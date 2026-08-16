@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TZ: UTC
+
+jobs:
+  estatico:
+    name: Lint, tipos y capas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # Los limites de capa. Violarlos rompe el build, no es sugerencia.
+      - run: pnpm layers
+
+  unitarios:
+    name: Tests unitarios
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm vitest run --project unit --coverage
+
+  aislamiento:
+    name: Integracion y aislamiento entre municipios
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: xula_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Las migraciones corren con el rol owner, nunca con el de aplicacion.
+      - name: Migrar
+        run: pnpm db:migrate
+        env:
+          MIGRATION_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/xula_test
+
+      # Este es el job que no se negocia: si una tabla con ayuntamiento_id
+      # quedo sin politica RLS, el build cae aca y no en produccion con el
+      # segundo municipio.
+      - name: Integracion y aislamiento
+        run: pnpm vitest run --project integration
+        env:
+          DATABASE_URL: postgresql://xula_app:postgres@localhost:5432/xula_test
+          MIGRATION_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/xula_test
+
+  docs:
+    name: Links de documentacion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validar links relativos
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --include-fragments --no-progress "**/*.md"
+          fail: true
+
+  revision:
+    name: Revision de IA
+    runs-on: ubuntu-latest
+    # Solo en PR y solo si hay credencial. Sin secreto no falla el build:
+    # la revision es una reja adicional, no la unica.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Instalar GGA y opencode
+        run: |
+          brew install gentleman-programming/tap/gga
+          npm install -g opencode-ai
+      - name: Revisar el PR
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GGA_OPENCODE_VARIANT: high
+        run: gga run --pr-mode --diff-only

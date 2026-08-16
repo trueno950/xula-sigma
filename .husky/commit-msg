@@ -1,0 +1,3 @@
+#!/bin/sh
+# Conventional commits en espanol. Determinista: no interviene ninguna IA.
+pnpm commitlint --edit "$1"

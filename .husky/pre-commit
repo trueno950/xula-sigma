@@ -1,0 +1,10 @@
+#!/bin/sh
+# Rapido y barato. La suite completa va en pre-push; la reja real, en CI.
+# Ver docs/adr/0001-decisiones-tecnicas-fase-0.md seccion 7.
+
+pnpm biome check --staged --no-errors-on-unmatched || exit 1
+pnpm typecheck || exit 1
+pnpm vitest related --run --passWithNoTests || exit 1
+
+# Revision de IA contra AGENTS.md. Solo lee, no toca el repositorio.
+gga run || exit 1

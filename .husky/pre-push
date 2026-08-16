@@ -1,0 +1,5 @@
+#!/bin/sh
+# Suite completa y limites de capa antes de que salga de la maquina.
+
+pnpm check || exit 1
+pnpm test || exit 1

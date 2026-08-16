@@ -1,0 +1,45 @@
+# Gentleman Guardian Angel — configuracion de XULA SIGMA
+# Decision documentada en docs/adr/0001-decisiones-tecnicas-fase-0.md, seccion 7
+
+# Proveedor y modelo, fijados.
+# Sin la parte del modelo, GGA invoca `opencode run` sin --model y queda a
+# merced del default de opencode, que puede cambiar sin avisar. Una revision
+# de codigo tiene que ser reproducible: el modelo se fija aca.
+PROVIDER="opencode:deepseek/deepseek-v4-pro"
+
+# Que se revisa.
+# Los .sql entran a proposito: una migracion que olvida FORCE ROW LEVEL
+# SECURITY es el error mas caro del proyecto y no vive en un .ts.
+FILE_PATTERNS="*.ts,*.tsx,*.sql"
+
+# Que NO se revisa.
+# Los tests NO se excluyen, al reves de lo que sugiere la plantilla por
+# defecto de GGA. En este proyecto el test es la especificacion, y un test
+# que pasa siempre es el modo de falla numero uno del codigo generado por
+# IA. Si el revisor no ve los tests, no puede detectarlo.
+# Ver docs/04-calidad.md seccion 7.
+EXCLUDE_PATTERNS="*.d.ts"
+
+# Reglas contra las que se revisa.
+# Condensado a proposito: las 12 reglas + los 22 antipatrones.
+# No se le pasa docs/ completo (2000+ lineas por revision).
+RULES_FILE="AGENTS.md"
+
+# Falla si la respuesta del modelo es ambigua. En un proyecto multi-tenant
+# una revision ambigua se lee como aprobada, y eso no puede pasar.
+STRICT_MODE="true"
+
+TIMEOUT="300"
+
+# Rama base para --pr-mode. Explicita en vez de autodeteccion.
+PR_BASE_BRANCH="main"
+
+# OPENCODE_VARIANT queda sin fijar a proposito: local corre rapido.
+# CI lo sube con la variable de entorno GGA_OPENCODE_VARIANT=high.
+
+# Agente de revision, definido en .opencode/agents/gga-reviewer.md
+# Sin esto, opencode usa su agente primario por defecto, cuyo prompt de
+# orquestacion SDD pesa 64 KB y viaja en cada revision. Ademas ese agente
+# esta escrito para coordinar y delegar trabajo, no para revisar un diff.
+# El de aca tiene edit y bash denegados: un revisor no toca el repositorio.
+OPENCODE_AGENT="gga-reviewer"
