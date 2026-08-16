@@ -1,0 +1,37 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Entorno — .env.example SI se commitea, .env NUNCA
+# Ver docs/05-seguridad.md seccion 8
+.env
+.env.*
+!.env.example
+
+# Tests
+coverage/
+test-results/
+playwright-report/
+.playwright/
+
+# Herramientas
+.husky/_/
+.turbo/
+.vercel/
+
+# Indice de skills, regenerable
+.atl/
+
+# Editor
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
