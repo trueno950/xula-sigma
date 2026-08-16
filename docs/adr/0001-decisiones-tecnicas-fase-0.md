@@ -506,6 +506,61 @@ evitar.
 
 ---
 
+## 9. Cadena de herramientas — Node 26, pnpm 11 y espera de 24h
+
+### Decisión
+
+`.nvmrc` fija **Node 26.7.0** y `packageManager` fija **pnpm 11.22.0**. Los
+ajustes de pnpm viven en `pnpm-workspace.yaml`, no en `package.json`.
+
+### Node 26, aunque hoy la LTS activa sea la 24
+
+Del calendario oficial de releases:
+
+| Línea | LTS activa | Mantenimiento | Fin |
+|---|---|---|---|
+| 24 (Krypton) | 2025-10-28 | **2026-10-20** | 2028-04-30 |
+| 26 | **2026-10-28** | 2027-10-20 | 2029-04-30 |
+
+En octubre de 2026 la 24 pasa a recibir solo parches de seguridad y la 26
+entra en LTS activa, con una semana de diferencia. XULA SIGMA sale a
+producción después de eso. Fijar la LTS de hoy era nacer en una línea que
+muere antes que el sistema.
+
+Verificado antes de subir: Next 16 pide `>=20.9.0`, Vitest 4 acepta `>=24`,
+y `@node-rs/argon2` compila contra N-API, que es estable entre majors y no
+exige recompilar.
+
+El punto de `.nvmrc` no es la preferencia de versión: es que local, CI y
+Railway lean el mismo número y no puedan divergir en silencio.
+
+### pnpm 11 y los 1440 minutos
+
+pnpm 11 rechaza cualquier versión publicada hace menos de 24 horas
+(`minimumReleaseAge`). Al reconstruir el lockfile bajo esta política,
+`nanostores@1.5.0` — publicada veinte horas antes, dependencia transitiva de
+`@better-auth/core` — quedó afuera y resolvió a `1.4.2`.
+
+Esa ventana de horas es donde vive un ataque de cadena de suministro:
+comprometen la cuenta de un mantenedor, publican una versión con payload, y
+el daño ocurre antes de que alguien lo note. Esperar un día no elimina el
+riesgo, corta la mayoría.
+
+**Costo real, y se paga:** una dependencia recién publicada no se instala
+hoy. Cuando aparezca, se espera. No se baja el número.
+
+### Dos cambios de pnpm 11 que fallan distinto
+
+- El campo `pnpm` de `package.json` **ya no se lee**. Avisa y sigue. Nuestro
+  `onlyBuiltDependencies` quedó ignorado sin romper nada visible: los
+  binarios nativos simplemente no se compilaban. Ahora es `allowBuilds` en
+  `pnpm-workspace.yaml`.
+- Un script de postinstall bloqueado **ahora es error**, no aviso. Mejor
+  así: corta la instalación en vez de dejar un binario ausente que aparece
+  mucho después y lejos de su causa.
+
+---
+
 ## Consecuencias sobre documentos existentes
 
 Este ADR agrega. No contradice ninguna regla vigente. Deja pendientes:

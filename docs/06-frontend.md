@@ -32,7 +32,22 @@ tenerlas presentes.
 | **Turbopack por defecto** | `next dev` y `next build` lo usan sin configuración |
 | **React Compiler estable** | Memoiza automáticamente. Sin `useMemo` ni `useCallback` manuales salvo caso medido. |
 | **`"use cache"`** | Reemplaza `unstable_cache`, `fetchCache` y `revalidate` de segmento. `cacheLife` y `cacheTag` ya no llevan prefijo `unstable_`. Se habilita con `cacheComponents: true`. |
-| **Node.js 20.9+** | Requisito mínimo; fijarlo en Railway |
+| **Node.js 20.9+** | Requisito mínimo de Next 16. El proyecto fija **26.7.0** en `.nvmrc` — ver más abajo. |
+
+**Por qué Node 26 y no la LTS activa de hoy.** El 2026-10-20 la línea 24
+entra en mantenimiento (solo parches de seguridad hasta 2028-04-30) y el
+2026-10-28 la 26 pasa a LTS activa, con soporte hasta 2029-04-30. XULA
+SIGMA sale a producción después de esa fecha: fijar 24 sería nacer en una
+línea que en dos meses deja de recibir features y muere antes que el
+sistema. La ventana en que la 26 todavía es *Current* es de dos meses y no
+tiene costo real: Next, Vitest y Drizzle ya la declaran soportada, y
+`@node-rs/argon2` compila contra N-API, que es estable entre versiones de
+Node y no exige recompilar por major.
+
+La versión vive en `.nvmrc` y **los tres entornos la leen de ahí**: local
+vía `nvm use`, CI vía `node-version-file: .nvmrc`, y Railway vía el
+detector de su builder. Ese es el punto del archivo — no es preferencia de
+versión, es que local, CI y producción no puedan divergir en silencio.
 
 ```ts
 // proxy.ts — en la raíz del proyecto o en src/

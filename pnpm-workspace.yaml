@@ -1,0 +1,24 @@
+# Configuracion de pnpm. Desde pnpm 11 el campo `pnpm` de package.json ya
+# no se lee: los ajustes viven aca aunque el repo no sea un monorepo.
+#
+# `allowBuilds` reemplaza a `onlyBuiltDependencies`. pnpm bloquea por
+# defecto los scripts de postinstall y en la 11 eso es error, no aviso: un
+# paquete que necesita compilar y no puede, corta la instalacion en vez de
+# dejar un binario ausente que aparece mucho despues.
+#
+# Solo esbuild lo necesita. Biome y @node-rs/argon2 resuelven su binario
+# por dependencia opcional segun plataforma, sin script.
+allowBuilds:
+  esbuild: true
+
+# Ninguna version publicada hace menos de 24h entra al lockfile. Es la
+# ventana en la que vive un ataque de cadena de suministro: comprometen la
+# cuenta de un mantenedor, publican con payload, y el dano ocurre antes de
+# que alguien lo note. Esperar un dia no elimina el riesgo, corta la mayoria.
+#
+# Es el valor por defecto de pnpm 11. Se declara igual: un control de
+# seguridad del que dependemos se escribe, no se hereda.
+#
+# Costo real: una dependencia recien publicada no se puede instalar hoy.
+# Eso se espera, no se baja el numero.
+minimumReleaseAge: 1440
