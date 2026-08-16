@@ -1,0 +1,67 @@
+schema: spec-driven
+
+context: |
+  XULA SIGMA: SaaS multi-tenant (Next.js 16 App Router, TS strict,
+  PostgreSQL + RLS, Drizzle, Zod 4). Capas: ui -> application -> domain
+  <- infrastructure, enforzadas por dependency-cruiser. Invariante raiz:
+  aislamiento por ayuntamiento_id + FORCE RLS via shared/tenancy
+  (withTenant, SET LOCAL). Fase 0 parcial: tenancy y resolucion de
+  subdominio implementados; auth/RBAC sin empezar. Strict TDD activo.
+  Idioma de artefactos: espanol.
+
+strict_tdd: true
+
+testing:
+  unit:
+    command: "pnpm test"
+    framework: "Vitest 4 (proyecto 'unit', sin base de datos)"
+  integration:
+    command: "pnpm test:integration"
+    framework: "Vitest 4 (proyecto 'integration', requiere Postgres via pnpm db:local)"
+    requires_env: ["DATABASE_URL", "MIGRATION_DATABASE_URL"]
+    includes: "*.isolation.test.ts (aislamiento por tenant, obligatorio por tabla con ayuntamiento_id)"
+  e2e:
+    command: "pnpm test:e2e"
+    framework: "Playwright"
+  coverage:
+    command: "vitest run --coverage"
+    threshold: 80
+    scope: ["src/modules/**/domain/**", "src/modules/**/application/**"]
+  quality_gate:
+    command: "pnpm check"
+    steps: ["pnpm lint (biome)", "pnpm typecheck (tsc --noEmit)", "pnpm layers (depcruise src)"]
+  never_compress:
+    - "pnpm test / vitest — nunca con rtk, oculta si un test de aislamiento corrio o no"
+    - "psql — nunca con rtk, puede ocultar la fila del otro municipio"
+
+rules:
+  proposal:
+    - Declarar que invariantes de docs/architecture/invariantes-criticos.md toca el cambio
+    - Incluir plan de rollback si toca tenancy, folios, datos personales o auditoria
+    - Redactar en espanol, terminologia tecnica en ingles
+  specs:
+    - Usar Given/When/Then para escenarios
+    - Usar palabras clave RFC 2119 (MUST, SHALL, SHOULD, MAY)
+    - Tabla nueva con ayuntamiento_id requiere escenario de aislamiento explicito
+  design:
+    - Documentar en que capa vive cada pieza nueva y por que
+    - Verificar direccion de dependencias contra .dependency-cruiser.cjs
+    - Justificar cualquier dependencia nueva
+  tasks:
+    - Test primero: cada tarea de codigo referencia su test
+    - Tabla nueva = tarea de RLS + tarea de test de aislamiento en el mismo commit
+    - Agrupar por capa/modulo, numeracion jerarquica
+  apply:
+    guidelines:
+      - Seguir patrones existentes en src/modules/<modulo>/{domain,application,infrastructure,ui}
+      - Dominio en espanol, andamiaje tecnico en ingles, sin acentos ni enes en identificadores
+      - Acceso a base de datos solo via shared/tenancy (withTenant, SET LOCAL)
+    tdd: true
+    test_command: "pnpm test"
+  verify:
+    test_command: "pnpm test"
+    build_command: "pnpm check"
+    coverage_threshold: 80
+  archive:
+    - Advertir antes de fusionar deltas que remuevan invariantes criticos
+    - Confirmar que toda tabla nueva con ayuntamiento_id tiene su test de aislamiento archivado

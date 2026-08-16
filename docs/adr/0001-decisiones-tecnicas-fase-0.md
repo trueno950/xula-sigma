@@ -49,11 +49,39 @@ Consecuencias, todas deseadas:
 ### SUPER_ADMIN
 
 No entra en ese modelo: no pertenece a ningún ayuntamiento. Vive en una
-superficie propia (`admin.xulasigma.mx`) con su propia tabla, fuera del
-padrón de usuarios municipales.
+superficie propia, `admin.xulasigma.mx`.
 
 Su cambio de contexto queda en bitácora y el contexto anterior no persiste
 en ninguna capa. Ver [Seguridad §6](../05-seguridad.md).
+
+#### Corrección — 2026-08-16, al diseñar `auth-rbac`
+
+La primera versión de esta sección decía **tabla propia, fuera del padrón de
+usuarios municipales**. Se cambió: el SUPER_ADMIN vive en un **ayuntamiento
+reservado de plataforma**, y usa las mismas cuatro tablas de autenticación
+que todos.
+
+El motivo es que la tabla propia obligaba a un **segundo mecanismo de
+sesión** —sus propias tablas de sesión y cuenta, su propia firma de cookie—
+para dar un servicio que el existente ya da. Dos caminos de autenticación en
+un sistema cuyo modo de falla grave es el cruce entre municipios es
+exactamente la clase de duplicación que no conviene: el segundo camino no
+hereda las defensas del primero, y hay que probarlo todo dos veces.
+
+Con el ayuntamiento reservado, el SUPER_ADMIN queda sujeto al mismo RLS, al
+mismo `withTenant` y a los mismos tests de aislamiento que cualquier usuario
+municipal. No es una excepción al invariante raíz: es un caso más de él.
+
+**Lo que esto obliga, y no es opcional:**
+
+- La fila reservada **no es un municipio** y el directorio público tiene que
+  excluirla. Si `resolverAyuntamientoPorSubdominio` la devolviera, la
+  plataforma aparecería como un ayuntamiento más.
+- Su alta no pasa por el flujo normal de provisión de municipios.
+
+La autoridad del alta de municipios —el tercer rol de Postgres y sus
+políticas— es idéntica en cualquiera de los dos caminos, así que esa parte
+del diseño no cambió.
 
 ### Hash de contraseña
 
