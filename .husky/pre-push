@@ -1,5 +1,25 @@
 #!/bin/sh
-# Suite completa y limites de capa antes de que salga de la maquina.
+# Limites de capa y suite antes de que salga de la maquina.
 
 pnpm check || exit 1
-pnpm test || exit 1
+pnpm vitest run --project unit || exit 1
+
+# Los tests de aislamiento necesitan Postgres. Se corren si hay base; si no
+# la hay, se avisa fuerte y se sigue.
+#
+# La alternativa —fallar el push— suena mas estricta pero es peor: un hook
+# que falla siempre ensena a usar --no-verify, y ahi se pierde el gate
+# entero. El gate real es CI, que los corre sin condicion. Ver ADR 0001
+# seccion 7.
+if [ -n "$DATABASE_URL" ] && [ -n "$MIGRATION_DATABASE_URL" ]; then
+  pnpm vitest run --project integration || exit 1
+else
+  echo ""
+  echo "  ⚠  AISLAMIENTO ENTRE MUNICIPIOS: NO VERIFICADO EN ESTA MAQUINA"
+  echo ""
+  echo "     Sin DATABASE_URL ni MIGRATION_DATABASE_URL no hay base contra"
+  echo "     la cual probar RLS. CI los corre igual y bloquea el merge."
+  echo ""
+  echo "     Para correrlos aca:  pnpm db:local"
+  echo ""
+fi

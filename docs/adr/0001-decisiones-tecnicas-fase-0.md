@@ -100,10 +100,40 @@ const EnvSchema = z.object({
 El pre-deploy usa `MIGRATION_DATABASE_URL`. La aplicación nunca la ve.
 
 Verificado el 2026-08-16: el template de Postgres de Railway entrega **un
-solo rol**, `postgres`, con `rolsuper` y `rolbypassrls` en `t`. Los dos
-roles de la aplicación se crean a mano en la migración inicial. Si la app
+solo rol**, `postgres`, con `rolsuper` y `rolbypassrls` en `t`. Si la app
 se conecta con la `DATABASE_URL` que Railway entrega tal cual, RLS no hace
 absolutamente nada.
+
+### Los roles se crean en `scripts/bootstrap.sql`, no en una migración
+
+Corrección a lo que decía la primera versión de este ADR. Los roles no
+pueden crearse en la migración inicial, por tres razones que aparecieron al
+implementarlo:
+
+1. `drizzle-kit migrate` se conecta con `MIGRATION_DATABASE_URL`, que es
+   justamente el rol que habría que crear. No puede crearse a sí mismo.
+2. Crear roles no es un cambio de esquema versionado. Se hace una vez por
+   base, no se replica como parte de la historia.
+3. Las contraseñas son por entorno. Una contraseña en una migración es una
+   contraseña en git, para siempre y en cada clon.
+
+El script se corre una vez por entorno con el superusuario de Railway:
+
+```
+psql "$SUPERUSER_URL" -v clave_migrator=... -v clave_app=... \
+  -f scripts/bootstrap.sql
+```
+
+Crea `xula_migrator` (dueño del esquema, **no superusuario**) y `xula_app`,
+ambos con `NOSUPERUSER NOBYPASSRLS`. El dueño no es `postgres` a propósito:
+un superusuario ignora RLS siempre, incluso con `FORCE`. Con un dueño
+común, una consulta que saliera por la conexión equivocada sigue sujeta a
+las políticas.
+
+También otorga `CREATE ON DATABASE` a `xula_migrator`: `drizzle-kit` guarda
+su journal en un esquema propio y lo crea en la primera corrida. Sin ese
+permiso la migración **falla callada** — se queda en `applying
+migrations...` y sale con código 1 sin imprimir el error de Postgres.
 
 ### Toda migración que crea tabla hace cuatro cosas
 
@@ -117,6 +147,51 @@ error de permisos en el primer request. **Olvidar RLS falla en silencio.**
 
 Por eso el test de esquema solo necesita vigilar el punto 2: el 4 se
 delata solo.
+
+Por la misma razón no hay `ALTER DEFAULT PRIVILEGES`. Sería cómodo, pero se
+llevaría puesta esa asimetría: el `GRANT` explícito obliga a escribir una
+línea por tabla, y esa línea es el momento en que alguien se pregunta si
+también puso la política.
+
+### Lo que drizzle-kit no emite
+
+`drizzle-orm` sabe generar `ENABLE ROW LEVEL SECURITY` y las políticas
+desde `pgPolicy()`, pero **no emite `FORCE ROW LEVEL SECURITY`** — se
+verificó contra la versión instalada. Sin `FORCE`, el dueño de la tabla
+queda exento de sus propias políticas y todo el aislamiento es decorativo
+para esa conexión.
+
+Por eso las migraciones van en dos partes: la generada, y una `--custom`
+con `FORCE` y los `GRANT`. Toda migración que cree una tabla con
+`ayuntamiento_id` repite ese par.
+
+### `NULLIF`, y por qué no es cosmético
+
+La política no compara contra `current_setting('app.tenant', true)::uuid`
+sino contra `NULLIF(current_setting('app.tenant', true), '')::uuid`.
+
+Verificado contra Postgres 18: cuando una transacción fija la variable con
+`set_config(..., true)` y termina, el valor **no vuelve a NULL — vuelve a
+cadena vacía.** Y `''::uuid` lanza `invalid input syntax for type uuid`.
+
+Sin el `NULLIF`, toda consulta que salga fuera de `withTenant` por una
+conexión ya reciclada del pool revienta al evaluar la política. No hay
+fuga —falla cerrado— pero es un error latente que aparece recién en
+producción, cuando el pool empieza a reusar conexiones.
+
+### Alta de municipios: provisionamiento, no operación
+
+Con `FORCE` puesto, ni el dueño puede insertar en `ayuntamientos`. Es
+correcto: `xula_app` no da de alta municipios, eso es del panel de
+SUPER_ADMIN.
+
+La política `ayuntamientos_provision` abre esa excepción **solo sobre esa
+tabla y solo para `xula_migrator`**. Se justifica barato: sus columnas de
+lectura ya son públicas —el escudo se pinta antes del login— y quien tiene
+esa conexión ya puede hacer `DROP TABLE`.
+
+`bitacora` y toda tabla operativa que venga después se quedan con `FORCE`
+sin escape para nadie. Ahí están los datos que no pueden cruzarse.
 
 ---
 

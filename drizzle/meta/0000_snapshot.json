@@ -1,0 +1,191 @@
+{
+  "id": "8fe0eba2-3389-4faf-9abc-ab7503d987ce",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.ayuntamientos": {
+      "name": "ayuntamientos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "subdominio": {
+          "name": "subdominio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marca": {
+          "name": "marca",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "activo": {
+          "name": "activo",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ayuntamientos_subdominio_unique": {
+          "name": "ayuntamientos_subdominio_unique",
+          "nullsNotDistinct": false,
+          "columns": ["subdominio"]
+        }
+      },
+      "policies": {
+        "ayuntamientos_directorio_publico": {
+          "name": "ayuntamientos_directorio_publico",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": ["xula_app"],
+          "using": "true"
+        },
+        "ayuntamientos_escritura_propia": {
+          "name": "ayuntamientos_escritura_propia",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": ["xula_app"],
+          "using": "id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.bitacora": {
+      "name": "bitacora",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accion": {
+          "name": "accion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entidad": {
+          "name": "entidad",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entidad_id": {
+          "name": "entidad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen": {
+          "name": "origen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ocurrido_en": {
+          "name": "ocurrido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bitacora_tenant_idx": {
+          "name": "bitacora_tenant_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocurrido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bitacora_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "bitacora_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "bitacora",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": ["ayuntamiento_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "bitacora_tenant": {
+          "name": "bitacora_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["xula_app"],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

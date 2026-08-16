@@ -20,6 +20,7 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --project integration",
     "test:e2e": "playwright test",
+    "db:local": "bash scripts/db-local.sh",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "prepare": "husky"

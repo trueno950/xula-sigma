@@ -4,7 +4,10 @@
 
 pnpm biome check --staged --no-errors-on-unmatched || exit 1
 pnpm typecheck || exit 1
-pnpm vitest related --run --passWithNoTests || exit 1
+# Solo el proyecto `unit`. Los de integracion necesitan Postgres y las dos
+# URLs de conexion; arrastrarlos aca haria fallar cada commit hecho sin la
+# base levantada. Corren en pre-push y, sobre todo, en CI.
+pnpm vitest related --run --project unit --passWithNoTests || exit 1
 
 # Revision de IA contra AGENTS.md. Solo lee, no toca el repositorio.
 gga run || exit 1

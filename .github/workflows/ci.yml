@@ -67,11 +67,22 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Las migraciones corren con el rol owner, nunca con el de aplicacion.
+      # Los roles no los crea una migracion: drizzle-kit se conecta con el
+      # rol que este script crea, asi que no puede crearse a si mismo.
+      - name: Provisionar roles
+        run: |
+          psql "postgresql://postgres:postgres@localhost:5432/xula_test" \
+            -v clave_migrator=postgres \
+            -v clave_app=postgres \
+            -f scripts/bootstrap.sql
+
+      # Las migraciones corren con el rol owner, nunca con el de aplicacion
+      # ni con el superusuario. Un superusuario ignora RLS siempre, asi que
+      # migrar con el dejaria el aislamiento sin probar.
       - name: Migrar
         run: pnpm db:migrate
         env:
-          MIGRATION_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/xula_test
+          MIGRATION_DATABASE_URL: postgresql://xula_migrator:postgres@localhost:5432/xula_test
 
       # Este es el job que no se negocia: si una tabla con ayuntamiento_id
       # quedo sin politica RLS, el build cae aca y no en produccion con el
@@ -80,7 +91,7 @@ jobs:
         run: pnpm vitest run --project integration
         env:
           DATABASE_URL: postgresql://xula_app:postgres@localhost:5432/xula_test
-          MIGRATION_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/xula_test
+          MIGRATION_DATABASE_URL: postgresql://xula_migrator:postgres@localhost:5432/xula_test
 
   docs:
     name: Links de documentacion
