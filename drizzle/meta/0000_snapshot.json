@@ -1,5 +1,5 @@
 {
-  "id": "8fe0eba2-3389-4faf-9abc-ab7503d987ce",
+  "id": "f21e0741-c525-452f-ab84-d3af7e7dd17c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -34,8 +34,8 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
-        "activo": {
-          "name": "activo",
+        "alta_en": {
+          "name": "alta_en",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -49,7 +49,9 @@
         "ayuntamientos_subdominio_unique": {
           "name": "ayuntamientos_subdominio_unique",
           "nullsNotDistinct": false,
-          "columns": ["subdominio"]
+          "columns": [
+            "subdominio"
+          ]
         }
       },
       "policies": {
@@ -57,14 +59,18 @@
           "name": "ayuntamientos_directorio_publico",
           "as": "PERMISSIVE",
           "for": "SELECT",
-          "to": ["xula_app"],
+          "to": [
+            "xula_app"
+          ],
           "using": "true"
         },
         "ayuntamientos_escritura_propia": {
           "name": "ayuntamientos_escritura_propia",
           "as": "PERMISSIVE",
           "for": "UPDATE",
-          "to": ["xula_app"],
+          "to": [
+            "xula_app"
+          ],
           "using": "id = NULLIF(current_setting('app.tenant', true), '')::uuid",
           "withCheck": "id = NULLIF(current_setting('app.tenant', true), '')::uuid"
         }
@@ -155,8 +161,12 @@
           "name": "bitacora_ayuntamiento_id_ayuntamientos_id_fk",
           "tableFrom": "bitacora",
           "tableTo": "ayuntamientos",
-          "columnsFrom": ["ayuntamiento_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -168,7 +178,9 @@
           "name": "bitacora_tenant",
           "as": "PERMISSIVE",
           "for": "ALL",
-          "to": ["xula_app"],
+          "to": [
+            "xula_app"
+          ],
           "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
           "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
         }

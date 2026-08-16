@@ -161,9 +161,16 @@ verificó contra la versión instalada. Sin `FORCE`, el dueño de la tabla
 queda exento de sus propias políticas y todo el aislamiento es decorativo
 para esa conexión.
 
-Por eso las migraciones van en dos partes: la generada, y una `--custom`
-con `FORCE` y los `GRANT`. Toda migración que cree una tabla con
-`ayuntamiento_id` repite ese par.
+Por eso a lo que genera `drizzle-kit` se le **agrega `FORCE` y los `GRANT`
+en el mismo archivo**, no en una migración aparte.
+
+Lo aparte se intentó primero y lo detuvo la revisión, con razón: cuando las
+cuatro cosas viven en dos archivos, un diff que toca solo el generado se ve
+idéntico a una migración que se olvidó del `FORCE`. Ni una persona ni una
+revisión automática pueden distinguir una omisión real del ruido, porque a
+ninguna de las dos le llega el archivo que falta.
+
+Una migración, las cuatro cosas, un solo diff que leer.
 
 ### `NULLIF`, y por qué no es cosmético
 

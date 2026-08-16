@@ -45,7 +45,9 @@ export const ayuntamientos = pgTable(
     // Escudo, logotipo y paleta. Los assets son URLs a R2, nunca rutas
     // del filesystem del contenedor.
     marca: jsonb().notNull().default({}),
-    activo: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    // `altaEn` y no `activo`: es la fecha en que el municipio entro al
+    // sistema. Un nombre como `activo` hace esperar un booleano.
+    altaEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   () => [
     /**
