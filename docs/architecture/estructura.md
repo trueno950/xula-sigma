@@ -69,14 +69,28 @@ ui ──► application ──► domain ◄── infrastructure
 
 | Capa | Importa de | Nunca importa de |
 |---|---|---|
-| `domain` | nada | application, infrastructure, ui |
-| `application` | domain | infrastructure, ui |
-| `infrastructure` | domain, application | ui |
-| `ui` | application, domain | infrastructure |
+| `domain` | nada | application, infrastructure, ui, **shared** |
+| `application` | domain, shared | infrastructure, ui |
+| `infrastructure` | domain, application, shared | ui |
+| `ui` | application, domain, shared | infrastructure |
 
 **`domain` no importa nada.** Ni Next.js, ni Drizzle, ni React. Es lógica
 de negocio pura, y por eso se testea en milisegundos sin base de datos ni
 navegador.
+
+**Tampoco importa de `shared`,** y esa es la parte que se pasa por alto.
+`shared` parece inocuo —son "utilidades"— pero adentro vive `tenancy`, que
+abre conexiones a Postgres. Un dominio que importa de ahí deja de ser puro
+sin que se note en la firma de la función. La excepción se abre una vez y
+se acabó la regla.
+
+Si el dominio necesita algo de `shared`, ese algo no era de `shared`: era
+del dominio, y va copiado adentro. Duplicar cuatro líneas es más barato que
+perder la pureza de la capa.
+
+Las otras tres capas sí pueden. `application` toma los errores
+transversales de `shared/lib/errors`, `infrastructure` toma `withTenant` de
+`shared/tenancy`, y `ui` toma el design system de `shared/ui`.
 
 `application` define puertos; `infrastructure` los implementa. El caso de
 uso no sabe si detrás hay Postgres, un archivo o un mock.
@@ -86,9 +100,15 @@ datos de `padron`, va por un puerto declarado en su propio dominio.
 
 ### Enforzado, no sugerido
 
-Estas reglas viven en `.dependency-cruiser.js` y corren en pre-push y en
-CI. Violarlas rompe el build. No es una convención que se recuerda: es un
-error de compilación.
+Estas reglas viven en `.dependency-cruiser.cjs` y corren en pre-push y en
+CI (`pnpm layers`). Violarlas rompe el build. No es una convención que se
+recuerda: es un error de compilación.
+
+Un detalle de mantenimiento: dependency-cruiser **no soporta TypeScript 7**
+todavía. Con TS 7 instalado emite `missing-typescript-transpiler`, avisa
+que probablemente no vio las fuentes… y devuelve exit 0 con "no dependency
+violations found". O sea, el enforcement queda muerto y el build en verde.
+Por eso `typescript` está fijado en `^6.0.3`. Ver ADR 0001.
 
 ---
 

@@ -78,7 +78,7 @@ describe("aislamiento: constancias", () => {
     const deMotul = await sembrarConstancia(motul);
     const deTicul = await sembrarConstancia(ticul);
 
-    const visibles = await conTenant(motul, (tx) =>
+    const visibles = await withTenant(motul, (tx) =>
       tx.select().from(constanciasTable) // deliberadamente sin WHERE
     );
 
@@ -88,9 +88,37 @@ describe("aislamiento: constancias", () => {
 });
 ```
 
-Además existe un test de esquema que recorre la base y falla si encuentra
-una tabla con `ayuntamiento_id` sin política RLS activa. Agregar una tabla
-y olvidar el aislamiento **rompe el build**.
+El helper es `withTenant`, de `shared/tenancy`. No hay otra forma de abrir
+una consulta: el manejador de base de datos es una constante privada de ese
+módulo y no se exporta.
+
+#### El test de esquema
+
+Además existe un test de esquema que le pregunta a Postgres —no al código—
+por el estado real de la base. Vigila tres cosas:
+
+1. Toda tabla con `ayuntamiento_id` tiene RLS **habilitado y forzado**. El
+   `FORCE` no es redundante: sin él, el dueño de la tabla queda exento de
+   sus propias políticas.
+2. Ninguna tabla con RLS quedó sin política.
+3. Ni `xula_app` ni `xula_migrator` son superusuario ni tienen
+   `BYPASSRLS`. **Los dos roles, no solo el de la aplicación.** Lo que
+   sostiene el `FORCE` es que el dueño tampoco esté exento; si se volviera
+   superusuario, las políticas seguirían existiendo, el resto de los tests
+   seguiría en verde, y el aislamiento sería decorativo.
+
+Agregar una tabla y olvidar el aislamiento **rompe el build**.
+
+#### Las tablas de Better Auth pasan por la misma regla
+
+Better Auth genera su propio esquema. Las suyas no son excepción: si una
+tabla suya lleva `ayuntamiento_id` —y la de usuarios la lleva, porque el
+mismo email en dos municipios son dos usuarios distintos— necesita RLS y su
+test de aislamiento en el mismo commit.
+
+El test de esquema las barre automáticamente: recorre la base por columna,
+no por una lista de tablas que alguien tiene que acordarse de actualizar.
+Venir de una librería no exime de nada.
 
 ### Mockear lo correcto
 

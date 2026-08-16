@@ -57,8 +57,15 @@ TDD estricto. El test se escribe antes que la implementación.
 
 - Dominio y casos de uso: obligatorio
 - Aislamiento por tenant: obligatorio, sin excepción
-- No se persigue porcentaje de cobertura; se persigue que cada camino de
-  decisión del dominio tenga un test que lo describa
+- El objetivo no es el porcentaje: es que cada camino de decisión del
+  dominio tenga un test que lo describa
+- **Pero hay piso: 80% en `modules/**/domain` y `modules/**/application`.**
+  Está en `vitest.config.ts` y CI lo hace fallar. La reja existe porque una
+  IA sin restricción salta tests, y un número en CI es más confiable que la
+  buena intención. Un test que siempre pasa es peor que ninguno.
+
+Suites: `unit` corre sin base de datos. `integration` —que incluye los
+`*.isolation.test.ts`— necesita Postgres: `pnpm db:local` lo levanta.
 
 ### Idioma
 - Dominio en español: `constancia`, `padron`, `apoyoTraslado`

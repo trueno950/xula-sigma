@@ -645,14 +645,31 @@ hoy. Cuando aparezca, se espera. No se baja el número.
 
 ## Consecuencias sobre documentos existentes
 
-Este ADR agrega. No contradice ninguna regla vigente. Deja pendientes:
+Este ADR agrega. No contradice ninguna regla vigente.
 
-- `estructura.md §3` — agregar la columna de `shared` a la tabla de capas
-  (decisión 3)
-- `04-calidad.md §3` — el test de esquema RLS ahora cubre también las
-  tablas que genera Better Auth (decisión 1)
-- `CLAUDE.md` — el piso de cobertura del 80% no está mencionado ahí y sí en
-  `04-calidad.md`. `CLAUDE.md` es lo que se lee cada sesión.
+Los tres pendientes que dejó quedaron cerrados:
+
+- ✅ `estructura.md §3` — la tabla de capas incluye `shared`, y se explica
+  por qué `domain` es la única capa que no puede tocarlo (decisión 3)
+- ✅ `04-calidad.md §1` — el test de esquema documenta lo que vigila
+  realmente: `FORCE`, políticas huérfanas y los **dos** roles. Se agregó
+  que las tablas de Better Auth pasan por la misma regla (decisión 1)
+- ✅ `CLAUDE.md` — el piso del 80% ahora está donde se lee cada sesión, con
+  la aclaración de que es reja y no objetivo
+
+De paso se corrigieron dos desalineaciones que dejó la implementación:
+`estructura.md` decía `.dependency-cruiser.js` (es `.cjs`) y el ejemplo
+canónico del test de aislamiento llamaba al helper `conTenant` cuando se
+llama `withTenant`. Un ejemplo canónico equivocado se copia.
+
+### Abierto
+
+- **Rol del panel SUPER_ADMIN.** Hoy el alta de municipios se apoya en la
+  política `ayuntamientos_provision`, abierta solo sobre esa tabla y solo
+  para `xula_migrator`. Se cierra al diseñar auth y RBAC.
+- **Node 26 en el builder de Railway.** Local y CI están verificados; el
+  tercero se confirma en el primer despliegue.
+- **`typescript@7`** cuando dependency-cruiser publique soporte.
 
 ---
 
