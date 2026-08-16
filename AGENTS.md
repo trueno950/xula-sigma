@@ -17,7 +17,12 @@ toca datos, marcá el hallazgo.
 ## Las 12 reglas que nadie rompe
 
 1. `any` está prohibido. Se usa `unknown` + type guard.
-2. Todo acceso a base de datos pasa por `withTenant`. Sin excepción.
+2. Todo acceso a base de datos pasa por `withTenant`. La **única** excepción
+   sancionada es `resolverAyuntamientoPorSubdominio`, en `shared/tenancy`:
+   resuelve el tenant antes de que exista uno, lee solo el directorio
+   público de `ayuntamientos` y su garantía la da RLS, no la función.
+   Cualquier otro acceso sin tenant es hallazgo, incluido uno nuevo que
+   invoque este precedente.
 3. `SET LOCAL` dentro de transacción. Nunca `SET` suelto.
 4. `ayuntamiento_id` sale del contexto del servidor, nunca del cliente.
 5. Tabla nueva = RLS + test de aislamiento, en el mismo commit.

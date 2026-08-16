@@ -8,6 +8,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { AyuntamientoId } from "./ayuntamientoId";
 
 /**
  * El tenant activo de la transaccion. Lo fija `withTenant` con
@@ -38,7 +39,10 @@ const tenantActual = sql`NULLIF(current_setting('app.tenant', true), '')::uuid`;
 export const ayuntamientos = pgTable(
   "ayuntamientos",
   {
-    id: uuid().primaryKey().defaultRandom(),
+    // `$type` propaga la marca hasta el resultado de la consulta: lo que
+    // sale de Drizzle ya es `AyuntamientoId`, no un string que alguien
+    // tenga que acordarse de convertir.
+    id: uuid().primaryKey().defaultRandom().$type<AyuntamientoId>(),
     // Resuelve el tenant en `proxy.ts` a partir del subdominio.
     subdominio: text().notNull().unique(),
     nombre: text().notNull(),
@@ -91,6 +95,7 @@ export const bitacora = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     ayuntamientoId: uuid()
       .notNull()
+      .$type<AyuntamientoId>()
       .references(() => ayuntamientos.id),
     // Nulo cuando la accion la origina el sistema, no una persona.
     actor: uuid(),

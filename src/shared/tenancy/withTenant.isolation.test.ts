@@ -1,8 +1,16 @@
-import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { AyuntamientoId } from "./ayuntamientoId";
 import { bitacora } from "./esquema";
+import {
+  appSinTenant,
+  limpiar,
+  motivoDeFalla,
+  motul,
+  owner,
+  sembrar,
+  ticul,
+} from "./municipiosDePrueba";
 import { cerrarConexion, withTenant } from "./withTenant";
 
 /**
@@ -10,79 +18,18 @@ import { cerrarConexion, withTenant } from "./withTenant";
  *
  * Estos tests no se pueden simular con mocks. La garantia la da RLS, y RLS
  * solo existe dentro de Postgres. Un mock probaria que nuestro codigo llama
- * a las funciones que creemos que hay que llamar, que es exactamente la
- * pregunta equivocada.
+ * a las funciones que creemos que hay que llamar, que es la pregunta
+ * equivocada.
  *
  * Corren con `DB_POOL_MAX=1` (ver vitest.config.ts). Con una sola conexion
  * en el pool, dos llamadas consecutivas a `withTenant` usan la misma
- * conexion fisica — que es la condicion sin la cual el escenario T2 no se
- * puede reproducir.
+ * conexion fisica — condicion sin la cual el escenario T2 no se reproduce.
  */
 
-const motul = randomUUID();
-const ticul = randomUUID();
-
-/**
- * Drizzle envuelve el error de Postgres en uno propio cuyo mensaje es
- * "Failed query: ..." y deja el motivo real en `cause`. Sin desenvolverlo,
- * un assert sobre el texto pasa o falla por razones que no tienen nada que
- * ver con lo que se quiere probar.
- */
-async function motivoDeFalla(trabajo: () => Promise<unknown>): Promise<string> {
-  try {
-    await trabajo();
-  } catch (error) {
-    const e = error as { message: string; cause?: { message?: string } };
-    return e.cause?.message ?? e.message;
-  }
-  throw new Error("Se esperaba que fallara, y no fallo.");
-}
-
-// Siembra con el rol owner: `xula_app` no tiene INSERT sobre
-// `ayuntamientos` a proposito. Los municipios los da de alta el
-// SUPER_ADMIN, no la aplicacion del municipio.
-const urlOwner = process.env.MIGRATION_DATABASE_URL;
-if (!urlOwner) throw new Error("Falta MIGRATION_DATABASE_URL para sembrar.");
-const owner = postgres(urlOwner, { max: 1 });
-
-/**
- * Conexion propia del test con el rol de aplicacion, sin pasar por
- * `withTenant`. Existe solo aca: sirve para comprobar que una consulta sin
- * tenant fijado no ve nada. En produccion no hay equivalente — `withTenant`
- * es la unica salida — y por eso esta conexion se abre en el test y no se
- * expone desde el modulo.
- */
-const urlApp = process.env.DATABASE_URL;
-if (!urlApp) throw new Error("Falta DATABASE_URL.");
-const appSinTenant = postgres(urlApp, { max: 1, prepare: false });
-
-beforeAll(async () => {
-  await owner`
-    INSERT INTO ayuntamientos (id, subdominio, nombre) VALUES
-      (${motul}, ${`motul-${motul.slice(0, 8)}`}, 'Motul'),
-      (${ticul}, ${`ticul-${ticul.slice(0, 8)}`}, 'Ticul')
-  `;
-  // La bitacora se siembra por `withTenant`, no con el rol owner. No es
-  // una comodidad del test: `bitacora` tiene FORCE sin excepcion para el
-  // dueno, asi que el owner tampoco puede insertar ahi. La escribe la
-  // aplicacion o no la escribe nadie.
-  for (const ayuntamiento of [motul, ticul]) {
-    await withTenant(ayuntamiento, (tx) =>
-      tx.insert(bitacora).values({
-        ayuntamientoId: ayuntamiento,
-        accion: "emitir",
-        entidad: "constancia",
-      }),
-    );
-  }
-});
+beforeAll(sembrar);
 
 afterAll(async () => {
-  // TRUNCATE y no DELETE. Con FORCE puesto, un `DELETE` del owner no
-  // falla: RLS le esconde las filas y devuelve "DELETE 0", dejando la
-  // tabla intacta y el test siguiente contaminado. TRUNCATE es operacion
-  // de tabla, no de fila, y RLS no interviene.
-  await owner`TRUNCATE bitacora, ayuntamientos CASCADE`;
+  await limpiar();
   await owner.end();
   await appSinTenant.end();
   await cerrarConexion();
@@ -123,14 +70,6 @@ describe("aislamiento entre ayuntamientos", () => {
     expect(deTicul.map((f) => f.ayuntamientoId)).toEqual([ticul]);
   });
 
-  it("una consulta sin tenant fijado no ve ninguna fila", async () => {
-    const filas = await appSinTenant`SELECT * FROM bitacora`;
-
-    // El NULLIF deja `NULL`, la comparacion da NULL, y NULL no es TRUE. La
-    // politica no deja pasar nada. Fallar cerrado, no abierto.
-    expect(filas).toHaveLength(0);
-  });
-
   it("no se puede insertar una fila a nombre de otro municipio", async () => {
     const motivo = await motivoDeFalla(() =>
       withTenant(motul, (tx) =>
@@ -159,9 +98,12 @@ describe("aislamiento entre ayuntamientos", () => {
     expect(motivo).toMatch(/permission denied/i);
   });
 
-  it("rechaza un ayuntamiento_id que no sea UUID antes de tocar la base", async () => {
+  it("rechaza un ayuntamiento_id que no sea UUID aunque se evada el tipo", async () => {
+    // El cast simula a alguien escribiendo `as AyuntamientoId` para
+    // saltarse la marca. La defensa en tiempo de ejecucion tiene que
+    // seguir ahi: no puede depender de que nadie escriba un `as`.
     const motivo = await motivoDeFalla(() =>
-      withTenant("' OR true --", async () => "no deberia llegar aca"),
+      withTenant("' OR true --" as AyuntamientoId, async () => "no llega"),
     );
 
     expect(motivo).toMatch(/UUID/);

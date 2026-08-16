@@ -1,7 +1,9 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { type AyuntamientoId, esAyuntamientoId } from "./ayuntamientoId";
 import * as esquema from "./esquema";
+import { ayuntamientos } from "./esquema";
 
 /**
  * La conexion vive en este archivo y no en uno propio a proposito.
@@ -42,9 +44,6 @@ export type TransaccionTenant = Parameters<
   Parameters<typeof bd.transaction>[0]
 >[0];
 
-const UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 /**
  * Ejecuta `trabajo` con el tenant fijado, dentro de una transaccion.
  *
@@ -55,13 +54,13 @@ const UUID =
  *   Nunca del body, del query string, ni de nada que el cliente controle.
  */
 export async function withTenant<T>(
-  ayuntamientoId: string,
+  ayuntamientoId: AyuntamientoId,
   trabajo: (tx: TransaccionTenant) => Promise<T>,
 ): Promise<T> {
-  // El valor termina dentro de una politica RLS. Validarlo antes de que
-  // llegue ahi cuesta un regex y cierra la unica via por la que un valor
-  // raro podria alterar la evaluacion de la politica.
-  if (!UUID.test(ayuntamientoId)) {
+  // El tipo ya obliga a que haya pasado por `comoAyuntamientoId`. Se
+  // revalida igual porque la marca se evade con un cast, y el valor
+  // termina dentro de una politica RLS. Cuesta un regex.
+  if (!esAyuntamientoId(ayuntamientoId)) {
     throw new Error(
       "ayuntamiento_id invalido: se esperaba un UUID. Este valor tiene que " +
         "venir del contexto de servidor, no de la peticion.",
@@ -90,6 +89,49 @@ export async function withTenant<T>(
 
     return trabajo(tx);
   });
+}
+
+/** Lo que el directorio publico expone de un ayuntamiento. */
+export type AyuntamientoResuelto = {
+  id: AyuntamientoId;
+  subdominio: string;
+  nombre: string;
+  marca: unknown;
+};
+
+/**
+ * Resuelve un ayuntamiento por su subdominio. **Es la unica consulta del
+ * sistema que corre sin tenant fijado**, y tiene que serlo: el tenant se
+ * resuelve en el borde del request, antes de que exista uno.
+ *
+ * No es un agujero en el invariante, y conviene ver por que:
+ *
+ * - La politica `ayuntamientos_directorio_publico` permite este SELECT sin
+ *   tenant a proposito. `ticul.xulasigma.mx` tiene que pintar el escudo de
+ *   Ticul en la pantalla de login, o sea antes de que haya sesion.
+ * - Cualquier otra tabla, por la misma conexion sin tenant, devuelve cero
+ *   filas: el `NULLIF` deja NULL y la politica no deja pasar nada. La
+ *   seguridad no depende de que esta funcion se porte bien; la da RLS.
+ *
+ * Las columnas se listan una por una y no se usa `select()` pelado. Es
+ * deliberado: el dia que `ayuntamientos` gane una columna sensible, no se
+ * cuela sola a una superficie que se sirve antes de autenticar.
+ */
+export async function resolverAyuntamientoPorSubdominio(
+  subdominio: string,
+): Promise<AyuntamientoResuelto | null> {
+  const [fila] = await bd
+    .select({
+      id: ayuntamientos.id,
+      subdominio: ayuntamientos.subdominio,
+      nombre: ayuntamientos.nombre,
+      marca: ayuntamientos.marca,
+    })
+    .from(ayuntamientos)
+    .where(eq(ayuntamientos.subdominio, subdominio))
+    .limit(1);
+
+  return fila ?? null;
 }
 
 /**
