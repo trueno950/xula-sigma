@@ -481,7 +481,7 @@ Las cinco llevan `ayuntamientoId uuid NOT NULL REFERENCES ayuntamientos(id)`,
 
 | Tabla | Columnas propias | GRANT a `xula_app` |
 |---|---|---|
-| `usuarios` | Better Auth (`id`, `name`, `email`, `emailVerified`, `image`, `createdAt`, `updatedAt`) + `rol text NOT NULL`, `bajaEn timestamptz` | SELECT, INSERT, UPDATE. **Sin DELETE**: baja logica |
+| `usuarios` | Better Auth (`id`, `name`, `email`, `emailVerified`, `image`, `createdAt`, `updatedAt`) + `rol` (conjunto cerrado, ver abajo), `bajaEn timestamptz` | SELECT, INSERT, UPDATE. **Sin DELETE**: baja logica |
 | `sesiones` | `id`, `token` (unico), `expiresAt`, `ipAddress`, `userAgent`, `userId`, fechas | SELECT, INSERT, UPDATE, DELETE |
 | `cuentas` | `id`, `accountId`, `providerId`, `userId`, `password`, fechas | SELECT, INSERT, UPDATE |
 | `verificaciones` | `id`, `identifier`, `value`, `expiresAt`, fechas | SELECT, INSERT, UPDATE, DELETE (el adaptador consume por borrado) |
@@ -490,6 +490,28 @@ Las cinco llevan `ayuntamientoId uuid NOT NULL REFERENCES ayuntamientos(id)`,
 Indices: `uniqueIndex(ayuntamientoId, email)` en `usuarios`;
 `(ayuntamientoId, clave, ocurridoEn)` en `intentos_acceso`;
 `(ayuntamientoId, identifier)` en `verificaciones`.
+
+### Correccion de PR 1 — `rol` y `tipo` no son texto libre
+
+El diseno decia `rol text NOT NULL` y `tipo text`. Se implementaron como
+conjuntos cerrados declarados **dos veces**: `$type<Rol>()` en TypeScript y
+`CHECK (rol IN (...))` en Postgres. No es redundancia — el `$type` se evade
+con un cast, y la base es la reja que queda.
+
+El motivo no es la regla 9 del proyecto, que habla de **dato sensible** y
+no cubre ninguna de las dos columnas. Es de correccion:
+
+- `rol` es la frontera de autorizacion. Como texto libre, un `"Operador"`
+  mal tipeado no falla: crea una persona con permisos equivocados y nadie
+  se entera hasta que le falta un boton, o le sobra.
+- `tipo` fuera del conjunto —`"email"` en vez de `"correo"`— abre una
+  tercera ventana de ritmo que nadie cuenta. El limitador deja de limitar
+  sin que nada falle.
+
+Los dos CHECK tienen su test, y el test se verifico quitando el CHECK a
+mano: sin el, ambos valores invalidos entran. `ROLES` y `Rol` viven en
+`shared/auth/roles.ts` desde PR 1; las reglas puras que los consumen
+siguen siendo de PR 3.
 
 ## 7. Pruebas
 
@@ -549,7 +571,8 @@ Aditivo: no altera `ayuntamientos`, `bitacora` ni `withTenant`. Orden:
         devolviera, la plataforma apareceria como un ayuntamiento mas.
         Esto necesita su propio test.
       - Su alta no pasa por el flujo normal de provision de municipios.
-- [ ] Numero real de p95 de construccion por request. Sale del spike y
-      define si el diseño sigue o vuelve a decision humana.
+- [x] **Numero real de p95 de construccion por request — RESUELTO
+      2026-08-17.** 0.227 ms (p50 0.141), 22 veces por debajo del umbral de
+      5 ms. El diseño sigue; no vuelve a decision humana.
 - [ ] Retencion de `intentos_acceso`: purga en cada escritura o tarea
       periodica. Se decide con el volumen real, no antes.

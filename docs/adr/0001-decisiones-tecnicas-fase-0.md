@@ -180,21 +180,35 @@ su journal en un esquema propio y lo crea en la primera corrida. Sin ese
 permiso la migración **falla callada** — se queda en `applying
 migrations...` y sale con código 1 sin imprimir el error de Postgres.
 
-### `drizzle-kit migrate` sale con código 1 cuando no hay nada que aplicar
+### El silencio de `drizzle-kit migrate` no es un caso, es su modo de falla
 
-Verificado el 2026-08-17 con la base ya al día: exit 1, misma salida y
-mismo silencio que el modo de falla de arriba.
+**Corrección al 2026-08-17.** Una primera versión de esta sección decía que
+`drizzle-kit migrate` sale con código 1 cuando no hay nada que aplicar. Es
+falso: con la base al día sale con código **0**. Lo que había atrás era
+otra cosa.
 
-O sea que **el código de salida no distingue "falló" de "ya estaba al
-día"**, y las dos cosas se ven idénticas en un log. En el Pre-deploy
-Command de Railway eso importa: un deploy sin migraciones nuevas —que es la
-mayoría— marca error, y el día que una migración falle de verdad va a
-parecer el ruido de siempre.
+Lo verificado es esto: **cuando `drizzle-kit migrate` no puede llegar a la
+base que cree, sale con código 1 y no imprime ni una línea del error.** Se
+queda en `applying migrations...` y termina. La misma pantalla exacta que
+el caso del `CREATE ON DATABASE` de arriba, que es un problema
+completamente distinto.
 
-Lo que hace el Pre-deploy Command no puede ser `drizzle-kit migrate` a
-secas. Tiene que verificar el estado después de correr, contra
-`drizzle.__drizzle_migrations`, y decidir con eso. Queda anotado acá porque
-se descubre una sola vez y se olvida.
+Reproducido dos veces con dos causas diferentes:
+
+| Causa | Lo que se ve |
+|---|---|
+| Falta `CREATE ON DATABASE` para el journal | `applying migrations...`, exit 1 |
+| `MIGRATION_DATABASE_URL` no resuelve a la base esperada | `applying migrations...`, exit 1 |
+
+La segunda apareció corriendo `pnpm db:migrate` a secas mientras
+`scripts/db-local.sh` —que exporta la variable antes de invocarlo— aplicaba
+lo mismo sin problema. **La variable se exporta siempre; no se confía en
+que el runner cargue `.env`.** Vitest, por ejemplo, no lo carga.
+
+Consecuencia para el Pre-deploy Command de Railway: `drizzle-kit migrate` a
+secas no alcanza como señal. El exit code distingue bien éxito de fracaso,
+pero el fracaso no dice de qué. Cuando falle, la primera pregunta es a qué
+base se estaba conectando.
 
 ### Toda migración que crea tabla hace cuatro cosas
 

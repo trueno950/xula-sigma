@@ -29,8 +29,13 @@ import type { AyuntamientoId } from "./ayuntamientoId";
  * por una conexion del pool ya usada revienta al evaluar la politica. No
  * hay fuga, pero es un error latente que aparece recien en produccion,
  * cuando el pool empieza a reciclar conexiones.
+ *
+ * **Se exporta para que `shared/auth/esquema.ts` lo reuse.** Duplicar el
+ * fragmento seria duplicar la sutileza del NULLIF, que es exactamente lo
+ * que no puede divergir entre dos archivos. La direccion es `auth →
+ * tenancy` y nunca al reves.
  */
-const tenantActual = sql`NULLIF(current_setting('app.tenant', true), '')::uuid`;
+export const tenantActual = sql`NULLIF(current_setting('app.tenant', true), '')::uuid`;
 
 /**
  * Registro de ayuntamientos. Es la tabla raiz del tenant: su `id` es el
@@ -93,10 +98,7 @@ export const bitacora = pgTable(
   "bitacora",
   {
     id: uuid().primaryKey().defaultRandom(),
-    ayuntamientoId: uuid()
-      .notNull()
-      .$type<AyuntamientoId>()
-      .references(() => ayuntamientos.id),
+    ayuntamientoId: columnaTenant(),
     // Nulo cuando la accion la origina el sistema, no una persona.
     actor: uuid(),
     accion: text().notNull(),
@@ -109,14 +111,35 @@ export const bitacora = pgTable(
   },
   (t) => [
     index("bitacora_tenant_idx").on(t.ayuntamientoId, t.ocurridoEn),
-    pgPolicy("bitacora_tenant", {
-      for: "all",
-      to: "xula_app",
-      using: sql`ayuntamiento_id = ${tenantActual}`,
-      // `withCheck` cubre el otro lado: sin esto se podria insertar una
-      // fila con el `ayuntamiento_id` de otro municipio, que despues no
-      // se veria desde ningun lado. Una fuga que ni siquiera se nota.
-      withCheck: sql`ayuntamiento_id = ${tenantActual}`,
-    }),
+    politicaTenant("bitacora"),
   ],
 ).enableRLS();
+
+/**
+ * La columna y la politica que repite **toda** tabla operativa del
+ * sistema, sin excepcion. Viven aca y no en cada esquema porque son la
+ * forma de un invariante, no una comodidad: el dia que cambie, cambia en
+ * un lugar.
+ *
+ * Se declaran despues de `ayuntamientos` porque `columnaTenant` la
+ * referencia.
+ */
+export function columnaTenant() {
+  // `$type` propaga la marca hasta el resultado de la consulta.
+  return uuid()
+    .notNull()
+    .$type<AyuntamientoId>()
+    .references(() => ayuntamientos.id);
+}
+
+export function politicaTenant(tabla: string) {
+  return pgPolicy(`${tabla}_tenant`, {
+    for: "all",
+    to: "xula_app",
+    using: sql`ayuntamiento_id = ${tenantActual}`,
+    // Sin `withCheck` se podria insertar una fila con el `ayuntamiento_id`
+    // de otro municipio, que despues no se veria desde ningun lado. Una
+    // fuga que ni siquiera se nota.
+    withCheck: sql`ayuntamiento_id = ${tenantActual}`,
+  });
+}

@@ -116,27 +116,53 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
 
 ## PR 1: Esquema, migracion, RLS, aislamiento
 
-- [ ] 1.1 RED `usuarios.isolation.test.ts` — fila de Motul invisible bajo
+> **Cerrado 2026-08-17.** 22 tests de aislamiento en verde; 34 de
+> integracion en total. `pnpm check` sin violaciones de capa.
+>
+> **Desvio del diseno, aceptado en revision:** `rol` y `tipo` se
+> implementaron como conjuntos cerrados (`$type` + `CHECK`), no como
+> `text` suelto. El motivo esta en `design.md` seccion 6. Aparecio con
+> `ROLES`/`Rol` en `shared/auth/roles.ts`, que el diseno ubicaba en PR 3;
+> las reglas puras siguen siendo de PR 3.
+>
+> `columnaTenant()` y `politicaTenant()` se movieron a
+> `tenancy/esquema.ts`: son la forma de un invariante que repite **toda**
+> tabla operativa, no una comodidad de auth. `bitacora` ya las usa.
+>
+> Las cinco tablas se escribieron juntas y los cinco tests tambien: el RED
+> fue correrlos contra Postgres **antes** de aplicar la migracion —cinco
+> archivos rojos con `relation "usuarios" does not exist`— porque la
+> garantia que estos tests describen vive en Postgres, no en TypeScript.
+
+- [x] 1.1 RED `usuarios.isolation.test.ts` — fila de Motul invisible bajo
       `withTenant(ticul)` sin filtro. [AM-6]
-- [ ] 1.2 GREEN tabla `usuarios` en `shared/auth/esquema.ts` (campos
+- [x] 1.2 GREEN tabla `usuarios` en `shared/auth/esquema.ts` (campos
       Better Auth + `rol`, `bajaEn`) + `uniqueIndex(ayuntamientoId, email)`.
-- [ ] 1.3 RED `sesiones.isolation.test.ts`. [AM-6]
-- [ ] 1.4 GREEN tabla `sesiones`.
-- [ ] 1.5 RED `cuentas.isolation.test.ts`. [AM-6]
-- [ ] 1.6 GREEN tabla `cuentas`.
-- [ ] 1.7 RED `verificaciones.isolation.test.ts` — caso sin `userId`,
+- [x] 1.3 RED `sesiones.isolation.test.ts`. [AM-6]
+- [x] 1.4 GREEN tabla `sesiones`.
+- [x] 1.5 RED `cuentas.isolation.test.ts`. [AM-6]
+- [x] 1.6 GREEN tabla `cuentas`. **Sin las columnas de OAuth**: el
+      adaptador solo valida contra el esquema los campos que escribe
+      (`checkMissingFields` recorre `values`, no el modelo —
+      `drizzle-adapter/dist/index.mjs:286`), y el alta por correo no
+      escribe ninguna.
+- [x] 1.7 RED `verificaciones.isolation.test.ts` — caso sin `userId`,
       tenant no derivable por join. [AM-6]
-- [ ] 1.8 GREEN tabla `verificaciones`.
-- [ ] 1.9 RED `intentosAcceso.isolation.test.ts`. [AM-5]
-- [ ] 1.10 GREEN tabla `intentos_acceso` (`clave` sha256, `tipo`,
+- [x] 1.8 GREEN tabla `verificaciones`.
+- [x] 1.9 RED `intentosAcceso.isolation.test.ts`. [AM-5]
+- [x] 1.10 GREEN tabla `intentos_acceso` (`clave` sha256, `tipo`,
       `ocurridoEn`) + indice `(ayuntamientoId, clave, ocurridoEn)`.
-- [ ] 1.11 Migracion `drizzle/0001_auth.sql`: 5 tablas, ENABLE+FORCE RLS,
+- [x] 1.11 Migracion `drizzle/0001_auth.sql`: 5 tablas, ENABLE+FORCE RLS,
       politica `FOR ALL TO xula_app`, GRANT por tabla (`usuarios` sin
       DELETE). [T1, T4]
-- [ ] 1.12 Modificar `tenancy/esquema.ts`: exportar `tenantActual`.
-- [ ] 1.13 Confirmar los 5 tests en rojo con la politica quitada a mano
-      (prueba de que no son decorativos).
-- [ ] 1.14 `pnpm test:integration` en verde para las 5 tablas.
+- [x] 1.12 Modificar `tenancy/esquema.ts`: exportar `tenantActual`.
+- [x] 1.13 Confirmar los 5 tests en rojo con la politica alterada a mano.
+      **La provocacion util no es quitar la politica** —eso rompe hasta la
+      siembra y el rojo no dice nada— sino aflojar el `USING` a `true`
+      dejando el `WITH CHECK` intacto: la fuga de lectura sin ruido. Los
+      cinco archivos en rojo, 12 tests. Entre ellos, Motul borro la sesion
+      de Ticul y **consumio su token de restablecimiento**.
+- [x] 1.14 `pnpm test:integration` en verde para las 5 tablas.
 
 ## PR 2: shared/auth — instancia, contrasenia, sesion
 

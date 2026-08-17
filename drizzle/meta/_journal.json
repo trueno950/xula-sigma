@@ -8,6 +8,13 @@
       "when": 1786902442544,
       "tag": "0000_fundacion_multitenant",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786949546374,
+      "tag": "0001_auth",
+      "breakpoints": true
     }
   ]
 }
