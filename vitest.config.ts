@@ -43,11 +43,16 @@ export default defineConfig({
           ],
           environment: "node",
           fileParallelism: false,
-          // Una sola conexion en el pool. Sin esto, el test de fuga entre
-          // requests no prueba nada: la segunda consulta caeria en otra
-          // conexion y pasaria por casualidad, no porque `SET LOCAL` haya
-          // muerto con la transaccion.
-          env: { DB_POOL_MAX: "1" },
+          env: {
+            // Una sola conexion en el pool. Sin esto, el test de fuga entre
+            // requests no prueba nada: la segunda consulta caeria en otra
+            // conexion y pasaria por casualidad, no porque `SET LOCAL` haya
+            // muerto con la transaccion.
+            DB_POOL_MAX: "1",
+            // `instancia.ts` lo exige al importarse. Valor de prueba: el de
+            // produccion sale del entorno y nunca del repositorio.
+            BETTER_AUTH_SECRET: "secreto-de-prueba-no-usar-en-produccion",
+          },
         },
       },
     ],

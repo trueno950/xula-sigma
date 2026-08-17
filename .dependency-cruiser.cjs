@@ -70,6 +70,26 @@ module.exports = {
       to: { path: "^src/modules/[^/]+/(infrastructure|domain)/" },
     },
     {
+      name: "auth-solo-desde-shared-auth",
+      severity: "error",
+      comment:
+        "better-auth y @node-rs/argon2 solo se importan desde src/shared/auth. " +
+        "Es la primera de las tres capas que sostienen el aislamiento (diseno " +
+        "seccion 1): un import de better-auth en otro lado construiria una " +
+        "instancia fuera de manejarAuth, o sea fuera de withTenant, y ahi el " +
+        "SELECT por correo de sign-up.mjs:166 correria sin app.tenant fijado. " +
+        "Un comentario no lo impide; esto rompe el build.",
+      from: { pathNot: "^src/shared/auth/" },
+      // Se compara contra `resolved`, que con pnpm es
+      // `node_modules/.pnpm/@node-rs+argon2@2.1.0/node_modules/@node-rs/argon2/…`.
+      // Un patron anclado al nombre del paquete (`^@node-rs/argon2`) no
+      // matchea nunca y la regla queda decorativa: se comprobo provocandola.
+      to: {
+        dependencyTypes: ["npm"],
+        path: "node_modules/(better-auth|@node-rs/argon2)/",
+      },
+    },
+    {
       name: "sin-ciclos",
       severity: "error",
       from: {},

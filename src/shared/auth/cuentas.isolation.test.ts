@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   limpiar,
@@ -70,6 +70,24 @@ describe("aislamiento de cuentas", () => {
     );
 
     expect(motivo).toMatch(/foreign key|cuentas_usuario_tenant_fk/i);
+  });
+
+  it("una credencial no se puede borrar: se revoca con la baja del usuario", async () => {
+    const motivo = await motivoDeFalla(() =>
+      withTenant(motul, (tx) =>
+        tx.execute(sql`DELETE FROM cuentas WHERE ayuntamiento_id = ${motul}`),
+      ),
+    );
+
+    /**
+     * Igual que en `usuarios`: no lo frena una politica sino la ausencia
+     * del GRANT. `0001_auth.sql` lo declara como regla de negocio —la
+     * credencial se revoca dando de baja a la persona, no borrandola por
+     * separado— y hasta ahora era la unica de las cuatro asimetrias de
+     * GRANT sin test. Con `DELETE` concedido, la baja logica deja de ser
+     * el unico camino y nada falla.
+     */
+    expect(motivo).toMatch(/permission denied/i);
   });
 
   it("no se puede crear una credencial a nombre de otro municipio", async () => {

@@ -10,4 +10,21 @@ pnpm typecheck || exit 1
 pnpm vitest related --run --project unit --passWithNoTests || exit 1
 
 # Revision de IA contra AGENTS.md. Solo lee, no toca el repositorio.
-gga run || exit 1
+#
+# `--pr-mode` fuera de main, y no es aflojar la reja: es darle MAS contexto.
+# `gga run` a secas mira solo el diff staged, asi que en una rama de varios
+# commits reporta como ausente todo lo que ya se commiteo en la misma rama.
+# Paso de verdad en PR 2 de auth-rbac: dijo tres veces que `verificaciones`
+# no tenia test de aislamiento, con los cinco `*.isolation.test.ts`
+# commiteados y pasando. Y se contradijo entre corridas segun que archivos
+# cayeran en el diff.
+#
+# El modo staged solo es correcto en main, donde el commit anterior ya paso
+# por su propia revision. `--pr-mode` compara contra PR_BASE_BRANCH y ve la
+# rama entera; con ese contexto encontro cosas que el otro no vio, como la
+# FK de una sola columna que dejaba enlazar un usuario de otro municipio.
+if [ "$(git branch --show-current)" = "main" ]; then
+  gga run || exit 1
+else
+  gga run --pr-mode || exit 1
+fi

@@ -39,9 +39,8 @@ export {
  * runtime y en silencio. `usuarios` ademas evita `"user"`, reservada en
  * Postgres.
  *
- * **Better Auth no esta cableado todavia**: no se importa en `src/`. Lo
- * que estas tablas suponen del adaptador y de sus hooks lo sostiene la
- * prosa hasta la tarea 2.12 de PR 2.
+ * El adaptador las alcanza por `modelName` y no por el nombre del modelo
+ * de la libreria: ver `instancia.ts`.
  *
  * `sesiones` y `cuentas` cuelgan de `usuarios` por FK **compuesta**
  * `(user_id, ayuntamiento_id)`, no por `user_id` solo. Con la FK simple,
@@ -167,8 +166,14 @@ export const cuentas = pgTable(
  * correo.
  *
  * **Es el caso duro del aislamiento.** Sin `userId` el tenant no se deriva
- * por join: lo fijara el hook `create.before`, que aun no existe. Hoy la
- * unica defensa es la politica.
+ * por join: lo pone el hook `verification.create.before` de `instancia.ts`
+ * y lo obliga la politica. Si el mecanismo fallara en alguna tabla, falla
+ * primero aca.
+ *
+ * Lo que todavia no existe es un flujo que **escriba** aca:
+ * restablecimiento de contrasenia y verificacion de correo necesitan envio
+ * de correo. La tabla esta creada y sin usar, asi que el hook no se
+ * ejercita todavia (tarea 2.12b).
  */
 export const verificaciones = pgTable(
   "verificaciones",

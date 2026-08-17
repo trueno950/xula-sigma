@@ -166,12 +166,12 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
 
 ## PR 2: shared/auth — instancia, contrasenia, sesion
 
-- [ ] 2.1 RED `contrasenia.test.ts` — hash/verify argon2id, rechazo
+- [x] 2.1 RED `contrasenia.test.ts` — hash/verify argon2id, rechazo
       < 12 caracteres.
-- [ ] 2.2 GREEN `shared/auth/contrasenia.ts`.
-- [ ] 2.3 Regla dependency-cruiser: `better-auth` y `@node-rs/argon2`
+- [x] 2.2 GREEN `shared/auth/contrasenia.ts`.
+- [x] 2.3 Regla dependency-cruiser: `better-auth` y `@node-rs/argon2`
       solo se importan desde `shared/auth`.
-- [ ] 2.4 GREEN `shared/auth/instancia.ts` — `manejarAuth(request)` abre
+- [x] 2.4 GREEN `shared/auth/instancia.ts` — `manejarAuth(request)` abre
       `withTenant` y corre **todo** `auth.handler(request)` adentro; el
       Proxy enruta TODAS las operaciones al `tx` ambiente y `transaction`
       reusa esa misma transaccion en vez de anidar. Sin parametro de
@@ -179,40 +179,67 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
       **Corregido por el spike PR 0**: la version anterior permitia solo
       `.transaction()`, y eso rompe el acceso — `findOne` del adaptador usa
       `db` directo (`index.mjs:377`) y no pasa por la transaccion.
-- [ ] 2.5 GREEN `shared/auth/sesion.ts` — lee la sesion del request.
-- [ ] 2.6 GREEN `shared/auth/index.ts` — superficie publica (`ROLES`),
+- [x] 2.5 GREEN `shared/auth/sesion.ts` — lee la sesion del request.
+- [x] 2.6 GREEN `shared/auth/index.ts` — superficie publica (`ROLES`),
       no exporta la fabrica ni la bd.
-- [ ] 2.7 RED `accesoCruzado.integration.test.ts` — mismo correo y
+- [x] 2.7 RED `accesoCruzado.integration.test.ts` — mismo correo y
       contrasenia en Motul y Ticul, alta y acceso en ambos sentidos,
       cruzado falla. [AM-1, AM-4]
-- [ ] 2.8 GREEN `app/api/auth/[...all]/route.ts` delega a
+- [x] 2.8 GREEN `app/api/auth/[...all]/route.ts` delega a
       `auth.handler(request)` via `manejarAuth(request)`.
-- [ ] 2.9 RED+GREEN `databaseHooks.session.create.before` rechaza si
+- [x] 2.9 RED+GREEN `databaseHooks.session.create.before` rechaza si
       `bajaEn` no es nulo; los 4 rechazos (inexistente, contrasenia,
       baja, otro municipio) mapean al mismo `CREDENCIALES_INVALIDAS`.
       [AM-1, AM-2]
-- [ ] 2.10 `pnpm test` y `pnpm test:integration` en verde.
-- [ ] 2.11 RED+GREEN borde de error en `route.ts`: con el handler adentro
+- [x] 2.10 `pnpm test` y `pnpm test:integration` en verde.
+- [x] 2.11 RED+GREEN borde de error en `route.ts`: con el handler adentro
       de la transaccion, un error del adaptador **no** vuelve como
       respuesta de Better Auth — sale como excepcion de `manejarAuth`
       (verificado en el spike). El borde lo convierte en 500 generico y
       **no** deja salir el motivo: `new row violates row-level security
       policy for table "usuarios"` en un cuerpo de respuesta es filtracion
       de esquema. El detalle va a bitacora, no al cliente. [AM-2]
-- [ ] 2.12 RED+GREEN alta **por el adaptador**, no por Drizzle directo.
-      Ningun test del repo pasa hoy por el adaptador de Better Auth, asi
-      que dos suposiciones las sostiene solo la prosa:
-      a) `cuentas` omite las columnas de OAuth apoyada en que
-         `checkMissingFields` recorre `values` y no el modelo
-         (`drizzle-adapter/dist/index.mjs:286` en 1.6.29). Un bump de
-         version la rompe en silencio.
-      b) **`verificaciones` es el caso grave.** Sin `userId` su tenant no
-         se deriva por join: lo tiene que fijar `create.before`. Si ese
-         hook falta o lo fija mal, los tokens de restablecimiento quedan
-         con `ayuntamiento_id` ausente o equivocado. El test de aislamiento
-         inserta con el id explicito, asi que ese camino —el unico real en
-         produccion— no esta cubierto.
-      Se cubren los dos por el adaptador. [AM-1, AM-2]
+- [x] 2.12a `cuentas` — **cerrado por construccion, no por test.** El alta
+      dejo de pasar por el adaptador (ver correccion abajo): la escribe
+      `altaDePersona` con Drizzle. `checkMissingFields` solo corre en
+      `create`, y el adaptador ya no crea cuentas — lee y actualiza. La
+      suposicion sobre las columnas de OAuth dejo de existir.
+- [ ] 2.12b `verificaciones` — **sigue sin cubrir, y sin escritor.** Sin
+      `userId` su tenant no se deriva por join: lo tiene que fijar
+      `create.before`. Hoy ningun flujo escribe ahi: restablecimiento de
+      contrasenia y verificacion de correo necesitan envio de correo, que
+      no existe todavia. La tabla esta creada y sin usar. Cuando entre el
+      envio, el test tiene que ir por el adaptador y comprobar que el
+      `ayuntamiento_id` del token es el del request. [AM-1, AM-2]
+
+### Correccion de PR 2 — el registro publico estaba abierto
+
+Las tareas 2.4 y 2.7 daban por hecho que el alta iba por el endpoint de
+Better Auth. **Cablearlo asi deja `/api/auth/sign-up/email` abierto en cada
+subdominio**: cualquiera que visite `motul.dominio` se crea una cuenta en
+Motul y queda adentro del municipio. Contradice D7, donde el alta la
+autoriza alguien.
+
+Se apago con `emailAndPassword.disableSignUp` y el alta paso a
+`shared/auth/alta.ts` (`altaDePersona`), que corre bajo `withTenant` y
+exige un `rol` explicito, sin valor por defecto. Better Auth se queda con
+el acceso y la sesion. Hay test de que el endpoint responde distinto de 200
+y no deja fila.
+
+Lo destapo `rol` NOT NULL: el alta por el endpoint fallaba porque la
+libreria no conoce esa columna, y al preguntarme que rol asignarle quedo
+claro que la pregunta correcta era otra — quien tiene derecho a dar de
+alta.
+
+### Correccion de PR 2 — `modelName` faltaba en el diseno
+
+D3 dice que traducir los **campos** con `fields:` seria un mapa de mas. No
+menciona los **modelos**, y esos si necesitan mapa: el adaptador resuelve
+la tabla con `schema[model]`, busqueda por clave directa
+(`@better-auth/drizzle-adapter/dist/index.mjs:92` en 1.6.29). Sin
+`modelName: "usuarios"` busca `schema["user"]`, no lo encuentra, y **todo
+endpoint responde 500 con cuerpo vacio**. El motivo solo aparece pasandole
+un `logger` a `betterAuth`.
 
 ## PR 3: Roles — regla pura, verificacion, contexto
 
