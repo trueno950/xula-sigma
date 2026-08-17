@@ -116,18 +116,40 @@ jobs:
     name: Revision de IA
     runs-on: ubuntu-latest
     # Solo en PR y solo si hay credencial. Sin secreto no falla el build:
-    # la revision es una reja adicional, no la unica.
+    # la revision es una reja adicional, no la unica —en cada commit ya
+    # corrio por el hook de pre-commit.
+    #
+    # Eso lo decia este comentario desde el principio y **no estaba
+    # implementado**: el `if` miraba solo el tipo de evento, asi que sin
+    # `DEEPSEEK_API_KEY` el job corria igual y rompia el build. Se vio en el
+    # PR 1, la primera vez que CI llego a correr. La condicion va por paso y
+    # no por job porque el contexto `secrets` no existe en el `if` de un job;
+    # mapeada a `env` si se puede leer.
     if: github.event_name == 'pull_request'
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      # `brew` NO viene en los runners de Ubuntu; solo en los de macOS. El
+      # job moria con `brew: command not found` y codigo 127 antes de tocar
+      # una linea de codigo. `gga` se distribuye por tap de Homebrew y no es
+      # un script suelto —hace `source` de su `lib/`—, asi que no alcanza con
+      # bajar un archivo. Esta es la accion oficial de Homebrew.
+      - name: Instalar Homebrew
+        if: env.DEEPSEEK_API_KEY != ''
+        uses: Homebrew/actions/setup-homebrew@master
+
       - name: Instalar GGA y opencode
+        if: env.DEEPSEEK_API_KEY != ''
         run: |
           brew install gentleman-programming/tap/gga
           npm install -g opencode-ai
+
       - name: Revisar el PR
+        if: env.DEEPSEEK_API_KEY != ''
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           GGA_OPENCODE_VARIANT: high
         run: gga run --pr-mode --diff-only

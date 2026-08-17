@@ -1,4 +1,5 @@
 import { hashDeClave, verificarClave } from "./contrasenia";
+import { LARGO_MINIMO } from "./reglasDeClave";
 
 /**
  * La configuracion declarativa de Better Auth: lo que no depende de la
@@ -67,7 +68,13 @@ export const ACCESO_POR_CORREO = {
    * exige un rol explicito.
    */
   disableSignUp: true,
-  minPasswordLength: 12,
+  /**
+   * Importado, no repetido. `reglasDeClave.ts` existe justamente para que
+   * esta regla tenga una sola fuente: el formulario del cliente y esta
+   * configuracion aplican la misma. Un `12` escrito aca quedaba en 12 el
+   * dia que la politica sube a 14, y nada fallaba al divergir.
+   */
+  minPasswordLength: LARGO_MINIMO,
   password: {
     hash: hashDeClave,
     verify: ({ hash, password }: { hash: string; password: string }) =>

@@ -59,13 +59,12 @@ const sembrarIntentos = (
   ayuntamientoId: typeof motul,
   cuantos: number,
   haceMinutos: number,
-  correo = CORREO,
 ) =>
   withTenant(ayuntamientoId, (tx) =>
     tx.insert(intentosAcceso).values(
       Array.from({ length: cuantos }, () => ({
         ayuntamientoId,
-        clave: claveDe(correo),
+        clave: claveDe(CORREO),
         tipo: "correo" as const,
         ocurridoEn: new Date(Date.now() - haceMinutos * 60_000),
       })),

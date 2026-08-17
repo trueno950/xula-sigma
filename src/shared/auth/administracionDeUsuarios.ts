@@ -52,16 +52,14 @@ async function objetivoDe(
 /** Una fila de bitacora. Nunca lleva datos personales: solo ids. */
 const registrar = (
   tx: TransaccionTenant,
-  contexto: ContextoActual,
-  accion: string,
-  entidadId: string,
+  traza: { contexto: ContextoActual; accion: string; entidadId: string },
 ) =>
   tx.insert(bitacora).values({
-    ayuntamientoId: contexto.ayuntamientoId,
-    actor: contexto.usuario.id,
-    accion,
+    ayuntamientoId: traza.contexto.ayuntamientoId,
+    actor: traza.contexto.usuario.id,
+    accion: traza.accion,
     entidad: "usuarios",
-    entidadId,
+    entidadId: traza.entidadId,
   });
 
 /** Cambia la credencial de otra persona y deja traza en la misma transaccion. */
@@ -83,7 +81,11 @@ export function restablecerContrasenia(
       .set({ password: digest })
       .where(eq(cuentas.userId, objetivo.id));
 
-    await registrar(tx, contexto, "RESTABLECER_CONTRASENIA", objetivo.id);
+    await registrar(tx, {
+      contexto,
+      accion: "RESTABLECER_CONTRASENIA",
+      entidadId: objetivo.id,
+    });
   });
 }
 
@@ -111,6 +113,10 @@ export function darDeBajaUsuario(
       .set({ bajaEn: new Date() })
       .where(eq(usuarios.id, objetivo.id));
 
-    await registrar(tx, contexto, "BAJA_USUARIO", objetivo.id);
+    await registrar(tx, {
+      contexto,
+      accion: "BAJA_USUARIO",
+      entidadId: objetivo.id,
+    });
   });
 }
