@@ -112,7 +112,11 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
 - [x] 0.9 **Decision: sigue el diseno (PR 1).** 5/5 criterios y p95 22
       veces por debajo del umbral. No se activa el repliegue ni se abre la
       discusion de AsyncLocalStorage.
-- [ ] 0.10 Registrar el p95 en el ADR. Borrar la rama del spike.
+- [x] 0.10 Registrar el p95 en el ADR (seccion 7, tabla de medicion). La
+      rama del spike se etiqueto como `spike-auth-rbac-pr0` antes de
+      borrarla: los hallazgos ya viven en `design.md` y en el ADR, pero la
+      evidencia de como se obtuvieron es irrecuperable si se pierde el
+      codigo. Un tag la conserva sin dejar la rama estorbando.
 
 ## PR 1: Esquema, migracion, RLS, aislamiento
 
@@ -204,13 +208,29 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
       `altaDePersona` con Drizzle. `checkMissingFields` solo corre en
       `create`, y el adaptador ya no crea cuentas — lee y actualiza. La
       suposicion sobre las columnas de OAuth dejo de existir.
-- [ ] 2.12b `verificaciones` — **sigue sin cubrir, y sin escritor.** Sin
-      `userId` su tenant no se deriva por join: lo tiene que fijar
-      `create.before`. Hoy ningun flujo escribe ahi: restablecimiento de
-      contrasenia y verificacion de correo necesitan envio de correo, que
-      no existe todavia. La tabla esta creada y sin usar. Cuando entre el
-      envio, el test tiene que ir por el adaptador y comprobar que el
-      `ayuntamiento_id` del token es el del request. [AM-1, AM-2]
+- [x] 2.12b `verificaciones` — cubierto por
+      `verificacionPorAdaptador.integration.test.ts`. Sin `userId` su tenant
+      no se deriva por join: lo fija `create.before` y nada mas. El test no
+      espera al envio de correo porque no hace falta: la ruta real
+      (`api/routes/password.mjs:75`) llama `createVerificationValue`
+      **antes** de mandar el correo, asi que llamarla directo ejercita el
+      mismo `createWithHooks`. [AM-1, AM-2]
+
+      Lo que aparecio al escribirlo: `findVerificationValue` busca **solo
+      por `identifier`, sin filtro de tenant**
+      (`db/internal-adapter.mjs:600` en 1.6.29) y resuelve con
+      `createdAt desc limit 1`. Es el mismo agujero que `findUserByEmail`
+      —el que justifica la forma de `instancia.ts`— y hasta ahora nadie lo
+      habia provocado. Con la politica aflojada a `USING (true)`, **Motul
+      recibio el token de restablecimiento de Ticul** por ser el ultimo
+      escrito. Dos provocaciones lo dejan falseable: neutralizar el gancho
+      manda el INSERT sin tenant y `ExecWithCheckOptions` lo rechaza;
+      aflojar el `USING` pone en rojo los dos casos de aislamiento.
+
+      **Sigue sin escritor de produccion.** Restablecimiento de contrasenia
+      y verificacion de correo necesitan envio de correo, que no existe
+      todavia. Cuando entre, el gancho ya esta cubierto; lo que falta
+      probar entonces es la ruta HTTP completa.
 
 ### Correccion de PR 2 — el registro publico estaba abierto
 
