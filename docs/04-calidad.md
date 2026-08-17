@@ -142,7 +142,7 @@ const folio = { toString: () => "MOT-2026-000001" }; // ese es el sujeto del tes
 | Métrica | Objetivo |
 |---|---|
 | Líneas por función | ≤ 30 |
-| Líneas por archivo | ≤ 200 |
+| Líneas por archivo de código | ≤ 200 |
 | Profundidad de anidación | ≤ 3 |
 | Parámetros por función | ≤ 3 (más, va objeto) |
 | Duplicación | ≤ 3% |
@@ -253,6 +253,7 @@ Violarlo rompe el build. No es una convención que se recuerda.
 ### Legibilidad
 - [ ] ¿Se entiende sin que el autor lo explique?
 - [ ] Si no se entiende, se reescribe. No entra.
+- [ ] Los comentarios pasan los cinco filtros de la sección 8
 
 ### Tests
 - [ ] ¿Test escrito antes que el código?
@@ -291,3 +292,64 @@ más cuesta después.
 El último punto merece énfasis: un test que pasa siempre no es un test.
 Rompé la implementación a propósito una vez y confirmá que el test se pone
 en rojo.
+
+Y verificá que la provocación **cambió el comportamiento**, no solo el
+texto. Un reemplazo que aplica a medias —o uno semánticamente neutro, como
+`null ?? valor`— deja la suite en verde y se lee como "el test no sirve".
+Se confirma corriendo, no leyendo el `diff`.
+
+---
+
+## 8. Comentarios
+
+Un comentario no tiene CI. El día que deja de ser cierto, nada falla: sigue
+ahí, afirmando con autoridad algo que ya no pasa. Un comentario podrido es
+peor que ninguno, igual que un test que siempre pasa.
+
+Por eso se escribe el que carga algo que **ningún test puede cargar**, y
+solo ese.
+
+Cinco filtros, en orden. El primero que dispara decide:
+
+| # | Pregunta | Si es sí |
+|---|---|---|
+| 1 | ¿Reformula el código? | Se borra |
+| 2 | ¿Describe comportamiento? | Es un test, no un comentario |
+| 3 | ¿Ya está dicho en otro archivo? | Queda en uno, el resto apunta |
+| 4 | ¿Trae un hecho de afuera del archivo, o documenta una ausencia? | **Se queda**, es su único hogar |
+| 5 | ¿Cita una versión o línea de un paquete? | Test, o la versión al lado |
+
+**El filtro 4 es el que justifica los comentarios largos de este repo.** El
+código no puede explicar por qué una columna NO existe, ni por qué el
+`unique: true` de una librería nunca llega a Postgres. Sin el comentario,
+esos hechos no están en ningún lado.
+
+De ahí que **no se recorte por porcentaje**. Podar por métrica mata primero
+los largos, que son justamente los que cargan lo que no está escrito en
+ninguna otra parte. Se recorta por reformulación, por duplicación y por
+afirmación sin test.
+
+### Ejemplos
+
+Reformula (filtro 1) — se borra:
+
+```ts
+// Nulo mientras la persona sigue en el ayuntamiento.
+bajaEn: timestamp({ withTimezone: true }),
+```
+
+Afirma comportamiento (filtro 2) — es un test:
+
+```ts
+// Es un 404, no un 403: confirmar que existe ya seria informacion.
+throw new TenantNoResueltoError(...);
+```
+
+Único hogar (filtro 4) — se queda, midan lo que midan:
+
+```ts
+// El GUC no vuelve a NULL tras el COMMIT: vuelve a CADENA VACIA, y
+// `''::uuid` lanza. Verificado contra Postgres 18. Sin el NULLIF, toda
+// consulta por una conexion del pool ya usada revienta al evaluar la
+// politica.
+```

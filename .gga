@@ -21,7 +21,7 @@ FILE_PATTERNS="*.ts,*.tsx,*.sql"
 EXCLUDE_PATTERNS="*.d.ts"
 
 # Reglas contra las que se revisa.
-# Condensado a proposito: las 12 reglas + los 22 antipatrones.
+# Condensado a proposito: las 12 reglas + los 25 antipatrones.
 # No se le pasa docs/ completo (2000+ lineas por revision).
 RULES_FILE="AGENTS.md"
 

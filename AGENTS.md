@@ -56,12 +56,15 @@ toca datos, marcá el hallazgo.
 | 14 | `try/catch` que traga el error | Manejo específico o re-throw |
 | 15 | Más de 3 niveles de anidación | Early returns |
 | 16 | Nombres vagos: `data`, `temp`, `info` | Nombre del concepto |
-| 17 | Comentario que explica código obvio | Código autoexplicativo |
+| 17 | Comentario que reformula el código | Borrarlo |
 | 18 | `"use client"` por defecto | Server Component salvo justificación |
 | 19 | Entrada sin validar con Zod | Esquema Zod en el borde |
 | 20 | Acentos o eñes en identificadores | Sin diacríticos |
 | 21 | Módulo creado con capas incompletas | Las cuatro capas desde el inicio |
 | 22 | Dependencia nueva sin justificar | Justificar en el PR |
+| 23 | La misma explicación en dos archivos | Dejarla en uno, el resto apunta |
+| 24 | Comentario que afirma comportamiento sin test | Escribir el test |
+| 25 | Cita a línea de un paquete sin la versión | `archivo:línea` + versión |
 
 ---
 
@@ -157,7 +160,7 @@ de acceso. Se referencia por ID.
 | Métrica | Límite |
 |---|---|
 | Líneas por función | ≤ 30 |
-| Líneas por archivo | ≤ 200 |
+| Líneas por archivo de código | ≤ 200 |
 | Profundidad de anidación | ≤ 3 |
 | Parámetros por función | ≤ 3 (más, va objeto) |
 
@@ -175,10 +178,36 @@ de acceso. Se referencia por ID.
 
 ---
 
+## Comentarios
+
+Un comentario no tiene CI. El día que deja de ser cierto nada falla: sigue
+ahí, afirmando con autoridad algo que ya no pasa. Por eso se escribe el que
+carga algo que ningún test puede cargar, y solo ese.
+
+Cinco filtros, en orden. El primero que dispara decide:
+
+1. **¿Reformula el código?** → hallazgo. Se borra.
+2. **¿Describe comportamiento?** → hallazgo. Es un test, no un comentario.
+3. **¿Ya está dicho en otro archivo?** → hallazgo. Queda en uno, el resto
+   apunta ahí.
+4. **¿Trae un hecho de afuera del archivo** —línea de un bundle,
+   comportamiento de Postgres, regla de negocio— **o documenta una
+   ausencia?** → NO es hallazgo, por largo que sea. Es su único hogar.
+5. **¿Cita una versión o una línea de un paquete?** → hallazgo si no lleva
+   la versión al lado.
+
+---
+
 ## Qué NO es hallazgo
 
 No marques:
 
+- **Un comentario largo que pasa el filtro 4.** El código no puede explicar
+  por qué una columna NO existe, ni por qué un `unique` de una librería
+  nunca llega a Postgres. Ese comentario es la única copia de ese hecho:
+  marcarlo por extenso o por densidad borra lo que no está en ningún otro
+  lado. Se marca por reformular, duplicar o afirmar sin test — nunca por
+  largo. La proporción de comentarios de un archivo **no** es hallazgo.
 - Preferencias de estilo que Biome ya formatea
 - Falta de abstracción especulativa. La duplicación es más barata que la
   abstracción equivocada: se duplica la primera vez, se aguanta la segunda,

@@ -512,7 +512,7 @@ archivo de reglas del proyecto, así que revisa lo generado contra nuestros
 propios antipatrones antes de que entren.
 
 **Archivo de reglas: `AGENTS.md` en la raíz**, condensado. Las 12 reglas de
-[docs/README.md](../README.md) más la tabla de 22 antipatrones de
+[docs/README.md](../README.md) más la tabla de 25 antipatrones de
 [03-antipatrones.md](../03-antipatrones.md).
 
 No se le pasa `docs/` completo: son más de 2,000 líneas por revisión, sale

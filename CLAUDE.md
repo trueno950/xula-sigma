@@ -73,6 +73,36 @@ Suites: `unit` corre sin base de datos. `integration` —que incluye los
 - Identificadores sin acentos ni eñes: `campanias`, `montoMinimo`
 - Comentarios, documentación y commits en español
 
+### Comentarios
+Un comentario no tiene CI. El día que deja de ser cierto, nada falla —
+sigue ahí, afirmando con autoridad algo que ya no pasa. Por eso se escribe
+el que carga algo que ningún test puede cargar, y solo ese.
+
+Cinco filtros, en orden. El primero que dispare decide:
+
+1. **¿Reformula el código?** → se borra. `// nulo mientras sigue activo`
+   sobre una columna nullable llamada `bajaEn` no informa nada.
+2. **¿Describe comportamiento?** → es un test, no un comentario. Un
+   `// esto devuelve 404, no 403` sin test al lado es una intención, no
+   una garantía.
+3. **¿Ya está dicho en otro archivo?** → se deja en UN lugar y el resto
+   apunta ahí. Dos copias de una explicación divergen; la que quede vieja
+   no avisa.
+4. **¿Trae un hecho de afuera del archivo** —línea de un bundle,
+   comportamiento de Postgres, regla de negocio— **o documenta una
+   ausencia?** → se queda. Es su único hogar. El código no puede explicar
+   por qué una columna NO existe.
+5. **¿Cita una versión o una línea de un paquete?** → o se vuelve test, o
+   lleva la versión escrita al lado. `index.mjs:286` se mueve solo en el
+   próximo bump y nadie se entera.
+
+El filtro 4 es el que justifica los comentarios largos de este repo, y no
+se recorta por porcentaje: podar por métrica mata primero los largos, que
+son justamente los que cargan lo que no está en ningún otro lado.
+
+Ejemplos y detalle: `docs/04-calidad.md` sección 8. GGA lo aplica vía
+`AGENTS.md` (antipatrones 17, 23, 24 y 25).
+
 ### Datos sensibles
 - Motivo de traslado y tipo de asunto del juzgado: **categorías cerradas,
   nunca texto libre**. Un diagnóstico o un pleito familiar en un campo
