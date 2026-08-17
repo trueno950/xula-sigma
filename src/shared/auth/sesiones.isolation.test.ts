@@ -66,6 +66,30 @@ describe("aislamiento de sesiones", () => {
     expect(motivo).toMatch(/row-level security/i);
   });
 
+  it("una sesion de Motul no puede apuntar a un usuario de Ticul", async () => {
+    /**
+     * El caso que los otros cuatro no cubren: `ayuntamiento_id` **propio**
+     * —o sea que pasa el `WITH CHECK` de RLS— con `user_id` ajeno.
+     *
+     * RLS no lo ve: solo compara el tenant de la fila contra el activo, y
+     * ahi coinciden. Lo tiene que impedir la FK compuesta contra
+     * `usuarios(id, ayuntamiento_id)`. Con la FK de una sola columna la
+     * base aceptaba la fila sin chistar.
+     */
+    const motivo = await motivoDeFalla(() =>
+      withTenant(motul, (tx) =>
+        tx.insert(sesiones).values({
+          ayuntamientoId: motul,
+          userId: semillas.enTicul.usuarioId,
+          token: "token-de-usuario-ajeno",
+          expiresAt: new Date(Date.now() + 3_600_000),
+        }),
+      ),
+    );
+
+    expect(motivo).toMatch(/foreign key|sesiones_usuario_tenant_fk/i);
+  });
+
   it("cerrar sesion desde Motul no borra la sesion de Ticul", async () => {
     // `sesiones` SI tiene GRANT de DELETE: cerrar sesion es borrar la fila.
     // Por eso el borrado cruzado no falla — simplemente no alcanza ninguna

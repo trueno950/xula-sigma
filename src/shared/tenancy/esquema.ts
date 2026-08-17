@@ -125,12 +125,21 @@ export const bitacora = pgTable(
  * referencia.
  */
 export function columnaTenant() {
-  // `$type` propaga la marca hasta el resultado de la consulta.
   return uuid()
     .notNull()
     .$type<AyuntamientoId>()
     .references(() => ayuntamientos.id);
 }
+
+/**
+ * CHECK que cierra una columna a un conjunto de valores.
+ *
+ * Un conjunto cerrado se declara **dos veces**: el `$type` lo cierra en
+ * TypeScript y este CHECK en Postgres. No es redundancia — el `$type` se
+ * evade con un cast, y la base es la reja que queda.
+ */
+export const enumerado = (columna: string, valores: readonly string[]) =>
+  sql.raw(`${columna} IN (${valores.map((v) => `'${v}'`).join(", ")})`);
 
 export function politicaTenant(tabla: string) {
   return pgPolicy(`${tabla}_tenant`, {

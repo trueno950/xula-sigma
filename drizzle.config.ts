@@ -19,7 +19,15 @@ if (!url) {
 
 export default defineConfig({
   dialect: "postgresql",
-  // Glob: cada modulo aporta su propio esquema conforme se construye.
+  /**
+   * Glob: cada modulo aporta su propio esquema conforme se construye.
+   *
+   * **Solo entra lo que se llame `esquema.ts`.** Una tabla definida en
+   * otro archivo del modulo existe en TypeScript, compila, pasa el
+   * typecheck — y no llega nunca a la migracion. `db:generate` no falla:
+   * anuncia un conteo de tablas menor y sigue. Si un esquema se parte en
+   * varios archivos, `esquema.ts` tiene que reexportar los demas.
+   */
   schema: ["./src/shared/**/esquema.ts", "./src/modules/**/esquema.ts"],
   out: "./drizzle",
   dbCredentials: { url },

@@ -50,6 +50,28 @@ describe("aislamiento de cuentas", () => {
     expect(filas).toHaveLength(0);
   });
 
+  it("una credencial de Motul no puede apuntar a un usuario de Ticul", async () => {
+    /**
+     * Mismo hueco que en `sesiones`, y aca es peor: la fila lleva el hash
+     * de una contrasenia. Una credencial de Motul colgada de una persona
+     * de Ticul no es solo inconsistencia, es una credencial sin dueno
+     * legible desde ningun municipio.
+     */
+    const motivo = await motivoDeFalla(() =>
+      withTenant(motul, (tx) =>
+        tx.insert(cuentas).values({
+          ayuntamientoId: motul,
+          userId: semillas.enTicul.usuarioId,
+          accountId: semillas.enTicul.usuarioId,
+          providerId: "credential",
+          password: "hash-de-usuario-ajeno",
+        }),
+      ),
+    );
+
+    expect(motivo).toMatch(/foreign key|cuentas_usuario_tenant_fk/i);
+  });
+
   it("no se puede crear una credencial a nombre de otro municipio", async () => {
     const motivo = await motivoDeFalla(() =>
       withTenant(motul, (tx) =>

@@ -45,13 +45,11 @@ export type TransaccionTenant = Parameters<
 >[0];
 
 /**
- * Ejecuta `trabajo` con el tenant fijado, dentro de una transaccion.
- *
- * Es el unico acceso a base de datos del sistema. Toda consulta sale de
+ * El unico acceso a base de datos del sistema. Toda consulta sale de
  * adentro de esta funcion o no sale.
  *
- * @param ayuntamientoId Viene SIEMPRE del contexto resuelto en servidor.
- *   Nunca del body, del query string, ni de nada que el cliente controle.
+ * @param ayuntamientoId Viene SIEMPRE del contexto resuelto en servidor
+ *   (ver `ayuntamientoId.ts`).
  */
 export async function withTenant<T>(
   ayuntamientoId: AyuntamientoId,
@@ -135,10 +133,8 @@ export async function resolverAyuntamientoPorSubdominio(
 }
 
 /**
- * Cierra el pool para que el proceso pueda terminar. En produccion el pool
- * vive lo que vive el contenedor; esto es para los tests.
- *
- * Cierra, no consulta: no abre ninguna ruta alternativa a la base.
+ * Para los tests: en produccion el pool vive lo que vive el contenedor.
+ * Cierra, no consulta — no abre una ruta alternativa a la base.
  */
 export async function cerrarConexion(): Promise<void> {
   await cliente.end();

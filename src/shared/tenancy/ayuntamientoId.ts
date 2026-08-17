@@ -30,10 +30,9 @@ export function esAyuntamientoId(valor: string): valor is AyuntamientoId {
 }
 
 /**
- * Convierte una cadena en `AyuntamientoId`, o lanza.
- *
  * El valor tiene que venir del contexto resuelto en servidor. Nunca del
- * body, del query string, ni de un parametro de ruta.
+ * body, del query string, ni de un parametro de ruta. Es el invariante 1,
+ * y este es su enunciado canonico: el resto del sistema apunta aca.
  */
 export function comoAyuntamientoId(valor: string): AyuntamientoId {
   if (!esAyuntamientoId(valor)) {

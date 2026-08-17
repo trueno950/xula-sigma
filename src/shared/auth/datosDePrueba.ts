@@ -2,13 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { motul, ticul } from "@/shared/tenancy/municipiosDePrueba";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import {
-  cuentas,
-  intentosAcceso,
-  sesiones,
-  usuarios,
-  verificaciones,
-} from "./esquema";
+import { cuentas, sesiones, usuarios, verificaciones } from "./esquema";
+import { intentosAcceso } from "./intentosAcceso";
 
 /**
  * Siembra compartida de los cinco tests de aislamiento de auth.

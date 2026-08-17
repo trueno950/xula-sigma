@@ -1,49 +1,62 @@
-import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  foreignKey,
   index,
   pgTable,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { columnaTenant, politicaTenant } from "@/shared/tenancy/esquema";
+import {
+  columnaTenant,
+  enumerado,
+  politicaTenant,
+} from "@/shared/tenancy/esquema";
 import { ROLES, type Rol } from "./roles";
 
 /**
- * Las cinco tablas de autenticacion. Cuatro son de Better Auth y la quinta
- * es nuestra (`intentos_acceso`, para la limitacion de ritmo). Venir de una
- * libreria no exime de nada: las cinco llevan `ayuntamiento_id`, `FORCE ROW
- * LEVEL SECURITY`, politica, `GRANT` y su test de aislamiento.
- *
- * **Nombres de tabla en español, campos de la libreria en ingles.**
- * `usuarios` ademas evita `"user"`, palabra reservada en Postgres.
- * Traducir los campos con `fields:` seria un mapa mas donde un desajuste
- * falla en runtime y en silencio.
+ * Reexportado, y no por comodidad: `drizzle.config.ts` solo mira archivos
+ * llamados `esquema.ts`. Una tabla definida en otro archivo existe en
+ * TypeScript y **nunca llega a la migracion** — se comprobo: `db:generate`
+ * anuncio "6 tables" en vez de 7 y siguio sin error.
  */
-
-/** Las dos ventanas de la limitacion de ritmo se cuentan por separado. */
-export const TIPOS_INTENTO = ["correo", "ip"] as const;
-export type TipoIntento = (typeof TIPOS_INTENTO)[number];
+export {
+  intentosAcceso,
+  TIPOS_INTENTO,
+  type TipoIntento,
+} from "./intentosAcceso";
 
 /**
- * Un conjunto cerrado se declara **dos veces**: el `$type` lo cierra en
- * TypeScript y el CHECK en Postgres. No es redundancia — el `$type` se
- * evade con un cast, y la base es la reja que queda.
+ * Las cuatro tablas que impone Better Auth. La quinta —`intentos_acceso`,
+ * que es nuestra— vive en su propio archivo. Venir de una libreria no
+ * exime del aislamiento.
+ *
+ * Nombres de tabla en espanol, campos de la libreria en ingles: traducir
+ * los campos con `fields:` seria un mapa mas donde un desajuste falla en
+ * runtime y en silencio. `usuarios` ademas evita `"user"`, reservada en
+ * Postgres.
+ *
+ * **Better Auth no esta cableado todavia**: no se importa en `src/`. Lo
+ * que estas tablas suponen del adaptador y de sus hooks lo sostiene la
+ * prosa hasta la tarea 2.12 de PR 2.
+ *
+ * `sesiones` y `cuentas` cuelgan de `usuarios` por FK **compuesta**
+ * `(user_id, ayuntamiento_id)`, no por `user_id` solo. Con la FK simple,
+ * una fila con `ayuntamiento_id` propio y `user_id` ajeno pasa el
+ * `WITH CHECK` de RLS —que solo mira el tenant de la fila— y la base la
+ * acepta. Verificado: entraba.
  */
-const enumerado = (columna: string, valores: readonly string[]) =>
-  sql.raw(`${columna} IN (${valores.map((v) => `'${v}'`).join(", ")})`);
 
 /**
  * Personas que operan el sistema. El hash de la contrasenia **no vive
  * aca**: vive en `cuentas.password`, en la fila con
  * `providerId: "credential"`.
  *
- * `bajaEn` y nunca `DELETE`: se da de baja a una persona, no se la borra —
- * un borrado real deja huerfanas las constancias que firmo. La prohibicion
- * es la ausencia del GRANT, no una politica que alguien tenga que escribir.
+ * `bajaEn` y nunca `DELETE`. Los GRANT de las cinco tablas no son
+ * uniformes y `0001_auth.sql` explica cada diferencia.
  */
 export const usuarios = pgTable(
   "usuarios",
@@ -58,7 +71,6 @@ export const usuarios = pgTable(
     // tipeado no falla: crea una persona con permisos equivocados y nadie
     // se entera.
     rol: text().$type<Rol>().notNull(),
-    // Nulo mientras la persona sigue en el ayuntamiento.
     bajaEn: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -69,13 +81,17 @@ export const usuarios = pgTable(
      * Unicidad **compuesta**, no global.
      *
      * El mismo correo en dos municipios son dos personas distintas. Better
-     * Auth marca `email` como `unique: true` hardcodeado en
-     * `get-tables.mjs:142`, pero su adaptador de Drizzle no emite DDL
-     * (verificado: cero `CREATE TABLE` en su bundle), asi que ese `unique`
+     * Auth marca `email` como `unique: true` hardcodeado
+     * (`get-tables.mjs:142` en 1.6.29), pero su adaptador de Drizzle no
+     * emite DDL —cero `CREATE TABLE` en su bundle—, asi que ese `unique`
      * nunca llega a Postgres. La restriccion real es esta.
      */
     uniqueIndex("usuarios_tenant_email_idx").on(t.ayuntamientoId, t.email),
     check("usuarios_rol_valido", enumerado("rol", ROLES)),
+    // Destino de las FK compuestas de `sesiones` y `cuentas`. Postgres
+    // exige una restriccion UNIQUE sobre las columnas referenciadas; con
+    // `id` ya siendo PK, esta no restringe nada nuevo.
+    unique("usuarios_id_tenant_key").on(t.id, t.ayuntamientoId),
     politicaTenant("usuarios"),
   ],
 ).enableRLS();
@@ -90,9 +106,7 @@ export const sesiones = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     ayuntamientoId: columnaTenant(),
-    userId: uuid()
-      .notNull()
-      .references(() => usuarios.id),
+    userId: uuid().notNull(),
     token: text().notNull(),
     expiresAt: timestamp({ withTimezone: true }).notNull(),
     ipAddress: text(),
@@ -103,6 +117,11 @@ export const sesiones = pgTable(
   (t) => [
     index("sesiones_tenant_idx").on(t.ayuntamientoId),
     uniqueIndex("sesiones_token_idx").on(t.token),
+    foreignKey({
+      columns: [t.userId, t.ayuntamientoId],
+      foreignColumns: [usuarios.id, usuarios.ayuntamientoId],
+      name: "sesiones_usuario_tenant_fk",
+    }),
     politicaTenant("sesiones"),
   ],
 ).enableRLS();
@@ -115,26 +134,30 @@ export const sesiones = pgTable(
  * `scope`, los dos `expiresAt` de token). Better Auth las declara en su
  * modelo `account`, pero su adaptador solo valida los campos que
  * **escribe** (`checkMissingFields` recorre `values`, no el modelo —
- * `drizzle-adapter/dist/index.mjs:286`) y el alta por correo no escribe
- * ninguna. El dia que entre OAuth, entra con sus columnas.
+ * `drizzle-adapter/dist/index.mjs:286` en 1.6.29) y el alta por correo no
+ * escribe ninguna. El dia que entre OAuth, entra con sus columnas.
  */
 export const cuentas = pgTable(
   "cuentas",
   {
     id: uuid().primaryKey().defaultRandom(),
     ayuntamientoId: columnaTenant(),
-    userId: uuid()
-      .notNull()
-      .references(() => usuarios.id),
+    userId: uuid().notNull(),
     accountId: text().notNull(),
     providerId: text().notNull(),
-    // El hash argon2id. Nulo para proveedores que no usan contrasenia.
+    // El hash argon2id, no la contrasenia. El nombre lo impone el modelo
+    // de Better Auth; renombrarlo obligaria a un mapa de campos.
     password: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("cuentas_tenant_idx").on(t.ayuntamientoId),
+    foreignKey({
+      columns: [t.userId, t.ayuntamientoId],
+      foreignColumns: [usuarios.id, usuarios.ayuntamientoId],
+      name: "cuentas_usuario_tenant_fk",
+    }),
     politicaTenant("cuentas"),
   ],
 ).enableRLS();
@@ -143,9 +166,9 @@ export const cuentas = pgTable(
  * Tokens de un solo uso: restablecimiento de contrasenia, verificacion de
  * correo.
  *
- * **Es el caso duro del aislamiento.** No tiene `userId`, asi que su tenant
- * no se puede derivar por join: lo pone el hook `create.before` y lo obliga
- * la politica. Si el mecanismo fallara en alguna tabla, falla primero aca.
+ * **Es el caso duro del aislamiento.** Sin `userId` el tenant no se deriva
+ * por join: lo fijara el hook `create.before`, que aun no existe. Hoy la
+ * unica defensa es la politica.
  */
 export const verificaciones = pgTable(
   "verificaciones",
@@ -161,39 +184,5 @@ export const verificaciones = pgTable(
   (t) => [
     index("verificaciones_tenant_idx").on(t.ayuntamientoId, t.identifier),
     politicaTenant("verificaciones"),
-  ],
-).enableRLS();
-
-/**
- * Intentos de acceso, para la ventana corrediza de limitacion de ritmo.
- *
- * Se guarda `sha256(valor + pimienta)`, **nunca el correo ni la IP en
- * claro**: es una tabla de conteo, no un registro de quien intento entrar.
- *
- * **No existe columna `bloqueadoHasta`, y es a proposito.** Se limita el
- * ritmo, nunca se bloquea la cuenta: un bloqueo persistente se puede usar
- * para dejar afuera a un companiero justo el dia que hay que emitir. Sin la
- * columna, no se puede introducir por configuracion.
- */
-export const intentosAcceso = pgTable(
-  "intentos_acceso",
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    ayuntamientoId: columnaTenant(),
-    clave: text().notNull(),
-    // Un valor fuera del conjunto —`"email"`, `"IP"`— abriria una tercera
-    // ventana que nadie cuenta: el limitador dejaria de limitar sin que
-    // nada falle. De ahi el CHECK.
-    tipo: text().$type<TipoIntento>().notNull(),
-    ocurridoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [
-    index("intentos_acceso_ventana_idx").on(
-      t.ayuntamientoId,
-      t.clave,
-      t.ocurridoEn,
-    ),
-    check("intentos_acceso_tipo_valido", enumerado("tipo", TIPOS_INTENTO)),
-    politicaTenant("intentos_acceso"),
   ],
 ).enableRLS();

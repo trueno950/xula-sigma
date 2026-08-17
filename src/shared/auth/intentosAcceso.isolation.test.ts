@@ -10,7 +10,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { type SemillasAuth, sembrarAuth } from "./datosDePrueba";
-import { intentosAcceso, type TipoIntento } from "./esquema";
+import { intentosAcceso, type TipoIntento } from "./intentosAcceso";
 
 let semillas: SemillasAuth;
 

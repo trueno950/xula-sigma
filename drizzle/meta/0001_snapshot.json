@@ -1,5 +1,5 @@
 {
-  "id": "2f2e7ca3-4f98-417e-9af8-576cbfd74dc8",
+  "id": "bfcff252-418c-4d27-9529-566446b3a2b0",
   "prevId": "f21e0741-c525-452f-ab84-d3af7e7dd17c",
   "version": "7",
   "dialect": "postgresql",
@@ -91,15 +91,17 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "cuentas_user_id_usuarios_id_fk": {
-          "name": "cuentas_user_id_usuarios_id_fk",
+        "cuentas_usuario_tenant_fk": {
+          "name": "cuentas_usuario_tenant_fk",
           "tableFrom": "cuentas",
           "tableTo": "usuarios",
           "columnsFrom": [
-            "user_id"
+            "user_id",
+            "ayuntamiento_id"
           ],
           "columnsTo": [
-            "id"
+            "id",
+            "ayuntamiento_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -333,15 +335,17 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "sesiones_user_id_usuarios_id_fk": {
-          "name": "sesiones_user_id_usuarios_id_fk",
+        "sesiones_usuario_tenant_fk": {
+          "name": "sesiones_usuario_tenant_fk",
           "tableFrom": "sesiones",
           "tableTo": "usuarios",
           "columnsFrom": [
-            "user_id"
+            "user_id",
+            "ayuntamiento_id"
           ],
           "columnsTo": [
-            "id"
+            "id",
+            "ayuntamiento_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -487,7 +491,16 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "usuarios_id_tenant_key": {
+          "name": "usuarios_id_tenant_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "ayuntamiento_id"
+          ]
+        }
+      },
       "policies": {
         "usuarios_tenant": {
           "name": "usuarios_tenant",

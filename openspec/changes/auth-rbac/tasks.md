@@ -199,6 +199,20 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
       **no** deja salir el motivo: `new row violates row-level security
       policy for table "usuarios"` en un cuerpo de respuesta es filtracion
       de esquema. El detalle va a bitacora, no al cliente. [AM-2]
+- [ ] 2.12 RED+GREEN alta **por el adaptador**, no por Drizzle directo.
+      Ningun test del repo pasa hoy por el adaptador de Better Auth, asi
+      que dos suposiciones las sostiene solo la prosa:
+      a) `cuentas` omite las columnas de OAuth apoyada en que
+         `checkMissingFields` recorre `values` y no el modelo
+         (`drizzle-adapter/dist/index.mjs:286` en 1.6.29). Un bump de
+         version la rompe en silencio.
+      b) **`verificaciones` es el caso grave.** Sin `userId` su tenant no
+         se deriva por join: lo tiene que fijar `create.before`. Si ese
+         hook falta o lo fija mal, los tokens de restablecimiento quedan
+         con `ayuntamiento_id` ausente o equivocado. El test de aislamiento
+         inserta con el id explicito, asi que ese camino —el unico real en
+         produccion— no esta cubierto.
+      Se cubren los dos por el adaptador. [AM-1, AM-2]
 
 ## PR 3: Roles — regla pura, verificacion, contexto
 

@@ -44,6 +44,7 @@ CREATE TABLE "usuarios" (
 	"baja_en" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "usuarios_id_tenant_key" UNIQUE("id","ayuntamiento_id"),
 	CONSTRAINT "usuarios_rol_valido" CHECK (rol IN ('SUPER_ADMIN', 'ADMIN_MUNICIPAL', 'OPERADOR', 'CONSULTA'))
 );
 --> statement-breakpoint
@@ -60,10 +61,10 @@ CREATE TABLE "verificaciones" (
 --> statement-breakpoint
 ALTER TABLE "verificaciones" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "cuentas" ADD CONSTRAINT "cuentas_ayuntamiento_id_ayuntamientos_id_fk" FOREIGN KEY ("ayuntamiento_id") REFERENCES "public"."ayuntamientos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "cuentas" ADD CONSTRAINT "cuentas_user_id_usuarios_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."usuarios"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "cuentas" ADD CONSTRAINT "cuentas_usuario_tenant_fk" FOREIGN KEY ("user_id","ayuntamiento_id") REFERENCES "public"."usuarios"("id","ayuntamiento_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "intentos_acceso" ADD CONSTRAINT "intentos_acceso_ayuntamiento_id_ayuntamientos_id_fk" FOREIGN KEY ("ayuntamiento_id") REFERENCES "public"."ayuntamientos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sesiones" ADD CONSTRAINT "sesiones_ayuntamiento_id_ayuntamientos_id_fk" FOREIGN KEY ("ayuntamiento_id") REFERENCES "public"."ayuntamientos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sesiones" ADD CONSTRAINT "sesiones_user_id_usuarios_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."usuarios"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sesiones" ADD CONSTRAINT "sesiones_usuario_tenant_fk" FOREIGN KEY ("user_id","ayuntamiento_id") REFERENCES "public"."usuarios"("id","ayuntamiento_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "usuarios" ADD CONSTRAINT "usuarios_ayuntamiento_id_ayuntamientos_id_fk" FOREIGN KEY ("ayuntamiento_id") REFERENCES "public"."ayuntamientos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "verificaciones" ADD CONSTRAINT "verificaciones_ayuntamiento_id_ayuntamientos_id_fk" FOREIGN KEY ("ayuntamiento_id") REFERENCES "public"."ayuntamientos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "cuentas_tenant_idx" ON "cuentas" USING btree ("ayuntamiento_id");--> statement-breakpoint
@@ -77,9 +78,7 @@ CREATE POLICY "cuentas_tenant" ON "cuentas" AS PERMISSIVE FOR ALL TO "xula_app" 
 CREATE POLICY "intentos_acceso_tenant" ON "intentos_acceso" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
 CREATE POLICY "sesiones_tenant" ON "sesiones" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
 CREATE POLICY "usuarios_tenant" ON "usuarios" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
-CREATE POLICY "verificaciones_tenant" ON "verificaciones" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
-
--- ---------------------------------------------------------------------
+CREATE POLICY "verificaciones_tenant" ON "verificaciones" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);-- ---------------------------------------------------------------------
 -- Lo que drizzle-kit no emite.
 --
 -- FORCE y GRANT van en el MISMO archivo que crea las tablas, no en uno
