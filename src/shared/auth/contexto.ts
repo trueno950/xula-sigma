@@ -1,3 +1,4 @@
+import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import { ROLES, type Rol } from "./roles";
 import { sesionActual } from "./sesion";
@@ -20,7 +21,7 @@ import { sesionActual } from "./sesion";
  */
 
 export type ContextoActual = {
-  ayuntamientoId: string;
+  ayuntamientoId: AyuntamientoId;
   usuario: { id: string; rol: Rol };
 };
 

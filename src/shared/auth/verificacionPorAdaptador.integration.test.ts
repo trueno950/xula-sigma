@@ -28,8 +28,8 @@ import { verificaciones } from "./esquema";
  * Todavia no hay flujo de produccion que escriba aca —restablecimiento de
  * contrasenia necesita envio de correo, que no existe— asi que el test
  * llama `createVerificationValue` directo. Es la misma funcion que usa la
- * ruta real: `api/routes/password.mjs:75` la invoca **antes** de mandar el
- * correo. Cuando entre el envio, el gancho ya esta cubierto.
+ * ruta real: `api/routes/password.mjs:75` (en 1.6.29) la invoca **antes**
+ * de mandar el correo. Cuando entre el envio, el gancho ya esta cubierto.
  */
 
 let tenantDelRequest: { id: AyuntamientoId; subdominio: string };

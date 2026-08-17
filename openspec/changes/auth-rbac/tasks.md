@@ -212,7 +212,7 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
       `verificacionPorAdaptador.integration.test.ts`. Sin `userId` su tenant
       no se deriva por join: lo fija `create.before` y nada mas. El test no
       espera al envio de correo porque no hace falta: la ruta real
-      (`api/routes/password.mjs:75`) llama `createVerificationValue`
+      (`api/routes/password.mjs:75` en 1.6.29) llama `createVerificationValue`
       **antes** de mandar el correo, asi que llamarla directo ejercita el
       mismo `createWithHooks`. [AM-1, AM-2]
 
@@ -291,22 +291,46 @@ un `logger` a `betterAuth`.
       que hace fallar a `parseInputData` con `FIELD_NOT_ALLOWED` antes de
       tocar la base (`db/schema.mjs:65` en 1.6.29). Hay test para `rol` y
       para `ayuntamientoId`.
-- [ ] 3.4 RED caso de uso: OPERADOR administrando usuarios y CONSULTA
-      escribiendo reciben 403. [AR-1]
-- [ ] 3.5 GREEN caso de uso en `application` verifica rol; nunca en
-      `domain`. [AR-2]
-- [ ] 3.6 RED recurso de otro ayuntamiento responde 404 sin importar el
-      rol; no se evalua rol antes de resolver tenant. [AR-3]
-- [ ] 3.7 GREEN orden de verificacion: aislamiento de tenant antes que
-      rol. [AR-3]
-- [ ] 3.8 RED bitacora registra actor y afectado en la misma transaccion
-      del restablecimiento. [AR-5]
-- [ ] 3.9 GREEN escritura en `bitacora` dentro de la transaccion del
-      caso de uso.
-- [ ] 3.10 RED usuario con `bajaEn` no autentica (mismo mensaje
-      generico); constancias previas conservan la autoria. [AR-6]
-- [ ] 3.11 GREEN caso de uso de baja logica (`ADMIN_MUNICIPAL` sobre su
-      propio ayuntamiento).
+- [x] 3.4 RED `restablecerContrasenia.integration.test.ts` y
+      `darDeBajaUsuario.integration.test.ts`. [AR-1]
+- [x] 3.5 GREEN `shared/auth/administracionDeUsuarios.ts`.
+
+      **Los casos de uso de plataforma no son un modulo.** La lista de
+      `estructura.md` seccion 2 es cerrada y no incluye administracion, y
+      dependency-cruiser confirma la lectura: sus reglas de capas aplican
+      solo a `^src/modules/`. Van planos en `shared/auth/`, que es lo que
+      `estructura.md` describe como "sesion y roles".
+
+      Abren su propia transaccion en vez de recibirla —al reves que
+      `altaDePersona`, que es una primitiva usada adentro de otras— porque
+      asi el ayuntamiento sale del contexto del actor y no hay forma de que
+      la transaccion sea de un municipio y el actor de otro.
+- [x] 3.6 RED dos casos, no uno. [AR-3]
+- [x] 3.7 GREEN el objetivo se resuelve **antes** de evaluar el rol.
+      Provocado invirtiendo el orden: el caso del `ADMIN_MUNICIPAL` sobre un
+      id ajeno **sigue verde** —ese rol pasa la verificacion y cae igual en
+      la busqueda—, y lo caza el segundo caso, el del rol sin permiso, que
+      pasa a responder `NO_AUTORIZADO`. Ahi el codigo de error se vuelve un
+      oraculo de en que municipio vive cada id. Un solo test no alcanzaba.
+
+      `NoEncontradoError` es nuevo en `shared/lib/errores.ts`.
+- [x] 3.8 RED traza con actor, afectado, entidad y ayuntamiento. [AR-5]
+- [x] 3.9 GREEN `registrar()` escribe en `bitacora` con el mismo `tx`.
+
+      **Lo que quedo sin cubrir, declarado:** que la traza y el cambio
+      compartan transaccion no tiene test, porque no se pudo escribir uno
+      que fallara. Tres mutaciones —bitacora en otra transaccion, el fallo
+      tragado con `catch`, y el orden de escrituras invertido— quedaron las
+      tres verdes: la traza es la ultima escritura, asi que nada falla
+      despues de ella, y Postgres aborta la transaccion entera al primer
+      statement que falla. El primer intento de test usaba una clave debil y
+      era vacio por la misma razon. Se borro en vez de dejarlo decorando.
+- [x] 3.10 RED baja logica: la fila sobrevive, las trazas que la referencian
+      tambien. Que un usuario con `bajaEn` no autentique ya estaba cubierto
+      por `soloSiSigueActiva` y `accesoCruzado` en PR 2. [AR-6]
+- [x] 3.11 GREEN `darDeBajaUsuario`. `SUPER_ADMIN` no da de baja a nadie:
+      restablecer al `ADMIN_MUNICIPAL` lo destraba, darlo de baja dejaria al
+      municipio sin quien lo administre, y esa decision no es de plataforma.
 
 ## PR 4: Tercer rol Postgres, provision de municipios
 

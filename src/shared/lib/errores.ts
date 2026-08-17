@@ -20,6 +20,24 @@ export class NoAutorizadoError extends Error {
   }
 }
 
+/**
+ * Lo que se responde cuando el recurso no existe **para quien pregunta**.
+ *
+ * Un recurso de otro ayuntamiento cae aca, no en `NoAutorizadoError`. La
+ * diferencia no es cosmetica: un 403 confirma que el recurso existe, y con
+ * un id enumerado eso alcanza para mapear el padron de otro municipio.
+ * Fuera del tenant propio, "no existe" y "no te lo puedo mostrar" tienen
+ * que ser la misma respuesta.
+ */
+export class NoEncontradoError extends Error {
+  readonly codigo = "NO_ENCONTRADO";
+
+  constructor(mensaje = "El recurso no existe.") {
+    super(mensaje);
+    this.name = "NoEncontradoError";
+  }
+}
+
 export class TenantNoResueltoError extends Error {
   readonly codigo = "TENANT_NO_RESUELTO";
 
