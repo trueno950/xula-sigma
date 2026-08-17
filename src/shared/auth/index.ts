@@ -15,6 +15,7 @@
  */
 
 export { altaDePersona } from "./alta";
+export { type ContextoActual, contextoActual } from "./contexto";
 export {
   ClaveDebilError,
   hashDeClave,
@@ -22,5 +23,12 @@ export {
   verificarClave,
 } from "./contrasenia";
 export { manejarAuth } from "./instancia";
-export { ROLES, type Rol } from "./roles";
+export {
+  puedeAdministrarUsuarios,
+  puedeDarDeBaja,
+  puedeEscribir,
+  puedeRestablecerContrasenia,
+  ROLES,
+  type Rol,
+} from "./roles";
 export { sesionActual } from "./sesion";

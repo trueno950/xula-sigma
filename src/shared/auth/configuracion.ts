@@ -22,6 +22,23 @@ const camposAyuntamiento = {
 };
 
 /**
+ * `rol` se declara para que `sesionActual()` lo devuelva: sin esto la
+ * libreria no lo trae y `contextoActual()` tendria que ir a la base por un
+ * dato que ya viaja en la sesion.
+ *
+ * `input: false` es lo que lo vuelve seguro. Con el valor por defecto
+ * —`input: true`— `POST /api/auth/update-user` con `{"rol":"ADMIN_MUNICIPAL"}`
+ * seria una escalada de privilegios servida por la libreria. Con `false`,
+ * `parseInputData` corta antes de tocar la base y responde
+ * `FIELD_NOT_ALLOWED` (`db/schema.mjs:65` en 1.6.29). Hay test que lo
+ * provoca.
+ */
+const camposDeUsuario = {
+  ...camposAyuntamiento,
+  rol: { type: "string", required: false, input: false } as const,
+};
+
+/**
  * `modelName` no es cosmetico: el adaptador resuelve la tabla con
  * `schema[model]`, una busqueda por clave directa
  * (`@better-auth/drizzle-adapter/dist/index.mjs:92` en 1.6.29). Sin esto
@@ -29,7 +46,7 @@ const camposAyuntamiento = {
  * **cuerpo vacio** — el motivo solo aparece si se le pasa un `logger`.
  */
 export const MODELOS = {
-  user: { modelName: "usuarios", additionalFields: camposAyuntamiento },
+  user: { modelName: "usuarios", additionalFields: camposDeUsuario },
   session: { modelName: "sesiones", additionalFields: camposAyuntamiento },
   account: { modelName: "cuentas", additionalFields: camposAyuntamiento },
   verification: {

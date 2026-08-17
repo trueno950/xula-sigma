@@ -263,13 +263,34 @@ un `logger` a `betterAuth`.
 
 ## PR 3: Roles — regla pura, verificacion, contexto
 
-- [ ] 3.1 RED `roles.test.ts` — `puedeRestablecerContrasenia(rolActor,
-      rolObjetivo)`: ADMIN sobre su gente, SUPER_ADMIN sobre
-      ADMIN_MUNICIPAL, SUPER_ADMIN sobre otro rol rechazado. [AR-4]
-- [ ] 3.2 GREEN `shared/auth/roles.ts` — `ROLES`, `Rol`, reglas puras
-      sin IO. [AR-1, AR-2]
-- [ ] 3.3 GREEN `contextoActual()` en `shared/auth/index.ts` compone
-      `ayuntamientoActual()` + `sesionActual()`.
+- [x] 3.1 RED `roles.test.ts` — 12 tests. Las tablas se recorren enteras
+      contra `ROLES` en vez de enumerar casos: un quinto rol deja el test
+      rojo en vez de heredar un permiso por descarte. [AR-4]
+- [x] 3.2 GREEN `shared/auth/roles.ts` — `puedeAdministrarUsuarios`,
+      `puedeEscribir`, `puedeRestablecerContrasenia`, `puedeDarDeBaja`.
+      Sin IO. [AR-1, AR-2]
+
+      **Desvio del spec, deliberado:** dice que `ADMIN_MUNICIPAL`
+      administra "cualquier usuario de su propio ayuntamiento", escrito
+      pensando en un municipio normal. El ayuntamiento reservado de
+      plataforma si tiene `SUPER_ADMIN` (tarea 4.11), y ahi la lectura
+      literal es una escalada: su `ADMIN_MUNICIPAL` le restablece la
+      contrasenia al `SUPER_ADMIN` y se queda con la plataforma. Ningun rol
+      toca a un `SUPER_ADMIN`. Se cierra por rol y no por ayuntamiento
+      porque la regla es pura y no sabe en que municipio corre.
+- [x] 3.3 GREEN `contextoActual()` — en `shared/auth/contexto.ts`, no en
+      `index.ts` como decia el diseno: ese archivo declara ser superficie y
+      nada mas. Se reexporta desde el barril. Test de punta a punta en
+      `contexto.integration.test.ts`; lo unico mockeado es `next/headers`.
+
+      **Encontrado al escribirlo:** para que el rol viaje en la sesion hay
+      que declararlo en `additionalFields`, y con el valor por defecto
+      —`input: true`— la libreria lo vuelve escribible por
+      `POST /api/auth/update-user`. Provocado: un `CONSULTA` respondio 200
+      y quedo `ADMIN_MUNICIPAL` **en la base**. Lo corta `input: false`,
+      que hace fallar a `parseInputData` con `FIELD_NOT_ALLOWED` antes de
+      tocar la base (`db/schema.mjs:65` en 1.6.29). Hay test para `rol` y
+      para `ayuntamientoId`.
 - [ ] 3.4 RED caso de uso: OPERADOR administrando usuarios y CONSULTA
       escribiendo reciben 403. [AR-1]
 - [ ] 3.5 GREEN caso de uso en `application` verifica rol; nunca en
