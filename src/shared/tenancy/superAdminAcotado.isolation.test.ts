@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
-import { limpiar, motivoDeFalla, owner } from "./municipiosDePrueba";
+import {
+  appSinTenant,
+  limpiar,
+  motivoDeFalla,
+  owner,
+} from "./municipiosDePrueba";
 
 /**
  * Lo que `xula_super_admin` **no** puede hacer.
@@ -41,6 +46,29 @@ async function unMunicipio() {
   return id;
 }
 
+/**
+ * Siembra una persona con el rol de la aplicacion.
+ *
+ * No va por el owner: `usuarios` tiene FORCE RLS y `xula_migrator` no tiene
+ * politica, asi que su INSERT muere. Y no va por `xula_super_admin`, que
+ * solo puede crear `ADMIN_MUNICIPAL` —justamente lo que prueba el test de
+ * arriba— y no serviria para sembrar el `OPERADOR`.
+ */
+const sembrarPersona = (id: string, rol: string, correo: string) =>
+  appSinTenant.begin(async (tx) => {
+    await tx`SELECT set_config('app.tenant', ${id}, true)`;
+
+    const [fila] = await tx`
+      INSERT INTO usuarios (ayuntamiento_id, name, email, rol)
+      VALUES (${id}, 'Persona', ${correo}, ${rol})
+      RETURNING id
+    `;
+
+    if (!fila) throw new Error(`No se sembro la persona ${correo}.`);
+
+    return fila.id as string;
+  });
+
 const comoSuperAdminEn = <T>(
   id: string,
   trabajo: (tx: postgres.TransactionSql) => Promise<T>,
@@ -79,26 +107,34 @@ describe("xula_super_admin esta acotado por politicas, no por confianza", () => 
     expect(motivo).toMatch(/row-level security/i);
   });
 
-  it("no ve a la gente del municipio, ni siquiera al admin de otro tenant", async () => {
+  it("solo ve al ADMIN_MUNICIPAL de su propio tenant", async () => {
     /**
      * `usuarios_lectura_admin` acota el SELECT a `ayuntamiento_id =
-     * tenantActual AND rol = 'ADMIN_MUNICIPAL'`. Con el tenant de un
-     * municipio fijado no ve a su `OPERADOR`; sin tenant fijado no ve a
-     * nadie.
+     * tenantActual AND rol = 'ADMIN_MUNICIPAL'`, y este test **siembra las
+     * tres filas que hacen falta para que pueda fallar**.
+     *
+     * La version anterior no sembraba ninguna y afirmaba ver cero: sobre una
+     * tabla vacia eso es cierto con la politica puesta, con `USING (true)` y
+     * sin politica. Era decorativo. Lo encontro GGA en el PR 1.
+     *
+     * Con las tres, cada mitad de la condicion tiene su contraejemplo: sacar
+     * el tenant hace aparecer al admin ajeno, sacar el rol hace aparecer al
+     * operador propio, y el admin propio es el control positivo que impide
+     * que un `USING (false)` pase por bueno.
      */
-    const id = await unMunicipio();
+    const propio = await unMunicipio();
+    const ajeno = await unMunicipio();
 
-    await owner`
-      INSERT INTO ayuntamientos (id, subdominio, nombre)
-      VALUES (${randomUUID()}, 'otro-municipio', 'Otro')
-    `;
+    const admin = await sembrarPersona(propio, "ADMIN_MUNICIPAL", "a@uno.test");
+    await sembrarPersona(propio, "OPERADOR", "o@uno.test");
+    await sembrarPersona(ajeno, "ADMIN_MUNICIPAL", "a@dos.test");
 
     const visibles = await comoSuperAdminEn(
-      id,
+      propio,
       (tx) => tx`SELECT id FROM usuarios`,
     );
 
-    expect(visibles).toHaveLength(0);
+    expect(visibles.map((fila) => fila.id)).toEqual([admin]);
   });
 
   it("no puede crear una fila de plataforma", async () => {

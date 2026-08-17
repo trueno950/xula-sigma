@@ -45,8 +45,15 @@ export type TransaccionTenant = Parameters<
 >[0];
 
 /**
- * El unico acceso a base de datos del sistema. Toda consulta sale de
- * adentro de esta funcion o no sale.
+ * El acceso a base de datos de **toda la operacion**: si hay un tenant, la
+ * consulta sale de adentro de esta funcion o no sale.
+ *
+ * Decia "el unico acceso del sistema" y dejo de ser cierto cuando entro
+ * `withAltaDeAyuntamiento`, la puerta del alta de un municipio —el momento
+ * en que el tenant todavia no existe—. Las dos, y solo las dos, estan
+ * sancionadas por la regla 2 de `AGENTS.md` y el ADR 0001 §2. La lista
+ * completa vive ahi y no aca: repetirla en cada archivo garantiza que una
+ * copia quede vieja, que es exactamente lo que paso con esta.
  *
  * @param ayuntamientoId Viene SIEMPRE del contexto resuelto en servidor
  *   (ver `ayuntamientoId.ts`).

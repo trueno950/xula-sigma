@@ -58,14 +58,24 @@ export const altaDeCredencialDelAdministrador = () =>
 
 /**
  * Destrabar al `ADMIN_MUNICIPAL` que quedo afuera. Es el unico caso en que
- * la plataforma toca datos de un municipio, y por eso el `USING` repite el
- * `EXISTS`: sin el, un `UPDATE` sin `WHERE` cambiaria la credencial de cada
- * persona del municipio.
+ * la plataforma toca datos de un municipio.
+ *
+ * **El `EXISTS` va en los dos lados y no es redundancia.** `USING` elige que
+ * filas se pueden tocar: sin el, un `UPDATE` sin `WHERE` cambiaria la
+ * credencial de cada persona del municipio. `WITH CHECK` mira la fila
+ * **resultante**, y el `GRANT UPDATE` sobre `cuentas` es de tabla entera,
+ * sin lista de columnas: con el `WITH CHECK` pidiendo solo el tenant,
+ * `UPDATE cuentas SET user_id = <operador> WHERE user_id = <admin>` pasaba
+ * —la FK compuesta solo exige que el nuevo duenio viva en el mismo
+ * municipio— y la credencial del admin terminaba colgada de un OPERADOR.
+ *
+ * Lo encontro GGA en el PR 1, comparando contra `cuentas_alta_admin`, que
+ * si lo repetia.
  */
 export const restablecimientoDelAdministrador = () =>
   pgPolicy("cuentas_restablece_admin", {
     for: "update",
     to: "xula_super_admin",
     using: sql`ayuntamiento_id = ${tenantActual} AND ${esDelAdministrador}`,
-    withCheck: sql`ayuntamiento_id = ${tenantActual}`,
+    withCheck: sql`ayuntamiento_id = ${tenantActual} AND ${esDelAdministrador}`,
   });
