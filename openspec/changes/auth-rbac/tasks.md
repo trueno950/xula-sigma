@@ -9,11 +9,11 @@
 | Chained PRs recommended | Yes |
 | Suggested split | PR 0 (spike) -> PR 1 -> PR 2 -> PR 3 -> PR 4 -> PR 5 |
 | Delivery strategy | ask-on-risk |
-| Chain strategy | pending |
+| Chain strategy | stacked-to-main |
 
 Decision needed before apply: Yes
 Chained PRs recommended: Yes
-Chain strategy: pending
+Chain strategy: stacked-to-main
 400-line budget risk: High
 
 **Nota sobre PR 1.** El diseno agrego una quinta tabla (`intentos_acceso`) y
@@ -58,6 +58,25 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
 
 ## PR 0: Spike y medicion (desechable, gate de decision)
 
+> **Primera corrida: 2026-08-16. La compuerta detuvo.** Encontro dos
+> errores del diseno, ya corregidos en `design.md`:
+>
+> 1. `additionalFields` con `required: true` exige el `ayuntamientoId`
+>    **al cliente** (`MISSING_FIELD`), aun con `input: false`. Va
+>    `required: false` + `NOT NULL` en la base.
+> 2. La bd guardada que solo permitia `.transaction()` **rompe el
+>    acceso**: con `transaction: true` el adaptador enruta por la
+>    transaccion solo las mutaciones; `findOne` usa `db` directo
+>    (`index.mjs:377`). La transaccion ahora la abre la ruta y envuelve
+>    todo el handler.
+>
+> El mecanismo `additionalFields` + `databaseHooks` quedo demostrado
+> **viable**: el alta devuelve el usuario con su `ayuntamientoId` puesto
+> por el hook, sin que el cliente lo mande nunca.
+>
+> Pendiente: volver a correr los cinco criterios sobre el diseno corregido
+> y medir el p95, que quedo sin medir.
+
 - [ ] 0.1 Rama de spike: 4 tablas de scratch + `additionalFields` +
       `databaseHooks` + argon2id, invocado por `auth.handler(request)`.
 - [ ] 0.2 Sembrar Motul y Ticul; habilitar `emailVerification` para forzar
@@ -72,7 +91,7 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
       de sesion, refresco.
 - [ ] 0.7 Criterio 5: mismo correo/contrasenia en Motul y Ticul, alta y
       acceso en ambos, cruzado falla.
-- [ ] 0.8 Medir p95 de `autenticacionDelRequest()` y del acceso completo
+- [ ] 0.8 Medir p95 de `manejarAuth(request)` y del acceso completo
       (1000 iter, 100 de calentamiento).
 - [ ] 0.9 **Decision**: 5/5 criterios y p95 <= 5ms -> sigue el diseno
       (PR 1). Cualquier falla, o p95 > 5ms -> repliegue (repositorio
@@ -111,9 +130,14 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
 - [ ] 2.2 GREEN `shared/auth/contrasenia.ts`.
 - [ ] 2.3 Regla dependency-cruiser: `better-auth` y `@node-rs/argon2`
       solo se importan desde `shared/auth`.
-- [ ] 2.4 GREEN `shared/auth/instancia.ts` — bd guardada (Proxy que solo
-      permite `.transaction()` -> `withTenant`), `autenticacionDelRequest()`
-      sin parametro de tenant. [T1, T2]
+- [ ] 2.4 GREEN `shared/auth/instancia.ts` — `manejarAuth(request)` abre
+      `withTenant` y corre **todo** `auth.handler(request)` adentro; el
+      Proxy enruta TODAS las operaciones al `tx` ambiente y `transaction`
+      reusa esa misma transaccion en vez de anidar. Sin parametro de
+      tenant: lo resuelve `ayuntamientoActual()`. [T1, T2]
+      **Corregido por el spike PR 0**: la version anterior permitia solo
+      `.transaction()`, y eso rompe el acceso — `findOne` del adaptador usa
+      `db` directo (`index.mjs:377`) y no pasa por la transaccion.
 - [ ] 2.5 GREEN `shared/auth/sesion.ts` — lee la sesion del request.
 - [ ] 2.6 GREEN `shared/auth/index.ts` — superficie publica (`ROLES`),
       no exporta la fabrica ni la bd.
@@ -121,7 +145,7 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
       contrasenia en Motul y Ticul, alta y acceso en ambos sentidos,
       cruzado falla. [AM-1, AM-4]
 - [ ] 2.8 GREEN `app/api/auth/[...all]/route.ts` delega a
-      `auth.handler(request)` via `autenticacionDelRequest()`.
+      `auth.handler(request)` via `manejarAuth(request)`.
 - [ ] 2.9 RED+GREEN `databaseHooks.session.create.before` rechaza si
       `bajaEn` no es nulo; los 4 rechazos (inexistente, contrasenia,
       baja, otro municipio) mapean al mismo `CREDENCIALES_INVALIDAS`.

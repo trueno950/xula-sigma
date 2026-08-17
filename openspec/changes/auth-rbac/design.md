@@ -20,35 +20,72 @@ con tres capas, ninguna de las cuales es un comentario.
 | Capa | Mecanismo | Que pasa si alguien la esquiva |
 |---|---|---|
 | Compilacion / build | Regla de dependency-cruiser: `better-auth` y `@node-rs/argon2` solo se importan desde `src/shared/auth/`. | `pnpm layers` falla. No entra a `main`. |
-| Modulo | La bd guardada y la fabrica son constantes privadas de `instancia.ts`. La unica exportacion es `autenticacionDelRequest()`, que **no recibe** `ayuntamientoId`: lo resuelve con `ayuntamientoActual()`. | No hay identificador que exportar: no existe otra puerta. Mismo criterio que la `const bd` de `withTenant.ts`. |
-| Ejecucion | La bd que recibe `drizzleAdapter` implementa **solo** `.transaction()`, que delega en `withTenant`. Todo otro acceso (`select`, `insert`, `update`, `delete`, `execute`, `query`) lanza `AccesoSinTenantError`. | Falla ruidoso y en el acto. Nunca una consulta silenciosa sin tenant. |
+| Modulo | La bd guardada y la fabrica son constantes privadas de `instancia.ts`. La unica exportacion es `manejarAuth(request)`, que **no recibe** `ayuntamientoId`: lo resuelve con `ayuntamientoActual()`. | No hay identificador que exportar: no existe otra puerta. Mismo criterio que la `const bd` de `withTenant.ts`. |
+| Ejecucion | `withTenant` envuelve **toda** la invocacion de `auth.handler(request)`. La bd que recibe `drizzleAdapter` enruta **todas** las operaciones a esa transaccion ambiente. Un acceso construido fuera de ese alcance lanza `AccesoSinTenantError`. | Falla ruidoso y en el acto. Nunca una consulta silenciosa sin tenant. |
 
-La tercera capa es la que importa y esta verificada contra el adaptador
-instalado: con `transaction: true`, `adapter.transaction` delega en
-`db.transaction` y reconstruye el adaptador sobre el `tx`
-(`@better-auth/drizzle-adapter/dist/index.mjs:578`). Fuera de transaccion
-el adaptador usa `db` directo (lineas 514, 555). Esas son exactamente las
-rutas de escape, y contra la bd guardada revientan en vez de filtrar.
+### Correccion del spike PR 0 — la tercera capa estaba mal disenada
+
+La version anterior de esta seccion decia que la bd guardada implementaba
+**solo** `.transaction()` y lanzaba en todo lo demas, apoyandose en que con
+`transaction: true` el adaptador delega en `db.transaction`
+(`@better-auth/drizzle-adapter/dist/index.mjs:578`).
+
+**Eso rompe el acceso.** El spike lo probo corriendo el flujo real:
+
+```
+escapes [ 'select' ]
+AccesoSinTenantError: Acceso a auth."select" sin tenant fijado
+  at Object.findOne (@better-auth/drizzle-adapter/dist/index.mjs:377)
+```
+
+Con `transaction: true`, el adaptador enruta por la transaccion **solo las
+mutaciones**. Las **lecturas no**: `findOne` usa `db.select(...)` directo en
+la linea 377. La exploracion habia encontrado las lineas 511 y 552 como
+rutas de escape, pero no la 377, que es justamente la que usa el sign-in.
+Leer el codigo no alcanzo; hizo falta correrlo.
+
+**La forma correcta invierte el anidamiento.** No es la bd la que abre la
+transaccion cuando Better Auth se la pide: es la ruta la que abre una
+transaccion con tenant y **adentro** corre todo el handler. Asi no hay
+operacion —lectura o escritura, por transaccion o directa— que pueda salir
+del alcance.
 
 ```ts
 // instancia.ts — privado al modulo
-const bdGuardada = (ayuntamientoId: AyuntamientoId) =>
+
+/**
+ * Enruta TODA operacion a la transaccion ambiente. `transaction` no abre
+ * una nueva: reusa la misma, porque ya estamos dentro de una con el tenant
+ * fijado. Anidar abriria una transaccion sin `app.tenant`.
+ */
+const bdSobreTransaccion = (tx: TransaccionTenant) =>
   new Proxy({} as BdDeAuth, {
     get(_, prop) {
       if (prop === "transaction") {
-        return (cb: (tx: TransaccionTenant) => Promise<unknown>) =>
-          withTenant(ayuntamientoId, cb);
+        return (cb: (t: TransaccionTenant) => Promise<unknown>) => cb(tx);
       }
-      throw new AccesoSinTenantError(String(prop));
+      return Reflect.get(tx, prop, tx);
     },
   });
 
 // unica exportacion del archivo
-export async function autenticacionDelRequest() {
+export async function manejarAuth(request: Request): Promise<Response> {
   const { id } = await ayuntamientoActual(); // contexto de servidor, no parametro
-  return betterAuth({ database: drizzleAdapter(bdGuardada(id), { ... }) });
+
+  // El handler entero corre adentro. No hay ruta de escape porque no hay
+  // nada de Better Auth ejecutandose afuera.
+  return withTenant(id, async (tx) => {
+    const auth = betterAuth({
+      database: drizzleAdapter(bdSobreTransaccion(tx), { ... }),
+    });
+    return auth.handler(request);
+  });
 }
 ```
+
+`AccesoSinTenantError` no desaparece: sigue siendo el modo de falla de
+cualquier instancia construida fuera de `manejarAuth`. Lo que cambia es que
+el camino correcto ya no depende de que el adaptador use la transaccion.
 
 ---
 
@@ -63,6 +100,37 @@ cuatro modelos (`user`, `session`, `account`, `verification`) aceptan
 `databaseHooks.<modelo>.create.before` (lineas 1135, 1179, 1226, 1273). Lo
 que **no** esta probado es que el hook se dispare en todos los caminos
 reales, en particular los internos con `context: null`.
+
+### Correccion del spike PR 0 — `required: false`, no `required: true`
+
+El campo se declara asi, y el matiz no es de estilo:
+
+```ts
+const camposAyuntamiento = {
+  ayuntamientoId: { type: "string", required: false, input: false } as const,
+};
+```
+
+Con `required: true`, el alta responde:
+
+```
+{"message":"ayuntamientoId is required","code":"MISSING_FIELD"}
+```
+
+Better Auth valida `additionalFields` **como entrada del cliente y antes de
+correr `databaseHooks.create.before`**, y lo hace aunque el campo este
+declarado `input: false`. O sea que `required: true` termina exigiendo que
+el `ayuntamientoId` venga en el cuerpo de la peticion — exactamente lo que
+prohibe el invariante 1.
+
+Con `required: false` el alta pasa y el hook puebla el campo: verificado en
+el spike, el usuario vuelve con su `ayuntamientoId` sin que el cliente lo
+haya mandado nunca.
+
+**Quien garantiza que el campo no quede nulo no es la libreria: es el
+`NOT NULL` de la migracion.** Esa es la division correcta — la libreria
+rellena, la base obliga. Y es lo que hace verificable al criterio 3: sin el
+hook, el alta tiene que fallar contra la restriccion de la base.
 
 ### Que cablea
 
@@ -97,7 +165,7 @@ tanto, no se puede derivar por join.
 
 ### Medicion del costo por request
 
-En la misma rama: `performance.now()` alrededor de `autenticacionDelRequest()`,
+En la misma rama: `performance.now()` alrededor de `manejarAuth(request)`,
 1000 iteraciones tras 100 de calentamiento, y p50/p95 tambien sobre el
 request completo de acceso.
 
@@ -309,7 +377,7 @@ Navegador  motul.xulasigma.mx/api/auth/sign-in/email
 proxy.ts            borra cabeceras entrantes, escribe x-xula-subdominio
     |
 route.ts            limitarRitmo()  -> withTenant -> intentos_acceso
-    |               autenticacionDelRequest()
+    |               manejarAuth(request)
     |                   ayuntamientoActual()  -> subdominio -> AyuntamientoId
     |                   betterAuth({ database: drizzleAdapter(bdGuardada(id)) })
     |
@@ -334,7 +402,7 @@ Cualquier acceso que no pase por la flecha del medio choca con
 | Archivo | Accion | Que hace |
 |---|---|---|
 | `src/shared/auth/index.ts` | Crear | Superficie publica: `contextoActual`, `sesionActual`, `ROLES`, reglas puras. No exporta la fabrica. |
-| `src/shared/auth/instancia.ts` | Crear | Punto unico de construccion. Bd guardada y fabrica privadas; exporta `autenticacionDelRequest()`. |
+| `src/shared/auth/instancia.ts` | Crear | Punto unico de construccion. Bd guardada y fabrica privadas; exporta `manejarAuth(request)`. |
 | `src/shared/auth/esquema.ts` | Crear | Las cinco tablas, indices, politicas |
 | `src/shared/auth/roles.ts` (+`.test.ts`) | Crear | `ROLES`, `Rol`, reglas puras sin IO |
 | `src/shared/auth/contrasenia.ts` (+`.test.ts`) | Crear | argon2id |
