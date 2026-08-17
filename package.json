@@ -26,6 +26,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.0",
     "@node-rs/argon2": "^2.0.2",
     "@phosphor-icons/react": "^2.1.10",
     "@react-pdf/renderer": "^4.3.1",
@@ -46,13 +47,16 @@
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
     "@playwright/test": "^1.57.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.2.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.10",
     "dependency-cruiser": "^18.2.0",
     "drizzle-kit": "^0.31.10",
     "husky": "^9.1.7",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   }

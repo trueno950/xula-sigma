@@ -35,7 +35,7 @@ STRICT_MODE="true"
 # el commit, asi que subirlo no afloja nada. Bajar el tamano del PR en su
 # lugar significaria partir una tabla de su test de aislamiento, que es
 # justo lo que la regla del proyecto prohibe.
-TIMEOUT="900"
+TIMEOUT="1800"
 
 # Rama base para --pr-mode. Explicita en vez de autodeteccion.
 PR_BASE_BRANCH="main"

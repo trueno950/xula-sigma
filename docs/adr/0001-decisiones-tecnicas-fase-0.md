@@ -133,16 +133,49 @@ La alternativa —correr migraciones desde CI— obliga a exponer la base al
 runner y desacopla la migración del deploy que la necesita. Peor en las dos
 dimensiones.
 
-### Dos URLs, no una
+### Tres URLs, no una
 
 ```ts
 const EnvSchema = z.object({
-  DATABASE_URL: z.string().url(),            // rol de aplicación
-  MIGRATION_DATABASE_URL: z.string().url(),  // rol owner
+  DATABASE_URL: z.string().url(),             // rol de aplicación
+  MIGRATION_DATABASE_URL: z.string().url(),   // rol owner
+  SUPER_ADMIN_DATABASE_URL: z.string().url(), // alta de municipios
 });
 ```
 
 El pre-deploy usa `MIGRATION_DATABASE_URL`. La aplicación nunca la ve.
+
+**Actualizado 2026-08-17 (PR 4 de `auth-rbac`): entró un tercer rol.**
+`xula_super_admin` da de alta municipios y destraba al `ADMIN_MUNICIPAL`
+que quedó afuera. Se creó porque el alta ocurre cuando el tenant todavía no
+existe —se está creando— y ninguno de los otros dos puede hacerla:
+`xula_app` no tiene `INSERT` sobre `ayuntamientos` a propósito, y el owner
+tendría privilegios de sobra para una operación que hace un panel.
+
+Lo que lo mantiene honesto es que **no es una llave maestra, y eso lo
+sostiene Postgres**: políticas propias en `0002_super_admin.sql` le impiden
+crear a nadie que no sea `ADMIN_MUNICIPAL`, restablecer la contraseña de
+nadie más, leer el directorio de municipios o crear una segunda fila de
+plataforma. Su único `SELECT` es por columna sobre cuatro campos de
+`usuarios`, y existe porque una subconsulta de política lo exige.
+
+### La segunda puerta a la base, y por qué no rompe el patrón
+
+`shared/tenancy/provision.ts` expone `withAltaDeAyuntamiento`. Es el
+segundo —y último— punto de acceso a datos que no pasa por `withTenant`.
+
+No es una excepción al invariante sino una superficie distinta:
+`withTenant` es la puerta de la **operación**, entra con un tenant ya
+resuelto y corre bajo `xula_app`; esta es la puerta del **alta**, donde el
+tenant no existe todavía y corre bajo otro rol con otras políticas.
+
+Comparte la forma que hace confiable a la primera: la conexión es una
+constante privada del módulo que nadie fuera puede alcanzar, y la única
+salida es la función. El invariante lo sostiene el lenguaje, no la
+disciplina de quien revisa.
+
+`AGENTS.md` regla 2 las nombra a las dos. Una tercera no entra sin
+actualizar esa regla primero.
 
 Verificado el 2026-08-16: el template de Postgres de Railway entrega **un
 solo rol**, `postgres`, con `rolsuper` y `rolbypassrls` en `t`. Si la app

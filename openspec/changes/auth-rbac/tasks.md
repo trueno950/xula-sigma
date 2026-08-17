@@ -400,17 +400,124 @@ un `logger` a `betterAuth`.
 
 ## PR 5: Rate limiting y pantalla de acceso
 
-- [ ] 5.1 RED `ritmo.test.ts` — ventana corrediza, 5/correo y 20/IP en
-      15 min, sin `bloqueadoHasta`. [AM-5]
-- [ ] 5.2 GREEN `shared/auth/ritmo.ts` sobre `intentos_acceso` (clave =
-      sha256(valor + pimienta)).
-- [ ] 5.3 RED integracion: intento tras expirar la ventana autentica con
-      normalidad. [AM-5]
-- [ ] 5.4 GREEN `route.ts` aplica `limitarRitmo()` antes de construir la
-      instancia, solo en la ruta de acceso.
-- [ ] 5.5 GREEN `app/(acceso)/acceso/page.tsx` — RSC + formulario, sin
-      `crossSubDomainCookies`. [AM-3]
-- [ ] 5.6 E2E sesion en Motul y Ticul en paralelo; la cookie de Motul no
-      llega a Ticul. [AM-3, T9]
-- [ ] 5.7 `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`,
-      `pnpm check` en verde.
+- [x] 5.1 RED `ritmo.test.ts` — la clave y la regla del limite, sin base.
+      [AM-5]
+- [x] 5.2 GREEN **dos archivos, no uno.** `ritmo.ts` es la regla pura
+      —`claveDe`, `LIMITES`, `superaElLimite`, `RitmoExcedidoError`— y
+      `limitarRitmo.ts` el efecto contra Postgres. El corte no es estetico:
+      importar `withTenant` exige `DATABASE_URL` al cargarse, y con todo
+      junto la suite `unit` —que por contrato corre sin base— dejaba de
+      poder cargar hasta el test del borde de la ruta. Mismo corte que
+      separa `contexto.ts` de `withTenant.ts`.
+
+      Nueva variable: `PIMIENTA_INTENTOS`. Sin ella la tabla de conteo es un
+      directorio de quien tiene cuenta en cada municipio —basta hashear un
+      correo y comparar.
+- [x] 5.3 RED+GREEN `ritmo.isolation.test.ts`, 7 casos. [AM-5]
+
+      **Dos hallazgos al escribirlo, los dos por contar filas:**
+
+      1. `limitarRitmo` recibia el `tx` y lanzaba **adentro** de la
+         transaccion: el `throw` se la llevaba y con ella el registro del
+         intento, asi que el que corta nunca se contaba. Un intento que no
+         se cuenta es un intento gratis. Ahora abre su propia transaccion y
+         lanza afuera. Provocado devolviendo el `throw` adentro: rojo.
+      2. El helper del test envejecia los intentos con un `UPDATE` del rol
+         owner. **Afecta 0 filas en silencio**: `intentos_acceso` no tiene
+         `GRANT UPDATE` para nadie y FORCE RLS alcanza tambien al dueno. El
+         test pasaba a probar otra cosa. Se siembran los intentos ya viejos.
+- [x] 5.4 GREEN `route.ts` limita solo `/api/auth/sign-in/email`, antes de
+      construir la instancia. 429 sin decir cual ventana se lleno —"para
+      este correo" confirmaria que la cuenta existe.
+
+      **El request se clona.** Leer el cuerpo para sacar el correo lo
+      consume; sin el clon `manejarAuth` recibe un cuerpo vacio y ningun
+      acceso funciona. Provocado: `Body has already been read`.
+- [x] 5.5 GREEN pantalla de acceso. [AM-3]
+
+      **Arrastro el arranque del frontend**, que no estaba en esta lista:
+      no habia `layout.tsx`, ni CSS, ni Tailwind instalado. Entraron
+      `tailwindcss` 4 + `@tailwindcss/postcss` y `@hookform/resolvers`.
+      Decision del usuario ante el fork.
+
+      `page.tsx` es RSC y solo `FormularioDeAcceso.tsx` es `"use client"`.
+      El formulario habla con `/api/auth/sign-in/email` y **no** con una
+      Server Action: la ruta es la superficie con limitacion de ritmo, y una
+      Server Action seria una segunda puerta al acceso que habria que
+      acordarse de limitar tambien.
+
+      `shared/ui/marca.ts` valida `ayuntamientos.marca` con Zod antes de
+      pintarla: esos colores van a un atributo `style` y salen de una
+      columna que alguien edita. `z.url()` **no alcanzo** —
+      `javascript:alert(1)` es una URL valida y pasaba el esquema; el test
+      lo agarro y el protocolo se acoto a http/https.
+
+      `LARGO_MINIMO` se movio a `reglasDeClave.ts`: importarlo del barril
+      `shared/auth` metia argon2 nativo y Postgres en el bundle del
+      navegador y **rompia el build**. `tsc` no lo ve; `pnpm build` si.
+- [x] 5.6 E2E, 6 casos en Playwright. [AM-3, T9]
+
+      **Dos bugs que ningun test anterior podia encontrar:**
+
+      1. `manejarAuth` armaba el `baseURL` desde `request.url` y `sesion.ts`
+         desde el header `Host`. En el servidor de produccion no coinciden:
+         Better Auth rechaza con `Invalid origin` y **ningun acceso
+         funciona**. Los tests de integracion no podian verlo porque ahi las
+         peticiones se construyen a mano con la URL ya correcta. Provocado
+         revirtiendo el arreglo: 2 de 6 en rojo.
+      2. `/acceso` en el dominio pelado respondia **500** en vez de 404: el
+         layout llamaba `ayuntamientoActual()` sin municipio. Un 500 en una
+         superficie publica delata que ahi adentro se espera un tenant.
+
+      Tambien entro `/api/salud`, que no toca la base: Playwright arranca el
+      servidor antes de sembrar, asi que el chequeo de arranque no puede
+      depender de datos. Sirve igual como healthcheck de Railway.
+- [x] 5.7 `pnpm test` (180), `pnpm test:e2e` (6) y `pnpm check` en verde.
+
+      **Pendiente tuyo:** `pnpm exec playwright install chromium` falla con
+      `EACCES` porque `~/Library/Caches/ms-playwright/.links` es de `root`
+      —alguien corrio `sudo playwright install` alguna vez. Se arregla con
+      `sudo chown -R "$USER" ~/Library/Caches/ms-playwright`. La suite se
+      verifico usando `PLAYWRIGHT_BROWSERS_PATH` a un directorio propio.
+- [x] 5.8 La reja de cobertura, que no existia. La encontro GGA y se
+      confirmo midiendo, no leyendo:
+
+      1. `@vitest/coverage-v8` **no estaba instalado**. `pnpm vitest run
+         --project unit --coverage` cortaba con `MISSING DEPENDENCY` y
+         codigo 1: el job `unitarios` de CI fallaba en cada PR.
+      2. Con el proveedor puesto, `coverage.include` apuntaba solo a
+         `src/modules/**`, que esta **vacio**. Resultado medido: `0/0`,
+         "Unknown%", **exit 0**. El piso de 80% se evaluaba sobre cero
+         archivos y pasaba siempre — el mismo defecto que `docs/04-calidad.md`
+         denuncia para los tests, una capa mas arriba.
+
+      Arreglado: `include` suma `src/shared/**`, `exclude` saca las
+      declaraciones (`esquema.ts`, `configuracion.ts`, `politicasPlataforma.ts`,
+      `*DePrueba.ts`) porque no tienen caminos de decision y su prueba es el
+      test de aislamiento. La medicion pasa a la **suite completa** y al job
+      que tiene Postgres: midiendo solo `unit`, `withTenant` y `provision`
+      daban 0% con sus tests de aislamiento en verde, y la unica forma de
+      subir el numero habria sido escribir tests unitarios que no prueban RLS.
+
+      Medido: 92.56 sentencias / 78.18 ramas / 92.75 funciones / 93.05 lineas.
+      Piso: 80/75/80/80. **Provocado**: con `branches=85` sale
+      `ERROR: Coverage for branches (78.18%) does not meet global threshold`
+      y codigo 1. Un piso que no se vio fallar no es un piso.
+
+      **Deuda declarada:** las ramas van en 75 y no en 80. Lo que falta son
+      las guardas de variable de entorno (`if (!url) throw`) que corren al
+      importar el modulo; cubrirlas pide `resetModules` y reimportar con el
+      entorno roto. Son caminos reales y el piso sube el dia que se escriban.
+- [x] 5.9 CI, dos roturas que dejo PR 4 y nadie vio porque la rama nunca
+      llego a `main`:
+
+      1. `bootstrap.sql` pide `-v clave_super_admin` y `ci.yml` pasaba solo
+         `clave_migrator` y `clave_app`. Con `\set ON_ERROR_STOP on` puesto,
+         el paso "Provisionar roles" **muere**, y con el todo el job de
+         aislamiento — el que `ci.yml` llama "el que no se negocia".
+      2. Al job de integracion le faltaba `SUPER_ADMIN_DATABASE_URL`, que
+         `provision.ts` y el barril de `tenancy` exigen al importarse.
+
+      **Brecha declarada:** el E2E no tiene job en CI. Necesita Postgres,
+      build y navegadores; no lo agrego sin poder verificarlo, y en esta
+      maquina `playwright install` esta roto por el `EACCES` de 5.7.

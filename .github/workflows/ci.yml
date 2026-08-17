@@ -41,7 +41,11 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm vitest run --project unit --coverage
+      # Sin `--coverage`: el piso se mide en el job de aislamiento, que es el
+      # unico con Postgres. Midiendolo aca, todo lo que se prueba contra la
+      # base daba 0% y la reja empujaba a escribir tests unitarios que no
+      # prueban RLS. Ver el comentario de `coverage` en vitest.config.ts.
+      - run: pnpm vitest run --project unit
 
   aislamiento:
     name: Integracion y aislamiento entre municipios
@@ -74,6 +78,7 @@ jobs:
           psql "postgresql://postgres:postgres@localhost:5432/xula_test" \
             -v clave_migrator=postgres \
             -v clave_app=postgres \
+            -v clave_super_admin=postgres \
             -f scripts/bootstrap.sql
 
       # Las migraciones corren con el rol owner, nunca con el de aplicacion
@@ -87,11 +92,14 @@ jobs:
       # Este es el job que no se negocia: si una tabla con ayuntamiento_id
       # quedo sin politica RLS, el build cae aca y no en produccion con el
       # segundo municipio.
+      # La suite completa y no solo `integration`: el piso de cobertura sale
+      # de aca, y con una sola de las dos mitades el numero miente.
       - name: Integracion y aislamiento
-        run: pnpm vitest run --project integration
+        run: pnpm vitest run --coverage
         env:
           DATABASE_URL: postgresql://xula_app:postgres@localhost:5432/xula_test
           MIGRATION_DATABASE_URL: postgresql://xula_migrator:postgres@localhost:5432/xula_test
+          SUPER_ADMIN_DATABASE_URL: postgresql://xula_super_admin:postgres@localhost:5432/xula_test
 
   docs:
     name: Links de documentacion

@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/**
+ * Tailwind 4 configura desde el CSS, no desde `tailwind.config.js`.
+ *
+ * Los colores de marca son **variables**, no valores fijos: cada municipio
+ * elige los suyos y el layout de su superficie los inyecta desde el
+ * servidor (ver `(acceso)/layout.tsx`). Lo que hay aca son los valores por
+ * defecto, que es lo que se ve mientras un municipio no haya cargado marca.
+ */
+@theme {
+  --color-marca: var(--primary, oklch(0.42 0.12 25));
+  --color-marca-texto: var(--primary-foreground, oklch(0.99 0 0));
+  --color-acento: var(--accent, oklch(0.55 0.1 25));
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-white text-neutral-900 antialiased;
+}

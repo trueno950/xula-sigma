@@ -1,4 +1,8 @@
 import { hash, verify } from "@node-rs/argon2";
+import { LARGO_MINIMO } from "./reglasDeClave";
+
+/** Reexportada para que quien ya la tomaba de aca no tenga que cambiar. */
+export { LARGO_MINIMO };
 
 /**
  * Hasheo de contrasenias con argon2id.
@@ -7,13 +11,6 @@ import { hash, verify } from "@node-rs/argon2";
  * pasa a `emailAndPassword.password` y tambien sobrevive intacto en el
  * repliegue del diseno (seccion 2), donde se invoca directo.
  */
-
-/**
- * Doce y no ocho. Con argon2id el costo de verificar es alto, asi que el
- * ataque realista no es fuerza bruta en linea sino diccionario contra un
- * volcado. Contra eso el largo importa mas que la variedad de simbolos.
- */
-export const LARGO_MINIMO = 12;
 
 export class ClaveDebilError extends Error {
   readonly codigo = "CLAVE_DEBIL";

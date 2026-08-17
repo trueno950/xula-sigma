@@ -19,6 +19,7 @@ compila".
 |---|---|---|---|
 | Dominio | Reglas puras, sin IO | **80%** | `*.test.ts` junto al archivo |
 | Aplicación | Casos de uso con puertos mockeados | **80%** | `*.test.ts` junto al archivo |
+| Compartido | Todo `shared/**` menos declaraciones | **80%** (75% ramas) | junto al archivo |
 | Aislamiento | Una tabla con `ayuntamiento_id` | **100%, sin excepción** | `*.isolation.test.ts` |
 | Integración | Repositorios contra Postgres real | Operaciones con transacción | `*.integration.test.ts` |
 | E2E | Flujos críticos y cambio de tenant | Happy path | `e2e/*.spec.ts` |
@@ -27,6 +28,24 @@ compila".
 real es que cada camino de decisión del dominio tenga un test que lo
 describa. Pero la reja existe porque una IA sin restricción salta tests, y
 un número en CI es más confiable que la buena intención.
+
+**Y la reja se provoca antes de creerle.** Durante la fase 1 el
+`coverage.include` apuntaba solo a `modules/**`, que todavía no existía: CI
+reportaba `0/0` y salía en verde, con el proveedor `@vitest/coverage-v8`
+sin instalar. Un piso medido sobre cero archivos es el mismo defecto que
+esta sección denuncia, una capa más arriba. Antes de dar un piso por bueno:
+subirlo por encima del valor medido y confirmar que sale en rojo.
+
+**Se mide sobre la suite completa**, en el job que tiene Postgres. Casi todo
+`shared/` se prueba contra la base; midiendo solo `unit`, `withTenant`
+daba 0% con sus tests de aislamiento pasando, y la única forma de subir el
+número habría sido escribir tests unitarios que no prueban RLS. La reja
+tiene que empujar hacia el test que sirve.
+
+**Las ramas van en 75%, con la deuda anotada.** Lo que falta son las guardas
+de variable de entorno que corren al importar el módulo; cubrirlas pide
+reimportar con el entorno roto. Son caminos reales y el piso sube a 80 el
+día que se escriban.
 
 ### Comportamiento, no implementación
 
@@ -146,7 +165,7 @@ const folio = { toString: () => "MOT-2026-000001" }; // ese es el sujeto del tes
 | Profundidad de anidación | ≤ 3 |
 | Parámetros por función | ≤ 3 (más, va objeto) |
 | Duplicación | ≤ 3% |
-| Cobertura dominio y aplicación | ≥ 80% |
+| Cobertura dominio, aplicación y `shared` | ≥ 80% (ramas ≥ 75%) |
 | Cobertura de aislamiento | 100% de tablas con tenant |
 
 Los números concretos existen porque una IA respeta un número. No respeta
