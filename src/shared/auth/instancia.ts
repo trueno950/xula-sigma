@@ -9,6 +9,7 @@ import { bdSobreTransaccion } from "./bdSobreTransaccion";
 import { ACCESO_POR_CORREO, MODELOS } from "./configuracion";
 import * as esquema from "./esquema";
 import { usuarios } from "./esquema";
+import { origenDesde } from "./origen";
 
 /**
  * Punto unico de construccion de Better Auth.
@@ -146,33 +147,6 @@ export async function conAuth<T>(
 }
 
 /**
- * El origen del municipio, tomado del `Host` **y no de `request.url`**.
- *
- * Better Auth valida el `Origin` de la peticion contra su `baseURL`. En el
- * servidor de produccion, `request.url` no siempre conserva el host del
- * subdominio, y entonces `baseURL` queda en `localhost:3000` mientras el
- * navegador manda `Origin: motul.localhost:3000`: la libreria rechaza con
- * `Invalid origin` y **ningun acceso funciona**. Lo encontro el E2E; ningun
- * test de integracion podia, porque ahi las peticiones se construyen a mano
- * con la URL ya correcta.
- *
- * Es ademas la misma forma de derivar el origen que usa `sesion.ts`. Que
- * dos puertas de la misma libreria lo calcularan distinto era el problema.
- */
-function origenDe(request: Request): string {
-  const url = new URL(request.url);
-  const host = request.headers.get("host");
-
-  if (!host) return url.origin;
-
-  // `x-forwarded-proto` lo pone el proxy de Railway; en local no viene.
-  const protocolo =
-    request.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "");
-
-  return `${protocolo}://${host}`;
-}
-
-/**
  * La puerta de las rutas de autenticacion.
  *
  * El handler entero corre adentro de la transaccion. No hay operacion
@@ -180,5 +154,7 @@ function origenDe(request: Request): string {
  * alcance, porque no hay nada de Better Auth ejecutandose afuera.
  */
 export function manejarAuth(request: Request): Promise<Response> {
-  return conAuth(origenDe(request), (auth) => auth.handler(request));
+  const origen = origenDesde(request.headers, new URL(request.url).origin);
+
+  return conAuth(origen, (auth) => auth.handler(request));
 }

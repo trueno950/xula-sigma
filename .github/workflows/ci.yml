@@ -133,6 +133,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      # En un evento de `pull_request`, `actions/checkout` **no deja `main`
+      # como rama local**: solo baja la referencia del PR. `gga --pr-mode`
+      # compara contra `PR_BASE_BRANCH`, que en `.gga` es `main`, y sin esa
+      # rama no resuelve el rango: reporta `No matching files changed in PR`
+      # y **sale en verde sin revisar una linea**.
+      #
+      # Se vio en el PR 1: el paso duro tres decimas de milisegundo y el job
+      # quedo verde. Una reja que no puede fallar es peor que no tenerla,
+      # porque ademas da confianza. Ver docs/04-calidad.md seccion 7.
+      - name: Traer la rama base
+        if: env.DEEPSEEK_API_KEY != ''
+        run: git fetch origin main:main
+
       # `brew` NO viene en los runners de Ubuntu; solo en los de macOS. El
       # job moria con `brew: command not found` y codigo 127 antes de tocar
       # una linea de codigo. `gga` se distribuye por tap de Homebrew y no es

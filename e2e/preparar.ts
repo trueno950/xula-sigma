@@ -5,7 +5,11 @@ import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { CLAVE, CORREO, MUNICIPIOS } from "./municipios";
 
 /**
- * Siembra de los dos municipios del E2E, antes de que arranque el servidor.
+ * Siembra de los dos municipios del E2E.
+ *
+ * Corre **despues** de que Playwright levanta el servidor, no antes: por eso
+ * el chequeo de arranque apunta a `/api/salud`, que no toca la base. El
+ * detalle y su consecuencia estan en `playwright.config.ts`.
  *
  * Corre en el proceso de Playwright y no dentro de la aplicacion: la
  * aplicacion no da de alta municipios —eso es provisionamiento— y montar

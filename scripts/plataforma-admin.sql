@@ -45,9 +45,10 @@ WITH persona AS (
   )
   RETURNING id, ayuntamiento_id
 )
--- `account_id` es el id de la persona: para el proveedor `credential`,
--- Better Auth guarda ahi el id del usuario (`sign-up.mjs:239` en 1.6.29).
--- Ponerle otra cosa haria que el acceso no encuentre la credencial.
+-- `account_id` es el id de la persona. El porque —y la linea del paquete
+-- que lo fija— esta en `src/shared/auth/alta.ts`, que hace este mismo
+-- insert desde la aplicacion. Una sola copia: dos divergen cuando cambie
+-- la version de la libreria y ninguna avisa.
 INSERT INTO cuentas (ayuntamiento_id, user_id, account_id, provider_id, password)
 SELECT ayuntamiento_id, id, id::text, 'credential', :'hash_argon2id'
   FROM persona;

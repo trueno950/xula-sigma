@@ -395,8 +395,33 @@ un `logger` a `betterAuth`.
 - [ ] 4.13 RED bitacora registra el alta (actor, ayuntamiento_id,
       accion, momento). [PA-4]
 - [ ] 4.14 GREEN traza de bitacora dentro de `withAltaDeAyuntamiento`.
-- [ ] 4.15 Actualizar `AGENTS.md` y ADR 0001 §1 con la resolucion del
-      SUPER_ADMIN (ya cerrada en el diseno).
+- [x] 4.15 Actualizar `AGENTS.md` y ADR 0001 §1 con la resolucion del
+      SUPER_ADMIN (ya cerrada en el diseno). Hecho: ADR 0001 §1 documenta el
+      ayuntamiento reservado y `AGENTS.md` nombra el tercer rol.
+- [ ] 4.16 **El camino real del SUPER_ADMIN no esta cableado.** Lo encontro
+      GGA revisando el PR 5.
+
+      `restablecerContrasenia` con un contexto de SUPER_ADMIN corre por
+      `withTenant` bajo `xula_app`, que tiene `GRANT UPDATE` sobre
+      `cuentas`. La politica `cuentas_restablece_admin` y el
+      `GRANT UPDATE ON cuentas TO xula_super_admin` —que existen, estan
+      migrados y tienen su test de que el rol queda acotado— **no tienen
+      ningun camino de ejecucion que los use**.
+
+      En produccion el SUPER_ADMIN vive en el ayuntamiento reservado, asi
+      que `ayuntamientoActual()` resuelve la plataforma y `objetivoDe`
+      devuelve `NO_ENCONTRADO`: el ADMIN_MUNICIPAL esta en otro tenant. El
+      test que parecia cubrirlo fabricaba un SUPER_ADMIN dentro de Motul,
+      cosa que no pasa; quedaba verde aunque la politica se borrara. Se le
+      corrigio el nombre y el comentario para que diga lo que prueba —la
+      regla de `roles.ts`— y no lo que no prueba.
+
+      **Requiere una decision tuya**, y por eso no lo resuelvo: conectar ese
+      camino significa abrir una conexion como `xula_super_admin` con el
+      tenant del municipio objetivo. Eso es una **tercera puerta** a la base,
+      y la regla 2 de `AGENTS.md` pide actualizarla junto con el ADR 0001 §2
+      antes de que entre. La alternativa es que el destrabe lo haga un script
+      operado a mano, como ya lo hace `scripts/plataforma-admin.sql`.
 
 ## PR 5: Rate limiting y pantalla de acceso
 

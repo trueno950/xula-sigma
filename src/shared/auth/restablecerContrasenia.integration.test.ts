@@ -108,7 +108,21 @@ describe("restablecerContrasenia", () => {
     expect(await claveDe(objetivo)).toBe(antes);
   });
 
-  it("SUPER_ADMIN si destraba al ADMIN_MUNICIPAL", async () => {
+  /**
+   * **Prueba la regla de `roles.ts`, no el camino real del SUPER_ADMIN.**
+   *
+   * El actor se fabrica con `ayuntamientoId` de Motul, y ese SUPER_ADMIN no
+   * existe en produccion: vive en el ayuntamiento reservado. Con ese
+   * contexto el UPDATE corre por `withTenant` bajo `xula_app`, que tiene
+   * `GRANT UPDATE` sobre `cuentas`, y **nunca toca**
+   * `cuentas_restablece_admin` ni el rol `xula_super_admin`. Este test
+   * quedaria verde aunque esa politica se borrara.
+   *
+   * Lo que si demuestra es que `puedeRestablecerContrasenia` deja pasar al
+   * SUPER_ADMIN sobre un ADMIN_MUNICIPAL. El camino de produccion no esta
+   * cableado todavia: ver tarea 4.16.
+   */
+  it("la regla deja al SUPER_ADMIN restablecer a un ADMIN_MUNICIPAL", async () => {
     const objetivo = gente.motul.ADMIN_MUNICIPAL;
 
     await restablecerContrasenia(actor("motul", "SUPER_ADMIN"), {

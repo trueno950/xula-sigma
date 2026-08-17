@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { conAuth } from "./instancia";
+import { origenDesde } from "./origen";
 
 /**
  * La sesion del request actual, o `null`.
@@ -12,14 +13,8 @@ import { conAuth } from "./instancia";
 export async function sesionActual() {
   const cabeceras = await headers();
 
-  /**
-   * El origen se arma con el Host de la peticion, que es el subdominio del
-   * municipio. `x-forwarded-proto` lo pone el proxy de Railway; en local
-   * no viene y entonces es http.
-   */
-  const host = cabeceras.get("host") ?? "localhost:3000";
-  const protocolo = cabeceras.get("x-forwarded-proto") ?? "http";
-  const origen = `${protocolo}://${host}`;
+  // Aca no hay `request.url`, solo cabeceras: de ahi el respaldo local.
+  const origen = origenDesde(cabeceras, "http://localhost:3000");
 
   return conAuth(origen, (auth) => auth.api.getSession({ headers: cabeceras }));
 }
