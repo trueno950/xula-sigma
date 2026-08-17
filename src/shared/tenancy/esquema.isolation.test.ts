@@ -75,16 +75,20 @@ it("ninguna tabla con ayuntamiento_id se quedo sin politica", async () => {
   expect(sinPolitica.map((t) => t.tabla)).toEqual([]);
 });
 
-it("ni el rol de aplicacion ni el owner son superusuario ni tienen BYPASSRLS", async () => {
+it("ningun rol del sistema es superusuario ni tiene BYPASSRLS", async () => {
   /**
-   * Los DOS roles, no solo el de la aplicacion.
+   * **Barrido por patron, no lista fija.** La version anterior nombraba
+   * `xula_app` y `xula_migrator` a mano, asi que un cuarto rol —creado por
+   * comodidad, con BYPASSRLS para "resolver" un permiso— quedaba fuera del
+   * test y nadie se enteraba. `xula\_%` los alcanza a todos, incluidos los
+   * que todavia no existen.
    *
-   * Que `xula_app` este limpio es lo obvio. Lo que sostiene FORCE ROW
-   * LEVEL SECURITY es que `xula_migrator` —el DUENO de las tablas—
-   * tampoco sea superusuario: un superusuario ignora RLS siempre, aun con
-   * FORCE puesto. Si el owner se volviera superusuario, las politicas
-   * seguirian existiendo, los otros tests seguirian en verde, y el
-   * aislamiento seria decorativo para esa conexion.
+   * Los tres roles y no solo el de la aplicacion. Que `xula_app` este
+   * limpio es lo obvio. Lo que sostiene FORCE ROW LEVEL SECURITY es que
+   * `xula_migrator` —el DUENO de las tablas— tampoco sea superusuario: un
+   * superusuario ignora RLS siempre, aun con FORCE puesto. Si el owner se
+   * volviera superusuario, las politicas seguirian existiendo, los otros
+   * tests seguirian en verde, y el aislamiento seria decorativo.
    *
    * Ademas `scripts/bootstrap.sql` no es una migracion y no lo cubre
    * ningun otro test. Este es el unico lugar donde una regresion ahi se
@@ -95,14 +99,20 @@ it("ni el rol de aplicacion ni el owner son superusuario ni tienen BYPASSRLS", a
   >`
     SELECT rolname, rolsuper, rolbypassrls
       FROM pg_roles
-     WHERE rolname IN ('xula_app', 'xula_migrator')
+     WHERE rolname LIKE 'xula\\_%'
      ORDER BY rolname
   `;
 
-  expect(roles.map((r) => r.rolname)).toEqual(["xula_app", "xula_migrator"]);
+  // El conjunto exacto: si aparece un rol nuevo, este test obliga a
+  // declararlo aca y a mirarle los atributos.
+  expect(roles.map((r) => r.rolname)).toEqual([
+    "xula_app",
+    "xula_migrator",
+    "xula_super_admin",
+  ]);
 
   // El assert nombra el rol y el atributo: quien rompa esto no tiene que
-  // abrir el test para saber cual de los dos fue.
+  // abrir el test para saber cual fue.
   const privilegiados = roles
     .filter((r) => r.rolsuper || r.rolbypassrls)
     .map(
@@ -110,4 +120,64 @@ it("ni el rol de aplicacion ni el owner son superusuario ni tienen BYPASSRLS", a
     );
 
   expect(privilegiados).toEqual([]);
+});
+
+it("xula_super_admin tiene exactamente los privilegios de tabla que necesita", async () => {
+  /**
+   * Conjunto exacto y no "contiene": la afirmacion que importa es lo que
+   * **no** puede hacer. Un `GRANT SELECT ON usuarios` agregado despues para
+   * destrabar algo le daria el padron de personal de todos los municipios,
+   * y un assert de inclusion lo dejaria pasar sin decir nada.
+   *
+   * `role_table_grants` no reporta los GRANT por columna —esos viven en
+   * `role_column_grants`— asi que el `SELECT` acotado de `usuarios` no
+   * aparece aca. Se verifica aparte.
+   */
+  const privilegios = await owner<
+    { table_name: string; privilege_type: string }[]
+  >`
+    SELECT table_name, privilege_type
+      FROM information_schema.role_table_grants
+     WHERE grantee = 'xula_super_admin'
+       AND table_schema = 'public'
+     ORDER BY table_name, privilege_type
+  `;
+
+  expect(privilegios.map((p) => `${p.table_name}.${p.privilege_type}`)).toEqual(
+    [
+      "ayuntamientos.INSERT",
+      "bitacora.INSERT",
+      "cuentas.INSERT",
+      "cuentas.UPDATE",
+      "usuarios.INSERT",
+    ],
+  );
+});
+
+it("su SELECT sobre usuarios es por columna, no sobre la tabla", async () => {
+  /**
+   * La politica `cuentas_restablece_admin` necesita leer `rol` de
+   * `usuarios` en una subconsulta, y eso exige `SELECT`. Darlo sobre la
+   * tabla entera abriria `name` y `baja_en` de cada persona de cada
+   * municipio; por columna alcanza para la subconsulta y nada mas.
+   *
+   * `email` entra porque el alta del primer administrador lo necesita para
+   * detectar el duplicado antes de escribir.
+   */
+  const columnas = await owner<{ column_name: string }[]>`
+    SELECT column_name
+      FROM information_schema.role_column_grants
+     WHERE grantee = 'xula_super_admin'
+       AND table_schema = 'public'
+       AND table_name = 'usuarios'
+       AND privilege_type = 'SELECT'
+     ORDER BY column_name
+  `;
+
+  expect(columnas.map((c) => c.column_name)).toEqual([
+    "ayuntamiento_id",
+    "email",
+    "id",
+    "rol",
+  ]);
 });

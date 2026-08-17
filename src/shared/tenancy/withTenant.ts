@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, not, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { type AyuntamientoId, esAyuntamientoId } from "./ayuntamientoId";
@@ -114,6 +114,12 @@ export type AyuntamientoResuelto = {
  * Las columnas se listan una por una y no se usa `select()` pelado. Es
  * deliberado: el dia que `ayuntamientos` gane una columna sensible, no se
  * cuela sola a una superficie que se sirve antes de autenticar.
+ *
+ * **Excluye la fila reservada de plataforma.** No es un municipio: es donde
+ * vive la identidad del `SUPER_ADMIN` (diseno seccion 10). Sin este filtro
+ * su subdominio resolveria, `proxy.ts` la trataria como un ayuntamiento mas
+ * y le pintaria pantalla de acceso a cualquiera que la escriba en la barra.
+ * `plataformaReservada.isolation.test.ts` lo provoca.
  */
 export async function resolverAyuntamientoPorSubdominio(
   subdominio: string,
@@ -126,7 +132,12 @@ export async function resolverAyuntamientoPorSubdominio(
       marca: ayuntamientos.marca,
     })
     .from(ayuntamientos)
-    .where(eq(ayuntamientos.subdominio, subdominio))
+    .where(
+      and(
+        eq(ayuntamientos.subdominio, subdominio),
+        not(ayuntamientos.esPlataforma),
+      ),
+    )
     .limit(1);
 
   return fila ?? null;

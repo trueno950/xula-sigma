@@ -15,6 +15,12 @@ import {
   enumerado,
   politicaTenant,
 } from "@/shared/tenancy/esquema";
+import {
+  altaDeCredencialDelAdministrador,
+  altaDelPrimerAdministrador,
+  lecturaDelPrimerAdministrador,
+  restablecimientoDelAdministrador,
+} from "./politicasPlataforma";
 import { ROLES, type Rol } from "./roles";
 
 /**
@@ -34,13 +40,9 @@ export {
  * que es nuestra— vive en su propio archivo. Venir de una libreria no
  * exime del aislamiento.
  *
- * Nombres de tabla en espanol, campos de la libreria en ingles: traducir
- * los campos con `fields:` seria un mapa mas donde un desajuste falla en
- * runtime y en silencio. `usuarios` ademas evita `"user"`, reservada en
- * Postgres.
- *
- * El adaptador las alcanza por `modelName` y no por el nombre del modelo
- * de la libreria: ver `instancia.ts`.
+ * Nombres de tabla en espanol, campos de la libreria en ingles. El motivo
+ * y como las alcanza el adaptador estan en `configuracion.ts`, sobre
+ * `MODELOS`; aca solo se usan.
  *
  * `sesiones` y `cuentas` cuelgan de `usuarios` por FK **compuesta**
  * `(user_id, ayuntamiento_id)`, no por `user_id` solo. Con la FK simple,
@@ -92,6 +94,8 @@ export const usuarios = pgTable(
     // `id` ya siendo PK, esta no restringe nada nuevo.
     unique("usuarios_id_tenant_key").on(t.id, t.ayuntamientoId),
     politicaTenant("usuarios"),
+    altaDelPrimerAdministrador(),
+    lecturaDelPrimerAdministrador(),
   ],
 ).enableRLS();
 
@@ -158,6 +162,8 @@ export const cuentas = pgTable(
       name: "cuentas_usuario_tenant_fk",
     }),
     politicaTenant("cuentas"),
+    altaDeCredencialDelAdministrador(),
+    restablecimientoDelAdministrador(),
   ],
 ).enableRLS();
 

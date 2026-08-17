@@ -35,13 +35,10 @@ const actor = (
   rol: Parameters<typeof contextoDe>[2],
 ) => contextoDe(gente, municipio, rol);
 
-const claveDe = async (usuarioId: string) => {
-  const [credencial] = await withTenant(motul, (tx) =>
+const claveDe = (usuarioId: string) =>
+  withTenant(motul, (tx) =>
     tx.select().from(cuentas).where(eq(cuentas.userId, usuarioId)),
-  );
-
-  return credencial?.password as string;
-};
+  ).then(([credencial]) => credencial?.password as string);
 
 const trazasDe = (usuarioId: string) =>
   withTenant(motul, (tx) =>

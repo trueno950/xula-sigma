@@ -334,36 +334,64 @@ un `logger` a `betterAuth`.
 
 ## PR 4: Tercer rol Postgres, provision de municipios
 
-- [ ] 4.1 Modificar `scripts/bootstrap.sql`: rol `xula_super_admin`
-      (`NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOINHERIT`),
-      mismo bloque `DO $$` idempotente, `SUPER_ADMIN_DATABASE_URL`. [PA-3]
-- [ ] 4.2 RED ampliar `esquema.isolation.test.ts`: barrido `xula\_%`
-      exige exactamente 3 roles, ninguno super/bypassrls. [PA-3]
-- [ ] 4.3 GREEN query por patron reemplaza la lista fija de 2 roles.
-- [ ] 4.4 RED assert de privilegios de tabla de `xula_super_admin`
-      contra `role_table_grants` (conjunto exacto). [PA-3]
-- [ ] 4.5 GREEN migracion adicional: politicas `usuarios_alta_admin`,
-      `cuentas_restablece_admin`, `GRANT INSERT` en `ayuntamientos`,
-      `GRANT SELECT` por columna en `usuarios`.
-- [ ] 4.6 RED `withAltaDeAyuntamiento` crea ayuntamiento + primer
-      `ADMIN_MUNICIPAL` en una transaccion; fallo en el segundo paso no
-      deja el ayuntamiento huerfano. [PA-1, PA-2]
-- [ ] 4.7 GREEN `shared/tenancy/provision.ts` — segunda conexion privada
-      de modulo, `withAltaDeAyuntamiento`.
-- [ ] 4.8 RED crear un `SUPER_ADMIN` via `withAltaDeAyuntamiento` falla
-      por `usuarios_alta_admin` (`WITH CHECK rol = 'ADMIN_MUNICIPAL'`).
-- [ ] 4.9 RED `resolverAyuntamientoPorSubdominio` devuelve null para el
-      subdominio reservado de plataforma — no aparece como un municipio
-      mas. Test propio, ver diseno §10.
-- [ ] 4.10 GREEN exclusion de la fila reservada (constante de subdominio
-      reservado o columna dedicada — decision de implementacion a
-      documentar en el PR).
-- [ ] 4.11 Seed unico del ayuntamiento reservado + primer `SUPER_ADMIN`,
-      fuera de `withAltaDeAyuntamiento`, documentado como paso manual
-      por entorno.
-- [ ] 4.12 Modificar `shared/tenancy/index.ts`: exportar
-      `withAltaDeAyuntamiento`, documentar por que no rompe el patron de
-      una sola puerta.
+- [x] 4.1 `scripts/bootstrap.sql`: rol `xula_super_admin` con los mismos
+      atributos que los otros dos, en el mismo bloque `DO $$` idempotente.
+      `scripts/db-local.sh` le pasa su clave y exporta
+      `SUPER_ADMIN_DATABASE_URL`. [PA-3]
+
+      **Pendiente tuyo:** `.env.example` no se pudo tocar (el harness
+      bloquea `.env*`). Falta agregarle:
+      `SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:cambiar@localhost:5432/xula"`.
+- [x] 4.2 RED barrido `xula\_%` en vez de lista fija. El motivo del cambio
+      no es cosmetico: con los dos roles nombrados a mano, un cuarto rol
+      creado por comodidad —con BYPASSRLS para "resolver" un permiso—
+      quedaba fuera del test. [PA-3]
+- [x] 4.3 GREEN conjunto exacto de tres roles, ninguno super/bypassrls.
+- [x] 4.4 RED+GREEN dos asserts de privilegios, no uno:
+      `role_table_grants` como conjunto exacto, y `role_column_grants`
+      aparte —el `GRANT SELECT (col, ...)` **no aparece** en la primera
+      vista, asi que un solo assert dejaba el SELECT por columna sin
+      cubrir. [PA-3]
+- [x] 4.5 GREEN `drizzle/0002_super_admin.sql`: las cuatro politicas del
+      diseno mas `usuarios_lectura_admin`, que el diseno no menciona y hace
+      falta — `INSERT ... RETURNING` aplica tambien las politicas de SELECT,
+      y `altaDePersona` usa `RETURNING`. Sin ella el alta falla.
+- [x] 4.6 RED+GREEN alta atomica. [PA-1, PA-2]
+- [x] 4.7 GREEN `shared/tenancy/provision.ts`. El id se genera en la
+      aplicacion y no con `DEFAULT gen_random_uuid()`: leerlo de vuelta
+      pediria `RETURNING`, que exige `SELECT` sobre `ayuntamientos`, y sin
+      ese GRANT el rol puede crear municipios pero no recorrer el
+      directorio de los que existen.
+- [x] 4.8 RED+GREEN ni `SUPER_ADMIN` ni `OPERADOR`.
+
+      **Un test no alcanzaba.** Por la API, `usuarios_alta_admin` y
+      `usuarios_lectura_admin` cubren el mismo camino y dan **el mismo
+      mensaje** de Postgres, verificado. Con la condicion `rol =
+      'ADMIN_MUNICIPAL'` quitada a mano del `WITH CHECK`, los tests que van
+      por `altaDePersona` **siguen verdes**: los salva el `RETURNING`. Lo
+      aisla un test sin `RETURNING`, por SQL directo, en
+      `superAdminAcotado.isolation.test.ts`.
+- [x] 4.9 RED `plataformaReservada.isolation.test.ts`, archivo propio.
+- [x] 4.10 GREEN **columna `es_plataforma`**, no constante de subdominio.
+
+      Un `subdominio <> 'plataforma'` disperso por las consultas es una
+      convencion de nombres y se olvida en la proxima. Un booleano se
+      indexa: `ayuntamientos_una_plataforma`, indice unico parcial, impide
+      que un seed corrido dos veces deje dos plataformas.
+- [x] 4.11 `scripts/plataforma.sql` + `scripts/plataforma-admin.sql`.
+
+      **Son dos pasos con dos roles, y no por descuido: ningun rol puede
+      hacer los dos.** Comprobado contra Postgres, no deducido.
+      `xula_migrator` es el unico que puede crear la fila de plataforma,
+      pero **no puede escribir en `usuarios`** —FORCE RLS alcanza al dueno y
+      ahi no tiene politica: `new row violates row-level security policy for
+      table "usuarios"`. `xula_super_admin` tampoco, por
+      `usuarios_alta_admin`. Queda `xula_app`. Los dos scripts se corrieron
+      de punta a punta contra la base local antes de darlos por buenos.
+- [x] 4.12 `shared/tenancy/index.ts` exporta `withAltaDeAyuntamiento`.
+      Consecuencia documentada ahi: importar el barril ahora exige
+      `SUPER_ADMIN_DATABASE_URL`, con el mismo criterio de fallo temprano
+      que `DATABASE_URL` en `withTenant.ts`.
 - [ ] 4.13 RED bitacora registra el alta (actor, ayuntamiento_id,
       accion, momento). [PA-4]
 - [ ] 4.14 GREEN traza de bitacora dentro de `withAltaDeAyuntamiento`.

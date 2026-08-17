@@ -1,11 +1,13 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   jsonb,
   pgPolicy,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import type { AyuntamientoId } from "./ayuntamientoId";
@@ -57,8 +59,30 @@ export const ayuntamientos = pgTable(
     // `altaEn` y no `activo`: es la fecha en que el municipio entro al
     // sistema. Un nombre como `activo` hace esperar un booleano.
     altaEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /**
+     * La fila reservada donde vive el `SUPER_ADMIN`. **No es un municipio**:
+     * por que existe y por que se excluye del directorio esta en
+     * `plataformaReservada.isolation.test.ts`, que es donde se prueba.
+     *
+     * Columna y no subdominio reservado por constante: un `subdominio <>
+     * 'plataforma'` disperso por las consultas es una convencion de
+     * nombres, y se olvida en la proxima.
+     */
+    esPlataforma: boolean().notNull().default(false),
   },
-  () => [
+  (t) => [
+    // Indice parcial sobre una constante: la segunda fila con
+    // `es_plataforma = true` choca contra el unique. Un seed corrido dos
+    // veces deja dos plataformas, y ninguna de las dos resuelve.
+    uniqueIndex("ayuntamientos_una_plataforma")
+      .on(sql`(true)`)
+      .where(sql`${t.esPlataforma}`),
+    // El `SUPER_ADMIN` crea municipios, nunca una segunda plataforma.
+    pgPolicy("ayuntamientos_alta_plataforma", {
+      for: "insert",
+      to: "xula_super_admin",
+      withCheck: sql`NOT ${t.esPlataforma}`,
+    }),
     /**
      * Lectura abierta, y es a proposito.
      *
@@ -112,6 +136,16 @@ export const bitacora = pgTable(
   (t) => [
     index("bitacora_tenant_idx").on(t.ayuntamientoId, t.ocurridoEn),
     politicaTenant("bitacora"),
+    /**
+     * El alta de un municipio deja su traza en la misma transaccion, y esa
+     * la escribe `xula_super_admin`. Solo INSERT: la bitacora no le da
+     * SELECT a nadie fuera de su municipio, ni siquiera a quien la escribio.
+     */
+    pgPolicy("bitacora_alta_plataforma", {
+      for: "insert",
+      to: "xula_super_admin",
+      withCheck: sql`ayuntamiento_id = ${tenantActual}`,
+    }),
   ],
 ).enableRLS();
 
