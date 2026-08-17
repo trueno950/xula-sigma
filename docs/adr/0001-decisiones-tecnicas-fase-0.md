@@ -96,6 +96,23 @@ Better Auth genera su propio esquema. Cada una de sus tablas pasa por la
 misma regla que el resto: si tiene `ayuntamiento_id`, tiene RLS y test de
 aislamiento en el mismo commit. Sin excepción por venir de una librería.
 
+### Costo de la instancia por request — medido 2026-08-17
+
+El ADR dejó abierto si construir la instancia de Better Auth en cada
+request salía caro. Medido en el spike PR 0 del cambio `auth-rbac`, con
+1000 iteraciones tras 100 de calentamiento contra Postgres 18 local:
+
+| Qué | p50 | p95 |
+|---|---|---|
+| Construir la instancia sobre la transacción | 0.141 ms | **0.227 ms** |
+| Acceso completo (`manejarAuth`, con sign-in real) | 23.6 ms | 26.2 ms |
+
+El umbral que habilitaba discutir AsyncLocalStorage era 5 ms de
+construcción. Quedó 22 veces por debajo, así que **no se discute**: un
+segundo mecanismo de contexto asincrónico conviviendo con el actual no se
+paga con este número. El p95 del acceso completo lo domina argon2id, que es
+lento a propósito.
+
 ---
 
 ## 2. Migraciones — drizzle-kit en el Pre-deploy Command de Railway
@@ -162,6 +179,22 @@ También otorga `CREATE ON DATABASE` a `xula_migrator`: `drizzle-kit` guarda
 su journal en un esquema propio y lo crea en la primera corrida. Sin ese
 permiso la migración **falla callada** — se queda en `applying
 migrations...` y sale con código 1 sin imprimir el error de Postgres.
+
+### `drizzle-kit migrate` sale con código 1 cuando no hay nada que aplicar
+
+Verificado el 2026-08-17 con la base ya al día: exit 1, misma salida y
+mismo silencio que el modo de falla de arriba.
+
+O sea que **el código de salida no distingue "falló" de "ya estaba al
+día"**, y las dos cosas se ven idénticas en un log. En el Pre-deploy
+Command de Railway eso importa: un deploy sin migraciones nuevas —que es la
+mayoría— marca error, y el día que una migración falle de verdad va a
+parecer el ruido de siempre.
+
+Lo que hace el Pre-deploy Command no puede ser `drizzle-kit migrate` a
+secas. Tiene que verificar el estado después de correr, contra
+`drizzle.__drizzle_migrations`, y decidir con eso. Queda anotado acá porque
+se descubre una sola vez y se olvida.
 
 ### Toda migración que crea tabla hace cuatro cosas
 

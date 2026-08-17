@@ -29,6 +29,11 @@ playwright-report/
 # Indice de skills, regenerable
 .atl/
 
+# Lock de tareas programadas del agente. Aparece y desaparece durante un
+# commit, y si entra al indice lo rompe: "invalid object ... Error building
+# trees". El resto de .claude/ SI se commitea.
+.claude/scheduled_tasks.lock
+
 # Editor
 .vscode/
 .idea/

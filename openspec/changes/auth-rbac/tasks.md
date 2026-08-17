@@ -74,29 +74,44 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
 > **viable**: el alta devuelve el usuario con su `ayuntamientoId` puesto
 > por el hook, sin que el cliente lo mande nunca.
 >
-> Pendiente: volver a correr los cinco criterios sobre el diseno corregido
-> y medir el p95, que quedo sin medir.
+> **Segunda corrida: 2026-08-17 sobre el diseno corregido. La compuerta
+> abrio.** 5/5 criterios, y p95 de construccion **0.227 ms** contra un
+> umbral de 5. Sigue el diseno tal cual: AsyncLocalStorage no hace falta.
+>
+> Un hallazgo mas, que no invalida el criterio pero si el motivo que el
+> diseno le atribuia: sin el hook, quien rechaza la fila es la **politica
+> RLS** (`WITH CHECK` sobre NULL evalua a "no verdadero"), no el
+> `NOT NULL`. Corregido en `design.md` seccion 2.
+>
+> Y una consecuencia de la forma corregida que PR 2 tiene que resolver: el
+> error del adaptador **no** se convierte en respuesta HTTP, sale como
+> excepcion de `manejarAuth`. Ver tarea 2.11.
 
-- [ ] 0.1 Rama de spike: 4 tablas de scratch + `additionalFields` +
+- [x] 0.1 Rama de spike: 4 tablas de scratch + `additionalFields` +
       `databaseHooks` + argon2id, invocado por `auth.handler(request)`.
-- [ ] 0.2 Sembrar Motul y Ticul; habilitar `emailVerification` para forzar
+- [x] 0.2 Sembrar Motul y Ticul; habilitar `emailVerification` para forzar
       escritura en `verification` (sin `userId`).
-- [ ] 0.3 Criterio 1: filas de las 4 tablas visibles solo bajo su tenant
+- [x] 0.3 Criterio 1: filas de las 4 tablas visibles solo bajo su tenant
       tras alta/acceso reales, conteo exacto por tabla.
-- [ ] 0.4 Criterio 2 (duro): token de `verification` de Motul invisible y
+- [x] 0.4 Criterio 2 (duro): token de `verification` de Motul invisible y
       no consumible desde Ticul.
-- [ ] 0.5 Criterio 3: remover el hook a mano; el alta debe FALLAR por
-      `NOT NULL`, no escribir la fila.
-- [ ] 0.6 Criterio 4: cero `AccesoSinTenantError` en alta, acceso, cierre
-      de sesion, refresco.
-- [ ] 0.7 Criterio 5: mismo correo/contrasenia en Motul y Ticul, alta y
+- [x] 0.5 Criterio 3: remover el hook a mano; el alta debe FALLAR en la
+      base, no escribir la fila. **Falla por politica RLS, no por
+      `NOT NULL`**; el `NOT NULL` queda como segunda reja y se verifica en
+      el catalogo porque `FORCE RLS` no deja rol por el que observarlo.
+- [x] 0.6 Criterio 4: cero `AccesoSinTenantError` en alta, acceso, cierre
+      de sesion, refresco. Con control positivo: una instancia construida
+      fuera de `withTenant` **si** lo levanta, o el criterio no es
+      falseable.
+- [x] 0.7 Criterio 5: mismo correo/contrasenia en Motul y Ticul, alta y
       acceso en ambos, cruzado falla.
-- [ ] 0.8 Medir p95 de `manejarAuth(request)` y del acceso completo
-      (1000 iter, 100 de calentamiento).
-- [ ] 0.9 **Decision**: 5/5 criterios y p95 <= 5ms -> sigue el diseno
-      (PR 1). Cualquier falla, o p95 > 5ms -> repliegue (repositorio
-      propio, Better Auth solo hash+verify) vuelve a **decision humana**
-      con el numero medido; AsyncLocalStorage NO preaprobado.
+- [x] 0.8 Medir p95 de `manejarAuth(request)` y del acceso completo
+      (1000 iter, 100 de calentamiento). Construccion: p50 0.141 ms,
+      p95 **0.227 ms**. Acceso completo: p50 23.6 ms, p95 26.2 ms —
+      dominado por argon2id, no por el mecanismo de tenant.
+- [x] 0.9 **Decision: sigue el diseno (PR 1).** 5/5 criterios y p95 22
+      veces por debajo del umbral. No se activa el repliegue ni se abre la
+      discusion de AsyncLocalStorage.
 - [ ] 0.10 Registrar el p95 en el ADR. Borrar la rama del spike.
 
 ## PR 1: Esquema, migracion, RLS, aislamiento
@@ -151,6 +166,13 @@ Requisitos por codigo corto: `AM-1..6` = `autenticacion-municipal`,
       baja, otro municipio) mapean al mismo `CREDENCIALES_INVALIDAS`.
       [AM-1, AM-2]
 - [ ] 2.10 `pnpm test` y `pnpm test:integration` en verde.
+- [ ] 2.11 RED+GREEN borde de error en `route.ts`: con el handler adentro
+      de la transaccion, un error del adaptador **no** vuelve como
+      respuesta de Better Auth — sale como excepcion de `manejarAuth`
+      (verificado en el spike). El borde lo convierte en 500 generico y
+      **no** deja salir el motivo: `new row violates row-level security
+      policy for table "usuarios"` en un cuerpo de respuesta es filtracion
+      de esquema. El detalle va a bitacora, no al cliente. [AM-2]
 
 ## PR 3: Roles — regla pura, verificacion, contexto
 
