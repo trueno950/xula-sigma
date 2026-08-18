@@ -1,29 +1,20 @@
-import { randomUUID } from "node:crypto";
-import postgres from "postgres";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { limpiar, motivoDeFalla, owner } from "./municipiosDePrueba";
 import {
-  appSinTenant,
-  limpiar,
-  motivoDeFalla,
-  owner,
-} from "./municipiosDePrueba";
+  comoSuperAdminEn,
+  sembrarPersona,
+  superAdmin,
+  unMunicipio,
+} from "./superAdminDePrueba";
 
 /**
  * Lo que `xula_super_admin` **no** puede hacer.
  *
- * Va por SQL directo y no por `withAltaDeAyuntamiento` a proposito: lo que
- * se verifica son las politicas de `0002_super_admin.sql`, no la forma de
- * una firma. Una firma se cambia el mes que viene; la politica es lo que
- * queda cuando alguien escriba otro camino de alta.
- *
- * Aparte de `provision.isolation.test.ts`, que prueba el camino feliz y la
- * atomicidad. Aca solo estan las negativas, que son las que sostienen que
- * el `SUPER_ADMIN` no sea llave maestra.
+ * Solo las negativas: son las que sostienen que el `SUPER_ADMIN` no sea
+ * llave maestra. El unico camino en que si toca datos de un municipio esta
+ * en `restablecerAdmin.isolation.test.ts`, y el camino feliz del alta en
+ * `provision.isolation.test.ts`.
  */
-
-const urlSuperAdmin = process.env.SUPER_ADMIN_DATABASE_URL;
-if (!urlSuperAdmin) throw new Error("Falta SUPER_ADMIN_DATABASE_URL.");
-const superAdmin = postgres(urlSuperAdmin, { max: 1, prepare: false });
 
 afterEach(async () => {
   await limpiar();
@@ -33,51 +24,6 @@ afterAll(async () => {
   await superAdmin.end();
   await owner.end();
 });
-
-/** Un municipio ya existente, creado por el owner. */
-async function unMunicipio() {
-  const id = randomUUID();
-
-  await owner`
-    INSERT INTO ayuntamientos (id, subdominio, nombre)
-    VALUES (${id}, ${`m-${id.slice(0, 8)}`}, 'Municipio')
-  `;
-
-  return id;
-}
-
-/**
- * Siembra una persona con el rol de la aplicacion.
- *
- * No va por el owner: `usuarios` tiene FORCE RLS y `xula_migrator` no tiene
- * politica, asi que su INSERT muere. Y no va por `xula_super_admin`, que
- * solo puede crear `ADMIN_MUNICIPAL` —justamente lo que prueba el test de
- * arriba— y no serviria para sembrar el `OPERADOR`.
- */
-const sembrarPersona = (id: string, rol: string, correo: string) =>
-  appSinTenant.begin(async (tx) => {
-    await tx`SELECT set_config('app.tenant', ${id}, true)`;
-
-    const [fila] = await tx`
-      INSERT INTO usuarios (ayuntamiento_id, name, email, rol)
-      VALUES (${id}, 'Persona', ${correo}, ${rol})
-      RETURNING id
-    `;
-
-    if (!fila) throw new Error(`No se sembro la persona ${correo}.`);
-
-    return fila.id as string;
-  });
-
-const comoSuperAdminEn = <T>(
-  id: string,
-  trabajo: (tx: postgres.TransactionSql) => Promise<T>,
-) =>
-  superAdmin.begin(async (tx) => {
-    await tx`SELECT set_config('app.tenant', ${id}, true)`;
-
-    return trabajo(tx);
-  });
 
 describe("xula_super_admin esta acotado por politicas, no por confianza", () => {
   it("el WITH CHECK solo, sin RETURNING, ya niega el OPERADOR", async () => {
@@ -183,9 +129,16 @@ describe("xula_super_admin esta acotado por politicas, no por confianza", () => 
     expect(motivo).toMatch(/permission denied/i);
   });
 
-  it("no puede leer ni escribir la bitacora de un municipio", async () => {
-    // Solo INSERT, y solo del tenant activo. La bitacora es de agregado y
-    // de nadie: quien la escribe tampoco la lee.
+  it("no puede leer la bitacora, ni siquiera la que escribio", async () => {
+    /**
+     * La bitacora es de agregado y de nadie: quien la escribe tampoco la
+     * lee. **Escribir si puede** —`bitacora_alta_plataforma` le da INSERT—
+     * y por eso el nombre de este test decia antes "ni escribir", que era
+     * falso: lo uso `withAltaDeAyuntamiento` para la traza del alta y
+     * `scripts/restablecer-admin.sql` para la del destrabe. Lo que ese
+     * INSERT no puede es salirse del tenant, y eso lo prueba el test de
+     * abajo.
+     */
     const id = await unMunicipio();
 
     const motivo = await motivoDeFalla(() =>
@@ -193,5 +146,29 @@ describe("xula_super_admin esta acotado por politicas, no por confianza", () => 
     );
 
     expect(motivo).toMatch(/permission denied/i);
+  });
+
+  it("no puede escribir en la bitacora de otro municipio", async () => {
+    /**
+     * El `WITH CHECK` de `bitacora_alta_plataforma` exige
+     * `ayuntamiento_id = tenantActual`. Sin este test, el unico camino de
+     * escritura que tiene el rol sobre una tabla operativa quedaba sin
+     * prueba de aislamiento: se sabia que escribe, no que no puede escribir
+     * en el municipio de al lado.
+     */
+    const propio = await unMunicipio();
+    const ajeno = await unMunicipio();
+
+    const motivo = await motivoDeFalla(() =>
+      comoSuperAdminEn(
+        propio,
+        (tx) => tx`
+          INSERT INTO bitacora (ayuntamiento_id, accion, entidad)
+          VALUES (${ajeno}, 'ALTA_AYUNTAMIENTO', 'ayuntamientos')
+        `,
+      ),
+    );
+
+    expect(motivo).toMatch(/row-level security/i);
   });
 });

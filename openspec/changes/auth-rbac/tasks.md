@@ -413,8 +413,39 @@ un `logger` a `betterAuth`.
 - [x] 4.15 Actualizar `AGENTS.md` y ADR 0001 §1 con la resolucion del
       SUPER_ADMIN (ya cerrada en el diseno). Hecho: ADR 0001 §1 documenta el
       ayuntamiento reservado y `AGENTS.md` nombra el tercer rol.
-- [ ] 4.16 **El camino real del SUPER_ADMIN no esta cableado.** Lo encontro
-      GGA revisando el PR 5.
+- [x] 4.16 **El camino real del SUPER_ADMIN no estaba cableado.** Lo
+      encontro GGA revisando el PR 5.
+
+      **Resuelto por script operado a mano** (`scripts/restablecer-admin.sql`),
+      no por caso de uso. Decision tomada: un municipio pierde a su
+      administrador pocas veces al anio, y cablearlo pedia una tercera puerta
+      a la base cuya superficie estaria siempre y su uso casi nunca. El dia
+      que se vuelva rutina se abre con datos de uso encima de la mesa, no por
+      anticipacion.
+
+      Lo que enseño escribirlo, y que ningun analisis anticipo: el rol tiene
+      `UPDATE` sobre `cuentas` y **ni una columna de `SELECT`**, asi que
+      cualquier `WHERE user_id = ...` muere con `permission denied for table
+      cuentas` —filtrar es leer—. El UPDATE va **sin `WHERE`** y lo acota el
+      `USING` de la politica. Era lo que el comentario de
+      `politicasPlataforma.ts` ya decia; recien se entendio cuando Postgres
+      lo nego.
+
+      Tampoco puede resolver el subdominio: sin `SELECT` sobre
+      `ayuntamientos`, el id va como parametro y se obtiene aparte con el rol
+      de aplicacion. El script cuenta las filas afectadas y falla si no es
+      exactamente una, porque un UPDATE frenado por RLS devuelve cero **sin
+      error** y no hay forma de releer para verificar.
+
+      Probado de punta a punta contra la base local: restablece al
+      ADMIN_MUNICIPAL, deja al OPERADOR intacto pese al UPDATE sin `WHERE`,
+      niega el correo de un OPERADOR y el de un admin de otro municipio con
+      el mismo mensaje, y no deja traza cuando falla. Ademas quedaron dos
+      tests de aislamiento que cubren el camino positivo de la politica —el
+      que antes no ejecutaba nadie—, provocados aflojando el `USING`: sin el
+      `EXISTS`, el OPERADOR sale con la clave cambiada y el test cae.
+
+      Detalle historico del hallazgo original:
 
       `restablecerContrasenia` con un contexto de SUPER_ADMIN corre por
       `withTenant` bajo `xula_app`, que tiene `GRANT UPDATE` sobre
@@ -431,12 +462,10 @@ un `logger` a `betterAuth`.
       corrigio el nombre y el comentario para que diga lo que prueba —la
       regla de `roles.ts`— y no lo que no prueba.
 
-      **Requiere una decision tuya**, y por eso no lo resuelvo: conectar ese
-      camino significa abrir una conexion como `xula_super_admin` con el
-      tenant del municipio objetivo. Eso es una **tercera puerta** a la base,
-      y la regla 2 de `AGENTS.md` pide actualizarla junto con el ADR 0001 §2
-      antes de que entre. La alternativa es que el destrabe lo haga un script
-      operado a mano, como ya lo hace `scripts/plataforma-admin.sql`.
+      La alternativa descartada era abrir una conexion como
+      `xula_super_admin` con el tenant del municipio objetivo: una **tercera
+      puerta** a la base, que la regla 2 de `AGENTS.md` no deja entrar sin
+      actualizar antes el ADR 0001 §2. **Sigue habiendo dos puertas.**
 
 ## PR 5: Rate limiting y pantalla de acceso
 
