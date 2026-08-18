@@ -14,10 +14,10 @@ import type { Rol } from "./roles";
  * URL. Better Auth se queda con el acceso y la sesion, que es donde
  * aporta.
  *
- * Recibe el `tx` en vez de abrir uno: quien da de alta suele estar
- * haciendo algo mas en la misma transaccion —la traza en bitacora, el
- * primer ADMIN_MUNICIPAL de un municipio recien creado— y partirlo en dos
- * transacciones deja municipios sin nadie que pueda entrar.
+ * Recibe el `tx` en vez de abrir uno: quien da de alta suele estar haciendo
+ * algo mas en la misma transaccion —el primer `ADMIN_MUNICIPAL` de un
+ * municipio recien creado— y partirlo en dos transacciones deja municipios
+ * sin nadie que pueda entrar.
  *
  * El `rol` es un parametro obligatorio y sin valor por defecto. Un default
  * aca seria el rol que termina teniendo todo el mundo el dia que alguien

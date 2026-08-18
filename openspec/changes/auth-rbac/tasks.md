@@ -403,18 +403,13 @@ un `logger` a `betterAuth`.
       `expected [] to have a length of 1`.
 - [x] 4.14 GREEN traza de bitacora dentro de `withAltaDeAyuntamiento`.
 
-      Va en el alta y no en el llamador: dejarsela a quien compone el alta
-      significa que el dia que uno se olvide no falla nada y queda un
-      municipio sin registro de haber sido creado. La escribe
-      `xula_super_admin` por `bitacora_alta_plataforma` —INSERT y nada mas,
-      ni siquiera puede releer lo que escribio— y no rompe capas porque
-      `bitacora` vive en `tenancy/esquema.ts`, no en `auth`.
+      Va en el alta y no en el llamador, y `actor` queda nulo. El porque de
+      las dos decisiones esta en `provision.ts`, junto al INSERT que las
+      aplica; repetirlo aca garantiza que una de las dos copias envejezca.
 
-      **`actor` queda nulo**, que es lo que el esquema reserva para lo que
-      origina el sistema: en ese punto no hay persona identificada. El
-      primer `ADMIN_MUNICIPAL` lo crea `trabajo`, despues. El dia que el
-      provisionamiento tenga un caso de uso con sesion, el actor sale de
-      ahi — hoy no hay ningun llamador de produccion (ver 4.16).
+      Lo que si vive aca: el dia que el provisionamiento tenga un caso de
+      uso con sesion, el actor sale de ahi. Hoy no hay ningun llamador de
+      produccion — ver 4.16.
 - [x] 4.15 Actualizar `AGENTS.md` y ADR 0001 §1 con la resolucion del
       SUPER_ADMIN (ya cerrada en el diseno). Hecho: ADR 0001 §1 documenta el
       ayuntamiento reservado y `AGENTS.md` nombra el tercer rol.

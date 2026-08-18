@@ -69,8 +69,7 @@ const bd = drizzle(cliente, { schema: esquema, casing: "snake_case" });
  *   `shared/tenancy` no puede importar `shared/auth` —la direccion es
  *   `auth → tenancy` y nunca al reves— asi que quien compone el alta
  *   completa es el caso de uso, no esta funcion. La traza en bitacora **no**
- *   va aca: la escribe el alta misma, mas abajo, para que no dependa de que
- *   cada llamador se acuerde.
+ *   va aca; el porque esta donde se escribe, mas abajo.
  */
 export async function withAltaDeAyuntamiento<T>(
   datos: { subdominio: string; nombre: string },
