@@ -25,9 +25,19 @@ import type { TransaccionTenant } from "./withTenant";
  * Y lo que hace fuerte a esta parte es que **el limite lo pone Postgres, no
  * este archivo**: `xula_super_admin` no puede crear un `OPERADOR`, no puede
  * restablecerle la contrasenia a nadie que no sea el `ADMIN_MUNICIPAL`, y
- * no tiene `SELECT` sobre `ayuntamientos` ni sobre ninguna tabla operativa.
+ * no tiene `SELECT` sobre `ayuntamientos`.
+ *
+ * Sobre `usuarios` **si tiene**, y conviene decirlo con precision en vez de
+ * afirmar que no ve nada: `GRANT SELECT` de cuatro columnas —`id`,
+ * `ayuntamiento_id`, `rol`, `email`— acotado ademas por
+ * `usuarios_lectura_admin` al tenant actual y a `rol = 'ADMIN_MUNICIPAL'`.
+ * No es comodidad: `INSERT ... RETURNING` aplica tambien las politicas de
+ * SELECT, y la subconsulta de `cuentas_restablece_admin` necesita leer
+ * `rol`. Quedan afuera `name` y `baja_en`, y cualquier persona que no sea
+ * el administrador.
+ *
  * Las politicas estan en `0002_super_admin.sql`; los tests que las provocan
- * en `provision.isolation.test.ts`.
+ * en `provision.isolation.test.ts` y en `superAdminAcotado.isolation.test.ts`.
  */
 
 const url = process.env.SUPER_ADMIN_DATABASE_URL;
@@ -55,10 +65,12 @@ const bd = drizzle(cliente, { schema: esquema, casing: "snake_case" });
  * como pedirlo — la firma es la comodidad, la politica es la garantia.
  *
  * @param trabajo Recibe el `tx` y el id recien creado. Aca adentro va el
- *   primer `ADMIN_MUNICIPAL` y la traza en bitacora. **No lo llama
- *   `provision.ts`**: `shared/tenancy` no puede importar `shared/auth` —la
- *   direccion es `auth → tenancy` y nunca al reves— asi que quien compone
- *   el alta completa es el caso de uso, no esta funcion.
+ *   primer `ADMIN_MUNICIPAL`. **No lo llama `provision.ts`**:
+ *   `shared/tenancy` no puede importar `shared/auth` —la direccion es
+ *   `auth → tenancy` y nunca al reves— asi que quien compone el alta
+ *   completa es el caso de uso, no esta funcion. La traza en bitacora **no**
+ *   va aca: la escribe el alta misma, mas abajo, para que no dependa de que
+ *   cada llamador se acuerde.
  */
 export async function withAltaDeAyuntamiento<T>(
   datos: { subdominio: string; nombre: string },
