@@ -17,8 +17,9 @@ toca datos, marcá el hallazgo.
 ## Las 12 reglas que nadie rompe
 
 1. `any` está prohibido. Se usa `unknown` + type guard.
-2. Todo acceso a base de datos pasa por `withTenant`. Hay **dos**
-   excepciones sancionadas, las dos en `shared/tenancy`, y ninguna más:
+2. **En `src/`**, todo acceso a base de datos pasa por `withTenant`. Hay
+   **dos** excepciones sancionadas, las dos en `shared/tenancy`, y ninguna
+   más:
 
    - `resolverAyuntamientoPorSubdominio`: resuelve el tenant antes de que
      exista uno, lee solo el directorio público de `ayuntamientos` y su
@@ -27,14 +28,38 @@ toca datos, marcá el hallazgo.
      cuando el tenant todavía no existe porque se está creando. Corre bajo
      un **tercer rol de Postgres**, `xula_super_admin`, con su propio
      conjunto de políticas: no puede crear a nadie que no sea
-     `ADMIN_MUNICIPAL`, no tiene `SELECT` sobre `ayuntamientos` ni sobre
-     ninguna tabla operativa, y no puede crear una segunda fila de
-     plataforma. Ver ADR 0001 §2 y diseño D7.
+     `ADMIN_MUNICIPAL`, no puede crear una segunda fila de plataforma, y de
+     `usuarios` solo lee cuatro columnas del `ADMIN_MUNICIPAL` de su tenant.
+     Ver ADR 0001 §2 y diseño D7.
 
    Las dos comparten forma: conexión privada del módulo, una sola salida, y
    el límite lo pone Postgres y no la función. Cualquier otro acceso sin
-   tenant es hallazgo, incluido uno nuevo que invoque este precedente —que
-   ya se usó dos veces y no se usa una tercera sin actualizar esta regla.
+   tenant desde `src/` es hallazgo, incluido uno nuevo que invoque este
+   precedente —que ya se usó dos veces y no se usa una tercera sin
+   actualizar esta regla.
+
+   **`scripts/*.sql` es otra categoría y siempre lo fue.** Son actos de
+   operación: los corre una persona con `psql` y credenciales del entorno,
+   no hay proceso que los invoque y no son superficie alcanzable desde la
+   aplicación. La regla de las dos puertas no los gobierna porque no son
+   una puerta: nadie los cruza sin acceso a la base, y quien ya tiene ese
+   acceso no necesita el script.
+
+   Lo que sí los gobierna, y es hallazgo si falta:
+
+   - Corren con el rol de **menor** privilegio que alcance, nunca con el
+     superusuario ni con el owner salvo que la tarea lo exija.
+   - El límite lo siguen poniendo las políticas, no el script: si RLS lo
+     dejara hacer de más, el script está mal aunque hoy no lo haga.
+   - Un `UPDATE` o `DELETE` frenado por RLS devuelve **cero filas sin
+     error**. Todo script que escriba cuenta las filas afectadas y falla si
+     no son las esperadas.
+   - Ningún secreto adentro: contraseñas y hashes entran por `-v`.
+
+   Los cuatro que existen: `bootstrap.sql` (roles, con el superusuario del
+   proveedor), `plataforma.sql` y `plataforma-admin.sql` (siembra del
+   ayuntamiento reservado) y `restablecer-admin.sql` (destraba a un
+   `ADMIN_MUNICIPAL`, decisión de la tarea 4.16 de `auth-rbac`).
 3. `SET LOCAL` dentro de transacción. Nunca `SET` suelto.
 4. `ayuntamiento_id` sale del contexto del servidor, nunca del cliente.
 5. Tabla nueva = RLS + test de aislamiento, en el mismo commit.
