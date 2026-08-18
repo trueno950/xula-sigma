@@ -392,9 +392,29 @@ un `logger` a `betterAuth`.
       Consecuencia documentada ahi: importar el barril ahora exige
       `SUPER_ADMIN_DATABASE_URL`, con el mismo criterio de fallo temprano
       que `DATABASE_URL` en `withTenant.ts`.
-- [ ] 4.13 RED bitacora registra el alta (actor, ayuntamiento_id,
+- [x] 4.13 RED bitacora registra el alta (actor, ayuntamiento_id,
       accion, momento). [PA-4]
-- [ ] 4.14 GREEN traza de bitacora dentro de `withAltaDeAyuntamiento`.
+
+      **El test ya existia y no probaba nada.** Escribia la traza adentro
+      del propio `trabajo` y despues afirmaba encontrarla: probaba que podia
+      leer una fila que el mismo habia puesto. Quedaba verde con
+      `withAltaDeAyuntamiento` sin escribir una sola traza, que era el
+      estado real del codigo. Reescrito sin ese insert, quedo en rojo con
+      `expected [] to have a length of 1`.
+- [x] 4.14 GREEN traza de bitacora dentro de `withAltaDeAyuntamiento`.
+
+      Va en el alta y no en el llamador: dejarsela a quien compone el alta
+      significa que el dia que uno se olvide no falla nada y queda un
+      municipio sin registro de haber sido creado. La escribe
+      `xula_super_admin` por `bitacora_alta_plataforma` —INSERT y nada mas,
+      ni siquiera puede releer lo que escribio— y no rompe capas porque
+      `bitacora` vive en `tenancy/esquema.ts`, no en `auth`.
+
+      **`actor` queda nulo**, que es lo que el esquema reserva para lo que
+      origina el sistema: en ese punto no hay persona identificada. El
+      primer `ADMIN_MUNICIPAL` lo crea `trabajo`, despues. El dia que el
+      provisionamiento tenga un caso de uso con sesion, el actor sale de
+      ahi — hoy no hay ningun llamador de produccion (ver 4.16).
 - [x] 4.15 Actualizar `AGENTS.md` y ADR 0001 §1 con la resolucion del
       SUPER_ADMIN (ya cerrada en el diseno). Hecho: ADR 0001 §1 documenta el
       ayuntamiento reservado y `AGENTS.md` nombra el tercer rol.

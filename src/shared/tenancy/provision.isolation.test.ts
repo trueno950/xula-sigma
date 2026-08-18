@@ -135,21 +135,26 @@ describe("withAltaDeAyuntamiento", () => {
     expect(motivo).toMatch(/row-level security/i);
   });
 
-  it("deja traza del alta en bitacora", async () => {
+  it("deja traza del alta en bitacora sin que el llamador la escriba", async () => {
+    /**
+     * **El callback no inserta nada en bitacora**, y ese es el punto.
+     *
+     * La version anterior de este test escribia la traza adentro del propio
+     * `trabajo` y despues afirmaba encontrarla: probaba que podia leer una
+     * fila que el mismo habia puesto. Quedaba verde con
+     * `withAltaDeAyuntamiento` sin escribir una sola traza — que era
+     * exactamente el estado del codigo.
+     *
+     * La traza tiene que salir del alta misma. Si dependiera de que cada
+     * llamador se acuerde de escribirla, el dia que uno se olvide no falla
+     * nada y el municipio aparece sin registro de haber sido creado.
+     */
     const id = await withAltaDeAyuntamiento(
       { subdominio: "muna", nombre: "Muna" },
       async (tx, ayuntamientoId) => {
-        const { id: actorId } = await altaDePersona(tx, ayuntamientoId, {
+        await altaDePersona(tx, ayuntamientoId, {
           ...PRIMER_ADMIN,
           rol: "ADMIN_MUNICIPAL",
-        });
-
-        await tx.insert(bitacora).values({
-          ayuntamientoId,
-          actor: actorId,
-          accion: "ALTA_AYUNTAMIENTO",
-          entidad: "ayuntamientos",
-          entidadId: ayuntamientoId,
         });
 
         return ayuntamientoId;
@@ -162,5 +167,15 @@ describe("withAltaDeAyuntamiento", () => {
 
     expect(trazas).toHaveLength(1);
     expect(trazas[0]?.accion).toBe("ALTA_AYUNTAMIENTO");
+    expect(trazas[0]?.entidad).toBe("ayuntamientos");
+    expect(trazas[0]?.ocurridoEn).toBeInstanceOf(Date);
+
+    /**
+     * Nulo a proposito: en este punto no hay persona identificada. Quien
+     * corre el provisionamiento es la plataforma, y el primer
+     * `ADMIN_MUNICIPAL` todavia no existe cuando se escribe la traza. El
+     * esquema ya reserva `actor` nulo para lo que origina el sistema.
+     */
+    expect(trazas[0]?.actor).toBeNull();
   });
 });

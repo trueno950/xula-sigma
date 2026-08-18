@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { type AyuntamientoId, comoAyuntamientoId } from "./ayuntamientoId";
 import * as esquema from "./esquema";
-import { ayuntamientos } from "./esquema";
+import { ayuntamientos, bitacora } from "./esquema";
 import type { TransaccionTenant } from "./withTenant";
 
 /**
@@ -87,6 +87,29 @@ export async function withAltaDeAyuntamiento<T>(
      * en produccion.
      */
     await tx.execute(sql`SELECT set_config('app.tenant', ${id}, true)`);
+
+    /**
+     * La traza la escribe el alta y no el llamador.
+     *
+     * Es la unica forma de que exista siempre: dejarsela a quien compone el
+     * alta significa que el dia que uno se olvide, no falla nada y queda un
+     * municipio sin registro de haber sido creado. La escribe
+     * `xula_super_admin` por `bitacora_alta_plataforma`, que le da INSERT y
+     * nada mas — ni siquiera puede volver a leer lo que acaba de escribir.
+     *
+     * `actor` queda nulo, que es lo que el esquema reserva para lo que
+     * origina el sistema: en este punto no hay persona identificada. El
+     * primer `ADMIN_MUNICIPAL` todavia no existe —lo crea `trabajo`, despues
+     * de esta linea— y la plataforma no llega hasta aca con una sesion. El
+     * dia que el provisionamiento tenga un caso de uso con contexto, el
+     * actor sale de ahi.
+     */
+    await tx.insert(bitacora).values({
+      ayuntamientoId: id,
+      accion: "ALTA_AYUNTAMIENTO",
+      entidad: "ayuntamientos",
+      entidadId: id,
+    });
 
     return trabajo(tx as TransaccionTenant, id);
   });
