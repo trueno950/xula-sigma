@@ -27,17 +27,12 @@ import type { TransaccionTenant } from "./withTenant";
  * restablecerle la contrasenia a nadie que no sea el `ADMIN_MUNICIPAL`, y
  * no tiene `SELECT` sobre `ayuntamientos`.
  *
- * Sobre `usuarios` **si tiene**, y conviene decirlo con precision en vez de
- * afirmar que no ve nada: `GRANT SELECT` de cuatro columnas —`id`,
- * `ayuntamiento_id`, `rol`, `email`— acotado ademas por
- * `usuarios_lectura_admin` al tenant actual y a `rol = 'ADMIN_MUNICIPAL'`.
- * No es comodidad: `INSERT ... RETURNING` aplica tambien las politicas de
- * SELECT, y la subconsulta de `cuentas_restablece_admin` necesita leer
- * `rol`. Quedan afuera `name` y `baja_en`, y cualquier persona que no sea
- * el administrador.
+ * Sobre `usuarios` **si tiene**, acotado por columna y por politica. Decir
+ * que no ve nada era mas corto y era falso; que columnas y por que, en
+ * `0002_super_admin.sql`, donde vive el GRANT.
  *
- * Las politicas estan en `0002_super_admin.sql`; los tests que las provocan
- * en `provision.isolation.test.ts` y en `superAdminAcotado.isolation.test.ts`.
+ * Las politicas estan en esa misma migracion; los tests que las provocan en
+ * `provision.isolation.test.ts` y en `superAdminAcotado.isolation.test.ts`.
  */
 
 const url = process.env.SUPER_ADMIN_DATABASE_URL;
