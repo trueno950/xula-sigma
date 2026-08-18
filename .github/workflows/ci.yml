@@ -41,7 +41,11 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm vitest run --project unit --coverage
+      # Sin `--coverage`: el piso se mide en el job de aislamiento, que es el
+      # unico con Postgres. Midiendolo aca, todo lo que se prueba contra la
+      # base daba 0% y la reja empujaba a escribir tests unitarios que no
+      # prueban RLS. Ver el comentario de `coverage` en vitest.config.ts.
+      - run: pnpm vitest run --project unit
 
   aislamiento:
     name: Integracion y aislamiento entre municipios
@@ -74,6 +78,7 @@ jobs:
           psql "postgresql://postgres:postgres@localhost:5432/xula_test" \
             -v clave_migrator=postgres \
             -v clave_app=postgres \
+            -v clave_super_admin=postgres \
             -f scripts/bootstrap.sql
 
       # Las migraciones corren con el rol owner, nunca con el de aplicacion
@@ -87,11 +92,14 @@ jobs:
       # Este es el job que no se negocia: si una tabla con ayuntamiento_id
       # quedo sin politica RLS, el build cae aca y no en produccion con el
       # segundo municipio.
+      # La suite completa y no solo `integration`: el piso de cobertura sale
+      # de aca, y con una sola de las dos mitades el numero miente.
       - name: Integracion y aislamiento
-        run: pnpm vitest run --project integration
+        run: pnpm vitest run --coverage
         env:
           DATABASE_URL: postgresql://xula_app:postgres@localhost:5432/xula_test
           MIGRATION_DATABASE_URL: postgresql://xula_migrator:postgres@localhost:5432/xula_test
+          SUPER_ADMIN_DATABASE_URL: postgresql://xula_super_admin:postgres@localhost:5432/xula_test
 
   docs:
     name: Links de documentacion
@@ -108,18 +116,53 @@ jobs:
     name: Revision de IA
     runs-on: ubuntu-latest
     # Solo en PR y solo si hay credencial. Sin secreto no falla el build:
-    # la revision es una reja adicional, no la unica.
+    # la revision es una reja adicional, no la unica —en cada commit ya
+    # corrio por el hook de pre-commit.
+    #
+    # Eso lo decia este comentario desde el principio y **no estaba
+    # implementado**: el `if` miraba solo el tipo de evento, asi que sin
+    # `DEEPSEEK_API_KEY` el job corria igual y rompia el build. Se vio en el
+    # PR 1, la primera vez que CI llego a correr. La condicion va por paso y
+    # no por job porque el contexto `secrets` no existe en el `if` de un job;
+    # mapeada a `env` si se puede leer.
     if: github.event_name == 'pull_request'
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      # En un evento de `pull_request`, `actions/checkout` **no deja `main`
+      # como rama local**: solo baja la referencia del PR. `gga --pr-mode`
+      # compara contra `PR_BASE_BRANCH`, que en `.gga` es `main`, y sin esa
+      # rama no resuelve el rango: reporta `No matching files changed in PR`
+      # y **sale en verde sin revisar una linea**.
+      #
+      # Se vio en el PR 1: el paso duro tres decimas de milisegundo y el job
+      # quedo verde. Una reja que no puede fallar es peor que no tenerla,
+      # porque ademas da confianza. Ver docs/04-calidad.md seccion 7.
+      - name: Traer la rama base
+        if: env.DEEPSEEK_API_KEY != ''
+        run: git fetch origin main:main
+
+      # `brew` NO viene en los runners de Ubuntu; solo en los de macOS. El
+      # job moria con `brew: command not found` y codigo 127 antes de tocar
+      # una linea de codigo. `gga` se distribuye por tap de Homebrew y no es
+      # un script suelto —hace `source` de su `lib/`—, asi que no alcanza con
+      # bajar un archivo. Esta es la accion oficial de Homebrew.
+      - name: Instalar Homebrew
+        if: env.DEEPSEEK_API_KEY != ''
+        uses: Homebrew/actions/setup-homebrew@master
+
       - name: Instalar GGA y opencode
+        if: env.DEEPSEEK_API_KEY != ''
         run: |
           brew install gentleman-programming/tap/gga
           npm install -g opencode-ai
+
       - name: Revisar el PR
+        if: env.DEEPSEEK_API_KEY != ''
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           GGA_OPENCODE_VARIANT: high
         run: gga run --pr-mode --diff-only

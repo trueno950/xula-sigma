@@ -16,7 +16,7 @@ lee cuando el trabajo lo toca, no de corrido.
 | 01 | [Principios](./01-principios.md) | SOLID, KISS, YAGNI, regla de oro |
 | 02 | [Nomenclatura](./02-nomenclatura.md) | Nombres, idioma del código, commits |
 | 03 | [Antipatrones](./03-antipatrones.md) | Qué no hacer y cómo se corrige |
-| 04 | [Calidad](./04-calidad.md) | Testing, métricas, checklists |
+| 04 | [Calidad](./04-calidad.md) | Testing, métricas, checklists, comentarios |
 | 05 | [Seguridad](./05-seguridad.md) | Aislamiento, auth, datos personales |
 | 06 | [Frontend](./06-frontend.md) | RSC, estado, marca blanca, formularios, PDF |
 | **Arquitectura** | | |

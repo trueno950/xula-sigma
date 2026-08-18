@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, not, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { type AyuntamientoId, esAyuntamientoId } from "./ayuntamientoId";
@@ -45,13 +45,18 @@ export type TransaccionTenant = Parameters<
 >[0];
 
 /**
- * Ejecuta `trabajo` con el tenant fijado, dentro de una transaccion.
+ * El acceso a base de datos de **toda la operacion**: si hay un tenant, la
+ * consulta sale de adentro de esta funcion o no sale.
  *
- * Es el unico acceso a base de datos del sistema. Toda consulta sale de
- * adentro de esta funcion o no sale.
+ * Decia "el unico acceso del sistema" y dejo de ser cierto cuando entro
+ * `withAltaDeAyuntamiento`, la puerta del alta de un municipio —el momento
+ * en que el tenant todavia no existe—. Las dos, y solo las dos, estan
+ * sancionadas por la regla 2 de `AGENTS.md` y el ADR 0001 §2. La lista
+ * completa vive ahi y no aca: repetirla en cada archivo garantiza que una
+ * copia quede vieja, que es exactamente lo que paso con esta.
  *
- * @param ayuntamientoId Viene SIEMPRE del contexto resuelto en servidor.
- *   Nunca del body, del query string, ni de nada que el cliente controle.
+ * @param ayuntamientoId Viene SIEMPRE del contexto resuelto en servidor
+ *   (ver `ayuntamientoId.ts`).
  */
 export async function withTenant<T>(
   ayuntamientoId: AyuntamientoId,
@@ -116,6 +121,12 @@ export type AyuntamientoResuelto = {
  * Las columnas se listan una por una y no se usa `select()` pelado. Es
  * deliberado: el dia que `ayuntamientos` gane una columna sensible, no se
  * cuela sola a una superficie que se sirve antes de autenticar.
+ *
+ * **Excluye la fila reservada de plataforma.** No es un municipio: es donde
+ * vive la identidad del `SUPER_ADMIN` (diseno seccion 10). Sin este filtro
+ * su subdominio resolveria, `proxy.ts` la trataria como un ayuntamiento mas
+ * y le pintaria pantalla de acceso a cualquiera que la escriba en la barra.
+ * `plataformaReservada.isolation.test.ts` lo provoca.
  */
 export async function resolverAyuntamientoPorSubdominio(
   subdominio: string,
@@ -128,17 +139,20 @@ export async function resolverAyuntamientoPorSubdominio(
       marca: ayuntamientos.marca,
     })
     .from(ayuntamientos)
-    .where(eq(ayuntamientos.subdominio, subdominio))
+    .where(
+      and(
+        eq(ayuntamientos.subdominio, subdominio),
+        not(ayuntamientos.esPlataforma),
+      ),
+    )
     .limit(1);
 
   return fila ?? null;
 }
 
 /**
- * Cierra el pool para que el proceso pueda terminar. En produccion el pool
- * vive lo que vive el contenedor; esto es para los tests.
- *
- * Cierra, no consulta: no abre ninguna ruta alternativa a la base.
+ * Para los tests: en produccion el pool vive lo que vive el contenedor.
+ * Cierra, no consulta — no abre una ruta alternativa a la base.
  */
 export async function cerrarConexion(): Promise<void> {
   await cliente.end();

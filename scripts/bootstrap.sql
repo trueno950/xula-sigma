@@ -4,6 +4,7 @@
 --   psql "$SUPERUSER_URL" \
 --     -v clave_migrator="..." \
 --     -v clave_app="..." \
+--     -v clave_super_admin="..." \
 --     -f scripts/bootstrap.sql
 --
 -- NO es una migracion, y no por comodidad:
@@ -19,7 +20,7 @@
 \set ON_ERROR_STOP on
 
 -- ---------------------------------------------------------------------
--- Los dos roles
+-- Los tres roles
 -- ---------------------------------------------------------------------
 --
 -- Railway entrega un solo `postgres` con `rolsuper` y `rolbypassrls` en
@@ -44,11 +45,22 @@ BEGIN
     CREATE ROLE xula_app LOGIN
       NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOINHERIT;
   END IF;
+
+  -- El tercero da de alta municipios y destraba al ADMIN_MUNICIPAL. No es
+  -- llave maestra: los mismos atributos que los otros dos, y lo que puede
+  -- hacer lo acotan politicas RLS propias en `0002_super_admin.sql`. No
+  -- tiene SELECT sobre ninguna tabla operativa salvo cuatro columnas de
+  -- `usuarios`, y esas porque una subconsulta de politica las exige.
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'xula_super_admin') THEN
+    CREATE ROLE xula_super_admin LOGIN
+      NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOINHERIT;
+  END IF;
 END
 $$;
 
-ALTER ROLE xula_migrator WITH PASSWORD :'clave_migrator';
-ALTER ROLE xula_app      WITH PASSWORD :'clave_app';
+ALTER ROLE xula_migrator    WITH PASSWORD :'clave_migrator';
+ALTER ROLE xula_app         WITH PASSWORD :'clave_app';
+ALTER ROLE xula_super_admin WITH PASSWORD :'clave_super_admin';
 
 -- ---------------------------------------------------------------------
 -- Propiedad del esquema
@@ -77,6 +89,7 @@ $$;
 -- una base restaurada desde un volcado viejo puede traerlo puesto.
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 GRANT USAGE ON SCHEMA public TO xula_app;
+GRANT USAGE ON SCHEMA public TO xula_super_admin;
 
 -- ---------------------------------------------------------------------
 -- Sin privilegios por defecto. A proposito.

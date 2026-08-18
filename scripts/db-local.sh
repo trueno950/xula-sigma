@@ -18,6 +18,7 @@ CLAVE="postgres"
 
 export MIGRATION_DATABASE_URL="postgresql://xula_migrator:${CLAVE}@localhost:${PUERTO}/${BASE}"
 export DATABASE_URL="postgresql://xula_app:${CLAVE}@localhost:${PUERTO}/${BASE}"
+export SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:${CLAVE}@localhost:${PUERTO}/${BASE}"
 
 if ! docker info >/dev/null 2>&1; then
   echo "Docker no esta corriendo." >&2
@@ -52,6 +53,7 @@ echo "→ Provisionando roles"
 docker cp scripts/bootstrap.sql "${CONTENEDOR}:/tmp/bootstrap.sql"
 docker exec "$CONTENEDOR" psql -U postgres -d "$BASE" -q \
   -v clave_migrator="$CLAVE" -v clave_app="$CLAVE" \
+  -v clave_super_admin="$CLAVE" \
   -f /tmp/bootstrap.sql
 
 echo "→ Migrando"
@@ -63,6 +65,7 @@ Base lista. Para correr los tests de aislamiento:
 
   export DATABASE_URL="${DATABASE_URL}"
   export MIGRATION_DATABASE_URL="${MIGRATION_DATABASE_URL}"
+  export SUPER_ADMIN_DATABASE_URL="${SUPER_ADMIN_DATABASE_URL}"
   pnpm test:integration
 
 FIN

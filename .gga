@@ -21,7 +21,7 @@ FILE_PATTERNS="*.ts,*.tsx,*.sql"
 EXCLUDE_PATTERNS="*.d.ts"
 
 # Reglas contra las que se revisa.
-# Condensado a proposito: las 12 reglas + los 22 antipatrones.
+# Condensado a proposito: las 12 reglas + los 25 antipatrones.
 # No se le pasa docs/ completo (2000+ lineas por revision).
 RULES_FILE="AGENTS.md"
 
@@ -29,7 +29,13 @@ RULES_FILE="AGENTS.md"
 # una revision ambigua se lee como aprobada, y eso no puede pasar.
 STRICT_MODE="true"
 
-TIMEOUT="300"
+# 900 y no 300. Un PR de esquema —cinco tablas, su migracion y sus cinco
+# tests de aislamiento— pasa de las 900 lineas revisables, y a 300s el
+# proveedor se quedaba corto. El modo de falla importa: el timeout aborta
+# el commit, asi que subirlo no afloja nada. Bajar el tamano del PR en su
+# lugar significaria partir una tabla de su test de aislamiento, que es
+# justo lo que la regla del proyecto prohibe.
+TIMEOUT="1800"
 
 # Rama base para --pr-mode. Explicita en vez de autodeteccion.
 PR_BASE_BRANCH="main"

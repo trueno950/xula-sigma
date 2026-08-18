@@ -17,12 +17,24 @@ toca datos, marcá el hallazgo.
 ## Las 12 reglas que nadie rompe
 
 1. `any` está prohibido. Se usa `unknown` + type guard.
-2. Todo acceso a base de datos pasa por `withTenant`. La **única** excepción
-   sancionada es `resolverAyuntamientoPorSubdominio`, en `shared/tenancy`:
-   resuelve el tenant antes de que exista uno, lee solo el directorio
-   público de `ayuntamientos` y su garantía la da RLS, no la función.
-   Cualquier otro acceso sin tenant es hallazgo, incluido uno nuevo que
-   invoque este precedente.
+2. Todo acceso a base de datos pasa por `withTenant`. Hay **dos**
+   excepciones sancionadas, las dos en `shared/tenancy`, y ninguna más:
+
+   - `resolverAyuntamientoPorSubdominio`: resuelve el tenant antes de que
+     exista uno, lee solo el directorio público de `ayuntamientos` y su
+     garantía la da RLS, no la función.
+   - `withAltaDeAyuntamiento` (`provision.ts`): da de alta un municipio,
+     cuando el tenant todavía no existe porque se está creando. Corre bajo
+     un **tercer rol de Postgres**, `xula_super_admin`, con su propio
+     conjunto de políticas: no puede crear a nadie que no sea
+     `ADMIN_MUNICIPAL`, no tiene `SELECT` sobre `ayuntamientos` ni sobre
+     ninguna tabla operativa, y no puede crear una segunda fila de
+     plataforma. Ver ADR 0001 §2 y diseño D7.
+
+   Las dos comparten forma: conexión privada del módulo, una sola salida, y
+   el límite lo pone Postgres y no la función. Cualquier otro acceso sin
+   tenant es hallazgo, incluido uno nuevo que invoque este precedente —que
+   ya se usó dos veces y no se usa una tercera sin actualizar esta regla.
 3. `SET LOCAL` dentro de transacción. Nunca `SET` suelto.
 4. `ayuntamiento_id` sale del contexto del servidor, nunca del cliente.
 5. Tabla nueva = RLS + test de aislamiento, en el mismo commit.
@@ -56,12 +68,15 @@ toca datos, marcá el hallazgo.
 | 14 | `try/catch` que traga el error | Manejo específico o re-throw |
 | 15 | Más de 3 niveles de anidación | Early returns |
 | 16 | Nombres vagos: `data`, `temp`, `info` | Nombre del concepto |
-| 17 | Comentario que explica código obvio | Código autoexplicativo |
+| 17 | Comentario que reformula el código | Borrarlo |
 | 18 | `"use client"` por defecto | Server Component salvo justificación |
 | 19 | Entrada sin validar con Zod | Esquema Zod en el borde |
 | 20 | Acentos o eñes en identificadores | Sin diacríticos |
 | 21 | Módulo creado con capas incompletas | Las cuatro capas desde el inicio |
 | 22 | Dependencia nueva sin justificar | Justificar en el PR |
+| 23 | La misma explicación en dos archivos | Dejarla en uno, el resto apunta |
+| 24 | Comentario que afirma comportamiento sin test | Escribir el test |
+| 25 | Cita a línea de un paquete sin la versión | `archivo:línea` + versión |
 
 ---
 
@@ -157,7 +172,7 @@ de acceso. Se referencia por ID.
 | Métrica | Límite |
 |---|---|
 | Líneas por función | ≤ 30 |
-| Líneas por archivo | ≤ 200 |
+| Líneas por archivo de código | ≤ 200 |
 | Profundidad de anidación | ≤ 3 |
 | Parámetros por función | ≤ 3 (más, va objeto) |
 
@@ -175,10 +190,36 @@ de acceso. Se referencia por ID.
 
 ---
 
+## Comentarios
+
+Un comentario no tiene CI. El día que deja de ser cierto nada falla: sigue
+ahí, afirmando con autoridad algo que ya no pasa. Por eso se escribe el que
+carga algo que ningún test puede cargar, y solo ese.
+
+Cinco filtros, en orden. El primero que dispara decide:
+
+1. **¿Reformula el código?** → hallazgo. Se borra.
+2. **¿Describe comportamiento?** → hallazgo. Es un test, no un comentario.
+3. **¿Ya está dicho en otro archivo?** → hallazgo. Queda en uno, el resto
+   apunta ahí.
+4. **¿Trae un hecho de afuera del archivo** —línea de un bundle,
+   comportamiento de Postgres, regla de negocio— **o documenta una
+   ausencia?** → NO es hallazgo, por largo que sea. Es su único hogar.
+5. **¿Cita una versión o una línea de un paquete?** → hallazgo si no lleva
+   la versión al lado.
+
+---
+
 ## Qué NO es hallazgo
 
 No marques:
 
+- **Un comentario largo que pasa el filtro 4.** El código no puede explicar
+  por qué una columna NO existe, ni por qué un `unique` de una librería
+  nunca llega a Postgres. Ese comentario es la única copia de ese hecho:
+  marcarlo por extenso o por densidad borra lo que no está en ningún otro
+  lado. Se marca por reformular, duplicar o afirmar sin test — nunca por
+  largo. La proporción de comentarios de un archivo **no** es hallazgo.
 - Preferencias de estilo que Biome ya formatea
 - Falta de abstracción especulativa. La duplicación es más barata que la
   abstracción equivocada: se duplica la primera vez, se aguanta la segunda,

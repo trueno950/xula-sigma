@@ -8,6 +8,27 @@
       "when": 1786902442544,
       "tag": "0000_fundacion_multitenant",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786972144333,
+      "tag": "0001_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786990448240,
+      "tag": "0002_super_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787010494087,
+      "tag": "0003_restablece_admin",
+      "breakpoints": true
     }
   ]
 }

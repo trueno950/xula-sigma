@@ -28,8 +28,11 @@ Un error aquí es una fuga de datos entre municipios y termina el negocio.
 
 - Toda tabla operativa lleva `ayuntamiento_id` y política RLS con
   `FORCE ROW LEVEL SECURITY`
-- Acceso a base de datos **siempre** por el helper de `shared/tenancy`.
-  Nunca conexión directa.
+- Acceso a base de datos **siempre** por `shared/tenancy`. Nunca conexión
+  directa. Dos puertas y solo dos: `withTenant` para la operación y
+  `withAltaDeAyuntamiento` para el alta de un municipio, cuando el tenant
+  todavía no existe. La tercera no entra sin actualizar `AGENTS.md` regla 2
+  y el ADR 0001 §2.
 - Dentro de transacción: `SET LOCAL app.tenant`. **Nunca `SET` sin
   `LOCAL`** — se queda pegado en el pooler y lo hereda el siguiente
   request de otro municipio.
@@ -59,19 +62,60 @@ TDD estricto. El test se escribe antes que la implementación.
 - Aislamiento por tenant: obligatorio, sin excepción
 - El objetivo no es el porcentaje: es que cada camino de decisión del
   dominio tenga un test que lo describa
-- **Pero hay piso: 80% en `modules/**/domain` y `modules/**/application`.**
-  Está en `vitest.config.ts` y CI lo hace fallar. La reja existe porque una
-  IA sin restricción salta tests, y un número en CI es más confiable que la
-  buena intención. Un test que siempre pasa es peor que ninguno.
+- **Pero hay piso: 80% en `shared/**` y en `modules/**/{domain,application}`,
+  75% en ramas.** Está en `vitest.config.ts` y CI lo hace fallar. La reja
+  existe porque una IA sin restricción salta tests, y un número en CI es más
+  confiable que la buena intención. Un test que siempre pasa es peor que
+  ninguno.
+- **Y la reja misma se provoca.** La primera versión medía solo
+  `modules/**`, que estaba vacío: daba `0/0` y salía en verde, con
+  `@vitest/coverage-v8` ni siquiera instalado. Un piso sobre cero archivos es
+  el mismo defecto que denuncia el punto anterior, una capa más arriba.
+- Fuera del piso quedan las declaraciones —`esquema.ts`, `configuracion.ts`,
+  `politicasPlataforma.ts`, fixtures—: no tienen caminos de decisión y su
+  prueba es el test de aislamiento contra Postgres, no una línea ejecutada.
 
 Suites: `unit` corre sin base de datos. `integration` —que incluye los
-`*.isolation.test.ts`— necesita Postgres: `pnpm db:local` lo levanta.
+`*.isolation.test.ts`— necesita Postgres: `pnpm db:local` lo levanta. **La
+cobertura se mide sobre las dos**, en el job que tiene base: midiendo solo
+`unit`, `withTenant` daba 0% con sus tests de aislamiento en verde, y subir
+el número habría pedido tests unitarios que no prueban RLS.
 
 ### Idioma
 - Dominio en español: `constancia`, `padron`, `apoyoTraslado`
 - Andamiaje técnico en inglés: `domain`, `useCase`, `repository`
 - Identificadores sin acentos ni eñes: `campanias`, `montoMinimo`
 - Comentarios, documentación y commits en español
+
+### Comentarios
+Un comentario no tiene CI. El día que deja de ser cierto, nada falla —
+sigue ahí, afirmando con autoridad algo que ya no pasa. Por eso se escribe
+el que carga algo que ningún test puede cargar, y solo ese.
+
+Cinco filtros, en orden. El primero que dispare decide:
+
+1. **¿Reformula el código?** → se borra. `// nulo mientras sigue activo`
+   sobre una columna nullable llamada `bajaEn` no informa nada.
+2. **¿Describe comportamiento?** → es un test, no un comentario. Un
+   `// esto devuelve 404, no 403` sin test al lado es una intención, no
+   una garantía.
+3. **¿Ya está dicho en otro archivo?** → se deja en UN lugar y el resto
+   apunta ahí. Dos copias de una explicación divergen; la que quede vieja
+   no avisa.
+4. **¿Trae un hecho de afuera del archivo** —línea de un bundle,
+   comportamiento de Postgres, regla de negocio— **o documenta una
+   ausencia?** → se queda. Es su único hogar. El código no puede explicar
+   por qué una columna NO existe.
+5. **¿Cita una versión o una línea de un paquete?** → o se vuelve test, o
+   lleva la versión escrita al lado. `index.mjs:286` se mueve solo en el
+   próximo bump y nadie se entera.
+
+El filtro 4 es el que justifica los comentarios largos de este repo, y no
+se recorta por porcentaje: podar por métrica mata primero los largos, que
+son justamente los que cargan lo que no está en ningún otro lado.
+
+Ejemplos y detalle: `docs/04-calidad.md` sección 8. GGA lo aplica vía
+`AGENTS.md` (antipatrones 17, 23, 24 y 25).
 
 ### Datos sensibles
 - Motivo de traslado y tipo de asunto del juzgado: **categorías cerradas,

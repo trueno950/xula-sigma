@@ -14,9 +14,8 @@ import {
  * poder testearse contra Postgres sin levantar un request.
  *
  * De aca —y solo de aca— sale el `ayuntamientoId` que se le pasa a
- * `withTenant`. Nunca del body, del query string, ni de un parametro de
- * ruta. Es el invariante 1: el tenant efectivo siempre viene del contexto
- * resuelto en servidor.
+ * `withTenant`. Es el invariante 1; la regla completa esta en
+ * `ayuntamientoId.ts`.
  */
 export async function ayuntamientoActual(): Promise<AyuntamientoResuelto> {
   const cabeceras = await headers();
@@ -36,9 +35,6 @@ export async function ayuntamientoActual(): Promise<AyuntamientoResuelto> {
   const ayuntamiento = await resolverAyuntamientoPorSubdominio(subdominio);
 
   if (!ayuntamiento) {
-    // El subdominio tiene forma valida pero no corresponde a ningun
-    // municipio dado de alta. Es un 404, no un 403: confirmar que existe
-    // ya seria informacion.
     throw new TenantNoResueltoError(
       `No hay ningun ayuntamiento con el subdominio "${subdominio}".`,
     );

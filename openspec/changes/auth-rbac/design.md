@@ -127,10 +127,34 @@ Con `required: false` el alta pasa y el hook puebla el campo: verificado en
 el spike, el usuario vuelve con su `ayuntamientoId` sin que el cliente lo
 haya mandado nunca.
 
-**Quien garantiza que el campo no quede nulo no es la libreria: es el
-`NOT NULL` de la migracion.** Esa es la division correcta — la libreria
-rellena, la base obliga. Y es lo que hace verificable al criterio 3: sin el
-hook, el alta tiene que fallar contra la restriccion de la base.
+**Quien garantiza que el campo no quede nulo no es la libreria: es la
+base.** Esa es la division correcta — la libreria rellena, la base obliga.
+Y es lo que hace verificable al criterio 3: sin el hook, el alta tiene que
+fallar contra la base.
+
+### Correccion de la segunda corrida — quien rechaza es RLS, no el NOT NULL
+
+La frase anterior decia "el `NOT NULL` de la migracion". Corrido el
+criterio 3, el motivo observado es otro:
+
+```
+new row violates row-level security policy for table "user_spike"
+```
+
+Con `ayuntamiento_id` en NULL, el `WITH CHECK` de la politica
+(`ayuntamiento_id = tenant`) evalua a NULL —o sea, no verdadero— y Postgres
+rechaza el INSERT antes de que el `NOT NULL` llegue a opinar.
+
+La conclusion del criterio no cambia: la fila la frena la base, no la
+libreria. El mecanismo si, y el que aparecio es el mas fuerte de los dos:
+el `WITH CHECK` rechaza tambien un tenant equivocado **no nulo**, cosa que
+un `NOT NULL` deja pasar sin chistar.
+
+El `NOT NULL` se queda igual, como segunda reja para el dia que una
+politica se caiga o una tabla nazca sin ella. Pero no se lo puede observar
+en ejecucion: con `FORCE ROW LEVEL SECURITY` no hay rol que llegue a la
+restriccion sin chocar antes con la politica. Se verifica en el catalogo
+(`information_schema.columns.is_nullable`), que es donde si es observable.
 
 ### Que cablea
 
@@ -154,9 +178,9 @@ tanto, no se puede derivar por join.
 2. **`verification`, explicito.** Un token emitido en Motul es invisible
    desde Ticul y su consumo desde Ticul falla. Es el criterio duro.
 3. **El guardia es estructural, no incidental.** Con el hook removido a
-   proposito, el alta **falla** con violacion de `NOT NULL`. Si en vez de
-   fallar escribe la fila, el mecanismo no es de fiar y el spike se declara
-   fallado aunque los otros criterios pasen.
+   proposito, el alta **falla en la base**. Si en vez de fallar escribe la
+   fila, el mecanismo no es de fiar y el spike se declara fallado aunque
+   los otros criterios pasen. (Corrido: falla por politica RLS, ver arriba.)
 4. **Cero escapes.** Ninguna invocacion levanta `AccesoSinTenantError` en
    los flujos de alta, acceso, cierre de sesion y refresco.
 5. **Correo repetido entre municipios.** Mismo correo y misma contrasenia
@@ -173,6 +197,34 @@ request completo de acceso.
 |---|---|
 | p95 de construccion <= 5 ms | Sigue el diseno tal cual. El numero queda registrado en el ADR. |
 | p95 > 5 ms | **Vuelve a decision humana con el numero medido.** AsyncLocalStorage NO esta preaprobado: mete un segundo mecanismo de contexto asincronico conviviendo con el actual, y eso se decide viendo el dato. |
+
+**Medido el 2026-08-17** (n=1000, 100 de calentamiento, Postgres 18 local):
+
+| Que | p50 | p95 |
+|---|---|---|
+| Construir la instancia sobre la transaccion | 0.141 ms | **0.227 ms** |
+| Acceso completo por `manejarAuth` | 23.6 ms | 26.2 ms |
+
+La construccion queda 22 veces por debajo del umbral. El acceso completo lo
+domina el hash de argon2id, que es lento **a proposito** y no es costo que
+agregue el mecanismo de tenant. **Sigue el diseno tal cual**: la discusion
+de AsyncLocalStorage no se abre.
+
+### Lo que la forma corregida cambia en el manejo de errores
+
+Consecuencia de correr el handler adentro de la transaccion: cuando el
+adaptador falla, Better Auth **no** convierte el error en respuesta HTTP.
+La excepcion sale de `manejarAuth` y se lleva la transaccion entera —lo
+cual esta bien, no se escribe nada— pero la ruta queda con una excepcion
+cruda en la mano.
+
+Dos cosas que PR 2 tiene que resolver (tarea 2.11):
+
+1. Convertirla en un 500 generico en el borde.
+2. **No dejar salir el motivo.** `new row violates row-level security
+   policy for table "usuarios"` en un cuerpo de respuesta le regala el
+   esquema y el modelo de aislamiento a cualquiera que provoque el error. A
+   bitacora si; al cliente no.
 
 ### Diseno de repliegue si el spike falla
 
@@ -429,7 +481,7 @@ Las cinco llevan `ayuntamientoId uuid NOT NULL REFERENCES ayuntamientos(id)`,
 
 | Tabla | Columnas propias | GRANT a `xula_app` |
 |---|---|---|
-| `usuarios` | Better Auth (`id`, `name`, `email`, `emailVerified`, `image`, `createdAt`, `updatedAt`) + `rol text NOT NULL`, `bajaEn timestamptz` | SELECT, INSERT, UPDATE. **Sin DELETE**: baja logica |
+| `usuarios` | Better Auth (`id`, `name`, `email`, `emailVerified`, `image`, `createdAt`, `updatedAt`) + `rol` (conjunto cerrado, ver abajo), `bajaEn timestamptz` | SELECT, INSERT, UPDATE. **Sin DELETE**: baja logica |
 | `sesiones` | `id`, `token` (unico), `expiresAt`, `ipAddress`, `userAgent`, `userId`, fechas | SELECT, INSERT, UPDATE, DELETE |
 | `cuentas` | `id`, `accountId`, `providerId`, `userId`, `password`, fechas | SELECT, INSERT, UPDATE |
 | `verificaciones` | `id`, `identifier`, `value`, `expiresAt`, fechas | SELECT, INSERT, UPDATE, DELETE (el adaptador consume por borrado) |
@@ -438,6 +490,28 @@ Las cinco llevan `ayuntamientoId uuid NOT NULL REFERENCES ayuntamientos(id)`,
 Indices: `uniqueIndex(ayuntamientoId, email)` en `usuarios`;
 `(ayuntamientoId, clave, ocurridoEn)` en `intentos_acceso`;
 `(ayuntamientoId, identifier)` en `verificaciones`.
+
+### Correccion de PR 1 — `rol` y `tipo` no son texto libre
+
+El diseno decia `rol text NOT NULL` y `tipo text`. Se implementaron como
+conjuntos cerrados declarados **dos veces**: `$type<Rol>()` en TypeScript y
+`CHECK (rol IN (...))` en Postgres. No es redundancia — el `$type` se evade
+con un cast, y la base es la reja que queda.
+
+El motivo no es la regla 9 del proyecto, que habla de **dato sensible** y
+no cubre ninguna de las dos columnas. Es de correccion:
+
+- `rol` es la frontera de autorizacion. Como texto libre, un `"Operador"`
+  mal tipeado no falla: crea una persona con permisos equivocados y nadie
+  se entera hasta que le falta un boton, o le sobra.
+- `tipo` fuera del conjunto —`"email"` en vez de `"correo"`— abre una
+  tercera ventana de ritmo que nadie cuenta. El limitador deja de limitar
+  sin que nada falle.
+
+Los dos CHECK tienen su test, y el test se verifico quitando el CHECK a
+mano: sin el, ambos valores invalidos entran. `ROLES` y `Rol` viven en
+`shared/auth/roles.ts` desde PR 1; las reglas puras que los consumen
+siguen siendo de PR 3.
 
 ## 7. Pruebas
 
@@ -497,7 +571,8 @@ Aditivo: no altera `ayuntamientos`, `bitacora` ni `withTenant`. Orden:
         devolviera, la plataforma apareceria como un ayuntamiento mas.
         Esto necesita su propio test.
       - Su alta no pasa por el flujo normal de provision de municipios.
-- [ ] Numero real de p95 de construccion por request. Sale del spike y
-      define si el diseño sigue o vuelve a decision humana.
+- [x] **Numero real de p95 de construccion por request — RESUELTO
+      2026-08-17.** 0.227 ms (p50 0.141), 22 veces por debajo del umbral de
+      5 ms. El diseño sigue; no vuelve a decision humana.
 - [ ] Retencion de `intentos_acceso`: purga en cada escritura o tarea
       periodica. Se decide con el volumen real, no antes.

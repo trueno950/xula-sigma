@@ -19,6 +19,7 @@ compila".
 |---|---|---|---|
 | Dominio | Reglas puras, sin IO | **80%** | `*.test.ts` junto al archivo |
 | Aplicación | Casos de uso con puertos mockeados | **80%** | `*.test.ts` junto al archivo |
+| Compartido | Todo `shared/**` menos declaraciones | **80%** (75% ramas) | junto al archivo |
 | Aislamiento | Una tabla con `ayuntamiento_id` | **100%, sin excepción** | `*.isolation.test.ts` |
 | Integración | Repositorios contra Postgres real | Operaciones con transacción | `*.integration.test.ts` |
 | E2E | Flujos críticos y cambio de tenant | Happy path | `e2e/*.spec.ts` |
@@ -27,6 +28,24 @@ compila".
 real es que cada camino de decisión del dominio tenga un test que lo
 describa. Pero la reja existe porque una IA sin restricción salta tests, y
 un número en CI es más confiable que la buena intención.
+
+**Y la reja se provoca antes de creerle.** Durante la fase 1 el
+`coverage.include` apuntaba solo a `modules/**`, que todavía no existía: CI
+reportaba `0/0` y salía en verde, con el proveedor `@vitest/coverage-v8`
+sin instalar. Un piso medido sobre cero archivos es el mismo defecto que
+esta sección denuncia, una capa más arriba. Antes de dar un piso por bueno:
+subirlo por encima del valor medido y confirmar que sale en rojo.
+
+**Se mide sobre la suite completa**, en el job que tiene Postgres. Casi todo
+`shared/` se prueba contra la base; midiendo solo `unit`, `withTenant`
+daba 0% con sus tests de aislamiento pasando, y la única forma de subir el
+número habría sido escribir tests unitarios que no prueban RLS. La reja
+tiene que empujar hacia el test que sirve.
+
+**Las ramas van en 75%, con la deuda anotada.** Lo que falta son las guardas
+de variable de entorno que corren al importar el módulo; cubrirlas pide
+reimportar con el entorno roto. Son caminos reales y el piso sube a 80 el
+día que se escriban.
 
 ### Comportamiento, no implementación
 
@@ -142,11 +161,11 @@ const folio = { toString: () => "MOT-2026-000001" }; // ese es el sujeto del tes
 | Métrica | Objetivo |
 |---|---|
 | Líneas por función | ≤ 30 |
-| Líneas por archivo | ≤ 200 |
+| Líneas por archivo de código | ≤ 200 |
 | Profundidad de anidación | ≤ 3 |
 | Parámetros por función | ≤ 3 (más, va objeto) |
 | Duplicación | ≤ 3% |
-| Cobertura dominio y aplicación | ≥ 80% |
+| Cobertura dominio, aplicación y `shared` | ≥ 80% (ramas ≥ 75%) |
 | Cobertura de aislamiento | 100% de tablas con tenant |
 
 Los números concretos existen porque una IA respeta un número. No respeta
@@ -253,6 +272,7 @@ Violarlo rompe el build. No es una convención que se recuerda.
 ### Legibilidad
 - [ ] ¿Se entiende sin que el autor lo explique?
 - [ ] Si no se entiende, se reescribe. No entra.
+- [ ] Los comentarios pasan los cinco filtros de la sección 8
 
 ### Tests
 - [ ] ¿Test escrito antes que el código?
@@ -291,3 +311,64 @@ más cuesta después.
 El último punto merece énfasis: un test que pasa siempre no es un test.
 Rompé la implementación a propósito una vez y confirmá que el test se pone
 en rojo.
+
+Y verificá que la provocación **cambió el comportamiento**, no solo el
+texto. Un reemplazo que aplica a medias —o uno semánticamente neutro, como
+`null ?? valor`— deja la suite en verde y se lee como "el test no sirve".
+Se confirma corriendo, no leyendo el `diff`.
+
+---
+
+## 8. Comentarios
+
+Un comentario no tiene CI. El día que deja de ser cierto, nada falla: sigue
+ahí, afirmando con autoridad algo que ya no pasa. Un comentario podrido es
+peor que ninguno, igual que un test que siempre pasa.
+
+Por eso se escribe el que carga algo que **ningún test puede cargar**, y
+solo ese.
+
+Cinco filtros, en orden. El primero que dispara decide:
+
+| # | Pregunta | Si es sí |
+|---|---|---|
+| 1 | ¿Reformula el código? | Se borra |
+| 2 | ¿Describe comportamiento? | Es un test, no un comentario |
+| 3 | ¿Ya está dicho en otro archivo? | Queda en uno, el resto apunta |
+| 4 | ¿Trae un hecho de afuera del archivo, o documenta una ausencia? | **Se queda**, es su único hogar |
+| 5 | ¿Cita una versión o línea de un paquete? | Test, o la versión al lado |
+
+**El filtro 4 es el que justifica los comentarios largos de este repo.** El
+código no puede explicar por qué una columna NO existe, ni por qué el
+`unique: true` de una librería nunca llega a Postgres. Sin el comentario,
+esos hechos no están en ningún lado.
+
+De ahí que **no se recorte por porcentaje**. Podar por métrica mata primero
+los largos, que son justamente los que cargan lo que no está escrito en
+ninguna otra parte. Se recorta por reformulación, por duplicación y por
+afirmación sin test.
+
+### Ejemplos
+
+Reformula (filtro 1) — se borra:
+
+```ts
+// Nulo mientras la persona sigue en el ayuntamiento.
+bajaEn: timestamp({ withTimezone: true }),
+```
+
+Afirma comportamiento (filtro 2) — es un test:
+
+```ts
+// Es un 404, no un 403: confirmar que existe ya seria informacion.
+throw new TenantNoResueltoError(...);
+```
+
+Único hogar (filtro 4) — se queda, midan lo que midan:
+
+```ts
+// El GUC no vuelve a NULL tras el COMMIT: vuelve a CADENA VACIA, y
+// `''::uuid` lanza. Verificado contra Postgres 18. Sin el NULLIF, toda
+// consulta por una conexion del pool ya usada revienta al evaluar la
+// politica.
+```

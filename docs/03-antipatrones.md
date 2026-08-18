@@ -24,12 +24,15 @@ Lista con su corrección. Si aparece en un PR, no entra.
 | 14 | `try/catch` que traga el error | Bugs invisibles | Manejo específico o re-throw |
 | 15 | Más de 3 niveles de anidación | Ilegible | Early returns |
 | 16 | Nombres vagos: `data`, `temp`, `info` | No dicen nada | Nombre del concepto |
-| 17 | Comentario que explica código obvio | Ruido | Código autoexplicativo |
+| 17 | Comentario que reformula el código | Ruido que envejece | Borrarlo |
 | 18 | `"use client"` por defecto | JS de más en redes lentas | Server Component salvo justificación |
 | 19 | Entrada sin validar con Zod | Datos inconsistentes | Esquema Zod en el borde |
 | 20 | Acentos o eñes en identificadores | Rompe herramientas y SQL | Sin diacríticos |
 | 21 | Módulo creado con capas incompletas | Deriva estructural | Las cuatro capas desde el inicio |
 | 22 | Dependencia nueva sin justificar | Superficie de mantenimiento permanente | Justificar en el PR |
+| 23 | La misma explicación en dos archivos | Divergen y la vieja no avisa | Dejarla en uno, el resto apunta |
+| 24 | Comentario que afirma comportamiento sin test | Es una intención, no una garantía | Escribir el test |
+| 25 | Cita a línea de un paquete sin la versión | Un bump la desactualiza en silencio | `archivo:línea` + versión |
 
 ---
 

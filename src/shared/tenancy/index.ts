@@ -4,17 +4,27 @@
  * No hay nada que devuelva un manejador de base de datos.
  *
  * Toda consulta entra por `withTenant`, con UNA excepcion declarada:
- * `resolverAyuntamientoPorSubdominio`. Corre sin tenant porque resuelve el
- * tenant, y eso pasa antes de que exista uno. No es un permiso general
- * para consultar sin aislamiento: esta acotada al directorio publico de
- * `ayuntamientos`, y lo que la contiene no es su buena conducta sino RLS
- * — cualquier otra tabla, por esa misma conexion, devuelve cero filas.
- * Hay un test que lo recorre tabla por tabla.
+ * `resolverAyuntamientoPorSubdominio`. Por que se permite y por que no
+ * abre un agujero esta en `withTenant.ts`, sobre la funcion;
+ * `resolverAyuntamiento.isolation.test.ts` lo recorre tabla por tabla.
  *
- * `contexto.ts` NO se reexporta aca a proposito: importa `next/headers`, y
- * arrastrarlo desde este indice ataria al framework a todo el que use
- * tenancy — incluidos los tests de aislamiento, que corren en Node sin un
- * request. Quien lo necesite lo importa por ruta directa.
+ * **`withAltaDeAyuntamiento` es la segunda puerta, y no rompe el patron.**
+ * `withTenant` es la puerta de la operacion: entra con un tenant ya
+ * resuelto y corre bajo `xula_app`. La otra es la puerta del alta, donde el
+ * tenant todavia no existe —se esta creando— y corre bajo `xula_super_admin`
+ * con otro conjunto de politicas. Dos superficies con dos conjuntos de
+ * privilegios, no la misma superficie con un atajo. Lo que comparten es la
+ * forma: la conexion es privada del modulo y la unica salida es la funcion.
+ *
+ * Consecuencia de exportarla aca, que conviene tener presente: importar
+ * este barril exige `SUPER_ADMIN_DATABASE_URL`, porque `provision.ts` la
+ * valida al cargarse. Es deliberado y es el mismo criterio que `DATABASE_URL`
+ * en `withTenant.ts`: una variable de conexion faltante tiene que reventar
+ * al arrancar y no en el primer alta de municipio. Quien solo necesite
+ * resolver un subdominio —`proxy.ts`, por ejemplo— importa por ruta directa.
+ *
+ * `contexto.ts` NO se reexporta aca: ver el encabezado de ese archivo.
+ * Quien lo necesite lo importa por ruta directa.
  */
 
 export type { AyuntamientoId } from "./ayuntamientoId";
@@ -24,6 +34,7 @@ export {
   CABECERA_SUPERFICIE,
 } from "./cabeceras";
 export * as esquema from "./esquema";
+export { withAltaDeAyuntamiento } from "./provision";
 export type { Subdominio } from "./subdominio";
 export { leerSubdominio } from "./subdominio";
 export type { AyuntamientoResuelto, TransaccionTenant } from "./withTenant";

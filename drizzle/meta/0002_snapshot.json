@@ -1,0 +1,904 @@
+{
+  "id": "e6b09711-b246-46bf-9f5a-db33d5c99137",
+  "prevId": "bfcff252-418c-4d27-9529-566446b3a2b0",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.cuentas": {
+      "name": "cuentas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "cuentas_tenant_idx": {
+          "name": "cuentas_tenant_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "cuentas_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "cuentas_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "cuentas",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "cuentas_usuario_tenant_fk": {
+          "name": "cuentas_usuario_tenant_fk",
+          "tableFrom": "cuentas",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "user_id",
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id",
+            "ayuntamiento_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "cuentas_tenant": {
+          "name": "cuentas_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "xula_app"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        },
+        "cuentas_alta_admin": {
+          "name": "cuentas_alta_admin",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "xula_super_admin"
+          ],
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid AND EXISTS (\n  SELECT 1 FROM usuarios u\n   WHERE u.id = cuentas.user_id AND u.rol = 'ADMIN_MUNICIPAL'\n)"
+        },
+        "cuentas_restablece_admin": {
+          "name": "cuentas_restablece_admin",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "xula_super_admin"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid AND EXISTS (\n  SELECT 1 FROM usuarios u\n   WHERE u.id = cuentas.user_id AND u.rol = 'ADMIN_MUNICIPAL'\n)",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.intentos_acceso": {
+      "name": "intentos_acceso",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clave": {
+          "name": "clave",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ocurrido_en": {
+          "name": "ocurrido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "intentos_acceso_ventana_idx": {
+          "name": "intentos_acceso_ventana_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "clave",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocurrido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "intentos_acceso_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "intentos_acceso_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "intentos_acceso",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "intentos_acceso_tenant": {
+          "name": "intentos_acceso_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "xula_app"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {
+        "intentos_acceso_tipo_valido": {
+          "name": "intentos_acceso_tipo_valido",
+          "value": "tipo IN ('correo', 'ip')"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.sesiones": {
+      "name": "sesiones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sesiones_tenant_idx": {
+          "name": "sesiones_tenant_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sesiones_token_idx": {
+          "name": "sesiones_token_idx",
+          "columns": [
+            {
+              "expression": "token",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sesiones_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "sesiones_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "sesiones",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "sesiones_usuario_tenant_fk": {
+          "name": "sesiones_usuario_tenant_fk",
+          "tableFrom": "sesiones",
+          "tableTo": "usuarios",
+          "columnsFrom": [
+            "user_id",
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id",
+            "ayuntamiento_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "sesiones_tenant": {
+          "name": "sesiones_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "xula_app"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.usuarios": {
+      "name": "usuarios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rol": {
+          "name": "rol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "baja_en": {
+          "name": "baja_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "usuarios_tenant_idx": {
+          "name": "usuarios_tenant_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "usuarios_tenant_email_idx": {
+          "name": "usuarios_tenant_email_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "usuarios_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "usuarios_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "usuarios",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "usuarios_id_tenant_key": {
+          "name": "usuarios_id_tenant_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "ayuntamiento_id"
+          ]
+        }
+      },
+      "policies": {
+        "usuarios_tenant": {
+          "name": "usuarios_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "xula_app"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        },
+        "usuarios_alta_admin": {
+          "name": "usuarios_alta_admin",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "xula_super_admin"
+          ],
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid AND rol = 'ADMIN_MUNICIPAL'"
+        },
+        "usuarios_lectura_admin": {
+          "name": "usuarios_lectura_admin",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "xula_super_admin"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid AND rol = 'ADMIN_MUNICIPAL'"
+        }
+      },
+      "checkConstraints": {
+        "usuarios_rol_valido": {
+          "name": "usuarios_rol_valido",
+          "value": "rol IN ('SUPER_ADMIN', 'ADMIN_MUNICIPAL', 'OPERADOR', 'CONSULTA')"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.verificaciones": {
+      "name": "verificaciones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "verificaciones_tenant_idx": {
+          "name": "verificaciones_tenant_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "verificaciones_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "verificaciones_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "verificaciones",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "verificaciones_tenant": {
+          "name": "verificaciones_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "xula_app"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.ayuntamientos": {
+      "name": "ayuntamientos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "subdominio": {
+          "name": "subdominio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marca": {
+          "name": "marca",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "alta_en": {
+          "name": "alta_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "es_plataforma": {
+          "name": "es_plataforma",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {
+        "ayuntamientos_una_plataforma": {
+          "name": "ayuntamientos_una_plataforma",
+          "columns": [
+            {
+              "expression": "(true)",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"ayuntamientos\".\"es_plataforma\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ayuntamientos_subdominio_unique": {
+          "name": "ayuntamientos_subdominio_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "subdominio"
+          ]
+        }
+      },
+      "policies": {
+        "ayuntamientos_alta_plataforma": {
+          "name": "ayuntamientos_alta_plataforma",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "xula_super_admin"
+          ],
+          "withCheck": "NOT \"ayuntamientos\".\"es_plataforma\""
+        },
+        "ayuntamientos_directorio_publico": {
+          "name": "ayuntamientos_directorio_publico",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "xula_app"
+          ],
+          "using": "true"
+        },
+        "ayuntamientos_escritura_propia": {
+          "name": "ayuntamientos_escritura_propia",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "xula_app"
+          ],
+          "using": "id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.bitacora": {
+      "name": "bitacora",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor": {
+          "name": "actor",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accion": {
+          "name": "accion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entidad": {
+          "name": "entidad",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entidad_id": {
+          "name": "entidad_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen": {
+          "name": "origen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ocurrido_en": {
+          "name": "ocurrido_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bitacora_tenant_idx": {
+          "name": "bitacora_tenant_idx",
+          "columns": [
+            {
+              "expression": "ayuntamiento_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "ocurrido_en",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bitacora_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "bitacora_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "bitacora",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "bitacora_tenant": {
+          "name": "bitacora_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "xula_app"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        },
+        "bitacora_alta_plataforma": {
+          "name": "bitacora_alta_plataforma",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "xula_super_admin"
+          ],
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

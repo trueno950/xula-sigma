@@ -96,6 +96,23 @@ Better Auth genera su propio esquema. Cada una de sus tablas pasa por la
 misma regla que el resto: si tiene `ayuntamiento_id`, tiene RLS y test de
 aislamiento en el mismo commit. Sin excepción por venir de una librería.
 
+### Costo de la instancia por request — medido 2026-08-17
+
+El ADR dejó abierto si construir la instancia de Better Auth en cada
+request salía caro. Medido en el spike PR 0 del cambio `auth-rbac`, con
+1000 iteraciones tras 100 de calentamiento contra Postgres 18 local:
+
+| Qué | p50 | p95 |
+|---|---|---|
+| Construir la instancia sobre la transacción | 0.141 ms | **0.227 ms** |
+| Acceso completo (`manejarAuth`, con sign-in real) | 23.6 ms | 26.2 ms |
+
+El umbral que habilitaba discutir AsyncLocalStorage era 5 ms de
+construcción. Quedó 22 veces por debajo, así que **no se discute**: un
+segundo mecanismo de contexto asincrónico conviviendo con el actual no se
+paga con este número. El p95 del acceso completo lo domina argon2id, que es
+lento a propósito.
+
 ---
 
 ## 2. Migraciones — drizzle-kit en el Pre-deploy Command de Railway
@@ -116,16 +133,49 @@ La alternativa —correr migraciones desde CI— obliga a exponer la base al
 runner y desacopla la migración del deploy que la necesita. Peor en las dos
 dimensiones.
 
-### Dos URLs, no una
+### Tres URLs, no una
 
 ```ts
 const EnvSchema = z.object({
-  DATABASE_URL: z.string().url(),            // rol de aplicación
-  MIGRATION_DATABASE_URL: z.string().url(),  // rol owner
+  DATABASE_URL: z.string().url(),             // rol de aplicación
+  MIGRATION_DATABASE_URL: z.string().url(),   // rol owner
+  SUPER_ADMIN_DATABASE_URL: z.string().url(), // alta de municipios
 });
 ```
 
 El pre-deploy usa `MIGRATION_DATABASE_URL`. La aplicación nunca la ve.
+
+**Actualizado 2026-08-17 (PR 4 de `auth-rbac`): entró un tercer rol.**
+`xula_super_admin` da de alta municipios y destraba al `ADMIN_MUNICIPAL`
+que quedó afuera. Se creó porque el alta ocurre cuando el tenant todavía no
+existe —se está creando— y ninguno de los otros dos puede hacerla:
+`xula_app` no tiene `INSERT` sobre `ayuntamientos` a propósito, y el owner
+tendría privilegios de sobra para una operación que hace un panel.
+
+Lo que lo mantiene honesto es que **no es una llave maestra, y eso lo
+sostiene Postgres**: políticas propias en `0002_super_admin.sql` le impiden
+crear a nadie que no sea `ADMIN_MUNICIPAL`, restablecer la contraseña de
+nadie más, leer el directorio de municipios o crear una segunda fila de
+plataforma. Su único `SELECT` es por columna sobre cuatro campos de
+`usuarios`, y existe porque una subconsulta de política lo exige.
+
+### La segunda puerta a la base, y por qué no rompe el patrón
+
+`shared/tenancy/provision.ts` expone `withAltaDeAyuntamiento`. Es el
+segundo —y último— punto de acceso a datos que no pasa por `withTenant`.
+
+No es una excepción al invariante sino una superficie distinta:
+`withTenant` es la puerta de la **operación**, entra con un tenant ya
+resuelto y corre bajo `xula_app`; esta es la puerta del **alta**, donde el
+tenant no existe todavía y corre bajo otro rol con otras políticas.
+
+Comparte la forma que hace confiable a la primera: la conexión es una
+constante privada del módulo que nadie fuera puede alcanzar, y la única
+salida es la función. El invariante lo sostiene el lenguaje, no la
+disciplina de quien revisa.
+
+`AGENTS.md` regla 2 las nombra a las dos. Una tercera no entra sin
+actualizar esa regla primero.
 
 Verificado el 2026-08-16: el template de Postgres de Railway entrega **un
 solo rol**, `postgres`, con `rolsuper` y `rolbypassrls` en `t`. Si la app
@@ -162,6 +212,36 @@ También otorga `CREATE ON DATABASE` a `xula_migrator`: `drizzle-kit` guarda
 su journal en un esquema propio y lo crea en la primera corrida. Sin ese
 permiso la migración **falla callada** — se queda en `applying
 migrations...` y sale con código 1 sin imprimir el error de Postgres.
+
+### El silencio de `drizzle-kit migrate` no es un caso, es su modo de falla
+
+**Corrección al 2026-08-17.** Una primera versión de esta sección decía que
+`drizzle-kit migrate` sale con código 1 cuando no hay nada que aplicar. Es
+falso: con la base al día sale con código **0**. Lo que había atrás era
+otra cosa.
+
+Lo verificado es esto: **cuando `drizzle-kit migrate` no puede llegar a la
+base que cree, sale con código 1 y no imprime ni una línea del error.** Se
+queda en `applying migrations...` y termina. La misma pantalla exacta que
+el caso del `CREATE ON DATABASE` de arriba, que es un problema
+completamente distinto.
+
+Reproducido dos veces con dos causas diferentes:
+
+| Causa | Lo que se ve |
+|---|---|
+| Falta `CREATE ON DATABASE` para el journal | `applying migrations...`, exit 1 |
+| `MIGRATION_DATABASE_URL` no resuelve a la base esperada | `applying migrations...`, exit 1 |
+
+La segunda apareció corriendo `pnpm db:migrate` a secas mientras
+`scripts/db-local.sh` —que exporta la variable antes de invocarlo— aplicaba
+lo mismo sin problema. **La variable se exporta siempre; no se confía en
+que el runner cargue `.env`.** Vitest, por ejemplo, no lo carga.
+
+Consecuencia para el Pre-deploy Command de Railway: `drizzle-kit migrate` a
+secas no alcanza como señal. El exit code distingue bien éxito de fracaso,
+pero el fracaso no dice de qué. Cuando falle, la primera pregunta es a qué
+base se estaba conectando.
 
 ### Toda migración que crea tabla hace cuatro cosas
 
@@ -465,7 +545,7 @@ archivo de reglas del proyecto, así que revisa lo generado contra nuestros
 propios antipatrones antes de que entren.
 
 **Archivo de reglas: `AGENTS.md` en la raíz**, condensado. Las 12 reglas de
-[docs/README.md](../README.md) más la tabla de 22 antipatrones de
+[docs/README.md](../README.md) más la tabla de 25 antipatrones de
 [03-antipatrones.md](../03-antipatrones.md).
 
 No se le pasa `docs/` completo: son más de 2,000 líneas por revisión, sale
