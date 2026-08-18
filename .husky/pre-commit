@@ -23,7 +23,16 @@ pnpm vitest related --run --project unit --passWithNoTests || exit 1
 # por su propia revision. `--pr-mode` compara contra PR_BASE_BRANCH y ve la
 # rama entera; con ese contexto encontro cosas que el otro no vio, como la
 # FK de una sola columna que dejaba enlazar un usuario de otro municipio.
+# Y hay un tercer caso, que aparecio recien cuando empezamos a mergear
+# seguido: en una rama sin commits por delante de main, `main...HEAD` esta
+# vacio. `--pr-mode` reporta "No matching files changed in PR" y **sale en
+# verde sin revisar una linea**, con todo el cambio staged delante. O sea
+# que el primer commit de cada rama se colaba sin revision. Paso con
+# `feat/bitacora-alta`, y es el mismo defecto que el job de CI tenia por no
+# tener la rama base. Ahi el modo staged es el unico que ve algo.
 if [ "$(git branch --show-current)" = "main" ]; then
+  gga run || exit 1
+elif [ "$(git rev-list --count main..HEAD)" -eq 0 ]; then
   gga run || exit 1
 else
   gga run --pr-mode || exit 1

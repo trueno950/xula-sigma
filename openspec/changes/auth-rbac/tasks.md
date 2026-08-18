@@ -392,9 +392,24 @@ un `logger` a `betterAuth`.
       Consecuencia documentada ahi: importar el barril ahora exige
       `SUPER_ADMIN_DATABASE_URL`, con el mismo criterio de fallo temprano
       que `DATABASE_URL` en `withTenant.ts`.
-- [ ] 4.13 RED bitacora registra el alta (actor, ayuntamiento_id,
+- [x] 4.13 RED bitacora registra el alta (actor, ayuntamiento_id,
       accion, momento). [PA-4]
-- [ ] 4.14 GREEN traza de bitacora dentro de `withAltaDeAyuntamiento`.
+
+      **El test ya existia y no probaba nada.** Escribia la traza adentro
+      del propio `trabajo` y despues afirmaba encontrarla: probaba que podia
+      leer una fila que el mismo habia puesto. Quedaba verde con
+      `withAltaDeAyuntamiento` sin escribir una sola traza, que era el
+      estado real del codigo. Reescrito sin ese insert, quedo en rojo con
+      `expected [] to have a length of 1`.
+- [x] 4.14 GREEN traza de bitacora dentro de `withAltaDeAyuntamiento`.
+
+      Va en el alta y no en el llamador, y `actor` queda nulo. El porque de
+      las dos decisiones esta en `provision.ts`, junto al INSERT que las
+      aplica; repetirlo aca garantiza que una de las dos copias envejezca.
+
+      Lo que si vive aca: el dia que el provisionamiento tenga un caso de
+      uso con sesion, el actor sale de ahi. Hoy no hay ningun llamador de
+      produccion — ver 4.16.
 - [x] 4.15 Actualizar `AGENTS.md` y ADR 0001 §1 con la resolucion del
       SUPER_ADMIN (ya cerrada en el diseno). Hecho: ADR 0001 §1 documenta el
       ayuntamiento reservado y `AGENTS.md` nombra el tercer rol.

@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { type AyuntamientoId, comoAyuntamientoId } from "./ayuntamientoId";
 import * as esquema from "./esquema";
-import { ayuntamientos } from "./esquema";
+import { ayuntamientos, bitacora } from "./esquema";
 import type { TransaccionTenant } from "./withTenant";
 
 /**
@@ -25,9 +25,14 @@ import type { TransaccionTenant } from "./withTenant";
  * Y lo que hace fuerte a esta parte es que **el limite lo pone Postgres, no
  * este archivo**: `xula_super_admin` no puede crear un `OPERADOR`, no puede
  * restablecerle la contrasenia a nadie que no sea el `ADMIN_MUNICIPAL`, y
- * no tiene `SELECT` sobre `ayuntamientos` ni sobre ninguna tabla operativa.
- * Las politicas estan en `0002_super_admin.sql`; los tests que las provocan
- * en `provision.isolation.test.ts`.
+ * no tiene `SELECT` sobre `ayuntamientos`.
+ *
+ * Sobre `usuarios` **si tiene**, acotado por columna y por politica. Decir
+ * que no ve nada era mas corto y era falso; que columnas y por que, en
+ * `0002_super_admin.sql`, donde vive el GRANT.
+ *
+ * Las politicas estan en esa misma migracion; los tests que las provocan en
+ * `provision.isolation.test.ts` y en `superAdminAcotado.isolation.test.ts`.
  */
 
 const url = process.env.SUPER_ADMIN_DATABASE_URL;
@@ -55,10 +60,11 @@ const bd = drizzle(cliente, { schema: esquema, casing: "snake_case" });
  * como pedirlo — la firma es la comodidad, la politica es la garantia.
  *
  * @param trabajo Recibe el `tx` y el id recien creado. Aca adentro va el
- *   primer `ADMIN_MUNICIPAL` y la traza en bitacora. **No lo llama
- *   `provision.ts`**: `shared/tenancy` no puede importar `shared/auth` —la
- *   direccion es `auth → tenancy` y nunca al reves— asi que quien compone
- *   el alta completa es el caso de uso, no esta funcion.
+ *   primer `ADMIN_MUNICIPAL`. **No lo llama `provision.ts`**:
+ *   `shared/tenancy` no puede importar `shared/auth` —la direccion es
+ *   `auth → tenancy` y nunca al reves— asi que quien compone el alta
+ *   completa es el caso de uso, no esta funcion. La traza en bitacora **no**
+ *   va aca; el porque esta donde se escribe, mas abajo.
  */
 export async function withAltaDeAyuntamiento<T>(
   datos: { subdominio: string; nombre: string },
@@ -87,6 +93,29 @@ export async function withAltaDeAyuntamiento<T>(
      * en produccion.
      */
     await tx.execute(sql`SELECT set_config('app.tenant', ${id}, true)`);
+
+    /**
+     * La traza la escribe el alta y no el llamador.
+     *
+     * Es la unica forma de que exista siempre: dejarsela a quien compone el
+     * alta significa que el dia que uno se olvide, no falla nada y queda un
+     * municipio sin registro de haber sido creado. La escribe
+     * `xula_super_admin` por `bitacora_alta_plataforma`, que le da INSERT y
+     * nada mas — ni siquiera puede volver a leer lo que acaba de escribir.
+     *
+     * `actor` queda nulo, que es lo que el esquema reserva para lo que
+     * origina el sistema: en este punto no hay persona identificada. El
+     * primer `ADMIN_MUNICIPAL` todavia no existe —lo crea `trabajo`, despues
+     * de esta linea— y la plataforma no llega hasta aca con una sesion. El
+     * dia que el provisionamiento tenga un caso de uso con contexto, el
+     * actor sale de ahi.
+     */
+    await tx.insert(bitacora).values({
+      ayuntamientoId: id,
+      accion: "ALTA_AYUNTAMIENTO",
+      entidad: "ayuntamientos",
+      entidadId: id,
+    });
 
     return trabajo(tx as TransaccionTenant, id);
   });
