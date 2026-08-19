@@ -372,3 +372,59 @@ throw new TenantNoResueltoError(...);
 // consulta por una conexion del pool ya usada revienta al evaluar la
 // politica.
 ```
+
+---
+
+## 9. El ciclo de revisión
+
+GGA revisa, la IA corrige, GGA vuelve a revisar. Ese ciclo no tiene freno
+propio: cada vuelta re-manda el diff completo al revisor y trae el veredicto
+entero de vuelta. Un PR de 900 líneas revisado diez veces son diez PRs
+pagados en cada dirección, y la mayoría de esas vueltas no encontraron nada
+que no se supiera en la primera.
+
+El cambio `auth-rbac` lo pagó. Lo que se aprendió ahí:
+
+### Dos rondas, y la segunda no corrige
+
+- **Ronda 1** — se corrige todo lo que el veredicto marcó.
+- **Ronda 2** — confirma. Si sale limpia, se commitea.
+- **Si la ronda 2 trae un hallazgo nuevo, se para.** No se corrige de
+  corrido.
+
+Un hallazgo que aparece recién después de un fix es sospechoso: el revisor
+ve un diff distinto al de la ronda anterior y puede estar persiguiéndose la
+cola. Puede ser real —un fix que rompió otra cosa— pero eso se decide
+leyendo, no encadenando otra vuelta. La tercera ronda se autoriza a mano.
+
+### Un hallazgo sobre un archivo ausente se verifica antes de tocar nada
+
+`gga run --pr-mode` compara contra `PR_BASE_BRANCH`. En una rama apilada
+sobre otra rama sin mergear, el revisor no ve los archivos que llegaron en
+un commit anterior de la misma rama: los lee como inexistentes y marca su
+ausencia.
+
+Pasó en el PR 2 de `auth-rbac`. El veredicto reportó **tres veces** que
+`cuentas` y `verificaciones` no tenían `*.isolation.test.ts`. Los dos
+archivos existían, commiteados en la misma rama. Tres rondas completas
+gastadas en un problema que no existía.
+
+Antes de corregir un hallazgo de la forma "falta X", se busca X en el repo.
+Si está, el hallazgo se descarta y se anota — no se "arregla" duplicando lo
+que ya estaba.
+
+### Cuatro hallazgos del mismo tipo son una regla ausente, no cuatro fixes
+
+Corregirlos de a uno con una revisión completa en el medio es la parte cara,
+y encima no evita el quinto. Cuando el patrón se repite, el arreglo es la
+regla —en `AGENTS.md`, en el linter o en un test— y una sola ronda que la
+verifique entera.
+
+### Mergear seguido, no apilar
+
+Cinco PRs apilados sobre `feat/auth-esquema` sin mergear tuvieron dos
+costos: CI solo corre en `pull_request` y `push` a `main`, así que no se
+ejecutó ni una vez en los cinco —los defectos salieron todos juntos al
+final— y `--pr-mode` empezó a dar los falsos positivos de arriba.
+
+Un PR, un merge. La rama base limpia es lo que hace confiable al revisor.
