@@ -145,8 +145,28 @@ es exactamente lo que se está buscando. Ver ADR 0001 §8.
 4. Conventional commits en español, sin atribución de IA
 5. PR hacia `main` aunque sea de una sola persona
 6. Sin dependencias nuevas sin justificación explícita
+7. Un PR, un merge. Las ramas no se apilan.
 
 Antes de decir que algo está listo: `pnpm test` y `pnpm check` en verde.
+
+### El ciclo de revisión tiene techo
+
+GGA revisa, se corrige, GGA vuelve a revisar. Ese ciclo no tiene freno
+propio: cada vuelta re-manda el diff completo y trae el veredicto entero de
+vuelta. En `auth-rbac` fue el gasto más grande del cambio, y casi todo en
+vueltas que no encontraron nada nuevo.
+
+- **Dos rondas.** La primera corrige, la segunda confirma. Si la segunda
+  trae un hallazgo nuevo, se para y lo decide una persona — un hallazgo que
+  aparece recién después de un fix puede ser el revisor persiguiéndose la
+  cola.
+- **"Falta X" se verifica antes de corregir.** `--pr-mode` no ve los
+  archivos que llegaron en un commit anterior de una rama apilada y marca su
+  ausencia. Se busca X en el repo primero; si está, el hallazgo se descarta.
+- **Cuatro hallazgos del mismo tipo son una regla ausente, no cuatro fixes.**
+  Se arregla la regla y se corre una sola ronda que la verifique entera.
+
+Detalle y el caso que lo originó: `docs/04-calidad.md` sección 9.
 
 ---
 

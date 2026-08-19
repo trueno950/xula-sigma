@@ -245,6 +245,13 @@ No marques:
   marcarlo por extenso o por densidad borra lo que no está en ningún otro
   lado. Se marca por reformular, duplicar o afirmar sin test — nunca por
   largo. La proporción de comentarios de un archivo **no** es hallazgo.
+- **La ausencia de un archivo que no está en el diff.** Ves el diff, no el
+  repositorio. Un test de aislamiento, un esquema o una migración pueden
+  existir en un commit anterior de esta misma rama y no aparecer acá. Si
+  falta algo obligatorio *en un archivo que sí estás viendo*, marcalo; si lo
+  que falta es un archivo entero, escribilo como "no lo veo en el diff" y no
+  como "no existe". La diferencia importa: lo segundo se corrige duplicando
+  lo que ya estaba.
 - Preferencias de estilo que Biome ya formatea
 - Falta de abstracción especulativa. La duplicación es más barata que la
   abstracción equivocada: se duplica la primera vez, se aguanta la segunda,
