@@ -115,10 +115,25 @@ describe("acceso cruzado entre municipios", () => {
   });
 
   it("la sesion se crea en el municipio del request", async () => {
+    const antesEnTicul = await withTenant(ticul, (tx) =>
+      tx.select().from(sesiones),
+    );
+    const antesEnMotul = await withTenant(motul, (tx) =>
+      tx.select().from(sesiones),
+    );
+
     await acceso(enTicul);
 
     const deTicul = await withTenant(ticul, (tx) => tx.select().from(sesiones));
     const deMotul = await withTenant(motul, (tx) => tx.select().from(sesiones));
+
+    // Se cuenta el delta y no el total porque este archivo no limpia entre
+    // tests: los `it` anteriores ya dejaron sesiones en los dos municipios.
+    // Sin estas dos aserciones el test no puede fallar — si el acceso no
+    // creara la sesion, los `for` de abajo no iterarian y ningun `expect`
+    // llegaria a correr.
+    expect(deTicul).toHaveLength(antesEnTicul.length + 1);
+    expect(deMotul).toHaveLength(antesEnMotul.length);
 
     for (const sesion of deTicul) expect(sesion.ayuntamientoId).toBe(ticul);
     for (const sesion of deMotul) expect(sesion.ayuntamientoId).toBe(motul);
