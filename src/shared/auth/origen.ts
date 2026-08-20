@@ -30,3 +30,14 @@ export function origenDesde(cabeceras: Headers, respaldo: string): string {
 
   return `${protocolo}://${host}`;
 }
+
+/**
+ * El respaldo de las puertas que solo tienen cabeceras.
+ *
+ * Estaba escrito literal en `sesion.ts`, y `contexto.ts` necesitaba el
+ * mismo valor para derivar el origen que va a la bitacora. Copiarlo era
+ * repetir el defecto que este archivo ya documenta mas arriba: dos
+ * derivaciones parecidas pero no iguales, que divergen sin avisar.
+ */
+export const origenDelRequest = (cabeceras: Headers): string =>
+  origenDesde(cabeceras, "http://localhost:3000");

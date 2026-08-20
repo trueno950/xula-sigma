@@ -777,6 +777,54 @@ llama `withTenant`. Un ejemplo canónico equivocado se copia.
   para `xula_migrator`. Se cierra al diseñar auth y RBAC.
 - **Node 26 en el builder de Railway.** Local y CI están verificados; el
   tercero se confirma en el primer despliegue.
+- **Wildcard DNS `*.xulasigma.mx` en Railway.** Es el segundo bloqueante
+  que declara el roadmap para Fase 0, y sigue sin verificar: el dominio no
+  está comprado y no existe todavía un proyecto de Railway para xula-sigma.
+  No se puede probar antes de que existan las dos cosas — el
+  `*.up.railway.app` que Railway entrega por servicio es un hostname
+  generado, no un wildcard propio.
+
+  **Se difiere a propósito, y esto es lo que lo permite:** el roadmap
+  supone que un wildcard ausente "cambia el proxy de resolución, que es de
+  lo primero que se construye". Medido contra el código, el radio es menor,
+  aunque no tan chico como decía la primera versión de este párrafo —que
+  afirmaba que `proxy.ts` era el único archivo que lee el `Host`, y es
+  falso: lo desmiente un `rg 'get("host")' src`—.
+
+  Lo que lee el `Host` son dos archivos, y por razones distintas:
+
+  - `src/proxy.ts`, para **resolver el tenant**. Es el único con ese
+    propósito: todo lo de abajo —`ayuntamientoActual()`, el layout de
+    acceso, las páginas— consume las cabeceras `x-xula-superficie` y
+    `x-xula-subdominio`, no el hostname.
+  - `src/shared/auth/origen.ts`, para armar el **origen de la petición**:
+    el `baseURL` que valida Better Auth y, desde que existe la bitácora
+    transversal, la columna `origen` de cada traza.
+
+  El fallback a dominio único con el tenant resuelto desde el JWT reescribe
+  el primero y deja `subdominio.ts` sin consumidores. No toca tenancy ni
+  RLS: el aislamiento no depende del hostname en ningún punto. Lo que sí
+  toca es el segundo, y no solo mecánicamente: con un dominio único, el
+  `Host` es el mismo para todos los municipios, así que la columna `origen`
+  deja de distinguir desde qué municipio entró la petición. Eso degrada la
+  bitácora, que es evidencia legal, y hay que decidir con qué se la
+  reemplaza —el subdominio lógico del JWT, probablemente— antes de aceptar
+  el fallback.
+
+  O sea: verificarlo tarde no obliga a rehacer el aislamiento ni las capas,
+  pero sí deja una decisión de auditoría pendiente de la respuesta. No es
+  gratis; es acotado.
+
+  Cuando existan dominio y proyecto, el ciclo entero se corre por CLI sin
+  entrar al dashboard: `railway domain '*.xulasigma.mx'` crea el custom
+  domain y devuelve los registros DNS a cargar, y `railway domain status`
+  reporta el estado del DNS y del certificado. La verificación es que dos
+  subdominios que no tienen registro propio respondan con TLS válido.
+
+  Al probarlo, confirmar antes que `DOMINIO_BASE` esté cargado en el
+  entorno. `src/proxy.ts` cae a `"localhost"` si falta, y entonces todo
+  Host real resuelve a `invalido` y devuelve 404 — que se lee igual que un
+  wildcard que no funcionó, por una causa que no tiene nada que ver.
 - **`typescript@7`** cuando dependency-cruiser publique soporte.
 
 ---

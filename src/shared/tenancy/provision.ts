@@ -3,8 +3,9 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { type AyuntamientoId, comoAyuntamientoId } from "./ayuntamientoId";
+import { registrar } from "./bitacora";
 import * as esquema from "./esquema";
-import { ayuntamientos, bitacora } from "./esquema";
+import { ayuntamientos } from "./esquema";
 import type { TransaccionTenant } from "./withTenant";
 
 /**
@@ -110,8 +111,12 @@ export async function withAltaDeAyuntamiento<T>(
      * dia que el provisionamiento tenga un caso de uso con contexto, el
      * actor sale de ahi.
      */
-    await tx.insert(bitacora).values({
+    await registrar(tx as TransaccionTenant, {
       ayuntamientoId: id,
+      actor: null,
+      // Sin peticion HTTP detras garantizada: el alta tambien corre desde
+      // un script de provisionamiento. Nulo antes que un valor inventado.
+      origen: null,
       accion: "ALTA_AYUNTAMIENTO",
       entidad: "ayuntamientos",
       entidadId: id,

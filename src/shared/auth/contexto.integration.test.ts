@@ -118,6 +118,18 @@ describe("contextoActual", () => {
     expect(contexto?.usuario.rol).toBe("ADMIN_MUNICIPAL");
   });
 
+  it("trae el origen de la peticion, que es el 'desde donde' de la bitacora", async () => {
+    // Control positivo contra la regresion: sin este assert, `origen`
+    // puede volver a nulo sin que nada falle. Por que vive en el contexto,
+    // en el campo mismo de `ContextoActual`.
+    const cookie = await acceder(enMotul);
+    situarseEn(enMotul, cookie);
+
+    const contexto = await contextoActual();
+
+    expect(contexto?.origen).toBe(origenDe(enMotul));
+  });
+
   it("el rol sale de la sesion, no de un valor por defecto", async () => {
     /**
      * Control positivo del anterior. Con un solo municipio, un
