@@ -118,6 +118,21 @@ describe("contextoActual", () => {
     expect(contexto?.usuario.rol).toBe("ADMIN_MUNICIPAL");
   });
 
+  it("trae el origen de la peticion, que es el 'desde donde' de la bitacora", async () => {
+    /**
+     * El origen viaja en el contexto y no lo arma cada caso de uso. Es lo
+     * que hace que la columna `origen` se llene sola: quien registra una
+     * traza ya tiene el contexto en la mano, asi que no hay un dato mas
+     * que acordarse de pasar.
+     */
+    const cookie = await acceder(enMotul);
+    situarseEn(enMotul, cookie);
+
+    const contexto = await contextoActual();
+
+    expect(contexto?.origen).toBe(origenDe(enMotul));
+  });
+
   it("el rol sale de la sesion, no de un valor por defecto", async () => {
     /**
      * Control positivo del anterior. Con un solo municipio, un

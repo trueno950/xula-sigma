@@ -65,6 +65,7 @@ export const contextoDe = (
 ): ContextoActual => ({
   ayuntamientoId: municipio === "motul" ? motul : ticul,
   usuario: { id: gente[municipio][rol], rol },
+  origen: `https://${municipio}.xulasigma.mx`,
 });
 
 /**

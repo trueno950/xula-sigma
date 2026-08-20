@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import { bitacora } from "@/shared/tenancy/esquema";
+import { registrar } from "@/shared/tenancy/bitacora";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { ContextoActual } from "./contexto";
@@ -49,14 +49,21 @@ async function objetivoDe(
   return persona;
 }
 
-/** Una fila de bitacora. Nunca lleva datos personales: solo ids. */
-const registrar = (
+/**
+ * La traza de los dos casos de uso de este archivo.
+ *
+ * Adapta el contexto a lo que pide `registrar`, que vive en `tenancy` y no
+ * puede conocer `ContextoActual` —la direccion es `auth → tenancy`—. Es
+ * traduccion, no una segunda forma de escribir en la bitacora.
+ */
+const trazaDe = (
   tx: TransaccionTenant,
   traza: { contexto: ContextoActual; accion: string; entidadId: string },
 ) =>
-  tx.insert(bitacora).values({
+  registrar(tx, {
     ayuntamientoId: traza.contexto.ayuntamientoId,
     actor: traza.contexto.usuario.id,
+    origen: traza.contexto.origen,
     accion: traza.accion,
     entidad: "usuarios",
     entidadId: traza.entidadId,
@@ -81,7 +88,7 @@ export function restablecerContrasenia(
       .set({ password: digest })
       .where(eq(cuentas.userId, objetivo.id));
 
-    await registrar(tx, {
+    await trazaDe(tx, {
       contexto,
       accion: "RESTABLECER_CONTRASENIA",
       entidadId: objetivo.id,
@@ -113,7 +120,7 @@ export function darDeBajaUsuario(
       .set({ bajaEn: new Date() })
       .where(eq(usuarios.id, objetivo.id));
 
-    await registrar(tx, {
+    await trazaDe(tx, {
       contexto,
       accion: "BAJA_USUARIO",
       entidadId: objetivo.id,

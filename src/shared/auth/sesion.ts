@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { conAuth } from "./instancia";
-import { origenDesde } from "./origen";
+import { origenDelRequest } from "./origen";
 
 /**
  * La sesion del request actual, o `null`.
@@ -14,7 +14,7 @@ export async function sesionActual() {
   const cabeceras = await headers();
 
   // Aca no hay `request.url`, solo cabeceras: de ahi el respaldo local.
-  const origen = origenDesde(cabeceras, "http://localhost:3000");
+  const origen = origenDelRequest(cabeceras);
 
   return conAuth(origen, (auth) => auth.api.getSession({ headers: cabeceras }));
 }

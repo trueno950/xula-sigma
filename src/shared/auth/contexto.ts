@@ -1,5 +1,7 @@
+import { headers } from "next/headers";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
+import { origenDelRequest } from "./origen";
 import { ROLES, type Rol } from "./roles";
 import { sesionActual } from "./sesion";
 
@@ -23,6 +25,16 @@ import { sesionActual } from "./sesion";
 export type ContextoActual = {
   ayuntamientoId: AyuntamientoId;
   usuario: { id: string; rol: Rol };
+  /**
+   * De donde entro la peticion, para la columna `origen` de la bitacora.
+   *
+   * Viaja en el contexto y no lo arma cada caso de uso a mano. Es lo que
+   * hace que la columna se llene sola: quien registra una traza ya recibe
+   * el contexto, asi que no hay un dato mas del que acordarse. Cuando se
+   * dejo librado al llamador, la columna quedo nula en todas las trazas
+   * que existian.
+   */
+  origen: string;
 };
 
 const esRol = (valor: unknown): valor is Rol =>
@@ -50,5 +62,9 @@ export async function contextoActual(): Promise<ContextoActual | null> {
 
   const { id: ayuntamientoId } = await ayuntamientoActual();
 
-  return { ayuntamientoId, usuario: { id, rol } };
+  return {
+    ayuntamientoId,
+    usuario: { id, rol },
+    origen: origenDelRequest(await headers()),
+  };
 }
