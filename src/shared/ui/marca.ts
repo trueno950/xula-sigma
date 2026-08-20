@@ -43,7 +43,7 @@ const color = z
  * parser y pasa el esquema. Verificado — el test lo agarro. El escudo va a
  * un `src`, asi que el protocolo se acota a http y https.
  */
-const urlDeAsset = z.url().refine((valor) => {
+export const urlDeAsset = z.url().refine((valor) => {
   const protocolo = URL.parse(valor)?.protocol;
 
   return protocolo === "https:" || protocolo === "http:";
@@ -88,13 +88,59 @@ const legible = (marca: Marca): boolean => {
   return razon !== null && razon >= CONTRASTE_MINIMO;
 };
 
-/** Lo que no valida se descarta entero y quedan los valores por defecto. */
-export const leerMarca = (valor: unknown): Marca => {
+export type ResultadoDeMarca =
+  | { ok: true; marca: Marca }
+  | { ok: false; campos: Record<string, string> };
+
+/**
+ * El nombre de campo que le corresponde a cada issue de Zod. Solo se toma
+ * el primero: `esquemaDeMarca` es plano, sin objetos anidados, asi que el
+ * primer segmento del path ya es el campo completo.
+ */
+const camposDe = (error: z.ZodError): Record<string, string> => {
+  const campos: Record<string, string> = {};
+
+  for (const issue of error.issues) {
+    const campo = typeof issue.path[0] === "string" ? issue.path[0] : "marca";
+
+    campos[campo] ??= `El valor de "${campo}" no es valido.`;
+  }
+
+  return campos;
+};
+
+/**
+ * Corre el esquema **y** la reja de contraste. Es la precondicion de
+ * escritura del cambio de escudo: escribir sobre una marca compone el
+ * `escudo` nuevo con los campos existentes y valida el resultado completo
+ * con esta misma funcion antes de guardar nada.
+ *
+ * Una falla de contraste se nombra `contraste` y no `primario` ni
+ * `primarioTexto`: no es un color el que esta mal, es el par.
+ */
+export const validarMarca = (valor: unknown): ResultadoDeMarca => {
   const resultado = esquemaDeMarca.safeParse(valor);
 
-  if (!resultado.success || !legible(resultado.data)) return {};
+  if (!resultado.success)
+    return { ok: false, campos: camposDe(resultado.error) };
 
-  return resultado.data;
+  if (!legible(resultado.data)) {
+    return {
+      ok: false,
+      campos: {
+        contraste: "El primario y el texto no tienen suficiente contraste.",
+      },
+    };
+  }
+
+  return { ok: true, marca: resultado.data };
+};
+
+/** Lo que no valida se descarta entero y quedan los valores por defecto. */
+export const leerMarca = (valor: unknown): Marca => {
+  const resultado = validarMarca(valor);
+
+  return resultado.ok ? resultado.marca : {};
 };
 
 /**

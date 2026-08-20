@@ -5,6 +5,7 @@ import {
   leerMarca,
   PRIMARIO_POR_DEFECTO,
   PRIMARIO_TEXTO_POR_DEFECTO,
+  validarMarca,
   variablesDeMarca,
 } from "./marca";
 
@@ -134,5 +135,44 @@ describe("variablesDeMarca", () => {
       "--primary": "#1f4d7a",
       "--accent": "#000000",
     });
+  });
+});
+
+describe("validarMarca", () => {
+  /**
+   * `leerMarca` colapsa "vacia" e "invalida" en el mismo `{}`: es lo que
+   * `validarMarca` tiene que distinguir para que escribir un escudo sobre
+   * una marca sin colores no se confunda con escribirlo sobre una marca
+   * con un color roto.
+   */
+  it("una marca vacia es valida y no invalida", () => {
+    expect(validarMarca({})).toEqual({ ok: true, marca: {} });
+  });
+
+  it("un color que trae CSS adentro falla nombrando el campo", () => {
+    const resultado = validarMarca({ primario: "url(//x)" });
+
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(Object.keys(resultado.campos)).toContain("primario");
+    }
+  });
+
+  it("una marca bien formada es valida", () => {
+    const marca = { primario: "#7a1f2b", escudo: "https://r2.example/e.png" };
+
+    expect(validarMarca(marca)).toEqual({ ok: true, marca });
+  });
+
+  it("un par sin contraste falla nombrando el par, no un color", () => {
+    const resultado = validarMarca({
+      primario: "#7a1f2b",
+      primarioTexto: "#000000",
+    });
+
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(Object.keys(resultado.campos)).toEqual(["contraste"]);
+    }
   });
 });

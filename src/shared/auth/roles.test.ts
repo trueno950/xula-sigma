@@ -98,11 +98,7 @@ describe("puedeDarDeBaja", () => {
   });
 
   it("SUPER_ADMIN no da de baja: destraba, no administra", () => {
-    /**
-     * Restablecer al ADMIN_MUNICIPAL es lo que lo destraba. Darlo de baja
-     * lo dejaria sin nadie que administre el municipio, y esa decision no
-     * es de plataforma.
-     */
+    // Por que, en `puedeDarDeBaja`.
     for (const objetivo of ROLES) {
       expect(puedeDarDeBaja("SUPER_ADMIN", objetivo)).toBe(false);
     }
@@ -166,9 +162,7 @@ describe("puedeCambiarMarca", () => {
   });
 
   it("SUPER_ADMIN no cambia la marca de ningun ayuntamiento", () => {
-    // El escudo es la identidad institucional del municipio: que lo cambie
-    // quien opera la plataforma es una superficie de suplantacion. Misma
-    // linea que `puedeExportar`, por la misma razon.
+    // Por que, en `puedeCambiarMarca`. Misma linea que `puedeExportar`.
     expect(puedeCambiarMarca("SUPER_ADMIN")).toBe(false);
   });
 });

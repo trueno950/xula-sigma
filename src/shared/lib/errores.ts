@@ -110,8 +110,18 @@ const esCodigoConocido = (valor: unknown): valor is CodigoConocido =>
  * cliente.
  */
 export function mapearError(error: unknown): ActionResult<never> {
-  const codigo = (error as { codigo?: unknown } | null)?.codigo;
-  const mensaje = error instanceof Error ? error.message : "Datos invalidos.";
+  const propiedades = error as { codigo?: unknown; message?: unknown } | null;
+  const codigo = propiedades?.codigo;
+  /**
+   * `message` se lee de la propiedad, no de `instanceof Error`. La misma
+   * razon que el `codigo`: un objeto que perdio el prototipo en la
+   * serializacion sigue trayendo su `message` como propiedad plana, y
+   * `instanceof` aca lo tiraria igual que lo tiraria mas arriba.
+   */
+  const mensaje =
+    typeof propiedades?.message === "string"
+      ? propiedades.message
+      : "Datos invalidos.";
 
   if (esCodigoConocido(codigo)) {
     if (codigo === "VALIDACION") {

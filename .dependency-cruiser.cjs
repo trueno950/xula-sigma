@@ -14,9 +14,12 @@ module.exports = {
       comment:
         "domain es logica de negocio pura. No importa Drizzle, ni Next, ni React, " +
         "ni otra capa, ni shared. Solo a si mismo. Es lo que permite testearlo en " +
-        "milisegundos sin base de datos.",
+        "milisegundos sin base de datos. `dependencyTypesNot: npm-dev` es la unica " +
+        "salida: el propio test de dominio necesita importar su runner (vitest), y " +
+        "un devDependency nunca llega al bundle que se despliega, asi que no es la " +
+        "impureza que esta regla existe para evitar.",
       from: { path: "^src/modules/([^/]+)/domain/" },
-      to: { pathNot: "^src/modules/$1/domain/" },
+      to: { pathNot: "^src/modules/$1/domain/", dependencyTypesNot: ["npm-dev"] },
     },
     {
       name: "application-no-importa-infra-ni-ui",
@@ -87,6 +90,22 @@ module.exports = {
       to: {
         dependencyTypes: ["npm"],
         path: "node_modules/(better-auth|@node-rs/argon2)/",
+      },
+    },
+    {
+      name: "s3-solo-desde-el-almacen-de-assets",
+      severity: "error",
+      comment:
+        "Espejo de auth-solo-desde-shared-auth. @aws-sdk/client-s3 firma con " +
+        "SigV4 y solo el adaptador de R2 lo toca.",
+      from: { pathNot: "^src/modules/marca/infrastructure/" },
+      // Se compara contra `resolved`, que con pnpm es
+      // node_modules/.pnpm/@aws-sdk+client-s3@X/node_modules/@aws-sdk/client-s3/…
+      // Un patron anclado al nombre del paquete no matchea nunca — la
+      // leccion de auth-solo-desde-shared-auth, verificada otra vez abajo.
+      to: {
+        dependencyTypes: ["npm"],
+        path: "node_modules/@aws-sdk/client-s3/",
       },
     },
     {

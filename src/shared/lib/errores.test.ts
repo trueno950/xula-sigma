@@ -58,7 +58,7 @@ describe("mapearError", () => {
     });
   });
 
-  it("un error sin codigo conocido mapea a ERROR_INTERNO sin filtrar el mensaje original", () => {
+  it("un error sin codigo conocido mapea a ERROR_INTERNO filtrando el mensaje original", () => {
     const espia = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const resultado = mapearError(
@@ -83,10 +83,15 @@ describe("mapearError", () => {
      */
     const sinPrototipo = { codigo: "NO_AUTORIZADO", message: "sin permiso" };
 
+    // El mensaje se afirma exacto y no con `expect.any(String)`: es lo que
+    // agarra que `mensaje` se siga leyendo con `instanceof Error` mientras
+    // `codigo` ya despacha por propiedad. Un objeto plano no es
+    // `instanceof Error`, y ese camino caeria en el mensaje generico del
+    // fallback aunque el `codigo` si despache bien.
     expect(mapearError(sinPrototipo)).toEqual({
       ok: false,
       codigo: "NO_AUTORIZADO",
-      mensaje: expect.any(String),
+      mensaje: "sin permiso",
     });
   });
 });

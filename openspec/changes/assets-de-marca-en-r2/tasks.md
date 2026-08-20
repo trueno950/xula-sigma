@@ -62,66 +62,83 @@ interna, no separa entregas.
 
 ## Phase 2: Dominio de `marca` y `marca.ts`
 
-- [ ] 2.1 RED `src/modules/marca/domain/png.test.ts` — los once casos de
+- [x] 2.1 RED `src/modules/marca/domain/png.test.ts` — los once casos de
       la seccion 4 del design (truncado, firma volteada, JPEG, `IEND`,
       79x80..2049x2048, 1 MiB +-1, bomba declarada), bytes armados con
       `pngDe(...)`, sin fixtures binarios.
-- [ ] 2.2 GREEN `src/modules/marca/domain/png.ts` — `validarPng`,
+- [x] 2.2 GREEN `src/modules/marca/domain/png.ts` — `validarPng`,
       `VeredictoPng`, `MotivoDeRechazo`.
-- [ ] 2.3 RED `src/modules/marca/domain/claveDeEscudo.test.ts` — el
+- [x] 2.3 RED `src/modules/marca/domain/claveDeEscudo.test.ts` — el
       prefijo es el `ayuntamientoId`; el uuid entra por parametro.
-- [ ] 2.4 GREEN `src/modules/marca/domain/claveDeEscudo.ts` +
+- [x] 2.4 GREEN `src/modules/marca/domain/claveDeEscudo.ts` +
       `domain/index.ts`.
-- [ ] 2.5 Confirmar en verde, sin tocarlos, los quince tests actuales de
+- [x] 2.5 Confirmar en verde, sin tocarlos, los quince tests actuales de
       `src/shared/ui/marca.test.ts` (linea base de regresion).
-- [ ] 2.6 RED `describe("validarMarca")` nuevo en `marca.test.ts` — `{}`
+- [x] 2.6 RED `describe("validarMarca")` nuevo en `marca.test.ts` — `{}`
       da `ok:true` con marca vacia; `{ primario: "url(//x)" }` da
       `ok:false` nombrando `primario`.
-- [ ] 2.7 GREEN `validarMarca`, `ResultadoDeMarca` y export `urlDeAsset`
+- [x] 2.7 GREEN `validarMarca`, `ResultadoDeMarca` y export `urlDeAsset`
       en `src/shared/ui/marca.ts`; `leerMarca` reconstruido encima, misma
       firma y mismo resultado.
-- [ ] 2.8 Confirmar que los quince tests viejos y los dos consumidores
+- [x] 2.8 Confirmar que los quince tests viejos y los dos consumidores
       (`(acceso)/layout.tsx`, `(acceso)/acceso/page.tsx`) siguen verdes,
       sin modificarlos.
+- [x] 2.9 (No planeada) `dominio-no-importa-nada` en
+      `.dependency-cruiser.cjs` bloqueaba tambien el import de `vitest`
+      dentro de los tests de `domain/` — nadie habia escrito un test de
+      dominio en este repo todavia. Se agrego `dependencyTypesNot:
+      ["npm-dev"]` a la regla: purifica contra Drizzle/Next/React
+      (dependencies de produccion) y deja pasar el test runner
+      (devDependency, nunca llega al bundle).
 
 ## Phase 3: Puerto, fake, adaptador R2, tipos publicos
 
-- [ ] 3.1 GREEN `src/modules/marca/application/puertos.ts` — tipo
+- [x] 3.1 GREEN `src/modules/marca/application/puertos.ts` — tipo
       `AlmacenDeAssets` (`guardar(clave, bytes): Promise<url>`,
       `borrar(url): Promise<void>`).
-- [ ] 3.2 RED `src/modules/marca/application/almacenDePrueba.test.ts` —
+- [x] 3.2 RED `src/modules/marca/application/almacenDePrueba.test.ts` —
       `borrar` no-opea si la URL no empieza con `R2_PUBLIC_URL`.
-- [ ] 3.3 GREEN `src/modules/marca/application/almacenDePrueba.ts` +
+- [x] 3.3 GREEN `src/modules/marca/application/almacenDePrueba.ts` +
       `application/index.ts`.
-- [ ] 3.4 Agregar regla `s3-solo-desde-el-almacen-de-assets` a
+- [x] 3.4 Agregar regla `s3-solo-desde-el-almacen-de-assets` a
       `.dependency-cruiser.cjs` (seccion 10 design). Provocarla una vez
       con un import de `@aws-sdk/client-s3` fuera de
       `infrastructure/almacenR2.ts`, confirmar `pnpm check` en rojo, y
       revertir el import de prueba.
-- [ ] 3.5 GREEN `src/modules/marca/infrastructure/almacenR2.ts` —
+- [x] 3.5 GREEN `src/modules/marca/infrastructure/almacenR2.ts` —
       `PutObjectCommand`/`DeleteObjectCommand`, lectura y validacion
       perezosa de `R2_*` dentro de la primera llamada. Sin test unitario:
       necesita credenciales reales, fuera de CI.
-- [ ] 3.6 GREEN `infrastructure/index.ts`; `package.json` suma
+- [x] 3.6 GREEN `infrastructure/index.ts`; `package.json` suma
       `@aws-sdk/client-s3`; `.env.example` suma las cinco `R2_*`.
-- [ ] 3.7 GREEN `src/modules/marca/types.ts` — `EntradaDeEscudo`,
+- [x] 3.7 GREEN `src/modules/marca/types.ts` — `EntradaDeEscudo`,
       `EscudoCambiado`.
+- [x] 3.8 (No planeada) `.env.example` ya traia `R2_ACCOUNT_ID`,
+      `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` y `R2_BUCKET` de un
+      trabajo previo — `R2_ENDPOINT` y `R2_PUBLIC_URL`, que design.md
+      seccion 8 exige, no estaban. Se reemplazo `R2_ACCOUNT_ID` por
+      `R2_ENDPOINT` (el SDK de S3 necesita la URL completa del endpoint,
+      no solo el id de cuenta) y se agrego `R2_PUBLIC_URL`.
 
 ## Phase 4: Caso de uso y aislamiento (T10)
 
-- [ ] 4.1 RED `src/modules/marca/application/cambiarEscudo.integration.test.ts`
+- [x] 4.1 RED `src/modules/marca/application/cambiarEscudo.integration.test.ts`
       contra `almacenDePrueba` + Postgres real — rol, PUT antes de la
       transaccion, clave con el `ayuntamientoId` del contexto (no de un
       parametro), traza en la misma transaccion, borrado del anterior
       despues del commit, borrado fallido no cambia `ok:true`, marca
       previa con color invalido no escribe nada.
-- [ ] 4.2 GREEN `src/modules/marca/application/cambiarEscudo.ts` — el
+- [x] 4.2 GREEN `src/modules/marca/application/cambiarEscudo.ts` — el
       flujo completo de la seccion 5 del design.
-- [ ] 4.3 RED `src/modules/marca/escudo.isolation.test.ts` — el
+- [x] 4.3 RED `src/modules/marca/escudo.isolation.test.ts` — el
       `ADMIN_MUNICIPAL` de Motul no cambia la marca de Ticul; RLS corta
       aunque el id se falsee. [T10]
-- [ ] 4.4 Confirmar 4.1 y 4.3 en verde contra Postgres real
+- [x] 4.4 Confirmar 4.1 y 4.3 en verde contra Postgres real
       (`pnpm db:local`); sin codigo nuevo si 4.2 ya cubre el camino.
+- [x] 4.5 (No planeada) `application/index.ts` gana `export * from
+      "./cambiarEscudo"` — el barrel de capa quedaba incompleto sin el
+      unico caso de uso del modulo. `almacenDePrueba` sigue sin
+      exportarse: es un doble de prueba, no API publica.
 
 ## Phase 5: Composicion, Server Action, UI (depende de 0.1)
 
