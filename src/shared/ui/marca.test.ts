@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { CONTRASTE_MINIMO, contraste } from "./contraste";
 import {
   leerMarca,
   PRIMARIO_POR_DEFECTO,
@@ -61,6 +62,18 @@ describe("leerMarca", () => {
   it("un hex con transparencia tampoco, por la misma razon", () => {
     expect(leerMarca({ primario: "#7a1f2b80" })).toEqual({});
   });
+
+  it("un oklch con forma valida pero no medible tampoco entra", () => {
+    /**
+     * El regex acepta la forma —los caracteres son los permitidos— pero
+     * `contraste.ts` no puede medirla. Se prueba por `secundario` a
+     * proposito: es el unico campo que no pasa por la reja de contraste,
+     * asi que es la unica puerta por la que un color no medible podia
+     * llegar hasta el `style` de la pagina.
+     */
+    expect(leerMarca({ secundario: "oklch(0.5)" })).toEqual({});
+    expect(leerMarca({ secundario: "oklch(0.5 50% 20)" })).toEqual({});
+  });
 });
 
 describe("leerMarca y el contraste", () => {
@@ -110,14 +123,13 @@ describe("variablesDeMarca", () => {
   });
 
   it("el acento se declara sin pasar por la reja de contraste", () => {
-    /**
-     * No es un olvido de la validacion: el esquema no declara el color de
-     * texto de `--accent`, asi que no hay par que medir. Este test fija el
-     * hueco para que se note el dia que el design system lo declare y esto
-     * empiece a estar mal.
-     */
+    // Por que el acento no se mide, en `legible`. Lo que agrega este test
+    // es fijar el hueco con el numero adentro: el par elegido no alcanza el
+    // piso y se declara igual. El dia que el design system declare el color
+    // de texto del acento, eso pasa a estar mal y rompe aca.
     const marca = leerMarca({ primario: "#1f4d7a", secundario: "#000000" });
 
+    expect(contraste("#1f4d7a", "#000000")).toBeLessThan(CONTRASTE_MINIMO);
     expect(variablesDeMarca(marca)).toEqual({
       "--primary": "#1f4d7a",
       "--accent": "#000000",

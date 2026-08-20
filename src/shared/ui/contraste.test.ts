@@ -34,6 +34,11 @@ describe("luminancia", () => {
       "#12345",
       "rebeccapurple",
       "",
+      // `Number("Infinity")` no es NaN, asi que un chequeo contra NaN lo
+      // deja pasar y la cuenta devuelve NaN en vez de `null`: la funcion
+      // quedaria mintiendo sobre su propio contrato.
+      "oklch(Infinity 0 0)",
+      "oklch(-Infinity 0 0)",
     ]) {
       expect(luminancia(valor)).toBeNull();
     }

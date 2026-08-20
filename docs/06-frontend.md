@@ -293,8 +293,19 @@ de un color translúcido depende de lo que tenga atrás. Aceptar en la lista
 blanca algo que no se puede medir vacía la garantía justo para quien
 escribió el color a mano.
 
-`--accent` queda fuera de la validación mientras el esquema no declare su
-color de texto: sin par, no hay contraste que medir.
+Y **medible lo decide el parser, no el regex.** El regex acota los
+caracteres —eso es lo que cierra la inyección de CSS— pero si además
+intentara describir qué formas de `oklch` son válidas, sería una segunda
+gramática del mismo formato viviendo lejos de la primera, y dos gramáticas
+divergen. `oklch(0.5)` es exactamente ese caso: caracteres permitidos,
+imposible de medir. Así que el esquema pregunta por la medibilidad al mismo
+código que después mide.
+
+`--accent` queda fuera de **la reja de contraste**, porque el esquema no
+declara su color de texto y sin par no hay contraste que medir. No queda
+fuera de la validación de medibilidad: por ahí pasó una vez un `oklch`
+inválido hasta el `style` de la página, y no hay reja de contraste que lo
+atajara justamente porque `--accent` no pasa por ella.
 
 ### Assets
 

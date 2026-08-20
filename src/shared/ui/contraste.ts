@@ -61,7 +61,11 @@ const numerosDeOklch = (cuerpo: string): [number, number, number] | null => {
     return porcentaje ? numero / 100 : numero;
   });
 
-  if (numeros.some(Number.isNaN)) return null;
+  // Finito y no "no es NaN": `Number("Infinity")` devuelve Infinity, que
+  // no es NaN, y arrastra la cuenta entera a NaN. Devolver NaN donde el
+  // contrato promete `number | null` deja a quien pregunta comparando
+  // contra un valor que responde `false` a todo.
+  if (!numeros.every(Number.isFinite)) return null;
 
   return numeros as [number, number, number];
 };
