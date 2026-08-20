@@ -20,10 +20,8 @@ import { exportarAyuntamiento, type PorcionExportable } from "./exportar";
 /**
  * La entrega de datos a un municipio que se va.
  *
- * Es la superficie con mas datos personales del sistema: por definicion
- * saca todo lo de un ayuntamiento de una sola vez. Los dos escenarios que
- * importan son que no se lleve nada del municipio de al lado, y que no se
- * lleve credenciales.
+ * Los dos escenarios que este archivo provoca: que no se lleve nada del
+ * municipio de al lado, y que no se lleve credenciales.
  */
 
 let gente: GentePorMunicipio;
@@ -89,6 +87,28 @@ describe("exportarAyuntamiento", () => {
 
     expect(correos).toHaveLength(4);
     expect(correos.every((c) => c.endsWith("@motul.example.com"))).toBe(true);
+  });
+
+  it("lleva la bitacora, que es la evidencia que hay que conservar", async () => {
+    /**
+     * La razon por la que va, en `exportar.ts`. Lo que agrega este test es
+     * que exista: el comentario decia que la bitacora se exportaba cuando
+     * `conjuntosDePlataforma` solo devolvia `usuarios`, y nada fallaba.
+     * Un archivo municipal sin su bitacora no tiene con que probar quien
+     * emitio que.
+     */
+    const exportacion = await exportarAyuntamiento(
+      actor("motul", "ADMIN_MUNICIPAL"),
+      [],
+    );
+
+    const trazas = conjunto(exportacion, "bitacora");
+    const ajenas = trazas.filter(
+      (t) => (t as { ayuntamientoId: string }).ayuntamientoId !== motul,
+    );
+
+    expect(trazas.length).toBeGreaterThan(0);
+    expect(ajenas).toHaveLength(0);
   });
 
   it("no exporta credenciales", async () => {

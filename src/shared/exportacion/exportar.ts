@@ -5,7 +5,7 @@ import { puedeExportar } from "@/shared/auth/roles";
 import { NoAutorizadoError, TenantNoResueltoError } from "@/shared/lib/errores";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { registrar } from "@/shared/tenancy/bitacora";
-import { ayuntamientos } from "@/shared/tenancy/esquema";
+import { ayuntamientos, bitacora } from "@/shared/tenancy/esquema";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 
@@ -46,7 +46,13 @@ export type PorcionExportable = {
 
 export type Exportacion = {
   generadaEn: Date;
-  ayuntamiento: { id: string; subdominio: string; nombre: string };
+  /**
+   * `id` va con la marca y no como `string` suelto. Declararlo suelto
+   * perdia el brand en silencio: `ayuntamientos.id` ya es `AyuntamientoId`
+   * por su `$type`, y el tipo de retorno de `municipioDe` lo degradaba sin
+   * que el compilador dijera nada.
+   */
+  ayuntamiento: { id: AyuntamientoId; subdominio: string; nombre: string };
   conjuntos: Record<string, readonly unknown[]>;
 };
 
@@ -84,6 +90,12 @@ const conjuntosDePlataforma = async (
       creadoEn: usuarios.createdAt,
     })
     .from(usuarios),
+  /**
+   * Se lee antes de que `registrar` escriba la traza de esta exportacion,
+   * asi que el archivo entregado no se incluye a si mismo. Es lo correcto:
+   * esa fila todavia no existe cuando se lee.
+   */
+  bitacora: await tx.select().from(bitacora).orderBy(bitacora.ocurridoEn),
 });
 
 /**
