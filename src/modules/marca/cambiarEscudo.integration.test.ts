@@ -14,13 +14,24 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { crearAlmacenDePrueba } from "./almacenDePrueba";
-import { crearCambiarEscudo } from "./cambiarEscudo";
+import { crearAlmacenDePrueba } from "./application/almacenDePrueba";
+import { crearCambiarEscudo } from "./application/cambiarEscudo";
+import { repositorioDeMarcaSql } from "./infrastructure/repositorioDeMarcaSql";
 
 /**
  * El caso de uso completo contra Postgres real: `withTenant`, RLS y
  * bitacora no se pueden simular con un mock. `almacenDePrueba` reemplaza
- * solo la parte que necesita credenciales de verdad.
+ * solo la parte que necesita credenciales de verdad — `RepositorioDeMarca`
+ * no tiene doble: `repositorioDeMarcaSql` es la unica implementacion, real
+ * en produccion y en este test, porque no hay credenciales externas que
+ * fakear (design.md, `infrastructure/repositorioDeMarcaSql.ts`).
+ *
+ * Este archivo vive en la raiz del modulo y no en `application/` a
+ * proposito: `application-no-importa-infra-ni-ui` esta anclada a
+ * `^src/modules/[^/]+/application/`, y un test ahi adentro que importara
+ * `repositorioDeMarcaSql` desde `infrastructure/` la violaria en el test
+ * mismo — el mismo motivo mecanico por el que `almacenDePrueba.ts` vive en
+ * `application/` y no en `infrastructure/`.
  */
 
 let gente: GentePorMunicipio;
@@ -73,7 +84,7 @@ afterAll(async () => {
 describe("cambiarEscudo", () => {
   it("un rol distinto de ADMIN_MUNICIPAL no puede cambiar la marca", async () => {
     const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen);
+    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
 
     const motivo = await motivoDe(() =>
       cambiarEscudo({ bytes: pngValido() }, actor("OPERADOR")),
@@ -93,7 +104,7 @@ describe("cambiarEscudo", () => {
     await escribirMarca(colorInvalido);
 
     const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen);
+    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
 
     const motivo = await motivoDe(() =>
       cambiarEscudo({ bytes: pngValido() }, actor("ADMIN_MUNICIPAL")),
@@ -109,7 +120,7 @@ describe("cambiarEscudo", () => {
 
   it("la clave lleva el ayuntamientoId del contexto, no de un parametro", async () => {
     const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen);
+    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
 
     await cambiarEscudo({ bytes: pngValido() }, actor("ADMIN_MUNICIPAL"));
 
@@ -120,7 +131,7 @@ describe("cambiarEscudo", () => {
 
   it("un admin sube un escudo valido: queda en la fila y en bitacora, en la misma transaccion", async () => {
     const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen);
+    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
     const contexto = actor("ADMIN_MUNICIPAL");
 
     const resultado = await cambiarEscudo({ bytes: pngValido() }, contexto);
@@ -144,7 +155,7 @@ describe("cambiarEscudo", () => {
 
   it("reemplazar un escudo borra el anterior despues del commit", async () => {
     const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen);
+    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
     const contexto = actor("ADMIN_MUNICIPAL");
 
     const primero = await cambiarEscudo({ bytes: pngValido() }, contexto);
@@ -156,7 +167,7 @@ describe("cambiarEscudo", () => {
 
   it("un borrado que falla no cambia el resultado de la subida", async () => {
     const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen);
+    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
     const contexto = actor("ADMIN_MUNICIPAL");
 
     await cambiarEscudo({ bytes: pngValido() }, contexto);

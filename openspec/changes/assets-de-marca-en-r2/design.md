@@ -4,6 +4,32 @@
 decisiones cerradas, no se reabren) y engram
 `sdd/assets-de-marca-en-r2/exploration`.
 
+**Correccion post Fase 4 (revision GGA sobre el commit `2b5b622`).** Tres
+secciones de este documento quedaron desactualizadas por hallazgos reales
+de la revision automatica; el detalle completo esta en `tasks.md`, seccion
+"Correccion de revision GGA". Resumen:
+
+1. **§3 `AlmacenDeAssets.borrar`** — la firma documentada abajo
+   (`borrar(url)`, no-op solo por prefijo de `R2_PUBLIC_URL`) no aislaba
+   por tenant ni comparaba origen con `URL.parse`. La firma real ahora es
+   `borrar(ayuntamientoId, url)`, respaldada por
+   `domain/claveDesdeUrl.ts#claveTenantDesdeUrl`.
+2. **§6 (`shared/ui/marca.ts` gana `validarMarca`)** — `validarMarca`,
+   `leerMarca`, `ResultadoDeMarca`, `urlDeAsset` y el esquema de colores
+   viven en `src/shared/marca/` (`validacion.ts`), no en `shared/ui/`:
+   `application/cambiarEscudo.ts` no puede importar de `ui` bajo ningun
+   nombre. `shared/ui/marca.ts` se queda solo con `variablesDeMarca`.
+3. **§2 (tabla de archivos) `application/puertos.ts` solo tenia
+   `AlmacenDeAssets`** —
+   `cambiarEscudo.ts` componia el UPDATE de `ayuntamientos.marca` a mano
+   (antipatron 7 de `AGENTS.md`). Se agrego `RepositorioDeMarca` al mismo
+   archivo, implementado en
+   `infrastructure/repositorioDeMarcaSql.ts` e inyectado en
+   `crearCambiarEscudo(almacen, repositorio)`.
+
+El resto del documento —el problema de composicion, `composicion.ts`, el
+flujo de `cambiarEscudo`, exportacion— sigue vigente sin cambios.
+
 **Supuesto declarado:** no se pudo consultar la documentacion de Next.js 16
 en esta sesion (la herramienta de docs no estuvo disponible). Lo que se
 asume de Server Actions es lo que ya esta escrito en el ADR 0001 seccion 4
@@ -102,8 +128,22 @@ municipio.
 export type AlmacenDeAssets = {
   /** Devuelve la URL publica absoluta del objeto guardado. */
   guardar(clave: string, bytes: Uint8Array): Promise<string>;
-  /** Recibe la URL guardada, no la clave. No-op si no es de este almacen. */
-  borrar(url: string): Promise<void>;
+  /**
+   * Recibe el `ayuntamientoId` de quien pide el borrado y la URL
+   * guardada, no la clave. No-op si no es de este almacen o de otro
+   * tenant.
+   */
+  borrar(ayuntamientoId: string, url: string): Promise<void>;
+};
+
+// application/puertos.ts — agregado en la correccion post Fase 4
+export type RepositorioDeMarca = {
+  leer(tx: TransaccionTenant, ayuntamientoId: AyuntamientoId): Promise<unknown>;
+  escribir(
+    tx: TransaccionTenant,
+    ayuntamientoId: AyuntamientoId,
+    marca: Record<string, unknown>,
+  ): Promise<void>;
 };
 ```
 
@@ -112,11 +152,29 @@ publico, y eso es conocimiento de infraestructura. Por simetria `borrar`
 recibe la URL guardada y el adaptador la mapea de vuelta a clave — es el
 unico que sabe hacerlo en las dos direcciones.
 
-**`borrar` no-opea sobre una URL ajena, y eso es una regla de seguridad, no
-una comodidad.** Hoy `marca.escudo` puede contener cualquier URL http
-pegada a mano; un `borrar` que confie en el prefijo intentaria un DELETE
-derivado de una cadena que escribio otro. Si la URL no empieza con
-`R2_PUBLIC_URL`, no se toca nada. Tiene su test contra el fake.
+**`borrar` no-opea en dos casos, los dos de seguridad y no de comodidad —
+version corregida tras la revision GGA, ver el resumen al inicio del
+documento.** Primero, si la URL no es de este almacen: comparacion de
+**origen** exacto contra `R2_PUBLIC_URL` con `URL.parse`, nunca
+`startsWith` sobre el string completo — `assets.example.com.evil.com`
+comparte el prefijo de texto de `assets.example.com` sin ser el mismo
+origen. Segundo, si la clave resultante no empieza con el
+`ayuntamientoId` de quien pide el borrado: sin este chequeo,
+`{urlPublica}/{otroAyuntamiento}/x.png` borraria el escudo de otro
+municipio, porque el DELETE al bucket corre fuera de Postgres y RLS no
+alcanza ahi. Las dos barreras las implementa la funcion pura
+`domain/claveDesdeUrl.ts#claveTenantDesdeUrl`, testeada sin IO
+(`domain/claveDesdeUrl.test.ts`) y ejercitada con `S3Client` mockeado en
+`infrastructure/almacenR2.test.ts`.
+
+`RepositorioDeMarca` evita que `cambiarEscudo.ts` componga el UPDATE de
+`ayuntamientos.marca` a mano (antipatron 7 de `AGENTS.md`). Las dos
+operaciones reciben la `tx` de `withTenant` por parametro — no abren su
+propia transaccion — porque el UPDATE de `escribir` y el INSERT de la
+bitacora tienen que confirmar juntos o fallar juntos. A diferencia de
+`AlmacenDeAssets`, no hay un doble de prueba: Postgres esta disponible en
+los tests de integracion, asi que `infrastructure/repositorioDeMarcaSql.ts`
+es la unica implementacion, real siempre.
 
 | Doble | Donde | Que hace |
 |---|---|---|

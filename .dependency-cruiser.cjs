@@ -37,6 +37,17 @@ module.exports = {
       to: { path: "^src/modules/[^/]+/ui/" },
     },
     {
+      name: "application-no-importa-shared-ui",
+      severity: "error",
+      comment:
+        "Espejo de application-no-importa-infra-ni-ui, pero contra shared/ui: " +
+        "esa regla esta anclada a ^src/modules/, asi que una regla de negocio " +
+        "viviendo en shared/ui/ (paso con validarMarca, ver ADR y el commit que " +
+        "la saco a shared/marca/) se cuela sin que nada la vea.",
+      from: { path: "^src/modules/[^/]+/application/" },
+      to: { path: "^src/shared/ui/" },
+    },
+    {
       name: "ui-no-importa-infrastructure",
       severity: "error",
       comment:

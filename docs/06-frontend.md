@@ -275,7 +275,7 @@ ilegible. Quien lo eligió no lo va a notar, porque lo está viendo en su
 propio monitor. Es un problema de accesibilidad que no podemos delegar al
 cliente.
 
-`shared/ui/contraste.ts` mide la razón de WCAG 2 y `leerMarca` exige **4.5**
+`shared/marca/contraste.ts` mide la razón de WCAG 2 y `leerMarca` exige **4.5**
 —texto normal, no el 3.0 de texto grande— porque `--primary` no pinta solo
 botones: pinta enlaces y estados de foco. Si el par no alcanza, se descarta
 la marca **entera** y quedan los valores por defecto. Descartar solo el

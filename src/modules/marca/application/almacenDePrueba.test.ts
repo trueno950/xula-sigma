@@ -19,24 +19,37 @@ describe("almacenDePrueba", () => {
       new Uint8Array([1]),
     );
 
-    await almacen.borrar(url);
+    await almacen.borrar("motul", url);
 
     expect(almacen.guardados.has("motul/escudo-x.png")).toBe(false);
     expect(almacen.borrados).toEqual([url]);
   });
 
-  it("borrar no-opea sobre una URL ajena: no toca guardados ni borrados", async () => {
-    /**
-     * Es la regla de seguridad de `AlmacenDeAssets.borrar`: `marca.escudo`
-     * puede llevar cualquier URL http pegada a mano, y confiar en el
-     * prefijo lanzaria un DELETE contra algo que no es de este almacen.
-     */
+  it("borrar no-opea sobre una URL de otro host: no toca guardados ni borrados", async () => {
+    // Primera barrera del contrato de `borrar`, en `puertos.ts`.
     const almacen = crearAlmacenDePrueba();
     await almacen.guardar("motul/escudo-x.png", new Uint8Array([1]));
 
-    await almacen.borrar("https://otro-dominio.example/motul/escudo-x.png");
+    await almacen.borrar(
+      "motul",
+      "https://otro-dominio.example/motul/escudo-x.png",
+    );
 
     expect(almacen.guardados.has("motul/escudo-x.png")).toBe(true);
+    expect(almacen.borrados).toEqual([]);
+  });
+
+  it("borrar no-opea sobre la clave de otro ayuntamiento en el mismo host", async () => {
+    // Segunda barrera del contrato de `borrar`, en `puertos.ts`.
+    const almacen = crearAlmacenDePrueba();
+    await almacen.guardar("ticul/escudo-x.png", new Uint8Array([1]));
+
+    await almacen.borrar(
+      "motul",
+      "https://assets.prueba.local/ticul/escudo-x.png",
+    );
+
+    expect(almacen.guardados.has("ticul/escudo-x.png")).toBe(true);
     expect(almacen.borrados).toEqual([]);
   });
 
@@ -49,9 +62,9 @@ describe("almacenDePrueba", () => {
 
   it("fallarEnBorrar hace que borrar lance sobre una URL propia", async () => {
     const almacen = crearAlmacenDePrueba();
-    const url = await almacen.guardar("x", new Uint8Array());
+    const url = await almacen.guardar("motul/x", new Uint8Array());
     almacen.fallarEnBorrar();
 
-    await expect(almacen.borrar(url)).rejects.toThrow();
+    await expect(almacen.borrar("motul", url)).rejects.toThrow();
   });
 });

@@ -4,6 +4,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import type { AlmacenDeAssets } from "../application/puertos";
+import { claveTenantDesdeUrl } from "../domain/claveDesdeUrl";
 
 /**
  * Adaptador contra R2. Es el unico archivo del repo que importa
@@ -71,10 +72,13 @@ function clienteDe(config: ConfiguracionR2): S3Client {
 }
 
 /**
- * Sin test unitario: necesita credenciales reales contra un bucket real, y
- * no hay credenciales de R2 en CI. El PUT y el DELETE efectivos, y que
- * `R2_PUBLIC_URL/{clave}` responda 200, son la tarea manual documentada en
- * design.md seccion 3.
+ * El PUT y el DELETE efectivos contra R2, y que `R2_PUBLIC_URL/{clave}`
+ * responda 200, no tienen test unitario: necesitan credenciales reales
+ * contra un bucket real, y no hay credenciales de R2 en CI — son la tarea
+ * manual documentada en design.md seccion 3. La logica que decide SI un
+ * DELETE procede si tiene: `claveTenantDesdeUrl` es pura y esta cubierta en
+ * `domain/claveDesdeUrl.test.ts`, y este archivo la ejercita con el cliente
+ * de R2 mockeado en `almacenR2.test.ts`.
  */
 export const almacenR2: AlmacenDeAssets = {
   async guardar(clave, bytes) {
@@ -94,15 +98,16 @@ export const almacenR2: AlmacenDeAssets = {
     return `${config.urlPublica}/${clave}`;
   },
 
-  async borrar(url) {
+  async borrar(ayuntamientoId, url) {
     const config = configuracion();
+    const clave = claveTenantDesdeUrl(config.urlPublica, ayuntamientoId, url);
 
-    if (!url.startsWith(config.urlPublica)) return;
+    if (!clave) return;
 
     await clienteDe(config).send(
       new DeleteObjectCommand({
         Bucket: config.bucket,
-        Key: url.slice(config.urlPublica.length + 1),
+        Key: clave,
       }),
     );
   },

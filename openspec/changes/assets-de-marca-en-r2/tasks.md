@@ -1,6 +1,34 @@
 # Tasks: Assets de marca en R2
 
-## Review Workload Forecast
+## Entrega real: dos PRs (corrige el pronostico de abajo)
+
+El pronostico de ~440 lineas fallo. Medido contra `main` al cerrar la Fase 4:
+
+| | Lineas |
+|---|---|
+| Implementacion (sin tests) | 544 |
+| Tests | 635 |
+| Total en `src/` | 1179 |
+
+La implementacion sola quedo 24% arriba de la estimacion, no 10%, y los
+tests —que el pronostico no conto— agregan otro tanto. Con las Fases 5, 6 y
+7 sin escribir, el PR unico iba camino a ~1600 lineas contra un techo de 400.
+
+Decision del responsable de producto: **se parte en dos**.
+
+- **PR 1 — Fases 1 a 4.** Dominio, puerto, fake, adaptador R2, caso de uso y
+  el aislamiento T10. Todo verde. Limitacion declarada: nada llama todavia a
+  `cambiarEscudo`; es cimiento, no funcionalidad visible.
+- **PR 2 — Fases 5 a 7.** Composicion, Server Action, UI, exportacion y
+  documentacion. Sale de `main` **despues** de que el PR 1 mergee, no apilado
+  sobre su rama (`CLAUDE.md`: "un PR, un merge; las ramas no se apilan").
+
+Lo que hay que aprender de esto: un pronostico de lineas que no cuenta los
+tests, en un repo con TDD estricto, se equivoca por el doble como piso.
+
+---
+
+## Review Workload Forecast (pronostico original, superado)
 
 | Field | Value |
 |---|---|
@@ -139,6 +167,62 @@ interna, no separa entregas.
       "./cambiarEscudo"` — el barrel de capa quedaba incompleto sin el
       unico caso de uso del modulo. `almacenDePrueba` sigue sin
       exportarse: es un doble de prueba, no API publica.
+
+## Correccion de revision GGA (post Fase 4, antes de la Fase 5)
+
+El hook de pre-commit (`--pr-mode`) encontro tres defectos reales sobre el
+commit `2b5b622`. Corridos en un run aparte, TDD estricto, sin tocar las
+Fases 1-4 ya mergeadas mas alla de lo que estos tres exigian.
+
+- [x] C.1 `AlmacenDeAssets.borrar` no aislaba por tenant ni comparaba
+      origen — `startsWith(config.urlPublica)` dejaba pasar
+      `{urlPublica}/{otroAyuntamiento}/x.png` y un host que solo comparte
+      prefijo de texto (`assets.example.com.evil.com`). Se agrego
+      `domain/claveDesdeUrl.ts#claveTenantDesdeUrl` (puro, `URL.parse` +
+      comparacion de origen exacta + verificacion de segmento completo del
+      `ayuntamientoId`), y `borrar` gano un primer parametro
+      `ayuntamientoId`. `puertos.ts`, `almacenDePrueba.ts`, `almacenR2.ts`
+      y `cambiarEscudo.ts` actualizados juntos. Tests nuevos:
+      `domain/claveDesdeUrl.test.ts` (7), `infrastructure/almacenR2.test.ts`
+      (3, con `S3Client` mockeado), mas dos casos nuevos en
+      `almacenDePrueba.test.ts`.
+- [x] C.2 `application/cambiarEscudo.ts` importaba `validarMarca` de
+      `@/shared/ui/marca` — `application` nunca importa `ui`, y
+      `dependency-cruiser` no lo veia porque sus reglas estan ancladas a
+      `^src/modules/`, nada vigilaba `src/shared/ui/`. Se creo
+      `src/shared/marca/` (`validacion.ts` con `validarMarca`, `leerMarca`,
+      `ResultadoDeMarca`, `urlDeAsset`, el esquema de colores; `contraste.ts`
+      movido tal cual) y `shared/ui/marca.ts` quedo solo con
+      `variablesDeMarca`. Se agrego la regla
+      `application-no-importa-shared-ui` a `.dependency-cruiser.cjs` para
+      que este defecto no pueda volver a colarse en silencio. Los quince
+      tests originales de `marca.test.ts` siguen pasando, repartidos entre
+      `shared/marca/validacion.test.ts` (con los cuatro de `validarMarca`
+      agregados en 2.6-2.7) y `shared/ui/marca.test.ts` (los de
+      `variablesDeMarca`).
+- [x] C.3 `cambiarEscudo.ts` componia SQL a mano contra `ayuntamientos`
+      (antipatron 7 de `AGENTS.md`) mientras la bitacora y el almacen si
+      estaban detras de un puerto. `bdSobreTransaccion.ts` no aplicaba —
+      es un `Proxy` especifico para enrutar Better Auth a la transaccion
+      ambiente, no un repositorio de tabla — asi que se agrego
+      `RepositorioDeMarca` a `application/puertos.ts`
+      (`leer(tx, ayuntamientoId)`, `escribir(tx, ayuntamientoId, marca)`,
+      las dos reciben la `tx` de `withTenant` por parametro para que el
+      UPDATE y el INSERT de bitacora sigan confirmando juntos) y
+      `infrastructure/repositorioDeMarcaSql.ts` la implementa.
+      `crearCambiarEscudo` ahora toma `(almacen, repositorio)`. Sin doble
+      de prueba: a diferencia de R2, Postgres esta disponible en los tests
+      de integracion, asi que `repositorioDeMarcaSql` es la unica
+      implementacion, real siempre. Por eso
+      `cambiarEscudo.integration.test.ts` se movio de `application/` a la
+      raiz del modulo — un test bajo `application/` no puede importar
+      `infrastructure/` sin violar la regla que este mismo hallazgo
+      remedia, y `escudo.isolation.test.ts` ya vivia ahi por la misma
+      razon.
+- Hallazgo descartado, verificado como falso positivo: la migracion de
+  `ayuntamientos.marca` no falta — esta en
+  `drizzle/0000_fundacion_multitenant.sql`. `--pr-mode` no ve commits
+  anteriores al diff que revisa.
 
 ## Phase 5: Composicion, Server Action, UI (depende de 0.1)
 

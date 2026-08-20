@@ -16,6 +16,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAlmacenDePrueba } from "./application/almacenDePrueba";
 import { crearCambiarEscudo } from "./application/cambiarEscudo";
+import { repositorioDeMarcaSql } from "./infrastructure/repositorioDeMarcaSql";
 
 /**
  * El escenario T10 de `invariantes-criticos.md`: el escudo sobrevive fuera
@@ -73,7 +74,7 @@ afterAll(async () => {
 describe("escudo.isolation", () => {
   it("el ADMIN_MUNICIPAL de Motul sube su escudo y Ticul no cambia", async () => {
     const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen);
+    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
     const contexto = contextoDe(gente, "motul", "ADMIN_MUNICIPAL");
 
     const resultado = await cambiarEscudo({ bytes: pngValido() }, contexto);

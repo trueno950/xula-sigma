@@ -50,7 +50,7 @@ ui ──► application ──► domain ◄── infrastructure
 ### Estructura
 ```
 src/modules/<modulo>/{domain,application,infrastructure,ui}
-src/shared/{tenancy,auth,ui,lib}
+src/shared/{tenancy,auth,ui,lib,marca}
 src/app/          Solo routing y composición
 ```
 Módulo nuevo se crea con sus cuatro capas.

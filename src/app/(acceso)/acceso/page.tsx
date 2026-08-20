@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { contextoActual } from "@/shared/auth";
+import { leerMarca } from "@/shared/marca";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
-import { leerMarca } from "@/shared/ui/marca";
 import { FormularioDeAcceso } from "./FormularioDeAcceso";
 
 /**

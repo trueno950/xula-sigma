@@ -1,3 +1,4 @@
+import { claveTenantDesdeUrl } from "../domain/claveDesdeUrl";
 import type { AlmacenDeAssets } from "./puertos";
 
 /**
@@ -47,13 +48,15 @@ export function crearAlmacenDePrueba(): AlmacenDePrueba {
 
       return `${BASE_DE_PRUEBA}/${clave}`;
     },
-    async borrar(url) {
-      if (!url.startsWith(BASE_DE_PRUEBA)) return;
+    async borrar(ayuntamientoId, url) {
+      const clave = claveTenantDesdeUrl(BASE_DE_PRUEBA, ayuntamientoId, url);
+
+      if (!clave) return;
       if (debeFallarBorrar) {
         throw new Error("fallo forzado de borrar, para pruebas");
       }
 
-      guardados.delete(url.slice(BASE_DE_PRUEBA.length + 1));
+      guardados.delete(clave);
       borrados.push(url);
     },
   };
