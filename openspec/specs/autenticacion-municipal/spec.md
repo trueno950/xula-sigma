@@ -89,11 +89,17 @@ mas alla de la ventana de limitacion.
 - AND una contrasenia correcta enviada despues de expirar la ventana
   autentica con normalidad
 
-### Requirement: Aislamiento de las tablas de autenticacion
+### Requirement: Aislamiento de toda tabla con `ayuntamiento_id`
 
-Las tablas `user`, `session`, `account` y `verification` MUST llevar
-`ayuntamiento_id`, `FORCE ROW LEVEL SECURITY`, politica de aislamiento y
-`GRANT` explicito, y MUST tener test de aislamiento.
+Toda tabla alcanzada por este cambio que lleve `ayuntamiento_id` MUST tener
+`FORCE ROW LEVEL SECURITY`, politica de aislamiento por tenant, `GRANT`
+explicito y su propio `*.isolation.test.ts`.
+
+La regla se enuncia por la presencia de la columna y NO por una lista de
+tablas. Una lista obliga a que alguien se acuerde de extenderla; la regla
+cubre a la tabla siguiente el dia que nace. Al cierre de este cambio las
+tablas alcanzadas son `user`, `session`, `account`, `verification` e
+`intentos_acceso`.
 
 #### Scenario: Consulta sin filtro de tenant sobre `user`
 
@@ -108,3 +114,18 @@ Las tablas `user`, `session`, `account` y `verification` MUST llevar
 - WHEN se consulta `verification` sin filtro explicito de tenant, con el
   contexto fijado en otro ayuntamiento
 - THEN esa fila no aparece
+
+#### Scenario: La ventana de limitacion de ritmo no cruza municipios
+
+- GIVEN intentos fallidos registrados en `intentos_acceso` para un correo
+  en un ayuntamiento
+- WHEN el mismo correo intenta acceder en otro ayuntamiento
+- THEN esos intentos no cuentan en su ventana
+- AND el acceso no queda limitado por actividad ajena a su municipio
+
+#### Scenario: Un intento no se registra a nombre de otro municipio
+
+- GIVEN el contexto de tenant fijado en un ayuntamiento
+- WHEN se intenta insertar una fila en `intentos_acceso` con el
+  `ayuntamiento_id` de otro
+- THEN la escritura es rechazada por el `WITH CHECK` de la politica
