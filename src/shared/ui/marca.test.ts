@@ -52,20 +52,13 @@ describe("leerMarca", () => {
   });
 
   it("un color con nombre no entra, porque no se puede medir", () => {
-    /**
-     * `rebeccapurple` es un color valido de CSS y aun asi se rechaza. La
-     * razon: garantizar contraste exige poder medir, y medir un nombre
-     * pide cargar la tabla de los 148 nombres de CSS. Una entrada de la
-     * lista blanca que no se puede medir vacia la garantia justo para el
-     * municipio que escribio el color a mano, que es el que mas la
-     * necesita. La marca sale de un selector, que emite hex u oklch.
-     */
+    // Por que quedaron afuera, en el regex `COLOR`. Lo que agrega este
+    // test es el caso incomodo: `rebeccapurple` es un color valido de CSS
+    // y aun asi se rechaza.
     expect(leerMarca({ primario: "rebeccapurple" })).toEqual({});
   });
 
   it("un hex con transparencia tampoco, por la misma razon", () => {
-    // El contraste de un color translucido depende de lo que tenga atras,
-    // y atras hay una pagina que todavia no se pinto.
     expect(leerMarca({ primario: "#7a1f2b80" })).toEqual({});
   });
 });
@@ -78,26 +71,17 @@ describe("leerMarca y el contraste", () => {
   });
 
   it("guinda con texto negro cae entera al defecto", () => {
-    /**
-     * Da 2.06 contra el piso de 4.5. Se descarta la marca completa y no
-     * solo el color del texto por la misma razon que una marca invalida:
-     * dejar el guinda con el texto por defecto seria elegir por el
-     * municipio un par que nunca aprobo.
-     */
+    // El caso concreto que motiva la reja entera, en
+    // `docs/06-frontend.md` seccion 6.
     expect(
       leerMarca({ primario: "#7a1f2b", primarioTexto: "#000000" }),
     ).toEqual({});
   });
 
   it("un primario solo se mide contra el texto por defecto", () => {
-    /**
-     * El caso mas probable en produccion: el municipio carga su color y no
-     * toca el del texto. Sin esta comparacion la reja no se enteraria,
-     * porque el par que se pinta mezcla un valor de la columna con uno de
-     * `globals.css`.
-     *
-     * Amarillo sobre el blanco por defecto da 1.07.
-     */
+    // Por que se mide contra el defecto, en `PRIMARIO_POR_DEFECTO`. Lo que
+    // agrega este test son los dos lados: amarillo sobre el blanco por
+    // defecto da 1.07 y no entra; el azul si.
     expect(leerMarca({ primario: "#ffff00" })).toEqual({});
     expect(leerMarca({ primario: "#1f4d7a" })).toEqual({ primario: "#1f4d7a" });
   });

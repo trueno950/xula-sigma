@@ -1,17 +1,11 @@
 /**
  * Contraste entre dos colores, en la escala de WCAG 2.
  *
- * Existe porque los colores los elige el municipio y algunos van a elegir
- * mal. Guinda con texto negro da 2.06 y es ilegible; quien lo eligio no lo
- * nota porque lo mira en su propio monitor. La reja va del lado del
- * sistema. Ver `docs/06-frontend.md` seccion 6.
+ * Por que el sistema valida esto y no lo delega al municipio:
+ * `docs/06-frontend.md` seccion 6.
  */
 
-/**
- * WCAG 2 AA para texto normal. Se toma 4.5 y no el 3.0 de texto grande
- * porque `--primary` no pinta solo botones: pinta enlaces y estados de
- * foco, que van en cuerpo de texto.
- */
+/** El piso, y por que es ese y no el de texto grande: la misma seccion. */
 export const CONTRASTE_MINIMO = 4.5;
 
 /** Un color en sRGB lineal, cada canal en [0, 1]. */

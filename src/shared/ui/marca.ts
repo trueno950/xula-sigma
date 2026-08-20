@@ -14,14 +14,12 @@ import { CONTRASTE_MINIMO, contraste } from "./contraste";
  */
 
 /**
- * Solo `oklch(...)` y `#rgb`/`#rrggbb`. La lista blanca es a proposito:
- * cualquier cosa que no sea exactamente un color no entra.
+ * Solo `oklch(...)` y `#rgb`/`#rrggbb`. Es una lista blanca: cualquier cosa
+ * que no sea exactamente un color no entra, y ademas se acota a lo que
+ * `contraste.ts` sabe medir.
  *
- * **Y solo lo que se puede medir.** Antes tambien aceptaba nombres
- * (`red`, `rebeccapurple`) y hex con alfa. Los dos salieron cuando entro
- * la reja de contraste: medir un nombre pide la tabla de los 148 de CSS, y
- * el contraste de un color translucido depende de lo que tenga atras. Una
- * entrada de la lista blanca que no se puede medir vacia la garantia.
+ * Por que los nombres de CSS y el hex con alfa quedaron afuera:
+ * `docs/06-frontend.md` seccion 6.
  */
 const COLOR = /^(#[0-9a-f]{3}|#[0-9a-f]{6}|oklch\([\d.\s%-]+\))$/i;
 
@@ -55,9 +53,8 @@ export type Marca = z.infer<typeof esquemaDeMarca>;
  * municipio ve un boton ilegible. Lo unico que los ata es un test de
  * `marca.test.ts` que lee el archivo y compara.
  *
- * Se necesitan aca porque una marca puede traer solo el color primario, y
- * entonces el par que se pinta mezcla un valor de la columna con uno del
- * CSS. Medir el primario contra si mismo no diria nada.
+ * Por que hace falta medir contra el defecto y no basta el par de la
+ * columna: `docs/06-frontend.md` seccion 6.
  */
 export const PRIMARIO_POR_DEFECTO = "oklch(0.42 0.12 25)";
 export const PRIMARIO_TEXTO_POR_DEFECTO = "oklch(0.99 0 0)";
@@ -65,9 +62,7 @@ export const PRIMARIO_TEXTO_POR_DEFECTO = "oklch(0.99 0 0)";
 /**
  * El par que de verdad se va a pintar alcanza el piso de contraste.
  *
- * `--accent` queda afuera y no por descuido: el esquema no declara su color
- * de texto, asi que no hay par que medir. Entra cuando el design system lo
- * declare.
+ * `--accent` queda afuera; por que, en `docs/06-frontend.md` seccion 6.
  */
 const legible = (marca: Marca): boolean => {
   const razon = contraste(

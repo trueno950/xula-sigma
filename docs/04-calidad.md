@@ -385,6 +385,42 @@ it("SUPER_ADMIN no exporta datos de un municipio", () => {
 Un comentario de test que se puede borrar sin perder nada que no esté en
 producción, se borra.
 
+### Y otra forma más: el código y el documento de estándares
+
+Cuando una política ya está escrita en un documento de `docs/`, el
+comentario que la repite en el código es el filtro 3 con otro disfraz. Se
+pasa por alto porque las dos copias se sienten de distinta especie —una es
+"la norma", la otra "el porqué de esta línea"— y son el mismo texto.
+
+**El documento es el hogar.** No por autoridad: porque una política se
+suele enforzar desde más de un archivo. El piso de contraste vive en
+`contraste.ts` y la lista blanca que lo hace medible en `marca.ts`; poner
+el hogar en uno de los dos deja al otro apuntando de costado a un archivo
+de implementación, que es peor que los dos apuntando al estándar.
+
+| Dónde | Qué lleva |
+|---|---|
+| Documento | La política y su porqué: qué se exige, en qué casos, contra qué evidencia |
+| Código | El puntero al documento, más lo que solo se ve desde acá: qué acepta este regex, qué pasa si el valor no se puede medir |
+
+```ts
+// ✗ La política entera, repetida encima de la constante
+/**
+ * WCAG 2 AA para texto normal. Se toma 4.5 y no el 3.0 de texto grande
+ * porque `--primary` no pinta solo botones: pinta enlaces y foco.
+ */
+export const CONTRASTE_MINIMO = 4.5;
+
+// ✓ Apunta
+/** El piso y por qué es ese: `docs/06-frontend.md` sección 6. */
+export const CONTRASTE_MINIMO = 4.5;
+```
+
+Que el documento tampoco tenga CI no es contraargumento. Una copia que
+puede podrirse es mejor que tres que divergen sin que nadie se entere: eso
+es el filtro 3 entero, y no cambia porque una de las copias esté en
+Markdown.
+
 ### Ejemplos
 
 Reformula (filtro 1) — se borra:

@@ -57,12 +57,9 @@ describe("contraste", () => {
   });
 
   it("el guinda con texto negro no alcanza y con blanco si", () => {
-    /**
-     * El caso concreto que motiva la reja: guinda es un color municipal
-     * comun en Yucatan, y con texto negro da 2.06 contra el piso de 4.5.
-     * Un boton asi es ilegible, y quien lo eligio no lo va a notar porque
-     * lo esta viendo en su monitor con el brillo al maximo.
-     */
+    // El caso que motiva la reja, en `docs/06-frontend.md` seccion 6. Va
+    // como test y no solo como numero en el doc para que el dia que la
+    // conversion de color se toque, el guinda siga sin pasar.
     expect(contraste("#7a1f2b", "#000000")).toBeLessThan(CONTRASTE_MINIMO);
     expect(contraste("#7a1f2b", "#ffffff")).toBeGreaterThan(CONTRASTE_MINIMO);
   });

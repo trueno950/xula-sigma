@@ -269,9 +269,11 @@ barato, y en una demo frente a un tesorero eso importa.
 
 ### Contraste
 
-Los colores los elige el municipio y algunos van a elegir mal. Un botón
-guinda con texto negro ilegible es un problema de accesibilidad que no
-podemos delegar al cliente.
+Los colores los elige el municipio y algunos van a elegir mal. Guinda es un
+color municipal común en Yucatán y con texto negro da **2.06**: un botón
+ilegible. Quien lo eligió no lo va a notar, porque lo está viendo en su
+propio monitor. Es un problema de accesibilidad que no podemos delegar al
+cliente.
 
 `shared/ui/contraste.ts` mide la razón de WCAG 2 y `leerMarca` exige **4.5**
 —texto normal, no el 3.0 de texto grande— porque `--primary` no pinta solo
