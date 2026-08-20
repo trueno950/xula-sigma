@@ -3,6 +3,7 @@ import {
   puedeAdministrarUsuarios,
   puedeDarDeBaja,
   puedeEscribir,
+  puedeExportar,
   puedeRestablecerContrasenia,
   ROLES,
   type Rol,
@@ -56,17 +57,8 @@ describe("puedeRestablecerContrasenia", () => {
   });
 
   it("ADMIN_MUNICIPAL no restablece a un SUPER_ADMIN", () => {
-    /**
-     * El spec dice "cualquier usuario de su propio ayuntamiento", escrito
-     * pensando en un municipio normal, donde no vive ningun SUPER_ADMIN.
-     * Pero el ayuntamiento reservado de plataforma si los tiene (tarea
-     * 4.11), y ahi la lectura literal es una escalada: el ADMIN_MUNICIPAL
-     * de ese ayuntamiento le cambia la contrasenia al SUPER_ADMIN y se
-     * queda con la plataforma entera.
-     *
-     * La regla se cierra por rol y no por ayuntamiento porque la regla es
-     * pura: no sabe en que municipio corre. Cerrarla aca cuesta una linea.
-     */
+    // La escalada que cierra esta linea, en `esIntocable` de `roles.ts`.
+    // Aca solo se provoca.
     expect(puedeRestablecerContrasenia("ADMIN_MUNICIPAL", "SUPER_ADMIN")).toBe(
       false,
     );
@@ -124,12 +116,17 @@ describe("puedeDarDeBaja", () => {
   });
 });
 
-describe("las reglas son puras", () => {
-  it("la misma entrada devuelve lo mismo y no toca nada de afuera", () => {
+describe("estado entre llamadas", () => {
+  it("ninguna regla depende de estado entre llamadas", () => {
     /**
-     * La pureza no se prueba con un espia: se prueba porque el modulo no
-     * tiene con que hacer IO. Lo que si se puede verificar aca es que
-     * ninguna regla dependa de estado entre llamadas.
+     * El nombre dice lo que el cuerpo prueba, y nada mas. Antes prometia
+     * "no toca nada de afuera", que es pureza, y este assert no la prueba:
+     * compara dos corridas entre si, asi que una regla que devolviera mal
+     * de forma consistente pasaria igual.
+     *
+     * La pureza no se prueba con un espia — se prueba porque el modulo no
+     * tiene con que hacer IO. Lo que queda verificable aca es el estado
+     * entre llamadas: memoizacion con bug, o una variable de modulo.
      */
     const primera = ROLES.map((actor) =>
       ROLES.map((objetivo) => puedeRestablecerContrasenia(actor, objetivo)),
@@ -139,5 +136,21 @@ describe("las reglas son puras", () => {
     );
 
     expect(segunda).toEqual(primera);
+  });
+});
+
+describe("puedeExportar", () => {
+  it("solo ADMIN_MUNICIPAL se lleva los datos de su municipio", () => {
+    expect(puedeExportar("ADMIN_MUNICIPAL")).toBe(true);
+
+    for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
+      expect(puedeExportar(rol)).toBe(false);
+    }
+  });
+
+  it("SUPER_ADMIN no exporta datos de un municipio", () => {
+    // Por que la plataforma queda afuera, en `puedeExportar`. Este test
+    // existe porque es el permiso que mas tentacion da de ampliar.
+    expect(puedeExportar("SUPER_ADMIN")).toBe(false);
   });
 });

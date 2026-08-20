@@ -348,6 +348,43 @@ los largos, que son justamente los que cargan lo que no está escrito en
 ninguna otra parte. Se recorta por reformulación, por duplicación y por
 afirmación sin test.
 
+### El filtro 3 tiene una forma que se repite: producción y su test
+
+De todas las duplicaciones posibles, hay una que sale sola una y otra vez:
+escribir el porqué de negocio dos veces, una en el código de producción y
+otra en el comentario del test que lo prueba. Se siente correcto —el test
+"explica lo que verifica"— y es exactamente el filtro 3.
+
+Aparece porque quien escribe el test acaba de escribir la regla y todavía
+la tiene fresca. La copia sale gratis en el momento y se paga después: el
+día que la regla cambia, se actualiza donde vive y el test queda afirmando
+la versión vieja con toda autoridad.
+
+**El reparto, entonces:**
+
+| Dónde | Qué lleva |
+|---|---|
+| Producción | El porqué: la regla de negocio, el riesgo, la decisión |
+| Test | Solo lo que agrega: qué provoca, qué precondición necesita, por qué el assert tiene esa forma |
+
+```ts
+// ✗ El razonamiento completo, repetido del archivo de producción
+it("SUPER_ADMIN no exporta datos de un municipio", () => {
+  /**
+   * Una exportación es el padrón entero de un municipio: quien opera la
+   * plataforma no tiene por qué poder sacarlo, y menos sin que el
+   * municipio se entere.
+   */
+
+// ✓ Apunta, y agrega lo que el test sí sabe
+it("SUPER_ADMIN no exporta datos de un municipio", () => {
+  // Por qué la plataforma queda afuera, en `puedeExportar`. Este test
+  // existe porque es el permiso que más tentación da de ampliar.
+```
+
+Un comentario de test que se puede borrar sin perder nada que no esté en
+producción, se borra.
+
 ### Ejemplos
 
 Reformula (filtro 1) — se borra:
