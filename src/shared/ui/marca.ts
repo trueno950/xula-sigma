@@ -24,18 +24,13 @@ import { CONTRASTE_MINIMO, contraste, luminancia } from "./contraste";
 const COLOR = /^(#[0-9a-f]{3}|#[0-9a-f]{6}|oklch\([\d.\s%-]+\))$/i;
 
 /**
- * Dos chequeos y los dos hacen falta.
+ * Dos chequeos: el regex acota los caracteres y `luminancia` decide la
+ * medibilidad. Por que el reparto es ese, en `docs/06-frontend.md`
+ * seccion 6.
  *
- * El regex acota los caracteres, que es lo que cierra la inyeccion de CSS.
- * La medibilidad la decide `luminancia`, o sea **el mismo parser que
- * despues mide**: un regex que la aproximara seria una segunda gramatica de
- * `oklch` viviendo lejos de la primera, y dos gramaticas del mismo formato
- * divergen. La forma `oklch(0.5)` es exactamente eso — pasa el regex y no
- * se puede medir.
- *
- * El orden tampoco es casual: sin el regex, `luminancia` acepta cosas como
- * `oklch(0x10 0 0)`, porque `Number` entiende hexadecimal y el parser de
- * color no tiene por que saber que su salida termina en un atributo
+ * El orden si es de aca: sin el regex delante, `luminancia` acepta cosas
+ * como `oklch(0x10 0 0)`, porque `Number` entiende hexadecimal y un parser
+ * de color no tiene por que saber que su salida termina en un atributo
  * `style`.
  */
 const color = z
