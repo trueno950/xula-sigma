@@ -62,12 +62,8 @@ describe("registrar", () => {
   });
 
   it("escribe el origen de la peticion", async () => {
-    /**
-     * La columna existia desde la migracion inicial y ningun escritor la
-     * llenaba: las trazas de `administracionDeUsuarios` quedaban con
-     * `origen` nulo. El "desde donde" que pide el roadmap para Fase 0 es
-     * esta columna, y este test es lo que impide que vuelva a quedar vacia.
-     */
+    // Por que la columna estuvo vacia hasta ahora: `ContextoActual.origen`,
+    // en `shared/auth/contexto.ts`. Aca solo se sostiene que no vuelva.
     await withTenant(motul, (tx) =>
       registrar(tx, {
         ayuntamientoId: motul,
