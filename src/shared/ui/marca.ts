@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { z } from "zod";
+import { CONTRASTE_MINIMO, contraste, luminancia } from "./contraste";
 
 /**
  * La marca del municipio: lo que se pinta antes de que exista sesion.
@@ -9,19 +10,33 @@ import { z } from "zod";
  * y salen de una columna que alguien edita. Sin validar, un valor con
  * `;background:url(...)` adentro se inyecta en el CSS de la pagina.
  *
- * **Contraste: pendiente.** `docs/06-frontend.md` seccion 6 pide validar
- * contraste minimo contra el color de texto y caer a un valor seguro. No
- * esta hecho: un municipio que elija guinda con texto negro va a quedar
- * ilegible. Se declara antes que taparlo — entra con el design system.
+ * Ademas del formato se valida el contraste. Ver `contraste.ts`.
  */
 
 /**
- * Solo `oklch(...)`, `#rgb`/`#rrggbb` y nombres simples. La lista blanca es
- * a proposito: cualquier cosa que no sea exactamente un color no entra.
+ * Solo `oklch(...)` y `#rgb`/`#rrggbb`. Es una lista blanca: cualquier cosa
+ * que no sea exactamente un color no entra, y ademas se acota a lo que
+ * `contraste.ts` sabe medir.
+ *
+ * Por que los nombres de CSS y el hex con alfa quedaron afuera:
+ * `docs/06-frontend.md` seccion 6.
  */
-const COLOR = /^(#[0-9a-f]{3,8}|oklch\([\d.\s%-]+\)|[a-z]+)$/i;
+const COLOR = /^(#[0-9a-f]{3}|#[0-9a-f]{6}|oklch\([\d.\s%-]+\))$/i;
 
-const color = z.string().regex(COLOR);
+/**
+ * Dos chequeos: el regex acota los caracteres y `luminancia` decide la
+ * medibilidad. Por que el reparto es ese, en `docs/06-frontend.md`
+ * seccion 6.
+ *
+ * El orden si es de aca: sin el regex delante, `luminancia` acepta cosas
+ * como `oklch(0x10 0 0)`, porque `Number` entiende hexadecimal y un parser
+ * de color no tiene por que saber que su salida termina en un atributo
+ * `style`.
+ */
+const color = z
+  .string()
+  .regex(COLOR)
+  .refine((valor) => luminancia(valor) !== null);
 
 /**
  * `z.url()` **no alcanza**: `javascript:alert(1)` es una URL valida para el
@@ -43,11 +58,43 @@ const esquemaDeMarca = z.object({
 
 export type Marca = z.infer<typeof esquemaDeMarca>;
 
+/**
+ * Los mismos valores que `globals.css` declara como fallback de `--primary`
+ * y `--primary-foreground`. Estan repetidos porque el CSS no se importa
+ * desde TypeScript, y una copia que diverge mide el contraste contra un
+ * color que la pagina no pinta: la reja seguiria en verde mientras el
+ * municipio ve un boton ilegible. Lo unico que los ata es un test de
+ * `marca.test.ts` que lee el archivo y compara.
+ *
+ * Por que hace falta medir contra el defecto y no basta el par de la
+ * columna: `docs/06-frontend.md` seccion 6.
+ */
+export const PRIMARIO_POR_DEFECTO = "oklch(0.42 0.12 25)";
+export const PRIMARIO_TEXTO_POR_DEFECTO = "oklch(0.99 0 0)";
+
+/**
+ * El par que de verdad se va a pintar alcanza el piso de contraste.
+ *
+ * `--accent` queda afuera **de esta reja y solo de esta**: la medibilidad
+ * la valida el esquema para todos los colores. Por que, en
+ * `docs/06-frontend.md` seccion 6.
+ */
+const legible = (marca: Marca): boolean => {
+  const razon = contraste(
+    marca.primario ?? PRIMARIO_POR_DEFECTO,
+    marca.primarioTexto ?? PRIMARIO_TEXTO_POR_DEFECTO,
+  );
+
+  return razon !== null && razon >= CONTRASTE_MINIMO;
+};
+
 /** Lo que no valida se descarta entero y quedan los valores por defecto. */
 export const leerMarca = (valor: unknown): Marca => {
   const resultado = esquemaDeMarca.safeParse(valor);
 
-  return resultado.success ? resultado.data : {};
+  if (!resultado.success || !legible(resultado.data)) return {};
+
+  return resultado.data;
 };
 
 /**

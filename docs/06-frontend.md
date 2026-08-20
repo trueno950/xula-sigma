@@ -269,10 +269,43 @@ barato, y en una demo frente a un tesorero eso importa.
 
 ### Contraste
 
-Los colores los elige el municipio y algunos van a elegir mal. El
-componente de marca valida contraste mínimo contra el color de texto y cae
-a un valor seguro si no alcanza. Un botón guinda con texto negro ilegible
-es un problema de accesibilidad que no podemos delegar al cliente.
+Los colores los elige el municipio y algunos van a elegir mal. Guinda es un
+color municipal común en Yucatán y con texto negro da **2.06**: un botón
+ilegible. Quien lo eligió no lo va a notar, porque lo está viendo en su
+propio monitor. Es un problema de accesibilidad que no podemos delegar al
+cliente.
+
+`shared/ui/contraste.ts` mide la razón de WCAG 2 y `leerMarca` exige **4.5**
+—texto normal, no el 3.0 de texto grande— porque `--primary` no pinta solo
+botones: pinta enlaces y estados de foco. Si el par no alcanza, se descarta
+la marca **entera** y quedan los valores por defecto. Descartar solo el
+color que falla dejaría un par que el municipio nunca eligió.
+
+El par que se mide es `--primary` contra `--primary-foreground`, y cuando la
+marca trae uno solo, el que falta se toma del valor por defecto de
+`globals.css`. Ese es el caso más probable: el municipio carga su color y no
+toca el del texto.
+
+**Solo entran colores medibles.** La lista blanca acepta `oklch(...)` y
+`#rgb`/`#rrggbb`; quedaron afuera los nombres de CSS y el hex con alfa. Un
+nombre pide cargar la tabla de los 148 de la especificación, y el contraste
+de un color translúcido depende de lo que tenga atrás. Aceptar en la lista
+blanca algo que no se puede medir vacía la garantía justo para quien
+escribió el color a mano.
+
+Y **medible lo decide el parser, no el regex.** El regex acota los
+caracteres —eso es lo que cierra la inyección de CSS— pero si además
+intentara describir qué formas de `oklch` son válidas, sería una segunda
+gramática del mismo formato viviendo lejos de la primera, y dos gramáticas
+divergen. `oklch(0.5)` es exactamente ese caso: caracteres permitidos,
+imposible de medir. Así que el esquema pregunta por la medibilidad al mismo
+código que después mide.
+
+`--accent` queda fuera de **la reja de contraste**, porque el esquema no
+declara su color de texto y sin par no hay contraste que medir. No queda
+fuera de la validación de medibilidad: por ahí pasó una vez un `oklch`
+inválido hasta el `style` de la página, y no hay reja de contraste que lo
+atajara justamente porque `--accent` no pasa por ella.
 
 ### Assets
 
