@@ -39,24 +39,26 @@ interna, no separa entregas.
 
 ## Phase 0: Verificacion previa (bloquea Fase 5)
 
-- [ ] 0.1 Con la herramienta MCP `context7`, confirmar contra documentacion
-      real de Next.js 16 que en un archivo `"use server"` la restriccion
-      cae solo sobre sus exports (deben ser funciones async) y no sobre lo
-      que importa. Si el tool no esta disponible en esta sesion, la tarea
-      queda pendiente para quien ejecute `sdd-apply`, antes de escribir
-      `composicion.ts` (Fase 5).
+- [x] 0.1 **Confirmado.** En un archivo `"use server"` la restriccion cae
+      solo sobre sus exports: la transformacion SWC activa
+      `should_track_exports` para anotar cada export, y `ExportedSyncFunction`
+      dice "Only async functions are allowed to be **exported** in a
+      `"use server"` file". Los imports no estan restringidos — el ejemplo de
+      `docs/01-app/03-api-reference/01-directives/use-server.mdx` importa `db`
+      y `auth`, que no son funciones. El cableado por `composicion.ts` de la
+      Fase 5 queda en pie sin cambios.
 
 ## Phase 1: Cimientos compartidos
 
-- [ ] 1.1 RED `src/shared/lib/errores.test.ts` (nuevo) — `ActionResult<T>`
+- [x] 1.1 RED `src/shared/lib/errores.test.ts` (nuevo) — `ActionResult<T>`
       y `mapearError` despachando por `codigo` para los cinco casos de la
       tabla de la seccion 9 del design.
-- [ ] 1.2 GREEN `ActionResult<T>` y `mapearError` en
+- [x] 1.2 GREEN `ActionResult<T>` y `mapearError` en
       `src/shared/lib/errores.ts`.
-- [ ] 1.3 RED en `src/shared/auth/roles.test.ts` — `puedeCambiarMarca`
+- [x] 1.3 RED en `src/shared/auth/roles.test.ts` — `puedeCambiarMarca`
       contra los cuatro roles; solo `ADMIN_MUNICIPAL` pasa. [AR-1..3 en
       `specs/autorizacion-roles/spec.md`]
-- [ ] 1.4 GREEN `puedeCambiarMarca` en `src/shared/auth/roles.ts`.
+- [x] 1.4 GREEN `puedeCambiarMarca` en `src/shared/auth/roles.ts`.
 
 ## Phase 2: Dominio de `marca` y `marca.ts`
 

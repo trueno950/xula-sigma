@@ -1,3 +1,5 @@
+import { datosSegurosDeError } from "./registroDeError";
+
 /**
  * Errores transversales. Los de negocio viven en el dominio de cada
  * modulo (`modules/<mod>/domain/errors.ts`); estos son los que puede
@@ -64,4 +66,68 @@ export class ValidacionError extends Error {
     this.name = "ValidacionError";
     this.campos = campos;
   }
+}
+
+/**
+ * Lo que devuelve una Server Action al cliente. Nunca una excepcion cruda
+ * (ADR 0001 seccion 4): lo que Next serializa de un `throw` pierde el
+ * prototipo, y del otro lado un `catch (e) { if (e instanceof X) }` deja de
+ * ser cierto sin avisar.
+ */
+export type ActionResult<T> =
+  | { ok: true; data: T }
+  | {
+      ok: false;
+      codigo: string;
+      mensaje: string;
+      /** Solo presente cuando `codigo` es `VALIDACION`. */
+      campos?: Record<string, string>;
+    };
+
+/** Los `codigo` que este archivo declara. Cualquier otro cae en `ERROR_INTERNO`. */
+const CODIGOS_CONOCIDOS = [
+  "NO_AUTORIZADO",
+  "NO_ENCONTRADO",
+  "VALIDACION",
+  "TENANT_NO_RESUELTO",
+] as const;
+
+type CodigoConocido = (typeof CODIGOS_CONOCIDOS)[number];
+
+const esCodigoConocido = (valor: unknown): valor is CodigoConocido =>
+  typeof valor === "string" &&
+  (CODIGOS_CONOCIDOS as readonly string[]).includes(valor);
+
+/**
+ * Traduce cualquier error atrapado en el borde de una Server Action a un
+ * `ActionResult`. Despacha por `codigo`, **nunca por `instanceof`**: es el
+ * unico despacho que sobrevive a un error que cruzo un limite de
+ * serializacion y perdio su prototipo.
+ *
+ * Lo que no trae un `codigo` conocido cae en `ERROR_INTERNO` con un mensaje
+ * generico — el original queda solo en el log del servidor, reducido por
+ * `datosSegurosDeError`, para no filtrar configuracion ni datos de fila al
+ * cliente.
+ */
+export function mapearError(error: unknown): ActionResult<never> {
+  const codigo = (error as { codigo?: unknown } | null)?.codigo;
+  const mensaje = error instanceof Error ? error.message : "Datos invalidos.";
+
+  if (esCodigoConocido(codigo)) {
+    if (codigo === "VALIDACION") {
+      const campos = (error as ValidacionError).campos ?? {};
+
+      return { ok: false, codigo, mensaje, campos };
+    }
+
+    return { ok: false, codigo, mensaje };
+  }
+
+  console.error("[accion] fallo no manejado", datosSegurosDeError(error));
+
+  return {
+    ok: false,
+    codigo: "ERROR_INTERNO",
+    mensaje: "No se pudo completar la operacion. Intente de nuevo.",
+  };
 }

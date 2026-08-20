@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   puedeAdministrarUsuarios,
+  puedeCambiarMarca,
   puedeDarDeBaja,
   puedeEscribir,
   puedeExportar,
@@ -152,5 +153,22 @@ describe("puedeExportar", () => {
     // Por que la plataforma queda afuera, en `puedeExportar`. Este test
     // existe porque es el permiso que mas tentacion da de ampliar.
     expect(puedeExportar("SUPER_ADMIN")).toBe(false);
+  });
+});
+
+describe("puedeCambiarMarca", () => {
+  it("solo ADMIN_MUNICIPAL cambia la marca de su ayuntamiento", () => {
+    expect(puedeCambiarMarca("ADMIN_MUNICIPAL")).toBe(true);
+
+    for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
+      expect(puedeCambiarMarca(rol)).toBe(false);
+    }
+  });
+
+  it("SUPER_ADMIN no cambia la marca de ningun ayuntamiento", () => {
+    // El escudo es la identidad institucional del municipio: que lo cambie
+    // quien opera la plataforma es una superficie de suplantacion. Misma
+    // linea que `puedeExportar`, por la misma razon.
+    expect(puedeCambiarMarca("SUPER_ADMIN")).toBe(false);
   });
 });

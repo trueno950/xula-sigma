@@ -74,3 +74,11 @@ export const puedeDarDeBaja = (actor: Rol, objetivo: Rol) =>
  * linea que traza `puedeAdministrarUsuarios`, por la misma razon.
  */
 export const puedeExportar = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
+
+/**
+ * El escudo es la identidad institucional del municipio: que lo cambie
+ * quien opera la plataforma es una superficie de suplantacion. `SUPER_ADMIN`
+ * queda afuera a proposito, como en `puedeExportar`. `OPERADOR` tambien
+ * queda afuera: la marca no es operacion.
+ */
+export const puedeCambiarMarca = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
