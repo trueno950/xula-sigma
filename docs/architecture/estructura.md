@@ -45,6 +45,7 @@ src/
   shared/
     tenancy/           Resolución de tenant y acceso a BD
     auth/              Sesión y roles
+    exportacion/       Entrega de los datos de un ayuntamiento
     ui/                Design system y primitivos
     lib/               Utilidades transversales
 

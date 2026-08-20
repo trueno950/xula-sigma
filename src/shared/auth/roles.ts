@@ -63,3 +63,14 @@ export const puedeRestablecerContrasenia = (actor: Rol, objetivo: Rol) => {
  */
 export const puedeDarDeBaja = (actor: Rol, objetivo: Rol) =>
   puedeAdministrarUsuarios(actor) && !esIntocable(objetivo);
+
+/**
+ * Llevarse los datos del municipio en formato abierto.
+ *
+ * Solo el `ADMIN_MUNICIPAL`, y `SUPER_ADMIN` queda afuera a proposito. Una
+ * exportacion completa es la superficie con mas datos personales del
+ * sistema: quien opera la plataforma no tiene por que poder sacar el padron
+ * de un municipio, y menos sin que el municipio se entere. Es la misma
+ * linea que traza `puedeAdministrarUsuarios`, por la misma razon.
+ */
+export const puedeExportar = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
