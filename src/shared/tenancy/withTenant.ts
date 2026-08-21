@@ -12,7 +12,7 @@ import { type FilaDeRol, problemaDeRol } from "./rolDeAplicacion";
  * TypeScript no tiene visibilidad de modulo: todo lo que un archivo
  * necesita compartir con otro tiene que exportarlo, y una vez exportado lo
  * importa cualquiera. Un `conexion.ts` que exportara el manejador seria
- * una segunda puerta a la base, sin tenant fijado, disponible para todo el
+ * otra puerta a la base, sin tenant fijado, disponible para todo el
  * sistema — por mas comentario que tuviera encima diciendo que no se use.
  *
  * Aca `bd` y `cliente` son constantes de modulo que nadie fuera puede
@@ -80,10 +80,9 @@ export type TransaccionTenant = Parameters<
  * El acceso a base de datos de **toda la operacion**: si hay un tenant, la
  * consulta sale de adentro de esta funcion o no sale.
  *
- * Decia "el unico acceso del sistema" y quedo viejo dos veces: primero con
- * `withAltaDeAyuntamiento`, despues con la guarda de rol de arriba. Por eso
- * ya no enumera: una lista repetida en cada archivo tiene una copia vieja
- * siempre, y ninguna avisa.
+ * Este comentario ya afirmo ser el unico acceso del sistema, y cada vez que
+ * entro una salida nueva quedo viejo sin que fallara nada. Por eso no
+ * enumera ni cuenta: la lista vive donde dice el encabezado del archivo.
  *
  * @param ayuntamientoId Viene SIEMPRE del contexto resuelto en servidor
  *   (ver `ayuntamientoId.ts`).
@@ -137,9 +136,9 @@ export type AyuntamientoResuelto = {
 };
 
 /**
- * Resuelve un ayuntamiento por su subdominio. **Es la unica consulta del
- * sistema que corre sin tenant fijado**, y tiene que serlo: el tenant se
- * resuelve en el borde del request, antes de que exista uno.
+ * Resuelve un ayuntamiento por su subdominio. Corre sin tenant fijado, y
+ * tiene que ser asi: el tenant se resuelve en el borde del request, antes
+ * de que exista uno.
  *
  * No es un agujero en el invariante, y conviene ver por que:
  *

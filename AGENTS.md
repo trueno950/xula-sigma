@@ -45,6 +45,15 @@ toca datos, marcá el hallazgo.
      negarse: con `SUPERUSER` o `BYPASSRLS`, el proceso no sirve un
      request. Ver `rolDeAplicacion.ts` y ADR 0001 §2.
 
+   **Ningún comentario de `src/shared/tenancy` cuenta ni enumera estas
+   salidas.** Cada función explica la suya en su archivo; la lista es esta y
+   solo esta. La regla existe porque esa lista llegó a estar copiada en seis
+   comentarios del módulo y las seis quedaron viejas: cada vez que entró una
+   salida nueva, ninguna copia falló, porque un comentario no tiene CI. Un
+   comentario de ese módulo que diga "la única", "la segunda" o "y la
+   última" es hallazgo **aunque el número esté bien hoy** — lo que no se
+   escribe es el número, no el número equivocado.
+
    Las tres comparten forma: conexión privada del módulo, una sola salida, y
    el límite lo pone Postgres y no la función. Cualquier otro acceso sin
    tenant desde `src/` es hallazgo, incluido uno nuevo que invoque este

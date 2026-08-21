@@ -182,7 +182,7 @@ solo rol**, `postgres`, con `rolsuper` y `rolbypassrls` en `t`. Si la app
 se conecta con la `DATABASE_URL` que Railway entrega tal cual, RLS no hace
 absolutamente nada.
 
-### La tercera consulta sin tenant, que existe por el párrafo de arriba
+### La consulta que pregunta con qué rol estamos conectados
 
 **Actualizado 2026-08-21.** Ese hecho quedó escrito acá y nada lo hacía
 fallar: un despliegue con la `DATABASE_URL` equivocada no rompe, anda
@@ -190,10 +190,9 @@ perfecto con el aislamiento apagado. `withTenant` ahora pregunta una vez
 por proceso con qué rol está conectado y se niega a servir si tiene
 `SUPERUSER` o `BYPASSRLS`.
 
-No comparte naturaleza con las otras dos y por eso no se cuenta como una
-tercera puerta: no lee una tabla sino `pg_roles`, no devuelve datos sino
-un veredicto, y no tiene tenant que poner porque corre antes de que exista
-uno.
+No es una puerta más, porque no comparte naturaleza con las otras: no lee
+una tabla sino `pg_roles`, no devuelve datos sino un veredicto, y no tiene
+tenant que poner porque corre antes de que exista uno.
 
 Y no la reemplaza un test. Un test corre contra la base de pruebas; esto
 corre contra la base a la que la aplicación se conecta de verdad. Es la
