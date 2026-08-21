@@ -3,12 +3,14 @@
  *
  * No hay nada que devuelva un manejador de base de datos.
  *
- * Toda consulta entra por `withTenant`, con UNA excepcion declarada:
- * `resolverAyuntamientoPorSubdominio`. Por que se permite y por que no
- * abre un agujero esta en `withTenant.ts`, sobre la funcion;
- * `resolverAyuntamiento.isolation.test.ts` lo recorre tabla por tabla.
+ * Toda consulta de la operacion entra por `withTenant`. Que mas corre sin
+ * tenant, y por que cada una esta sancionada, vive en la regla 2 de
+ * `AGENTS.md`: ahi esta la lista y aca no, porque una lista copiada tiene
+ * una copia vieja siempre. Cada funcion explica lo suyo en su archivo, y
+ * `resolverAyuntamiento.isolation.test.ts` recorre tabla por tabla que la
+ * conexion sin tenant no alcance nada mas que el directorio publico.
  *
- * **`withAltaDeAyuntamiento` es la segunda puerta, y no rompe el patron.**
+ * **`withAltaDeAyuntamiento` no rompe el patron.**
  * `withTenant` es la puerta de la operacion: entra con un tenant ya
  * resuelto y corre bajo `xula_app`. La otra es la puerta del alta, donde el
  * tenant todavia no existe —se esta creando— y corre bajo `xula_super_admin`

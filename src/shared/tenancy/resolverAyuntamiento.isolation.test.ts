@@ -17,8 +17,9 @@ import {
 } from "./withTenant";
 
 /**
- * `resolverAyuntamientoPorSubdominio` es la unica consulta del sistema que
- * corre sin tenant fijado. Estos tests son lo que sostiene esa excepcion.
+ * `resolverAyuntamientoPorSubdominio` corre sin tenant fijado. Estos tests
+ * son lo que sostiene esa excepcion: que la conexion sin tenant no alcance
+ * ninguna tabla mas que el directorio publico.
  */
 
 beforeAll(sembrar);

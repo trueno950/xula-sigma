@@ -18,8 +18,8 @@ toca datos, marcá el hallazgo.
 
 1. `any` está prohibido. Se usa `unknown` + type guard.
 2. **En `src/`**, todo acceso a base de datos pasa por `withTenant`. Hay
-   **dos** excepciones sancionadas, las dos en `shared/tenancy`, y ninguna
-   más:
+   **tres** excepciones sancionadas, las tres en `shared/tenancy`, y
+   ninguna más:
 
    - `resolverAyuntamientoPorSubdominio`: resuelve el tenant antes de que
      exista uno, lee solo el directorio público de `ayuntamientos` y su
@@ -32,10 +32,32 @@ toca datos, marcá el hallazgo.
      `usuarios` solo lee cuatro columnas del `ADMIN_MUNICIPAL` de su tenant.
      Ver ADR 0001 §2 y diseño D7.
 
-   Las dos comparten forma: conexión privada del módulo, una sola salida, y
+   - `exigirRolSinPrivilegios` (`withTenant.ts`): pregunta con qué rol
+     está conectada la aplicación. **Entró el 2026-08-21 por este mismo
+     mecanismo**, que es el que la regla exige antes de abrir una salida
+     nueva.
+
+     Se nombra aparte porque no es de la misma clase que las otras dos: no
+     lee una tabla del esquema sino `pg_roles`, el catálogo del sistema, y
+     no devuelve datos sino un veredicto. No tiene tenant que poner porque
+     corre antes de que exista uno —es, justamente, la afirmación de que
+     va a haber filtrado— y ponerle uno sería circular. Su única salida es
+     negarse: con `SUPERUSER` o `BYPASSRLS`, el proceso no sirve un
+     request. Ver `rolDeAplicacion.ts` y ADR 0001 §2.
+
+   **Ningún comentario de `src/shared/tenancy` cuenta ni enumera estas
+   salidas.** Cada función explica la suya en su archivo; la lista es esta y
+   solo esta. La regla existe porque esa lista llegó a estar copiada en seis
+   comentarios del módulo y las seis quedaron viejas: cada vez que entró una
+   salida nueva, ninguna copia falló, porque un comentario no tiene CI. Un
+   comentario de ese módulo que diga "la única", "la segunda" o "y la
+   última" es hallazgo **aunque el número esté bien hoy** — lo que no se
+   escribe es el número, no el número equivocado.
+
+   Las tres comparten forma: conexión privada del módulo, una sola salida, y
    el límite lo pone Postgres y no la función. Cualquier otro acceso sin
    tenant desde `src/` es hallazgo, incluido uno nuevo que invoque este
-   precedente —que ya se usó dos veces y no se usa una tercera sin
+   precedente —que ya se usó tres veces y no se usa una cuarta sin
    actualizar esta regla.
 
    **`scripts/*.sql` es otra categoría y siempre lo fue.** Son actos de

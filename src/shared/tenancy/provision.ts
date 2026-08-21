@@ -9,10 +9,9 @@ import { ayuntamientos } from "./esquema";
 import type { TransaccionTenant } from "./withTenant";
 
 /**
- * La segunda puerta a la base, y la ultima.
+ * La puerta del alta de un municipio.
  *
- * **No es una excepcion al invariante de una sola puerta**, y conviene ver
- * por que. `withTenant` es la puerta de la operacion: entra con un tenant
+ * **No es un agujero en el invariante**, y conviene ver por que. `withTenant` es la puerta de la operacion: entra con un tenant
  * ya resuelto y corre bajo `xula_app`. Esta es la puerta del alta, donde el
  * tenant todavia no existe —se esta creando— y corre bajo otro rol de
  * Postgres con otros privilegios. Son dos superficies distintas con dos

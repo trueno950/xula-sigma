@@ -32,6 +32,12 @@ Este es el invariante raíz. Todo lo demás es secundario.
   `FORCE ROW LEVEL SECURITY`.
 - El rol de aplicación no es owner de las tablas y no tiene `BYPASSRLS`.
   Migraciones y aplicación usan roles distintos.
+- **Y la aplicación se conecta con ese rol, no solo lo tiene definido.**
+  Son dos cosas distintas y la segunda no la prueba un test: un test corre
+  contra la base de pruebas, y `DATABASE_URL` apuntando al superusuario
+  deja la suite entera en verde con RLS apagado. Por eso `withTenant`
+  verifica `current_user` una vez por proceso y se niega a servir si tiene
+  `SUPERUSER` o `BYPASSRLS`. Ver `shared/tenancy/rolDeAplicacion.ts`.
 - Todo acceso a base de datos pasa por el helper de `shared/tenancy`. No
   existe una ruta alternativa a la conexión.
 - El tenant se fija con `SET LOCAL` dentro de transacción. Nunca `SET`

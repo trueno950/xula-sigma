@@ -29,10 +29,12 @@ Un error aquí es una fuga de datos entre municipios y termina el negocio.
 - Toda tabla operativa lleva `ayuntamiento_id` y política RLS con
   `FORCE ROW LEVEL SECURITY`
 - Acceso a base de datos **siempre** por `shared/tenancy`. Nunca conexión
-  directa. Dos puertas y solo dos: `withTenant` para la operación y
-  `withAltaDeAyuntamiento` para el alta de un municipio, cuando el tenant
-  todavía no existe. La tercera no entra sin actualizar `AGENTS.md` regla 2
-  y el ADR 0001 §2.
+  directa. `withTenant` para la operación, `withAltaDeAyuntamiento` para el
+  alta de un municipio cuando el tenant todavía no existe, y
+  `exigirRolSinPrivilegios`, que no es una puerta: lee `pg_roles` y solo
+  sabe negarse. La lista canónica y qué sanciona a cada una: `AGENTS.md`
+  regla 2 y ADR 0001 §2. Ninguna nueva entra sin actualizarlas, y los
+  comentarios del módulo no llevan la cuenta — por qué, en la misma regla.
 - Dentro de transacción: `SET LOCAL app.tenant`. **Nunca `SET` sin
   `LOCAL`** — se queda pegado en el pooler y lo hereda el siguiente
   request de otro municipio.

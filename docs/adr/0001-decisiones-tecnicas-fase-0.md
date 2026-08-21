@@ -174,13 +174,30 @@ constante privada del módulo que nadie fuera puede alcanzar, y la única
 salida es la función. El invariante lo sostiene el lenguaje, no la
 disciplina de quien revisa.
 
-`AGENTS.md` regla 2 las nombra a las dos. Una tercera no entra sin
-actualizar esa regla primero.
+`AGENTS.md` regla 2 las nombra. Una nueva no entra sin actualizar esa
+regla primero.
 
 Verificado el 2026-08-16: el template de Postgres de Railway entrega **un
 solo rol**, `postgres`, con `rolsuper` y `rolbypassrls` en `t`. Si la app
 se conecta con la `DATABASE_URL` que Railway entrega tal cual, RLS no hace
 absolutamente nada.
+
+### La consulta que pregunta con qué rol estamos conectados
+
+**Actualizado 2026-08-21.** Ese hecho quedó escrito acá y nada lo hacía
+fallar: un despliegue con la `DATABASE_URL` equivocada no rompe, anda
+perfecto con el aislamiento apagado. `withTenant` ahora pregunta una vez
+por proceso con qué rol está conectado y se niega a servir si tiene
+`SUPERUSER` o `BYPASSRLS`.
+
+No es una puerta más, porque no comparte naturaleza con las otras: no lee
+una tabla sino `pg_roles`, no devuelve datos sino un veredicto, y no tiene
+tenant que poner porque corre antes de que exista uno.
+
+Y no la reemplaza un test. Un test corre contra la base de pruebas; esto
+corre contra la base a la que la aplicación se conecta de verdad. Es la
+diferencia entre saber que el rol correcto existe y saber que es el que se
+está usando.
 
 ### Los roles se crean en `scripts/bootstrap.sql`, no en una migración
 
