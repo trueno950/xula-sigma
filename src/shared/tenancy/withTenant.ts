@@ -4,6 +4,7 @@ import postgres from "postgres";
 import { type AyuntamientoId, esAyuntamientoId } from "./ayuntamientoId";
 import * as esquema from "./esquema";
 import { ayuntamientos } from "./esquema";
+import { type FilaDeRol, problemaDeRol } from "./rolDeAplicacion";
 
 /**
  * La conexion vive en este archivo y no en uno propio a proposito.
@@ -14,9 +15,11 @@ import { ayuntamientos } from "./esquema";
  * una segunda puerta a la base, sin tenant fijado, disponible para todo el
  * sistema — por mas comentario que tuviera encima diciendo que no se use.
  *
- * Aca `bd` es una constante de modulo que nadie fuera puede alcanzar. La
- * unica salida es `withTenant`. El invariante lo sostiene el lenguaje, no
- * la disciplina de quien revisa.
+ * Aca `bd` y `cliente` son constantes de modulo que nadie fuera puede
+ * alcanzar: se sale por las funciones que este archivo exporta y por
+ * ninguna otra. Cuales son y por que vive en la regla 2 de `AGENTS.md`, no
+ * aca. El invariante lo sostiene el lenguaje, no la disciplina de quien
+ * revisa.
  */
 
 const url = process.env.DATABASE_URL;
@@ -40,6 +43,35 @@ const cliente = postgres(url, {
 
 const bd = drizzle(cliente, { schema: esquema, casing: "snake_case" });
 
+/**
+ * Se verifica una vez por proceso y no en el ambito del modulo: `next build`
+ * evalua el tope de los modulos alcanzables, y tirar ahi rompe la
+ * compilacion en vez de la peticion. Perezoso, memoizado, y si falla queda
+ * fallando — una promesa rechazada cacheada es exactamente lo que se
+ * quiere: que no sirva ni un request mas.
+ *
+ * Por que hace falta y por que no alcanza un test: `rolDeAplicacion.ts`.
+ */
+let rolVerificado: Promise<void> | null = null;
+
+const exigirRolSinPrivilegios = async (): Promise<void> => {
+  const [fila] = await cliente<FilaDeRol[]>`
+    SELECT current_user AS usuario, rolsuper, rolbypassrls
+      FROM pg_roles
+     WHERE rolname = current_user
+  `;
+
+  const problema = problemaDeRol(fila);
+
+  if (problema) throw new Error(problema);
+};
+
+const conRolVerificado = (): Promise<void> => {
+  rolVerificado ??= exigirRolSinPrivilegios();
+
+  return rolVerificado;
+};
+
 export type TransaccionTenant = Parameters<
   Parameters<typeof bd.transaction>[0]
 >[0];
@@ -48,12 +80,10 @@ export type TransaccionTenant = Parameters<
  * El acceso a base de datos de **toda la operacion**: si hay un tenant, la
  * consulta sale de adentro de esta funcion o no sale.
  *
- * Decia "el unico acceso del sistema" y dejo de ser cierto cuando entro
- * `withAltaDeAyuntamiento`, la puerta del alta de un municipio —el momento
- * en que el tenant todavia no existe—. Las dos, y solo las dos, estan
- * sancionadas por la regla 2 de `AGENTS.md` y el ADR 0001 §2. La lista
- * completa vive ahi y no aca: repetirla en cada archivo garantiza que una
- * copia quede vieja, que es exactamente lo que paso con esta.
+ * Decia "el unico acceso del sistema" y quedo viejo dos veces: primero con
+ * `withAltaDeAyuntamiento`, despues con la guarda de rol de arriba. Por eso
+ * ya no enumera: una lista repetida en cada archivo tiene una copia vieja
+ * siempre, y ninguna avisa.
  *
  * @param ayuntamientoId Viene SIEMPRE del contexto resuelto en servidor
  *   (ver `ayuntamientoId.ts`).
@@ -71,6 +101,8 @@ export async function withTenant<T>(
         "venir del contexto de servidor, no de la peticion.",
     );
   }
+
+  await conRolVerificado();
 
   return bd.transaction(async (tx) => {
     /**
@@ -131,6 +163,8 @@ export type AyuntamientoResuelto = {
 export async function resolverAyuntamientoPorSubdominio(
   subdominio: string,
 ): Promise<AyuntamientoResuelto | null> {
+  await conRolVerificado();
+
   const [fila] = await bd
     .select({
       id: ayuntamientos.id,

@@ -109,3 +109,19 @@ describe("aislamiento entre ayuntamientos", () => {
     expect(motivo).toMatch(/UUID/);
   });
 });
+
+it("la aplicacion se conecta con el rol de aplicacion, no con el superusuario", async () => {
+  // Por que la identidad de la conexion se afirma y no se supone:
+  // `rolDeAplicacion.ts`. Lo que agrega este test es el camino: la
+  // pregunta sale por `withTenant`, que es la conexion de la operacion.
+  const [fila] = await withTenant(motul, (tx) =>
+    tx.execute(sql`SELECT current_user AS usuario, rolsuper, rolbypassrls
+                     FROM pg_roles WHERE rolname = current_user`),
+  );
+
+  expect(fila).toMatchObject({
+    usuario: "xula_app",
+    rolsuper: false,
+    rolbypassrls: false,
+  });
+});
