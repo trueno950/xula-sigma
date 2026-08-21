@@ -191,14 +191,24 @@ src/modules/constancias/ui/
     └── useEmitirConstancia.ts     Hook facade
 ```
 
-Lo compartido entre módulos vive en `src/shared/ui/`:
+Lo compartido entre módulos vive en `src/shared/ui/`. Hoy solo existe
+`marca.ts`; `primitives/` y `layout/` se crean cuando haya un primer
+consumidor real, no antes:
 
 ```text
 src/shared/ui/
-├── primitives/     shadcn/ui — button, dialog, input, table...
-├── layout/         Shell, sidebar, header
-└── branding/       Proveedor de marca blanca
+└── marca.ts        variablesDeMarca — variables CSS de la marca municipal
 ```
+
+**No hay una carpeta `branding/`.** La marca blanca no queda en un
+proveedor de `shared/ui/` — se reparte entre dos lugares por dirección de
+capas, no por gusto: la validación (`validarMarca`, `leerMarca`,
+`ResultadoDeMarca`, `urlDeAsset`) vive en `src/shared/marca/`, porque
+`application/cambiarEscudo.ts` la necesita y `application` no puede
+importar de `shared/ui/` (`application-no-importa-shared-ui` en
+`.dependency-cruiser.cjs`); la escritura del escudo —Server Action,
+formulario, adaptador de R2— vive en `src/modules/marca/`, con sus cuatro
+capas, porque solo ahí rigen las reglas `forbidden` del mismo archivo.
 
 **No existe una carpeta `components/` global.** Un componente vive en su
 módulo hasta que dos módulos distintos lo necesitan; recién ahí sube a

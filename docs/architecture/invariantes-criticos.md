@@ -108,6 +108,13 @@ Este es el invariante raíz. Todo lo demás es secundario.
 | T11 | Exportación masiva del padrón de apoyos | autorización, bitácora | Autorizada por rol y registrada con alcance |
 | T12 | Cancelación de documento ya emitido | dominio | Se cancela y se registra; el original no se modifica |
 
+**T10** dejó de estar sin test: `src/modules/marca/escudo.isolation.test.ts`
+prueba que el `ADMIN_MUNICIPAL` de un ayuntamiento no cambia la marca de
+otro, y que RLS corta aunque el `ayuntamientoId` se falsee. El almacenamiento
+fuera del filesystem del contenedor lo cubre el adaptador de R2
+(`src/modules/marca/infrastructure/almacenR2.ts`) detrás del puerto
+`AlmacenDeAssets`.
+
 ---
 
 ## Estrategia de Validación

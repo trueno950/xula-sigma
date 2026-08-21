@@ -3,6 +3,7 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { usuarios } from "@/shared/auth/esquema";
 import { puedeExportar } from "@/shared/auth/roles";
 import { NoAutorizadoError, TenantNoResueltoError } from "@/shared/lib/errores";
+import { leerMarca, type Marca } from "@/shared/marca";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { ayuntamientos, bitacora } from "@/shared/tenancy/esquema";
@@ -52,7 +53,12 @@ export type Exportacion = {
    * por su `$type`, y el tipo de retorno de `municipioDe` lo degradaba sin
    * que el compilador dijera nada.
    */
-  ayuntamiento: { id: AyuntamientoId; subdominio: string; nombre: string };
+  ayuntamiento: {
+    id: AyuntamientoId;
+    subdominio: string;
+    nombre: string;
+    marca: Marca;
+  };
   conjuntos: Record<string, readonly unknown[]>;
 };
 
@@ -134,13 +140,18 @@ const municipioDe = async (
       id: ayuntamientos.id,
       subdominio: ayuntamientos.subdominio,
       nombre: ayuntamientos.nombre,
+      marca: ayuntamientos.marca,
     })
     .from(ayuntamientos)
     .where(eq(ayuntamientos.id, ayuntamientoId));
 
   if (!municipio) throw new TenantNoResueltoError();
 
-  return municipio;
+  // Se exporta la marca validada y no el `jsonb` crudo (design.md seccion
+  // 7): `Exportacion` es un contrato tipado y un `unknown` ahi es un
+  // agujero. Un color invalido pegado a mano no aparece en el archivo —
+  // es un valor que la plataforma nunca uso.
+  return { ...municipio, marca: leerMarca(municipio.marca) };
 };
 
 /**
