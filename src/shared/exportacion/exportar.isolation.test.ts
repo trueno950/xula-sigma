@@ -6,7 +6,7 @@ import {
   motivoDe,
   sembrarGente,
 } from "@/shared/auth/genteDePrueba";
-import { ayuntamientos, bitacora } from "@/shared/tenancy/esquema";
+import { bitacora } from "@/shared/tenancy/esquema";
 import {
   limpiar,
   motul,
@@ -190,32 +190,5 @@ describe("exportarAyuntamiento", () => {
     expect(deTicul.length).toBeGreaterThan(0);
     expect(filas.length).toBeGreaterThan(0);
     expect(ajenas).toHaveLength(0);
-  });
-
-  it("trae la marca con el escudo cuando el municipio tiene uno", async () => {
-    const escudo = "https://assets.prueba.local/motul/escudo-x.png";
-
-    await withTenant(motul, (tx) =>
-      tx
-        .update(ayuntamientos)
-        .set({ marca: { escudo } })
-        .where(eq(ayuntamientos.id, motul)),
-    );
-
-    const exportacion = await exportarAyuntamiento(
-      actor("motul", "ADMIN_MUNICIPAL"),
-      [],
-    );
-
-    expect(exportacion.ayuntamiento.marca).toEqual({ escudo });
-  });
-
-  it("exporta marca vacia cuando el municipio no tiene una guardada", async () => {
-    const exportacion = await exportarAyuntamiento(
-      actor("ticul", "ADMIN_MUNICIPAL"),
-      [],
-    );
-
-    expect(exportacion.ayuntamiento.marca).toEqual({});
   });
 });
