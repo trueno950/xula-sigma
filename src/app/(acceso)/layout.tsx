@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { leerMarca } from "@/shared/marca";
 import { CABECERA_SUPERFICIE } from "@/shared/tenancy/cabeceras";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
-import { leerMarca, variablesDeMarca } from "@/shared/ui/marca";
+import { variablesDeMarca } from "@/shared/ui/marca";
 
 /**
  * Layout de la superficie de un municipio.

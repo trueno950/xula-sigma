@@ -46,6 +46,7 @@ src/
     tenancy/           Resolución de tenant y acceso a BD
     auth/              Sesión y roles
     exportacion/       Entrega de los datos de un ayuntamiento
+    marca/             Validación de la marca del municipio (colores, escudo)
     ui/                Design system y primitivos
     lib/               Utilidades transversales
 

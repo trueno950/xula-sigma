@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   puedeAdministrarUsuarios,
+  puedeCambiarMarca,
   puedeDarDeBaja,
   puedeEscribir,
   puedeExportar,
@@ -97,11 +98,7 @@ describe("puedeDarDeBaja", () => {
   });
 
   it("SUPER_ADMIN no da de baja: destraba, no administra", () => {
-    /**
-     * Restablecer al ADMIN_MUNICIPAL es lo que lo destraba. Darlo de baja
-     * lo dejaria sin nadie que administre el municipio, y esa decision no
-     * es de plataforma.
-     */
+    // Por que, en `puedeDarDeBaja`.
     for (const objetivo of ROLES) {
       expect(puedeDarDeBaja("SUPER_ADMIN", objetivo)).toBe(false);
     }
@@ -152,5 +149,20 @@ describe("puedeExportar", () => {
     // Por que la plataforma queda afuera, en `puedeExportar`. Este test
     // existe porque es el permiso que mas tentacion da de ampliar.
     expect(puedeExportar("SUPER_ADMIN")).toBe(false);
+  });
+});
+
+describe("puedeCambiarMarca", () => {
+  it("solo ADMIN_MUNICIPAL cambia la marca de su ayuntamiento", () => {
+    expect(puedeCambiarMarca("ADMIN_MUNICIPAL")).toBe(true);
+
+    for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
+      expect(puedeCambiarMarca(rol)).toBe(false);
+    }
+  });
+
+  it("SUPER_ADMIN no cambia la marca de ningun ayuntamiento", () => {
+    // Por que, en `puedeCambiarMarca`. Misma linea que `puedeExportar`.
+    expect(puedeCambiarMarca("SUPER_ADMIN")).toBe(false);
   });
 });
