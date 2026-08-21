@@ -50,7 +50,7 @@ para cablearlos estan prohibidos y el tercero es un ciclo.
 archivo de raiz del modulo, fuera de las cuatro capas.
 
 ```text
-src/app/(acceso)/marca/page.tsx
+src/app/(panel)/marca/page.tsx
   └─► @/modules/marca                    index.ts   (barril)
         └─► ./ui                          ui/index.ts
               └─► ui/actions/cambiarEscudo.action.ts   "use server"
@@ -113,11 +113,17 @@ tiene una decision adentro, esa decision esta en el lugar equivocado.
 | `ui/index.ts` | Barril de capa |
 | `ui/actions/cambiarEscudo.action.ts` | `"use server"`: Zod, contexto, `ActionResult`, `revalidatePath` |
 | `ui/FormularioDeEscudo.tsx` | `"use client"`: input de archivo, RHF, pinta el error por campo |
-| `src/app/(acceso)/marca/page.tsx` | Ruta fina: sin sesion redirige, compone el formulario |
+| `src/app/(panel)/layout.tsx` | Exige sesion; repite la guarda de superficie por la misma razon que `(acceso)/layout.tsx` |
+| `src/app/(panel)/marca/page.tsx` | Ruta fina: sin sesion redirige, compone el formulario |
 
-`(acceso)` y no un grupo nuevo: ese layout ya exige
-`superficie === "ayuntamiento"`, que es donde vive el panel de un
-municipio.
+**Corregido durante la implementacion.** Este documento decia `(acceso)`,
+razonando que ese layout ya exige `superficie === "ayuntamiento"`. Es
+cierto y no alcanza: `(acceso)/acceso/page.tsx` **echa a quien ya tiene
+sesion**, porque es la pantalla de login. Una pantalla que exige sesion y
+rol colgada de ese grupo hereda en el nombre una semantica que es la
+opuesta. Va en `(panel)`, que es ademas lo que `module-template.md` ya
+documentaba como destino de las rutas de modulo — convencion escrita y
+nunca usada hasta aca.
 
 ---
 
@@ -483,7 +489,7 @@ decorativa.
 | `src/shared/lib/errores.ts` | Modificar | `ActionResult<T>` y `mapearError` |
 | `src/shared/exportacion/exportar.ts` | Modificar | `marca` en `Exportacion["ayuntamiento"]` y en `municipioDe` |
 | `src/shared/exportacion/exportar.isolation.test.ts` | Modificar | Con escudo y sin marca |
-| `src/app/(acceso)/marca/page.tsx` | Crear | Ruta fina |
+| `src/app/(panel)/marca/page.tsx` | Crear | Ruta fina |
 | `.dependency-cruiser.cjs` | Modificar | La regla del cliente S3 |
 | `.env.example` | Modificar | Las cinco `R2_*` |
 | `package.json` | Modificar | `@aws-sdk/client-s3` |

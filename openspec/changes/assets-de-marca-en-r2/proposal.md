@@ -3,6 +3,19 @@
 **Cambio:** `assets-de-marca-en-r2` · **Base:** engram
 `sdd/assets-de-marca-en-r2/exploration`
 
+> **Lo que cambio despues de escribir esto.** Este documento es de un
+> momento y no se reescribe: sus decisiones eran ciertas cuando se tomaron.
+> Dos se movieron durante la implementacion, por hallazgos de la revision
+> del repo, y `design.md` es el que manda:
+>
+> - La validacion de marca **no** vive en `src/shared/ui/marca.ts`. Se movio
+>   a `src/shared/marca/validacion.ts` junto con `contraste.ts`: era una
+>   regla de negocio en un archivo de presentacion, y `application` no puede
+>   importar de `ui`. `shared/ui/marca.ts` se quedo solo con
+>   `variablesDeMarca`, que si devuelve `CSSProperties`.
+> - El caso de uso recibe **dos** puertos, no uno: se sumo
+>   `RepositorioDeMarca` para sacarle el Drizzle crudo de encima.
+
 ## Intencion
 
 `ayuntamientos.marca` ya valida un campo `escudo` (`src/shared/ui/marca.ts`)

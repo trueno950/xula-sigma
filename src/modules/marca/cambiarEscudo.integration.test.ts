@@ -3,10 +3,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   contextoDe,
   type GentePorMunicipio,
-  motivoDe,
   sembrarGente,
 } from "@/shared/auth/genteDePrueba";
-import { ayuntamientos, bitacora } from "@/shared/tenancy/esquema";
+import { bitacora } from "@/shared/tenancy/esquema";
 import {
   limpiar,
   motul,
@@ -16,6 +15,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAlmacenDePrueba } from "./application/almacenDePrueba";
 import { crearCambiarEscudo } from "./application/cambiarEscudo";
+import { escribirMarca, marcaDe, pngValido } from "./escudoDePrueba";
 import { repositorioDeMarcaSql } from "./infrastructure/repositorioDeMarcaSql";
 
 /**
@@ -39,33 +39,6 @@ let gente: GentePorMunicipio;
 const actor = (rol: Parameters<typeof contextoDe>[2]) =>
   contextoDe(gente, "motul", rol);
 
-/** 80x80, la firma y el IHDR minimos para que `validarPng` lo acepte. */
-function pngValido(): Uint8Array {
-  const bytes = new Uint8Array(33);
-  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0);
-  bytes.set([0, 0, 0, 13], 8);
-  bytes.set(new TextEncoder().encode("IHDR"), 12);
-  bytes.set([0, 0, 0, 80], 16);
-  bytes.set([0, 0, 0, 80], 20);
-  return bytes;
-}
-
-const marcaDe = async (): Promise<Record<string, unknown> | undefined> => {
-  const [fila] = await withTenant(motul, (tx) =>
-    tx
-      .select({ marca: ayuntamientos.marca })
-      .from(ayuntamientos)
-      .where(eq(ayuntamientos.id, motul)),
-  );
-
-  return fila?.marca as Record<string, unknown> | undefined;
-};
-
-const escribirMarca = (marca: Record<string, unknown>) =>
-  withTenant(motul, (tx) =>
-    tx.update(ayuntamientos).set({ marca }).where(eq(ayuntamientos.id, motul)),
-  );
-
 beforeAll(async () => {
   await sembrar();
   gente = await sembrarGente();
@@ -82,42 +55,6 @@ afterAll(async () => {
 });
 
 describe("cambiarEscudo", () => {
-  it("un rol distinto de ADMIN_MUNICIPAL no puede cambiar la marca", async () => {
-    const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
-
-    const motivo = await motivoDe(() =>
-      cambiarEscudo({ bytes: pngValido() }, actor("OPERADOR")),
-    );
-
-    expect(motivo.codigo).toBe("NO_AUTORIZADO");
-    expect(almacen.guardados.size).toBe(0);
-  });
-
-  it("una marca previa con color invalido no escribe nada y ya guardo en el almacen", async () => {
-    /**
-     * Las dos afirmaciones en un solo test y no en dos: la segunda solo
-     * tiene sentido si la primera es cierta, y separarlas invitaria a que
-     * una corriera sin la otra en algun refactor futuro.
-     */
-    const colorInvalido = { primario: "red;background:url(//x)" };
-    await escribirMarca(colorInvalido);
-
-    const almacen = crearAlmacenDePrueba();
-    const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);
-
-    const motivo = await motivoDe(() =>
-      cambiarEscudo({ bytes: pngValido() }, actor("ADMIN_MUNICIPAL")),
-    );
-
-    expect(motivo.codigo).toBe("VALIDACION");
-    expect(await marcaDe()).toEqual(colorInvalido);
-    // El PUT ya paso para cuando la transaccion descubre el color
-    // invalido: el huerfano queda en el almacen, aceptado por la
-    // decision 4 de proposal.md.
-    expect(almacen.guardados.size).toBe(1);
-  });
-
   it("la clave lleva el ayuntamientoId del contexto, no de un parametro", async () => {
     const almacen = crearAlmacenDePrueba();
     const cambiarEscudo = crearCambiarEscudo(almacen, repositorioDeMarcaSql);

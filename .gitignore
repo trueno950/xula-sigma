@@ -29,6 +29,11 @@ playwright-report/
 # Indice de skills, regenerable
 .atl/
 
+# Indice de CodeGraph, local a cada maquina. Mismo defecto que el lock de
+# abajo si entra al indice a mitad de un commit: "invalid object ... Error
+# building trees" (visto en esta sesion contra .codegraph/.gitignore).
+.codegraph/
+
 # Lock de tareas programadas del agente. Aparece y desaparece durante un
 # commit, y si entra al indice lo rompe: "invalid object ... Error building
 # trees". El resto de .claude/ SI se commitea.

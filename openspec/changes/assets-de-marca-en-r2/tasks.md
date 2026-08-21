@@ -226,44 +226,67 @@ Fases 1-4 ya mergeadas mas alla de lo que estos tres exigian.
 
 ## Phase 5: Composicion, Server Action, UI (depende de 0.1)
 
-- [ ] 5.1 GREEN `src/modules/marca/composicion.ts` — une la fabrica de
-      `cambiarEscudo` con `almacenR2`; sin condicionales, sin `await`.
-- [ ] 5.2 RED test de `cambiarEscudo.action.ts` — sin sesion da
-      `NO_AUTORIZADO`; archivo invalido o > 1 MiB da
-      `VALIDACION.campos.escudo`.
-- [ ] 5.3 GREEN `src/modules/marca/ui/actions/cambiarEscudo.action.ts` —
+- [x] 5.1 GREEN `src/modules/marca/composicion.ts` — une la fabrica de
+      `cambiarEscudo` con `almacenR2` **y con `repositorioDeMarcaSql`**
+      (correccion sobre el texto original de esta tarea: la correccion de
+      revision GGA post-Fase-4, C.3, agrego un segundo parametro a
+      `crearCambiarEscudo`; `composicion.ts` cablea los dos). Sin
+      condicionales, sin `await`.
+- [x] 5.2 RED test de `cambiarEscudo.action.ts` — sin sesion da
+      `NO_AUTORIZADO`; sin archivo o > 1 MiB da `VALIDACION.campos.escudo`.
+      `cambiarEscudo.action.test.ts`, cuatro casos, con `@/shared/auth` y
+      `../../composicion` mockeados.
+- [x] 5.3 GREEN `src/modules/marca/ui/actions/cambiarEscudo.action.ts` —
       `"use server"`, `esquemaDeEntrada.safeParse`, `contextoActual()`,
       llama a `composicion.ts`, `ActionResult`,
       `revalidatePath("/marca")`, `revalidatePath("/acceso")`.
-- [ ] 5.4 GREEN `src/modules/marca/ui/FormularioDeEscudo.tsx` —
+- [x] 5.4 GREEN `src/modules/marca/ui/FormularioDeEscudo.tsx` —
       `"use client"`, input de archivo, React Hook Form, error por campo.
-- [ ] 5.5 GREEN `ui/index.ts` y `src/modules/marca/index.ts` (barril:
+      Sin test propio: mismo precedente que `FormularioDeAcceso.tsx`, que
+      tampoco lo tiene — los componentes de formulario de este repo se
+      prueban por E2E (Playwright), no por Vitest, y no hay
+      `@testing-library/react` instalado.
+- [x] 5.5 GREEN `ui/index.ts` y `src/modules/marca/index.ts` (barril:
       `export * from "./application"`, `"./ui"`, `export type * from
       "./types"`).
-- [ ] 5.6 GREEN `src/app/(acceso)/marca/page.tsx` — ruta fina, redirige
-      sin sesion, compone el formulario.
+- [x] 5.6 GREEN **`src/app/(panel)/marca/page.tsx`, no
+      `(acceso)/marca/page.tsx`** — correccion sobre el texto original de
+      esta tarea. `(acceso)` es el grupo del login: `acceso/page.tsx`
+      redirige a quien YA tiene sesion, exactamente lo opuesto de lo que
+      necesita una pantalla de administracion. La convencion ya estaba
+      documentada y sin usar en `module-template.md` (`app/(panel)/<modulo>/...`,
+      seccion "Flujo canonico"), asi que crear el grupo no es una
+      desviacion nueva sino la primera vez que se usa lo que el template
+      ya prometia. Se agrego `src/app/(panel)/layout.tsx`: exige sesion
+      (`redirect("/acceso")` si no hay) y repite la guarda de superficie
+      `=== "ayuntamiento"` de `(acceso)/layout.tsx` (misma razon: sin ella,
+      un request a la superficie `raiz` responderia 500 en vez de 404). La
+      pagina en si solo decide si el rol alcanza (`puedeCambiarMarca`), en
+      espejo de la regla que ya corre dentro de `cambiarEscudo` — ocultar
+      un boton no es autorizacion, pero mostrar el formulario a quien de
+      todos modos va a recibir `NO_AUTORIZADO` es UX de sobra.
 
 ## Phase 6: Exportacion
 
-- [ ] 6.1 RED caso en `src/shared/exportacion/exportar.isolation.test.ts`
+- [x] 6.1 RED caso en `src/shared/exportacion/exportar.isolation.test.ts`
       — municipio con escudo trae `marca` con esos valores; municipio sin
       marca trae `{}`.
-- [ ] 6.2 GREEN `marca` en `Exportacion["ayuntamiento"]` y en
+- [x] 6.2 GREEN `marca` en `Exportacion["ayuntamiento"]` y en
       `municipioDe`, `src/shared/exportacion/exportar.ts` (validada, no
       el `jsonb` crudo).
 
 ## Phase 7: Documentacion y cierre
 
-- [ ] 7.1 Corregir `docs/06-frontend.md` seccion 6 (arbol de
+- [x] 7.1 Corregir `docs/06-frontend.md` seccion 6 (arbol de
       `src/shared/ui/`) — quitar `branding/` inexistente; documentar el
       reparto real entre `shared/ui/marca.ts` y `modules/marca/`.
-- [ ] 7.2 `docs/adr/0001-decisiones-tecnicas-fase-0.md` — seccion nueva:
+- [x] 7.2 `docs/adr/0001-decisiones-tecnicas-fase-0.md` — seccion nueva:
       bucket de un proposito, clave opaca, PNG unicamente, borrado
       diferido.
-- [ ] 7.3 `docs/architecture/invariantes-criticos.md` — T10 deja de estar
+- [x] 7.3 `docs/architecture/invariantes-criticos.md` — T10 deja de estar
       sin test; referenciar `escudo.isolation.test.ts`.
-- [ ] 7.4 `pnpm test`, `pnpm test:integration` (con `pnpm db:local`) y
+- [x] 7.4 `pnpm test`, `pnpm test:integration` (con `pnpm db:local`) y
       `pnpm check` en verde.
-- [ ] 7.5 Commits convencionales en espanol, uno por fase coherente
+- [x] 7.5 Commits convencionales en espanol, uno por fase coherente
       (1-2 pueden ir en un mismo commit si quedan chicos); sin atribucion
       de IA.

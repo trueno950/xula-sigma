@@ -751,6 +751,59 @@ hoy. Cuando aparezca, se espera. No se baja el número.
 
 ---
 
+## 10. Assets de marca — bucket R2 de un solo propósito
+
+### Decisión
+
+El escudo municipal se guarda en un bucket de Cloudflare R2 público,
+detrás de un dominio propio, con cuatro reglas cerradas en
+`assets-de-marca-en-r2/proposal.md` (detalle completo ahí; acá solo el
+porqué que sobrevive al cambio):
+
+- **Bucket de un solo propósito**, nombrado por su contenido. No es "el
+  bucket de archivos": es el bucket de escudos, y el puerto
+  `AlmacenDeAssets` solo expone `guardar`/`borrar` de un escudo. Un bucket
+  genérico normaliza "los archivos van a R2", y mañana alguien mete ahí un
+  documento del juzgado — dato sensible que no debería salir por la misma
+  puerta que una imagen pública.
+- **Clave opaca y nueva en cada subida**: `{ayuntamientoId}/escudo-{uuid}.png`,
+  con el `ayuntamientoId` tomado siempre del contexto de sesión, nunca de
+  un parámetro. Una clave estable (`{id}/escudo.png`) sería más simple,
+  pero Cloudflare cachea agresivo y el municipio vería el escudo viejo sin
+  forma de invalidarlo.
+- **PNG únicamente**: firma de 8 bytes, chunk `IHDR` en offset fijo, máximo
+  1 MiB, entre 80×80 y 2048×2048. Un formato es un sniffer con offsets
+  fijos, testeable con bytes armados en el test y sin decodificar la
+  imagen completa — lo que también acota la bomba de descompresión sin
+  abrir el archivo. El límite de 1 MiB entra en el límite por defecto de
+  Server Actions de Next: subirlo lo sube para todas las acciones del
+  repo, no solo esta.
+- **Borrado diferido**: el objeto anterior se borra **después** del commit
+  de Postgres, best-effort, con log y sin propagar el error. La verdad
+  vive en la fila, no en el bucket; un borrado dentro de la transacción no
+  se puede revertir si el commit falla después. El costo aceptado es un
+  huérfano ocasional — 1 MiB por municipio por cambio de escudo, cuando la
+  caída ocurre entre el commit y el borrado.
+
+### Por qué no reglas de ciclo de vida en R2
+
+Borrar por antigüedad borraría también el escudo **vigente**, que nunca se
+vuelve a tocar después de subirse — el huérfano es el objeto sin
+referencia, no el objeto viejo.
+
+### Consecuencia sobre RLS
+
+Ninguna. La URL vive en la columna `ayuntamientos.marca` (`jsonb`) que ya
+existía, sin tabla ni política nueva. Pero el bucket en sí **no tiene
+RLS** — es un objeto plano fuera de Postgres — así que `AlmacenDeAssets.borrar`
+hace su propio chequeo de tenant (`domain/claveDesdeUrl.ts#claveTenantDesdeUrl`,
+comparación de origen exacta y verificación de segmento completo del
+`ayuntamientoId`) antes de emitir el `DeleteObjectCommand`. Sin ese
+chequeo, un DELETE contra el objeto de otro municipio no lo frena nada:
+la garantía que da RLS en la base no tiene equivalente ahí.
+
+---
+
 ## Consecuencias sobre documentos existentes
 
 Este ADR agrega. No contradice ninguna regla vigente.
