@@ -24,10 +24,20 @@ export default defineConfig({
           name: "unit",
           include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
           env: {
-            // `ritmo.ts` lo exige al importarse, igual que
-            // `BETTER_AUTH_SECRET` en integracion. El de produccion sale del
+            // `ritmo.ts` lo exige al importarse. El de produccion sale del
             // entorno y nunca del repositorio.
             PIMIENTA_INTENTOS: "pimienta-de-prueba-no-usar-en-produccion",
+            // `withTenant.ts` e `instancia.ts` (Better Auth) exigen los dos
+            // siguientes al importarse, no al usarse. Un caso de uso que
+            // abre su propia transaccion (`altaDePersona.ts`, precedente
+            // `cambiarEscudo.ts`) o una Server Action que llama
+            // `contextoActual()` arrastra ese import con solo importar el
+            // barrel del modulo, aunque el test -como
+            // `superficiePublica.test.ts`- nunca dialogue con ninguno de
+            // los dos. Ningun test de `unit` abre una conexion real ni
+            // firma una cookie: los valores no importan, solo que existan.
+            DATABASE_URL: "postgresql://no-se-usa@localhost:1/no-se-usa",
+            BETTER_AUTH_SECRET: "secreto-de-prueba-no-usar-en-produccion",
           },
           // `*` tambien captura `algo.isolation`, asi que sin este exclude
           // los tests de aislamiento correrian aca, en una suite que por

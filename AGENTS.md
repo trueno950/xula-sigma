@@ -209,6 +209,29 @@ Un módulo no importa de otro módulo: va por un puerto de su propio dominio.
 - El mensaje de error está redactado para un operador municipal, en
   español. Nunca el texto de la excepción.
 
+### La única excepción: formulario nativo sin `use client`
+
+Una Server Action puede transportar el error por `redirect` +
+`searchParams` en vez de devolver `ActionResult<T>` **solo** si es el
+`action` de un `<form>` nativo, sin ningún componente cliente de por
+medio. Hoy hay una:
+
+- `altaDePersonaAction` (`padron`): `FormularioDeAltaDePersona` es un
+  Server Component con `<form action={...}>`, sin JavaScript — funciona
+  igual en la red móvil rural que describe `PRODUCT.md`. `ActionResult<T>`
+  solo lo puede leer `useActionState`, y esa API exige `"use client"`. Una
+  acción sin límite de cliente no tiene quién lea el valor que devuelva:
+  devolverlo sería código muerto.
+
+  Lo que la protege es que el `redirect` sigue redactando el mensaje para
+  la operadora con la misma lista blanca de tipos de error que usaría
+  `ActionResult<T>` — la regla de abajo no se relaja, solo cambia el
+  transporte.
+
+**Una segunda no entra sin agregarse a esta lista**, misma razón que la
+excepción de catálogos de plataforma: una excepción que vive solo en un
+comentario de código es indistinguible de un olvido.
+
 ---
 
 ## Datos personales
