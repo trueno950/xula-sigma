@@ -21,7 +21,14 @@ import {
 const SUBDOMINIO = "demo";
 const NOMBRE_MUNICIPIO = "Municipio Demo";
 const EMAIL_ADMIN = "admin@demo.example.com";
-const CLAVE_ADMIN = "clave-de-desarrollo-no-usar-en-produccion";
+
+/**
+ * Igual que `bootstrap.sql` toma sus claves por `-v` en vez de traerlas
+ * escritas: por defecto siembra con una clave de desarrollo explicita,
+ * pero `SEED_ADMIN_CLAVE` la reemplaza sin tocar el script.
+ */
+const CLAVE_ADMIN =
+  process.env.SEED_ADMIN_CLAVE ?? "clave-de-desarrollo-no-usar-en-produccion";
 
 const mensajeDeExito = () => `
 Municipio de prueba listo.
@@ -31,11 +38,7 @@ Municipio de prueba listo.
   Clave:   ${CLAVE_ADMIN}
 `;
 
-/**
- * Drizzle envuelve el error de Postgres en uno propio cuyo `.message` es
- * "Failed query: ..."; el texto real queda en `.cause` (mismo
- * desenvolvimiento que `motivoDeFalla` en `municipiosDePrueba.ts`).
- */
+/** Mismo desenvolvimiento del error de Drizzle que `motivoDeFalla` en `municipiosDePrueba.ts`. */
 const esSubdominioDuplicado = (error: unknown): boolean => {
   const e = error as { message: string; cause?: { message?: string } };
   const mensaje = e.cause?.message ?? e.message;

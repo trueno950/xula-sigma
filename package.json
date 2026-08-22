@@ -25,7 +25,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "prepare": "husky",
-    "seed:dev": "tsx scripts/seed-dev.ts"
+    "seed:dev": "tsx --env-file=.env scripts/seed-dev.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1113.0",
