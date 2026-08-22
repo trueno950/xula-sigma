@@ -25,6 +25,7 @@ lee cuando el trabajo lo toca, no de corrido.
 | 09 | [Template de Módulo](./architecture/module-template.md) | Crear un módulo nuevo |
 | **Decisiones** | | |
 | ADR 0001 | [Decisiones técnicas de Fase 0](./adr/0001-decisiones-tecnicas-fase-0.md) | Auth, migraciones, errores, Server Actions, logging, fecha y hora, hooks |
+| ADR 0002 | [Búsqueda de personas tolerante a variantes](./adr/0002-busqueda-de-personas.md) | Trigramas, diccionario de abreviaturas, umbral, columna normalizada |
 
 Los links de este índice se validan en CI. Un link roto rompe el build.
 
