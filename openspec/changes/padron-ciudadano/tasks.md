@@ -98,38 +98,38 @@ rompe nada hasta que alguien corta por el documento equivocado.
 
 ## Phase 2: Slice 2 — Alta, edicion, baja y UI (~250 lineas)
 
-- [ ] 2.1 `application/puertos.ts`: `PersonaParaGuardar` (sin
+- [x] 2.1 `application/puertos.ts`: `PersonaParaGuardar` (sin
       `nombreNormalizado`), `RepositorioDePersonas.{guardar,actualizar,
       buscarPorId}`
-- [ ] 2.2 RED `infrastructure/repositorioDePersonasSql.test.ts`:
+- [x] 2.2 RED `infrastructure/repositorioDePersonasSql.test.ts`:
       `guardar`/`actualizar` escriben `nombreNormalizado` recalculado
-- [ ] 2.3 GREEN `repositorioDePersonasSql.ts` (objeto literal, precedente
+- [x] 2.3 GREEN `repositorioDePersonasSql.ts` (objeto literal, precedente
       `repositorioDeMarcaSql`): `guardar`, `actualizar` llaman al catalogo
       memoizado + `normalizarParaBusqueda`; `buscarPorId` (SELECT plano,
       sin resolucion de fusion aun)
-- [ ] 2.4 RED `application/altaDePersona.test.ts` (puertos mockeados):
+- [x] 2.4 RED `application/altaDePersona.test.ts` (puertos mockeados):
       rechaza sin `puedeEscribir`
-- [ ] 2.5 GREEN `altaDePersona.ts`: un `withTenant`, `catalogo.leer` +
+- [x] 2.5 GREEN `altaDePersona.ts`: un `withTenant`, `catalogo.leer` +
       `guardar` + `registrar(ALTA_PERSONA, solo ids)` en la misma tx
-- [ ] 2.6 RED `editarPersona.test.ts`: recalcula `nombreNormalizado` al
+- [x] 2.6 RED `editarPersona.test.ts`: recalcula `nombreNormalizado` al
       corregir `primerApellido`
-- [ ] 2.7 GREEN `editarPersona.ts`
-- [ ] 2.8 RED `darDeBajaPersona.test.ts`: fija `bajaEn`, bitacora
+- [x] 2.7 GREEN `editarPersona.ts`
+- [x] 2.8 RED `darDeBajaPersona.test.ts`: fija `bajaEn`, bitacora
       `BAJA_PERSONA`, sin motivo estructurado
-- [ ] 2.9 GREEN `darDeBajaPersona.ts`; `application/index.ts`
-- [ ] 2.10 RED integration: tras alta y tras edicion, `nombreNormalizado`
+- [x] 2.9 GREEN `darDeBajaPersona.ts`; `application/index.ts`
+- [x] 2.10 RED integration: tras alta y tras edicion, `nombreNormalizado`
       en la fila coincide con `normalizarParaBusqueda(...)` recalculado
       por fuera — la prueba de la costura tipo (design.md §5)
-- [ ] 2.11 GREEN (ajustar adaptador si diverge)
-- [ ] 2.12 RED integration: bitacora de alta/edicion/baja no contiene
+- [x] 2.11 GREEN (ajustar adaptador si diverge)
+- [x] 2.12 RED integration: bitacora de alta/edicion/baja no contiene
       `nombre` ni `curp`, solo ids
-- [ ] 2.13 GREEN (ajustar `registrar(...)` si filtra de mas)
-- [ ] 2.14 `ui/FormularioDeAltaDePersona.tsx` (Server Component) +
+- [x] 2.13 GREEN (ajustar `registrar(...)` si filtra de mas)
+- [x] 2.14 `ui/FormularioDeAltaDePersona.tsx` (Server Component) +
       `ui/actions/altaDePersona.action.ts`
-- [ ] 2.15 `ui/ListadoDePersonas.tsx`: excluye `bajaEn` no nulo por defecto
-- [ ] 2.16 Ruta fina `app/(panel)/padron/{page.tsx,alta/page.tsx}`; cablear
+- [x] 2.15 `ui/ListadoDePersonas.tsx`: excluye `bajaEn` no nulo por defecto
+- [x] 2.16 Ruta fina `app/(panel)/padron/{page.tsx,alta/page.tsx}`; cablear
       en `composicion.ts`
-- [ ] 2.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 2.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       cobertura sobre `modules/padron/application`
 
 ## Phase 3: Slice 3 — Busqueda tolerante (~310 lineas)

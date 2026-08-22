@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import {
   limpiar,
   motivoDeFalla,
@@ -10,40 +9,18 @@ import {
   ticul,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { normalizarParaBusqueda } from "./domain";
 import { personas } from "./infrastructure/esquema";
+import { personaDePrueba } from "./personaDePrueba";
 
 /**
  * Forma canonica del test de aislamiento (`invariantes-criticos.md`, Capa
- * 2). Sin `altaDePersona` todavia (entra en la rebanada 2), asi que este
- * test inserta directo con `withTenant` y calcula `nombreNormalizado` con
- * la misma funcion de dominio que usara el adaptador real — no una
- * constante fija: la columna no tiene default (decision 6 de
- * proposal.md) y un INSERT que la olvide falla ruidoso.
+ * 2): inserta directo con `withTenant`, sin pasar por `altaDePersona`.
+ *
+ * El aislamiento a traves de los casos de uso reales (`altaDePersona`,
+ * `editarPersona`, `darDeBajaPersona`) vive en
+ * `altaEdicionBaja.isolation.test.ts`, aparte por la metrica de lineas
+ * por archivo de `AGENTS.md`.
  */
-
-type PersonaDePrueba = {
-  ayuntamientoId: AyuntamientoId;
-  nombres: string;
-  primerApellido: string;
-  curp?: string;
-};
-
-const personaDePrueba = ({
-  ayuntamientoId,
-  nombres,
-  primerApellido,
-  curp,
-}: PersonaDePrueba) => ({
-  ayuntamientoId,
-  nombres,
-  primerApellido,
-  nombreNormalizado: normalizarParaBusqueda(
-    `${nombres} ${primerApellido}`,
-    new Map(),
-  ),
-  curp: curp ?? null,
-});
 
 beforeAll(async () => {
   await sembrar();
