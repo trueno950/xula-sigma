@@ -7,17 +7,105 @@
  * elige los suyos y el layout de su superficie los inyecta desde el
  * servidor (ver `(acceso)/layout.tsx`). Lo que hay aca son los valores por
  * defecto, que es lo que se ve mientras un municipio no haya cargado marca.
+ *
+ * El resto de la paleta —caliza, senales, radios, tipografia— es de
+ * `DESIGN.md`. Los nombres de token son los mismos ahi y aca a proposito,
+ * para que un cambio en uno sea facil de auditar contra el otro a simple
+ * vista; nada los sincroniza automaticamente.
  */
 @theme {
   --color-marca: var(--primary, oklch(0.42 0.12 25));
   --color-marca-texto: var(--primary-foreground, oklch(0.99 0 0));
   --color-acento: var(--accent, oklch(0.55 0.1 25));
+
+  --color-caliza-lienzo: oklch(0.99 0.003 80);
+  --color-caliza-superficie: oklch(0.975 0.004 80);
+  --color-caliza-relleno: oklch(0.94 0.005 80);
+  --color-caliza-divisor: oklch(0.88 0.006 80);
+  --color-caliza-borde: oklch(0.62 0.008 80);
+  --color-caliza-inhabilitado: oklch(0.68 0.007 80);
+  --color-caliza-apagada: oklch(0.52 0.008 80);
+  --color-caliza-tinta: oklch(0.24 0.008 80);
+
+  /* Fijas, nunca derivadas de la marca: ver DESIGN.md, "la regla del tono ocupado". */
+  --color-senial-error: oklch(0.46 0.17 27);
+  --color-senial-exito: oklch(0.46 0.11 150);
+  --color-senial-aviso: oklch(0.5 0.13 65);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 14px;
+  --radius-4xl: 16px;
+
+  /* Un solo stack, el del sistema operativo. Cero bytes de webfont. */
+  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  /* La unica sombra del sistema: solo para lo que tapa contenido. */
+  --shadow-flotante: 0 6px 16px -4px oklch(0.24 0.008 80 / 0.18);
 }
 
 :root {
   color-scheme: light;
 }
 
-body {
-  @apply bg-white text-neutral-900 antialiased;
+/*
+ * Alias semanticos que `body` ya consume abajo (`bg-background`,
+ * `text-foreground`) y que los componentes de shadcn/Radix van a esperar
+ * cuando se generen en la rebanada 2 (`bg-primary`, `border-border`, etc.).
+ * Cada uno apunta a un token real de arriba: no hay paleta gris propia de
+ * shadcn en este archivo.
+ */
+@theme inline {
+  --color-background: var(--color-caliza-lienzo);
+  --color-foreground: var(--color-caliza-tinta);
+  --color-card: var(--color-caliza-superficie);
+  --color-card-foreground: var(--color-caliza-tinta);
+  --color-popover: var(--color-caliza-lienzo);
+  --color-popover-foreground: var(--color-caliza-tinta);
+  --color-primary: var(--color-marca);
+  --color-primary-foreground: var(--color-marca-texto);
+  --color-secondary: var(--color-caliza-lienzo);
+  --color-secondary-foreground: var(--color-caliza-tinta);
+  --color-muted: var(--color-caliza-relleno);
+  --color-muted-foreground: var(--color-caliza-apagada);
+  --color-accent: var(--color-acento);
+  --color-accent-foreground: var(--color-marca-texto);
+  --color-destructive: var(--color-senial-error);
+  --color-destructive-foreground: var(--color-caliza-lienzo);
+  --color-border: var(--color-caliza-borde);
+  --color-input: var(--color-caliza-borde);
+  --color-ring: var(--color-marca);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  /*
+   * DESIGN.md exige movimiento reducido en su seccion de accesibilidad.
+   * La guarda va general, en `@layer base`, para que cubra cualquier
+   * animacion futura sin depender de que cada componente se acuerde de
+   * repetirla.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
