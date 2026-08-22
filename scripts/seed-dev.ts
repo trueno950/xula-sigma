@@ -38,10 +38,19 @@ Municipio de prueba listo.
   Clave:   ${CLAVE_ADMIN}
 `;
 
+type ErrorConCausa = { message: string; cause?: { message?: string } };
+
+const esErrorConCausa = (error: unknown): error is ErrorConCausa =>
+  typeof error === "object" &&
+  error !== null &&
+  "message" in error &&
+  typeof (error as { message: unknown }).message === "string";
+
 /** Mismo desenvolvimiento del error de Drizzle que `motivoDeFalla` en `municipiosDePrueba.ts`. */
 const esSubdominioDuplicado = (error: unknown): boolean => {
-  const e = error as { message: string; cause?: { message?: string } };
-  const mensaje = e.cause?.message ?? e.message;
+  if (!esErrorConCausa(error)) return false;
+
+  const mensaje = error.cause?.message ?? error.message;
 
   return mensaje.includes("ayuntamientos_subdominio_unique");
 };
