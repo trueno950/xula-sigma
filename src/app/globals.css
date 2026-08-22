@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 /**
  * Tailwind 4 configura desde el CSS, no desde `tailwind.config.js`.
@@ -11,9 +9,9 @@
  * defecto, que es lo que se ve mientras un municipio no haya cargado marca.
  *
  * El resto de la paleta —caliza, senales, radios, tipografia— es de
- * `DESIGN.md`: los nombres de token son los mismos ahi y aca a proposito,
- * para que el documento siga siendo la fuente y no una descripcion vieja
- * del CSS.
+ * `DESIGN.md`. Los nombres de token son los mismos ahi y aca a proposito,
+ * para que un cambio en uno sea facil de auditar contra el otro a simple
+ * vista; nada los sincroniza automaticamente.
  */
 @theme {
   --color-marca: var(--primary, oklch(0.42 0.12 25));
@@ -55,10 +53,11 @@
 }
 
 /*
- * Alias semanticos para los componentes generados por shadcn/Radix, que
- * consumen `bg-background`, `bg-primary`, `border-border`, etc. Cada uno
- * apunta a un token real de arriba: no hay paleta gris propia de shadcn en
- * este archivo.
+ * Alias semanticos que `body` ya consume abajo (`bg-background`,
+ * `text-foreground`) y que los componentes de shadcn/Radix van a esperar
+ * cuando se generen en la rebanada 2 (`bg-primary`, `border-border`, etc.).
+ * Cada uno apunta a un token real de arriba: no hay paleta gris propia de
+ * shadcn en este archivo.
  */
 @theme inline {
   --color-background: var(--color-caliza-lienzo);
@@ -94,10 +93,10 @@
   }
 
   /*
-   * `tw-animate-css` no trae esta guarda: sus clases `animate-in`/`fade-in`
-   * no respetan `prefers-reduced-motion` por si solas. DESIGN.md exige
-   * movimiento reducido, asi que la guarda va aca, general, en vez de
-   * parchear ese paquete o confiar en que cada componente se acuerde.
+   * DESIGN.md exige movimiento reducido en su seccion de accesibilidad.
+   * La guarda va general, en `@layer base`, para que cubra cualquier
+   * animacion futura sin depender de que cada componente se acuerde de
+   * repetirla.
    */
   @media (prefers-reduced-motion: reduce) {
     *,
