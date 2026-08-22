@@ -30,6 +30,14 @@ Este es el invariante raíz. Todo lo demás es secundario.
   parámetro que el cliente controle.
 - Toda tabla operativa tiene columna `ayuntamiento_id` y política RLS con
   `FORCE ROW LEVEL SECURITY`.
+- **Excepción escrita: catálogos de plataforma sin dato por municipio.**
+  `padron.abreviaturas` (`ma` → `maria`, `gpe` → `guadalupe`, …) no lleva
+  `ayuntamiento_id` porque no es tabla operativa: el diccionario no cambia
+  entre Motul y Ticul. No tiene RLS; la protección es el `GRANT` de la
+  migración, que le da `SELECT` al rol de aplicación y nunca `INSERT` ni
+  `UPDATE` — el catálogo se cura a mano, no lo escribe la aplicación. Una
+  tabla sin tenant que nadie documentó es indistinguible de un olvido; esta
+  línea es la que la distingue.
 - El rol de aplicación no es owner de las tablas y no tiene `BYPASSRLS`.
   Migraciones y aplicación usan roles distintos.
 - **Y la aplicación se conecta con ese rol, no solo lo tiene definido.**

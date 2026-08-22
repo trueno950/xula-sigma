@@ -23,16 +23,20 @@ src/modules/constancias/
 ├── domain/
 │   ├── index.ts
 │   ├── constancia.ts             Entidad y reglas
-│   ├── folio.ts                  Value object
-│   └── ports.ts                  Interfaces que el módulo necesita
+│   └── folio.ts                  Value object
 ├── application/
 │   ├── index.ts
+│   ├── puertos.ts                Interfaces que el módulo necesita
 │   ├── emitir-constancia.ts      Un caso de uso por archivo
 │   └── reimprimir-constancia.ts
 ├── infrastructure/
 │   ├── index.ts
 │   ├── constancia.repository.ts  Implementa el puerto
-│   └── schema.ts                 Tablas Drizzle del módulo
+│   └── esquema.ts                Tablas Drizzle del módulo. El nombre es
+│                                  exacto: `drizzle.config.ts:31` globea
+│                                  solo `esquema.ts`, y una tabla en otro
+│                                  nombre compila, pasa typecheck y nunca
+│                                  migra (verificado en `padron-ciudadano`)
 └── ui/
     ├── index.ts
     ├── EmitirConstancia.tsx
@@ -47,7 +51,10 @@ src/modules/constancias/
 2. `types.ts` en la raíz — contratos públicos
 3. Las cuatro capas, aunque alguna arranque casi vacía
 4. `index.ts` en cada capa
-5. `domain/ports.ts` si el módulo necesita algo de afuera
+5. `application/puertos.ts` si el módulo necesita algo de afuera — es el
+   único precedente real del repo (`src/modules/marca/application/puertos.ts`):
+   el puerto es lo que el caso de uso necesita, y `domain` no necesita nada
+   de afuera
 
 ## Opcional
 

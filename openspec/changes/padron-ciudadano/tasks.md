@@ -46,54 +46,54 @@ rompe nada hasta que alguien corta por el documento equivocado.
 
 ## Phase 1: Slice 1 — Esquema y aislamiento (~300 lineas)
 
-- [ ] 1.1 RED `domain/normalizarParaBusqueda.test.ts`: minusculas, sin
+- [x] 1.1 RED `domain/normalizarParaBusqueda.test.ts`: minusculas, sin
       acentos, sin puntos, expansion via `ReadonlyMap` de prueba
-- [ ] 1.2 GREEN `domain/normalizarParaBusqueda.ts`
-- [ ] 1.3 RED `domain/curp.test.ts`: `''`->`null`, formato invalido rechazado
-- [ ] 1.4 GREEN `domain/curp.ts`
-- [ ] 1.5 RED `domain/persona.test.ts`: `Persona.crear` con `nombres`/
+- [x] 1.2 GREEN `domain/normalizarParaBusqueda.ts`
+- [x] 1.3 RED `domain/curp.test.ts`: `''`->`null`, formato invalido rechazado
+- [x] 1.4 GREEN `domain/curp.ts`
+- [x] 1.5 RED `domain/persona.test.ts`: `Persona.crear` con `nombres`/
       `primerApellido` obligatorios, `segundoApellido` opcional
-- [ ] 1.6 GREEN `domain/persona.ts`; `domain/index.ts`
-- [ ] 1.7 `infrastructure/esquema.ts`: tabla `personas` (sin `fusionadaEn`
+- [x] 1.6 GREEN `domain/persona.ts`; `domain/index.ts`
+- [x] 1.7 `infrastructure/esquema.ts`: tabla `personas` (sin `fusionadaEn`
       todavia) con `nombreNormalizado text().notNull()` sin default,
       `unique(id, ayuntamientoId)`, `uniqueIndex(ayuntamientoId, curp)`,
       `politicaTenant(personas)` + `enableRLS()`; tabla `abreviaturas` sin
       `ayuntamientoId`. El objeto de tabla NO se exporta de ningun barrel
-- [ ] 1.8 `drizzle/000X_padron.sql`: generar con `drizzle-kit generate`; en la
+- [x] 1.8 `drizzle/000X_padron.sql`: generar con `drizzle-kit generate`; en la
       cola del mismo archivo agregar `CREATE EXTENSION IF NOT EXISTS
       pg_trgm`, `unaccent`, `FORCE ROW LEVEL SECURITY`, `GRANT` (catalogo
       solo `SELECT` para `xula_app`, sin `INSERT`/`UPDATE`), semilla del
       diccionario del ADR 0002 §4
-- [ ] 1.9 RED `infrastructure/catalogoDeAbreviaturasSql.test.ts`: lee
+- [x] 1.9 RED `infrastructure/catalogoDeAbreviaturasSql.test.ts`: lee
       `abreviaturas`, devuelve `Map`, memoiza por proceso
-- [ ] 1.10 GREEN `catalogoDeAbreviaturasSql.ts`
-- [ ] 1.11 `docs/architecture/invariantes-criticos.md` §1: agregar la
+- [x] 1.10 GREEN `catalogoDeAbreviaturasSql.ts`
+- [x] 1.11 `docs/architecture/invariantes-criticos.md` §1: agregar la
       excepcion de `abreviaturas` (tabla de plataforma sin
       `ayuntamiento_id`, solo lectura para el rol de aplicacion)
-- [ ] 1.12 `docs/architecture/module-template.md`: linea 35
+- [x] 1.12 `docs/architecture/module-template.md`: linea 35
       `schema.ts`->`esquema.ts` (razon: `drizzle.config.ts:31` globea ese
       nombre exacto); lineas 27 y 50 `domain/ports.ts`->
       `application/puertos.ts`
-- [ ] 1.13 `src/modules/padron/{index.ts,types.ts,composicion.ts}`:
+- [x] 1.13 `src/modules/padron/{index.ts,types.ts,composicion.ts}`:
       esqueleto minimo, sin casos de uso todavia
-- [ ] 1.14 RED `superficiePublica.test.ts`: el barrel no exporta ningun
+- [x] 1.14 RED `superficiePublica.test.ts`: el barrel no exporta ningun
       objeto de tabla Drizzle. **Este test nace verde contra 1.13, asi que
       hay que provocarle el rojo:** agregar temporalmente
       `export { personas } from "./infrastructure/esquema"` al barrel,
       verificar que falla, y recien ahi sacarlo. Un test que nunca se vio
       fallar no prueba que detecte nada
-- [ ] 1.15 GREEN: quitar el export temporal y dejar el test en verde
-- [ ] 1.16 RED `personas.isolation.test.ts`: sembrar dos municipios
+- [x] 1.15 GREEN: quitar el export temporal y dejar el test en verde
+- [x] 1.16 RED `personas.isolation.test.ts`: sembrar dos municipios
       (`municipiosDePrueba.ts`), insertar personas en A y B calculando
       `nombreNormalizado` con la funcion de 1.2 antes del INSERT; contexto
       en A sin `where` de tenant devuelve solo A (T1); id de B por id
       directo no aparece (T3); CURP duplicada en el mismo municipio se
       rechaza, entre municipios convive
-- [ ] 1.17 GREEN (ajustar RLS/`FORCE`/`GRANT` de 1.8 si falla)
-- [ ] 1.18 Correr con `pnpm db:local` levantado y las tres env vars de
+- [x] 1.17 GREEN (ajustar RLS/`FORCE`/`GRANT` de 1.8 si falla)
+- [x] 1.18 Correr con `pnpm db:local` levantado y las tres env vars de
       `scripts/db-local.sh` exportadas; `pnpm test:integration` nativo,
       nunca `rtk test` para este archivo
-- [ ] 1.19 `pnpm check` + `pnpm test` en verde; confirmar piso 80%/75% sobre
+- [x] 1.19 `pnpm check` + `pnpm test` en verde; confirmar piso 80%/75% sobre
       `modules/padron/domain`
 
 ## Phase 2: Slice 2 — Alta, edicion, baja y UI (~250 lineas)
