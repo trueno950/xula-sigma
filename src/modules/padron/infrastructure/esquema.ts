@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   char,
   index,
@@ -47,6 +48,16 @@ export const personas = pgTable(
     // Unica por municipio cuando existe. Por que "cuando existe" se
     // expresa con NULL y no con '': `domain/curp.ts`.
     uniqueIndex("personas_tenant_curp_idx").on(t.ayuntamientoId, t.curp),
+    /**
+     * GIN sobre trigramas (rebanada 3, `pg_trgm` ya viene de la migracion de
+     * la rebanada 1). Sin este indice `similarity()` hace un secuencial
+     * completo por busqueda; con el, el planner puede resolverla con
+     * `Bitmap Index Scan` — es lo que verifica el test de `EXPLAIN`.
+     */
+    index("personas_nombre_normalizado_trgm_idx").using(
+      "gin",
+      sql`${t.nombreNormalizado} gin_trgm_ops`,
+    ),
     politicaTenant("personas"),
   ],
 ).enableRLS();

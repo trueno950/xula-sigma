@@ -98,4 +98,16 @@ export type RepositorioDePersonas = {
    * sin que alguien la pida explicitamente.
    */
   listar(tx: TransaccionTenant): Promise<readonly PersonaGuardada[]>;
+  /**
+   * `cadenaExpandida` ya paso por `normalizarParaBusqueda` con el catalogo
+   * leido — el caso de uso expande UNA vez, este metodo no vuelve a llamar
+   * a la funcion de expansion por fila (spec, escenario "la expansion no
+   * corre por fila"). Excluye `bajaEn` no nulo por defecto, mismo criterio
+   * que `listar`.
+   */
+  buscar(
+    tx: TransaccionTenant,
+    cadenaExpandida: string,
+    umbral: number,
+  ): Promise<readonly PersonaGuardada[]>;
 };

@@ -47,6 +47,7 @@ describe("darDeBajaPersona", () => {
     buscarPorId: vi.fn(),
     marcarBaja: vi.fn(),
     listar: vi.fn(),
+    buscar: vi.fn(),
   };
 
   beforeEach(() => {

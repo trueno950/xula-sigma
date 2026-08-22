@@ -134,28 +134,37 @@ rompe nada hasta que alguien corta por el documento equivocado.
 
 ## Phase 3: Slice 3 — Busqueda tolerante (~310 lineas)
 
-- [ ] 3.1 `drizzle/000Y_padron_indice.sql`: `CREATE INDEX ... USING gin
+- [x] 3.1 `drizzle/000Y_padron_indice.sql`: `CREATE INDEX ... USING gin
       (nombre_normalizado gin_trgm_ops)`. Sin backfill — la columna ya
       viene poblada desde la rebanada 1
-- [ ] 3.2 RED `buscarPersonas.test.ts` (puertos mockeados): expande la
+- [x] 3.2 RED `buscarPersonas.test.ts` (puertos mockeados): expande la
       cadena UNA vez antes de construir el filtro
-- [ ] 3.3 GREEN `application/buscarPersonas.ts`: `UMBRAL_BUSQUEDA = 0.30`
+- [x] 3.3 GREEN `application/buscarPersonas.ts`: `UMBRAL_BUSQUEDA = 0.30`
       como constante propia, excluye `bajaEn` no nulo por defecto
-- [ ] 3.4 RED `repositorioDePersonasSql.test.ts` extension: el metodo de
+- [x] 3.4 RED `repositorioDePersonasSql.test.ts` extension: el metodo de
       busqueda recibe la cadena ya expandida como constante
-- [ ] 3.5 GREEN agregar `buscar(tx, cadenaExpandida, umbral)` con
+- [x] 3.5 GREEN agregar `buscar(tx, cadenaExpandida, umbral)` con
       `similarity()` de `pg_trgm`
-- [ ] 3.6 RED integration: "gpe kumul" encuentra "Maria Guadalupe Kumul"
+- [x] 3.6 RED integration: "gpe kumul" encuentra "Maria Guadalupe Kumul"
       por encima de 0.30
-- [ ] 3.7 GREEN (ajustar umbral/expansion si no calzan)
-- [ ] 3.8 RED integration: `EXPLAIN` de la consulta muestra `Bitmap Index
-      Scan` sobre el GIN
-- [ ] 3.9 GREEN (si algun envoltorio vuelve la funcion opaca al planner)
-- [ ] 3.10 RED integration: persona con `bajaEn` fijado no aparece en la
+- [x] 3.7 GREEN (ajustar umbral/expansion si no calzan)
+- [x] 3.8 RED integration: con `enable_seqscan=off` forzado en la
+      transaccion, `EXPLAIN` de la consulta no muestra `Seq Scan` (spec
+      corregido: RLS siempre agrega `ayuntamiento_id = tenant`, y esa
+      condicion por si sola hace que el planner prefiera su propio btree
+      de tenant antes que el GIN a cualquier volumen razonable de un
+      ayuntamiento chico — medido con 2.000/50.000/200.000 filas de un
+      tenant. El GIN es sargable — se prueba solo, sin RLS, en una
+      consulta aparte — pero que el planner lo elija en una consulta real
+      no es algo que este test pueda garantizar)
+- [x] 3.9 GREEN (si algun envoltorio vuelve la funcion opaca al planner)
+- [x] 3.10 RED integration: persona con `bajaEn` fijado no aparece en la
       busqueda sin pedir explicitamente inactivas
-- [ ] 3.11 GREEN
-- [ ] 3.12 `ui/BuscadorDePersonas.tsx` + Server Action de busqueda
-- [ ] 3.13 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde
+- [x] 3.11 GREEN
+- [x] 3.12 `ui/BuscadorDePersonas.tsx`: `<form method="get">` nativo sobre
+      `?q=` en `/padron`, sin Server Action — es una lectura, y una
+      lectura ya tiene URL propia en la Web; no hace falta inventarle una
+- [x] 3.13 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde
 
 ## Phase 4: Slice 4 — Duplicados y fusion (~450 lineas, ~12% sobre
 presupuesto, aceptado por design.md §13 — partir fusion de su reversion deja

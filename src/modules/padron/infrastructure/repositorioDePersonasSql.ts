@@ -1,4 +1,4 @@
-import { eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type {
   PersonaGuardada,
   PersonaParaGuardar,
@@ -83,5 +83,35 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       .from(personas)
       .where(isNull(personas.bajaEn))
       .orderBy(personas.primerApellido, personas.nombres);
+  },
+
+  async buscar(tx, cadenaExpandida, umbral) {
+    /**
+     * `%` y no `similarity(...) >= umbral` a secas: es el operador que
+     * `gin_trgm_ops` sabe resolver con el indice (test de sargabilidad de
+     * la rebanada 3). Su umbral vive en el GUC `pg_trgm.similarity_threshold`,
+     * y `set_config(..., true)` en vez de `set_limit()` -su wrapper
+     * habitual- es a proposito: `set_limit()` hace un `SET` de sesion
+     * completa, sin version `LOCAL`. Un `SET` suelto sobrevive al COMMIT y
+     * queda pegado en la conexion del pool para el proximo request -el
+     * mismo T2 que documenta `withTenant.ts` para `app.tenant`-, y el `%`
+     * de la busqueda de otro municipio heredaria el umbral de este.
+     */
+    await tx.execute(
+      sql`SELECT set_config('pg_trgm.similarity_threshold', ${String(umbral)}, true)`,
+    );
+
+    return tx
+      .select(columnasDeLectura)
+      .from(personas)
+      .where(
+        and(
+          isNull(personas.bajaEn),
+          sql`${personas.nombreNormalizado} % ${cadenaExpandida}`,
+        ),
+      )
+      .orderBy(
+        sql`similarity(${personas.nombreNormalizado}, ${cadenaExpandida}) desc`,
+      );
   },
 };

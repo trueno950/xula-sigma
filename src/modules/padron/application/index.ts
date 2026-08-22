@@ -1,4 +1,5 @@
 export * from "./altaDePersona";
+export * from "./buscarPersonas";
 export * from "./darDeBajaPersona";
 export * from "./editarPersona";
 export * from "./listarPersonas";
