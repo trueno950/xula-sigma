@@ -143,6 +143,28 @@ y no falla nunca** — hasta que hay un segundo municipio en producción.
 Marcá también: `BYPASSRLS` en cualquier rol, y el rol de aplicación como
 owner de una tabla.
 
+### La única excepción: catálogos de plataforma
+
+Una tabla puede entrar sin `ayuntamiento_id`, sin RLS y sin política
+**solo** si no guarda ningún dato de un municipio. Hoy hay una:
+
+- `abreviaturas` (`padron`): el diccionario `ma` → `maria` que expande
+  nombres antes de normalizarlos. No cambia entre Motul y Ticul, así que no
+  hay dato municipal que pueda fugarse. **Entró el 2026-08-22 por este
+  mismo mecanismo.**
+
+  Lo que la protege no es una política sino el `GRANT`: `SELECT` para el
+  rol de aplicación y **nunca** `INSERT` ni `UPDATE`. El catálogo se cura a
+  mano. Una tabla de esta clase con permiso de escritura para `xula_app` es
+  hallazgo aunque no tenga dato de municipio.
+
+**Una segunda no entra sin agregarse a esta lista**, igual que las salidas
+a la base de la regla 2 y por la misma razón: la excepción anterior se
+escribió en `docs/architecture/invariantes-criticos.md`, que no es un
+archivo de reglas, y esta revisión no la vio. Una excepción que vive fuera
+de las reglas es indistinguible de un olvido, que es exactamente el modo de
+falla que este documento existe para evitar.
+
 ---
 
 ## Revisión de tests

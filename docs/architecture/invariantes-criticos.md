@@ -30,6 +30,13 @@ Este es el invariante raíz. Todo lo demás es secundario.
   parámetro que el cliente controle.
 - Toda tabla operativa tiene columna `ayuntamiento_id` y política RLS con
   `FORCE ROW LEVEL SECURITY`.
+- **Hay una excepción, y vive en las reglas, no acá.** Un catálogo de
+  plataforma —hoy solo `padron.abreviaturas`— puede entrar sin
+  `ayuntamiento_id` y sin RLS porque no guarda dato de ningún municipio.
+  La lista, qué la protege y qué hace falta para abrir una segunda están en
+  `AGENTS.md`, "Revisión de migraciones SQL". No se repiten acá a propósito:
+  la primera versión de esta excepción se escribió solo en este archivo, que
+  no es de reglas, y la revisión automática no la vio.
 - El rol de aplicación no es owner de las tablas y no tiene `BYPASSRLS`.
   Migraciones y aplicación usan roles distintos.
 - **Y la aplicación se conecta con ese rol, no solo lo tiene definido.**
