@@ -15,17 +15,10 @@ import { CurpInvalidaError, PersonaInvalidaError } from "../../domain";
  * `FormData`, resuelve el contexto y traduce el resultado. El caso de uso
  * ya cableado por `composicion.ts` hace el resto.
  *
- * `FormularioDeAltaDePersona` es un Server Component con un `<form
- * action={...}>` nativo (tasks.md 2.14): sin JavaScript de por medio, el
- * alta funciona igual en la red movil rural que describe `PRODUCT.md`. Sin
- * `useActionState` para pintar el error tampoco se necesita un limite
- * `"use client"` — el error viaja como `searchParams` en la redireccion de
- * vuelta a `/padron/alta`, que es la unica forma de devolver estado a un
- * formulario que se envio sin JS.
- *
- * No devuelve `ActionResult<T>` (regla de Server Actions, `AGENTS.md`):
- * la excepcion de formulario nativo sin `use client` esta escrita ahi, no
- * solo aca.
+ * `FormularioDeAltaDePersona` (tasks.md 2.14) es el `<form action={...}>`
+ * nativo de esta accion. Por que no devuelve `ActionResult<T>` y el error
+ * viaja como `searchParams`: la excepcion de formulario nativo sin
+ * `use client` en `AGENTS.md`, seccion Server Actions.
  */
 
 const esquemaDeEntrada = z.object({
@@ -61,10 +54,6 @@ const mensajeDeError = (error: unknown): string => {
 };
 
 export async function altaDePersonaAction(formData: FormData): Promise<void> {
-  const contexto = await contextoActual();
-
-  if (!contexto) redirect("/acceso");
-
   const analisis = esquemaDeEntrada.safeParse({
     nombres: formData.get("nombres"),
     primerApellido: formData.get("primerApellido"),
@@ -80,6 +69,10 @@ export async function altaDePersonaAction(formData: FormData): Promise<void> {
     redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
+
+  const contexto = await contextoActual();
+
+  if (!contexto) redirect("/acceso");
 
   try {
     await altaDePersona(
