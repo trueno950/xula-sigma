@@ -136,16 +136,20 @@ no una consulta mal escrita.
 - WHEN se busca "gpe kumul"
 - THEN la persona aparece por encima del umbral 0.30
 
-#### Scenario: La consulta es sargable
+#### Scenario: El operador % es sargable sobre el indice GIN
 
-- GIVEN la tabla `personas` con datos y `enable_seqscan` forzado a `off`
-  en la transaccion (asi Postgres no puede elegir un secuencial salvo que
-  sea la unica opcion valida — es la forma de probar sargabilidad sin
-  depender de que el volumen de datos haga que el GIN gane por costo)
-- WHEN se ejecuta `EXPLAIN` sobre la busqueda
-- THEN el plan usa algun indice — nunca un `Seq Scan` — lo que prueba que
-  ni el `%` sobre `nombreNormalizado` ni el filtro de tenant quedaron
-  detras de una funcion opaca al planner
+- GIVEN la tabla `personas` con datos, RLS deshabilitada dentro de una
+  transaccion que la vuelve a habilitar antes del COMMIT (aislando la
+  consulta del filtro de tenant que RLS agregaria, que de otro modo
+  siempre gana por costo — ver el requisito de mas arriba) y
+  `enable_seqscan` forzado a `off`
+- WHEN se ejecuta `EXPLAIN` sobre `nombreNormalizado % cadena`
+- THEN el plan usa `Bitmap Index Scan` sobre
+  `personas_nombre_normalizado_trgm_idx` — nunca un `Seq Scan` — lo que
+  prueba que el operador no quedo detras de una funcion opaca al planner.
+  Un `enable_seqscan=off` **con RLS activa** no alcanza: el btree de
+  tenant satisface igual "no es un Seq Scan" aunque `%` este roto, y el
+  test no discriminaria nada
 
 #### Scenario: La expansion no corre por fila
 

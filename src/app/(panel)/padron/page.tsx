@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { z } from "zod";
 import {
   BuscadorDePersonas,
   buscarPersonas,
@@ -9,8 +10,16 @@ import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
 
 type Props = {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+/**
+ * `?q=a&q=b` llega como `string[]`, no `string` — Next no lo impide. Sin
+ * este `safeParse`, ese caso pasaba `string[]` a `buscarPersonas(cadena:
+ * string, ...)`, que termina en `texto.normalize()` dentro de
+ * `normalizarParaBusqueda` y revienta con un 500 sobre una URL publica.
+ */
+const esquemaDeBusqueda = z.object({ q: z.string().trim().min(1).optional() });
 
 /**
  * Ruta fina: resuelve el contexto, lista o busca, y compone. Por que la
@@ -34,7 +43,8 @@ export default async function PaginaDePadron({ searchParams }: Props) {
     );
   }
 
-  const { q } = await searchParams;
+  const analisis = esquemaDeBusqueda.safeParse(await searchParams);
+  const q = analisis.success ? analisis.data.q : undefined;
   const personas = q
     ? await buscarPersonas(q, contexto)
     : await listarPersonas(contexto);

@@ -1,4 +1,3 @@
-import { and, isNull, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import {
@@ -13,23 +12,34 @@ import {
   catalogoDeAbreviaturasSql,
   repositorioDePersonasSql,
 } from "./infrastructure";
-import { personas } from "./infrastructure/esquema";
 
 /**
  * Contra Postgres real: prueba lo que la 3.2/3.5 no pueden con puertos
  * mockeados — que "gpe kumul" encuentra a la persona por encima del umbral
- * medido, que una persona dada de baja no aparece, y que la consulta es
- * sargable (design.md seccion 10, `EXPLAIN` sobre el GIN).
+ * medido, que una persona dada de baja no aparece, y que el operador `%`
+ * es sargable sobre el indice GIN.
  *
- * La ultima parte se corrigio contra el spec original tras medir: RLS
- * agrega siempre `ayuntamiento_id = tenant`, y esa condicion por si sola
- * ya alcanza a toda la fila del municipio, asi que el planner prefiere su
- * propio btree de tenant antes que el GIN a cualquier volumen razonable de
- * un ayuntamiento chico (medido con 2.000/50.000/200.000 filas de un
- * tenant). Que el GIN es sargable se prueba forzando `enable_seqscan =
- * off`: sin eso, Postgres no tiene por que preferirlo, y no es un defecto
- * de la consulta — es su costo real. Verificar sargabilidad, no que el
- * planner elija especificamente el GIN.
+ * La ultima parte se corrigio dos veces. Primero contra el spec original
+ * tras medir: RLS agrega siempre `ayuntamiento_id = tenant`, y esa
+ * condicion por si sola ya alcanza a toda la fila del municipio, asi que
+ * el planner prefiere su propio btree de tenant antes que el GIN a
+ * cualquier volumen razonable de un ayuntamiento chico (medido con
+ * 2.000/50.000/200.000 filas de un tenant) — asi que un `EXPLAIN` con RLS
+ * activa nunca prueba el GIN, solo ese btree.
+ *
+ * Segunda vuelta, encontrada por la revision del PR: la primera version de
+ * este archivo forzaba `enable_seqscan=off` **con RLS activa** y afirmaba
+ * "no es un Seq Scan" — una consulta que reemplazara `%` por
+ * `similarity(...) >= 0.3` (funcion opaca al planner, indexacion rota)
+ * habria pasado el mismo test igual, porque el btree de tenant sigue
+ * satisfaciendo esa afirmacion. El test no fallaba cuando se rompia
+ * justo lo que decia cuidar.
+ *
+ * Correccion real: `owner` (el dueño de la tabla) puede deshabilitar RLS
+ * dentro de una transaccion y volver a habilitarla antes del COMMIT — el
+ * estado final de la tabla no cambia, y adentro de esa ventana la consulta
+ * corre sin el filtro de tenant, aislando de verdad si `%` es sargable.
+ * Ahi si se puede pedir el nombre del indice, no solo "no es secuencial".
  */
 
 const contexto: ContextoActual = {
@@ -103,7 +113,7 @@ describe("busqueda tolerante a variantes", () => {
     expect(resultado.some((persona) => persona.id === id)).toBe(false);
   });
 
-  it("la consulta es sargable: con enable_seqscan=off el plan no hace un secuencial", async () => {
+  it("el operador % es sargable: sin RLS de por medio, el plan usa el indice GIN", async () => {
     await altaDePersona(
       {
         nombres: "Otra Guadalupe",
@@ -114,27 +124,26 @@ describe("busqueda tolerante a variantes", () => {
       contexto,
     );
 
-    const plan = await withTenant(motul, async (tx) => {
-      await tx.execute(sql`SET LOCAL enable_seqscan = off`);
-      await tx.execute(
-        sql`SELECT set_config('pg_trgm.similarity_threshold', '0.3', true)`,
-      );
+    // Deshabilita RLS, corre el EXPLAIN, y la vuelve a habilitar antes del
+    // COMMIT: el estado final de `personas` no cambia, pero adentro de la
+    // transaccion la consulta ve la tabla entera, sin el filtro de tenant
+    // que RLS agregaria — la unica forma de aislar si `%` en si mismo es
+    // sargable, sin que el btree de tenant tape la respuesta.
+    const textoDelPlan = await owner.begin(async (tx) => {
+      await tx`ALTER TABLE personas DISABLE ROW LEVEL SECURITY`;
+      await tx`SET LOCAL enable_seqscan = off`;
 
-      const consulta = tx
-        .select({ id: personas.id })
-        .from(personas)
-        .where(
-          and(
-            isNull(personas.bajaEn),
-            sql`${personas.nombreNormalizado} % ${"guadalupe uc"}`,
-          ),
-        );
+      const plan = await tx`
+        EXPLAIN SELECT id FROM personas
+         WHERE nombre_normalizado % ${"guadalupe uc"}
+      `;
 
-      return tx.execute(sql`EXPLAIN ${consulta}`);
+      await tx`ALTER TABLE personas ENABLE ROW LEVEL SECURITY`;
+      await tx`ALTER TABLE personas FORCE ROW LEVEL SECURITY`;
+
+      return plan.map((fila) => Object.values(fila)[0]).join("\n");
     });
 
-    const textoDelPlan = plan.map((fila) => Object.values(fila)[0]).join("\n");
-
-    expect(textoDelPlan).not.toContain("Seq Scan");
+    expect(textoDelPlan).toContain("personas_nombre_normalizado_trgm_idx");
   });
 });

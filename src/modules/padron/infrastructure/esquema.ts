@@ -50,9 +50,15 @@ export const personas = pgTable(
     uniqueIndex("personas_tenant_curp_idx").on(t.ayuntamientoId, t.curp),
     /**
      * GIN sobre trigramas (rebanada 3, `pg_trgm` ya viene de la migracion de
-     * la rebanada 1). Sin este indice `similarity()` hace un secuencial
-     * completo por busqueda; con el, el planner puede resolverla con
-     * `Bitmap Index Scan` — es lo que verifica el test de `EXPLAIN`.
+     * la rebanada 1). El operador `%` es sargable sobre este indice —
+     * verificado con `EXPLAIN` en `buscarPersonas.integration.test.ts`, con
+     * RLS deshabilitada a proposito para esa comprobacion puntual, porque
+     * en una consulta real RLS agrega `ayuntamiento_id = tenant` y esa
+     * condicion por si sola hace que el planner prefiera su propio btree de
+     * tenant antes que este GIN a cualquier volumen razonable de un
+     * ayuntamiento chico (medido). El indice sigue siendo el camino
+     * correcto para el municipio que crezca lo bastante como para que la
+     * relacion de costos se invierta.
      */
     index("personas_nombre_normalizado_trgm_idx").using(
       "gin",
@@ -66,7 +72,8 @@ export const personas = pgTable(
  * Catalogo de plataforma, no operativo: sin `ayuntamientoId` a proposito
  * (pregunta 2 de proposal.md). `ma` -> `maria` no cambia entre Motul y
  * Ticul. La excepcion a "toda tabla operativa lleva ayuntamiento_id" esta
- * escrita en `docs/architecture/invariantes-criticos.md` seccion 1.
+ * en `AGENTS.md`, "Revision de migraciones SQL" — la lista de reglas, no
+ * `invariantes-criticos.md`, que a proposito no la repite.
  *
  * Sin RLS: la proteccion de solo-lectura es el GRANT de la migracion —
  * `SELECT` para `xula_app`, sin `INSERT` ni `UPDATE` — no una politica.
