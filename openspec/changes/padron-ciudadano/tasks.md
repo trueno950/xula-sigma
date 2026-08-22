@@ -142,27 +142,23 @@ rompe nada hasta que alguien corta por el documento equivocado.
 - [x] 3.3 GREEN `application/buscarPersonas.ts`: `UMBRAL_BUSQUEDA = 0.30`
       como constante propia, excluye `bajaEn` no nulo por defecto
 - [x] 3.4 RED `repositorioDePersonasSql.test.ts` extension: el metodo de
-      busqueda recibe la cadena ya expandida como constante
-- [x] 3.5 GREEN agregar `buscar(tx, cadenaExpandida, umbral)` con
-      `similarity()` de `pg_trgm`
+      busqueda recibe la cadena ya expandida como constante (test
+      retirado despues: mockeaba la forma interna de `queryChunks` de
+      Drizzle para afirmar el SQL exacto, se rompia con cualquier cambio
+      de esa libreria sin que el comportamiento cambiara. Lo cubre
+      `buscarPersonas.integration.test.ts` contra Postgres real. Hallado
+      por la revision del PR)
+- [x] 3.5 GREEN agregar `buscar(tx, cadenaExpandida, umbral)` con el
+      operador `%` de `pg_trgm`
 - [x] 3.6 RED integration: "gpe kumul" encuentra "Maria Guadalupe Kumul"
       por encima de 0.30
 - [x] 3.7 GREEN (ajustar umbral/expansion si no calzan)
 - [x] 3.8 RED integration: `owner` deshabilita RLS dentro de una
-      transaccion (la vuelve a habilitar antes del COMMIT, sin cambiar el
-      estado final de la tabla), y con `enable_seqscan=off` forzado,
-      `EXPLAIN` muestra `Bitmap Index Scan` sobre
-      `personas_nombre_normalizado_trgm_idx` (spec corregido dos veces:
-      primero porque RLS siempre agrega `ayuntamiento_id = tenant` y esa
-      condicion por si sola hace que el planner prefiera su propio btree
-      de tenant antes que el GIN a cualquier volumen razonable de un
-      ayuntamiento chico -medido con 2.000/50.000/200.000 filas de un
-      tenant-, asi que un `EXPLAIN` con RLS activa nunca prueba el GIN;
-      segunda vuelta porque la primera version de este test forzaba
-      `enable_seqscan=off` CON RLS activa y solo afirmaba "no es un Seq
-      Scan" -satisfecho igual por el btree de tenant-, asi que no fallaba
-      si se rompia la sargabilidad de `%` en si mismo. Hallado por la
-      revision del PR)
+      transaccion (la vuelve a habilitar antes del COMMIT), y con
+      `enable_seqscan=off` forzado, `EXPLAIN` muestra `Bitmap Index Scan`
+      sobre `personas_nombre_normalizado_trgm_idx`. Por que no alcanza con
+      RLS activa: el requisito "Busqueda tolerante a variantes con
+      trigramas" del spec
 - [x] 3.9 GREEN (si algun envoltorio vuelve la funcion opaca al planner)
 - [x] 3.10 RED integration: persona con `bajaEn` fijado no aparece en la
       busqueda sin pedir explicitamente inactivas

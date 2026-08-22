@@ -19,27 +19,11 @@ import {
  * medido, que una persona dada de baja no aparece, y que el operador `%`
  * es sargable sobre el indice GIN.
  *
- * La ultima parte se corrigio dos veces. Primero contra el spec original
- * tras medir: RLS agrega siempre `ayuntamiento_id = tenant`, y esa
- * condicion por si sola ya alcanza a toda la fila del municipio, asi que
- * el planner prefiere su propio btree de tenant antes que el GIN a
- * cualquier volumen razonable de un ayuntamiento chico (medido con
- * 2.000/50.000/200.000 filas de un tenant) — asi que un `EXPLAIN` con RLS
- * activa nunca prueba el GIN, solo ese btree.
- *
- * Segunda vuelta, encontrada por la revision del PR: la primera version de
- * este archivo forzaba `enable_seqscan=off` **con RLS activa** y afirmaba
- * "no es un Seq Scan" — una consulta que reemplazara `%` por
- * `similarity(...) >= 0.3` (funcion opaca al planner, indexacion rota)
- * habria pasado el mismo test igual, porque el btree de tenant sigue
- * satisfaciendo esa afirmacion. El test no fallaba cuando se rompia
- * justo lo que decia cuidar.
- *
- * Correccion real: `owner` (el dueño de la tabla) puede deshabilitar RLS
- * dentro de una transaccion y volver a habilitarla antes del COMMIT — el
- * estado final de la tabla no cambia, y adentro de esa ventana la consulta
- * corre sin el filtro de tenant, aislando de verdad si `%` es sargable.
- * Ahi si se puede pedir el nombre del indice, no solo "no es secuencial".
+ * Por que la sargabilidad se prueba deshabilitando RLS dentro de una
+ * transaccion (`owner.begin`, mas abajo) y no con un `enable_seqscan=off`
+ * comun: el requisito "Busqueda tolerante a variantes con trigramas" del
+ * spec, que tambien trae la historia de por que la primera version de este
+ * test no discriminaba una consulta rota.
  */
 
 const contexto: ContextoActual = {

@@ -50,15 +50,9 @@ export const personas = pgTable(
     uniqueIndex("personas_tenant_curp_idx").on(t.ayuntamientoId, t.curp),
     /**
      * GIN sobre trigramas (rebanada 3, `pg_trgm` ya viene de la migracion de
-     * la rebanada 1). El operador `%` es sargable sobre este indice —
-     * verificado con `EXPLAIN` en `buscarPersonas.integration.test.ts`, con
-     * RLS deshabilitada a proposito para esa comprobacion puntual, porque
-     * en una consulta real RLS agrega `ayuntamiento_id = tenant` y esa
-     * condicion por si sola hace que el planner prefiera su propio btree de
-     * tenant antes que este GIN a cualquier volumen razonable de un
-     * ayuntamiento chico (medido). El indice sigue siendo el camino
-     * correcto para el municipio que crezca lo bastante como para que la
-     * relacion de costos se invierta.
+     * la rebanada 1). Sargabilidad de `%` y por que un `EXPLAIN` con RLS
+     * activa no lo prueba: `buscarPersonas.integration.test.ts` y el
+     * requisito "Busqueda tolerante a variantes con trigramas" del spec.
      */
     index("personas_nombre_normalizado_trgm_idx").using(
       "gin",

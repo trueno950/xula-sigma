@@ -13,9 +13,15 @@ import { repositorioDePersonasSql } from "./repositorioDePersonasSql";
  * Lo que este archivo prueba es la costura de design.md seccion 5: que
  * `nombreNormalizado` sale de `normalizarParaBusqueda` (la misma funcion de
  * dominio) y no de una copia. No prueba el resto del adaptador —
- * `buscarPorId`, `marcarBaja`, `listar`— porque esos no tienen decision de
- * negocio que un mock pueda ejercitar mejor que la integracion real
- * (design.md seccion 10).
+ * `buscarPorId`, `marcarBaja`, `listar`, `buscar`— porque esos no tienen
+ * decision de negocio que un mock pueda ejercitar mejor que la integracion
+ * real (design.md seccion 10). `buscar` en particular se probo con un mock
+ * que reconstruia la forma interna de `queryChunks` de Drizzle para afirmar
+ * el SQL exacto: se rompia con cualquier cambio de esa libreria sin que el
+ * comportamiento hubiera cambiado, y lo que de verdad importa —que `%` sea
+ * sargable, que la cadena llegue sin re-normalizar— ya lo prueba
+ * `buscarPersonas.integration.test.ts` contra Postgres real. Encontrado por
+ * la revision del PR.
  */
 
 const txDeInsercion = () => {
@@ -31,43 +37,6 @@ const txDeActualizacion = () => {
   const update = vi.fn().mockReturnValue({ set });
 
   return { tx: { update } as unknown as TransaccionTenant, set, where };
-};
-
-/**
- * Aplana `queryChunks` de un objeto `SQL` de Drizzle a texto plano, params
- * incluidos entre corchetes. No es la forma en que Postgres ve la consulta
- * (eso lo prueba `EXPLAIN` en integracion, tasks.md 3.8) — alcanza para
- * probar que `buscar` no vuelve a tocar `cadenaExpandida` ni el `umbral`
- * antes de mandarlos, que es la unica decision de negocio de este metodo.
- */
-const aplanar = (valor: unknown): string => {
-  if (
-    valor &&
-    typeof valor === "object" &&
-    Array.isArray((valor as { queryChunks?: unknown }).queryChunks)
-  ) {
-    return (valor as { queryChunks: unknown[] }).queryChunks
-      .map(aplanar)
-      .join("");
-  }
-
-  // Columna de Drizzle: identificador, no parametro. Sale por su nombre,
-  // no por `[valor]`, para no confundir "compara contra esta columna" con
-  // "compara contra este literal".
-  if (
-    valor &&
-    typeof valor === "object" &&
-    "name" in valor &&
-    "table" in valor
-  ) {
-    return `<${(valor as { name: string }).name}>`;
-  }
-
-  if (valor && typeof valor === "object" && "value" in valor) {
-    return String((valor as { value: unknown }).value);
-  }
-
-  return `[${String(valor)}]`;
 };
 
 const persona: PersonaParaGuardar = {
@@ -134,33 +103,5 @@ describe("repositorioDePersonasSql", () => {
       }),
     );
     expect(where).toHaveBeenCalled();
-  });
-
-  it("buscar fija el umbral recibido y usa la cadena ya expandida, sin volver a normalizarla", async () => {
-    const orderBy = vi.fn().mockResolvedValue([]);
-    const where = vi.fn().mockReturnValue({ orderBy });
-    const from = vi.fn().mockReturnValue({ where });
-    const select = vi.fn().mockReturnValue({ from });
-    const execute = vi.fn().mockResolvedValue(undefined);
-    const tx = { select, execute } as unknown as TransaccionTenant;
-
-    await repositorioDePersonasSql.buscar(tx, "guadalupe kumul", 0.3);
-
-    const configuracionDeUmbral = aplanar(execute.mock.calls[0]?.[0]);
-    // `true` al final y sin corchetes: Drizzle lo inlinea como literal, no
-    // como parametro — es el mismo "local a la transaccion" que
-    // `app.tenant` en `withTenant.ts`, no una sesion completa.
-    expect(configuracionDeUmbral).toBe(
-      "SELECT set_config('pg_trgm.similarity_threshold', [0.3], true)",
-    );
-
-    const filtro = aplanar(where.mock.calls[0]?.[0]);
-    expect(filtro).toContain("<bajaEn> is null");
-    expect(filtro).toContain("<nombreNormalizado> % [guadalupe kumul]");
-
-    const orden = aplanar(orderBy.mock.calls[0]?.[0]);
-    expect(orden).toBe(
-      "similarity(<nombreNormalizado>, [guadalupe kumul]) desc",
-    );
   });
 });
