@@ -92,4 +92,21 @@
   html {
     @apply font-sans;
   }
+
+  /*
+   * `tw-animate-css` no trae esta guarda: sus clases `animate-in`/`fade-in`
+   * no respetan `prefers-reduced-motion` por si solas. DESIGN.md exige
+   * movimiento reducido, asi que la guarda va aca, general, en vez de
+   * parchear ese paquete o confiar en que cada componente se acuerde.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
