@@ -52,6 +52,11 @@ typography:
 rounded:
   sm: "4px"
   md: "6px"
+  lg: "8px"
+  xl: "10px"
+  2xl: "12px"
+  3xl: "14px"
+  4xl: "16px"
 spacing:
   xs: "4px"
   sm: "8px"
