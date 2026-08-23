@@ -26,6 +26,8 @@ describe("listarPersonas", () => {
     marcarBaja: vi.fn(),
     listar: vi.fn(),
     buscar: vi.fn(),
+    fusionar: vi.fn(),
+    revertirFusion: vi.fn(),
   };
 
   beforeEach(() => {

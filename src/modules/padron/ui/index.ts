@@ -4,4 +4,5 @@
  */
 export * from "./BuscadorDePersonas";
 export * from "./FormularioDeAltaDePersona";
+export * from "./FusionarPersonas";
 export * from "./ListadoDePersonas";

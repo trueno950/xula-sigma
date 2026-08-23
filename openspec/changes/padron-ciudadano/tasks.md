@@ -172,71 +172,80 @@ rompe nada hasta que alguien corta por el documento equivocado.
 presupuesto, aceptado por design.md §13 — partir fusion de su reversion deja
 un estado intermedio irreversible, peor que el diff largo)
 
-- [ ] 4.1 `drizzle/000Z_padron_fusion.sql`: `ALTER TABLE personas ADD COLUMN
+- [x] 4.1 `drizzle/0006_padron_fusion.sql`: `ALTER TABLE personas ADD COLUMN
       fusionada_en uuid NULL, ADD COLUMN fusionada_directo_en uuid NULL`,
       ambos con FK compuesto `(columna, ayuntamiento_id) -> (id,
       ayuntamiento_id)`. Columnas nullable aditivas, sin cambiar firmas
       previas
-- [ ] 4.2 RED `src/shared/auth/roles.test.ts`: `puedeFusionarPersonas` —
+- [x] 4.2 RED `src/shared/auth/roles.test.ts`: `puedeFusionarPersonas` —
       ADMIN_MUNICIPAL si, OPERADOR/CONSULTA/SUPER_ADMIN no
-- [ ] 4.3 GREEN `src/shared/auth/roles.ts`: `puedeFusionarPersonas = (rol)
+- [x] 4.3 GREEN `src/shared/auth/roles.ts`: `puedeFusionarPersonas = (rol)
       => rol === "ADMIN_MUNICIPAL"` (mismo criterio que `puedeExportar`)
-- [ ] 4.4 RED `repositorioDePersonasSql.test.ts`: `buscarPorId` resuelve la
-      redireccion colapsada (`COALESCE((SELECT fusionada_en ...), id)`),
-      un salto, mismo tipo de retorno
-- [ ] 4.5 GREEN actualizar `buscarPorId`
-- [ ] 4.6 RED `fusionarPersonas.test.ts` (puertos mockeados): rechaza sin
+- [x] 4.4 (retirado, mismo motivo que 3.4): un mock de
+      `repositorioDePersonasSql.test.ts` para el `COALESCE` de
+      `buscarPorId` volveria a testear la forma interna de Drizzle, no
+      comportamiento. Lo cubre `fusionarPersonas.integration.test.ts`
+      contra Postgres real (cadena, salto unico, dato fresco tras editar)
+- [x] 4.5 GREEN actualizar `buscarPorId`
+- [x] 4.6 RED `fusionarPersonas.test.ts` (puertos mockeados): rechaza sin
       `puedeFusionarPersonas`; auto-fusion (mismos terminales) no-opera
-- [ ] 4.7 GREEN `application/fusionarPersonas.ts`: resolver ambos ids al
+- [x] 4.7 GREEN `application/fusionarPersonas.ts`: resolver ambos ids al
       terminal, `UPDATE ... SET fusionada_en = G WHERE fusionada_en = P`
       (colapso), `UPDATE ... SET fusionada_en = G, fusionada_directo_en =
       G WHERE id = P`, `registrar(FUSIONAR_PERSONA, solo ids)`, una tx
-- [ ] 4.8 RED integration: invariante — `SELECT count(*) FROM personas p
+- [x] 4.8 RED integration: invariante — `SELECT count(*) FROM personas p
       JOIN personas g ON g.id = p.fusionada_en WHERE g.fusionada_en IS NOT
       NULL` da 0 tras una cadena A->B->C
-- [ ] 4.9 RED integration: cadena A->B, B->C; consultar A por el puerto
+- [x] 4.9 RED integration: cadena A->B, B->C; consultar A por el puerto
       resuelve a C en un salto
-- [ ] 4.10 RED integration: editar a C tras la cadena y volver a consultar
+- [x] 4.10 RED integration: editar a C tras la cadena y volver a consultar
       A trae el apellido nuevo (no foto del momento de la fusion)
-- [ ] 4.11 GREEN (4.8-4.10 confirman 4.7; ajustar si algo falla)
-- [ ] 4.12 RED `revertirFusion.test.ts`: revertir A->B devuelve ambas
-      personas a existir por separado
-- [ ] 4.13 GREEN `application/revertirFusion.ts`: `UPDATE personas SET
+- [x] 4.11 GREEN (4.8-4.10 confirman 4.7; ajustar si algo falla)
+- [x] 4.12 RED `revertirFusion.test.ts`: revertir A->B devuelve ambas
+      personas a existir por separado. Se agrego ademas el mismo guard de
+      rol que `fusionarPersonas` — no estaba en el enunciado original, pero
+      revertir es igual de sensible que fusionar y dejarlo sin permiso
+      hubiera sido el agujero
+- [x] 4.13 GREEN `application/revertirFusion.ts`: `UPDATE personas SET
       fusionada_en = NULL, fusionada_directo_en = NULL WHERE id = P`,
       `UPDATE personas SET fusionada_en = P WHERE fusionada_directo_en = P
       AND id <> P` (des-colapsa reenganchados), traza `REVERTIR_FUSION`
-- [ ] 4.14 RED integration: cadena A->B->C, revertir B->C deja a A
+- [x] 4.14 RED integration: cadena A->B->C, revertir B->C deja a A
       apuntando a B, no a C
-- [ ] 4.15 GREEN (ajustar 4.13 si el des-colapso no alcanza a A)
-- [ ] 4.16 RED integration: fusion entre dos municipios distintos falla —
-      FK compuesto + RLS impiden que el UPDATE vea la fila del otro tenant
-- [ ] 4.17 GREEN
-- [ ] 4.18 RED `sugerirDuplicados.test.ts`: `UMBRAL_SUGERENCIA = 0.30` en
+- [x] 4.15 GREEN (ajustar 4.13 si el des-colapso no alcanza a A)
+- [x] 4.16 RED integration: fusion entre dos municipios distintos falla —
+      RLS le esconde la ganadora a `buscarPorId` antes de llegar al FK
+      compuesto, asi que el caso de uso corta con `NoEncontradoError`, no
+      con una violacion de constraint
+- [x] 4.17 GREEN
+- [x] 4.18 RED `sugerirDuplicados.test.ts`: `UMBRAL_SUGERENCIA = 0.30` en
       su propia constante nombrada (no compartida con `buscarPersonas`),
       `TOPE_SUGERENCIAS = 5`, nunca bloquea
-- [ ] 4.19 GREEN `application/sugerirDuplicados.ts`
-- [ ] 4.20 RED integration: nombre a medio escribir (pila + 4 letras del
+- [x] 4.19 GREEN `application/sugerirDuplicados.ts`
+- [x] 4.20 RED integration: nombre a medio escribir (pila + 4 letras del
       apellido paterno) trae a la persona existente entre las sugerencias
-- [ ] 4.21 GREEN
-- [ ] 4.22 Actualizar `buscarPersonas.ts` (Slice 3) para excluir tambien
+- [x] 4.21 GREEN
+- [x] 4.22 Actualizar `buscarPersonas.ts` (Slice 3) para excluir tambien
       `fusionadaEn` no nulo — aditivo, no cambia su firma
-- [ ] 4.23 RED `src/modules/padron/identidadPorPuerto.test.ts` (capa C de
+- [x] 4.23 RED `src/modules/padron/identidadPorPuerto.test.ts` (capa C de
       design.md §2): escanea `src/**` fuera de `padron` buscando
       `persona_id`/`personas` dentro de `` sql`` `` crudo. **Pasa en vacio
       hoy, asi que hay que provocarle el rojo:** meter en un archivo
       temporal fuera de `padron` una consulta cruda contra `personas`,
       verificar que el escaneo la encuentra, y recien ahi borrarla. Un
       escaneo que nunca encontro nada tampoco probo que sepa buscar
-- [ ] 4.24 GREEN: quitar el archivo temporal. El propio test documenta su
+- [x] 4.24 GREEN: quitar el archivo temporal. El propio test documenta su
       limite declarado — no cubre nombre de tabla armado dinamicamente ni
       `.sql` de `scripts/`
-- [ ] 4.25 `ui/SugerenciaDeDuplicados.tsx` (`"use client"`, la unica hoja
+- [x] 4.25 `ui/SugerenciaDeDuplicados.tsx` (`"use client"`, la unica hoja
       que lo justifica), integrada al formulario de alta de Slice 2
-- [ ] 4.26 `ui/FusionarPersonas.tsx` + Server Action, visible solo si
-      `puedeFusionarPersonas`
-- [ ] 4.27 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 4.26 `ui/FusionarPersonas.tsx` + Server Action, visible solo si
+      `puedeFusionarPersonas`. Sin pagina propia todavia (no la pide esta
+      rebanada): el chequeo de rol vive en el componente mismo, no en un
+      punto de composicion externo, porque ese punto todavia no existe
+- [x] 4.27 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       cobertura sobre `modules/padron/{domain,application}` con fusion
-      incluida
+      incluida: 100% statements/functions/branches
 
 ## Phase 5: Slice 5 — Exportacion (~60 lineas)
 

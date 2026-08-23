@@ -43,6 +43,13 @@
       "when": 1787435990824,
       "tag": "0005_padron_indice_busqueda",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787446738058,
+      "tag": "0006_padron_fusion",
+      "breakpoints": true
     }
   ]
 }

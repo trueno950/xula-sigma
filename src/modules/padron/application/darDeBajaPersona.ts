@@ -20,11 +20,12 @@ export function crearDarDeBajaPersona(repositorio: RepositorioDePersonas) {
     if (!puedeEscribir(contexto.usuario.rol)) throw new NoAutorizadoError();
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
-      // Mismo motivo que `editarPersona`.
+      // Mismo motivo que `editarPersona`, incluido usar `existente.id` y
+      // no `id` crudo cuando `id` resulta ser un perdedor de fusion.
       const existente = await repositorio.buscarPorId(tx, id);
       if (!existente) throw new NoEncontradoError();
 
-      await repositorio.marcarBaja(tx, id, new Date());
+      await repositorio.marcarBaja(tx, existente.id, new Date());
 
       await registrar(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
@@ -32,7 +33,7 @@ export function crearDarDeBajaPersona(repositorio: RepositorioDePersonas) {
         origen: contexto.origen,
         accion: "BAJA_PERSONA",
         entidad: "personas",
-        entidadId: id,
+        entidadId: existente.id,
       });
     });
   };

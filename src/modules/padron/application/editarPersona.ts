@@ -32,13 +32,19 @@ export function crearEditarPersona(
       // edicion que nunca paso. `buscarPorId` ya resuelve "no existe" y
       // "no es tuyo" a la misma respuesta, que es el escenario 404-no-403
       // del spec.
+      //
+      // `existente.id` y no `id`: si `id` es un perdedor de una fusion
+      // (rebanada 4), `buscarPorId` ya devolvio al ganador terminal -misma
+      // fila que ve `listar`/`buscar`-, y escribir contra el `id` crudo
+      // editaria la fila oculta del perdedor en vez de la que la operadora
+      // esta viendo.
       const existente = await repositorio.buscarPorId(tx, id);
       if (!existente) throw new NoEncontradoError();
 
       const expansiones = await catalogo.leer(tx);
 
       await repositorio.actualizar(tx, {
-        id,
+        id: existente.id,
         persona: {
           nombres: persona.nombres,
           primerApellido: persona.primerApellido,
@@ -54,7 +60,7 @@ export function crearEditarPersona(
         origen: contexto.origen,
         accion: "EDITAR_PERSONA",
         entidad: "personas",
-        entidadId: id,
+        entidadId: existente.id,
       });
     });
   };

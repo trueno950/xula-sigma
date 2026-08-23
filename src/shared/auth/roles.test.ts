@@ -5,6 +5,7 @@ import {
   puedeDarDeBaja,
   puedeEscribir,
   puedeExportar,
+  puedeFusionarPersonas,
   puedeRestablecerContrasenia,
   ROLES,
   type Rol,
@@ -164,5 +165,15 @@ describe("puedeCambiarMarca", () => {
   it("SUPER_ADMIN no cambia la marca de ningun ayuntamiento", () => {
     // Por que, en `puedeCambiarMarca`. Misma linea que `puedeExportar`.
     expect(puedeCambiarMarca("SUPER_ADMIN")).toBe(false);
+  });
+});
+
+describe("puedeFusionarPersonas", () => {
+  it("solo ADMIN_MUNICIPAL fusiona personas de su municipio", () => {
+    expect(puedeFusionarPersonas("ADMIN_MUNICIPAL")).toBe(true);
+
+    for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
+      expect(puedeFusionarPersonas(rol)).toBe(false);
+    }
   });
 });

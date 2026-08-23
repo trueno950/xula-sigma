@@ -3,7 +3,10 @@ import {
   crearBuscarPersonas,
   crearDarDeBajaPersona,
   crearEditarPersona,
+  crearFusionarPersonas,
   crearListarPersonas,
+  crearRevertirFusion,
+  crearSugerirDuplicados,
 } from "./application";
 import {
   catalogoDeAbreviaturasSql,
@@ -26,6 +29,12 @@ export const editarPersona = crearEditarPersona(
 export const darDeBajaPersona = crearDarDeBajaPersona(repositorioDePersonasSql);
 export const listarPersonas = crearListarPersonas(repositorioDePersonasSql);
 export const buscarPersonas = crearBuscarPersonas(
+  repositorioDePersonasSql,
+  catalogoDeAbreviaturasSql,
+);
+export const fusionarPersonas = crearFusionarPersonas(repositorioDePersonasSql);
+export const revertirFusion = crearRevertirFusion(repositorioDePersonasSql);
+export const sugerirDuplicados = crearSugerirDuplicados(
   repositorioDePersonasSql,
   catalogoDeAbreviaturasSql,
 );

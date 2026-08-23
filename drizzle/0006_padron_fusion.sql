@@ -1,0 +1,4 @@
+ALTER TABLE "personas" ADD COLUMN "fusionada_en" uuid;--> statement-breakpoint
+ALTER TABLE "personas" ADD COLUMN "fusionada_directo_en" uuid;--> statement-breakpoint
+ALTER TABLE "personas" ADD CONSTRAINT "personas_fusionada_en_tenant_fk" FOREIGN KEY ("fusionada_en","ayuntamiento_id") REFERENCES "public"."personas"("id","ayuntamiento_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "personas" ADD CONSTRAINT "personas_fusionada_directo_en_tenant_fk" FOREIGN KEY ("fusionada_directo_en","ayuntamiento_id") REFERENCES "public"."personas"("id","ayuntamiento_id") ON DELETE no action ON UPDATE no action;

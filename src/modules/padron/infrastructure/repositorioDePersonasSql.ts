@@ -6,6 +6,7 @@ import type {
 } from "../application/puertos";
 import { comoPersonaId, normalizarParaBusqueda } from "../domain";
 import { personas } from "./esquema";
+import { fusionarSql, revertirFusionSql } from "./fusionDePersonasSql";
 
 /**
  * Implementacion real de `RepositorioDePersonas` contra `personas`.
@@ -80,10 +81,21 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
   },
 
   async buscarPorId(tx, id): Promise<PersonaGuardada | null> {
+    /**
+     * `fusionadaEn` ya llega colapsada al terminal (design.md decision 3,
+     * invariante): un solo COALESCE alcanza, sin recorrer la cadena. La
+     * subconsulta corre bajo el mismo RLS que la externa -mismo `tx`-, asi
+     * que tampoco puede resolver hacia una fila de otro tenant.
+     */
     const [fila] = await tx
       .select(columnasDeLectura)
       .from(personas)
-      .where(eq(personas.id, id));
+      .where(
+        eq(
+          personas.id,
+          sql`COALESCE((SELECT ${personas.fusionadaEn} FROM ${personas} WHERE ${personas.id} = ${id}), ${id})`,
+        ),
+      );
 
     return fila ? aPersonaGuardada(fila) : null;
   },
@@ -92,11 +104,19 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
     await tx.update(personas).set({ bajaEn }).where(eq(personas.id, id));
   },
 
+  // `fusionar`/`revertirFusion` viven en `fusionDePersonasSql.ts` (motivo
+  // de la separacion en su comentario de cabecera).
+  fusionar: fusionarSql,
+  revertirFusion: revertirFusionSql,
+
   async listar(tx): Promise<readonly PersonaGuardada[]> {
     const filas = await tx
       .select(columnasDeLectura)
       .from(personas)
-      .where(isNull(personas.bajaEn))
+      // Redirigida por una fusion (rebanada 4): mismo motivo que `buscar`
+      // -listarla dejaria un duplicado fantasma con nombre viejo, cuando
+      // el puerto de lectura ya tiene su terminal actual con `buscarPorId`.
+      .where(and(isNull(personas.bajaEn), isNull(personas.fusionadaEn)))
       .orderBy(personas.primerApellido, personas.nombres);
 
     return filas.map(aPersonaGuardada);
@@ -124,6 +144,8 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       .where(
         and(
           isNull(personas.bajaEn),
+          // Redirigida por una fusion: mismo motivo que `listar`, arriba.
+          isNull(personas.fusionadaEn),
           sql`${personas.nombreNormalizado} % ${cadenaExpandida}`,
         ),
       )

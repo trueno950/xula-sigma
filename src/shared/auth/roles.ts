@@ -6,10 +6,13 @@
  * infraestructura (`sesion.ts`) y verificarlo es del caso de uso. Ocultar
  * un boton no es autorizacion (`05-seguridad.md` seccion 6).
  *
- * **Un modulo de negocio NO importa esto.** Cuando `padron` necesite
- * "¿este rol puede exportar el padron?", declara su propia union en su
- * `domain/` y la duplica: `domain` no importa nada, ni siquiera `shared`.
- * Cuatro lineas duplicadas cuestan menos que perder la pureza de la capa.
+ * **`domain` no importa esto** — ni esto ni nada de `shared`, es la capa que
+ * no importa nada. `application`, `infrastructure` y `ui` de un modulo si
+ * pueden: la tabla de capas de `AGENTS.md` ya los deja importar `shared`, y
+ * `puedeEscribir`, `puedeExportar`, `puedeCambiarMarca` y
+ * `puedeFusionarPersonas` -mas abajo- ya viven aca e importados directo por
+ * `padron`/`marca`. Si un permiso alguna vez necesita logica que solo tiene
+ * sentido dentro de un modulo, ahi si se declara en su `domain/` propio.
  */
 export const ROLES = [
   "SUPER_ADMIN",
@@ -82,3 +85,10 @@ export const puedeExportar = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
  * queda afuera: la marca no es operacion.
  */
 export const puedeCambiarMarca = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
+
+/**
+ * Fusionar (o revertir la fusion de) dos personas reescribe la identidad
+ * del padron. Mismo criterio que `puedeExportar`: solo el municipio, nunca
+ * `SUPER_ADMIN`.
+ */
+export const puedeFusionarPersonas = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
