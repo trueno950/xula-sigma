@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import type { PersonaId } from "../domain";
 import type { CatalogoDeAbreviaturas, RepositorioDePersonas } from "./puertos";
 
 /**
@@ -59,7 +60,7 @@ describe("buscarPersonas", () => {
   it("devuelve lo que responde el repositorio", async () => {
     const buscarPersonas = crearBuscarPersonas(repositorio, catalogo);
     const encontrada = {
-      id: "persona-1",
+      id: "persona-1" as PersonaId,
       nombres: "Maria Guadalupe",
       primerApellido: "Kumul",
       segundoApellido: null,

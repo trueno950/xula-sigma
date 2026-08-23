@@ -1,5 +1,6 @@
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
+import type { PersonaId } from "../domain";
 
 /**
  * Lo que `padron` necesita para expandir abreviaturas antes de normalizar
@@ -37,7 +38,7 @@ export type PersonaParaGuardar = {
  * redireccion.
  */
 export type PersonaGuardada = PersonaParaGuardar & {
-  id: string;
+  id: PersonaId;
   bajaEn: Date | null;
 };
 
@@ -52,14 +53,14 @@ export type PersonaGuardada = PersonaParaGuardar & {
  * porque el UPDATE ya esta acotado por la fila existente.
  */
 export type DatosDeAlta = {
-  id: string;
+  id: PersonaId;
   ayuntamientoId: AyuntamientoId;
   persona: PersonaParaGuardar;
   expansiones: ReadonlyMap<string, string>;
 };
 
 export type DatosDeEdicion = {
-  id: string;
+  id: PersonaId;
   persona: PersonaParaGuardar;
   expansiones: ReadonlyMap<string, string>;
 };
@@ -82,7 +83,7 @@ export type RepositorioDePersonas = {
    */
   buscarPorId(
     tx: TransaccionTenant,
-    id: string,
+    id: PersonaId,
   ): Promise<PersonaGuardada | null>;
   /**
    * Baja logica: fija `bajaEn` sin tocar el resto de la fila. Metodo propio
@@ -90,7 +91,7 @@ export type RepositorioDePersonas = {
    * recalcula `nombreNormalizado` — una baja no cambia el nombre, y
    * forzarla por ese camino recalcularia una columna que no debia moverse.
    */
-  marcarBaja(tx: TransaccionTenant, id: string, bajaEn: Date): Promise<void>;
+  marcarBaja(tx: TransaccionTenant, id: PersonaId, bajaEn: Date): Promise<void>;
   /**
    * Listado para la pantalla de padron de esta rebanada. Excluye `bajaEn`
    * no nulo por defecto (mismo criterio que exige el spec para la busqueda

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type { PersonaParaGuardar } from "../application/puertos";
+import type { PersonaId } from "../domain";
 import { normalizarParaBusqueda } from "../domain";
 import { repositorioDePersonasSql } from "./repositorioDePersonasSql";
 
@@ -54,7 +55,7 @@ describe("repositorioDePersonasSql", () => {
     const ayuntamientoId = "motul" as AyuntamientoId;
 
     await repositorioDePersonasSql.guardar(tx, {
-      id: "persona-1",
+      id: "persona-1" as PersonaId,
       ayuntamientoId,
       persona,
       expansiones,
@@ -86,7 +87,7 @@ describe("repositorioDePersonasSql", () => {
     };
 
     await repositorioDePersonasSql.actualizar(tx, {
-      id: "persona-1",
+      id: "persona-1" as PersonaId,
       persona: editada,
       expansiones,
     });
