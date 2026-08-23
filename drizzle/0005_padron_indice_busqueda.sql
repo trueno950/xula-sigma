@@ -1,0 +1,1 @@
+CREATE INDEX "personas_nombre_normalizado_trgm_idx" ON "personas" USING gin ("nombre_normalizado" gin_trgm_ops);

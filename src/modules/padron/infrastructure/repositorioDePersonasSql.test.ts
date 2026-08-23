@@ -13,9 +13,15 @@ import { repositorioDePersonasSql } from "./repositorioDePersonasSql";
  * Lo que este archivo prueba es la costura de design.md seccion 5: que
  * `nombreNormalizado` sale de `normalizarParaBusqueda` (la misma funcion de
  * dominio) y no de una copia. No prueba el resto del adaptador —
- * `buscarPorId`, `marcarBaja`, `listar`— porque esos no tienen decision de
- * negocio que un mock pueda ejercitar mejor que la integracion real
- * (design.md seccion 10).
+ * `buscarPorId`, `marcarBaja`, `listar`, `buscar`— porque esos no tienen
+ * decision de negocio que un mock pueda ejercitar mejor que la integracion
+ * real (design.md seccion 10). `buscar` en particular se probo con un mock
+ * que reconstruia la forma interna de `queryChunks` de Drizzle para afirmar
+ * el SQL exacto: se rompia con cualquier cambio de esa libreria sin que el
+ * comportamiento hubiera cambiado, y lo que de verdad importa —que `%` sea
+ * sargable, que la cadena llegue sin re-normalizar— ya lo prueba
+ * `buscarPersonas.integration.test.ts` contra Postgres real. Encontrado por
+ * la revision del PR.
  */
 
 const txDeInsercion = () => {

@@ -109,17 +109,47 @@ domicilio, ni siquiera texto libre temporal.
 
 ### Requirement: Busqueda tolerante a variantes con trigramas (Rebanada 3)
 
-La busqueda MUST usar `similarity()` sobre `nombreNormalizado` con umbral
-0.30 fijado en la consulta, MUST expandir abreviaturas una sola vez sobre
-la cadena de busqueda antes de armar la consulta, y MUST NOT heredar el
-umbral de configuracion de servidor.
+La busqueda MUST usar el operador `%` de `pg_trgm` sobre `nombreNormalizado`
+con el umbral fijado en la transaccion vía
+`set_config('pg_trgm.similarity_threshold', '0.30', true)` — el tercer
+argumento en `true` importa: `set_limit()`, el wrapper habitual de
+`pg_trgm`, hace un `SET` de sesion completa sin equivalente `LOCAL`, y esa
+sesion es la misma conexion del pool que el siguiente request puede
+heredar de otro municipio (mismo T2 que `withTenant.ts` documenta para
+`app.tenant`). El umbral MUST NOT heredarse de la configuracion de
+servidor, y MUST expandir abreviaturas una sola vez sobre la cadena de
+busqueda antes de armar la consulta. El indice GIN sobre `nombreNormalizado` MUST existir
+para que la consulta sea sargable — que el planner efectivamente lo elija
+en un municipio dado es una decision de costo de Postgres, no una garantia
+de esta consulta: RLS agrega siempre `ayuntamiento_id = tenant`, y esa
+condicion por si sola ya identifica "todas las filas del municipio", asi
+que el planner prefiere su propio btree de tenant antes que el GIN a
+cualquier volumen razonable de un ayuntamiento chico — medido con 2.000,
+50.000 y 200.000 filas de un solo tenant. Sin RLS de por medio (una
+consulta sin filtro de tenant) el mismo GIN si se elige solo, lo que
+confirma que el indice funciona; la competencia es con el btree de tenant,
+no una consulta mal escrita.
 
 #### Scenario: Variante abreviada encuentra a la persona
 
 - GIVEN "Maria Guadalupe Kumul" ya registrada
 - WHEN se busca "gpe kumul"
-- THEN la persona aparece por encima del umbral 0.30 y el plan usa el
-  indice GIN
+- THEN la persona aparece por encima del umbral 0.30
+
+#### Scenario: El operador % es sargable sobre el indice GIN
+
+- GIVEN la tabla `personas` con datos, RLS deshabilitada dentro de una
+  transaccion que la vuelve a habilitar antes del COMMIT (aislando la
+  consulta del filtro de tenant que RLS agregaria, que de otro modo
+  siempre gana por costo — ver el requisito de mas arriba) y
+  `enable_seqscan` forzado a `off`
+- WHEN se ejecuta `EXPLAIN` sobre `nombreNormalizado % cadena`
+- THEN el plan usa `Bitmap Index Scan` sobre
+  `personas_nombre_normalizado_trgm_idx` — nunca un `Seq Scan` — lo que
+  prueba que el operador no quedo detras de una funcion opaca al planner.
+  Un `enable_seqscan=off` **con RLS activa** no alcanza: el btree de
+  tenant satisface igual "no es un Seq Scan" aunque `%` este roto, y el
+  test no discriminaria nada
 
 #### Scenario: La expansion no corre por fila
 

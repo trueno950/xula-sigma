@@ -1,5 +1,6 @@
 import {
   crearAltaDePersona,
+  crearBuscarPersonas,
   crearDarDeBajaPersona,
   crearEditarPersona,
   crearListarPersonas,
@@ -24,3 +25,7 @@ export const editarPersona = crearEditarPersona(
 );
 export const darDeBajaPersona = crearDarDeBajaPersona(repositorioDePersonasSql);
 export const listarPersonas = crearListarPersonas(repositorioDePersonasSql);
+export const buscarPersonas = crearBuscarPersonas(
+  repositorioDePersonasSql,
+  catalogoDeAbreviaturasSql,
+);
