@@ -9,6 +9,9 @@ import { registrar } from "@/shared/tenancy/bitacora";
 import { ayuntamientos, bitacora } from "@/shared/tenancy/esquema";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
+import { agregarPorciones, type PorcionExportable } from "./agregarPorciones";
+
+export type { PorcionExportable } from "./agregarPorciones";
 
 /**
  * La entrega de los datos de un ayuntamiento, en formato abierto.
@@ -29,21 +32,6 @@ import { withTenant } from "@/shared/tenancy/withTenant";
  * entre, lo que cambia es esta funcion y no el contrato de las porciones:
  * `leer` ya devuelve por conjunto y no un volcado unico.
  */
-
-/**
- * Lo que un modulo aporta al exportador.
- *
- * `leer` recibe la transaccion **ya abierta** por `withTenant` y no un
- * manejador de base. No es comodidad: es lo que impide que una porcion
- * exporte de mas. Su consulta puede salir sin `where` de tenant y RLS la
- * acota igual, porque corre con el `app.tenant` de quien pidio la
- * exportacion.
- */
-export type PorcionExportable = {
-  /** El nombre del conjunto en el archivo entregado. */
-  nombre: string;
-  leer: (tx: TransaccionTenant) => Promise<readonly unknown[]>;
-};
 
 export type Exportacion = {
   generadaEn: Date;
@@ -97,11 +85,27 @@ const conjuntosDePlataforma = async (
     })
     .from(usuarios),
   /**
+   * Columnas explicitas, mismo criterio que `usuarios` arriba: sin esto
+   * una columna nueva de `bitacora` entraria sola al archivo entregado sin
+   * que nadie la revise.
+   *
    * Se lee antes de que `registrar` escriba la traza de esta exportacion,
    * asi que el archivo entregado no se incluye a si mismo. Es lo correcto:
    * esa fila todavia no existe cuando se lee.
    */
-  bitacora: await tx.select().from(bitacora).orderBy(bitacora.ocurridoEn),
+  bitacora: await tx
+    .select({
+      id: bitacora.id,
+      ayuntamientoId: bitacora.ayuntamientoId,
+      actor: bitacora.actor,
+      accion: bitacora.accion,
+      entidad: bitacora.entidad,
+      entidadId: bitacora.entidadId,
+      origen: bitacora.origen,
+      ocurridoEn: bitacora.ocurridoEn,
+    })
+    .from(bitacora)
+    .orderBy(bitacora.ocurridoEn),
 });
 
 /**
@@ -112,16 +116,8 @@ const conjuntosDePlataforma = async (
 const conjuntosDe = async (
   tx: TransaccionTenant,
   porciones: readonly PorcionExportable[],
-): Promise<Record<string, readonly unknown[]>> => {
-  const conjuntos: Record<string, readonly unknown[]> =
-    await conjuntosDePlataforma(tx);
-
-  for (const porcion of porciones) {
-    conjuntos[porcion.nombre] = await porcion.leer(tx);
-  }
-
-  return conjuntos;
-};
+): Promise<Record<string, readonly unknown[]>> =>
+  agregarPorciones(tx, await conjuntosDePlataforma(tx), porciones);
 
 /**
  * El municipio del contexto, o falla.

@@ -249,20 +249,27 @@ un estado intermedio irreversible, peor que el diff largo)
 
 ## Phase 5: Slice 5 — Exportacion (~60 lineas)
 
-- [ ] 5.1 RED `src/shared/exportacion/porciones.test.ts`: dos
+- [x] 5.1 RED `src/shared/exportacion/porciones.test.ts`: dos
       `PorcionExportable` con el mismo `nombre` deben fallar
       explicitamente — hoy `conjuntosDe` (`exportar.ts`) los pisa en
       silencio
-- [ ] 5.2 GREEN guarda de tres lineas en `conjuntosDe`
-      (`src/shared/exportacion/exportar.ts`): lanzar si `nombre` ya esta
-      en `conjuntos`
-- [ ] 5.3 RED `padron/composicion.test.ts`: `porcionDePadron.leer` devuelve
+- [x] 5.2 GREEN guarda en `conjuntosDe` (`src/shared/exportacion/exportar.ts`):
+      lanzar si `nombre` ya esta en `conjuntos`. Extraida a
+      `agregarPorciones` (exportada) en vez de quedar inline: `conjuntosDe`
+      abre la base de plataforma (`conjuntosDePlataforma`, que necesita
+      Postgres real), asi que un test unitario de la guarda en si —sin
+      tocar la base— necesita poder llamarla aparte con una base falsa.
+- [x] 5.3 RED `padron/composicion.test.ts`: `porcionDePadron.leer` devuelve
       columnas listadas una por una (nunca `select()` pelado), incluye
       `fusionadaEn` como columna — el archivo municipal no esconde
       tombstones
-- [ ] 5.4 GREEN `porcionDePadron` en `padron/composicion.ts`, exportado
+- [x] 5.4 GREEN `porcionDePadron` en `padron/composicion.ts`, exportado
       como valor (no tabla) desde el barrel
-- [ ] 5.5 `src/app/exportacion/porciones.ts`: `export const porciones:
-      readonly PorcionExportable[] = [porcionDePadron]`; cablear en el
-      punto de llamada de `exportarAyuntamiento`
-- [ ] 5.6 `pnpm check` + `pnpm test` en verde
+- [x] 5.5 `src/app/exportacion/porciones.ts`: `export const porciones:
+      readonly PorcionExportable[] = [porcionDePadron]`. No hay todavia
+      una pagina o Server Action que llame a `exportarAyuntamiento` con
+      este arreglo —esa superficie no existe en ningun modulo del repo
+      hoy—, asi que "cablear en el punto de llamada" es este archivo: el
+      punto de composicion que design.md seccion 7 describe, listo para
+      que ese llamador lo importe cuando se construya.
+- [x] 5.6 `pnpm check` + `pnpm test` en verde
