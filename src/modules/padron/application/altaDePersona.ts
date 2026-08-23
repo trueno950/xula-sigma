@@ -4,7 +4,12 @@ import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { type DatosDePersona, Persona } from "../domain";
+import {
+  comoPersonaId,
+  type DatosDePersona,
+  Persona,
+  type PersonaId,
+} from "../domain";
 import type { CatalogoDeAbreviaturas, RepositorioDePersonas } from "./puertos";
 
 /**
@@ -20,11 +25,11 @@ export function crearAltaDePersona(
   return async function altaDePersona(
     datos: DatosDePersona,
     contexto: ContextoActual,
-  ): Promise<{ id: string }> {
+  ): Promise<{ id: PersonaId }> {
     if (!puedeEscribir(contexto.usuario.rol)) throw new NoAutorizadoError();
 
     const persona = Persona.crear(datos);
-    const id = randomUUID();
+    const id = comoPersonaId(randomUUID());
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
       const expansiones = await catalogo.leer(tx);

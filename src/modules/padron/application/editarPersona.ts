@@ -3,7 +3,7 @@ import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { type DatosDePersona, Persona } from "../domain";
+import { type DatosDePersona, Persona, type PersonaId } from "../domain";
 import type { CatalogoDeAbreviaturas, RepositorioDePersonas } from "./puertos";
 
 /**
@@ -17,7 +17,7 @@ export function crearEditarPersona(
   catalogo: CatalogoDeAbreviaturas,
 ) {
   return async function editarPersona(
-    id: string,
+    id: PersonaId,
     datos: DatosDePersona,
     contexto: ContextoActual,
   ): Promise<void> {

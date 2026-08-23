@@ -3,6 +3,7 @@ import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
+import type { PersonaId } from "../domain";
 import type { RepositorioDePersonas } from "./puertos";
 
 /**
@@ -13,15 +14,13 @@ import type { RepositorioDePersonas } from "./puertos";
  */
 export function crearDarDeBajaPersona(repositorio: RepositorioDePersonas) {
   return async function darDeBajaPersona(
-    id: string,
+    id: PersonaId,
     contexto: ContextoActual,
   ): Promise<void> {
     if (!puedeEscribir(contexto.usuario.rol)) throw new NoAutorizadoError();
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
-      // Mismo motivo que `editarPersona`: sin verificar antes, un id de
-      // otro municipio deja `marcarBaja` sin efecto y la bitacora
-      // afirmaria una baja que nunca paso.
+      // Mismo motivo que `editarPersona`.
       const existente = await repositorio.buscarPorId(tx, id);
       if (!existente) throw new NoEncontradoError();
 

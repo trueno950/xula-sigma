@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import type { PersonaId } from "../domain";
 import type { RepositorioDePersonas } from "./puertos";
 
 /** Por que no hay guarda de rol aca: `listarPersonas.ts`. */
@@ -37,7 +38,7 @@ describe("listarPersonas", () => {
   it("abre el tenant del contexto y delega el listado al repositorio, sin exigir rol", async () => {
     const personas = [
       {
-        id: "persona-1",
+        id: "persona-1" as PersonaId,
         nombres: "Juan",
         primerApellido: "Poot",
         segundoApellido: null,

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import type { DatosDePersona } from "../domain";
+import type { DatosDePersona, PersonaId } from "../domain";
 import type {
   CatalogoDeAbreviaturas,
   PersonaGuardada,
@@ -9,7 +9,7 @@ import type {
 } from "./puertos";
 
 const personaExistente: PersonaGuardada = {
-  id: "persona-1",
+  id: "persona-1" as PersonaId,
   nombres: "Maria Guadalupe",
   primerApellido: "Kumul",
   segundoApellido: "Pech",
@@ -69,7 +69,11 @@ describe("editarPersona", () => {
     const editarPersona = crearEditarPersona(repositorio, catalogo);
 
     await expect(
-      editarPersona("persona-1", datosCorregidos, contextoCon("CONSULTA")),
+      editarPersona(
+        "persona-1" as PersonaId,
+        datosCorregidos,
+        contextoCon("CONSULTA"),
+      ),
     ).rejects.toBeInstanceOf(NoAutorizadoError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
@@ -80,7 +84,11 @@ describe("editarPersona", () => {
     const editarPersona = crearEditarPersona(repositorio, catalogo);
 
     await expect(
-      editarPersona("persona-ajena", datosCorregidos, contextoCon("OPERADOR")),
+      editarPersona(
+        "persona-ajena" as PersonaId,
+        datosCorregidos,
+        contextoCon("OPERADOR"),
+      ),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
@@ -90,10 +98,14 @@ describe("editarPersona", () => {
   it("al corregir primerApellido pasa los datos nuevos para que el adaptador recalcule el normalizado", async () => {
     const editarPersona = crearEditarPersona(repositorio, catalogo);
 
-    await editarPersona("persona-1", datosCorregidos, contextoCon("OPERADOR"));
+    await editarPersona(
+      "persona-1" as PersonaId,
+      datosCorregidos,
+      contextoCon("OPERADOR"),
+    );
 
     expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
-      id: "persona-1",
+      id: "persona-1" as PersonaId,
       persona: {
         nombres: datosCorregidos.nombres,
         primerApellido: "Canul",

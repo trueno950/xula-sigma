@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import type { PersonaId } from "../domain";
 import type { PersonaGuardada, RepositorioDePersonas } from "./puertos";
 
 const personaExistente: PersonaGuardada = {
-  id: "persona-1",
+  id: "persona-1" as PersonaId,
   nombres: "Maria Guadalupe",
   primerApellido: "Kumul",
   segundoApellido: "Pech",
@@ -62,7 +63,7 @@ describe("darDeBajaPersona", () => {
     const darDeBajaPersona = crearDarDeBajaPersona(repositorio);
 
     await expect(
-      darDeBajaPersona("persona-1", contextoCon("CONSULTA")),
+      darDeBajaPersona("persona-1" as PersonaId, contextoCon("CONSULTA")),
     ).rejects.toBeInstanceOf(NoAutorizadoError);
 
     expect(repositorio.marcarBaja).not.toHaveBeenCalled();
@@ -73,7 +74,10 @@ describe("darDeBajaPersona", () => {
     const darDeBajaPersona = crearDarDeBajaPersona(repositorio);
 
     await expect(
-      darDeBajaPersona("persona-ajena", contextoCon("ADMIN_MUNICIPAL")),
+      darDeBajaPersona(
+        "persona-ajena" as PersonaId,
+        contextoCon("ADMIN_MUNICIPAL"),
+      ),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(repositorio.marcarBaja).not.toHaveBeenCalled();
@@ -83,7 +87,10 @@ describe("darDeBajaPersona", () => {
   it("con permiso fija bajaEn y registra BAJA_PERSONA en la misma transaccion", async () => {
     const darDeBajaPersona = crearDarDeBajaPersona(repositorio);
 
-    await darDeBajaPersona("persona-1", contextoCon("ADMIN_MUNICIPAL"));
+    await darDeBajaPersona(
+      "persona-1" as PersonaId,
+      contextoCon("ADMIN_MUNICIPAL"),
+    );
 
     expect(repositorio.marcarBaja).toHaveBeenCalledWith(
       expect.anything(),

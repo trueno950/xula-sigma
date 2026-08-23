@@ -4,7 +4,7 @@ import type {
   PersonaParaGuardar,
   RepositorioDePersonas,
 } from "../application/puertos";
-import { normalizarParaBusqueda } from "../domain";
+import { comoPersonaId, normalizarParaBusqueda } from "../domain";
 import { personas } from "./esquema";
 
 /**
@@ -30,6 +30,21 @@ const columnasDeLectura = {
   curp: personas.curp,
   bajaEn: personas.bajaEn,
 };
+
+/**
+ * `personas.id` sale de Postgres como `string` a secas -Drizzle no conoce
+ * la marca de `PersonaId`-, y `comoAyuntamientoId` ya fija el precedente
+ * de validar incluso lo que viene de una fuente confiable en vez de un
+ * `as` (`shared/tenancy/ayuntamientoId.ts`).
+ */
+const aPersonaGuardada = (fila: {
+  id: string;
+  nombres: string;
+  primerApellido: string;
+  segundoApellido: string | null;
+  curp: string | null;
+  bajaEn: Date | null;
+}): PersonaGuardada => ({ ...fila, id: comoPersonaId(fila.id) });
 
 export const repositorioDePersonasSql: RepositorioDePersonas = {
   async guardar(tx, { id, ayuntamientoId, persona, expansiones }) {
@@ -70,7 +85,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       .from(personas)
       .where(eq(personas.id, id));
 
-    return fila ?? null;
+    return fila ? aPersonaGuardada(fila) : null;
   },
 
   async marcarBaja(tx, id, bajaEn) {
@@ -78,11 +93,13 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
   },
 
   async listar(tx): Promise<readonly PersonaGuardada[]> {
-    return tx
+    const filas = await tx
       .select(columnasDeLectura)
       .from(personas)
       .where(isNull(personas.bajaEn))
       .orderBy(personas.primerApellido, personas.nombres);
+
+    return filas.map(aPersonaGuardada);
   },
 
   async buscar(tx, cadenaExpandida, umbral) {
@@ -101,7 +118,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       sql`SELECT set_config('pg_trgm.similarity_threshold', ${String(umbral)}, true)`,
     );
 
-    return tx
+    const filas = await tx
       .select(columnasDeLectura)
       .from(personas)
       .where(
@@ -113,5 +130,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       .orderBy(
         sql`similarity(${personas.nombreNormalizado}, ${cadenaExpandida}) desc`,
       );
+
+    return filas.map(aPersonaGuardada);
   },
 };
