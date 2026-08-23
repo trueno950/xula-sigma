@@ -589,6 +589,30 @@ La reja que no se puede saltar es CI, y ahí GGA corre sobre el PR completo:
 gga run --pr-mode --diff-only
 ```
 
+**`pre-commit` corre en modo rápido a propósito** (sin `GGA_OPENCODE_VARIANT`,
+que en CI va en `high`): es la señal más barata posible en cada commit. El
+costo de esa velocidad es real — un hallazgo que solo el modo `high` ve no
+aparecía hasta después de empujar y esperar a CI, con el PR entero ya
+revisado por el modo rápido. Eso generó ciclos de "pasa local, falla CI,
+corrijo, empujo, falla de nuevo" que se notaron primero por el gasto de
+tokens que costaban, no por una regla mal escrita.
+
+**`pre-push` sí corre el mismo comando que CI**, mismo modo `high` incluido
+(agregado 2026-08-22, tras medir el patrón de arriba en `padron-ciudadano`
+rebanada 3). No reemplaza a CI —sigue siendo la reja que no se puede
+saltar—, pero mueve el hallazgo caro a la máquina de quien empuja, antes de
+la vuelta completa de push + Actions + otro push. `pre-commit` se deja como
+está: sigue siendo la señal rápida por commit: un push agrupa varios
+commits, así que pagar el modo `high` ahí y no en cada commit es el mismo
+principio de "la herramienta más simple que alcance" aplicado al costo, no
+solo a la lógica.
+
+Ni con esto desaparece la discrepancia entera: el modelo no es
+determinista. Se verificó reintentando el mismo job de CI sobre el mismo
+commit sin cambiar nada — la primera corrida falló por respuesta ambigua,
+la segunda encontró hallazgos reales distintos. Alinear el comando reduce
+la superficie de discrepancia; no la elimina.
+
 ### Proveedor: opencode
 
 Configuración en `.gga`, commiteada:
