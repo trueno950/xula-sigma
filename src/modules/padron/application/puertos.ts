@@ -131,11 +131,12 @@ export type RepositorioDePersonas = {
    * suyo (`fusionadaDirectoEn = id`) se des-colapsan de vuelta a `id` en
    * vez de quedar apuntando al que fuera terminal antes de revertir.
    *
-   * Devuelve si `id` existia y pertenecia a este tenant -RLS deja un
-   * `UPDATE` sobre una fila ajena o inexistente en cero filas, sin error-,
-   * asi el caso de uso puede distinguir "revirtio" de "no-op silencioso" y
-   * responder 404 en vez de registrar en bitacora una reversion que nunca
-   * paso.
+   * Devuelve si `id` existia, pertenecia a este tenant y **estaba
+   * fusionada** -RLS deja un `UPDATE` sobre una fila ajena o inexistente en
+   * cero filas sin error, y una fila propia que nunca se fusiono tampoco
+   * cuenta como reversion real-, asi el caso de uso puede distinguir
+   * "revirtio" de "no-op silencioso" y responder 404 en vez de registrar en
+   * bitacora una reversion que nunca paso.
    */
   revertirFusion(tx: TransaccionTenant, id: PersonaId): Promise<boolean>;
 };

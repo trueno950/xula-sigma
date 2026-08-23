@@ -139,4 +139,12 @@ describe("revertirFusion", () => {
       revertirFusion(deOtroTenant, contextoDe(motul)),
     ).rejects.toBeInstanceOf(NoEncontradoError);
   });
+
+  it("revertir una persona que nunca fue fusionada da 404, sin dejar entrada de bitacora falsa", async () => {
+    const nuncaFusionada = await personaDe("AnaN", "Poot");
+
+    await expect(
+      revertirFusion(nuncaFusionada, contexto),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+  });
 });

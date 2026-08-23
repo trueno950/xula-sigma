@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type { PersonaId } from "../domain";
 import { personas } from "./esquema";
@@ -37,11 +37,17 @@ export async function revertirFusionSql(
    * que el `UPDATE` afecte cero filas sin lanzar error -mismo modo de
    * falla silenciosa que documenta AGENTS.md para scripts sueltos-, y sin
    * esto el caso de uso no tendria como distinguirlo de un exito real.
+   *
+   * `isNotNull(fusionadaEn)` en el WHERE, no solo el `id`: sin esto, revertir
+   * una persona que nunca fue fusionada -su `fusionadaEn` ya es NULL- sigue
+   * afectando la fila (fijar NULL sobre NULL cuenta como fila tocada) y
+   * `filas.length` da 1 igual. El caso de uso registraria en bitacora una
+   * reversion que nunca paso. Hallado por la revision del PR.
    */
   const filas = await tx
     .update(personas)
     .set({ fusionadaEn: null, fusionadaDirectoEn: null })
-    .where(eq(personas.id, id))
+    .where(and(eq(personas.id, id), isNotNull(personas.fusionadaEn)))
     .returning({ id: personas.id });
 
   if (filas.length === 0) return false;
