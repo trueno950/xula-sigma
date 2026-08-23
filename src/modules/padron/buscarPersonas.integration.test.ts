@@ -7,7 +7,11 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { crearAltaDePersona, crearBuscarPersonas } from "./application";
+import {
+  crearAltaDePersona,
+  crearBuscarPersonas,
+  crearFusionarPersonas,
+} from "./application";
 import {
   catalogoDeAbreviaturasSql,
   repositorioDePersonasSql,
@@ -43,6 +47,7 @@ const buscarPersonas = crearBuscarPersonas(
   repositorioDePersonasSql,
   catalogoDeAbreviaturasSql,
 );
+const fusionarPersonas = crearFusionarPersonas(repositorioDePersonasSql);
 
 beforeAll(async () => {
   await sembrar();
@@ -95,6 +100,33 @@ describe("busqueda tolerante a variantes", () => {
     const resultado = await buscarPersonas("guadalupe chan", contexto);
 
     expect(resultado.some((persona) => persona.id === id)).toBe(false);
+  });
+
+  it("una persona redirigida por fusion no aparece por su nombre viejo (rebanada 4)", async () => {
+    const { id: perdedoraId } = await altaDePersona(
+      {
+        nombres: "Guadalupe Fusionada",
+        primerApellido: "Poot",
+        segundoApellido: null,
+        curp: null,
+      },
+      contexto,
+    );
+    const { id: ganadoraId } = await altaDePersona(
+      {
+        nombres: "Guadalupe Ganadora",
+        primerApellido: "Chan",
+        segundoApellido: null,
+        curp: null,
+      },
+      contexto,
+    );
+
+    await fusionarPersonas(perdedoraId, ganadoraId, contexto);
+
+    const resultado = await buscarPersonas("guadalupe fusionada", contexto);
+
+    expect(resultado.some((persona) => persona.id === perdedoraId)).toBe(false);
   });
 
   it("el operador % es sargable: sin RLS de por medio, el plan usa el indice GIN", async () => {

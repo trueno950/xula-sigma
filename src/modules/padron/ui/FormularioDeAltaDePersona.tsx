@@ -1,4 +1,5 @@
 import { altaDePersonaAction } from "./actions/altaDePersona.action";
+import { SugerenciaDeDuplicados } from "./SugerenciaDeDuplicados";
 
 type Props = {
   /** `searchParams.error` de `/padron/alta`, puesto por la Server Action. */
@@ -15,6 +16,10 @@ const CLASE_CAMPO =
  * visibles arriba del campo, nunca como placeholder (`DESIGN.md`, Inputs) —
  * un placeholder desaparece al escribir y la operadora que se distrajo
  * pierde el contexto.
+ *
+ * `nombres`/`primerApellido` los renderiza `SugerenciaDeDuplicados`
+ * (`"use client"`, tasks.md 4.25): sus inputs llevan el mismo `name`, asi
+ * que este `<form>` los sigue leyendo igual al enviar.
  */
 export function FormularioDeAltaDePersona({ error }: Props) {
   return (
@@ -25,20 +30,7 @@ export function FormularioDeAltaDePersona({ error }: Props) {
         </p>
       ) : null}
 
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Nombres</span>
-        <input name="nombres" type="text" required className={CLASE_CAMPO} />
-      </label>
-
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Primer apellido</span>
-        <input
-          name="primerApellido"
-          type="text"
-          required
-          className={CLASE_CAMPO}
-        />
-      </label>
+      <SugerenciaDeDuplicados />
 
       <label className="flex flex-col gap-1">
         <span className={CLASE_ETIQUETA}>Segundo apellido</span>

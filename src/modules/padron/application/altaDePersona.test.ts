@@ -46,6 +46,8 @@ describe("altaDePersona", () => {
     marcarBaja: vi.fn(),
     listar: vi.fn(),
     buscar: vi.fn(),
+    fusionar: vi.fn(),
+    revertirFusion: vi.fn(),
   };
   const catalogo: CatalogoDeAbreviaturas = { leer: vi.fn() };
 

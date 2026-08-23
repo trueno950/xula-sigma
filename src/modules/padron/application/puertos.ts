@@ -33,9 +33,10 @@ export type PersonaParaGuardar = {
 
 /**
  * Lo que devuelve una lectura: los mismos campos de `PersonaParaGuardar`
- * mas lo que solo existe una vez guardada. Sin `fusionadaEn` todavia — esa
- * columna entra en la rebanada 4, y hasta entonces ninguna lectura resuelve
- * redireccion.
+ * mas lo que solo existe una vez guardada. Sin `fusionadaEn`: el puerto de
+ * lectura ya resuelve la redireccion (design.md decision 3), asi que quien
+ * llama a `buscarPorId`/`listar`/`buscar` nunca necesita saber si el `id`
+ * que pidio era el ganador o un perdedor redirigido.
  */
 export type PersonaGuardada = PersonaParaGuardar & {
   id: PersonaId;
@@ -75,11 +76,12 @@ export type RepositorioDePersonas = {
   guardar(tx: TransaccionTenant, datos: DatosDeAlta): Promise<void>;
   actualizar(tx: TransaccionTenant, datos: DatosDeEdicion): Promise<void>;
   /**
-   * SELECT plano por `id`, sin resolucion de fusion todavia (esa columna y
-   * ese salto entran en la rebanada 4). `null` cuando la fila no existe o
-   * RLS la esconde por tenant — las dos cosas se ven igual del lado de
-   * quien pregunta, que es exactamente la garantia que pide el escenario
-   * "404 y no 403" del spec.
+   * Resuelve la redireccion colapsada antes de leer (design.md decision
+   * 3): si `id` es un perdedor, devuelve los datos actuales del ganador
+   * terminal, no una foto del momento de la fusion. `null` cuando la fila
+   * no existe o RLS la esconde por tenant — las dos cosas se ven igual del
+   * lado de quien pregunta, que es exactamente la garantia que pide el
+   * escenario "404 y no 403" del spec.
    */
   buscarPorId(
     tx: TransaccionTenant,
@@ -111,4 +113,29 @@ export type RepositorioDePersonas = {
     cadenaExpandida: string,
     umbral: number,
   ): Promise<readonly PersonaGuardada[]>;
+  /**
+   * `perdedoraId`/`ganadoraId` ya son terminales (el caso de uso los
+   * resolvio con `buscarPorId` antes de llamar aca) y distintos (la
+   * auto-fusion no-opera antes de llegar). Dos UPDATE, design.md decision
+   * 3: primero reengancha a quienes ya apuntaban a la perdedora, despues
+   * marca a la perdedora misma.
+   */
+  fusionar(
+    tx: TransaccionTenant,
+    perdedoraId: PersonaId,
+    ganadoraId: PersonaId,
+  ): Promise<void>;
+  /**
+   * Deshace una fusion directa (design.md decision 3, "Reversion"):
+   * `id` vuelve a ser terminal, y quienes se habian reenganchado a traves
+   * suyo (`fusionadaDirectoEn = id`) se des-colapsan de vuelta a `id` en
+   * vez de quedar apuntando al que fuera terminal antes de revertir.
+   *
+   * Devuelve si `id` existia y pertenecia a este tenant -RLS deja un
+   * `UPDATE` sobre una fila ajena o inexistente en cero filas, sin error-,
+   * asi el caso de uso puede distinguir "revirtio" de "no-op silencioso" y
+   * responder 404 en vez de registrar en bitacora una reversion que nunca
+   * paso.
+   */
+  revertirFusion(tx: TransaccionTenant, id: PersonaId): Promise<boolean>;
 };

@@ -213,24 +213,58 @@ Un módulo no importa de otro módulo: va por un puerto de su propio dominio.
 
 Una Server Action puede transportar el error por `redirect` +
 `searchParams` en vez de devolver `ActionResult<T>` **solo** si es el
-`action` de un `<form>` nativo, sin ningún componente cliente de por
-medio. Hoy hay una:
+`action` de un `<form>` nativo y ningún componente cliente media *esa*
+Server Action -nadie la envuelve con `useActionState` para leer su
+retorno-. La condición es sobre la acción, no sobre el árbol entero del
+formulario: una hoja `"use client"` puede convivir adentro del mismo
+`<form>` para otra cosa, mientras el envío siga siendo el POST nativo del
+navegador y nada intercepte esa acción en particular. Hoy hay una:
 
 - `altaDePersonaAction` (`padron`): `FormularioDeAltaDePersona` es un
-  Server Component con `<form action={...}>`, sin JavaScript — funciona
-  igual en la red móvil rural que describe `PRODUCT.md`. `ActionResult<T>`
-  solo lo puede leer `useActionState`, y esa API exige `"use client"`. Una
-  acción sin límite de cliente no tiene quién lea el valor que devuelva:
-  devolverlo sería código muerto.
+  Server Component con `<form action={...}>`. Desde la rebanada 4 el form
+  también renderiza `<SugerenciaDeDuplicados />` (`"use client"`), pero esa
+  hoja llama a `sugerirDuplicadosAction` -la otra excepción, abajo-, no a
+  `altaDePersonaAction`: el envío del formulario sigue sin JavaScript de
+  por medio para *esta* acción, funciona igual en la red móvil rural que
+  describe `PRODUCT.md`. `ActionResult<T>` solo lo puede leer
+  `useActionState`, y esa API exige `"use client"` alrededor de la propia
+  acción. Una acción sin ese límite de cliente no tiene quién lea el valor
+  que devuelva: devolverlo sería código muerto.
 
   Lo que la protege es que el `redirect` sigue redactando el mensaje para
   la operadora con la misma lista blanca de tipos de error que usaría
   `ActionResult<T>` — la regla de abajo no se relaja, solo cambia el
   transporte.
 
+- `fusionarPersonasAction` (`padron`, rebanada 4): mismo motivo exacto.
+  `FusionarPersonas.tsx` es un `<form action={...}>` de Server Component,
+  sin `"use client"` en ningún componente de por medio, y `redirect(
+  \`/padron?error=...\`)` redacta con la misma lista blanca
+  (`NoAutorizadoError`, `NoEncontradoError`).
+
 **Una segunda no entra sin agregarse a esta lista**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un
 comentario de código es indistinguible de un olvido.
+
+### La única excepción: lectura no bloqueante invocada desde cliente
+
+Una Server Action puede devolver su tipo directo en vez de `ActionResult<T>`
+**solo** si (a) la invoca directamente un componente `"use client"` -no un
+`<form action>`- y (b) no existe ningún error de negocio que redactar para
+la operadora: sin rol que exigir, sin escritura que pueda rechazarse, y el
+spec exige explícitamente que la función sea "nunca bloqueante". Sin esas
+tres condiciones juntas, la acción vuelve a `ActionResult<T>`. Hoy hay una:
+
+- `sugerirDuplicadosAction` (`padron`, rebanada 4): `SugerenciaDeDuplicados`
+  la llama directo, no por `<form>`. Es sugerencia informativa mientras se
+  escribe -catálogo de personas parecidas-, nunca falla de forma que la
+  operadora deba enterarse: valida con Zod, resuelve el contexto y atrapa su
+  propia caída de infraestructura, así que ante cualquier tropiezo devuelve
+  lista vacía en vez de un `ActionResult<T>` con éxito o error que nadie va
+  a mostrar como error.
+
+**Una segunda no entra sin agregarse a esta lista**, mismo motivo que la de
+arriba.
 
 ---
 

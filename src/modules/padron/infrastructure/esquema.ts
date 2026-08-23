@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   char,
+  foreignKey,
   index,
   pgTable,
   text,
@@ -32,6 +33,15 @@ export const personas = pgTable(
     nombreNormalizado: text().notNull(),
     curp: char({ length: 18 }),
     bajaEn: timestamp({ withTimezone: true }),
+    /**
+     * Redireccion colapsada (rebanada 4, design.md decision 3): la
+     * respuesta ya resuelta al ganador terminal. `fusionadaDirectoEn` es
+     * contra quien se fusiono de verdad — sin las dos, revertir una fusion
+     * encadenada (A->B->C) no puede devolver A a B porque ese dato ya no
+     * existe en ninguna parte.
+     */
+    fusionadaEn: uuid(),
+    fusionadaDirectoEn: uuid(),
     creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
     actualizadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
@@ -58,6 +68,23 @@ export const personas = pgTable(
       "gin",
       sql`${t.nombreNormalizado} gin_trgm_ops`,
     ),
+    /**
+     * Mismo patron que `sesiones_usuario_tenant_fk`
+     * (`shared/auth/esquema.ts:123`): el compuesto obliga a que el destino
+     * de la fusion comparta el `ayuntamiento_id` de la propia fila. Una
+     * fusion entre municipios queda imposible en dos capas independientes
+     * — esta y RLS con `app.tenant` fijado — no en una sola.
+     */
+    foreignKey({
+      columns: [t.fusionadaEn, t.ayuntamientoId],
+      foreignColumns: [t.id, t.ayuntamientoId],
+      name: "personas_fusionada_en_tenant_fk",
+    }),
+    foreignKey({
+      columns: [t.fusionadaDirectoEn, t.ayuntamientoId],
+      foreignColumns: [t.id, t.ayuntamientoId],
+      name: "personas_fusionada_directo_en_tenant_fk",
+    }),
     politicaTenant("personas"),
   ],
 ).enableRLS();
