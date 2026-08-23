@@ -3,11 +3,7 @@ import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { agregarPorciones, type PorcionExportable } from "./agregarPorciones";
 
 /**
- * El agujero que design.md documenta (decision 6, "un agujero que se
- * encontro de paso"): `conjuntosDe` armaba el archivo entregado con un
- * `Record` sin guarda, asi que dos porciones que reclamaran el mismo
- * `nombre` se pisaban en silencio y el archivo entregado perdia un
- * conjunto sin que nada avisara.
+ * El agujero que documenta `agregarPorciones.ts`.
  *
  * `tx` nunca se usa de verdad aca: las porciones de prueba lo ignoran, asi
  * que corre sin Postgres.
