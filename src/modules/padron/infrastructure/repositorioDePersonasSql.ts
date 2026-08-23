@@ -104,9 +104,8 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
     await tx.update(personas).set({ bajaEn }).where(eq(personas.id, id));
   },
 
-  // `fusionar`/`revertirFusion` viven en `fusionDePersonasSql.ts`: el
-  // limite de 200 lineas por archivo (`AGENTS.md`) no da lugar a sus
-  // comentarios de design.md decision 3 aca adentro.
+  // `fusionar`/`revertirFusion` viven en `fusionDePersonasSql.ts` (motivo
+  // de la separacion en su comentario de cabecera).
   fusionar: fusionarSql,
   revertirFusion: revertirFusionSql,
 
