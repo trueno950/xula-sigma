@@ -218,7 +218,7 @@ Server Action -nadie la envuelve con `useActionState` para leer su
 retorno-. La condición es sobre la acción, no sobre el árbol entero del
 formulario: una hoja `"use client"` puede convivir adentro del mismo
 `<form>` para otra cosa, mientras el envío siga siendo el POST nativo del
-navegador y nada intercepte esa acción en particular. Hoy hay una:
+navegador y nada intercepte esa acción en particular. Hoy hay dos:
 
 - `altaDePersonaAction` (`padron`): `FormularioDeAltaDePersona` es un
   Server Component con `<form action={...}>`. Desde la rebanada 4 el form

@@ -6,6 +6,7 @@ import type {
 } from "../application/puertos";
 import { comoPersonaId, normalizarParaBusqueda } from "../domain";
 import { personas } from "./esquema";
+import { fusionarSql, revertirFusionSql } from "./fusionDePersonasSql";
 
 /**
  * Implementacion real de `RepositorioDePersonas` contra `personas`.
@@ -103,58 +104,11 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
     await tx.update(personas).set({ bajaEn }).where(eq(personas.id, id));
   },
 
-  async fusionar(tx, perdedoraId, ganadoraId) {
-    await tx
-      .update(personas)
-      .set({ fusionadaEn: ganadoraId })
-      .where(eq(personas.fusionadaEn, perdedoraId));
-
-    await tx
-      .update(personas)
-      .set({ fusionadaEn: ganadoraId, fusionadaDirectoEn: ganadoraId })
-      .where(eq(personas.id, perdedoraId));
-  },
-
-  async revertirFusion(tx, id) {
-    /**
-     * `RETURNING` en vez de un `UPDATE` a secas: es la unica forma de saber
-     * si RLS dejo pasar la fila. Un `id` de otro tenant o inexistente hace
-     * que el `UPDATE` afecte cero filas sin lanzar error -mismo modo de
-     * falla silenciosa que documenta AGENTS.md para scripts sueltos-, y sin
-     * esto el caso de uso no tendria como distinguirlo de un exito real.
-     */
-    const filas = await tx
-      .update(personas)
-      .set({ fusionadaEn: null, fusionadaDirectoEn: null })
-      .where(eq(personas.id, id))
-      .returning({ id: personas.id });
-
-    if (filas.length === 0) return false;
-
-    /**
-     * Recolapsa TODO el subarbol de fusiones directas bajo `id`, no solo
-     * los hijos inmediatos. En una cadena A->B->C->D, revertir C reenganchaba
-     * a B (`fusionadaDirectoEn = C`) pero dejaba a A -que llego a C a traves
-     * de B, con `fusionadaDirectoEn = B`- con `fusionadaEn = D` sin tocar:
-     * el invariante "colapsada al terminal" que exige `buscarPorId` se
-     * rompia recien a la segunda vuelta de fusion. El arbol lo arma
-     * `fusionadaDirectoEn` -la columna ya colapsada, `fusionadaEn`, no
-     * distingue un descendiente real de otro fusionado aparte hacia el
-     * mismo terminal-. Hallado por la revision del PR.
-     */
-    await tx.execute(sql`
-      WITH RECURSIVE subarbol AS (
-        SELECT id FROM personas WHERE fusionada_directo_en = ${id}
-        UNION ALL
-        SELECT p.id FROM personas p
-          JOIN subarbol s ON p.fusionada_directo_en = s.id
-      )
-      UPDATE personas SET fusionada_en = ${id}
-       WHERE id IN (SELECT id FROM subarbol)
-    `);
-
-    return true;
-  },
+  // `fusionar`/`revertirFusion` viven en `fusionDePersonasSql.ts`: el
+  // limite de 200 lineas por archivo (`AGENTS.md`) no da lugar a sus
+  // comentarios de design.md decision 3 aca adentro.
+  fusionar: fusionarSql,
+  revertirFusion: revertirFusionSql,
 
   async listar(tx): Promise<readonly PersonaGuardada[]> {
     const filas = await tx

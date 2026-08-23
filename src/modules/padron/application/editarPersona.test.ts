@@ -125,4 +125,27 @@ describe("editarPersona", () => {
       }),
     );
   });
+
+  it("id de una persona ya fusionada: escribe sobre el ganador resuelto, no sobre el id crudo", async () => {
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue({
+      ...personaExistente,
+      id: "persona-ganadora" as PersonaId,
+    });
+    const editarPersona = crearEditarPersona(repositorio, catalogo);
+
+    await editarPersona(
+      "persona-perdedora" as PersonaId,
+      datosCorregidos,
+      contextoCon("OPERADOR"),
+    );
+
+    expect(repositorio.actualizar).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "persona-ganadora" }),
+    );
+    expect(registrarMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ entidadId: "persona-ganadora" }),
+    );
+  });
 });

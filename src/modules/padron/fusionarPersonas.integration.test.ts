@@ -96,6 +96,33 @@ describe("fusionarPersonas", () => {
     expect(resuelta?.primerApellido).toBe("Uc");
   });
 
+  it("editar por el id perdedor edita al ganador resuelto, no crea una fila fantasma", async () => {
+    const contexto = contextoDe(motul);
+    const a = await personaDe(contexto, "Ana5", "Poot");
+    const b = await personaDe(contexto, "Beto5", "Chan");
+
+    await fusionarPersonas(a, b, contexto);
+    await editarPersona(
+      a,
+      {
+        nombres: "Beto5",
+        primerApellido: "Editado",
+        segundoApellido: null,
+        curp: null,
+      },
+      contexto,
+    );
+
+    const resuelta = await withTenant(motul, (tx) =>
+      repositorioDePersonasSql.buscarPorId(tx, a),
+    );
+
+    // Si `editarPersona` hubiera escrito sobre el `id` crudo (el perdedor),
+    // la fila oculta cambiaria pero `buscarPorId(a)` -que resuelve al
+    // ganador- seguiria mostrando el apellido viejo.
+    expect(resuelta?.primerApellido).toBe("Editado");
+  });
+
   it("cadena de fusiones resuelve en un salto", async () => {
     const contexto = contextoDe(motul);
     const a = await personaDe(contexto, "Ana2", "Poot");

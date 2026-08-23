@@ -108,4 +108,27 @@ describe("darDeBajaPersona", () => {
       }),
     );
   });
+
+  it("id de una persona ya fusionada: da de baja al ganador resuelto, no al id crudo", async () => {
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue({
+      ...personaExistente,
+      id: "persona-ganadora" as PersonaId,
+    });
+    const darDeBajaPersona = crearDarDeBajaPersona(repositorio);
+
+    await darDeBajaPersona(
+      "persona-perdedora" as PersonaId,
+      contextoCon("ADMIN_MUNICIPAL"),
+    );
+
+    expect(repositorio.marcarBaja).toHaveBeenCalledWith(
+      expect.anything(),
+      "persona-ganadora",
+      expect.any(Date),
+    );
+    expect(registrarMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ entidadId: "persona-ganadora" }),
+    );
+  });
 });
