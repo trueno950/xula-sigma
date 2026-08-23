@@ -11,13 +11,17 @@ import { comoPersonaId } from "../../domain";
 
 /**
  * Mismo reparto que `altaDePersonaAction`: esta accion valida la forma del
- * `FormData`, resuelve el contexto y traduce el resultado. `comoPersonaId`
- * hace la validacion real de formato -sus dos IDs no son un UUID cualquiera,
- * son las dos personas a fusionar-, no `esquemaDeEntrada`.
+ * `FormData`, resuelve el contexto y traduce el resultado. El formato UUID
+ * se valida aca, con `z.uuid()`, para que un id mal formado caiga en
+ * `MENSAJE_FORMULARIO_INVALIDO` -el mismo criterio que `altaDePersonaAction`
+ * aplica a sus errores de formato de dominio-. `comoPersonaId` vuelve a
+ * validar del lado del dominio (no confia en el borde), pero su `Error`
+ * generico no distingue "entrada mal formada" de una caida real de
+ * infraestructura, y no esta en la lista blanca de `mensajeDeError`.
  */
 const esquemaDeEntrada = z.object({
-  perdedoraId: z.string().trim().min(1),
-  ganadoraId: z.string().trim().min(1),
+  perdedoraId: z.uuid(),
+  ganadoraId: z.uuid(),
 });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Selecciona las dos personas a fusionar.";
