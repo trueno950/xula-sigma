@@ -109,6 +109,14 @@ GRANT SELECT, INSERT, UPDATE ON "residencias" TO "xula_app";--> statement-breakp
 -- impide que una residencia apunte a una persona de otro municipio:
 -- el compuesto obliga a que el destino comparta el ayuntamiento_id de
 -- la propia fila. Destino: personas_id_tenant_key (0004_padron.sql:17).
+--
+-- Por el mismo motivo, este FK tampoco esta en 0007_snapshot.json:
+-- drizzle-kit no la conoce y una regeneracion del snapshot no la lee
+-- como faltante que agregar, sino como ausente sin mas. Si algun dia
+-- corre `drizzle-kit push` contra esta base, el ALTER TABLE de abajo
+-- se borraria en silencio -- no se genera un `drizzle-kit push` en
+-- este proyecto (solo generate/migrate), pero si eso cambia, este FK
+-- tiene que reescribirse a mano de nuevo.
 -- ---------------------------------------------------------------------
 ALTER TABLE "residencias"
   ADD CONSTRAINT "residencias_persona_tenant_fk"
