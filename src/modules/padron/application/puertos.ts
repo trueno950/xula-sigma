@@ -139,4 +139,15 @@ export type RepositorioDePersonas = {
    * bitacora una reversion que nunca paso.
    */
   revertirFusion(tx: TransaccionTenant, id: PersonaId): Promise<boolean>;
+  /**
+   * La direccion inversa de `buscarPorId`: no "id cualquiera -> terminal"
+   * sino "terminal -> todos los ids que colapsan en el". El invariante de
+   * design.md decision 3 -toda fila con `fusionadaEn` no nulo apunta a una
+   * terminal- garantiza que la clase de equivalencia completa esta a un
+   * salto, sin cadena que recorrer. Sin fusion devuelve `[id]`.
+   */
+  identidadesDe(
+    tx: TransaccionTenant,
+    id: PersonaId,
+  ): Promise<readonly PersonaId[]>;
 };

@@ -28,6 +28,7 @@ describe("listarPersonas", () => {
     buscar: vi.fn(),
     fusionar: vi.fn(),
     revertirFusion: vi.fn(),
+    identidadesDe: vi.fn(),
   };
 
   beforeEach(() => {

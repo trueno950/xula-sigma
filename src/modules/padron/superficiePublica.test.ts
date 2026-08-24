@@ -24,4 +24,18 @@ describe("superficie publica de padron", () => {
 
     expect(tablas).toHaveLength(0);
   });
+
+  /**
+   * `index.ts` abre un reexport nombrado de `./domain` para que
+   * `PersonaId` cruce el limite del modulo (capa-territorial design.md
+   * decision 2). El riesgo que ese assertion de arriba no ve: el dia que
+   * alguien cambie el reexport nombrado por `export * from "./domain"`,
+   * `normalizarParaBusqueda` queda alcanzable y otro modulo puede
+   * normalizar con su propio diccionario -la misma divergencia que
+   * `padron` design.md seccion 5 existe para impedir-, sin que ningun
+   * `isTable()` lo detecte porque no es una tabla.
+   */
+  it("no exporta normalizarParaBusqueda", () => {
+    expect("normalizarParaBusqueda" in superficie).toBe(false);
+  });
 });
