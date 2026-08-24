@@ -251,8 +251,18 @@ a cambio de ahorrar 0.26 candidatos falsos por alta. El ruido promedio a
 ### Requirement: Exportacion por ayuntamiento incluye el padron (Rebanada 5)
 
 `padron` MUST aportar una `PorcionExportable` con columnas listadas una
-por una, nunca `select()` pelado, y toda exportacion masiva MUST quedar
-en bitacora con usuario, alcance y cantidad de registros.
+por una, nunca `select()` pelado. Toda exportacion masiva, mecanismo que
+existe desde Fase 0, ya deja su traza en bitacora (actor, origen, accion,
+en la misma transaccion) — esta rebanada no le agrega campos.
+
+**Corregido en el archivado.** La redaccion original pedia que la fila de
+bitacora llevara ademas "alcance y cantidad de registros". `design.md` y
+`tasks.md` de esta rebanada nunca disenaron ni tasquearon esos dos campos
+—`exportarAyuntamiento` no cambio su firma de bitacora en esta rebanada—,
+asi que la exigencia nunca se implemento ni se pudo implementar sin una
+decision de diseno que no se tomo. Se retira del requisito para que el
+spec fusionado no afirme algo que el codigo no hace. Si se necesita en el
+futuro, es un cambio de `shared/exportacion`, no de `padron`.
 
 #### Scenario: La exportacion no trae columnas no declaradas
 
@@ -264,5 +274,5 @@ en bitacora con usuario, alcance y cantidad de registros.
 
 - GIVEN una exportacion completa del padron de un municipio
 - WHEN termina
-- THEN la bitacora tiene una fila con usuario, momento, alcance y cantidad
-  de registros
+- THEN la bitacora tiene una fila con actor, origen y la accion
+  `EXPORTAR_AYUNTAMIENTO`, en la misma transaccion que la lectura
