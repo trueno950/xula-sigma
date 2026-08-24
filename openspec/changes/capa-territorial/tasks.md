@@ -138,19 +138,19 @@ Independiente. Requerida solo por la Fase 6.
 
 Independiente (no depende de la 1). Requerida por las Fases 3, 4, 5, 6 y 7.
 
-- [ ] 2.1 RED `territorio/domain/identificadores.test.ts`: los 4
+- [x] 2.1 RED `territorio/domain/identificadores.test.ts`: los 4
       constructores (`comoLugarId`, `comoCalleId`, `comoDomicilioId`,
       `comoResidenciaId`) rechazan no-UUID y aceptan UUID valido.
-- [ ] 2.2 GREEN `territorio/domain/identificadores.ts` (`Identificador<N>` +
+- [x] 2.2 GREEN `territorio/domain/identificadores.ts` (`Identificador<N>` +
       `PATRON_UUID` propio, tercera copia del regex — design §3).
-- [ ] 2.3 RED `territorio/domain/tipoDeLugar.test.ts`: `puedeContener(padre,
+- [x] 2.3 RED `territorio/domain/tipoDeLugar.test.ts`: `puedeContener(padre,
       hijo)` sobre las 25 combinaciones de `TIPOS_DE_LUGAR`, con los dos
       casos de rango 0 nombrados (`cabecera` y `comisaria` no se contienen
       entre si) y el resto del orden estricto.
-- [ ] 2.4 GREEN `territorio/domain/tipoDeLugar.ts`: tabla de rangos +
+- [x] 2.4 GREEN `territorio/domain/tipoDeLugar.ts`: tabla de rangos +
       `puedeContener`.
-- [ ] 2.5 `territorio/domain/index.ts`.
-- [ ] 2.6 `territorio/infrastructure/esquema.ts`: las 4 tablas con
+- [x] 2.5 `territorio/domain/index.ts`.
+- [x] 2.6 `territorio/infrastructure/esquema.ts`: las 4 tablas con
       `columnaTenant()` + `politicaTenant()` + `.enableRLS()`;
       `unique(id, ayuntamientoId)` en `lugares`/`calles`/`domicilios`;
       `check("lugares_sin_autopadre")`, `uniqueIndex("lugares_una_cabecera")`,
@@ -160,42 +160,42 @@ Independiente (no depende de la 1). Requerida por las Fases 3, 4, 5, 6 y 7.
       `identidadPorPuerto.test.ts`), `check("residencias_vigencia")`.
       `residencias.personaId` es `uuid().notNull().$type<PersonaId>()` sin
       `.references()`.
-- [ ] 2.7 `drizzle/0007_territorio.sql`: generar con `drizzle-kit generate`;
+- [x] 2.7 `drizzle/0007_territorio.sql`: generar con `drizzle-kit generate`;
       en la cola, `FORCE ROW LEVEL SECURITY` + `GRANT` para las 4 tablas y el
       FK compuesto a mano `residencias_persona_tenant_fk` hacia
       `personas(id, ayuntamiento_id)`, con el comentario del design §5.
-- [ ] 2.8 `territorio/infrastructure/index.ts`;
+- [x] 2.8 `territorio/infrastructure/index.ts`;
       `territorio/{index,types,composicion}.ts` esqueleto minimo.
-- [ ] 2.9 RED `territorio/superficiePublica.test.ts`: el barrel no exporta
+- [x] 2.9 RED `territorio/superficiePublica.test.ts`: el barrel no exporta
       ningun objeto de tabla Drizzle — provocar el rojo exportando `lugares`
       temporalmente, confirmar el fallo, retirarlo.
-- [ ] 2.10 GREEN: barrel limpio, test en verde.
-- [ ] 2.11 RED `territorio/lugares.isolation.test.ts`: sembrar dos
+- [x] 2.10 GREEN: barrel limpio, test en verde.
+- [x] 2.11 RED `territorio/lugares.isolation.test.ts`: sembrar dos
       municipios; sin filtro en Motul solo devuelve lugares de Motul (T1); un
       `padreId` de Ticul insertado desde Motul es rechazado por Postgres
       (T4).
-- [ ] 2.12 GREEN (ajustar RLS/FK de 2.6-2.7 si falla).
-- [ ] 2.13 RED integration: segunda fila `tipo=cabecera` en el mismo
+- [x] 2.12 GREEN (ajustar RLS/FK de 2.6-2.7 si falla).
+- [x] 2.13 RED integration: segunda fila `tipo=cabecera` en el mismo
       municipio rechazada por `lugares_una_cabecera`; `padre_id = id` por SQL
       directo rechazado por `lugares_sin_autopadre`.
-- [ ] 2.14 GREEN.
-- [ ] 2.15 RED `territorio/calles.isolation.test.ts`: sin filtro en Motul
+- [x] 2.14 GREEN.
+- [x] 2.15 RED `territorio/calles.isolation.test.ts`: sin filtro en Motul
       solo devuelve calles de Motul (T1); un `lugarId` de Ticul insertado
       desde Motul es rechazado por Postgres.
-- [ ] 2.16 GREEN.
-- [ ] 2.17 RED `territorio/domicilios.isolation.test.ts`: sin filtro en Motul
+- [x] 2.16 GREEN.
+- [x] 2.17 RED `territorio/domicilios.isolation.test.ts`: sin filtro en Motul
       solo devuelve domicilios de Motul (T1); un `calleId` de Ticul
       insertado desde Motul es rechazado por Postgres.
-- [ ] 2.18 GREEN.
-- [ ] 2.19 RED `territorio/residencias.isolation.test.ts` — la prueba mas
+- [x] 2.18 GREEN.
+- [x] 2.19 RED `territorio/residencias.isolation.test.ts` — la prueba mas
       critica del cambio: sin filtro en Motul solo devuelve residencias de
       Motul (T1); una residencia con `personaId` de una persona de Ticul
       insertada desde Motul es rechazada por Postgres nombrando
       `residencias_persona_tenant_fk`.
-- [ ] 2.20 GREEN (ajustar el FK a mano de 2.7 si el nombre no calza).
-- [ ] 2.21 Verificar (no asumir) que `identidadPorPuerto.test.ts` sigue en
+- [x] 2.20 GREEN (ajustar el FK a mano de 2.7 si el nombre no calza).
+- [x] 2.21 Verificar (no asumir) que `identidadPorPuerto.test.ts` sigue en
       verde con `territorio/infrastructure/esquema.ts` presente.
-- [ ] 2.22 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 2.22 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       confirmar piso 80/75 sobre `modules/territorio/domain`.
 
 ## Phase 3: Rebanada 3 — Casos de uso de lugares, arbol y regla de administracion (~640 lineas)

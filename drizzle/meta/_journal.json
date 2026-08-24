@@ -50,6 +50,13 @@
       "when": 1787446738058,
       "tag": "0006_padron_fusion",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787583094162,
+      "tag": "0007_territorio",
+      "breakpoints": true
     }
   ]
 }
