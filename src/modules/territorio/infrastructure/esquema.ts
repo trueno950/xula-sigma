@@ -11,7 +11,6 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import type { PersonaId } from "@/modules/padron";
 import {
   columnaTenant,
   enumerado,
@@ -158,10 +157,15 @@ export const residencias = pgTable(
   {
     id: uuid().primaryKey().defaultRandom().$type<ResidenciaId>(),
     ayuntamientoId: columnaTenant(),
-    // Sin `.references()`: `personas` es inalcanzable fuera de `padron`
-    // (design.md decision 4). El FK compuesto real va escrito a mano en
-    // la cola de `drizzle/0007_territorio.sql`.
-    personaId: uuid().notNull().$type<PersonaId>(),
+    // Sin `.references()` y sin `$type<PersonaId>()`: `personas` es
+    // inalcanzable fuera de `padron` (design.md decision 4) y su tipo de
+    // dominio tambien -- importarlo, aunque sea `import type` via el
+    // barrel, es el antipatron 8 de `AGENTS.md` ("Importar modules/x/domain
+    // desde otro modulo"), encontrado por GGA en la revision de esta
+    // rebanada. `territorio` no valida ni interpreta este uuid; el FK
+    // compuesto a mano en la cola de `drizzle/0007_territorio.sql` es la
+    // unica proteccion, y es de Postgres, no de TypeScript.
+    personaId: uuid().notNull(),
     domicilioId: uuid().notNull().$type<DomicilioId>(),
     // `date`, no `timestamptz`: fecha civil, no instante (design.md
     // seccion 8; `AGENTS.md` regla de fechas civiles).

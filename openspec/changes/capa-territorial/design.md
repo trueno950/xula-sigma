@@ -297,10 +297,33 @@ inalcanzable fuera de `padron` (`padron` design §2 capa A), y el builder
 Drizzle no puede expresarlo, y no se le abre el barrel para que pueda:
 exportar la tabla anula la capa A entera.
 
-En `esquema.ts`, `personaId` es `uuid().notNull().$type<PersonaId>()`
-**sin `.references()`**. En la cola de `drizzle/0007_territorio.sql`, en el
-mismo archivo que crea las tablas (ADR 0001 §2: un diff que solo toque lo
-generado se veria identico a una migracion que se olvido del `FORCE`):
+En `esquema.ts`, `personaId` es `uuid().notNull()` **sin `.references()`**.
+En la cola de `drizzle/0007_territorio.sql`, en el mismo archivo que crea
+las tablas (ADR 0001 §2: un diff que solo toque lo generado se veria
+identico a una migracion que se olvido del `FORCE`):
+
+**Correccion sobre la version original de esta decision, encontrada por
+GGA en la revision de la rebanada 2.** La primera version tipaba la
+columna `.$type<PersonaId>()`, importando el tipo desde `@/modules/padron`
+via el reexport nombrado de decision 2. Aunque `import type` se borra en
+runtime, GGA marco el import como el antipatron 8 de `AGENTS.md`
+("Importar `modules/x/domain` desde otro modulo" -> "Puerto propio y
+adaptador"): el tipo se origina en `padron/domain/personaId.ts`, y el
+barrel no cambia esa procedencia. Se verifico contra `AGENTS.md` y contra
+el comentario de la regla `modulo-no-importa-interior-de-otro` de
+`.dependency-cruiser.cjs` -"si necesita datos de otro modulo, declara un
+puerto en su propio dominio"- y el hallazgo es correcto: `depcruise` solo
+mira la ruta del import (por eso deja pasar el barrel), pero la regla de
+capas es sobre el tipo, no sobre el archivo.
+`residencias.personaId` queda sin marca de tipo: `territorio` no valida
+ni interpreta ese uuid, la unica proteccion es el FK compuesto de
+Postgres, y una columna sin `$type` no pierde nada -Drizzle la infiere
+como `string`, y un `PersonaId` de `padron` es asignable ahi sin cast por
+ser mas especifico. La Fase 3 (`application/puertos.ts` de `territorio`)
+hereda la misma restriccion: si en algun momento necesita distinguir este
+uuid en su propio dominio, declara su propio tipo marcado en
+`territorio/domain` -sexto lugar del mismo patron de `identificadores.ts`-,
+nunca importa el de `padron`.
 
 ```sql
 -- ---------------------------------------------------------------------
