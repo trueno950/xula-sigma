@@ -158,8 +158,9 @@ Independiente (no depende de la 1). Requerida por las Fases 3, 4, 5, 6 y 7.
       `uniqueIndex("residencias_una_abierta_idx")` **con el builder de
       Drizzle, nunca `sql\`…\`\`** (evita disparar
       `identidadPorPuerto.test.ts`), `check("residencias_vigencia")`.
-      `residencias.personaId` es `uuid().notNull().$type<PersonaId>()` sin
-      `.references()`.
+      `residencias.personaId` es `uuid().notNull()` sin `.references()` ni
+      `$type<PersonaId>()` — importar el tipo de `padron` via el barrel es
+      el antipatron 8 (hallazgo de GGA, ver design.md decision 4).
 - [x] 2.7 `drizzle/0007_territorio.sql`: generar con `drizzle-kit generate`;
       en la cola, `FORCE ROW LEVEL SECURITY` + `GRANT` para las 4 tablas y el
       FK compuesto a mano `residencias_persona_tenant_fk` hacia
