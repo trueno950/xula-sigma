@@ -1,9 +1,10 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import type {
   PersonaGuardada,
   PersonaParaGuardar,
   RepositorioDePersonas,
 } from "../application/puertos";
+import type { PersonaId } from "../domain";
 import { comoPersonaId, normalizarParaBusqueda } from "../domain";
 import { personas } from "./esquema";
 import { fusionarSql, revertirFusionSql } from "./fusionDePersonasSql";
@@ -47,6 +48,15 @@ const aPersonaGuardada = (fila: {
   bajaEn: Date | null;
 }): PersonaGuardada => ({ ...fila, id: comoPersonaId(fila.id) });
 
+/**
+ * `id` cualquiera -ganador o perdedor- resuelto a su terminal (design.md
+ * decision 3, invariante: `fusionadaEn` ya llega colapsado, un solo
+ * COALESCE alcanza). Compartido por `buscarPorId` e `identidadesDe` para
+ * que las dos resuelvan exactamente igual.
+ */
+const terminalDe = (id: string) =>
+  sql`COALESCE((SELECT ${personas.fusionadaEn} FROM ${personas} WHERE ${personas.id} = ${id}), ${id})`;
+
 export const repositorioDePersonasSql: RepositorioDePersonas = {
   async guardar(tx, { id, ayuntamientoId, persona, expansiones }) {
     await tx.insert(personas).values({
@@ -82,20 +92,14 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
 
   async buscarPorId(tx, id): Promise<PersonaGuardada | null> {
     /**
-     * `fusionadaEn` ya llega colapsada al terminal (design.md decision 3,
-     * invariante): un solo COALESCE alcanza, sin recorrer la cadena. La
-     * subconsulta corre bajo el mismo RLS que la externa -mismo `tx`-, asi
-     * que tampoco puede resolver hacia una fila de otro tenant.
+     * La subconsulta de `terminalDe` corre bajo el mismo RLS que la
+     * externa -mismo `tx`-, asi que tampoco puede resolver hacia una fila
+     * de otro tenant.
      */
     const [fila] = await tx
       .select(columnasDeLectura)
       .from(personas)
-      .where(
-        eq(
-          personas.id,
-          sql`COALESCE((SELECT ${personas.fusionadaEn} FROM ${personas} WHERE ${personas.id} = ${id}), ${id})`,
-        ),
-      );
+      .where(eq(personas.id, terminalDe(id)));
 
     return fila ? aPersonaGuardada(fila) : null;
   },
@@ -108,6 +112,16 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
   // de la separacion en su comentario de cabecera).
   fusionar: fusionarSql,
   revertirFusion: revertirFusionSql,
+
+  async identidadesDe(tx, id): Promise<readonly PersonaId[]> {
+    const terminal = terminalDe(id);
+    const filas = await tx
+      .select({ id: personas.id })
+      .from(personas)
+      .where(or(eq(personas.id, terminal), eq(personas.fusionadaEn, terminal)));
+
+    return filas.map((fila) => comoPersonaId(fila.id));
+  },
 
   async listar(tx): Promise<readonly PersonaGuardada[]> {
     const filas = await tx

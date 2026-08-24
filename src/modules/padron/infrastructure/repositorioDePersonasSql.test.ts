@@ -40,6 +40,14 @@ const txDeActualizacion = () => {
   return { tx: { update } as unknown as TransaccionTenant, set, where };
 };
 
+const txDeLectura = (filas: ReadonlyArray<{ id: string }>) => {
+  const where = vi.fn().mockResolvedValue(filas);
+  const from = vi.fn().mockReturnValue({ where });
+  const select = vi.fn().mockReturnValue({ from });
+
+  return { tx: { select } as unknown as TransaccionTenant, select };
+};
+
 const persona: PersonaParaGuardar = {
   nombres: "Maria Guadalupe",
   primerApellido: "Kumul",
@@ -104,5 +112,29 @@ describe("repositorioDePersonasSql", () => {
       }),
     );
     expect(where).toHaveBeenCalled();
+  });
+
+  const idA = "8d9773f3-35a0-46ac-9b34-f49606430c5c" as PersonaId;
+  const idB = "23a12ddf-4d85-42b8-9e3a-96258f3addee" as PersonaId;
+
+  it("identidadesDe sin fusion devuelve solo el propio id", async () => {
+    const { tx } = txDeLectura([{ id: idA }]);
+
+    const identidades = await repositorioDePersonasSql.identidadesDe(tx, idA);
+
+    expect(identidades).toEqual([idA]);
+  });
+
+  it("identidadesDe con fusion devuelve perdedora y ganadora, mismo COALESCE que buscarPorId", async () => {
+    const { tx, select } = txDeLectura([{ id: idA }, { id: idB }]);
+
+    const identidades = await repositorioDePersonasSql.identidadesDe(tx, idB);
+
+    expect(identidades).toEqual([idA, idB]);
+    // Selecciona solo el id -no la fila completa, esta lectura no expone
+    // datos personales- y consulta sobre `personas`, nunca una tabla ajena.
+    expect(select).toHaveBeenCalledWith(
+      expect.objectContaining({ id: expect.anything() }),
+    );
   });
 });

@@ -5,7 +5,9 @@ import {
   crearDarDeBajaPersona,
   crearEditarPersona,
   crearFusionarPersonas,
+  crearIdentidadesDePersona,
   crearListarPersonas,
+  crearPersonaPorId,
   crearRevertirFusion,
   crearSugerirDuplicados,
 } from "./application";
@@ -39,6 +41,10 @@ export const revertirFusion = crearRevertirFusion(repositorioDePersonasSql);
 export const sugerirDuplicados = crearSugerirDuplicados(
   repositorioDePersonasSql,
   catalogoDeAbreviaturasSql,
+);
+export const personaPorId = crearPersonaPorId(repositorioDePersonasSql);
+export const identidadesDePersona = crearIdentidadesDePersona(
+  repositorioDePersonasSql,
 );
 
 /**
