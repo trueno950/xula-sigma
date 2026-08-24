@@ -1,1 +1,1 @@
-export {};
+export { repositorioDeLugaresSql } from "./repositorioDeLugaresSql";

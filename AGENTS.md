@@ -218,31 +218,47 @@ Server Action -nadie la envuelve con `useActionState` para leer su
 retorno-. La condición es sobre la acción, no sobre el árbol entero del
 formulario: una hoja `"use client"` puede convivir adentro del mismo
 `<form>` para otra cosa, mientras el envío siga siendo el POST nativo del
-navegador y nada intercepte esa acción en particular. Hoy hay dos:
+navegador y nada intercepte esa acción en particular.
 
-- `altaDePersonaAction` (`padron`): `FormularioDeAltaDePersona` es un
-  Server Component con `<form action={...}>`. Desde la rebanada 4 el form
+Lo que protege a todas las filas de esta tabla es lo mismo: el `redirect`
+sigue redactando el mensaje para la operadora con la misma lista blanca de
+tipos de error que usaría `ActionResult<T>` — la regla de arriba no se
+relaja, solo cambia el transporte. `ActionResult<T>` solo lo puede leer
+`useActionState`, y esa API exige `"use client"` alrededor de la propia
+acción; una acción sin ese límite de cliente no tiene quién lea el valor
+que devuelva, y devolverlo sería código muerto.
+
+| Acción | Módulo | Forma del formulario |
+|---|---|---|
+| `altaDePersonaAction` | `padron` | Server Component, `<form action={...}>` |
+| `fusionarPersonasAction` | `padron` | Server Component, `<form action={...}>` |
+| `altaDeLugarAction` | `territorio` | Server Component, `<form action={...}>` |
+| `editarLugarAction` | `territorio` | Server Component, `<form action={...}>` |
+| `darDeBajaLugarAction` | `territorio` | Server Component, `<form action={...}>` |
+| `reparentearLugarAction` | `territorio` | Server Component, `<form action={...}>` |
+
+Notas que no caben en la tabla, una por fila que las necesita:
+
+- `altaDePersonaAction`: desde la rebanada 4, `FormularioDeAltaDePersona`
   también renderiza `<SugerenciaDeDuplicados />` (`"use client"`), pero esa
   hoja llama a `sugerirDuplicadosAction` -la otra excepción, abajo-, no a
   `altaDePersonaAction`: el envío del formulario sigue sin JavaScript de
   por medio para *esta* acción, funciona igual en la red móvil rural que
-  describe `PRODUCT.md`. `ActionResult<T>` solo lo puede leer
-  `useActionState`, y esa API exige `"use client"` alrededor de la propia
-  acción. Una acción sin ese límite de cliente no tiene quién lea el valor
-  que devuelva: devolverlo sería código muerto.
+  describe `PRODUCT.md`.
+- `fusionarPersonasAction` (rebanada 4): `FusionarPersonas.tsx` es un
+  `<form action={...}>` sin `"use client"` en ningún componente de por
+  medio, y `redirect(\`/padron?error=...\`)` redacta con la misma lista
+  blanca (`NoAutorizadoError`, `NoEncontradoError`).
+- `altaDeLugarAction`/`editarLugarAction`/`darDeBajaLugarAction`
+  (`capa-territorial`, rebanada 3): mismo motivo exacto que
+  `altaDePersonaAction`, sin una segunda hoja cliente que complique el
+  árbol. Redactan con `NoAutorizadoError`/`NoEncontradoError` y, la de baja,
+  también `LugarConDependientesError`.
+- `reparentearLugarAction` (`capa-territorial`, rebanada 3): mismo motivo,
+  y además redacta `JerarquiaInvalidaError` -el rechazo de dominio cuando
+  `puedeContener` da falso.
 
-  Lo que la protege es que el `redirect` sigue redactando el mensaje para
-  la operadora con la misma lista blanca de tipos de error que usaría
-  `ActionResult<T>` — la regla de abajo no se relaja, solo cambia el
-  transporte.
-
-- `fusionarPersonasAction` (`padron`, rebanada 4): mismo motivo exacto.
-  `FusionarPersonas.tsx` es un `<form action={...}>` de Server Component,
-  sin `"use client"` en ningún componente de por medio, y `redirect(
-  \`/padron?error=...\`)` redacta con la misma lista blanca
-  (`NoAutorizadoError`, `NoEncontradoError`).
-
-**Una segunda no entra sin agregarse a esta lista**, misma razón que la
+**Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un
 comentario de código es indistinguible de un olvido.
 

@@ -203,59 +203,59 @@ Independiente (no depende de la 1). Requerida por las Fases 3, 4, 5, 6 y 7.
 
 Depende de la Fase 2. Independiente de las Fases 1, 4, 5 y 6.
 
-- [ ] 3.1 `territorio/application/puertos.ts`: `RepositorioDeLugares`
+- [x] 3.1 `territorio/application/puertos.ts`: `RepositorioDeLugares`
       (`crear`, `buscarPorId`, `actualizar`, `contarHijosActivos`,
       `contarDomiciliosColgados`, `subarbol`).
-- [ ] 3.2 RED `shared/auth/roles.test.ts`: fila para
+- [x] 3.2 RED `shared/auth/roles.test.ts`: fila para
       `puedeAdministrarTerritorio` — `ADMIN_MUNICIPAL` si,
       `OPERADOR`/`CONSULTA`/`SUPER_ADMIN` no (nombre del spec — ver Nota 2).
-- [ ] 3.3 GREEN `shared/auth/roles.ts`: `puedeAdministrarTerritorio = (rol)
+- [x] 3.3 GREEN `shared/auth/roles.ts`: `puedeAdministrarTerritorio = (rol)
       => rol === "ADMIN_MUNICIPAL"`.
-- [ ] 3.4 RED `territorio/application/altaDeLugar.test.ts` (puertos
+- [x] 3.4 RED `territorio/application/altaDeLugar.test.ts` (puertos
       mockeados): rechaza sin `puedeEscribir`; un sector cuyo padre es una
       comisaria sin colonias se crea sin fila de relleno.
-- [ ] 3.5 GREEN `altaDeLugar.ts`.
-- [ ] 3.6 RED `territorio/application/editarLugar.test.ts`:
+- [x] 3.5 GREEN `altaDeLugar.ts`.
+- [x] 3.6 RED `territorio/application/editarLugar.test.ts`:
       `DatosDeEdicionDeLugar` no tiene campo `tipo` — el caso de uso no
       puede recibirlo ni omitirlo, solo renombra.
-- [ ] 3.7 GREEN `editarLugar.ts`.
-- [ ] 3.8 RED `territorio/application/darDeBajaLugar.test.ts`: rechaza si el
+- [x] 3.7 GREEN `editarLugar.ts`.
+- [x] 3.8 RED `territorio/application/darDeBajaLugar.test.ts`: rechaza si el
       lugar tiene hijos activos o domicilios colgados (dos `count`
       mockeados).
-- [ ] 3.9 GREEN `darDeBajaLugar.ts`.
-- [ ] 3.10 RED `territorio/application/reparentearLugar.test.ts` (puertos
+- [x] 3.9 GREEN `darDeBajaLugar.ts`.
+- [x] 3.10 RED `territorio/application/reparentearLugar.test.ts` (puertos
       mockeados): rechaza sin `puedeAdministrarTerritorio`; rechaza si
       `puedeContener(nuevoPadre.tipo, lugar.tipo)` es falso (comisaria no
       puede ser hija de cabecera; un sector no puede volverse padre de su
       propia colonia); `nuevoPadreId = null` salta el chequeo de tipo.
-- [ ] 3.11 GREEN `reparentearLugar.ts`: `UPDATE` de una sola fila +
+- [x] 3.11 GREEN `reparentearLugar.ts`: `UPDATE` de una sola fila +
       `registrar(REPARENTEAR_LUGAR, solo ids)`.
-- [ ] 3.12 RED `territorio/infrastructure/repositorioDeLugaresSql.test.ts`:
+- [x] 3.12 RED `territorio/infrastructure/repositorioDeLugaresSql.test.ts`:
       CTE de subarbol con el builder de Drizzle (no `sql\`…\``, mismo motivo
       que 2.6) devuelve descendientes a cualquier profundidad con `WHERE
       profundidad < 8` como cinturon.
-- [ ] 3.13 GREEN `repositorioDeLugaresSql.ts`.
-- [ ] 3.14 RED integration: sector con dos manzanas y un domicilio colgado
+- [x] 3.13 GREEN `repositorioDeLugaresSql.ts`.
+- [x] 3.14 RED integration: sector con dos manzanas y un domicilio colgado
       directo del sector — el subarbol devuelve las tres filas.
-- [ ] 3.15 GREEN.
-- [ ] 3.16 RED integration: reparentear una colonia para que su padre sea su
+- [x] 3.15 GREEN.
+- [x] 3.16 RED integration: reparentear una colonia para que su padre sea su
       propio sector (ciclo de largo 2) es rechazado por el caso de uso.
-- [ ] 3.17 GREEN.
-- [ ] 3.18 RED integration: reparentear deja intacto el conteo y el `xmin`
+- [x] 3.17 GREEN.
+- [x] 3.18 RED integration: reparentear deja intacto el conteo y el `xmin`
       de `domicilios`/`residencias` del subarbol movido, y el subarbol del
       nuevo padre incluye los domicilios movidos.
-- [ ] 3.19 GREEN.
-- [ ] 3.20 `territorio/ui/ArbolDeLugares.tsx` (Server Component,
+- [x] 3.19 GREEN.
+- [x] 3.20 `territorio/ui/ArbolDeLugares.tsx` (Server Component,
       `<details>/<summary>` nativo, cero `"use client"`);
       `ui/actions/{altaDeLugar,editarLugar,darDeBajaLugar,reparentearLugar}Action.ts`;
       `src/app/(panel)/territorio/page.tsx`.
-- [ ] 3.21 `AGENTS.md`: reformar "Server Actions" — la justificacion de la
+- [x] 3.21 `AGENTS.md`: reformar "Server Actions" — la justificacion de la
       excepcion queda escrita una vez como condicion y el padron de acciones
       pasa a tabla (`accion | modulo | forma del formulario`), migrando
       `altaDePersonaAction`/`fusionarPersonasAction` sin perder sus notas y
       agregando las cuatro de esta rebanada. Tarea independiente y
       revertible sin tocar codigo (decision del usuario, confirmada).
-- [ ] 3.22 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 3.22 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       cobertura sobre `modules/territorio/application`.
 
 ## Phase 4: Rebanada 4 — Catalogo de calles (~370 lineas)

@@ -92,3 +92,11 @@ export const puedeCambiarMarca = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
  * `SUPER_ADMIN`.
  */
 export const puedeFusionarPersonas = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
+
+/**
+ * Reparentear o dar de baja un lugar reescribe la jerarquia territorial.
+ * Mismo criterio que `puedeFusionarPersonas`: solo el municipio, nunca
+ * `SUPER_ADMIN` (`specs/autorizacion-roles/spec.md`).
+ */
+export const puedeAdministrarTerritorio = (rol: Rol) =>
+  rol === "ADMIN_MUNICIPAL";
