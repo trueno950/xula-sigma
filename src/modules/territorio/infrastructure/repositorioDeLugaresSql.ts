@@ -63,11 +63,19 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
       .values({ id, ayuntamientoId, tipo, nombre, padreId });
   },
 
+  /**
+   * Excluye `bajaEn` no nulo (hallazgo de GGA en la revision de esta
+   * rebanada): sin este filtro, `altaDeLugar`/`reparentearLugar` podian
+   * usar un lugar dado de baja como padre valido -la fila sigue
+   * existiendo, `puedeContener` no sabe de bajas- y una rama cerrada
+   * volvia a recibir descendientes. Mismo criterio "activo = `bajaEn IS
+   * NULL`" que ya aplica `contarHijosActivos`.
+   */
   async buscarPorId(tx, id) {
     const [fila] = await tx
       .select(columnasDeLectura)
       .from(lugares)
-      .where(eq(lugares.id, id));
+      .where(and(eq(lugares.id, id), isNull(lugares.bajaEn)));
 
     return fila ? aLugarGuardado(fila) : null;
   },

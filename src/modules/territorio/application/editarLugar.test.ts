@@ -99,15 +99,21 @@ describe("editarLugar", () => {
       expect.objectContaining({ accion: "EDITAR_LUGAR", entidadId: sectorId }),
     );
   });
-
-  it("DatosDeEdicionDeLugar no tiene campo tipo: ni recibirlo ni omitirlo", () => {
-    const conTipo: DatosDeEdicionDeLugar = {
-      id: sectorId,
-      nombre: "Sector 3-A",
-      // @ts-expect-error tipo no existe en DatosDeEdicionDeLugar (design.md
-      // seccion 7: el tipo es inmutable despues del alta).
-      tipo: "sector",
-    };
-    void conTipo;
-  });
 });
+
+/**
+ * Assertion de tipo, no de runtime: `vitest` no evalua `@ts-expect-error`,
+ * asi que esto se prueba solo si `tsc --noEmit` corre (`pnpm check`, no
+ * `pnpm test`). `DatosDeEdicionDeLugar` no tiene campo `tipo` (design.md
+ * seccion 7: el tipo es inmutable despues del alta) — si alguien lo
+ * agrega, el chequeo de propiedades excedentes de TypeScript sobre este
+ * literal deja de fallar y "Unused '@ts-expect-error' directive" rompe
+ * `tsc --noEmit`.
+ */
+const _conTipo: DatosDeEdicionDeLugar = {
+  id: sectorId,
+  nombre: "Sector 3-A",
+  // @ts-expect-error tipo no existe en DatosDeEdicionDeLugar
+  tipo: "sector",
+};
+void _conTipo;

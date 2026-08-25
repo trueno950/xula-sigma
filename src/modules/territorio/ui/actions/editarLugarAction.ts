@@ -12,7 +12,7 @@ import { comoLugarId } from "../../domain";
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
 const esquemaDeEntrada = z.object({
-  id: z.string().trim().min(1),
+  id: z.string().trim().uuid(),
   nombre: z.string().trim().min(1),
 });
 

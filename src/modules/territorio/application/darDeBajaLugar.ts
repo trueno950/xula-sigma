@@ -7,10 +7,9 @@ import { LugarConDependientesError, type LugarId } from "../domain";
 import type { RepositorioDeLugares } from "./puertos";
 
 /**
- * Baja logica de un lugar. Rechaza si tiene hijos activos o domicilios
- * colgados (design.md seccion 8): no es un FK — la baja no es un DELETE
- * para Postgres, asi que `ON DELETE RESTRICT` no aplica y la regla vive
- * aca, con dos `SELECT count`.
+ * Baja logica de un lugar. Rechaza con `LugarConDependientesError`
+ * (`domain/errores.ts` explica por que la regla vive aca y no en un FK)
+ * si tiene hijos activos o domicilios colgados, con dos `SELECT count`.
  */
 export function crearDarDeBajaLugar(repositorio: RepositorioDeLugares) {
   return async function darDeBajaLugar(

@@ -9,7 +9,8 @@ import {
   ticul,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { lugares } from "./infrastructure/esquema";
+import { calles, domicilios, lugares } from "./infrastructure/esquema";
+import { repositorioDeLugaresSql } from "./infrastructure/repositorioDeLugaresSql";
 
 /**
  * Forma canonica del test de aislamiento (`invariantes-criticos.md`, Capa
@@ -116,5 +117,44 @@ describe("aislamiento de lugares", () => {
     );
 
     expect(motivo).toMatch(/lugares_sin_autopadre/i);
+  });
+
+  it("subarbol no filtra por tenant en su SQL crudo: RLS lo hace, y aca se prueba", async () => {
+    const [sectorMotul] = await withTenant(motul, (tx) =>
+      tx
+        .insert(lugares)
+        .values({ ayuntamientoId: motul, tipo: "sector", nombre: "Sector M" })
+        .returning({ id: lugares.id }),
+    );
+    const [calleMotul] = await withTenant(motul, (tx) =>
+      tx
+        .insert(calles)
+        .values({
+          ayuntamientoId: motul,
+          nombre: "Calle M",
+          lugarId: sectorMotul!.id,
+        })
+        .returning({ id: calles.id }),
+    );
+    await withTenant(motul, (tx) =>
+      tx.insert(domicilios).values({
+        ayuntamientoId: motul,
+        lugarId: sectorMotul!.id,
+        calleId: calleMotul!.id,
+      }),
+    );
+
+    /**
+     * Mismo id de raiz, tenant distinto: si `subarbol` dependiera de un
+     * `WHERE ayuntamiento_id` propio en vez de RLS, esto devolveria el
+     * domicilio de `motul`. Con `app.tenant = ticul` fijado por
+     * `withTenant`, la semilla del CTE (`WHERE id = raizId`) no encuentra
+     * la fila -RLS la esconde- y la recursion nunca arranca.
+     */
+    const nodosDesdeTicul = await withTenant(ticul, (tx) =>
+      repositorioDeLugaresSql.subarbol(tx, sectorMotul!.id),
+    );
+
+    expect(nodosDesdeTicul).toHaveLength(0);
   });
 });

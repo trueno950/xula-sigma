@@ -4,10 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { contextoActual } from "@/shared/auth";
-import { NoAutorizadoError } from "@/shared/lib/errores";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeLugar } from "../../composicion";
-import { comoLugarId, TIPOS_DE_LUGAR } from "../../domain";
+import {
+  comoLugarId,
+  JerarquiaInvalidaError,
+  TIPOS_DE_LUGAR,
+} from "../../domain";
 
 /**
  * Borde de sesion del alta (mismo reparto que `altaDePersonaAction`,
@@ -18,7 +22,7 @@ import { comoLugarId, TIPOS_DE_LUGAR } from "../../domain";
 const esquemaDeEntrada = z.object({
   tipo: z.enum(TIPOS_DE_LUGAR),
   nombre: z.string().trim().min(1),
-  padreId: z.string().trim(),
+  padreId: z.union([z.literal(""), z.string().trim().uuid()]),
 });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Tipo y nombre son obligatorios.";
@@ -29,6 +33,11 @@ const redirigirConError = (mensaje: string): never =>
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
+  // padreId inexistente: puede pasar aunque el FK compuesto de Postgres lo
+  // bloquee, si `padreId` referencia un lugar de otro tenant que RLS ya
+  // esconde antes de llegar al FK (altaDeLugar.ts).
+  if (error instanceof NoEncontradoError) return error.message;
+  if (error instanceof JerarquiaInvalidaError) return error.message;
 
   console.error("[territorio] alta de lugar fallo", datosSegurosDeError(error));
 

@@ -11,7 +11,7 @@ import { comoLugarId, LugarConDependientesError } from "../../domain";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
-const esquemaDeEntrada = z.object({ id: z.string().trim().min(1) });
+const esquemaDeEntrada = z.object({ id: z.string().trim().uuid() });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Falta el lugar a dar de baja.";
 const MENSAJE_GENERICO = "No se pudo completar la baja. Intente de nuevo.";

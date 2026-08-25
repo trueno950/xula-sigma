@@ -12,8 +12,8 @@ import { comoLugarId, JerarquiaInvalidaError } from "../../domain";
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
 const esquemaDeEntrada = z.object({
-  lugarId: z.string().trim().min(1),
-  nuevoPadreId: z.string().trim(),
+  lugarId: z.string().trim().uuid(),
+  nuevoPadreId: z.union([z.literal(""), z.string().trim().uuid()]),
 });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Falta el lugar a mover.";

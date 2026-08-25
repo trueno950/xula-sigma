@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { altaDePersona } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import { NoEncontradoError } from "@/shared/lib/errores";
 import {
   limpiar,
   motul,
@@ -9,6 +10,7 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+import { crearAltaDeLugar } from "./application/altaDeLugar";
 import { crearReparentearLugar } from "./application/reparentearLugar";
 import {
   comoDomicilioId,
@@ -84,6 +86,37 @@ describe("subarbol", () => {
     expect(nodos).toHaveLength(3);
     expect(nodos.filter((nodo) => nodo.clase === "lugar")).toHaveLength(2);
     expect(nodos.filter((nodo) => nodo.clase === "domicilio")).toHaveLength(1);
+  });
+});
+
+describe("altaDeLugar", () => {
+  it("rechaza un padre dado de baja como si no existiera", async () => {
+    const comisaria = await crearLugar("comisaria", "Dzitya");
+    const [sector] = await withTenant(motul, async (tx) => {
+      const [fila] = await tx
+        .insert(lugares)
+        .values({
+          ayuntamientoId: motul,
+          tipo: "sector",
+          nombre: "Sector cerrado",
+          padreId: comisaria,
+        })
+        .returning({ id: lugares.id });
+      await tx
+        .update(lugares)
+        .set({ bajaEn: new Date() })
+        .where(eq(lugares.id, fila!.id));
+      return [comoLugarId(fila!.id)];
+    });
+
+    const altaDeLugar = crearAltaDeLugar(repositorioDeLugaresSql);
+
+    await expect(
+      altaDeLugar(
+        { tipo: "manzana", nombre: "Manzana huerfana", padreId: sector! },
+        contextoDe(),
+      ),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
   });
 });
 

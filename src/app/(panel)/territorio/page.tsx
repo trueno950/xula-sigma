@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   ArbolDeLugares,
+  comoLugarId,
   FormularioDeAltaDeLugar,
   FormularioDeBajaDeLugar,
   FormularioDeEdicionDeLugar,
@@ -42,9 +43,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
   const raizId = analisis.success ? analisis.data.raiz : undefined;
   const error = analisis.success ? analisis.data.error : undefined;
 
-  const raiz = raizId
-    ? await lugarPorId(raizId as Parameters<typeof lugarPorId>[0], contexto)
-    : null;
+  const raiz = raizId ? await lugarPorId(comoLugarId(raizId), contexto) : null;
   const nodos = raiz ? await subarbol(raiz.id, contexto) : [];
 
   return (

@@ -6,10 +6,10 @@ import { withTenant } from "@/shared/tenancy/withTenant";
 import type { DatosDeEdicionDeLugar, RepositorioDeLugares } from "./puertos";
 
 /**
- * Renombra un lugar, y nada mas: `DatosDeEdicionDeLugar` no tiene `tipo`,
- * asi que esta funcion no puede cambiarlo aunque quisiera (design.md
- * seccion 7). `puedeEscribir`, no `puedeAdministrarTerritorio` — renombrar
- * es trabajo de mostrador, `specs/autorizacion-roles/spec.md`.
+ * Renombra un lugar, y nada mas (`DatosDeEdicionDeLugar` en `puertos.ts`
+ * explica por que no tiene `tipo`). `puedeEscribir`, no
+ * `puedeAdministrarTerritorio` — renombrar es trabajo de mostrador,
+ * `specs/autorizacion-roles/spec.md`.
  */
 export function crearEditarLugar(repositorio: RepositorioDeLugares) {
   return async function editarLugar(
