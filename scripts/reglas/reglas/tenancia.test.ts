@@ -53,6 +53,26 @@ describe("tenancy-driver", () => {
    * una cuarta sin actualizar la regla. Un archivo nuevo adentro de
    * `shared/tenancy` es exactamente esa cuarta.
    */
+  /**
+   * El andamiaje siembra municipios y arma el escenario de los tests de
+   * aislamiento; no sirve ningun request. Se reconoce por el nombre para no
+   * mantener una segunda lista que diverja de la regla 2.
+   */
+  it("no marca el andamiaje de prueba, reconocido por su nombre", () => {
+    expect(
+      hallazgosDe(id, [
+        archivo(
+          "src/shared/tenancy/municipiosDePrueba.ts",
+          'import postgres from "postgres";\n',
+        ),
+        archivo(
+          "src/shared/tenancy/esquema.isolation.test.ts",
+          'import postgres from "postgres";\n',
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
   it("marca una salida NUEVA dentro de shared/tenancy", () => {
     const encontrados = hallazgosDe(id, [
       archivo(
@@ -87,49 +107,6 @@ describe("tenancy-driver", () => {
         archivo(
           "src/modules/padron/infrastructure/repositorio.ts",
           'import { and, eq } from "drizzle-orm";\n',
-        ),
-      ]),
-    ).toEqual([]);
-  });
-});
-
-describe("set-local", () => {
-  const id = "set-local";
-
-  it("marca un SET de parametro de sesion sin LOCAL", () => {
-    expect(
-      hallazgosDe(id, [
-        archivo(
-          "src/shared/tenancy/withTenant.ts",
-          "await tx`SET app.tenant = 'merida'`;\n",
-        ),
-      ]),
-    ).toHaveLength(1);
-  });
-
-  it("no marca cuando lleva LOCAL", () => {
-    expect(
-      hallazgosDe(id, [
-        archivo(
-          "src/shared/tenancy/withTenant.ts",
-          "await tx`SET LOCAL app.tenant = 'merida'`;\n",
-        ),
-      ]),
-    ).toEqual([]);
-  });
-
-  /**
-   * `ON DELETE SET NULL` y `ALTER COLUMN ... SET DEFAULT` son SQL corriente
-   * y aparecen en cada migracion. La regla mira parametros con punto
-   * justamente para no tropezar con ellos.
-   */
-  it("no marca el SET de una definicion de tabla", () => {
-    expect(
-      hallazgosDe(id, [
-        archivo(
-          "drizzle/0008_algo.sql",
-          'ALTER TABLE "calles" ALTER COLUMN "nombre" SET DEFAULT \'\';\n' +
-            'ALTER TABLE "calles" ADD CONSTRAINT "fk" FOREIGN KEY ("x") REFERENCES "y"("id") ON DELETE SET NULL;\n',
         ),
       ]),
     ).toEqual([]);

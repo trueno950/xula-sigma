@@ -27,3 +27,21 @@ export const sinComentariosNiCadenas = (contenido: string): string =>
     /\/\*[\s\S]*?\*\/|\/\/[^\n]*|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`/g,
     (encontrado) => encontrado.replace(/[^\n]/g, " "),
   );
+
+/**
+ * Quita comentarios y deja las cadenas.
+ *
+ * `sinComentariosNiCadenas` no sirve para las reglas que buscan SQL: en este
+ * proyecto el SQL viaja adentro de template literals, asi que borrar las
+ * cadenas borraria justo lo que hay que revisar. Pero un comentario que
+ * DESCRIBE una fuga no es una fuga — y sin esta funcion, el comentario que
+ * explica `set_config(..., false)` se marca a si mismo.
+ *
+ * Cubre las tres formas que aparecen: `//` y `/* *\/` de TypeScript, y `--`
+ * de SQL. Reemplaza por espacios para no mover los indices, de donde salen
+ * los numeros de linea.
+ */
+export const sinComentarios = (contenido: string): string =>
+  contenido.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*|--[^\n]*/g, (encontrado) =>
+    encontrado.replace(/[^\n]/g, " "),
+  );

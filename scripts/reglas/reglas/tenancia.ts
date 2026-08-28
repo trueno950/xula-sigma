@@ -1,29 +1,39 @@
-import { esSql, esTypeScript, lineaDe } from "../comunes";
+import { esSql, esTypeScript, lineaDe, sinComentarios } from "../comunes";
 import type { Regla } from "../tipos";
 
 /**
- * Las tres salidas sancionadas de la regla 2, mas los ayudantes de prueba
- * que siembran municipios antes de que exista un tenant.
+ * Las salidas de produccion que abren conexion propia. Son las dos que
+ * alojan las tres excepciones de la regla 2 de AGENTS.md, y nada mas.
  *
- * La lista existe porque el directorio entero no alcanza como permiso. La
- * regla 2 de AGENTS.md dice que hay **tres** excepciones y que "no se usa
- * una cuarta sin actualizar la regla"; bendecir `shared/tenancy/` completo
- * dejaba entrar una cuarta en silencio. Con la lista, abrir una salida
- * nueva obliga a tocar este archivo, que es exactamente lo que la regla
- * pide.
+ * La lista es de DOS archivos y no de cinco a proposito. La version anterior
+ * incluia el andamiaje de prueba, y eso convertia esta constante en una
+ * segunda enumeracion de "quien puede tocar la base" que ya divergia de la
+ * canonica: la regla 2 dice tres excepciones, el checker permitia cinco. La
+ * regla 2 existe justamente porque esa lista llego a estar copiada en seis
+ * lugares. Copiarla aca con otro contenido era repetir el defecto adentro
+ * del verificador que deberia impedirlo.
  *
- * `municipiosDePrueba` y `superAdminDePrueba` no son salidas de produccion:
- * arman el escenario de los tests de aislamiento. Estan nombrados igual
- * porque el patron no distingue una cosa de la otra, y una lista honesta
- * vale mas que un permiso implicito.
+ * Abrir una salida de produccion nueva obliga a tocar estas dos lineas, que
+ * es lo que la regla pide al decir que no se usa una cuarta sin
+ * actualizarla.
  */
 const SALIDAS_CON_DRIVER = new Set([
   "src/shared/tenancy/withTenant.ts",
   "src/shared/tenancy/provision.ts",
-  "src/shared/tenancy/municipiosDePrueba.ts",
-  "src/shared/tenancy/superAdminDePrueba.ts",
-  "src/shared/tenancy/esquema.isolation.test.ts",
 ]);
+
+/**
+ * El andamiaje de prueba no es una salida: siembra municipios y arma el
+ * escenario de los tests de aislamiento. No sirve ningun request.
+ *
+ * Se reconoce por el nombre y no por una lista, para que agregar un ayudante
+ * nuevo no pida editar este archivo ni haga divergir nada. Es el mismo
+ * criterio con el que `assets-filesystem` deja pasar los tests que leen
+ * fixtures: la categoria se decide por lo que el archivo ES, no por
+ * enumerarlo.
+ */
+const esAndamiajeDePrueba = (ruta: string): boolean =>
+  /DePrueba\.ts$|\.isolation\.test\.ts$/.test(ruta);
 
 /**
  * El driver, no el constructor de consultas.
@@ -47,6 +57,7 @@ export const driverFueraDeTenancy: Regla = {
       if (!esTypeScript(archivo.ruta)) continue;
       if (!archivo.ruta.startsWith("src/")) continue;
       if (SALIDAS_CON_DRIVER.has(archivo.ruta)) continue;
+      if (esAndamiajeDePrueba(archivo.ruta)) continue;
 
       const patron = /from\s+["'](postgres|drizzle-orm\/postgres-js)["']/g;
 
@@ -54,7 +65,7 @@ export const driverFueraDeTenancy: Regla = {
         hallazgos.push({
           ruta: archivo.ruta,
           linea: lineaDe(archivo.contenido, encontrado.index),
-          mensaje: `Importa \`${encontrado[1]}\` directo. El acceso a la base va por \`shared/tenancy\`, y las salidas con driver son la lista de \`tenancia.ts\`.`,
+          mensaje: `Importa \`${encontrado[1]}\` directo. El acceso a la base va por \`shared/tenancy\`, y las salidas de produccion con driver son las dos de \`tenancia.ts\`.`,
         });
       }
     }
@@ -64,33 +75,69 @@ export const driverFueraDeTenancy: Regla = {
 };
 
 /**
- * `SET` sin `LOCAL` sobrevive a la transaccion, se queda pegado en la
- * conexion del pooler y lo hereda el siguiente request, que puede ser de
- * otro municipio.
+ * Lo que sobrevive a la transaccion se queda pegado en la conexion del
+ * pooler y lo hereda el siguiente request, que puede ser de otro municipio.
+ * Es el escenario T2 de los invariantes, y es una fuga silenciosa.
  *
- * Mira parametros con punto —`app.tenant`— y no cualquier `SET`. Sin esa
- * restriccion, `ON DELETE SET NULL` y `ALTER COLUMN ... SET DEFAULT`
- * marcarian en cada migracion, y una regla que grita sobre codigo sano se
- * termina desactivando.
+ * La regla mira DOS formas, y la segunda es la que importa en este
+ * repositorio:
+ *
+ * 1. `SET app.tenant = ...` sin `LOCAL`. Es lo que dice el antipatron 3 y
+ *    aca no lo escribe nadie: `withTenant.ts:117` explica que `SET LOCAL
+ *    app.tenant = $1` ni siquiera existe, porque la sintaxis SET no acepta
+ *    parametros. Queda por si alguien escribe SQL a mano.
+ *
+ * 2. `set_config('app.tenant', valor, false)`. **Este es el vector real.**
+ *    El tercer argumento es el que dice "local a la transaccion": con
+ *    `true` muere en el COMMIT, con `false` sobrevive. Las quince llamadas
+ *    del repositorio usan `true`, y `false` esta a un caracter de
+ *    distancia.
+ *
+ * La primera version de esta regla solo miraba la forma 1, o sea que
+ * verificaba una sintaxis que este codigo nunca usa y no veia la unica que
+ * si usa. Una reja que no puede fallar es peor que no tenerla, porque
+ * ademas da confianza. Lo encontro la revision de IA, que es exactamente el
+ * trabajo que un patron no hace solo: leer como fija el tenant este
+ * proyecto en vez de como lo describe el documento.
  */
 export const setSinLocal: Regla = {
   id: "set-local",
   antipatron: 3,
-  titulo: "SET de parametro de sesion sin LOCAL",
+  titulo: "Parametro de sesion que sobrevive a la transaccion",
   revisar(archivos) {
     const hallazgos = [];
 
     for (const archivo of archivos) {
       if (!esTypeScript(archivo.ruta) && !esSql(archivo.ruta)) continue;
 
-      const patron =
+      // Un comentario que describe la fuga no es la fuga. Las cadenas SI se
+      // conservan: el SQL de este proyecto viaja adentro de template
+      // literals, asi que ahi es donde hay que buscar.
+      const codigo = sinComentarios(archivo.contenido);
+
+      const setSuelto =
         /\bSET\s+(?!LOCAL\b)([a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*)\s*(?:=|\bTO\b)/gi;
 
-      for (const encontrado of archivo.contenido.matchAll(patron)) {
+      for (const encontrado of codigo.matchAll(setSuelto)) {
         hallazgos.push({
           ruta: archivo.ruta,
-          linea: lineaDe(archivo.contenido, encontrado.index),
+          linea: lineaDe(codigo, encontrado.index),
           mensaje: `\`SET ${encontrado[1]}\` sin \`LOCAL\`: sobrevive a la transaccion y lo hereda el proximo request.`,
+        });
+      }
+
+      const noLocal = /set_config\s*\(([^)]*?),\s*false\s*\)/gi;
+
+      for (const encontrado of codigo.matchAll(noLocal)) {
+        const parametro = /['"`]([^'"`]+)['"`]/.exec(encontrado[1] ?? "");
+
+        hallazgos.push({
+          ruta: archivo.ruta,
+          linea: lineaDe(codigo, encontrado.index),
+          // El mensaje no reproduce la forma de la llamada a proposito: si
+          // la citara literal, esta misma linea seria un hallazgo. Es el
+          // limite de un verificador escrito con los patrones que busca.
+          mensaje: `\`set_config\` sobre \`${parametro?.[1] ?? "?"}\` con el tercer argumento en \`false\`: sobrevive a la transaccion y lo hereda el proximo request. Va en \`true\`.`,
         });
       }
     }
