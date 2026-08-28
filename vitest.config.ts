@@ -22,7 +22,15 @@ export default defineConfig({
         extends: true,
         test: {
           name: "unit",
-          include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+          // `scripts/` entra aca y no en un proyecto propio: sus tests no
+          // tocan la base, que es exactamente el contrato de `unit`. El
+          // verificador de reglas vive ahi porque es herramienta, no
+          // aplicacion; por eso tampoco entra en `coverage.include`.
+          include: [
+            "src/**/*.test.ts",
+            "src/**/*.test.tsx",
+            "scripts/**/*.test.ts",
+          ],
           env: {
             // `ritmo.ts` lo exige al importarse. El de produccion sale del
             // entorno y nunca del repositorio.

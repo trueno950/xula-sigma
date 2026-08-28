@@ -210,6 +210,14 @@ Violarlo rompe el build. No es una convención que se recuerda.
 
 ## 4. Checklist pre-commit
 
+**Nueve de estos puntos ya los verifica `pnpm reglas`**, que corre en el hook
+de `pre-commit` y en CI: `any`, acentos en identificadores, `withTenant`,
+`SET LOCAL`, RLS de tabla nueva, secuencia para folios, assets al filesystem,
+capas de un módulo y cita a línea de paquete sin versión. Están igual en la
+lista porque la lista es el contrato; la diferencia es que esos no dependen
+de que alguien se acuerde. Los que quedan —código comentado, TODO sin issue,
+nombres vagos, anidación— piden criterio, y por eso siguen siendo lectura.
+
 ```markdown
 ### Código
 - [ ] Sin console.log ni restos de depuración
@@ -457,6 +465,18 @@ pagados en cada dirección, y la mayoría de esas vueltas no encontraron nada
 que no se supiera en la primera.
 
 El cambio `auth-rbac` lo pagó. Lo que se aprendió ahí:
+
+### Dónde corre el revisor
+
+Desde el 2026-08-28, en CI y nada más. Corría además en `pre-commit` y en
+`pre-push`, y ese `pre-push` ejecutaba **el mismo comando que CI**: dos tiros
+del mismo dado sobre el mismo diff, que por eso mismo no coincidían. La
+decisión, los números que la forzaron y lo que se pierde con ella están en
+ADR 0001 §7; acá no se repiten.
+
+Lo que sí cambia para quien escribe: `pnpm reglas` da la señal determinista
+en cada commit, y `pnpm revision` corre el revisor de IA a demanda cuando el
+PR es grande y conviene verlo antes de empujar.
 
 ### Dos rondas, y la segunda no corrige
 

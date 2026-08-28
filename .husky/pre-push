@@ -4,17 +4,12 @@
 pnpm check || exit 1
 pnpm vitest run --project unit || exit 1
 
-# Revision de IA en el mismo modo que CI: mismo comando, misma variante del
-# modelo (GGA_OPENCODE_VARIANT=high). El pre-commit corre en modo rapido a
-# proposito (comodidad, no la reja real, ver ADR 0001 seccion 7) — pero eso
-# significa que un hallazgo que solo el modo `high` ve no aparecia hasta
-# despues de empujar y esperar a CI. Corrida aca, aparece antes de salir de
-# la maquina, sin la vuelta completa de push + Actions + otro push.
-#
-# Solo en ramas con PR de por medio: en `main` no hay contra que comparar.
-if [ "$(git branch --show-current)" != "main" ]; then
-  GGA_OPENCODE_VARIANT=high gga run --pr-mode --diff-only || exit 1
-fi
+# La revision de IA NO corre aca. Corria, con el mismo comando que CI, y esa
+# era justamente la razon para sacarla: dos corridas del mismo modelo sobre
+# el mismo diff no coinciden, asi que el hook no evitaba la vuelta por CI
+# —solo la pagaba dos veces. Queda a demanda en `pnpm revision`, y como gate
+# en CI, que es el unico que bloquea el merge.
+# Ver docs/adr/0001-decisiones-tecnicas-fase-0.md seccion 7.
 
 # Los tests de aislamiento necesitan Postgres. Se corren si hay base; si no
 # la hay, se avisa fuerte y se sigue.

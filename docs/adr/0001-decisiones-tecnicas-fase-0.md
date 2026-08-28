@@ -513,14 +513,15 @@ por día, y el sello de la bitácora cuando se muestra.
 
 ---
 
-## 7. Hooks de git — Husky es el dueño, GGA es una línea adentro
+## 7. Hooks de git — Husky es el dueño, la revisión de IA vive en CI
 
 ### Decisión
 
 | Herramienta | Rol | Dónde vive |
 |---|---|---|
 | **Husky** | Dueño de los hooks | `devDependency` + `.husky/`, commiteado |
-| **GGA** | Revisión de IA sobre lo generado | Una línea en `.husky/pre-commit` |
+| **GGA** | Revisión de IA sobre lo generado | Job `revision` de CI, y `pnpm revision` a demanda |
+| **`pnpm reglas`** | Las reglas de AGENTS.md que decide un patrón | `pre-commit`, `check` y CI |
 | **commitlint** | Formato del mensaje de commit | `commit-msg` |
 
 ### No se corre `gga install`
@@ -548,8 +549,13 @@ GGA va como una línea del archivo que sí commiteamos:
 pnpm biome check --staged
 pnpm typecheck
 pnpm test --changed
-gga run
+pnpm reglas
 ```
+
+El argumento de arriba —un hook que se instala solo no viaja con el
+repositorio— vale igual para `pnpm reglas`, que es lo que ocupa hoy ese
+lugar. GGA se sacó de los hooks por costo, no por instalación; el detalle,
+más abajo en esta misma sección.
 
 ### Por qué GGA está en este proyecto
 
@@ -589,29 +595,78 @@ La reja que no se puede saltar es CI, y ahí GGA corre sobre el PR completo:
 gga run --pr-mode --diff-only
 ```
 
-**`pre-commit` corre en modo rápido a propósito** (sin `GGA_OPENCODE_VARIANT`,
-que en CI va en `high`): es la señal más barata posible en cada commit. El
-costo de esa velocidad es real — un hallazgo que solo el modo `high` ve no
-aparecía hasta después de empujar y esperar a CI, con el PR entero ya
-revisado por el modo rápido. Eso generó ciclos de "pasa local, falla CI,
-corrijo, empujo, falla de nuevo" que se notaron primero por el gasto de
-tokens que costaban, no por una regla mal escrita.
+**Revisado el 2026-08-28: la revisión de IA ya no corre en ningún hook
+local.** Corre en CI, y a demanda con `pnpm revision`.
 
-**`pre-push` sí corre el mismo comando que CI**, mismo modo `high` incluido
-(agregado 2026-08-22, tras medir el patrón de arriba en `padron-ciudadano`
-rebanada 3). No reemplaza a CI —sigue siendo la reja que no se puede
-saltar—, pero mueve el hallazgo caro a la máquina de quien empuja, antes de
-la vuelta completa de push + Actions + otro push. `pre-commit` se deja como
-está: sigue siendo la señal rápida por commit: un push agrupa varios
-commits, así que pagar el modo `high` ahí y no en cada commit es el mismo
-principio de "la herramienta más simple que alcance" aplicado al costo, no
-solo a la lógica.
+La versión anterior de esta sección puso GGA en `pre-commit` (modo rápido) y
+después también en `pre-push` (modo `high`, agregado el 2026-08-22 tras medir
+el patrón en `padron-ciudadano` rebanada 3), con este razonamiento: mover el
+hallazgo caro a la máquina de quien empuja evita la vuelta completa de push +
+Actions + otro push.
 
-Ni con esto desaparece la discrepancia entera: el modelo no es
-determinista. Se verificó reintentando el mismo job de CI sobre el mismo
-commit sin cambiar nada — la primera corrida falló por respuesta ambigua,
-la segunda encontró hallazgos reales distintos. Alinear el comando reduce
-la superficie de discrepancia; no la elimina.
+Ese razonamiento tenía un agujero, y la versión anterior de esta sección ya
+lo nombraba sin sacarle la conclusión: **el modelo no es determinista**. Se
+verificó reintentando el mismo job de CI sobre el mismo commit sin cambiar
+nada, y las dos corridas encontraron cosas distintas. Si `pre-push` y CI
+ejecutan el mismo comando no determinista, `pre-push` **no puede** evitar la
+vuelta por CI — CI vuelve a tirar el dado. Lo único que garantiza es pagar el
+dado dos veces.
+
+Lo que decidió el cambio fue el costo, medido sobre 30 días al 2026-08-28:
+
+| | |
+|---|---|
+| Gasto | $40.76 USD |
+| Requests | 3,942 |
+| Tokens | 413,155,805 |
+| **Promedio** | **~105k tokens por request** |
+
+Una rama de tres commits pagaba cinco revisiones del mismo trabajo: tres de
+`pre-commit` —una por commit, sobre el rango `main...HEAD` que crece— más la
+de `pre-push` más la de CI. Con tres empujones de corrección, once.
+
+### Dónde quedó cada cosa
+
+| Gate | Qué corre | Dónde |
+|---|---|---|
+| Determinista | `pnpm reglas` — las reglas de AGENTS.md que decide un patrón | `pre-commit`, `pre-push` (vía `check`) y CI |
+| No determinista | GGA sobre el PR | Solo CI |
+| A demanda | `pnpm revision` — el mismo comando que CI | Cuando quien escribe lo pide |
+
+El criterio: **lo que se puede decidir con un patrón no paga un modelo.**
+`pnpm reglas` cubre ocho antipatrones (2, 3, 5, 9, 12, 20, 21 y 25), corre en
+un segundo sobre el repositorio entero y da el mismo resultado en las dos
+máquinas. A GGA le queda lo que pide criterio —si un `try/catch` traga el
+error, si un nombre es vago, si un comentario reformula el código—, que es
+donde su costo se justifica.
+
+`pnpm revision` existe para no perder la opción: en un PR grande, correrlo
+antes de empujar sigue siendo buena idea. La diferencia es que ahora es una
+decisión de quien escribe, no un peaje en cada push.
+
+### Lo que se pierde, dicho de frente
+
+La revisión de IA ahora solo aparece después de empujar. Es más lento para el
+hallazgo que GGA sí encuentra. Se acepta porque el hallazgo que llegaba antes
+llegaba **además** del de CI, no **en vez** del de CI: la vuelta seguía
+existiendo igual.
+
+Y hay dos historias que este proyecto pagó y que conviene no repetir, las dos
+del mismo defecto —una reja que sale en verde sin revisar nada—:
+
+- `gga run` a secas mira solo el diff staged: en una rama de varios commits
+  reporta como ausente todo lo ya commiteado. En `auth-rbac` PR 2 dijo tres
+  veces que `verificaciones` no tenía test de aislamiento, con los cinco
+  `*.isolation.test.ts` commiteados y pasando.
+- `gga run --pr-mode` sobre una rama sin commits por delante de `main` ve un
+  rango vacío, reporta `No matching files changed in PR` y **sale en verde
+  sin revisar una línea**. Pasó con `feat/bitacora-alta`, y es el mismo
+  defecto que el job de CI tuvo por no bajar la rama base.
+
+En CI ninguno de los dos aplica: un PR siempre tiene commits por delante de
+`main`, y el job hace `git fetch origin main:main` antes de revisar.
+`pnpm reglas` no tiene ninguno de los dos modos de falla porque no calcula
+rango: lee el repositorio entero.
 
 ### Proveedor: opencode
 
