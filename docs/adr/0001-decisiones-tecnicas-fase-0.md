@@ -636,7 +636,15 @@ de `pre-push` más la de CI. Con tres empujones de corrección, once.
 El criterio: **lo que se puede decidir con un patrón no paga un modelo.**
 `pnpm reglas` cubre ocho antipatrones (2, 3, 5, 9, 12, 20, 21 y 25), corre en
 un segundo sobre el repositorio entero y da el mismo resultado en las dos
-máquinas. A GGA le queda lo que pide criterio —si un `try/catch` traga el
+máquinas.
+
+Con un límite que conviene decir: cubre lo que un patrón alcanza de cada
+antipatrón, no el antipatrón entero. El caso claro es el 2. La regla lleva
+una lista de los archivos que pueden importar el driver, así que abrir una
+salida nueva dentro de `shared/tenancy` obliga a tocar esa lista — que es lo
+que pide la regla 2 al decir que no se usa una cuarta sin actualizarla. Lo
+que no puede es juzgar si esa cuarta salida está *justificada*. Eso lo lee
+una persona, y ahí sigue valiendo el revisor. A GGA le queda lo que pide criterio —si un `try/catch` traga el
 error, si un nombre es vago, si un comentario reformula el código—, que es
 donde su costo se justifica.
 

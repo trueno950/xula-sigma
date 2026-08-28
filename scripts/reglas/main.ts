@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { type Archivo, type Hallazgo, reglas, revisar } from "./reglas";
+import { existsSync, readFileSync } from "node:fs";
+import { type Archivo, type Hallazgo, reglas, revisar } from "./index";
 
 /**
  * Revisa el repositorio ENTERO, no el diff.
@@ -18,20 +18,22 @@ const EXTENSIONES = /\.(tsx?|sql)$/;
 /**
  * El corpus de prueba del propio verificador.
  *
- * `reglas.test.ts` tiene que contener, literales, las violaciones que las
- * reglas buscan: un `SET app.tenant` sin `LOCAL`, una cita a `sign-up.mjs`
- * sin version. Sin eso los tests no probarian nada. Escaneandolo, el
- * verificador se marca a si mismo y no deja commitear.
+ * `tenancia.test.ts` y `codigo.test.ts` tienen que contener, literales, las
+ * violaciones que las reglas buscan: un `SET app.tenant` sin `LOCAL`, un
+ * `const numeroDeSesión`, una cita a `sign-up.mjs` sin version. Sin eso los
+ * tests no probarian nada. Escaneandolos, el verificador se marca a si mismo
+ * y no deja commitear.
  *
- * La exclusion es de UN archivo, no del directorio: `reglas.ts` y este mismo
- * `main.ts` siguen bajo la reja. Y se anuncia en la salida —abajo— porque
- * una exclusion que no se ve es un agujero, y este proyecto ya pago dos
- * veces por rejas que salian en verde sin revisar nada.
+ * La exclusion alcanza solo a los `*.test.ts` de este directorio: `tipos.ts`,
+ * `comunes.ts`, `pruebas.ts`, `index.ts`, las reglas y este mismo `main.ts`
+ * siguen bajo la reja. Y se anuncia en la salida —abajo— porque una
+ * exclusion que no se ve es un agujero, y este proyecto ya pago dos veces
+ * por rejas que salian en verde sin revisar nada.
  *
- * Que las reglas funcionen no lo demuestra este escaneo: lo demuestran los
- * 31 tests de `reglas.test.ts`, que corren en `unit` y en CI.
+ * Que las reglas funcionen no lo demuestra este escaneo: lo demuestran sus
+ * tests, que corren en `unit` y en CI.
  */
-const CORPUS_DE_PRUEBA = "scripts/reglas/reglas.test.ts";
+const CORPUS_DE_PRUEBA = /^scripts\/reglas\/.*\.test\.ts$/;
 
 function archivosRastreados(): Archivo[] {
   const salida = execFileSync("git", ["ls-files", "-z"], {
@@ -39,11 +41,18 @@ function archivosRastreados(): Archivo[] {
     maxBuffer: 64 * 1024 * 1024,
   });
 
-  return salida
-    .split("\0")
-    .filter((ruta) => ruta !== "" && EXTENSIONES.test(ruta))
-    .filter((ruta) => ruta !== CORPUS_DE_PRUEBA)
-    .map((ruta) => ({ ruta, contenido: readFileSync(ruta, "utf8") }));
+  return (
+    salida
+      .split("\0")
+      .filter((ruta) => ruta !== "" && EXTENSIONES.test(ruta))
+      .filter((ruta) => !CORPUS_DE_PRUEBA.test(ruta))
+      // `git ls-files` lista lo rastreado, y un archivo borrado que todavia no
+      // se puso en el indice sigue apareciendo. Es el estado normal a mitad de
+      // un renombrado. Sin esta guarda el verificador aborta con ENOENT en vez
+      // de revisar, y un gate que se cae no es un gate.
+      .filter((ruta) => existsSync(ruta))
+      .map((ruta) => ({ ruta, contenido: readFileSync(ruta, "utf8") }))
+  );
 }
 
 function informar(hallazgos: Hallazgo[]): void {
@@ -76,7 +85,7 @@ if (hallazgos.length === 0) {
   console.error(
     `  ${reglas.length} reglas sobre ${archivos.length} archivos: sin hallazgos.`,
   );
-  console.error(`  (excluido: ${CORPUS_DE_PRUEBA}, el corpus de prueba)`);
+  console.error("  (excluidos: los *.test.ts del propio verificador)");
   process.exit(0);
 }
 

@@ -210,13 +210,18 @@ Violarlo rompe el build. No es una convención que se recuerda.
 
 ## 4. Checklist pre-commit
 
-**Nueve de estos puntos ya los verifica `pnpm reglas`**, que corre en el hook
-de `pre-commit` y en CI: `any`, acentos en identificadores, `withTenant`,
-`SET LOCAL`, RLS de tabla nueva, secuencia para folios, assets al filesystem,
-capas de un módulo y cita a línea de paquete sin versión. Están igual en la
-lista porque la lista es el contrato; la diferencia es que esos no dependen
-de que alguien se acuerde. Los que quedan —código comentado, TODO sin issue,
-nombres vagos, anidación— piden criterio, y por eso siguen siendo lectura.
+**Ocho de estos puntos los verifica `pnpm reglas`**, que corre en el hook de
+`pre-commit` y en CI: acentos en identificadores, `withTenant`, `SET LOCAL`,
+RLS de tabla nueva, secuencia para folios, assets al filesystem, capas de un
+módulo y cita a línea de paquete sin versión. `any` también es automático,
+pero lo verifica Biome (`noExplicitAny`), no `pnpm reglas` — la distinción
+importa el día que alguien busque en `scripts/reglas/` la regla que lo cubre
+y no la encuentre.
+
+Están igual en la lista porque la lista es el contrato; la diferencia es que
+esos no dependen de que alguien se acuerde. Los que quedan —código
+comentado, TODO sin issue, nombres vagos, anidación— piden criterio, y por
+eso siguen siendo lectura.
 
 ```markdown
 ### Código
