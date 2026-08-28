@@ -45,3 +45,55 @@ export const sinComentarios = (contenido: string): string =>
   contenido.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*|--[^\n]*/g, (encontrado) =>
     encontrado.replace(/[^\n]/g, " "),
   );
+
+/**
+ * Los argumentos de una llamada, contando parentesis.
+ *
+ * Una expresion regular no puede cruzar un parentesis anidado, y en este
+ * repositorio el valor de `set_config` a veces es una subconsulta entera
+ * —`scripts/plataforma-admin.sql:31`—. Con `[^)]*` el match se frenaba en el
+ * parentesis de adentro y nunca llegaba al tercer argumento, que es el unico
+ * que importa. Contar profundidad es la unica forma honesta.
+ *
+ * `desde` es el indice del parentesis que abre. Devuelve null si no cierra.
+ */
+export const argumentosDeLlamada = (
+  texto: string,
+  desde: number,
+): string | null => {
+  let profundidad = 0;
+
+  for (let i = desde; i < texto.length; i++) {
+    if (texto[i] === "(") profundidad++;
+    else if (texto[i] === ")") {
+      profundidad--;
+      if (profundidad === 0) return texto.slice(desde + 1, i);
+    }
+  }
+
+  return null;
+};
+
+/** Parte por las comas del nivel exterior, ignorando las de adentro. */
+export const porComasExternas = (argumentos: string): string[] => {
+  const partes: string[] = [];
+  let profundidad = 0;
+  let actual = "";
+
+  for (const caracter of argumentos) {
+    if (caracter === "(") profundidad++;
+    if (caracter === ")") profundidad--;
+
+    if (caracter === "," && profundidad === 0) {
+      partes.push(actual);
+      actual = "";
+      continue;
+    }
+
+    actual += caracter;
+  }
+
+  partes.push(actual);
+
+  return partes.map((parte) => parte.trim());
+};

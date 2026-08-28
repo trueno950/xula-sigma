@@ -1,26 +1,76 @@
 import { escapar, esSql, lineaDe } from "../comunes";
 import type { Archivo, Regla } from "../tipos";
 
+/** Las sentencias de un tipo que hablan de una tabla, ya separadas por `;`. */
+const sentenciasSobre = (
+  contenido: string,
+  arranque: RegExp,
+  tabla: string,
+): string[] =>
+  contenido
+    .split(";")
+    .filter(
+      (sentencia) =>
+        arranque.test(sentencia) &&
+        new RegExp(`\\bON\\s+"${escapar(tabla)}"`).test(sentencia),
+    );
+
+/**
+ * Las cuatro piezas, verificadas por CONTENIDO y no por presencia.
+ *
+ * La version anterior solo preguntaba si existia una politica que nombrara la
+ * tabla y un GRANT que la nombrara. Con eso, `CREATE POLICY ... USING (true)`
+ * pasaba en verde: una politica que no filtra por nada, sobre una tabla con
+ * `ayuntamiento_id`. Y un `GRANT ... TO "xula_super_admin"` sin el rol de
+ * aplicacion tambien pasaba.
+ *
+ * El fixture del propio test lo delataba: construia el caso "correcto" con
+ * `USING (true)`. O sea que la reja estaba disenada para aprobar exactamente
+ * lo que existe para impedir. En cualquier otra regla la parcialidad se
+ * discute; en esta no, porque es la garantia de aislamiento entre municipios.
+ *
+ * Alcanza con que UNA politica filtre por tenant: una tabla puede tener
+ * ademas la del super admin, con otro predicado y a proposito.
+ */
 const piezasDeRls = (contenido: string, tabla: string): string[] => {
   const n = escapar(tabla);
+  const faltantes: string[] = [];
 
-  return [
-    {
-      que: "ENABLE ROW LEVEL SECURITY",
-      patron: new RegExp(`ALTER TABLE\\s+"${n}"\\s+ENABLE ROW LEVEL SECURITY`),
-    },
-    {
-      que: "FORCE ROW LEVEL SECURITY",
-      patron: new RegExp(`ALTER TABLE\\s+"${n}"\\s+FORCE ROW LEVEL SECURITY`),
-    },
-    {
-      que: "CREATE POLICY",
-      patron: new RegExp(`CREATE POLICY[^;]*?\\bON\\s+"${n}"`),
-    },
-    { que: "GRANT", patron: new RegExp(`GRANT[^;]*?\\bON\\s+"${n}"`) },
-  ]
-    .filter(({ patron }) => !patron.test(contenido))
-    .map(({ que }) => que);
+  if (
+    !new RegExp(`ALTER TABLE\\s+"${n}"\\s+ENABLE ROW LEVEL SECURITY`).test(
+      contenido,
+    )
+  ) {
+    faltantes.push("ENABLE ROW LEVEL SECURITY");
+  }
+
+  if (
+    !new RegExp(`ALTER TABLE\\s+"${n}"\\s+FORCE ROW LEVEL SECURITY`).test(
+      contenido,
+    )
+  ) {
+    faltantes.push("FORCE ROW LEVEL SECURITY");
+  }
+
+  const politicas = sentenciasSobre(contenido, /CREATE POLICY/i, tabla);
+
+  if (politicas.length === 0) {
+    faltantes.push("CREATE POLICY");
+  } else if (
+    !politicas.some((politica) => /ayuntamiento_id|app\.tenant/i.test(politica))
+  ) {
+    faltantes.push("una CREATE POLICY que filtre por el tenant");
+  }
+
+  const permisos = sentenciasSobre(contenido, /GRANT/i, tabla);
+
+  if (permisos.length === 0) {
+    faltantes.push("GRANT");
+  } else if (!permisos.some((permiso) => /TO\s+"xula_app"/i.test(permiso))) {
+    faltantes.push('un GRANT al rol de aplicacion (TO "xula_app")');
+  }
+
+  return faltantes;
 };
 
 /**

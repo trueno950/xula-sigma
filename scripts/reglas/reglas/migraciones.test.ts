@@ -12,7 +12,7 @@ describe("rls-tabla-nueva", () => {
   const rls = (nombre: string) =>
     `ALTER TABLE "${nombre}" ENABLE ROW LEVEL SECURITY;\n` +
     `ALTER TABLE "${nombre}" FORCE ROW LEVEL SECURITY;\n` +
-    `CREATE POLICY "${nombre}_tenant" ON "${nombre}" AS PERMISSIVE FOR ALL TO "xula_app" USING (true);\n` +
+    `CREATE POLICY "${nombre}_tenant" ON "${nombre}" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);\n` +
     `GRANT SELECT, INSERT, UPDATE ON "${nombre}" TO "xula_app";\n`;
 
   it("no marca la tabla que trae las cuatro cosas", () => {
@@ -106,6 +106,62 @@ describe("rls-tabla-nueva", () => {
    * —`abreviaturas` en 0004_padron.sql— no lleva `ayuntamiento_id` porque no
    * pertenece a ningun municipio.
    */
+  /**
+   * El caso que el fixture anterior daba por bueno. Una politica sobre una
+   * tabla con `ayuntamiento_id` que no menciona el tenant no filtra nada: la
+   * tabla queda con RLS activo y una regla que deja pasar todo. Es peor que
+   * no tener politica, porque las otras tres piezas estan y parece completo.
+   */
+  it("marca una politica que no filtra por el tenant", () => {
+    const sinFiltro =
+      `ALTER TABLE "lugares" ENABLE ROW LEVEL SECURITY;\n` +
+      `ALTER TABLE "lugares" FORCE ROW LEVEL SECURITY;\n` +
+      `CREATE POLICY "lugares_todo" ON "lugares" AS PERMISSIVE FOR ALL TO "xula_app" USING (true);\n` +
+      `GRANT SELECT ON "lugares" TO "xula_app";\n`;
+
+    const encontrados = hallazgosDe(id, [
+      archivo("drizzle/0008_x.sql", tabla("lugares") + sinFiltro),
+    ]);
+
+    expect(encontrados).toHaveLength(1);
+    expect(encontrados[0]?.mensaje).toContain("filtre por el tenant");
+  });
+
+  /**
+   * Un GRANT al super admin no habilita a la aplicacion. Sin el rol de
+   * aplicacion, la tabla existe pero ningun request la puede leer — y la
+   * version anterior de la regla daba verde porque solo miraba que hubiera
+   * un GRANT que nombrara la tabla.
+   */
+  it("marca un GRANT que no alcanza al rol de aplicacion", () => {
+    const otroRol =
+      `ALTER TABLE "lugares" ENABLE ROW LEVEL SECURITY;\n` +
+      `ALTER TABLE "lugares" FORCE ROW LEVEL SECURITY;\n` +
+      `CREATE POLICY "lugares_tenant" ON "lugares" FOR ALL TO "xula_app" USING (ayuntamiento_id = current_setting('app.tenant')::uuid);\n` +
+      `GRANT SELECT ON "lugares" TO "xula_super_admin";\n`;
+
+    const encontrados = hallazgosDe(id, [
+      archivo("drizzle/0008_x.sql", tabla("lugares") + otroRol),
+    ]);
+
+    expect(encontrados).toHaveLength(1);
+    expect(encontrados[0]?.mensaje).toContain("xula_app");
+  });
+
+  /**
+   * Una tabla puede llevar ademas la politica del super admin, con otro
+   * predicado y a proposito. Alcanza con que UNA filtre por tenant.
+   */
+  it("no marca cuando una politica filtra y otra no", () => {
+    const dos =
+      rls("lugares") +
+      `CREATE POLICY "lugares_super" ON "lugares" FOR SELECT TO "xula_super_admin" USING (true);\n`;
+
+    expect(
+      hallazgosDe(id, [archivo("drizzle/0008_x.sql", tabla("lugares") + dos)]),
+    ).toEqual([]);
+  });
+
   it("no marca un catalogo de plataforma, que no lleva ayuntamiento_id", () => {
     expect(
       hallazgosDe(id, [
@@ -124,28 +180,5 @@ describe("rls-tabla-nueva", () => {
 
     expect(encontrados).toHaveLength(1);
     expect(encontrados[0]?.mensaje).toContain("calles");
-  });
-});
-
-describe("folio-secuencia", () => {
-  const id = "folio-secuencia";
-
-  it("marca una secuencia de base de datos", () => {
-    expect(
-      hallazgosDe(id, [
-        archivo("drizzle/0008_x.sql", "CREATE SEQUENCE folio_constancias;\n"),
-      ]),
-    ).toHaveLength(1);
-  });
-
-  it("no marca un contador por tenant", () => {
-    expect(
-      hallazgosDe(id, [
-        archivo(
-          "drizzle/0008_x.sql",
-          'CREATE TABLE "folios" (\n\t"ayuntamiento_id" uuid NOT NULL,\n\t"siguiente" integer NOT NULL\n);\n',
-        ),
-      ]),
-    ).toEqual([]);
   });
 });

@@ -1,4 +1,11 @@
-import { esSql, esTypeScript, lineaDe, sinComentarios } from "../comunes";
+import {
+  argumentosDeLlamada,
+  esSql,
+  esTypeScript,
+  lineaDe,
+  porComasExternas,
+  sinComentarios,
+} from "../comunes";
 import type { Regla } from "../tipos";
 
 /**
@@ -100,6 +107,41 @@ export const driverFueraDeTenancy: Regla = {
  * trabajo que un patron no hace solo: leer como fija el tenant este
  * proyecto en vez de como lo describe el documento.
  */
+/**
+ * `set_config` con parentesis contados, no con una expresion regular.
+ *
+ * El valor puede ser una subconsulta con sus propios parentesis —es la forma
+ * de `scripts/plataforma-admin.sql:31`— y ahi `[^)]*` se frenaba antes de
+ * llegar al tercer argumento, que es el unico que decide si la variable
+ * muere en el COMMIT. La fuga se colaba justo en la forma que el repositorio
+ * escribe de verdad.
+ */
+const configuracionesNoLocales = (codigo: string, ruta: string) => {
+  const hallazgos = [];
+
+  for (const encontrado of codigo.matchAll(/set_config\s*\(/gi)) {
+    const abre = encontrado.index + encontrado[0].length - 1;
+    const argumentos = argumentosDeLlamada(codigo, abre);
+    if (argumentos === null) continue;
+
+    const partes = porComasExternas(argumentos);
+    if (!/^false$/i.test(partes[2] ?? "")) continue;
+
+    const parametro = /['"`]([^'"`]+)['"`]/.exec(partes[0] ?? "");
+
+    // El mensaje no reproduce la forma de la llamada a proposito: si la
+    // citara literal, esta misma linea seria un hallazgo. Es el limite de un
+    // verificador escrito con los patrones que busca.
+    hallazgos.push({
+      ruta,
+      linea: lineaDe(codigo, encontrado.index),
+      mensaje: `\`set_config\` sobre \`${parametro?.[1] ?? "?"}\` con el tercer argumento en \`false\`: sobrevive a la transaccion y lo hereda el proximo request. Va en \`true\`.`,
+    });
+  }
+
+  return hallazgos;
+};
+
 export const setSinLocal: Regla = {
   id: "set-local",
   antipatron: 3,
@@ -126,20 +168,7 @@ export const setSinLocal: Regla = {
         });
       }
 
-      const noLocal = /set_config\s*\(([^)]*?),\s*false\s*\)/gi;
-
-      for (const encontrado of codigo.matchAll(noLocal)) {
-        const parametro = /['"`]([^'"`]+)['"`]/.exec(encontrado[1] ?? "");
-
-        hallazgos.push({
-          ruta: archivo.ruta,
-          linea: lineaDe(codigo, encontrado.index),
-          // El mensaje no reproduce la forma de la llamada a proposito: si
-          // la citara literal, esta misma linea seria un hallazgo. Es el
-          // limite de un verificador escrito con los patrones que busca.
-          mensaje: `\`set_config\` sobre \`${parametro?.[1] ?? "?"}\` con el tercer argumento en \`false\`: sobrevive a la transaccion y lo hereda el proximo request. Va en \`true\`.`,
-        });
-      }
+      hallazgos.push(...configuracionesNoLocales(codigo, archivo.ruta));
     }
 
     return hallazgos;

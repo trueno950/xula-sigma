@@ -63,6 +63,40 @@ describe("set-local", () => {
   });
 
   /**
+   * La forma real de `scripts/plataforma-admin.sql:31`: el valor es una
+   * subconsulta con sus propios parentesis. La version anterior de la regla
+   * usaba `[^)]*` y el match se frenaba ahi, sin llegar nunca al tercer
+   * argumento — o sea que la fuga se colaba justo en la forma que el
+   * repositorio escribe de verdad.
+   */
+  it("marca set_config en false aunque el valor sea una subconsulta", () => {
+    const encontrados = hallazgosDe(id, [
+      archivo(
+        "scripts/plataforma-admin.sql",
+        "SELECT set_config(\n  'app.tenant',\n" +
+          "  (SELECT id::text FROM ayuntamientos WHERE es_plataforma),\n" +
+          "  false\n);\n",
+      ),
+    ]);
+
+    expect(encontrados).toHaveLength(1);
+    expect(encontrados[0]?.mensaje).toContain("app.tenant");
+  });
+
+  it("no marca la misma subconsulta cuando cierra en true", () => {
+    expect(
+      hallazgosDe(id, [
+        archivo(
+          "scripts/plataforma-admin.sql",
+          "SELECT set_config(\n  'app.tenant',\n" +
+            "  (SELECT id::text FROM ayuntamientos WHERE es_plataforma),\n" +
+            "  true\n);\n",
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  /**
    * Un comentario que DESCRIBE la fuga no es la fuga. Sin esta distincion el
    * propio archivo de la regla se marcaba a si mismo, y el unico arreglo
    * habria sido dejar de explicar por que la regla existe.
