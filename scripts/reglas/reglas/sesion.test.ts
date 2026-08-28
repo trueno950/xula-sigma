@@ -43,7 +43,7 @@ describe("set-local", () => {
     const encontrados = hallazgosDe(id, [
       archivo(
         "src/shared/tenancy/withTenant.ts",
-        "await tx`SELECT set_config('app.tenant', ${id}, false)`;\n",
+        "await tx`SELECT set_config('app.tenant', 'merida', false)`;\n",
       ),
     ]);
 
@@ -56,7 +56,7 @@ describe("set-local", () => {
       hallazgosDe(id, [
         archivo(
           "src/shared/tenancy/withTenant.ts",
-          "await tx`SELECT set_config('app.tenant', ${id}, true)`;\n",
+          "await tx`SELECT set_config('app.tenant', 'merida', true)`;\n",
         ),
       ]),
     ).toEqual([]);

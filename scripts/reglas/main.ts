@@ -5,7 +5,7 @@ import { type Archivo, type Hallazgo, reglas, revisar } from "./index";
 /**
  * Revisa el repositorio ENTERO, no el diff.
  *
- * Es la ventaja concreta sobre el revisor de IA: leer 8 reglas sobre todos
+ * Es la ventaja concreta sobre el revisor de IA: leer todas las reglas sobre
  * los archivos rastreados tarda milisegundos y cuesta cero, asi que no hay
  * ninguna razon para acotar el alcance. Acotarlo, ademas, reintroduce el
  * defecto que ya se pago dos veces en este proyecto: `--pr-mode` sobre una
