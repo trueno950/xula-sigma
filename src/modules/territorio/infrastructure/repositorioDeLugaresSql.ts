@@ -123,13 +123,13 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
         SELECT l.id, d.profundidad + 1
           FROM lugares l
           JOIN descendientes d ON l.padre_id = d.id
-         WHERE d.profundidad < 8
+         WHERE d.profundidad < 8 AND l.baja_en IS NULL
       )
       SELECT 'lugar' AS clase, l.id, l.tipo, l.nombre,
              l.padre_id AS "padreId", NULL::uuid AS "lugarId"
         FROM lugares l
         JOIN descendientes d ON d.id = l.id
-       WHERE l.id <> ${raizId}
+       WHERE l.id <> ${raizId} AND l.baja_en IS NULL
       UNION ALL
       SELECT 'domicilio' AS clase, dom.id, NULL, NULL,
              NULL, dom.lugar_id AS "lugarId"

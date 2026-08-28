@@ -14,8 +14,7 @@ import { repositorioDeLugaresSql } from "./infrastructure/repositorioDeLugaresSq
 
 /**
  * Forma canonica del test de aislamiento (`invariantes-criticos.md`, Capa
- * 2): inserta directo con `withTenant`, sin caso de uso -todavia no
- * existe ninguno (tasks.md Fase 3)-.
+ * 2): inserta directo con `withTenant`, sin pasar por caso de uso.
  */
 
 beforeAll(async () => {
