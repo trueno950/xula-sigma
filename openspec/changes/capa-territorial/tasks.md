@@ -396,15 +396,15 @@ Depende de la Fase 2 (solo necesita los objetos de tabla). Se secuencia al
 final por conveniencia de revision, no por dependencia de codigo con las
 Fases 3-6.
 
-- [ ] 7.1 RED `territorio/composicion.test.ts` (clon de
+- [x] 7.1 RED `territorio/composicion.test.ts` (clon de
       `padron/composicion.test.ts`, `tx` fabricado a mano, sin Postgres):
       las cuatro `PorcionExportable` devuelven columnas listadas una por
       una, nunca `select()` pelado; `residencias` incluye `personaId` crudo.
-- [ ] 7.2 GREEN `porcionesDeTerritorio` en `territorio/composicion.ts`.
-- [ ] 7.3 RED verificar que `nombre` de las cuatro porciones no choca con
+- [x] 7.2 GREEN `porcionesDeTerritorio` en `territorio/composicion.ts`.
+- [x] 7.3 RED verificar que `nombre` de las cuatro porciones no choca con
       `usuarios`, `bitacora`, `personas` en `conjuntosDePlataforma`.
-- [ ] 7.4 GREEN (ajustar nombres si hay colision).
-- [ ] 7.5 `src/app/exportacion/porciones.ts`: `export const porciones:
+- [x] 7.4 GREEN (ajustar nombres si hay colision).
+- [x] 7.5 `src/app/exportacion/porciones.ts`: `export const porciones:
       readonly PorcionExportable[] = [porcionDePadron,
       ...porcionesDeTerritorio]`.
-- [ ] 7.6 `pnpm check` + `pnpm test` en verde.
+- [x] 7.6 `pnpm check` + `pnpm test` en verde.

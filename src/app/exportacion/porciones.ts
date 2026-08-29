@@ -1,4 +1,5 @@
 import { porcionDePadron } from "@/modules/padron";
+import { porcionesDeTerritorio } from "@/modules/territorio";
 import type { PorcionExportable } from "@/shared/exportacion/exportar";
 
 /**
@@ -9,4 +10,7 @@ import type { PorcionExportable } from "@/shared/exportacion/exportar";
  * Por que vive en `src/app` y no en `shared`: el `@param porciones` de
  * `exportarAyuntamiento` (`exportar.ts`).
  */
-export const porciones: readonly PorcionExportable[] = [porcionDePadron];
+export const porciones: readonly PorcionExportable[] = [
+  porcionDePadron,
+  ...porcionesDeTerritorio,
+];
