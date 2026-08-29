@@ -29,6 +29,11 @@ jobs:
       - run: pnpm typecheck
       # Los limites de capa. Violarlos rompe el build, no es sugerencia.
       - run: pnpm layers
+      # Las reglas de AGENTS.md que no necesitan un modelo para decidirse.
+      # Determinista: el mismo commit da el mismo resultado aca y en la
+      # maquina de quien lo escribio, que es justo lo que el job `revision`
+      # no puede prometer.
+      - run: pnpm reglas
 
   unitarios:
     name: Tests unitarios
