@@ -7,10 +7,9 @@ import { porcionesDeTerritorio } from "./composicion";
  * alcanza con la parte de la cadena de Drizzle que `leer` realmente usa, y
  * corre sin Postgres.
  *
- * Prueba design.md decision 9: cuatro porciones planas, columnas
- * explicitas -nunca `select()` pelado- y `residencias` exporta
- * `personaId` crudo (el conjunto `personas` ya va en el mismo archivo, y
- * esconderlo dejaria un historial que no se puede leer).
+ * Prueba design.md decision 9; el porque de cada aserto -columnas
+ * explicitas, `personaId` crudo- esta en el comentario de
+ * `porcionesDeTerritorio` en `composicion.ts`, no aca.
  */
 const txDePrueba = () => {
   const from = vi.fn().mockResolvedValue([]);
