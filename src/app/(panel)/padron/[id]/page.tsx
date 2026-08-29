@@ -14,13 +14,18 @@ type Props = {
 };
 
 const esquemaDeParametros = z.object({ error: z.string().optional() });
+const esquemaDeId = z.string().uuid();
 
 /**
  * Unica ruta que compone `padron` y `territorio` (design.md seccion 11,
- * "Composicion de pantallas"): el historial de residencias de una persona
- * necesita los dos, y ninguno de los dos modulos puede importar al otro
- * (`sin-ciclos` en `.dependency-cruiser.cjs`). `src/app` es la unica capa
- * que conoce a ambos.
+ * "Composicion de pantallas"). La dependencia entre modulos es de un solo
+ * sentido: `territorio/infrastructure/lectorDePersonasPorPadron.ts` importa
+ * el barrel de `padron` (puerto propio + adaptador, design.md seccion 6),
+ * pero `padron` nunca importa `territorio` -esa arista no existe, y es lo
+ * que `sin-ciclos` en `.dependency-cruiser.cjs` hace cumplir-. Esta pagina
+ * no repite esa arista: solo necesita leer de los dos barrels para
+ * mostrarlos juntos, algo que ningun modulo podria hacer sin crear una
+ * dependencia permanente entre ellos.
  */
 export default async function PaginaDeDetalleDePersona({
   params,
@@ -42,14 +47,18 @@ export default async function PaginaDeDetalleDePersona({
   const analisis = esquemaDeParametros.safeParse(await searchParams);
   const error = analisis.success ? analisis.data.error : undefined;
 
-  let persona: Awaited<ReturnType<typeof personaPorId>> = null;
-  try {
-    persona = await personaPorId(comoPersonaId(id), contexto);
-  } catch {
-    // `id` con formato invalido: mismo tratamiento que un id inexistente,
-    // nunca un 500 sobre una URL manipulada a mano.
-    persona = null;
-  }
+  /**
+   * El formato se valida con Zod, no con un `try/catch` alrededor de
+   * `personaPorId` (hallazgo de GGA en la revision de esta rebanada): un
+   * `catch` amplio ahi tragaria tambien un fallo real de infraestructura
+   * -conexion caida, timeout- y lo mostraria igual que un id inexistente,
+   * sin log y sin propagar el error. Con la validacion aparte, un fallo de
+   * `personaPorId` que no sea "no encontrado" sigue siendo un error real.
+   */
+  const analisisDeId = esquemaDeId.safeParse(id);
+  const persona = analisisDeId.success
+    ? await personaPorId(comoPersonaId(analisisDeId.data), contexto)
+    : null;
 
   if (!persona) {
     return (
