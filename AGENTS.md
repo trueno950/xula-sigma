@@ -158,6 +158,12 @@ Una tabla puede entrar sin `ayuntamiento_id`, sin RLS y sin política
   mano. Una tabla de esta clase con permiso de escritura para `xula_app` es
   hallazgo aunque no tenga dato de municipio.
 
+`ayuntamientos` también entra sin `ayuntamiento_id`, y no por esta
+excepción: no es un catálogo sino la raíz del tenant —su propio `id` ES el
+municipio— y su política filtra por esa columna. Se nombra acá porque
+`pnpm reglas` la lleva en la misma lista, y una excepción que no está
+escrita se lee como un olvido.
+
 **Una segunda no entra sin agregarse a esta lista**, igual que las salidas
 a la base de la regla 2 y por la misma razón: la excepción anterior se
 escribió en `docs/architecture/invariantes-criticos.md`, que no es un

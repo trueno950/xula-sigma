@@ -1,77 +1,6 @@
-import { escapar, esSql, lineaDe } from "../comunes";
+import { esSql, lineaDe, sinComentarios } from "../comunes";
 import type { Archivo, Regla } from "../tipos";
-
-/** Las sentencias de un tipo que hablan de una tabla, ya separadas por `;`. */
-const sentenciasSobre = (
-  contenido: string,
-  arranque: RegExp,
-  tabla: string,
-): string[] =>
-  contenido
-    .split(";")
-    .filter(
-      (sentencia) =>
-        arranque.test(sentencia) &&
-        new RegExp(`\\bON\\s+"${escapar(tabla)}"`).test(sentencia),
-    );
-
-/**
- * Las cuatro piezas, verificadas por CONTENIDO y no por presencia.
- *
- * La version anterior solo preguntaba si existia una politica que nombrara la
- * tabla y un GRANT que la nombrara. Con eso, `CREATE POLICY ... USING (true)`
- * pasaba en verde: una politica que no filtra por nada, sobre una tabla con
- * `ayuntamiento_id`. Y un `GRANT ... TO "xula_super_admin"` sin el rol de
- * aplicacion tambien pasaba.
- *
- * El fixture del propio test lo delataba: construia el caso "correcto" con
- * `USING (true)`. O sea que la reja estaba disenada para aprobar exactamente
- * lo que existe para impedir. En cualquier otra regla la parcialidad se
- * discute; en esta no, porque es la garantia de aislamiento entre municipios.
- *
- * Alcanza con que UNA politica filtre por tenant: una tabla puede tener
- * ademas la del super admin, con otro predicado y a proposito.
- */
-const piezasDeRls = (contenido: string, tabla: string): string[] => {
-  const n = escapar(tabla);
-  const faltantes: string[] = [];
-
-  if (
-    !new RegExp(`ALTER TABLE\\s+"${n}"\\s+ENABLE ROW LEVEL SECURITY`).test(
-      contenido,
-    )
-  ) {
-    faltantes.push("ENABLE ROW LEVEL SECURITY");
-  }
-
-  if (
-    !new RegExp(`ALTER TABLE\\s+"${n}"\\s+FORCE ROW LEVEL SECURITY`).test(
-      contenido,
-    )
-  ) {
-    faltantes.push("FORCE ROW LEVEL SECURITY");
-  }
-
-  const politicas = sentenciasSobre(contenido, /CREATE POLICY/i, tabla);
-
-  if (politicas.length === 0) {
-    faltantes.push("CREATE POLICY");
-  } else if (
-    !politicas.some((politica) => /ayuntamiento_id|app\.tenant/i.test(politica))
-  ) {
-    faltantes.push("una CREATE POLICY que filtre por el tenant");
-  }
-
-  const permisos = sentenciasSobre(contenido, /GRANT/i, tabla);
-
-  if (permisos.length === 0) {
-    faltantes.push("GRANT");
-  } else if (!permisos.some((permiso) => /TO\s+"xula_app"/i.test(permiso))) {
-    faltantes.push('un GRANT al rol de aplicacion (TO "xula_app")');
-  }
-
-  return faltantes;
-};
+import { escrituraEnCatalogo, exencionDe, piezasDeRls } from "./rls";
 
 /**
  * `IF NOT EXISTS` es opcional en el patron a proposito.
@@ -87,7 +16,7 @@ const piezasDeRls = (contenido: string, tabla: string): string[] => {
  * repositorio ya pago dos veces. Una alternancia cuesta nada; enterarse
  * tarde cuesta un municipio leyendo los datos de otro.
  */
-const tablasDeMunicipio = (archivo: Archivo) =>
+const tablasDeclaradas = (archivo: Archivo) =>
   [
     ...archivo.contenido.matchAll(
       /CREATE TABLE\s+(?:IF NOT EXISTS\s+)?"([^"]+)"\s*\(([\s\S]*?)\n\);/gi,
@@ -95,43 +24,80 @@ const tablasDeMunicipio = (archivo: Archivo) =>
   ]
     .map((tabla) => ({
       nombre: tabla[1] ?? "",
-      cuerpo: tabla[2] ?? "",
+      conTenant: /"ayuntamiento_id"/.test(tabla[2] ?? ""),
       indice: tabla.index,
     }))
-    .filter(
-      (tabla) => tabla.nombre !== "" && /"ayuntamiento_id"/.test(tabla.cuerpo),
-    );
+    .filter((tabla) => tabla.nombre !== "");
 
 /**
- * Las cuatro cosas que hace toda migracion que crea una tabla de municipio.
+ * Las cuatro cosas que hace toda migracion que crea una tabla de municipio,
+ * mas la que las precede: que la tabla lleve `ayuntamiento_id`.
  *
- * La que mas importa es `FORCE`: drizzle-kit genera `ENABLE` solo, nunca
- * `FORCE`, asi que la diferencia entre una tabla aislada y una que el rol
- * dueno lee entera se agrega a mano despues de cada `db:generate`. Es
- * exactamente el tipo de paso que se olvida.
+ * La que mas importa de las cuatro es `FORCE`: drizzle-kit genera `ENABLE`
+ * solo, nunca `FORCE`, asi que la diferencia entre una tabla aislada y una
+ * que el rol dueno lee entera se agrega a mano despues de cada
+ * `db:generate`. Es exactamente el tipo de paso que se olvida.
  *
- * El predicado es la columna, no la tabla: un catalogo de plataforma
- * —`abreviaturas`— no lleva `ayuntamiento_id` porque no pertenece a ningun
- * municipio, y exigirle RLS seria pedirle que filtre contra nada.
+ * La quinta se agrego despues, y por un defecto de esta misma regla: el
+ * filtro de tablas era `/"ayuntamiento_id"/`, o sea que solo revisaba las
+ * que YA tenian la columna. Una tabla de municipio sin ella salia por el
+ * mismo lado que un catalogo de plataforma —sin revisar, en verde—, que es
+ * la fuga mas grave de las cinco y la unica que ninguna otra regla
+ * compensaba. Ahora el default es exigir, y las excepciones se nombran.
  */
+const revisarTabla = (
+  sql: string,
+  tabla: { nombre: string; conTenant: boolean },
+): string[] => {
+  const exencion = exencionDe(tabla.nombre);
+
+  if (exencion === "raiz") return [];
+
+  if (exencion === "catalogo") {
+    return escrituraEnCatalogo(sql, tabla.nombre)
+      ? [
+          "es un catalogo de plataforma con permiso de escritura para `xula_app`: va `SELECT` y nada mas, porque se cura a mano",
+        ]
+      : [];
+  }
+
+  if (!tabla.conTenant) {
+    return [
+      "no lleva `ayuntamiento_id` y no esta en la lista de excepciones: si no guarda dato de ningun municipio, entra a esa lista antes que a la migracion",
+    ];
+  }
+
+  const faltantes = piezasDeRls(sql, tabla.nombre);
+
+  return faltantes.length === 0
+    ? []
+    : [
+        `lleva \`ayuntamiento_id\` y le falta, en este mismo archivo: ${faltantes.join(", ")}`,
+      ];
+};
+
 export const rlsEnTablaNueva: Regla = {
   id: "rls-tabla-nueva",
   antipatron: 5,
-  titulo: "Tabla con ayuntamiento_id sin RLS completo",
+  titulo: "Tabla nueva sin ayuntamiento_id o sin RLS completo",
   revisar(archivos) {
     return archivos
       .filter((archivo) => esSql(archivo.ruta))
+      .map((archivo) => ({
+        ...archivo,
+        contenido: sinComentarios(archivo.contenido),
+      }))
       .flatMap((archivo) =>
-        tablasDeMunicipio(archivo)
+        tablasDeclaradas(archivo)
           .map((tabla) => ({
             tabla,
-            faltantes: piezasDeRls(archivo.contenido, tabla.nombre),
+            fallas: revisarTabla(archivo.contenido, tabla),
           }))
-          .filter(({ faltantes }) => faltantes.length > 0)
-          .map(({ tabla, faltantes }) => ({
+          .filter(({ fallas }) => fallas.length > 0)
+          .map(({ tabla, fallas }) => ({
             ruta: archivo.ruta,
             linea: lineaDe(archivo.contenido, tabla.indice),
-            mensaje: `La tabla \`${tabla.nombre}\` lleva \`ayuntamiento_id\` y le falta, en este mismo archivo: ${faltantes.join(", ")}.`,
+            mensaje: `La tabla \`${tabla.nombre}\` ${fallas.join("; ")}.`,
           })),
       );
   },

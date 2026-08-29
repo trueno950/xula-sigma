@@ -1,35 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { archivo, hallazgosDe } from "../pruebas";
+import { archivo, hallazgosDe, rlsSql, tablaSql } from "../pruebas";
 
 describe("rls-tabla-nueva", () => {
   const id = "rls-tabla-nueva";
 
-  const tabla = (nombre: string, conAyuntamientoId = true, prefijo = "") =>
-    `CREATE TABLE ${prefijo}"${nombre}" (\n\t"id" uuid PRIMARY KEY NOT NULL${
-      conAyuntamientoId ? ',\n\t"ayuntamiento_id" uuid NOT NULL' : ""
-    }\n);\n`;
-
-  const rls = (nombre: string) =>
-    `ALTER TABLE "${nombre}" ENABLE ROW LEVEL SECURITY;\n` +
-    `ALTER TABLE "${nombre}" FORCE ROW LEVEL SECURITY;\n` +
-    `CREATE POLICY "${nombre}_tenant" ON "${nombre}" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);\n` +
-    `GRANT SELECT, INSERT, UPDATE ON "${nombre}" TO "xula_app";\n`;
-
   it("no marca la tabla que trae las cuatro cosas", () => {
     expect(
       hallazgosDe(id, [
-        archivo("drizzle/0008_x.sql", tabla("lugares") + rls("lugares")),
+        archivo("drizzle/0008_x.sql", tablaSql("lugares") + rlsSql("lugares")),
       ]),
     ).toEqual([]);
   });
 
   it("marca la tabla sin FORCE, que es lo que drizzle-kit nunca genera", () => {
-    const sinForce = rls("lugares").replace(
+    const sinForce = rlsSql("lugares").replace(
       'ALTER TABLE "lugares" FORCE ROW LEVEL SECURITY;\n',
       "",
     );
     const encontrados = hallazgosDe(id, [
-      archivo("drizzle/0008_x.sql", tabla("lugares") + sinForce),
+      archivo("drizzle/0008_x.sql", tablaSql("lugares") + sinForce),
     ]);
 
     expect(encontrados).toHaveLength(1);
@@ -37,34 +26,34 @@ describe("rls-tabla-nueva", () => {
   });
 
   it("marca la tabla sin politica", () => {
-    const sinPolitica = rls("lugares")
+    const sinPolitica = rlsSql("lugares")
       .split("\n")
       .filter((linea) => !linea.startsWith("CREATE POLICY"))
       .join("\n");
 
     expect(
       hallazgosDe(id, [
-        archivo("drizzle/0008_x.sql", tabla("lugares") + sinPolitica),
+        archivo("drizzle/0008_x.sql", tablaSql("lugares") + sinPolitica),
       ]),
     ).toHaveLength(1);
   });
 
   it("marca la tabla sin GRANT al rol de aplicacion", () => {
-    const sinGrant = rls("lugares")
+    const sinGrant = rlsSql("lugares")
       .split("\n")
       .filter((linea) => !linea.startsWith("GRANT"))
       .join("\n");
 
     expect(
       hallazgosDe(id, [
-        archivo("drizzle/0008_x.sql", tabla("lugares") + sinGrant),
+        archivo("drizzle/0008_x.sql", tablaSql("lugares") + sinGrant),
       ]),
     ).toHaveLength(1);
   });
 
   it("acumula las cuatro ausencias en un solo hallazgo por tabla", () => {
     const encontrados = hallazgosDe(id, [
-      archivo("drizzle/0008_x.sql", tabla("lugares")),
+      archivo("drizzle/0008_x.sql", tablaSql("lugares")),
     ]);
 
     expect(encontrados).toHaveLength(1);
@@ -83,7 +72,10 @@ describe("rls-tabla-nueva", () => {
    */
   it("reconoce la forma CREATE TABLE IF NOT EXISTS", () => {
     const encontrados = hallazgosDe(id, [
-      archivo("drizzle/0008_x.sql", tabla("lugares", true, "IF NOT EXISTS ")),
+      archivo(
+        "drizzle/0008_x.sql",
+        tablaSql("lugares", true, "IF NOT EXISTS "),
+      ),
     ]);
 
     expect(encontrados).toHaveLength(1);
@@ -95,7 +87,7 @@ describe("rls-tabla-nueva", () => {
       hallazgosDe(id, [
         archivo(
           "drizzle/0008_x.sql",
-          tabla("lugares", true, "IF NOT EXISTS ") + rls("lugares"),
+          tablaSql("lugares", true, "IF NOT EXISTS ") + rlsSql("lugares"),
         ),
       ]),
     ).toEqual([]);
@@ -115,7 +107,7 @@ describe("rls-tabla-nueva", () => {
       `GRANT SELECT ON "lugares" TO "xula_app";\n`;
 
     const encontrados = hallazgosDe(id, [
-      archivo("drizzle/0008_x.sql", tabla("lugares") + sinFiltro),
+      archivo("drizzle/0008_x.sql", tablaSql("lugares") + sinFiltro),
     ]);
 
     expect(encontrados).toHaveLength(1);
@@ -136,7 +128,7 @@ describe("rls-tabla-nueva", () => {
       `GRANT SELECT ON "lugares" TO "xula_super_admin";\n`;
 
     const encontrados = hallazgosDe(id, [
-      archivo("drizzle/0008_x.sql", tabla("lugares") + otroRol),
+      archivo("drizzle/0008_x.sql", tablaSql("lugares") + otroRol),
     ]);
 
     expect(encontrados).toHaveLength(1);
@@ -149,18 +141,20 @@ describe("rls-tabla-nueva", () => {
    */
   it("no marca cuando una politica filtra y otra no", () => {
     const dos =
-      rls("lugares") +
+      rlsSql("lugares") +
       `CREATE POLICY "lugares_super" ON "lugares" FOR SELECT TO "xula_super_admin" USING (true);\n`;
 
     expect(
-      hallazgosDe(id, [archivo("drizzle/0008_x.sql", tabla("lugares") + dos)]),
+      hallazgosDe(id, [
+        archivo("drizzle/0008_x.sql", tablaSql("lugares") + dos),
+      ]),
     ).toEqual([]);
   });
 
   it("no marca un catalogo de plataforma, que no lleva ayuntamiento_id", () => {
     expect(
       hallazgosDe(id, [
-        archivo("drizzle/0008_x.sql", tabla("abreviaturas", false)),
+        archivo("drizzle/0008_x.sql", tablaSql("abreviaturas", false)),
       ]),
     ).toEqual([]);
   });
@@ -169,7 +163,7 @@ describe("rls-tabla-nueva", () => {
     const encontrados = hallazgosDe(id, [
       archivo(
         "drizzle/0008_x.sql",
-        tabla("lugares") + rls("lugares") + tabla("calles"),
+        tablaSql("lugares") + rlsSql("lugares") + tablaSql("calles"),
       ),
     ]);
 

@@ -15,3 +15,25 @@ export const archivo = (ruta: string, contenido: string): Archivo => ({
 
 export const hallazgosDe = (id: string, archivos: Archivo[]) =>
   revisar(archivos).filter((hallazgo) => hallazgo.regla === id);
+
+/**
+ * Las dos mitades de una migracion, para los tests de `rls-tabla-nueva`.
+ *
+ * Viven aca por la misma razon que `archivo`: el corte por tema reparte los
+ * casos de una sola regla en dos archivos, y copiar el fixture en los dos
+ * es lo que hace que uno de ellos quede viejo sin que nada avise.
+ */
+export const tablaSql = (
+  nombre: string,
+  conAyuntamientoId = true,
+  prefijo = "",
+) =>
+  `CREATE TABLE ${prefijo}"${nombre}" (\n\t"id" uuid PRIMARY KEY NOT NULL${
+    conAyuntamientoId ? ',\n\t"ayuntamiento_id" uuid NOT NULL' : ""
+  }\n);\n`;
+
+export const rlsSql = (nombre: string) =>
+  `ALTER TABLE "${nombre}" ENABLE ROW LEVEL SECURITY;\n` +
+  `ALTER TABLE "${nombre}" FORCE ROW LEVEL SECURITY;\n` +
+  `CREATE POLICY "${nombre}_tenant" ON "${nombre}" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);\n` +
+  `GRANT SELECT, INSERT, UPDATE ON "${nombre}" TO "xula_app";\n`;
