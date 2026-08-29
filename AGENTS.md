@@ -82,6 +82,24 @@ toca datos, marcá el hallazgo.
    proveedor), `plataforma.sql` y `plataforma-admin.sql` (siembra del
    ayuntamiento reservado) y `restablecer-admin.sql` (destraba a un
    `ADMIN_MUNICIPAL`, decisión de la tarea 4.16 de `auth-rbac`).
+
+   **El andamiaje de los tests de aislamiento es una tercera categoría.**
+   `*DePrueba.ts` y `*.isolation.test.ts` viven dentro de `src/` y abren
+   conexión propia. No sirven ningún request, y la conexión cruda es
+   justamente lo que prueban: `municipiosDePrueba.ts` expone `owner` —un rol
+   que `xula_app` no tiene— y `appSinTenant`, cuyo único propósito es
+   comprobar que una consulta sin tenant fijado no ve nada. Pedirle que pase
+   por `withTenant` sería pedirle que pruebe RLS a través de lo que está
+   probando. `esquema.isolation.test.ts` le pregunta a Postgres por el
+   esquema real por la misma razón.
+
+   Los que hoy abren conexión son `municipiosDePrueba.ts`,
+   `superAdminDePrueba.ts` y `esquema.isolation.test.ts`, pero `pnpm reglas`
+   reconoce la categoría por el nombre y no por una lista: un ayudante nuevo
+   no debe obligar a editar el verificador. Es la diferencia con las salidas de producción, que sí se
+   enumeran, y el motivo es el que separa a las dos categorías: una salida de
+   producción es superficie alcanzable desde la aplicación y el andamiaje de
+   tests no existe fuera de `pnpm test`.
 3. `SET LOCAL` dentro de transacción. Nunca `SET` suelto.
 4. `ayuntamiento_id` sale del contexto del servidor, nunca del cliente.
 5. Tabla nueva = RLS + test de aislamiento, en el mismo commit.

@@ -33,11 +33,11 @@ const SALIDAS_CON_DRIVER = new Set([
  * El andamiaje de prueba no es una salida: siembra municipios y arma el
  * escenario de los tests de aislamiento. No sirve ningun request.
  *
- * Se reconoce por el nombre y no por una lista, para que agregar un ayudante
- * nuevo no pida editar este archivo ni haga divergir nada. Es el mismo
- * criterio con el que `assets-filesystem` deja pasar los tests que leen
- * fixtures: la categoria se decide por lo que el archivo ES, no por
- * enumerarlo.
+ * Es la tercera categoria de la regla 2 de AGENTS.md, que explica por que la
+ * conexion cruda es justamente lo que estos archivos prueban. Aca solo vive
+ * el criterio: por nombre y no por lista, para que agregar un ayudante nuevo
+ * no pida editar este archivo. La categoria vivio un tiempo solo aca, y una
+ * excepcion que no esta en las reglas se lee igual que un olvido.
  */
 const esAndamiajeDePrueba = (ruta: string): boolean =>
   /DePrueba\.ts$|\.isolation\.test\.ts$/.test(ruta);
