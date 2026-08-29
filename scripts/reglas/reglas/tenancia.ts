@@ -108,6 +108,25 @@ export const driverFueraDeTenancy: Regla = {
  * proyecto en vez de como lo describe el documento.
  */
 /**
+ * `is_local` es un `boolean`, y la reja pregunta si el argumento prueba que
+ * muere en el COMMIT — no si prueba lo contrario.
+ *
+ * Verificado contra Postgres 17 (`pg_proc`: `pronargs 3, pronargdefaults 0`):
+ * no hay sobrecarga de dos argumentos, asi que omitir el tercero no es una
+ * fuga silenciosa sino un error ruidoso. Pero `0::boolean`, `'FALSE'` y
+ * `'f'` fijan la variable a nivel de sesion sin decir `false` en ningun
+ * lado, y un argumento calculado no se puede decidir leyendo el archivo.
+ * Buscar el literal `false` los dejaba pasar a todos.
+ *
+ * Falla cerrado a proposito: sobre el aislamiento entre municipios, un falso
+ * positivo cuesta una linea de discusion y un falso negativo cuesta el
+ * negocio. Hoy las quince llamadas del repositorio escriben `true` pelado,
+ * asi que el costo real es cero.
+ */
+const pruebaQueEsLocal = (argumento: string): boolean =>
+  /^(?:'|")?(?:t|true)(?:'|")?$/i.test(argumento.trim());
+
+/**
  * `set_config` con parentesis contados, no con una expresion regular.
  *
  * El valor puede ser una subconsulta con sus propios parentesis —es la forma
@@ -125,7 +144,7 @@ const configuracionesNoLocales = (codigo: string, ruta: string) => {
     if (argumentos === null) continue;
 
     const partes = porComasExternas(argumentos);
-    if (!/^false$/i.test(partes[2] ?? "")) continue;
+    if (pruebaQueEsLocal(partes[2] ?? "")) continue;
 
     const parametro = /['"`]([^'"`]+)['"`]/.exec(partes[0] ?? "");
 
@@ -135,7 +154,7 @@ const configuracionesNoLocales = (codigo: string, ruta: string) => {
     hallazgos.push({
       ruta,
       linea: lineaDe(codigo, encontrado.index),
-      mensaje: `\`set_config\` sobre \`${parametro?.[1] ?? "?"}\` con el tercer argumento en \`false\`: sobrevive a la transaccion y lo hereda el proximo request. Va en \`true\`.`,
+      mensaje: `\`set_config\` sobre \`${parametro?.[1] ?? "?"}\` con un tercer argumento que no prueba que sea local: sobrevive a la transaccion y lo hereda el proximo request. Va en \`true\`.`,
     });
   }
 

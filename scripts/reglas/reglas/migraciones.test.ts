@@ -102,11 +102,6 @@ describe("rls-tabla-nueva", () => {
   });
 
   /**
-   * La excepcion documentada en AGENTS.md: un catalogo de plataforma
-   * —`abreviaturas` en 0004_padron.sql— no lleva `ayuntamiento_id` porque no
-   * pertenece a ningun municipio.
-   */
-  /**
    * El caso que el fixture anterior daba por bueno. Una politica sobre una
    * tabla con `ayuntamiento_id` que no menciona el tenant no filtra nada: la
    * tabla queda con RLS activo y una regla que deja pasar todo. Es peor que

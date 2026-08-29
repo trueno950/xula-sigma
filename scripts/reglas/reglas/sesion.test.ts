@@ -63,6 +63,48 @@ describe("set-local", () => {
   });
 
   /**
+   * `is_local` es un `boolean`, y `false` es solo una de sus escrituras.
+   * Verificado contra Postgres 17: `set_config('app.a','1',0::boolean)`,
+   * `set_config('app.b','2','FALSE')` y `set_config('app.c','3','f')`
+   * devuelven el valor sin error y dejan la variable a nivel de sesion,
+   * igual que `false`. Una reja que solo busca el literal `false` las deja
+   * pasar a las tres.
+   *
+   * Por eso la pregunta se invierte: no "es esto una fuga" sino "prueba
+   * este argumento que muere en el COMMIT". Lo que no lo prueba, se marca.
+   * Es la unica direccion honesta para el invariante mas caro del proyecto.
+   */
+  for (const tercero of ["0::boolean", "'FALSE'", "'f'", "esLocal"]) {
+    it(`marca set_config con el tercer argumento en ${tercero}`, () => {
+      expect(
+        hallazgosDe(id, [
+          archivo(
+            "src/shared/tenancy/withTenant.ts",
+            `await tx\`SELECT set_config('app.tenant', 'merida', ${tercero})\`;\n`,
+          ),
+        ]),
+      ).toHaveLength(1);
+    });
+  }
+
+  /**
+   * La otra cara: `'t'` y `'true'` si prueban que es local, y Postgres las
+   * acepta. Marcarlas seria ruido, y una reja ruidosa se termina apagando.
+   */
+  for (const tercero of ["'true'", "'t'", "TRUE"]) {
+    it(`no marca set_config con el tercer argumento en ${tercero}`, () => {
+      expect(
+        hallazgosDe(id, [
+          archivo(
+            "src/shared/tenancy/withTenant.ts",
+            `await tx\`SELECT set_config('app.tenant', 'merida', ${tercero})\`;\n`,
+          ),
+        ]),
+      ).toEqual([]);
+    });
+  }
+
+  /**
    * La forma real de `scripts/plataforma-admin.sql:31`: el valor es una
    * subconsulta con sus propios parentesis. La version anterior de la regla
    * usaba `[^)]*` y el match se frenaba ahi, sin llegar nunca al tercer
