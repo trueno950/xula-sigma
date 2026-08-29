@@ -8,10 +8,9 @@ import type { RepositorioDeLugares } from "./puertos";
 
 /**
  * Mueve un lugar a otro padre. `puedeAdministrarTerritorio`, no
- * `puedeEscribir`: reparentear reescribe la estructura del municipio
- * (`specs/autorizacion-roles/spec.md`). `nuevoPadreId = null` saltea el
- * chequeo de tipo — cualquier tipo puede volverse raiz (design.md seccion
- * 9, raggedness), y solo los de rango 0 pueden serlo de verdad.
+ * `puedeEscribir` (criterio en `shared/auth/roles.ts`). `nuevoPadreId = null`
+ * saltea el chequeo de tipo — cualquier tipo puede volverse raiz (design.md
+ * seccion 9, raggedness), y solo los de rango 0 pueden serlo de verdad.
  */
 export function crearReparentearLugar(repositorio: RepositorioDeLugares) {
   return async function reparentearLugar(

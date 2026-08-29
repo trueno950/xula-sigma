@@ -8,8 +8,7 @@ import type { DatosDeEdicionDeLugar, RepositorioDeLugares } from "./puertos";
 /**
  * Renombra un lugar, y nada mas (`DatosDeEdicionDeLugar` en `puertos.ts`
  * explica por que no tiene `tipo`). `puedeEscribir`, no
- * `puedeAdministrarTerritorio` — renombrar es trabajo de mostrador,
- * `specs/autorizacion-roles/spec.md`.
+ * `puedeAdministrarTerritorio` (criterio en `shared/auth/roles.ts`).
  */
 export function crearEditarLugar(repositorio: RepositorioDeLugares) {
   return async function editarLugar(

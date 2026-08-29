@@ -118,7 +118,8 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
   async subarbol(tx, raizId) {
     const filas = await tx.execute<FilaDeSubarbol>(sql`
       WITH RECURSIVE descendientes AS (
-        SELECT id, 0 AS profundidad FROM lugares WHERE id = ${raizId}
+        SELECT id, 0 AS profundidad FROM lugares
+         WHERE id = ${raizId} AND baja_en IS NULL
         UNION ALL
         SELECT l.id, d.profundidad + 1
           FROM lugares l

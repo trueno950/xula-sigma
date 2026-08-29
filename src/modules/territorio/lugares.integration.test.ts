@@ -65,6 +65,24 @@ describe("subarbol", () => {
       nodos.some((nodo) => nodo.clase === "lugar" && nodo.id === manzanaActiva),
     ).toBe(true);
   });
+
+  it("una raiz dada de baja no devuelve sus descendientes activos", async () => {
+    const comisaria = await crearLugar("comisaria", "Raiz dada de baja");
+    await crearLugar("sector", "Sector huerfano", comisaria);
+
+    await withTenant(motul, (tx) =>
+      tx
+        .update(lugares)
+        .set({ bajaEn: new Date() })
+        .where(eq(lugares.id, comisaria)),
+    );
+
+    const nodos = await withTenant(motul, (tx) =>
+      repositorioDeLugaresSql.subarbol(tx, comisaria),
+    );
+
+    expect(nodos).toHaveLength(0);
+  });
 });
 
 describe("altaDeLugar", () => {

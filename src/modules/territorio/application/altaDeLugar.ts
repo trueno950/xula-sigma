@@ -20,9 +20,8 @@ export type NuevoLugar = {
 };
 
 /**
- * Alta de un lugar: `puedeEscribir`, no `puedeAdministrarTerritorio`
- * (`specs/autorizacion-roles/spec.md` — dar de alta es trabajo de
- * mostrador, no de estructura). Un solo `INSERT`: la jerarquia raggeada
+ * Alta de un lugar: `puedeEscribir`, no `puedeAdministrarTerritorio` (criterio
+ * en `shared/auth/roles.ts`). Un solo `INSERT`: la jerarquia raggeada
  * (design.md seccion 7) permite que un sector cuelgue directo de una
  * comisaria sin fila de relleno para la colonia que falta.
  *
