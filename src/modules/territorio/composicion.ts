@@ -1,5 +1,6 @@
 import {
   crearAltaDeCalle,
+  crearAltaDeDomicilio,
   crearAltaDeLugar,
   crearDarDeBajaLugar,
   crearEditarLugar,
@@ -11,6 +12,7 @@ import {
 } from "./application";
 import {
   repositorioDeCallesSql,
+  repositorioDeDomiciliosSql,
   repositorioDeLugaresSql,
 } from "./infrastructure";
 
@@ -29,3 +31,4 @@ export const altaDeCalle = crearAltaDeCalle(
 );
 export const renombrarCalle = crearRenombrarCalle(repositorioDeCallesSql);
 export const listarCalles = crearListarCalles(repositorioDeCallesSql);
+export const altaDeDomicilio = crearAltaDeDomicilio(repositorioDeDomiciliosSql);

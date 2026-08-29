@@ -131,3 +131,43 @@ export type RepositorioDeCalles = {
     lugarId: LugarId,
   ): Promise<readonly CalleGuardada[]>;
 };
+
+export type DatosDeAltaDeDomicilio = {
+  id: DomicilioId;
+  ayuntamientoId: AyuntamientoId;
+  lugarId: LugarId;
+  calleId: CalleId;
+  numero: string | null;
+  entreCalleAId: CalleId | null;
+  entreCalleBId: CalleId | null;
+  referencia: string | null;
+};
+
+export type DomicilioGuardado = {
+  id: DomicilioId;
+  lugarId: LugarId;
+  calleId: CalleId;
+  numero: string | null;
+  entreCalleAId: CalleId | null;
+  entreCalleBId: CalleId | null;
+  referencia: string | null;
+};
+
+/**
+ * `porLugarYSubarbol` reusa el mismo `WITH RECURSIVE` que
+ * `RepositorioDeLugares.subarbol` (tasks.md 3.12), pero devuelve el detalle
+ * completo del domicilio en vez del nodo minimo del arbol. `porCalle` no
+ * necesita CTE: `calleId` ya identifica la fila sin bajar por jerarquia
+ * (design.md seccion 12, "POR CALLE").
+ */
+export type RepositorioDeDomicilios = {
+  crear(tx: TransaccionTenant, datos: DatosDeAltaDeDomicilio): Promise<void>;
+  porLugarYSubarbol(
+    tx: TransaccionTenant,
+    lugarId: LugarId,
+  ): Promise<readonly DomicilioGuardado[]>;
+  porCalle(
+    tx: TransaccionTenant,
+    calleId: CalleId,
+  ): Promise<readonly DomicilioGuardado[]>;
+};
