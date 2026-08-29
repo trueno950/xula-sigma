@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { contextoActual } from "@/shared/auth";
-import { NoAutorizadoError } from "@/shared/lib/errores";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeDomicilio } from "../../composicion";
 import {
@@ -32,6 +32,9 @@ const redirigirConError = (mensaje: string): never =>
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
+  // lugarId o calleId de otro tenant o inexistente: RLS ya lo esconde antes
+  // del FK compuesto (altaDeDomicilio.ts).
+  if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof TransversalRepetidaError) return error.message;
 
   console.error(

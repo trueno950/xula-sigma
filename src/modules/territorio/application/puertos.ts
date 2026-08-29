@@ -114,13 +114,19 @@ export type DatosDeActualizacionDeCalle = {
 /**
  * `actualizar` devuelve la fila actualizada o `null` si el `UPDATE` afecto
  * cero filas -id inexistente o de otro tenant, RLS ya lo esconde-. De ahi
- * sale `NoEncontradoError` en `renombrarCalle` sin necesitar un
- * `buscarPorId` propio en este puerto (tasks.md 4.1). `crear` y
- * `actualizar` pueden lanzar `NombreDeCalleDuplicadoError`; el porque esta
- * en `domain/errores.ts`, unico lugar que lo explica.
+ * sale `NoEncontradoError` en `renombrarCalle` sin necesitar `buscarPorId`
+ * (tasks.md 4.1). `buscarPorId` si hace falta en otro caso de uso que solo
+ * necesita leer -`altaDeDomicilio` valida `calleId` bajo RLS antes de
+ * insertar, mismo motivo que `RepositorioDeLugares.buscarPorId`-. `crear`
+ * y `actualizar` pueden lanzar `NombreDeCalleDuplicadoError`; el porque
+ * esta en `domain/errores.ts`, unico lugar que lo explica.
  */
 export type RepositorioDeCalles = {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeCalle): Promise<void>;
+  buscarPorId(
+    tx: TransaccionTenant,
+    id: CalleId,
+  ): Promise<CalleGuardada | null>;
   actualizar(
     tx: TransaccionTenant,
     datos: DatosDeActualizacionDeCalle,

@@ -1,8 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { limpiar, owner, sembrar } from "@/shared/tenancy/municipiosDePrueba";
+import { NoEncontradoError } from "@/shared/lib/errores";
+import {
+  limpiar,
+  owner,
+  sembrar,
+  ticul,
+} from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAltaDeDomicilio } from "./application/altaDeDomicilio";
+import { comoCalleId, comoLugarId } from "./domain";
+import { calles, lugares } from "./infrastructure/esquema";
+import { repositorioDeCallesSql } from "./infrastructure/repositorioDeCallesSql";
 import { repositorioDeDomiciliosSql } from "./infrastructure/repositorioDeDomiciliosSql";
+import { repositorioDeLugaresSql } from "./infrastructure/repositorioDeLugaresSql";
 import {
   contextoDe,
   crearCalle,
@@ -20,7 +30,11 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
-const altaDeDomicilio = crearAltaDeDomicilio(repositorioDeDomiciliosSql);
+const altaDeDomicilio = crearAltaDeDomicilio(
+  repositorioDeDomiciliosSql,
+  repositorioDeLugaresSql,
+  repositorioDeCallesSql,
+);
 
 describe("altaDeDomicilio", () => {
   it("un domicilio sin manzana conocida, colgado directo de una colonia, se crea correctamente", async () => {
@@ -44,6 +58,77 @@ describe("altaDeDomicilio", () => {
     );
 
     expect(domicilios.map((d) => d.id)).toContain(id);
+  });
+
+  it("rechaza un lugarId de otro municipio como si no existiera: RLS lo esconde antes del FK", async () => {
+    const [lugarDeTicul] = await withTenant(ticul, (tx) =>
+      tx
+        .insert(lugares)
+        .values({
+          ayuntamientoId: ticul,
+          tipo: "comisaria",
+          nombre: "Yotholin",
+        })
+        .returning({ id: lugares.id }),
+    );
+    const calle = await crearCalle(
+      await crearLugar("colonia", "Colonia para lugarId ajeno"),
+      "Calle 21",
+    );
+
+    await expect(
+      altaDeDomicilio(
+        {
+          lugarId: comoLugarId(lugarDeTicul!.id),
+          calleId: calle,
+          numero: "10",
+          entreCalleAId: null,
+          entreCalleBId: null,
+          referencia: null,
+        },
+        contextoDe(),
+      ),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+  });
+
+  it("rechaza un calleId de otro municipio como si no existiera: RLS lo esconde antes del FK", async () => {
+    const lugarDeTicul = (
+      await withTenant(ticul, (tx) =>
+        tx
+          .insert(lugares)
+          .values({
+            ayuntamientoId: ticul,
+            tipo: "colonia",
+            nombre: "Colonia de Ticul",
+          })
+          .returning({ id: lugares.id }),
+      )
+    )[0]!;
+    const [calleDeTicul] = await withTenant(ticul, (tx) =>
+      tx
+        .insert(calles)
+        .values({
+          ayuntamientoId: ticul,
+          nombre: "Calle ajena",
+          lugarId: lugarDeTicul.id,
+        })
+        .returning({ id: calles.id }),
+    );
+    const lugar = await crearLugar("colonia", "Colonia para calleId ajeno");
+
+    await expect(
+      altaDeDomicilio(
+        {
+          lugarId: lugar,
+          calleId: comoCalleId(calleDeTicul!.id),
+          numero: "10",
+          entreCalleAId: null,
+          entreCalleBId: null,
+          referencia: null,
+        },
+        contextoDe(),
+      ),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
   });
 });
 

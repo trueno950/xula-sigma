@@ -51,6 +51,7 @@ const comisariaGuardada: LugarGuardado = {
 describe("altaDeCalle", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
+    buscarPorId: vi.fn(),
     actualizar: vi.fn(),
     listarPorLugar: vi.fn(),
   };

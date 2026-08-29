@@ -31,4 +31,8 @@ export const altaDeCalle = crearAltaDeCalle(
 );
 export const renombrarCalle = crearRenombrarCalle(repositorioDeCallesSql);
 export const listarCalles = crearListarCalles(repositorioDeCallesSql);
-export const altaDeDomicilio = crearAltaDeDomicilio(repositorioDeDomiciliosSql);
+export const altaDeDomicilio = crearAltaDeDomicilio(
+  repositorioDeDomiciliosSql,
+  repositorioDeLugaresSql,
+  repositorioDeCallesSql,
+);
