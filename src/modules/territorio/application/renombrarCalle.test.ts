@@ -42,6 +42,7 @@ const calleGuardada: CalleGuardada = {
 describe("renombrarCalle", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
+    buscarPorId: vi.fn(),
     actualizar: vi.fn(),
     listarPorLugar: vi.fn(),
   };

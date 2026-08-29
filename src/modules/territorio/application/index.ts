@@ -1,4 +1,5 @@
 export * from "./altaDeCalle";
+export * from "./altaDeDomicilio";
 export * from "./altaDeLugar";
 export * from "./darDeBajaLugar";
 export * from "./editarLugar";

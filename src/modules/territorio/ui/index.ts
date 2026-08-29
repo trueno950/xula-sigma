@@ -2,6 +2,7 @@ export { ArbolDeLugares } from "./ArbolDeLugares";
 export { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 export { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 export { FormularioDeBajaDeLugar } from "./FormularioDeBajaDeLugar";
+export { FormularioDeDomicilio } from "./FormularioDeDomicilio";
 export { FormularioDeEdicionDeLugar } from "./FormularioDeEdicionDeLugar";
 export { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
 export { FormularioDeReparenteo } from "./FormularioDeReparenteo";

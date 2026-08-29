@@ -44,3 +44,19 @@ export class NombreDeCalleDuplicadoError extends Error {
     this.name = "NombreDeCalleDuplicadoError";
   }
 }
+
+/**
+ * `altaDeDomicilio` rechaza si dos de las tres calles del domicilio
+ * coinciden (design.md seccion 4, CHECK `domicilios_calles_distintas`):
+ * `domain/direccion.ts` decide, este error solo lo transporta.
+ */
+export class TransversalRepetidaError extends Error {
+  readonly codigo = "TRANSVERSAL_REPETIDA";
+
+  constructor(
+    mensaje = "Las calles del domicilio deben ser distintas entre si.",
+  ) {
+    super(mensaje);
+    this.name = "TransversalRepetidaError";
+  }
+}

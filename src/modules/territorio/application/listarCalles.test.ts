@@ -23,6 +23,7 @@ const lugarId = comoLugarId("11111111-1111-4111-8111-111111111111");
 describe("listarCalles", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
+    buscarPorId: vi.fn(),
     actualizar: vi.fn(),
     listarPorLugar: vi.fn(),
   };

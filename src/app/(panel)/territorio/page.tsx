@@ -5,6 +5,7 @@ import {
   FormularioDeAltaDeCalle,
   FormularioDeAltaDeLugar,
   FormularioDeBajaDeLugar,
+  FormularioDeDomicilio,
   FormularioDeEdicionDeLugar,
   FormularioDeRenombreDeCalle,
   FormularioDeReparenteo,
@@ -74,6 +75,9 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
           <FormularioDeAltaDeLugar />
           <FormularioDeEdicionDeLugar />
           <FormularioDeBajaDeLugar />
+          {raiz ? (
+            <FormularioDeDomicilio lugarId={raiz.id} calles={calles} />
+          ) : null}
         </div>
       ) : null}
 

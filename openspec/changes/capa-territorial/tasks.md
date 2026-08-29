@@ -290,38 +290,38 @@ Depende de la Fase 2. Debe mergearse antes que la Fase 5.
 
 Depende de las Fases 2 y 4. Independiente de las Fases 1, 3 y 6.
 
-- [ ] 5.1 RED `territorio/domain/direccion.test.ts`: `calleId`,
+- [x] 5.1 RED `territorio/domain/direccion.test.ts`: `calleId`,
       `entreCalleAId`, `entreCalleBId` distintas entre si cuando las tres
       estan presentes; nullable a proposito para una comisaria rural.
-- [ ] 5.2 GREEN `territorio/domain/direccion.ts`.
-- [ ] 5.3 `territorio/application/puertos.ts` (modificar): agregar
+- [x] 5.2 GREEN `territorio/domain/direccion.ts`.
+- [x] 5.3 `territorio/application/puertos.ts` (modificar): agregar
       `RepositorioDeDomicilios` (`crear`, `porLugarYSubarbol`, `porCalle`).
-- [ ] 5.4 RED `territorio/application/altaDeDomicilio.test.ts` (puertos
+- [x] 5.4 RED `territorio/application/altaDeDomicilio.test.ts` (puertos
       mockeados): rechaza sin `puedeEscribir`; `numero` ausente queda
       `null`, nunca la cadena `"S/N"`; transversal repetida
       (`entreCalleAId === calleId`) se rechaza antes de escribir.
-- [ ] 5.5 GREEN `altaDeDomicilio.ts`.
-- [ ] 5.6 RED `territorio/infrastructure/repositorioDeDomiciliosSql.test.ts`:
+- [x] 5.5 GREEN `altaDeDomicilio.ts`.
+- [x] 5.6 RED `territorio/infrastructure/repositorioDeDomiciliosSql.test.ts`:
       `porLugarYSubarbol` reusa el CTE de 3.12; `porCalle` es un `WHERE
       calleId = $calle` directo, sin CTE.
-- [ ] 5.7 GREEN `repositorioDeDomiciliosSql.ts`.
-- [ ] 5.8 RED integration: domicilio sin manzana conocida, colgado directo
+- [x] 5.7 GREEN `repositorioDeDomiciliosSql.ts`.
+- [x] 5.8 RED integration: domicilio sin manzana conocida, colgado directo
       de una colonia, se crea correctamente.
-- [ ] 5.9 GREEN.
-- [ ] 5.10 RED integration: los domicilios de un sector incluyen el colgado
+- [x] 5.9 GREEN.
+- [x] 5.10 RED integration: los domicilios de un sector incluyen el colgado
       directo del sector y los de sus manzanas, en una sola consulta.
-- [ ] 5.11 GREEN.
-- [ ] 5.12 RED integration: los domicilios de la Calle 21 incluyen los de
+- [x] 5.11 GREEN.
+- [x] 5.12 RED integration: los domicilios de la Calle 21 incluyen los de
       todas las manzanas que atraviesa.
-- [ ] 5.13 GREEN.
-- [ ] 5.14 RED integration: un domicilio sin residentes aparece igual en la
+- [x] 5.13 GREEN.
+- [x] 5.14 RED integration: un domicilio sin residentes aparece igual en la
       consulta por zona.
-- [ ] 5.15 GREEN.
-- [ ] 5.16 `territorio/ui/FormularioDeDomicilio.tsx` (Server Component,
+- [x] 5.15 GREEN.
+- [x] 5.16 `territorio/ui/FormularioDeDomicilio.tsx` (Server Component,
       `<form action>` con `SelectorDeCalle` x3 de la Fase 4);
       `ui/actions/altaDeDomicilioAction.ts`.
-- [ ] 5.17 `AGENTS.md`: agregar `altaDeDomicilioAction` a la tabla.
-- [ ] 5.18 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+- [x] 5.17 `AGENTS.md`: agregar `altaDeDomicilioAction` a la tabla.
+- [x] 5.18 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 6: Rebanada 6 — Residencias: mudanza y colapso de fusion (~490 lineas)
 

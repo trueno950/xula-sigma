@@ -2,6 +2,7 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { motul } from "@/shared/tenancy/municipiosDePrueba";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
+  type CalleId,
   comoCalleId,
   comoDomicilioId,
   comoLugarId,
@@ -57,6 +58,16 @@ export const crearDomicilio = (lugarId: LugarId, nombreCalle: string) =>
     const [domicilio] = await tx
       .insert(domicilios)
       .values({ ayuntamientoId: motul, lugarId, calleId: calle!.id })
+      .returning({ id: domicilios.id });
+    return comoDomicilioId(domicilio!.id);
+  });
+
+/** Cuelga un domicilio de una `calleId` ya existente -precedente `crearDomicilio`, sin crear la calle-. */
+export const crearDomicilioEnCalle = (lugarId: LugarId, calleId: CalleId) =>
+  withTenant(motul, async (tx) => {
+    const [domicilio] = await tx
+      .insert(domicilios)
+      .values({ ayuntamientoId: motul, lugarId, calleId })
       .returning({ id: domicilios.id });
     return comoDomicilioId(domicilio!.id);
   });

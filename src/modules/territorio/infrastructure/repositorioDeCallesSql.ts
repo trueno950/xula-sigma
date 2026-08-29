@@ -73,6 +73,16 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
     }
   },
 
+  /** Mismo criterio "activo = `bajaEn IS NULL`" que `repositorioDeLugaresSql.buscarPorId`. */
+  async buscarPorId(tx, id) {
+    const [fila] = await tx
+      .select(columnasDeLectura)
+      .from(calles)
+      .where(and(eq(calles.id, id), isNull(calles.bajaEn)));
+
+    return fila ? aCalleGuardada(fila) : null;
+  },
+
   async actualizar(tx, { id, nombre }) {
     try {
       const [fila] = await tx
