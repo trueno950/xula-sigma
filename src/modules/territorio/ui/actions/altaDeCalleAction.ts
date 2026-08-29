@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { contextoActual } from "@/shared/auth";
-import { NoAutorizadoError } from "@/shared/lib/errores";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeCalle } from "../../composicion";
-import { comoLugarId } from "../../domain";
+import { comoLugarId, NombreDeCalleDuplicadoError } from "../../domain";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
@@ -24,6 +24,10 @@ const redirigirConError = (mensaje: string): never =>
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
+  // lugarId de otro tenant o inexistente: RLS ya lo esconde antes del FK
+  // compuesto (altaDeCalle.ts).
+  if (error instanceof NoEncontradoError) return error.message;
+  if (error instanceof NombreDeCalleDuplicadoError) return error.message;
 
   console.error("[territorio] alta de calle fallo", datosSegurosDeError(error));
 

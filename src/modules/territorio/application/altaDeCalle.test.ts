@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { NoAutorizadoError } from "@/shared/lib/errores";
-import { comoLugarId } from "../domain";
-import type { RepositorioDeCalles } from "./puertos";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import { comoLugarId, NombreDeCalleDuplicadoError } from "../domain";
+import type {
+  LugarGuardado,
+  RepositorioDeCalles,
+  RepositorioDeLugares,
+} from "./puertos";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -28,22 +32,49 @@ const contextoCon = (
 const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const comisariaId = comoLugarId("22222222-2222-4222-8222-222222222222");
 
+const cabeceraGuardada: LugarGuardado = {
+  id: cabeceraId,
+  tipo: "cabecera",
+  nombre: "Motul",
+  padreId: null,
+  bajaEn: null,
+};
+
+const comisariaGuardada: LugarGuardado = {
+  id: comisariaId,
+  tipo: "comisaria",
+  nombre: "Dzununcan",
+  padreId: cabeceraId,
+  bajaEn: null,
+};
+
 describe("altaDeCalle", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
     actualizar: vi.fn(),
     listarPorLugar: vi.fn(),
   };
+  const repositorioDeLugares: RepositorioDeLugares = {
+    crear: vi.fn(),
+    buscarPorId: vi.fn(),
+    actualizar: vi.fn(),
+    contarHijosActivos: vi.fn(),
+    contarDomiciliosColgados: vi.fn(),
+    subarbol: vi.fn(),
+  };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     withTenantMock.mockImplementation(
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
+    );
+    vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(
+      cabeceraGuardada,
     );
   });
 
   it("rechaza sin puedeAdministrarTerritorio y no abre transaccion ni escribe", async () => {
-    const altaDeCalle = crearAltaDeCalle(repositorio);
+    const altaDeCalle = crearAltaDeCalle(repositorio, repositorioDeLugares);
 
     await expect(
       altaDeCalle(
@@ -57,12 +88,47 @@ describe("altaDeCalle", () => {
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
+  it("rechaza como si no existiera un lugarId de otro tenant o inexistente", async () => {
+    vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(null);
+    const altaDeCalle = crearAltaDeCalle(repositorio, repositorioDeLugares);
+
+    await expect(
+      altaDeCalle(
+        { nombre: "Calle 21", lugarId: cabeceraId },
+        contextoCon("ADMIN_MUNICIPAL"),
+      ),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+
+    expect(repositorio.crear).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("propaga NombreDeCalleDuplicadoError del repositorio sin envolverla", async () => {
+    vi.mocked(repositorio.crear).mockRejectedValue(
+      new NombreDeCalleDuplicadoError(),
+    );
+    const altaDeCalle = crearAltaDeCalle(repositorio, repositorioDeLugares);
+
+    await expect(
+      altaDeCalle(
+        { nombre: "Calle 21", lugarId: cabeceraId },
+        contextoCon("ADMIN_MUNICIPAL"),
+      ),
+    ).rejects.toBeInstanceOf(NombreDeCalleDuplicadoError);
+
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
   it("una Calle 21 de la cabecera y otra de una comisaria distinta conviven", async () => {
-    const altaDeCalle = crearAltaDeCalle(repositorio);
+    const altaDeCalle = crearAltaDeCalle(repositorio, repositorioDeLugares);
 
     const dela = await altaDeCalle(
       { nombre: "Calle 21", lugarId: cabeceraId },
       contextoCon("ADMIN_MUNICIPAL"),
+    );
+
+    vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(
+      comisariaGuardada,
     );
     const delaOtra = await altaDeCalle(
       { nombre: "Calle 21", lugarId: comisariaId },

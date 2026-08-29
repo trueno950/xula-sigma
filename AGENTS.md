@@ -284,9 +284,13 @@ Notas que no caben en la tabla, una por fila que las necesita:
 - `reparentearLugarAction` (`capa-territorial`, rebanada 3): mismo motivo,
   y también redacta `JerarquiaInvalidaError`.
 - `altaDeCalleAction`/`renombrarCalleAction` (`capa-territorial`, rebanada
-  4): mismo motivo exacto que `altaDeLugarAction`. `renombrarCalleAction`
-  también redacta `NoEncontradoError` y `NombreDeCalleDuplicadoError` -el
-  choque contra `calles_tenant_lugar_nombre_idx`.
+  4): mismo motivo exacto que `altaDeLugarAction`. Las dos redactan
+  `NoEncontradoError` y `NombreDeCalleDuplicadoError` -el choque contra
+  `calles_tenant_lugar_nombre_idx`, que tanto `crear` como `actualizar`
+  traducen en `repositorioDeCallesSql`- y `altaDeCalleAction` ademas por
+  un `lugarId` de otro municipio o inexistente, que `altaDeCalle.ts` lee
+  bajo RLS antes de insertar (mismo patron que `padreId` en
+  `altaDeLugarAction`).
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un

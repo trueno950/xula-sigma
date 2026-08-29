@@ -23,6 +23,9 @@ export const darDeBajaLugar = crearDarDeBajaLugar(repositorioDeLugaresSql);
 export const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
 export const subarbol = crearSubarbol(repositorioDeLugaresSql);
 export const lugarPorId = crearLugarPorId(repositorioDeLugaresSql);
-export const altaDeCalle = crearAltaDeCalle(repositorioDeCallesSql);
+export const altaDeCalle = crearAltaDeCalle(
+  repositorioDeCallesSql,
+  repositorioDeLugaresSql,
+);
 export const renombrarCalle = crearRenombrarCalle(repositorioDeCallesSql);
 export const listarCalles = crearListarCalles(repositorioDeCallesSql);

@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeAdministrarTerritorio } from "@/shared/auth/roles";
-import { NoAutorizadoError } from "@/shared/lib/errores";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import { type CalleId, comoCalleId, type LugarId } from "../domain";
-import type { RepositorioDeCalles } from "./puertos";
+import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
 
 export type NuevaCalle = {
   nombre: string;
@@ -15,12 +15,25 @@ export type NuevaCalle = {
 /**
  * Alta de una calle en el catalogo de un lugar. `puedeAdministrarTerritorio`
  * (tasks.md 4.2): el catalogo de calles es estructura territorial, no
- * trabajo de mostrador. `calles_tenant_lugar_nombre_idx` permite el mismo
- * nombre en dos lugares distintos -"Calle 21" de la cabecera y de una
- * comisaria conviven-, asi que no hay chequeo propio de duplicado aca; el
- * choque es cosa de `renombrarCalle` (design.md seccion 9).
+ * trabajo de mostrador.
+ *
+ * Lee `lugarId` bajo RLS con `repositorioDeLugares.buscarPorId` antes de
+ * insertar -mismo precedente que `altaDeLugar.ts` con `padreId` (hallazgo
+ * de GGA en la revision de esta rebanada): sin esto, un `lugarId` de otro
+ * tenant o inexistente llegaba crudo al FK compuesto de Postgres (`23503`
+ * sin traducir) en vez de un `NoEncontradoError` limpio.
+ *
+ * No hay chequeo propio de nombre duplicado aca: `calles_tenant_lugar_nombre_idx`
+ * permite el mismo nombre en dos lugares distintos -"Calle 21" de la
+ * cabecera y de una comisaria conviven-, y si el choque ocurre en el mismo
+ * lugar, `repositorioDeCallesSql.crear` ya lo traduce a
+ * `NombreDeCalleDuplicadoError` (mismo mecanismo que `actualizar`, otro
+ * hallazgo de la misma revision).
  */
-export function crearAltaDeCalle(repositorio: RepositorioDeCalles) {
+export function crearAltaDeCalle(
+  repositorio: RepositorioDeCalles,
+  repositorioDeLugares: RepositorioDeLugares,
+) {
   return async function altaDeCalle(
     datos: NuevaCalle,
     contexto: ContextoActual,
@@ -32,6 +45,9 @@ export function crearAltaDeCalle(repositorio: RepositorioDeCalles) {
     const id = comoCalleId(randomUUID());
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
+      const lugar = await repositorioDeLugares.buscarPorId(tx, datos.lugarId);
+      if (!lugar) throw new NoEncontradoError();
+
       await repositorio.crear(tx, {
         id,
         ayuntamientoId: contexto.ayuntamientoId,

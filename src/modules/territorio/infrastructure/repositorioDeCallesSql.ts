@@ -36,7 +36,11 @@ const aCalleGuardada = (fila: {
  * error de Postgres: los campos viven en `.cause`, no en el error que
  * llega aca (mismo hallazgo que documenta `registroDeError.ts`). Solo el
  * choque contra `calles_tenant_lugar_nombre_idx` se traduce a dominio;
- * cualquier otro error de Postgres se deja pasar tal cual.
+ * cualquier otro error de Postgres se deja pasar tal cual. `crear` y
+ * `actualizar` la comparten: el indice unico se dispara en el `INSERT`
+ * igual que en el `UPDATE` (hallazgo de GGA en la revision de esta
+ * rebanada -el comentario anterior de `altaDeCalle.ts` lo daba solo para
+ * `renombrarCalle`, y era falso).
  */
 const esChoqueDeNombreDuplicado = (error: unknown): boolean => {
   let actual: unknown = error;
@@ -63,7 +67,14 @@ const esChoqueDeNombreDuplicado = (error: unknown): boolean => {
  */
 export const repositorioDeCallesSql: RepositorioDeCalles = {
   async crear(tx, { id, ayuntamientoId, nombre, lugarId }) {
-    await tx.insert(calles).values({ id, ayuntamientoId, nombre, lugarId });
+    try {
+      await tx.insert(calles).values({ id, ayuntamientoId, nombre, lugarId });
+    } catch (error) {
+      if (esChoqueDeNombreDuplicado(error)) {
+        throw new NombreDeCalleDuplicadoError();
+      }
+      throw error;
+    }
   },
 
   async actualizar(tx, { id, nombre }) {
