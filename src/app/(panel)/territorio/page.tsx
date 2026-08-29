@@ -2,10 +2,13 @@ import { z } from "zod";
 import {
   ArbolDeLugares,
   comoLugarId,
+  FormularioDeAltaDeCalle,
   FormularioDeAltaDeLugar,
   FormularioDeBajaDeLugar,
   FormularioDeEdicionDeLugar,
+  FormularioDeRenombreDeCalle,
   FormularioDeReparenteo,
+  listarCalles,
   lugarPorId,
   subarbol,
 } from "@/modules/territorio";
@@ -45,6 +48,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
 
   const raiz = raizId ? await lugarPorId(comoLugarId(raizId), contexto) : null;
   const nodos = raiz ? await subarbol(raiz.id, contexto) : [];
+  const calles = raiz ? await listarCalles(raiz.id, contexto) : [];
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 p-6">
@@ -74,8 +78,14 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
       ) : null}
 
       {puedeAdministrarTerritorio(contexto.usuario.rol) ? (
-        <div className="border-t border-caliza-divisor pt-4">
+        <div className="flex flex-col gap-6 border-t border-caliza-divisor pt-4">
           <FormularioDeReparenteo />
+          {raiz ? (
+            <>
+              <FormularioDeAltaDeCalle lugarId={raiz.id} />
+              <FormularioDeRenombreDeCalle calles={calles} />
+            </>
+          ) : null}
         </div>
       ) : null}
     </main>

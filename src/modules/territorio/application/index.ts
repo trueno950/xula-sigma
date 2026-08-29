@@ -1,7 +1,10 @@
+export * from "./altaDeCalle";
 export * from "./altaDeLugar";
 export * from "./darDeBajaLugar";
 export * from "./editarLugar";
+export * from "./listarCalles";
 export * from "./lugarPorId";
 export type * from "./puertos";
+export * from "./renombrarCalle";
 export * from "./reparentearLugar";
 export * from "./subarbol";

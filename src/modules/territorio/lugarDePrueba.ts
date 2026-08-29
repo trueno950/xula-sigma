@@ -1,7 +1,12 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { motul } from "@/shared/tenancy/municipiosDePrueba";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { comoDomicilioId, comoLugarId, type LugarId } from "./domain";
+import {
+  comoCalleId,
+  comoDomicilioId,
+  comoLugarId,
+  type LugarId,
+} from "./domain";
 import { calles, domicilios, lugares } from "./infrastructure/esquema";
 
 /**
@@ -32,6 +37,15 @@ export const crearLugar = (
       .values({ ayuntamientoId: motul, tipo, nombre, padreId })
       .returning({ id: lugares.id });
     return comoLugarId(fila!.id);
+  });
+
+export const crearCalle = (lugarId: LugarId, nombre: string) =>
+  withTenant(motul, async (tx) => {
+    const [fila] = await tx
+      .insert(calles)
+      .values({ ayuntamientoId: motul, nombre, lugarId })
+      .returning({ id: calles.id });
+    return comoCalleId(fila!.id);
   });
 
 export const crearDomicilio = (lugarId: LugarId, nombreCalle: string) =>
