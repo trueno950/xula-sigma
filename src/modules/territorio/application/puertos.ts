@@ -1,6 +1,6 @@
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
-import type { DomicilioId, LugarId, TipoDeLugar } from "../domain";
+import type { CalleId, DomicilioId, LugarId, TipoDeLugar } from "../domain";
 
 export type DatosDeAltaDeLugar = {
   id: LugarId;
@@ -90,4 +90,44 @@ export type RepositorioDeLugares = {
     tx: TransaccionTenant,
     raizId: LugarId,
   ): Promise<readonly NodoDeSubarbol[]>;
+};
+
+export type DatosDeAltaDeCalle = {
+  id: CalleId;
+  ayuntamientoId: AyuntamientoId;
+  nombre: string;
+  lugarId: LugarId;
+};
+
+export type CalleGuardada = {
+  id: CalleId;
+  nombre: string;
+  lugarId: LugarId;
+  bajaEn: Date | null;
+};
+
+export type DatosDeActualizacionDeCalle = {
+  id: CalleId;
+  nombre: string;
+};
+
+/**
+ * `actualizar` devuelve la fila actualizada o `null` si el `UPDATE` afecto
+ * cero filas -id inexistente o de otro tenant, RLS ya lo esconde-. De ahi
+ * sale `NoEncontradoError` en `renombrarCalle` sin necesitar un
+ * `buscarPorId` propio en este puerto (tasks.md 4.1). Puede lanzar
+ * `NombreDeCalleDuplicadoError` si el nuevo nombre choca contra
+ * `calles_tenant_lugar_nombre_idx` (design.md seccion 9).
+ */
+export type RepositorioDeCalles = {
+  crear(tx: TransaccionTenant, datos: DatosDeAltaDeCalle): Promise<void>;
+  actualizar(
+    tx: TransaccionTenant,
+    datos: DatosDeActualizacionDeCalle,
+  ): Promise<CalleGuardada | null>;
+  /** Calles activas (`bajaEn IS NULL`) de un lugar, para el catalogo y `SelectorDeCalle`. */
+  listarPorLugar(
+    tx: TransaccionTenant,
+    lugarId: LugarId,
+  ): Promise<readonly CalleGuardada[]>;
 };

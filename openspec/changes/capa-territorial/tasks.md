@@ -262,29 +262,29 @@ Depende de la Fase 2. Independiente de las Fases 1, 4, 5 y 6.
 
 Depende de la Fase 2. Debe mergearse antes que la Fase 5.
 
-- [ ] 4.1 `territorio/application/puertos.ts` (modificar): agregar
+- [x] 4.1 `territorio/application/puertos.ts` (modificar): agregar
       `RepositorioDeCalles` (`crear`, `actualizar`, `listarPorLugar`).
-- [ ] 4.2 RED `territorio/application/altaDeCalle.test.ts` (puertos
+- [x] 4.2 RED `territorio/application/altaDeCalle.test.ts` (puertos
       mockeados): rechaza sin `puedeAdministrarTerritorio`; una "Calle 21"
       de la cabecera y otra de una comisaria distinta conviven.
-- [ ] 4.3 GREEN `altaDeCalle.ts`.
-- [ ] 4.4 RED `territorio/application/renombrarCalle.test.ts`: rechaza sin
+- [x] 4.3 GREEN `altaDeCalle.ts`.
+- [x] 4.4 RED `territorio/application/renombrarCalle.test.ts`: rechaza sin
       `puedeAdministrarTerritorio`; choque contra
       `calles_tenant_lugar_nombre_idx` es el unico rechazo propio.
-- [ ] 4.5 GREEN `renombrarCalle.ts`.
-- [ ] 4.6 RED `territorio/application/listarCalles.test.ts`: sin guarda de
+- [x] 4.5 GREEN `renombrarCalle.ts`.
+- [x] 4.6 RED `territorio/application/listarCalles.test.ts`: sin guarda de
       rol (lectura de catalogo para el selector, precedente
       `listarPersonas`).
-- [ ] 4.7 GREEN `listarCalles.ts`.
-- [ ] 4.8 RED integration: renombrar la Calle 21 no cambia ninguna fila de
+- [x] 4.7 GREEN `listarCalles.ts`.
+- [x] 4.8 RED integration: renombrar la Calle 21 no cambia ninguna fila de
       `domicilios` — conteo y `xmin` intactos.
-- [ ] 4.9 GREEN.
-- [ ] 4.10 `territorio/ui/SelectorDeCalle.tsx` (`<select>` nativo poblado en
+- [x] 4.9 GREEN.
+- [x] 4.10 `territorio/ui/SelectorDeCalle.tsx` (`<select>` nativo poblado en
       servidor); `ui/actions/{altaDeCalle,renombrarCalle}Action.ts`; alta en
       la pagina de `territorio`.
-- [ ] 4.11 `AGENTS.md`: agregar `altaDeCalleAction`/`renombrarCalleAction` a
+- [x] 4.11 `AGENTS.md`: agregar `altaDeCalleAction`/`renombrarCalleAction` a
       la tabla de 3.21.
-- [ ] 4.12 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+- [x] 4.12 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 5: Rebanada 5 — Domicilios: direccion compuesta (~495 lineas)
 

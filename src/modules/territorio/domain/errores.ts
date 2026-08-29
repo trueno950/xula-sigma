@@ -26,3 +26,17 @@ export class JerarquiaInvalidaError extends Error {
     this.name = "JerarquiaInvalidaError";
   }
 }
+
+/**
+ * `renombrarCalle` rechaza si el nombre nuevo choca contra
+ * `calles_tenant_lugar_nombre_idx` (design.md seccion 9): dos calles
+ * pueden compartir nombre en lugares distintos, nunca en el mismo.
+ */
+export class NombreDeCalleDuplicadoError extends Error {
+  readonly codigo = "NOMBRE_DE_CALLE_DUPLICADO";
+
+  constructor(mensaje = "Ya existe una calle con ese nombre en este lugar.") {
+    super(mensaje);
+    this.name = "NombreDeCalleDuplicadoError";
+  }
+}

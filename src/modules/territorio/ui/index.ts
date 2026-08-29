@@ -1,5 +1,8 @@
 export { ArbolDeLugares } from "./ArbolDeLugares";
+export { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 export { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 export { FormularioDeBajaDeLugar } from "./FormularioDeBajaDeLugar";
 export { FormularioDeEdicionDeLugar } from "./FormularioDeEdicionDeLugar";
+export { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
 export { FormularioDeReparenteo } from "./FormularioDeReparenteo";
+export { SelectorDeCalle } from "./SelectorDeCalle";
