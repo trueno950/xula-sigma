@@ -4,16 +4,21 @@ import {
   crearAltaDeLugar,
   crearDarDeBajaLugar,
   crearEditarLugar,
+  crearHistorialDeResidencias,
   crearListarCalles,
   crearLugarPorId,
+  crearRegistrarMudanza,
   crearRenombrarCalle,
   crearReparentearLugar,
+  crearResidentesDe,
   crearSubarbol,
 } from "./application";
 import {
+  crearLectorDePersonasPorPadron,
   repositorioDeCallesSql,
   repositorioDeDomiciliosSql,
   repositorioDeLugaresSql,
+  repositorioDeResidenciasSql,
 } from "./infrastructure";
 
 /**
@@ -35,4 +40,17 @@ export const altaDeDomicilio = crearAltaDeDomicilio(
   repositorioDeDomiciliosSql,
   repositorioDeLugaresSql,
   repositorioDeCallesSql,
+);
+export const registrarMudanza = crearRegistrarMudanza(
+  repositorioDeResidenciasSql,
+  repositorioDeDomiciliosSql,
+  crearLectorDePersonasPorPadron,
+);
+export const historialDeResidencias = crearHistorialDeResidencias(
+  repositorioDeResidenciasSql,
+  crearLectorDePersonasPorPadron,
+);
+export const residentesDe = crearResidentesDe(
+  repositorioDeDomiciliosSql,
+  repositorioDeResidenciasSql,
 );

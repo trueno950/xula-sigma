@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { PersonaGuardada } from "../application/puertos";
 
 type Props = {
@@ -28,16 +29,21 @@ export function ListadoDePersonas({ personas }: Props) {
           key={persona.id}
           className="flex min-h-11 flex-col justify-center gap-0.5 border-b border-caliza-divisor px-3 py-2 sm:h-11 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-0"
         >
-          <span className="text-[15px] font-medium text-caliza-tinta">
-            {persona.primerApellido}
-            {persona.segundoApellido ? ` ${persona.segundoApellido}` : ""},{" "}
-            {persona.nombres}
-          </span>
-          {persona.curp ? (
-            <span className="font-mono text-[14px] text-caliza-apagada tabular-nums">
-              {persona.curp}
+          <Link
+            href={`/padron/${persona.id}`}
+            className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4"
+          >
+            <span className="text-[15px] font-medium text-caliza-tinta">
+              {persona.primerApellido}
+              {persona.segundoApellido ? ` ${persona.segundoApellido}` : ""},{" "}
+              {persona.nombres}
             </span>
-          ) : null}
+            {persona.curp ? (
+              <span className="font-mono text-[14px] text-caliza-apagada tabular-nums">
+                {persona.curp}
+              </span>
+            ) : null}
+          </Link>
         </li>
       ))}
     </ul>

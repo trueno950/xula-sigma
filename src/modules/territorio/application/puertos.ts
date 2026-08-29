@@ -168,6 +168,18 @@ export type DomicilioGuardado = {
  */
 export type RepositorioDeDomicilios = {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeDomicilio): Promise<void>;
+  /**
+   * `registrarMudanza` la usa para validar `domicilioId` bajo RLS antes de
+   * insertar la residencia -mismo motivo que `RepositorioDeCalles.buscarPorId`
+   * en `altaDeDomicilio` (hallazgo de GGA en la revision de PR 30): sin
+   * este chequeo, un `domicilioId` de otro tenant o inexistente cae en el
+   * `23503` crudo de `residencias_domicilio_tenant_fk` en vez de un
+   * `NoEncontradoError` limpio.
+   */
+  buscarPorId(
+    tx: TransaccionTenant,
+    id: DomicilioId,
+  ): Promise<DomicilioGuardado | null>;
   porLugarYSubarbol(
     tx: TransaccionTenant,
     lugarId: LugarId,
@@ -177,3 +189,11 @@ export type RepositorioDeDomicilios = {
     calleId: CalleId,
   ): Promise<readonly DomicilioGuardado[]>;
 };
+
+/**
+ * Los puertos de residencias (`RepositorioDeResidencias`,
+ * `LecturaDePersonas` y sus tipos de datos) viven en
+ * `puertosDeResidencias.ts`, no aca (hallazgo de GGA en la revision de
+ * esta rebanada: "Lineas por archivo de codigo <= 200" — este archivo
+ * llego a 288 antes del split).
+ */

@@ -44,6 +44,15 @@ export const repositorioDeDomiciliosSql: RepositorioDeDomicilios = {
     await tx.insert(domicilios).values(datos);
   },
 
+  async buscarPorId(tx, id) {
+    const [fila] = await tx
+      .select(columnasDeLectura)
+      .from(domicilios)
+      .where(eq(domicilios.id, id));
+
+    return fila ? aDomicilioGuardado(fila) : null;
+  },
+
   /**
    * Mismo `WITH RECURSIVE` que `repositorioDeLugaresSql.subarbol`
    * (tasks.md 3.12), con el mismo cinturon de profundidad — no la garantia
