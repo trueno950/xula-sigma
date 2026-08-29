@@ -158,6 +158,21 @@ propio: cada vuelta re-manda el diff completo y trae el veredicto entero de
 vuelta. En `auth-rbac` fue el gasto más grande del cambio, y casi todo en
 vueltas que no encontraron nada nuevo.
 
+**El revisor corre en CI y nada más.** Corría también en `pre-commit` y en
+`pre-push` — y el de `pre-push` ejecutaba el mismo comando que CI, así que no
+evitaba la vuelta: la pagaba dos veces con un modelo que no coincide consigo
+mismo. Una rama de tres commits pagaba cinco revisiones del mismo trabajo.
+Ver ADR 0001 §7.
+
+| Comando | Qué es | Cuándo |
+|---|---|---|
+| `pnpm reglas` | Determinista, un segundo, ocho antipatrones de AGENTS.md | `pre-commit`, `check` y CI |
+| `pnpm revision` | El revisor de IA, mismo comando que CI | A demanda, cuando el PR es grande |
+
+Lo que un patrón decide, no paga un modelo.
+
+Y el ciclo, cuando el revisor sí corre:
+
 - **Dos rondas.** La primera corrige, la segunda confirma. Si la segunda
   trae un hallazgo nuevo, se para y lo decide una persona — un hallazgo que
   aparece recién después de un fix puede ser el revisor persiguiéndose la
@@ -166,7 +181,8 @@ vueltas que no encontraron nada nuevo.
   archivos que llegaron en un commit anterior de una rama apilada y marca su
   ausencia. Se busca X en el repo primero; si está, el hallazgo se descarta.
 - **Cuatro hallazgos del mismo tipo son una regla ausente, no cuatro fixes.**
-  Se arregla la regla y se corre una sola ronda que la verifique entera.
+  Se arregla la regla y se corre una sola ronda que la verifique entera. Y si
+  un patrón la decide, la regla va a `scripts/reglas/`, no al revisor.
 
 Detalle y el caso que lo originó: `docs/04-calidad.md` sección 9.
 
