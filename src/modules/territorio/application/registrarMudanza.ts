@@ -6,11 +6,21 @@ import { registrar } from "@/shared/tenancy/bitacora";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { DomicilioId, ResidenciaId } from "../domain";
+import type { RepositorioDeDomicilios } from "./puertos";
 import type {
   LecturaDePersonas,
-  RepositorioDeDomicilios,
   RepositorioDeResidencias,
-} from "./puertos";
+} from "./puertosDeResidencias";
+
+/** Datos de `escribirMudanza`, agrupados para no superar 3 parametros por funcion (metrica de `AGENTS.md`; `tx` va aparte, mismo criterio que los repositorios). */
+type DatosDeEscrituraDeMudanza = {
+  repositorio: RepositorioDeResidencias;
+  repositorioDeDomicilios: RepositorioDeDomicilios;
+  terminal: string;
+  domicilioId: DomicilioId;
+  hoy: string;
+  contexto: ContextoActual;
+};
 
 /**
  * Cuerpo de la transaccion, separado de `registrarMudanza` (limite de
@@ -20,13 +30,17 @@ import type {
  */
 async function escribirMudanza(
   tx: TransaccionTenant,
-  repositorio: RepositorioDeResidencias,
-  repositorioDeDomicilios: RepositorioDeDomicilios,
-  terminal: string,
-  domicilioId: DomicilioId,
-  hoy: string,
-  contexto: ContextoActual,
+  datos: DatosDeEscrituraDeMudanza,
 ): Promise<{ id: ResidenciaId }> {
+  const {
+    repositorio,
+    repositorioDeDomicilios,
+    terminal,
+    domicilioId,
+    hoy,
+    contexto,
+  } = datos;
+
   const domicilio = await repositorioDeDomicilios.buscarPorId(tx, domicilioId);
   if (!domicilio) throw new NoEncontradoError();
 
@@ -87,15 +101,14 @@ export function crearRegistrarMudanza(
     const hoy = hoyEnMerida();
 
     return withTenant(contexto.ayuntamientoId, (tx) =>
-      escribirMudanza(
-        tx,
+      escribirMudanza(tx, {
         repositorio,
         repositorioDeDomicilios,
         terminal,
         domicilioId,
         hoy,
         contexto,
-      ),
+      }),
     );
   };
 }

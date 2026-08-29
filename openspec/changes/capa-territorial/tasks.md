@@ -336,7 +336,10 @@ Depende de las Fases 1 y 2. Sin dependencia de codigo con las Fases 3, 4 y 5
       `Intl.DateTimeFormat("en-CA", { timeZone: "America/Merida" })`.
 - [x] 6.3 RED `territorio/domain/residencia.test.ts`: vigencia — `hastaEn IS
       NULL` o `hastaEn >= desdeEn`.
-- [x] 6.4 GREEN `territorio/domain/residencia.ts`.
+- [x] 6.4 GREEN `territorio/domain/residencia.ts`. Revertido en la revision
+      de PR 31 (GGA): sin llamador de produccion, `registrarMudanza` nunca
+      recibe estas fechas del cliente. La unica proteccion real es el CHECK
+      `residencias_vigencia` de Postgres.
 - [x] 6.5 `territorio/application/puertos.ts` (modificar):
       `RepositorioDeResidencias` (`cerrarAbierta`, `abrir`, `historialDe`) y
       `LecturaDePersonas` (`terminalDe`, `identidadesDe`) SIN `tx` en la

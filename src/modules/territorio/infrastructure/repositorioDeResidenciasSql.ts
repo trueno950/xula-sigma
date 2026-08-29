@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import type {
   RepositorioDeResidencias,
   ResidenciaGuardada,
-} from "../application/puertos";
+} from "../application/puertosDeResidencias";
 import {
   comoCalleId,
   comoDomicilioId,

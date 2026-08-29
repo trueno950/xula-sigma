@@ -11,7 +11,7 @@ import type {
   LecturaDePersonas,
   RepositorioDeResidencias,
   ResidenciaGuardada,
-} from "./puertos";
+} from "./puertosDeResidencias";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 

@@ -7,6 +7,7 @@ export * from "./historialDeResidencias";
 export * from "./listarCalles";
 export * from "./lugarPorId";
 export type * from "./puertos";
+export type * from "./puertosDeResidencias";
 export * from "./registrarMudanza";
 export * from "./renombrarCalle";
 export * from "./reparentearLugar";

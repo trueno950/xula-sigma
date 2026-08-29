@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { comoDomicilioId, comoLugarId } from "../domain";
-import type {
-  DomicilioGuardado,
-  RepositorioDeDomicilios,
-  RepositorioDeResidencias,
-} from "./puertos";
+import type { DomicilioGuardado, RepositorioDeDomicilios } from "./puertos";
+import type { RepositorioDeResidencias } from "./puertosDeResidencias";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 

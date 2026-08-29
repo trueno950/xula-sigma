@@ -4,7 +4,7 @@ import {
   personaPorId,
 } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import type { LecturaDePersonas } from "../application/puertos";
+import type { LecturaDePersonas } from "../application/puertosDeResidencias";
 
 /**
  * Implementacion real de `LecturaDePersonas` contra los casos de uso de

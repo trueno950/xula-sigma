@@ -5,7 +5,7 @@ import type {
   LecturaDePersonas,
   RepositorioDeResidencias,
   ResidenciaGuardada,
-} from "./puertos";
+} from "./puertosDeResidencias";
 
 /**
  * Sin guarda de rol: leer el historial no es escribirlo, mismo criterio

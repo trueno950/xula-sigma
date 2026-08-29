@@ -2,12 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoDomicilioId, comoResidenciaId } from "../domain";
+import type { DomicilioGuardado, RepositorioDeDomicilios } from "./puertos";
 import type {
-  DomicilioGuardado,
   LecturaDePersonas,
-  RepositorioDeDomicilios,
   RepositorioDeResidencias,
-} from "./puertos";
+} from "./puertosDeResidencias";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());

@@ -1,4 +1,4 @@
-import type { ResidenciaGuardada } from "../application/puertos";
+import type { ResidenciaGuardada } from "../application/puertosDeResidencias";
 
 type Props = {
   historial: readonly ResidenciaGuardada[];
