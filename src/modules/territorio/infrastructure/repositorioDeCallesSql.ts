@@ -34,13 +34,9 @@ const aCalleGuardada = (fila: {
  * la restriccion en `constraint_name` -mismo campo que ya lista
  * `registroDeError.ts` como seguro para loguear-, pero drizzle envuelve ese
  * error de Postgres: los campos viven en `.cause`, no en el error que
- * llega aca (mismo hallazgo que documenta `registroDeError.ts`). Solo el
- * choque contra `calles_tenant_lugar_nombre_idx` se traduce a dominio;
- * cualquier otro error de Postgres se deja pasar tal cual. `crear` y
- * `actualizar` la comparten: el indice unico se dispara en el `INSERT`
- * igual que en el `UPDATE` (hallazgo de GGA en la revision de esta
- * rebanada -el comentario anterior de `altaDeCalle.ts` lo daba solo para
- * `renombrarCalle`, y era falso).
+ * llega aca (mismo hallazgo que documenta `registroDeError.ts`). `crear` y
+ * `actualizar` la comparten porque el indice se dispara en las dos
+ * operaciones; el porque del rechazo esta en `domain/errores.ts`.
  */
 const esChoqueDeNombreDuplicado = (error: unknown): boolean => {
   let actual: unknown = error;

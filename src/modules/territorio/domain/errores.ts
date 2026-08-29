@@ -28,9 +28,13 @@ export class JerarquiaInvalidaError extends Error {
 }
 
 /**
- * `renombrarCalle` rechaza si el nombre nuevo choca contra
+ * `altaDeCalle` y `renombrarCalle` rechazan si el nombre choca contra
  * `calles_tenant_lugar_nombre_idx` (design.md seccion 9): dos calles
- * pueden compartir nombre en lugares distintos, nunca en el mismo.
+ * pueden compartir nombre en lugares distintos, nunca en el mismo. El
+ * indice se dispara tanto en el `INSERT` como en el `UPDATE`, y
+ * `repositorioDeCallesSql` traduce los dos (SQLSTATE `23505`, mecanismo
+ * documentado ahi). Unico lugar que explica esta regla; el resto del
+ * modulo apunta aca en vez de repetirla.
  */
 export class NombreDeCalleDuplicadoError extends Error {
   readonly codigo = "NOMBRE_DE_CALLE_DUPLICADO";

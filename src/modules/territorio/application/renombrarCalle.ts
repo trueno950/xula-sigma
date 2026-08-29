@@ -8,10 +8,9 @@ import type { RepositorioDeCalles } from "./puertos";
 
 /**
  * Renombra una calle. Mismo esqueleto que `reparentearLugar` (design.md
- * seccion 9): el unico rechazo propio es el choque contra
- * `calles_tenant_lugar_nombre_idx`, que el repositorio traduce a
- * `NombreDeCalleDuplicadoError` y este caso de uso deja propagar sin
- * envolverla.
+ * seccion 9). Puede lanzar `NombreDeCalleDuplicadoError`, que el
+ * repositorio traduce y este caso de uso deja propagar sin envolverla; el
+ * porque esta en `domain/errores.ts`.
  */
 export function crearRenombrarCalle(repositorio: RepositorioDeCalles) {
   return async function renombrarCalle(

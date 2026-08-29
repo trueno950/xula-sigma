@@ -16,7 +16,8 @@ const esquemaDeEntrada = z.object({
   nombre: z.string().trim().min(1),
 });
 
-const MENSAJE_FORMULARIO_INVALIDO = "El nombre es obligatorio.";
+const MENSAJE_FORMULARIO_INVALIDO =
+  "Seleccione una calle y escriba el nombre nuevo.";
 const MENSAJE_GENERICO = "No se pudo completar el renombre. Intente de nuevo.";
 
 const redirigirConError = (mensaje: string): never =>

@@ -18,17 +18,12 @@ export type NuevaCalle = {
  * trabajo de mostrador.
  *
  * Lee `lugarId` bajo RLS con `repositorioDeLugares.buscarPorId` antes de
- * insertar -mismo precedente que `altaDeLugar.ts` con `padreId` (hallazgo
- * de GGA en la revision de esta rebanada): sin esto, un `lugarId` de otro
- * tenant o inexistente llegaba crudo al FK compuesto de Postgres (`23503`
- * sin traducir) en vez de un `NoEncontradoError` limpio.
+ * insertar -mismo precedente que `altaDeLugar.ts` con `padreId`: sin esto,
+ * un `lugarId` de otro tenant o inexistente llegaba crudo al FK compuesto
+ * de Postgres en vez de un `NoEncontradoError` limpio.
  *
- * No hay chequeo propio de nombre duplicado aca: `calles_tenant_lugar_nombre_idx`
- * permite el mismo nombre en dos lugares distintos -"Calle 21" de la
- * cabecera y de una comisaria conviven-, y si el choque ocurre en el mismo
- * lugar, `repositorioDeCallesSql.crear` ya lo traduce a
- * `NombreDeCalleDuplicadoError` (mismo mecanismo que `actualizar`, otro
- * hallazgo de la misma revision).
+ * Puede lanzar `NombreDeCalleDuplicadoError`; el porque esta en
+ * `domain/errores.ts`.
  */
 export function crearAltaDeCalle(
   repositorio: RepositorioDeCalles,

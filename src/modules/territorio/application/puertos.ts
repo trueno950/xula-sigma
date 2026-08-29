@@ -115,9 +115,9 @@ export type DatosDeActualizacionDeCalle = {
  * `actualizar` devuelve la fila actualizada o `null` si el `UPDATE` afecto
  * cero filas -id inexistente o de otro tenant, RLS ya lo esconde-. De ahi
  * sale `NoEncontradoError` en `renombrarCalle` sin necesitar un
- * `buscarPorId` propio en este puerto (tasks.md 4.1). Puede lanzar
- * `NombreDeCalleDuplicadoError` si el nuevo nombre choca contra
- * `calles_tenant_lugar_nombre_idx` (design.md seccion 9).
+ * `buscarPorId` propio en este puerto (tasks.md 4.1). `crear` y
+ * `actualizar` pueden lanzar `NombreDeCalleDuplicadoError`; el porque esta
+ * en `domain/errores.ts`, unico lugar que lo explica.
  */
 export type RepositorioDeCalles = {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeCalle): Promise<void>;
