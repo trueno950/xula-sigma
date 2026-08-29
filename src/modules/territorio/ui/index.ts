@@ -4,6 +4,8 @@ export { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 export { FormularioDeBajaDeLugar } from "./FormularioDeBajaDeLugar";
 export { FormularioDeDomicilio } from "./FormularioDeDomicilio";
 export { FormularioDeEdicionDeLugar } from "./FormularioDeEdicionDeLugar";
+export { FormularioDeMudanza } from "./FormularioDeMudanza";
 export { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
 export { FormularioDeReparenteo } from "./FormularioDeReparenteo";
+export { HistorialDeResidencias } from "./HistorialDeResidencias";
 export { SelectorDeCalle } from "./SelectorDeCalle";

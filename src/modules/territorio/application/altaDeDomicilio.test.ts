@@ -54,6 +54,7 @@ const calleGuardada: CalleGuardada = {
 describe("altaDeDomicilio", () => {
   const repositorio: RepositorioDeDomicilios = {
     crear: vi.fn(),
+    buscarPorId: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
   };

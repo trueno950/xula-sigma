@@ -328,62 +328,62 @@ Depende de las Fases 2 y 4. Independiente de las Fases 1, 3 y 6.
 Depende de las Fases 1 y 2. Sin dependencia de codigo con las Fases 3, 4 y 5
 (sus pruebas de integracion siembran el domicilio por SQL directo).
 
-- [ ] 6.1 RED `shared/lib/fecha.test.ts`: `hoyEnMerida()` devuelve
+- [x] 6.1 RED `shared/lib/fecha.test.ts`: `hoyEnMerida()` devuelve
       `"YYYY-MM-DD"` en `America/Merida`, no en UTC (bug del design §8:
       medianoche UTC del 3 de marzo es 2 de marzo en Merida). Archivo nuevo
       — `shared/lib/` solo tiene `errores.ts`/`registroDeError.ts` hoy.
-- [ ] 6.2 GREEN `shared/lib/fecha.ts`: `hoyEnMerida()` con
+- [x] 6.2 GREEN `shared/lib/fecha.ts`: `hoyEnMerida()` con
       `Intl.DateTimeFormat("en-CA", { timeZone: "America/Merida" })`.
-- [ ] 6.3 RED `territorio/domain/residencia.test.ts`: vigencia — `hastaEn IS
+- [x] 6.3 RED `territorio/domain/residencia.test.ts`: vigencia — `hastaEn IS
       NULL` o `hastaEn >= desdeEn`.
-- [ ] 6.4 GREEN `territorio/domain/residencia.ts`.
-- [ ] 6.5 `territorio/application/puertos.ts` (modificar):
+- [x] 6.4 GREEN `territorio/domain/residencia.ts`.
+- [x] 6.5 `territorio/application/puertos.ts` (modificar):
       `RepositorioDeResidencias` (`cerrarAbierta`, `abrir`, `historialDe`) y
       `LecturaDePersonas` (`terminalDe`, `identidadesDe`) SIN `tx` en la
       firma (design §6 — se llama fuera de `withTenant`).
-- [ ] 6.6 `territorio/infrastructure/lectorDePersonasPorPadron.ts`: adaptador
+- [x] 6.6 `territorio/infrastructure/lectorDePersonasPorPadron.ts`: adaptador
       que llama a `padron.personaPorId`/`padron.identidadesDePersona` (Fase
       1) via el barrel; verificar que `identidadPorPuerto.test.ts` sigue en
       verde con este archivo presente.
-- [ ] 6.7 RED `territorio/application/registrarMudanza.test.ts` (puertos
+- [x] 6.7 RED `territorio/application/registrarMudanza.test.ts` (puertos
       mockeados): rechaza sin `puedeEscribir`; `terminalDe` -> `null` lanza
       `NoEncontradoError` **antes** de abrir `withTenant`; verifica el orden
       de llamada (protege contra el anidamiento de 1.14).
-- [ ] 6.8 GREEN `registrarMudanza.ts`: cerrar+abrir en una transaccion, dos
+- [x] 6.8 GREEN `registrarMudanza.ts`: cerrar+abrir en una transaccion, dos
       trazas (`CERRAR_RESIDENCIA`/`ABRIR_RESIDENCIA`).
-- [ ] 6.9 RED integration: mudanza exitosa cierra la anterior y abre la
+- [x] 6.9 RED integration: mudanza exitosa cierra la anterior y abre la
       nueva en la misma transaccion; una apertura que falla revierte sin
       huella parcial.
-- [ ] 6.10 GREEN.
-- [ ] 6.11 RED integration: dos mudanzas concurrentes de la misma persona —
+- [x] 6.10 GREEN.
+- [x] 6.11 RED integration: dos mudanzas concurrentes de la misma persona —
       la segunda falla nombrando `residencias_una_abierta_idx`.
-- [ ] 6.12 GREEN.
-- [ ] 6.13 RED `territorio/application/historialDeResidencias.test.ts`
+- [x] 6.12 GREEN.
+- [x] 6.13 RED `territorio/application/historialDeResidencias.test.ts`
       (puertos mockeados): `identidadesDe` vacio lanza `NoEncontradoError`;
       orden `desdeEn DESC, creadoEn DESC`.
-- [ ] 6.14 GREEN `historialDeResidencias.ts`.
-- [ ] 6.15 RED integration: fusion A->B, historial por el id de A devuelve
+- [x] 6.14 GREEN `historialDeResidencias.ts`.
+- [x] 6.15 RED integration: fusion A->B, historial por el id de A devuelve
       las residencias de A y de B colapsadas.
-- [ ] 6.16 GREEN.
-- [ ] 6.17 RED integration: A con residencia abierta el 1 de marzo y B (su
+- [x] 6.16 GREEN.
+- [x] 6.17 RED integration: A con residencia abierta el 1 de marzo y B (su
       fusion) con una abierta el 10 de marzo — la vigente es la del 10 de
       marzo; la de A sigue en el historial, no vigente.
-- [ ] 6.18 GREEN (ajustar el `ORDER BY` si el desempate no calza).
-- [ ] 6.19 RED integration: revertir la fusion de A devuelve su historial
+- [x] 6.18 GREEN (ajustar el `ORDER BY` si el desempate no calza).
+- [x] 6.19 RED integration: revertir la fusion de A devuelve su historial
       sin las residencias de B, sin que ninguna fila de `residencias` haya
       cambiado nunca.
-- [ ] 6.20 GREEN (debe pasar sin cambios si 6.16-6.18 estan bien).
-- [ ] 6.21 `territorio/application/residentesDe.ts` + test: personas con
+- [x] 6.20 GREEN (debe pasar sin cambios si 6.16-6.18 estan bien).
+- [x] 6.21 `territorio/application/residentesDe.ts` + test: personas con
       residencia vigente en el subarbol de un lugar (reusa el CTE de 3.12
       combinado con `residencias.personaId` — **con el builder de Drizzle,
       no `sql\`…\``**, mismo motivo que 2.6).
-- [ ] 6.22 `territorio/ui/FormularioDeMudanza.tsx` +
+- [x] 6.22 `territorio/ui/FormularioDeMudanza.tsx` +
       `ui/actions/registrarMudanzaAction.ts`;
       `territorio/ui/HistorialDeResidencias.tsx`.
-- [ ] 6.23 `src/app/(panel)/padron/[id]/page.tsx`: composicion de los
+- [x] 6.23 `src/app/(panel)/padron/[id]/page.tsx`: composicion de los
       barrels de `padron` y `territorio` (ninguno importa al otro).
-- [ ] 6.24 `AGENTS.md`: agregar `registrarMudanzaAction` a la tabla.
-- [ ] 6.25 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 6.24 `AGENTS.md`: agregar `registrarMudanzaAction` a la tabla.
+- [x] 6.25 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       cobertura sobre `modules/territorio/{domain,application}` y
       `shared/lib/fecha`.
 

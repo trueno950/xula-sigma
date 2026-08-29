@@ -263,6 +263,7 @@ que devuelva, y devolverlo sería código muerto.
 | `altaDeCalleAction` | `territorio` | Server Component, `<form action={...}>` |
 | `renombrarCalleAction` | `territorio` | Server Component, `<form action={...}>` |
 | `altaDeDomicilioAction` | `territorio` | Server Component, `<form action={...}>` |
+| `registrarMudanzaAction` | `territorio` | Server Component, `<form action={...}>` |
 
 Notas que no caben en la tabla, una por fila que las necesita:
 
