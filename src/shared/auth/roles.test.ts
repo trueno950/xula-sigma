@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  puedeAdministrarTerritorio,
   puedeAdministrarUsuarios,
   puedeCambiarMarca,
   puedeDarDeBaja,
@@ -174,6 +175,16 @@ describe("puedeFusionarPersonas", () => {
 
     for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
       expect(puedeFusionarPersonas(rol)).toBe(false);
+    }
+  });
+});
+
+describe("puedeAdministrarTerritorio", () => {
+  it("solo ADMIN_MUNICIPAL reestructura el territorio de su municipio", () => {
+    expect(puedeAdministrarTerritorio("ADMIN_MUNICIPAL")).toBe(true);
+
+    for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
+      expect(puedeAdministrarTerritorio(rol)).toBe(false);
     }
   });
 });
