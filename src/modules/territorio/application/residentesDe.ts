@@ -1,4 +1,3 @@
-import type { PersonaId } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { LugarId } from "../domain";
@@ -21,7 +20,7 @@ export function crearResidentesDe(
   return function residentesDe(
     lugarId: LugarId,
     contexto: ContextoActual,
-  ): Promise<readonly PersonaId[]> {
+  ): Promise<readonly string[]> {
     return withTenant(contexto.ayuntamientoId, async (tx) => {
       const domicilios = await repositorioDeDomicilios.porLugarYSubarbol(
         tx,

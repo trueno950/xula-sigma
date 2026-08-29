@@ -1,9 +1,9 @@
-import type { PersonaId } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { hoyEnMerida } from "@/shared/lib/fecha";
 import { registrar } from "@/shared/tenancy/bitacora";
+import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { DomicilioId, ResidenciaId } from "../domain";
 import type {
@@ -11,6 +11,51 @@ import type {
   RepositorioDeDomicilios,
   RepositorioDeResidencias,
 } from "./puertos";
+
+/**
+ * Cuerpo de la transaccion, separado de `registrarMudanza` (limite de
+ * `AGENTS.md`, lineas por funcion): domicilio invalido, cierre de la
+ * residencia previa si habia una, y apertura de la nueva, cada escritura
+ * con su propia traza.
+ */
+async function escribirMudanza(
+  tx: TransaccionTenant,
+  repositorio: RepositorioDeResidencias,
+  repositorioDeDomicilios: RepositorioDeDomicilios,
+  terminal: string,
+  domicilioId: DomicilioId,
+  hoy: string,
+  contexto: ContextoActual,
+): Promise<{ id: ResidenciaId }> {
+  const domicilio = await repositorioDeDomicilios.buscarPorId(tx, domicilioId);
+  if (!domicilio) throw new NoEncontradoError();
+
+  const trazar = (accion: string, entidadId: ResidenciaId) =>
+    registrar(tx, {
+      ayuntamientoId: contexto.ayuntamientoId,
+      actor: contexto.usuario.id,
+      origen: contexto.origen,
+      accion,
+      entidad: "residencias",
+      entidadId,
+    });
+
+  const cerrada = await repositorio.cerrarAbierta(tx, terminal, hoy);
+  if (cerrada) await trazar("CERRAR_RESIDENCIA", cerrada);
+
+  // Se guarda el terminal, no lo que mando la UI -mismo criterio que
+  // `fusionarPersonas` (design.md seccion 8): mudar a alguien que ya es
+  // perdedor desaparece sin rechazarlo.
+  const id = await repositorio.abrir(tx, {
+    ayuntamientoId: contexto.ayuntamientoId,
+    personaId: terminal,
+    domicilioId,
+    desdeEn: hoy,
+  });
+  await trazar("ABRIR_RESIDENCIA", id);
+
+  return { id };
+}
 
 /**
  * `crearLecturaDePersonas` es una fabrica y no una instancia (design.md
@@ -24,7 +69,7 @@ export function crearRegistrarMudanza(
   crearLecturaDePersonas: (contexto: ContextoActual) => LecturaDePersonas,
 ) {
   return async function registrarMudanza(
-    personaId: PersonaId,
+    personaId: string,
     domicilioId: DomicilioId,
     contexto: ContextoActual,
   ): Promise<{ id: ResidenciaId }> {
@@ -41,45 +86,16 @@ export function crearRegistrarMudanza(
 
     const hoy = hoyEnMerida();
 
-    return withTenant(contexto.ayuntamientoId, async (tx) => {
-      const domicilio = await repositorioDeDomicilios.buscarPorId(
+    return withTenant(contexto.ayuntamientoId, (tx) =>
+      escribirMudanza(
         tx,
+        repositorio,
+        repositorioDeDomicilios,
+        terminal,
         domicilioId,
-      );
-      if (!domicilio) throw new NoEncontradoError();
-
-      const cerrada = await repositorio.cerrarAbierta(tx, terminal, hoy);
-      if (cerrada) {
-        await registrar(tx, {
-          ayuntamientoId: contexto.ayuntamientoId,
-          actor: contexto.usuario.id,
-          origen: contexto.origen,
-          accion: "CERRAR_RESIDENCIA",
-          entidad: "residencias",
-          entidadId: cerrada,
-        });
-      }
-
-      // Se guarda el terminal, no lo que mando la UI -mismo criterio que
-      // `fusionarPersonas` (design.md seccion 8): mudar a alguien que ya
-      // es perdedor desaparece sin rechazarlo.
-      const id = await repositorio.abrir(tx, {
-        ayuntamientoId: contexto.ayuntamientoId,
-        personaId: terminal,
-        domicilioId,
-        desdeEn: hoy,
-      });
-
-      await registrar(tx, {
-        ayuntamientoId: contexto.ayuntamientoId,
-        actor: contexto.usuario.id,
-        origen: contexto.origen,
-        accion: "ABRIR_RESIDENCIA",
-        entidad: "residencias",
-        entidadId: id,
-      });
-
-      return { id };
-    });
+        hoy,
+        contexto,
+      ),
+    );
   };
 }

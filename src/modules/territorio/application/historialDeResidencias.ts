@@ -1,4 +1,3 @@
-import type { PersonaId } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import { withTenant } from "@/shared/tenancy/withTenant";
@@ -23,7 +22,7 @@ export function crearHistorialDeResidencias(
   crearLecturaDePersonas: (contexto: ContextoActual) => LecturaDePersonas,
 ) {
   return async function historialDeResidencias(
-    personaId: PersonaId,
+    personaId: string,
     contexto: ContextoActual,
   ): Promise<readonly ResidenciaGuardada[]> {
     const lecturaDePersonas = crearLecturaDePersonas(contexto);

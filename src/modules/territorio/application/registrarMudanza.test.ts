@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PersonaId } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoDomicilioId, comoResidenciaId } from "../domain";
@@ -36,8 +35,8 @@ const contextoCon = (
   origen: "web",
 });
 
-const personaId = "11111111-1111-4111-8111-111111111111" as PersonaId;
-const terminal = "22222222-2222-4222-8222-222222222222" as PersonaId;
+const personaId = "11111111-1111-4111-8111-111111111111";
+const terminal = "22222222-2222-4222-8222-222222222222";
 const domicilioId = comoDomicilioId("33333333-3333-4333-8333-333333333333");
 const residenciaCerradaId = comoResidenciaId(
   "44444444-4444-4444-8444-444444444444",
@@ -85,7 +84,7 @@ describe("registrarMudanza", () => {
       domicilioGuardado,
     );
     lecturaDePersonas = {
-      terminalDe: vi.fn(async (id: PersonaId) => {
+      terminalDe: vi.fn(async (id: string) => {
         ordenDeLlamadas.push("terminalDe");
         return id === personaId ? terminal : null;
       }),
@@ -115,11 +114,7 @@ describe("registrarMudanza", () => {
     vi.mocked(lecturaDePersonas.terminalDe).mockResolvedValue(null);
 
     await expect(
-      registrarMudanza()(
-        "no-existe" as PersonaId,
-        domicilioId,
-        contextoCon("OPERADOR"),
-      ),
+      registrarMudanza()("no-existe", domicilioId, contextoCon("OPERADOR")),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(withTenantMock).not.toHaveBeenCalled();

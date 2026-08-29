@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PersonaId } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import {
@@ -30,8 +29,8 @@ const contexto: ContextoActual = {
   origen: "web",
 };
 
-const personaId = "11111111-1111-4111-8111-111111111111" as PersonaId;
-const otraIdentidad = "22222222-2222-4222-8222-222222222222" as PersonaId;
+const personaId = "11111111-1111-4111-8111-111111111111";
+const otraIdentidad = "22222222-2222-4222-8222-222222222222";
 
 const residenciaGuardada: ResidenciaGuardada = {
   id: comoResidenciaId("33333333-3333-4333-8333-333333333333"),

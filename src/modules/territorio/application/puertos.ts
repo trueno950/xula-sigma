@@ -1,4 +1,3 @@
-import type { PersonaId } from "@/modules/padron";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type {
@@ -197,16 +196,25 @@ export type RepositorioDeDomicilios = {
   ): Promise<readonly DomicilioGuardado[]>;
 };
 
+/**
+ * `personaId` es `string`, no el `PersonaId` de `padron` (hallazgo de GGA
+ * en la revision de esta rebanada): ese tipo vive en `padron/domain` y
+ * traerlo aca -aunque sea `import type`- es el antipatron 8 de
+ * `AGENTS.md`, el mismo que ya document `esquema.ts` (design.md decision
+ * 4). `territorio` no valida ni interpreta este uuid; la unica frontera
+ * que puede convertirlo es el adaptador `lectorDePersonasPorPadron.ts`,
+ * porque es el que de verdad llama a las funciones tipadas de `padron`.
+ */
 export type DatosDeAperturaDeResidencia = {
   ayuntamientoId: AyuntamientoId;
-  personaId: PersonaId;
+  personaId: string;
   domicilioId: DomicilioId;
   desdeEn: string;
 };
 
 export type ResidenciaGuardada = {
   id: ResidenciaId;
-  personaId: PersonaId;
+  personaId: string;
   domicilioId: DomicilioId;
   desdeEn: string;
   hastaEn: string | null;
@@ -244,7 +252,7 @@ export type ResidenciaGuardada = {
 export type RepositorioDeResidencias = {
   cerrarAbierta(
     tx: TransaccionTenant,
-    personaId: PersonaId,
+    personaId: string,
     hastaEn: string,
   ): Promise<ResidenciaId | null>;
   abrir(
@@ -253,26 +261,28 @@ export type RepositorioDeResidencias = {
   ): Promise<ResidenciaId>;
   historialDe(
     tx: TransaccionTenant,
-    identidades: readonly PersonaId[],
+    identidades: readonly string[],
   ): Promise<readonly ResidenciaGuardada[]>;
   residentesDe(
     tx: TransaccionTenant,
     domicilioIds: readonly DomicilioId[],
-  ): Promise<readonly PersonaId[]>;
+  ): Promise<readonly string[]>;
 };
 
 /**
  * Puerto propio de `territorio` sobre la lectura compuesta de `padron`
- * (design.md seccion 6). **Sin `tx` en la firma, a proposito**: el
- * adaptador (`infrastructure/lectorDePersonasPorPadron.ts`) llama a los
- * casos de uso de `padron`, que abren su propio `withTenant`. Si
- * `territorio` lo invocara desde adentro de su propia transaccion seria un
- * `withTenant` anidado — con `DB_POOL_MAX=1` en integracion se traba, y en
- * produccion consume dos conexiones del pool por operacion. Por eso
+ * (design.md seccion 6). `id` es `string`, no el `PersonaId` de `padron`
+ * -mismo motivo que `DatosDeAperturaDeResidencia.personaId` arriba-.
+ * **Sin `tx` en la firma, a proposito**: el adaptador
+ * (`infrastructure/lectorDePersonasPorPadron.ts`) llama a los casos de uso
+ * de `padron`, que abren su propio `withTenant`. Si `territorio` lo
+ * invocara desde adentro de su propia transaccion seria un `withTenant`
+ * anidado — con `DB_POOL_MAX=1` en integracion se traba, y en produccion
+ * consume dos conexiones del pool por operacion. Por eso
  * `registrarMudanza`/`historialDeResidencias` lo llaman **antes** de abrir
  * `withTenant`, nunca adentro.
  */
 export type LecturaDePersonas = {
-  terminalDe(id: PersonaId): Promise<PersonaId | null>;
-  identidadesDe(id: PersonaId): Promise<readonly PersonaId[]>;
+  terminalDe(id: string): Promise<string | null>;
+  identidadesDe(id: string): Promise<readonly string[]>;
 };

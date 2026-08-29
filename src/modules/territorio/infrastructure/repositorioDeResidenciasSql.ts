@@ -1,5 +1,4 @@
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
-import { comoPersonaId, type PersonaId } from "@/modules/padron";
 import type {
   RepositorioDeResidencias,
   ResidenciaGuardada,
@@ -26,7 +25,7 @@ type FilaDeHistorial = {
 
 const aResidenciaGuardada = (fila: FilaDeHistorial): ResidenciaGuardada => ({
   id: comoResidenciaId(fila.id),
-  personaId: comoPersonaId(fila.personaId),
+  personaId: fila.personaId,
   domicilioId: comoDomicilioId(fila.domicilioId),
   desdeEn: fila.desdeEn,
   hastaEn: fila.hastaEn,
@@ -115,6 +114,6 @@ export const repositorioDeResidenciasSql: RepositorioDeResidencias = {
         ),
       );
 
-    return filas.map((fila): PersonaId => comoPersonaId(fila.personaId));
+    return filas.map((fila) => fila.personaId);
   },
 };

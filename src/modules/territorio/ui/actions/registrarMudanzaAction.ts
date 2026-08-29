@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { comoPersonaId } from "@/modules/padron";
 import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
@@ -59,11 +58,7 @@ export async function registrarMudanzaAction(
   if (!contexto) redirect("/acceso");
 
   try {
-    await registrarMudanza(
-      comoPersonaId(personaId),
-      comoDomicilioId(domicilioId),
-      contexto,
-    );
+    await registrarMudanza(personaId, comoDomicilioId(domicilioId), contexto);
   } catch (error) {
     redirigirAlDetalleConError(personaId, mensajeDeError(error));
   }
