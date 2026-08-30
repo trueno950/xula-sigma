@@ -76,17 +76,9 @@ describe("superaElLimite", () => {
 
 describe("los limites del diseno", () => {
   it("son 5 por correo, 20 por IP y 30 por folio, en 15 minutos", () => {
-    /**
-     * Estan aca escritos como assert y no solo como constante porque son una
-     * decision, no un detalle: 5 por correo frena la prueba de contrasenias
-     * sin dejar afuera a quien se equivoca dos veces, y 20 por IP tolera que
-     * el palacio entero salga por una sola conexion. 30 por folio es un poco
-     * mas alto que el de IP a proposito: una institucion validando un lote
-     * de documentos tiene la forma legitima del enumerador, y quien agota
-     * esa ventana no obtuvo ningun dato personal -sin codigo correcto no hay
-     * titular ni direccion que raspar- (design.md de `constancias-oficios`,
-     * seccion 12).
-     */
+    // Estan aca escritos como assert y no solo como constante porque son
+    // una decision, no un detalle. El racional de cada numero vive en el
+    // comentario de `LIMITES` en `ritmo.ts`, no aca.
     expect(LIMITES).toEqual({ correo: 5, ip: 20, folio: 30 });
     expect(VENTANA_MINUTOS).toBe(15);
   });
