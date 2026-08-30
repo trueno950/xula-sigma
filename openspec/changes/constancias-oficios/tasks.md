@@ -831,12 +831,12 @@ diseno sobre el orden de la propuesta): necesita `constancias.folio` y
 reimpresion ni de cancelacion (Fase 6). Puede implementarse y mergearse
 mientras la compuerta de revision visual de la Fase 5 sigue abierta.
 
-- [ ] 7.1 RED `shared/auth/intentosAcceso.test.ts` (si no existe, crear —
+- [x] 7.1 RED `shared/auth/intentosAcceso.test.ts` (si no existe, crear —
       verificar primero): `TIPOS_INTENTO` incluye `"folio"` ademas de
       `"correo"` e `"ip"`.
-- [ ] 7.2 GREEN `shared/auth/intentosAcceso.ts` (modificar): `TIPOS_INTENTO =
+- [x] 7.2 GREEN `shared/auth/intentosAcceso.ts` (modificar): `TIPOS_INTENTO =
       ["correo", "ip", "folio"] as const`.
-- [ ] 7.3 `drizzle/0009_ritmo_folio.sql` (crear, migracion propia — otra
+- [x] 7.3 `drizzle/0009_ritmo_folio.sql` (crear, migracion propia — otra
       tabla, otro modulo, otra rebanada, no se mezcla con `0008_constancias.sql`):
       generar con `drizzle-kit generate`; **verificar leyendo el archivo
       generado, no asumir** que `checkConstraints` del snapshot produce el
@@ -844,31 +844,31 @@ mientras la compuerta de revision visual de la Fase 5 sigue abierta.
       `intentos_acceso_tipo_valido` (Postgres no permite alterar la
       expresion de un CHECK con una sola sentencia); si no aparece, escribir
       a mano en la cola del mismo archivo.
-- [ ] 7.4 RED `shared/auth/ritmo.test.ts` (modificar): `LIMITES` gana
+- [x] 7.4 RED `shared/auth/ritmo.test.ts` (modificar): `LIMITES` gana
       `folio: 30`.
-- [ ] 7.5 GREEN `shared/auth/ritmo.ts` (modificar): `LIMITES = { correo: 5,
+- [x] 7.5 GREEN `shared/auth/ritmo.ts` (modificar): `LIMITES = { correo: 5,
       ip: 20, folio: 30 } as const`.
-- [ ] 7.6 RED `shared/auth/limitarRitmo.test.ts` (crear, unit sobre la forma
+- [x] 7.6 RED `shared/auth/limitarRitmo.test.ts` (crear, unit sobre la forma
       nueva sin Postgres): `limitarRitmo(ayuntamientoId, ventanas)` recibe un
       arreglo de `{ tipo, valor }` en vez de `{ correo, ip }`;
       `limitarRitmoDeAcceso(ayuntamientoId, { correo, ip })` sigue aceptando
       la forma vieja y arma las mismas ventanas que antes (correo ausente ->
       sin esa ventana, ip siempre presente).
-- [ ] 7.7 GREEN `shared/auth/limitarRitmo.ts` (modificar): el nucleo se
+- [x] 7.7 GREEN `shared/auth/limitarRitmo.ts` (modificar): el nucleo se
       generaliza a `Ventana = { tipo: TipoIntento; valor: string }[]`,
       **conserva el orden "lanza despues de confirmar"** (el bug que
       documenta el comentario del archivo — el `throw` fuera de la
       transaccion, nunca adentro); `limitarRitmoDeAcceso` como envoltorio
       delgado.
-- [ ] 7.8 `src/app/api/auth/[...all]/route.ts` (modificar, una linea): usar
+- [x] 7.8 `src/app/api/auth/[...all]/route.ts` (modificar, una linea): usar
       `limitarRitmoDeAcceso` en vez de `limitarRitmo`.
-- [ ] 7.9 `src/shared/auth/ritmo.isolation.test.ts` (modificar, renombre de
+- [x] 7.9 `src/shared/auth/ritmo.isolation.test.ts` (modificar, renombre de
       llamador): actualizar las dos lineas que invocan el nucleo viejo.
-- [ ] 7.10 `src/app/api/auth/[...all]/ritmoDeLaRuta.test.ts` (modificar,
+- [x] 7.10 `src/app/api/auth/[...all]/ritmoDeLaRuta.test.ts` (modificar,
       churn de renombre): el `vi.mock` y los cuatro `toHaveBeenCalledWith`
       pasan a `limitarRitmoDeAcceso` — los ocho casos del archivo conservan
       su significado, sin cambio de comportamiento.
-- [ ] 7.11 RED `constancias/application/validarFolio.test.ts` — la
+- [x] 7.11 RED `constancias/application/validarFolio.test.ts` — la
       uniformidad probada en los cuatro casos negativos, con `toBe`, no
       `toEqual` (mismo criterio que 2.9): folio inexistente -> `null` de
       `repositorio.paraValidar` -> `toBe(NO_VALIDO)`; folio de otro tenant ->
@@ -878,39 +878,41 @@ mientras la compuerta de revision visual de la Fase 5 sigue abierta.
       correcto) -> `toBe(NO_VALIDO)`; sin `codigo` -> nivel 1; con `codigo`
       correcto -> nivel 2 con `titular` y `direccion` congelados del
       snapshot.
-- [ ] 7.12 GREEN `constancias/application/validarFolio.ts`: firma propia
+- [x] 7.12 GREEN `constancias/application/validarFolio.ts`: firma propia
       `validarFolio({ ayuntamientoId, folio, codigo }): Promise<ResultadoDeValidacion>`,
       **sin `ContextoActual`, sin `usuario`** (design.md seccion 7 — no se
       puede construir un `ContextoActual` para un visitante anonimo sin
       contaminar la bitacora con un actor inexistente).
-- [ ] 7.13 `constancias/infrastructure/repositorioDeConstanciasSql.ts`
+- [x] 7.13 `constancias/infrastructure/repositorioDeConstanciasSql.ts`
       (modificar): implementar `paraValidar(tx, folio)`.
-- [ ] 7.14 RED integration: dos municipios con el mismo folio impreso
+- [x] 7.14 RED integration: dos municipios con el mismo folio impreso
       (`VEC-2026-000001` cada uno) — `validarFolio` desde el subdominio de
       Motul solo resuelve la constancia de Motul, sin confirmar que el folio
       existe en Ticul (spec: "Folio de otro municipio no confirma su
       existencia").
-- [ ] 7.15 GREEN (deberia pasar sin cambios si 2.13/RLS estan bien —
+- [x] 7.15 GREEN (deberia pasar sin cambios si 2.13/RLS estan bien —
       confirmar, no asumir).
-- [ ] 7.16 `constancias/composicion.ts` (modificar): componer `validarFolio`
+- [x] 7.16 `constancias/composicion.ts` (modificar): componer `validarFolio`
       **sin** exigir sesion.
-- [ ] 7.17 RED `src/app/validar/[folio]/ritmo.test.ts` (forma de
+- [x] 7.17 RED `src/app/validar/[folio]/ritmo.test.ts` (forma de
       `ritmoDeLaRuta.test.ts`): con `invocationCallOrder`, el limitador corre
       **antes** que `validarFolio`; `RitmoExcedidoError` -> `429` **sin haber
       llamado** al caso de uso; la clave de la ventana es la IP, nunca el
       folio (assert de que dos folios distintos desde la misma IP comparten
       ventana).
-- [ ] 7.18 GREEN `src/app/validar/[folio]/page.tsx`: `CABECERA_SUPERFICIE ===
+- [x] 7.18 GREEN `src/app/validar/[folio]/page.tsx`: `CABECERA_SUPERFICIE ===
       "ayuntamiento"` (si no, `notFound()`); `ayuntamientoActual()` resuelve
       por subdominio, nunca del folio ni de la URL; `limitarRitmo(id, [{
       tipo: "folio", valor: ip }])` antes de `validarFolio`; **HTTP 200
       siempre** — nunca 404 para folio inexistente (un 404 reconstruye el
       oraculo que la union cerro).
-- [ ] 7.19 RED mismo archivo o uno de borde dedicado: el HTML de la respuesta
+- [x] 7.19 RED mismo archivo o uno de borde dedicado: el HTML de la respuesta
       sin `codigo` correcto no contiene nombre ni direccion en ningun texto
       renderizado, ni siquiera en un atributo oculto.
-- [ ] 7.20 GREEN (ajuste de la UI de la pagina si 7.19 encuentra una fuga).
-- [ ] 7.21 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+- [x] 7.20 GREEN (ajuste de la UI de la pagina si 7.19 encuentra una fuga) —
+      sin ajuste: 7.19 paso al primer intento, el guard `tieneTitular` de
+      7.18 ya evitaba la fuga.
+- [x] 7.21 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 8: Rebanada 8 — Exportacion (~160 lineas)
 

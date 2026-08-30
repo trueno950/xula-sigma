@@ -7,6 +7,7 @@ import {
   crearListarConstancias,
   crearPdfDeConstancia,
   crearReimprimirConstancia,
+  crearValidarFolio,
 } from "./application";
 import {
   contadorDeFoliosSql,
@@ -60,3 +61,8 @@ export const reimprimirConstancia = crearReimprimirConstancia(
 export const cancelarConstancia = crearCancelarConstancia(
   repositorioDeConstanciasSql,
 );
+/**
+ * Publico, sin `ContextoActual`: `src/app/validar/[folio]/page.tsx` la llama
+ * sin sesion (design.md de `constancias-oficios`, secciones 7 y 8).
+ */
+export const validarFolio = crearValidarFolio(repositorioDeConstanciasSql);

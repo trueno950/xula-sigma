@@ -26,14 +26,19 @@ import type { TipoIntento } from "./intentosAcceso";
 export const VENTANA_MINUTOS = 15;
 
 /**
- * Dos ventanas separadas y con numeros distintos.
+ * Tres ventanas separadas y con numeros distintos.
  *
  * 5 por correo frena la prueba de contrasenias sin dejar afuera a quien se
  * equivoca dos veces. 20 por IP tolera que el palacio entero salga por una
  * sola conexion — contarlas juntas dejaria al municipio afuera por el uso
- * normal.
+ * normal. 30 por folio (design.md de `constancias-oficios`, seccion 12) es
+ * un poco mas alto que el de IP a proposito: una institucion validando un
+ * lote de documentos tiene la forma legitima del enumerador, y quien agota
+ * esa ventana no obtuvo ningun dato personal -sin codigo correcto la
+ * respuesta nunca trae titular ni direccion-. Protege contra raspado, no
+ * contra fuga.
  */
-export const LIMITES = { correo: 5, ip: 20 } as const;
+export const LIMITES = { correo: 5, ip: 20, folio: 30 } as const;
 
 const pimienta = process.env.PIMIENTA_INTENTOS;
 

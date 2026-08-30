@@ -38,7 +38,15 @@ async function intentosEnLaVentana(
 }
 
 /**
- * Registra el intento y lanza si alguna de las dos ventanas estaba llena.
+ * Una ventana de conteo: que tipo y sobre que valor crudo -sin hashear, eso
+ * lo hace el nucleo con `claveDe`- (design.md de `constancias-oficios`,
+ * seccion 12).
+ */
+export type Ventana = { tipo: TipoIntento; valor: string };
+
+/**
+ * El nucleo, generalizado sobre `Ventana[]`: cuenta, registra, y lanza si
+ * alguna ventana estaba llena.
  *
  * **Abre su propia transaccion y lanza afuera de ella**, y ese orden es la
  * unica forma de que el intento quede anotado. La primera version recibia el
@@ -46,7 +54,10 @@ async function intentosEnLaVentana(
  * registro, asi que el intento numero seis nunca se contaba. Un intento que
  * no se cuenta es un intento gratis — quien prueba contrasenias esperaria a
  * que la ventana se vacie sin haber pagado por los que hizo de mas. Lo
- * agarro `ritmo.isolation.test.ts` contando filas.
+ * agarro `ritmo.isolation.test.ts` contando filas. Generalizar este nucleo
+ * -en vez de duplicarlo para la ventana de `folio`- es la unica forma de que
+ * una "hermana" no pueda reintroducir ese mismo bug sin que un tipo lo
+ * impida: no hay tipo que lo impida, hay una sola funcion que lo respeta.
  *
  * Tampoco comparte transaccion con el handler de Better Auth por lo mismo:
  * si el acceso falla y esa transaccion revierte, el intento fallido —que es
@@ -54,37 +65,47 @@ async function intentosEnLaVentana(
  */
 export async function limitarRitmo(
   ayuntamientoId: AyuntamientoId,
-  datos: { correo: string | null; ip: string },
+  ventanas: readonly Ventana[],
 ): Promise<void> {
-  /**
-   * **El correo puede faltar y la IP nunca.** Un cuerpo que no se puede
-   * leer —JSON roto, campo ausente— no tiene correo con que abrir esa
-   * ventana, pero sigue siendo un intento y sigue viniendo de algun lado.
-   * Saltear el limitador entero por eso dejaba una puerta: bastaba mandar
-   * basura para no gastar ventana. Lo encontro la revision.
-   */
-  const ventanas = [
-    ...(datos.correo === null
-      ? []
-      : [{ tipo: "correo" as const, clave: claveDe(datos.correo) }]),
-    { tipo: "ip" as const, clave: claveDe(datos.ip) },
-  ];
+  const claves = ventanas.map((v) => ({
+    tipo: v.tipo,
+    clave: claveDe(v.valor),
+  }));
 
   const lleno = await withTenant(ayuntamientoId, async (tx) => {
     const conteos = await Promise.all(
-      ventanas.map((v) => intentosEnLaVentana(tx, v.clave, v.tipo)),
+      claves.map((v) => intentosEnLaVentana(tx, v.clave, v.tipo)),
     );
 
     await tx
       .insert(intentosAcceso)
       .values(
-        ventanas.map((v) => ({ ayuntamientoId, clave: v.clave, tipo: v.tipo })),
+        claves.map((v) => ({ ayuntamientoId, clave: v.clave, tipo: v.tipo })),
       );
 
-    return ventanas.find((v, i) =>
-      superaElLimite(v.tipo, conteos[i] as number),
-    );
+    return claves.find((v, i) => superaElLimite(v.tipo, conteos[i] as number));
   });
 
   if (lleno) throw new RitmoExcedidoError(lleno.tipo);
 }
+
+/**
+ * La forma del acceso, sin cambios para quien la llama: envoltorio delgado
+ * del nucleo generalizado (design.md de `constancias-oficios`, seccion 12).
+ *
+ * **El correo puede faltar y la IP nunca.** Un cuerpo que no se puede
+ * leer —JSON roto, campo ausente— no tiene correo con que abrir esa
+ * ventana, pero sigue siendo un intento y sigue viniendo de algun lado.
+ * Saltear el limitador entero por eso dejaba una puerta: bastaba mandar
+ * basura para no gastar ventana. Lo encontro la revision.
+ */
+export const limitarRitmoDeAcceso = (
+  ayuntamientoId: AyuntamientoId,
+  datos: { correo: string | null; ip: string },
+): Promise<void> =>
+  limitarRitmo(ayuntamientoId, [
+    ...(datos.correo === null
+      ? []
+      : [{ tipo: "correo" as const, valor: datos.correo }]),
+    { tipo: "ip" as const, valor: datos.ip },
+  ]);

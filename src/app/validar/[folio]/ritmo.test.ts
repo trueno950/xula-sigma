@@ -1,0 +1,93 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { RitmoExcedidoError } from "@/shared/auth/ritmo";
+
+/**
+ * Borde de ritmo de `/validar/[folio]`, forma de `ritmoDeLaRuta.test.ts`
+ * (design.md de `constancias-oficios`, secciones 12 y 13): el limitador
+ * corre ANTES que `validarFolio`, con `invocationCallOrder`, y un
+ * `RitmoExcedidoError` corta sin haber llamado al caso de uso.
+ *
+ * Esta pagina es un Server Component, no un Route Handler: no hay
+ * `Response` que devuelva `.status`. La verificacion aca es del contrato de
+ * comportamiento -orden, no-llamado, clave por IP-, no de un codigo HTTP
+ * literal. En Next 16.3.1,
+ * `next/dist/client/components/http-access-fallback/http-access-fallback.d.ts`
+ * solo reconoce 404/401/403 como codigos que un componente de servidor
+ * puede forzar; no existe un equivalente para 429, asi que la pagina deja
+ * propagar `RitmoExcedidoError` sin capturarla.
+ */
+const leerCabeceras = vi.hoisted(() => vi.fn());
+const limitarRitmoMock = vi.hoisted(() => vi.fn());
+const ayuntamientoActualMock = vi.hoisted(() => vi.fn());
+const validarFolioMock = vi.hoisted(() => vi.fn());
+const notFoundMock = vi.hoisted(() => vi.fn());
+
+vi.mock("next/headers", () => ({ headers: leerCabeceras }));
+vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
+vi.mock("@/shared/auth/limitarRitmo", () => ({
+  limitarRitmo: limitarRitmoMock,
+}));
+vi.mock("@/shared/tenancy/contexto", () => ({
+  ayuntamientoActual: ayuntamientoActualMock,
+}));
+vi.mock("@/modules/constancias", () => ({ validarFolio: validarFolioMock }));
+
+const { default: PaginaDeValidacion } = await import("./page");
+
+const TENANT = "11111111-1111-1111-1111-111111111111";
+const IP = "189.203.10.7";
+
+const cabecerasDe = (ip: string | null) => ({
+  get: (nombre: string) =>
+    nombre === "x-xula-superficie" ? "ayuntamiento" : ip,
+});
+
+const propsDe = (folio: string, c?: string) => ({
+  params: Promise.resolve({ folio }),
+  searchParams: Promise.resolve(c === undefined ? {} : { c }),
+});
+
+describe("limitacion de ritmo en /validar/[folio]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    leerCabeceras.mockResolvedValue(cabecerasDe(IP));
+    ayuntamientoActualMock.mockResolvedValue({ id: TENANT });
+    limitarRitmoMock.mockResolvedValue(undefined);
+    validarFolioMock.mockResolvedValue({ estado: "NO_VALIDO" });
+  });
+
+  it("el limitador corre antes que validarFolio", async () => {
+    await PaginaDeValidacion(propsDe("VEC-2026-000001"));
+
+    expect(limitarRitmoMock).toHaveBeenCalledTimes(1);
+    expect(validarFolioMock).toHaveBeenCalledTimes(1);
+    expect(limitarRitmoMock.mock.invocationCallOrder[0]).toBeLessThan(
+      validarFolioMock.mock.invocationCallOrder[0] as number,
+    );
+  });
+
+  it("RitmoExcedidoError corta antes de llamar a validarFolio", async () => {
+    limitarRitmoMock.mockRejectedValue(new RitmoExcedidoError("folio"));
+
+    await expect(
+      PaginaDeValidacion(propsDe("VEC-2026-000001")),
+    ).rejects.toThrow(RitmoExcedidoError);
+
+    expect(validarFolioMock).not.toHaveBeenCalled();
+  });
+
+  it("la clave de la ventana es la IP, nunca el folio", async () => {
+    // Dos folios distintos, misma IP: la misma clave de ventana las dos
+    // veces. Si la clave fuera el folio, cada numero de la serie estrenaria
+    // su propia ventana y recorrerla saldria gratis.
+    await PaginaDeValidacion(propsDe("VEC-2026-000001"));
+    await PaginaDeValidacion(propsDe("VEC-2026-000002"));
+
+    expect(limitarRitmoMock).toHaveBeenNthCalledWith(1, TENANT, [
+      { tipo: "folio", valor: IP },
+    ]);
+    expect(limitarRitmoMock).toHaveBeenNthCalledWith(2, TENANT, [
+      { tipo: "folio", valor: IP },
+    ]);
+  });
+});

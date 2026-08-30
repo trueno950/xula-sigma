@@ -38,14 +38,18 @@ export type ConstanciaGuardada = DatosParaGuardar & {
 };
 
 /**
- * Lo que valida una constancia sin exponer el snapshot completo
- * (design.md seccion 8): la superficie publica solo necesita saber si el
- * folio y el codigo coinciden con una fila de este municipio.
+ * Lo que lee `paraValidar` para la superficie publica (design.md seccion 8):
+ * datos crudos, sin el snapshot resuelto. `application/validarFolio.ts` lo
+ * traduce a `FilaDeValidacion` -mismo criterio que `pdfDeConstancia.ts`, que
+ * resuelve `esquemaDeSnapshot.parse(constancia.datos)` fuera de
+ * `infrastructure`, nunca adentro.
  */
 export type FilaParaValidar = {
-  folio: string;
-  codigoVerificacion: string;
+  tipo: TipoDeDocumento;
+  emitidaEn: Date;
   canceladaEn: Date | null;
+  codigoVerificacion: string;
+  datos: Record<string, unknown>;
 };
 
 /**
