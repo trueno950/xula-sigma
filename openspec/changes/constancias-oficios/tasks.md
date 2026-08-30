@@ -809,6 +809,18 @@ revision visual haya cerrado**.
       el comentario duplicado de `cancelarConstancia.ts` sobre el mecanismo
       de concurrencia -ya explicado en `repositorioDeConstanciasSql.ts`,
       antipatron 23-.
+      **Correccion (GGA, ronda 4 de PR #40):** cabecera de
+      `repositorioDeConstanciasSql.ts` desactualizada -decia que
+      `registrarReimpresion`/`cancelar` eran para "una rebanada posterior",
+      siendo esta misma rebanada, y no mencionaba `bloquearPorId`-,
+      actualizada. `reimprimirConstancia` (la funcion interna) media 35
+      lineas sobre el limite de 30 de `AGENTS.md`; se extrajo
+      `guardarReimpresion` (el `registrarReimpresion` + `registrar` de
+      bitacora, un solo paso logico). Comentario de
+      `cancelarConstanciaAction.ts` se contradecia a si mismo -decia que la
+      accion "vuelve a validar el rol" y en la misma frase que
+      `cancelarConstancia` "ya lo hace"-, reescrito para no afirmar una
+      validacion que la accion no ejecuta.
 
 ## Phase 7: Rebanada 7 — Validacion publica de folio (~460 lineas)
 

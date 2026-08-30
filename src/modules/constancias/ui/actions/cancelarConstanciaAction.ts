@@ -13,9 +13,9 @@ import { comoConstanciaId, MOTIVOS_DE_CANCELACION } from "../../domain";
  * Borde de sesion de la cancelacion. Formulario nativo sin `use client`: la
  * excepcion de `AGENTS.md`, seccion Server Actions. La visibilidad del boton
  * la decide la pagina con `puedeAdministrarDocumentos` -ocultar un boton no
- * es autorizacion (`shared/auth/roles.ts`)-, asi que esta accion vuelve a
- * validar el rol antes de escribir: `cancelarConstancia` ya lo hace, pero el
- * mensaje de error se arma aca.
+ * es autorizacion (`shared/auth/roles.ts`)-; la autorizacion real vive en
+ * `cancelarConstancia`, que esta accion llama sin repetir el chequeo de rol.
+ * Lo que se arma aca es el mensaje legible cuando ese chequeo rechaza.
  */
 
 const esquemaDeEntrada = z.object({
