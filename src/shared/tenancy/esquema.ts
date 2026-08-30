@@ -56,12 +56,6 @@ export const ayuntamientos = pgTable(
     // Escudo, logotipo y paleta. Los assets son URLs a R2, nunca rutas
     // del filesystem del contenedor.
     marca: jsonb().notNull().default({}),
-    // Bloque de firma de `constancias`: firmante, cargo y leyenda de pie.
-    // `NOT NULL DEFAULT '{}'`, no nullable: mismo criterio que `marca`, para
-    // que "sin configurar" tenga una sola representacion (design.md seccion
-    // 9). Sin GRANT ni politica nueva: `ayuntamientos_escritura_propia` ya
-    // cubre el UPDATE sobre la fila propia.
-    documentos: jsonb().notNull().default({}),
     // `altaEn` y no `activo`: es la fecha en que el municipio entro al
     // sistema. Un nombre como `activo` hace esperar un booleano.
     altaEn: timestamp({ withTimezone: true }).notNull().defaultNow(),

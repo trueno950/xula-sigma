@@ -1,3 +1,9 @@
+CREATE TABLE "configuracion_de_documentos" (
+	"ayuntamiento_id" uuid PRIMARY KEY NOT NULL,
+	"datos" jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "configuracion_de_documentos" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "constancias" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"ayuntamiento_id" uuid NOT NULL,
@@ -44,7 +50,7 @@ CREATE TABLE "reimpresiones" (
 );
 --> statement-breakpoint
 ALTER TABLE "reimpresiones" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-ALTER TABLE "ayuntamientos" ADD COLUMN "documentos" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "configuracion_de_documentos" ADD CONSTRAINT "configuracion_de_documentos_ayuntamiento_id_ayuntamientos_id_fk" FOREIGN KEY ("ayuntamiento_id") REFERENCES "public"."ayuntamientos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "constancias" ADD CONSTRAINT "constancias_ayuntamiento_id_ayuntamientos_id_fk" FOREIGN KEY ("ayuntamiento_id") REFERENCES "public"."ayuntamientos"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "constancias" ADD CONSTRAINT "constancias_emitida_por_tenant_fk" FOREIGN KEY ("emitida_por_usuario_id","ayuntamiento_id") REFERENCES "public"."usuarios"("id","ayuntamiento_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "constancias" ADD CONSTRAINT "constancias_cancelada_por_tenant_fk" FOREIGN KEY ("cancelada_por_usuario_id","ayuntamiento_id") REFERENCES "public"."usuarios"("id","ayuntamiento_id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -58,9 +64,11 @@ CREATE UNIQUE INDEX "constancias_serie_idx" ON "constancias" USING btree ("ayunt
 CREATE INDEX "constancias_persona_idx" ON "constancias" USING btree ("ayuntamiento_id","persona_id");--> statement-breakpoint
 CREATE INDEX "reimpresiones_tenant_idx" ON "reimpresiones" USING btree ("ayuntamiento_id");--> statement-breakpoint
 CREATE INDEX "reimpresiones_constancia_idx" ON "reimpresiones" USING btree ("ayuntamiento_id","constancia_id");--> statement-breakpoint
+CREATE POLICY "configuracion_de_documentos_tenant" ON "configuracion_de_documentos" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
 CREATE POLICY "constancias_tenant" ON "constancias" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
 CREATE POLICY "folios_de_documentos_tenant" ON "folios_de_documentos" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
 CREATE POLICY "reimpresiones_tenant" ON "reimpresiones" AS PERMISSIVE FOR ALL TO "xula_app" USING (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid) WITH CHECK (ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid);--> statement-breakpoint
+
 -- ---------------------------------------------------------------------
 -- Lo que drizzle-kit no emite.
 --
@@ -69,10 +77,16 @@ CREATE POLICY "reimpresiones_tenant" ON "reimpresiones" AS PERMISSIVE FOR ALL TO
 -- veria identico a una migracion que se olvido del FORCE.
 -- ---------------------------------------------------------------------
 
+ALTER TABLE "configuracion_de_documentos" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "constancias" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "folios_de_documentos" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "reimpresiones" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
 
+-- Sin DELETE: la configuracion se actualiza, nunca se borra -- un
+-- ayuntamiento sin fila configurada es "sin configurar", no una fila
+-- ausente por eleccion (design.md seccion 9, `leerDocumentos` devuelve
+-- null cuando no hay fila).
+GRANT SELECT, INSERT, UPDATE ON "configuracion_de_documentos" TO "xula_app";--> statement-breakpoint
 -- `constancias` con UPDATE solo por la cancelacion: no hay ningun otro
 -- caso de uso que escriba sobre una fila existente, y el invariante 2
 -- prohibe que lo haya. Sin DELETE en ninguna: un documento oficial no se

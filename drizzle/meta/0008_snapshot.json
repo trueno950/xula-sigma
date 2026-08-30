@@ -1,5 +1,5 @@
 {
-  "id": "eda106b9-cd3e-4842-bfa1-7572484202d8",
+  "id": "1c71dfe0-98d1-4666-8782-f8fbb89204c5",
   "prevId": "7dcf68d6-c0fe-4083-a9eb-03698b7aa535",
   "version": "7",
   "dialect": "postgresql",
@@ -693,13 +693,6 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
-        "documentos": {
-          "name": "documentos",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
         "alta_en": {
           "name": "alta_en",
           "type": "timestamp with time zone",
@@ -890,6 +883,57 @@
           "to": [
             "xula_super_admin"
           ],
+          "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.configuracion_de_documentos": {
+      "name": "configuracion_de_documentos",
+      "schema": "",
+      "columns": {
+        "ayuntamiento_id": {
+          "name": "ayuntamiento_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "datos": {
+          "name": "datos",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "configuracion_de_documentos_ayuntamiento_id_ayuntamientos_id_fk": {
+          "name": "configuracion_de_documentos_ayuntamiento_id_ayuntamientos_id_fk",
+          "tableFrom": "configuracion_de_documentos",
+          "tableTo": "ayuntamientos",
+          "columnsFrom": [
+            "ayuntamiento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "configuracion_de_documentos_tenant": {
+          "name": "configuracion_de_documentos_tenant",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "xula_app"
+          ],
+          "using": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid",
           "withCheck": "ayuntamiento_id = NULLIF(current_setting('app.tenant', true), '')::uuid"
         }
       },

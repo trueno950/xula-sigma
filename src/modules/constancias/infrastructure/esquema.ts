@@ -138,6 +138,31 @@ export const reimpresiones = pgTable(
 ).enableRLS();
 
 /**
+ * Bloque de firma de `constancias`: firmante, cargo y leyenda de pie.
+ * **No vive en `ayuntamientos`** -correccion sobre la version original de
+ * design.md seccion 9, encontrada por GGA en la revision de esta rebanada-:
+ * `ayuntamientos` tiene `pgPolicy("ayuntamientos_directorio_publico", {for:
+ * "select", using: sql\`true\`})` porque `resolverAyuntamientoPorSubdominio`
+ * la lee **antes** de que exista contexto de tenant -es lo que resuelve el
+ * tenant, no algo que ya lo tenga-. `documentos` no tiene esa necesidad: se
+ * lee siempre dentro de la transaccion de `emitirConstancia`, con el tenant
+ * ya resuelto. Ponerlo en `ayuntamientos` heredaba una lectura publica sin
+ * proposito, exactamente lo que el comentario de esa politica excluye a
+ * proposito ("lo que nunca se expone es la operacion").
+ *
+ * Sin columna `id` sustituta, mismo criterio que `foliosDeDocumentos`: la
+ * identidad es `ayuntamientoId`, una fila por municipio.
+ */
+export const configuracionDeDocumentos = pgTable(
+  "configuracion_de_documentos",
+  {
+    ayuntamientoId: columnaTenant().primaryKey(),
+    datos: jsonb().notNull().default({}),
+  },
+  (t) => [politicaTenant("configuracion_de_documentos")],
+).enableRLS();
+
+/**
  * Sin columna `id` sustituta: la identidad de un contador **es** la
  * tripleta `(ayuntamientoId, tipo, anio)` (design.md seccion 4). Un uuid
  * encima permitiria dos filas para la misma serie, que es exactamente el

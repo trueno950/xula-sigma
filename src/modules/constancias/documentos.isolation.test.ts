@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { ayuntamientos } from "@/shared/tenancy/esquema";
 import {
   limpiar,
   motul,
@@ -9,35 +8,34 @@ import {
   ticul,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+import { configuracionDeDocumentos } from "./infrastructure/esquema";
 
 /**
- * Espejo exacto de `marca/escudo.isolation.test.ts`: la columna
- * `ayuntamientos.documentos` -el bloque de firma de `constancias`- se
- * aisla por la misma politica RLS que `marca`.
+ * `configuracion_de_documentos` no lleva `id`: la identidad es
+ * `ayuntamientoId`, una fila por municipio -no vive en `ayuntamientos`
+ * porque esa tabla tiene lectura publica a proposito, ver el comentario de
+ * la tabla en `infrastructure/esquema.ts`-.
+ *
+ * `beforeEach` sube ambos tenants con `onConflictDoUpdate`, no `DELETE`
+ * -el `GRANT` de la migracion no le da `DELETE` a `xula_app` a proposito-,
+ * asi que el reset entre tests usa el mismo mecanismo que va a usar
+ * `configurarDocumentos` en la Fase 3.
  */
-
-const documentosDe = async (ayuntamientoId: typeof motul) => {
-  const [fila] = await withTenant(ayuntamientoId, (tx) =>
-    tx
-      .select({ documentos: ayuntamientos.documentos })
-      .from(ayuntamientos)
-      .where(eq(ayuntamientos.id, ayuntamientoId)),
-  );
-
-  return fila?.documentos;
-};
 
 beforeAll(async () => {
   await sembrar();
 });
 
 beforeEach(async () => {
-  for (const ayuntamiento of [motul, ticul]) {
-    await withTenant(ayuntamiento, (tx) =>
+  for (const ayuntamientoId of [motul, ticul]) {
+    await withTenant(ayuntamientoId, (tx) =>
       tx
-        .update(ayuntamientos)
-        .set({ documentos: {} })
-        .where(eq(ayuntamientos.id, ayuntamiento)),
+        .insert(configuracionDeDocumentos)
+        .values({ ayuntamientoId, datos: {} })
+        .onConflictDoUpdate({
+          target: configuracionDeDocumentos.ayuntamientoId,
+          set: { datos: {} },
+        }),
     );
   }
 });
@@ -48,8 +46,8 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
-describe("documentos.isolation", () => {
-  it("el bloque de firma de Motul no aparece al consultar desde Ticul sin filtro explicito", async () => {
+describe("aislamiento de configuracion_de_documentos", () => {
+  it("una consulta sin filtro solo devuelve el bloque de firma del tenant activo", async () => {
     const bloqueDeFirma = {
       firmanteNombre: "Juan Poot",
       firmanteCargo: "Secretario Municipal",
@@ -57,28 +55,33 @@ describe("documentos.isolation", () => {
 
     await withTenant(motul, (tx) =>
       tx
-        .update(ayuntamientos)
-        .set({ documentos: bloqueDeFirma })
-        .where(eq(ayuntamientos.id, motul)),
+        .update(configuracionDeDocumentos)
+        .set({ datos: bloqueDeFirma })
+        .where(eq(configuracionDeDocumentos.ayuntamientoId, motul)),
     );
 
-    expect(await documentosDe(motul)).toEqual(bloqueDeFirma);
-    expect(await documentosDe(ticul)).toEqual({});
+    const filas = await withTenant(motul, (tx) =>
+      tx.select().from(configuracionDeDocumentos),
+    );
+
+    expect(filas).toHaveLength(1);
+    expect(filas[0]?.ayuntamientoId).toBe(motul);
+    expect(filas[0]?.datos).toEqual(bloqueDeFirma);
   });
 
   it("RLS corta un UPDATE contra otro ayuntamiento aunque el WHERE lo nombre", async () => {
-    /**
-     * Simula el bug que `ayuntamientos_escritura_propia` existe para
-     * evitar: un UPDATE armado con el id de Ticul mientras el tenant
-     * fijado es Motul.
-     */
+    // Simula el bug que la politica de tenant existe para evitar: un
+    // UPDATE armado con el id de Ticul mientras el tenant fijado es Motul.
     await withTenant(motul, (tx) =>
       tx
-        .update(ayuntamientos)
-        .set({ documentos: { firmanteNombre: "Intento cruzado" } })
-        .where(eq(ayuntamientos.id, ticul)),
+        .update(configuracionDeDocumentos)
+        .set({ datos: { firmanteNombre: "Intento cruzado" } })
+        .where(eq(configuracionDeDocumentos.ayuntamientoId, ticul)),
     );
 
-    expect(await documentosDe(ticul)).toEqual({});
+    const [fila] = await withTenant(ticul, (tx) =>
+      tx.select().from(configuracionDeDocumentos),
+    );
+    expect(fila?.datos).toEqual({});
   });
 });
