@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { transversalesValidas } from "./direccion";
+import { componerDireccion, transversalesValidas } from "./direccion";
 import { comoCalleId } from "./identificadores";
 
 const calleA = comoCalleId("11111111-1111-4111-8111-111111111111");
@@ -29,5 +29,83 @@ describe("transversalesValidas", () => {
 
   it("acepta una sola transversal presente", () => {
     expect(transversalesValidas(calleA, calleB, null)).toBe(true);
+  });
+});
+
+describe("componerDireccion", () => {
+  it("numero null incluye 'S/N' en el texto", () => {
+    const texto = componerDireccion({
+      calle: "Calle 20",
+      numero: null,
+      entreCalleA: null,
+      entreCalleB: null,
+      referencia: null,
+      ancestros: [],
+    });
+
+    expect(texto).toContain("S/N");
+  });
+
+  it("incluye las dos transversales presentes con su conector", () => {
+    const texto = componerDireccion({
+      calle: "Calle 20",
+      numero: "105",
+      entreCalleA: "Calle 21",
+      entreCalleB: "Calle 23",
+      referencia: null,
+      ancestros: [],
+    });
+
+    expect(texto).toContain("Calle 21");
+    expect(texto).toContain("Calle 23");
+  });
+
+  it("incluye la unica transversal presente -comisaria rural con un solo cruce conocido, valida segun transversalesValidas-", () => {
+    const texto = componerDireccion({
+      calle: "Calle 20",
+      numero: "105",
+      entreCalleA: "Calle 21",
+      entreCalleB: null,
+      referencia: null,
+      ancestros: [],
+    });
+
+    expect(texto).toContain("Calle 21");
+  });
+
+  it("sin transversales ni referencia las omite sin dejar separadores huerfanos", () => {
+    const texto = componerDireccion({
+      calle: "Calle 20",
+      numero: "105",
+      entreCalleA: null,
+      entreCalleB: null,
+      referencia: null,
+      ancestros: [],
+    });
+
+    expect(texto).not.toMatch(/,\s*,/);
+    expect(texto).not.toMatch(/,\s*$/);
+    expect(texto.trim()).toBe(texto);
+  });
+
+  it("la cadena de ancestros completa aparece del mas profundo al mas superficial", () => {
+    const texto = componerDireccion({
+      calle: "Calle 20",
+      numero: "105",
+      entreCalleA: null,
+      entreCalleB: null,
+      referencia: null,
+      ancestros: ["Manzana 5", "Sector 2", "Colonia Centro", "Comisaria X"],
+    });
+
+    const indiceManzana = texto.indexOf("Manzana 5");
+    const indiceSector = texto.indexOf("Sector 2");
+    const indiceColonia = texto.indexOf("Colonia Centro");
+    const indiceComisaria = texto.indexOf("Comisaria X");
+
+    expect(indiceManzana).toBeGreaterThanOrEqual(0);
+    expect(indiceSector).toBeGreaterThan(indiceManzana);
+    expect(indiceColonia).toBeGreaterThan(indiceSector);
+    expect(indiceComisaria).toBeGreaterThan(indiceColonia);
   });
 });

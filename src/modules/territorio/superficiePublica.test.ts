@@ -16,4 +16,16 @@ describe("superficie publica de territorio", () => {
 
     expect(tablas).toHaveLength(0);
   });
+
+  /**
+   * `direccionVigenteDePersona` es el caso de uso ya compuesto (tasks.md
+   * 1.13), sin guarda de rol propia -la autorizacion la decide el
+   * consumidor, mismo criterio que `personaPorId`-. El barrel lo tiene que
+   * exponer como funcion invocable directamente, no como un objeto de
+   * configuracion sin verificacion que un consumidor pueda confundir con
+   * un caso de uso guardado.
+   */
+  it("exporta direccionVigenteDePersona como funcion", () => {
+    expect(typeof superficie.direccionVigenteDePersona).toBe("function");
+  });
 });
