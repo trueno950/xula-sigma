@@ -43,7 +43,7 @@ precedente de formato).
 | 4 | Emision con folio bajo lock: contador, `emitirConstancia`, snapshot congelado, T6/T7, `enTransaccionParalela`, UI | PR 4 | `pnpm test src/modules/constancias/application -- emitirConstancia` | `pnpm db:local`; `pnpm test:integration -- folio emision` | Revertir `application/{puertos,emitirConstancia,constanciaPorId,listarConstancias}.ts`+adaptadores+UI; esquema de PR2 intacto, `folios_de_documentos` queda vacia |
 | 5 | Render de PDF: puerto, `renderizadorReactPdf`, plantilla de vecindad, QR, Route Handler | PR 5 | `pnpm test src/modules/constancias/application -- pdfDeConstancia` | `pnpm db:local`; sin Postgres para el render puro (renderizador falso) | Revertir `application/{puertosDeRender,pdfDeConstancia}.ts`+`infrastructure/{renderizadorReactPdf,plantillas}`+route.ts; emision de PR4 sigue funcionando, solo sin PDF |
 | **Compuerta de producto** | Ronda de revision visual con el piloto, hoja impresa en su propia impresora. **La fase no cuenta como vendible hasta que cierre.** No es una tarea de codigo | — | — | — | — |
-| 6 | Reimpresion y cancelacion: tabla `reimpresiones`, casos de uso, marca de agua acreditada, motivos cerrados, UI | PR 6 | `pnpm test src/modules/constancias/application -- reimprimir cancelar` | `pnpm db:local`; `pnpm test:integration -- reimpresionYCancelacion` | Revertir `application/{reimprimirConstancia,cancelarConstancia}.ts`+UI; `constancias`/PDF de PR4-5 intactos |
+| 6 | Reimpresion y cancelacion: tabla `reimpresiones`, casos de uso, marca de agua acreditada, motivos cerrados, UI | PR 6 | `pnpm test src/modules/constancias/application -- reimprimir cancelar` | `pnpm db:local`; `pnpm test:integration -- reimprimirConstancia cancelarConstancia` | Revertir `application/{reimprimirConstancia,cancelarConstancia}.ts`+UI; `constancias`/PDF de PR4-5 intactos |
 | 7 | Validacion publica: `validarFolio`, generalizacion de `limitarRitmo`, migracion del CHECK, pagina publica | PR 7 | `pnpm test src/modules/constancias/application -- validarFolio` + `src/shared/auth -- ritmo` | `pnpm db:local`; `pnpm test:integration -- ritmo folio` | Quitar `src/app/validar/[folio]/page.tsx` sin tocar la base — el QR queda apuntando a 404, fallo visible y no fuga |
 | 8 | Exportacion: `PorcionExportable` de `constancias` | PR 8 | `pnpm test src/modules/constancias -- composicion` | N/A — cubre el propio test de composicion | Revertir `porcionesDeConstancias`/`porciones.ts`; exportacion de otros modulos intacta |
 
@@ -715,8 +715,9 @@ revision visual haya cerrado**.
       Se agrego `bloquearPorId` (`SELECT ... FOR UPDATE`) al puerto
       `RepositorioDeConstancias` y `reimprimirConstancia` lo usa en vez de
       `buscarPorId`; probado con una segunda conexion real
-      (`enTransaccionParalela`) en `reimpresionYCancelacion.integration.test.ts`,
-      mismo mecanismo de prueba que T6 de `folio.integration.test.ts`.
+      (`enTransaccionParalela`) en `cancelarConstancia.integration.test.ts`
+      -nombre del archivo tras la correccion de la ronda 3-, mismo mecanismo
+      de prueba que T6 de `folio.integration.test.ts`.
 - [x] 6.5 `constancias/infrastructure/repositorioDeConstanciasSql.ts`
       (modificar): implementar `registrarReimpresion` y `cancelar` contra el
       esquema de la Fase 2.

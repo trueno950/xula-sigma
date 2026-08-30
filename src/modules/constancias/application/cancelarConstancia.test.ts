@@ -7,7 +7,7 @@ import type { RepositorioDeConstancias } from "./puertos";
 /**
  * Puertos mockeados, mismo patron que `reimprimirConstancia.test.ts`. La
  * prueba real del `UPDATE ... WHERE cancelada_en IS NULL` contra Postgres es
- * `reimpresionYCancelacion.integration.test.ts`.
+ * `cancelarConstancia.integration.test.ts`.
  */
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());

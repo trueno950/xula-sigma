@@ -12,7 +12,7 @@ import type { ConstanciaGuardada, RepositorioDeConstancias } from "./puertos";
  * Puertos mockeados, mismo patron que `emitirConstancia.test.ts`:
  * `withTenant` y `registrar` se mockean para que la prueba no toque
  * Postgres. La prueba real contra la base es
- * `reimpresionYCancelacion.integration.test.ts` (tasks.md Fase 6, 6.6-6.13).
+ * `reimprimirConstancia.integration.test.ts` (tasks.md Fase 6, 6.6-6.13).
  */
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
