@@ -297,14 +297,14 @@ entre municipios que este cambio existe para cerrar (mismo criterio que
 Depende de la Fase 2. Antes de la Fase 4, no con ella (decision 19 de
 `proposal.md`: sin bloque de firma configurado no se emite).
 
-- [ ] 3.1 RED `shared/auth/roles.test.ts` (modificar): fila para
+- [x] 3.1 RED `shared/auth/roles.test.ts` (modificar): fila para
       `puedeAdministrarDocumentos` — `ADMIN_MUNICIPAL` si, `OPERADOR` /
       `CONSULTA` / `SUPER_ADMIN` no, recorriendo `ROLES` con `todosMenos`
       (mismo patron que las filas existentes de la tabla).
-- [ ] 3.2 GREEN `shared/auth/roles.ts` (modificar): `puedeAdministrarDocumentos
+- [x] 3.2 GREEN `shared/auth/roles.ts` (modificar): `puedeAdministrarDocumentos
       = (rol) => rol === "ADMIN_MUNICIPAL"`, junto a
       `puedeAdministrarTerritorio`.
-- [ ] 3.3 RED `constancias/application/validacionDeDocumentos.test.ts`:
+- [x] 3.3 RED `constancias/application/validacionDeDocumentos.test.ts`:
       `validarDocumentos` acepta `{ firmanteNombre, firmanteCargo }` validos
       con `leyendaDePie` opcional; rechaza nombre/cargo bajo el minimo de 3
       caracteres; esquema **plano, no anidado** (verificar que un error de
@@ -313,38 +313,46 @@ Depende de la Fase 2. Antes de la Fase 4, no con ella (decision 19 de
       valor no valida — diverge del precedente `leerMarca` a proposito
       (decision 19: sin firmante no se emite, degradar a valores por defecto
       renderizaria la hoja sin firmante).
-- [ ] 3.4 GREEN `constancias/application/validacionDeDocumentos.ts`: Zod aca,
+- [x] 3.4 GREEN `constancias/application/validacionDeDocumentos.ts`: Zod aca,
       no en `domain` (`dominio-no-importa-nada` solo deja pasar `npm-dev`).
-- [ ] 3.5 `constancias/application/puertosDeLectura.ts` (crear):
+- [x] 3.5 `constancias/application/puertosDeLectura.ts` (crear):
       `RepositorioDeDocumentos.{leer,escribir}` — repositorio propio, no el
       de `marca` (compartirlo obligaria a `constancias` a importar `marca`).
-- [ ] 3.6 RED `constancias/infrastructure/repositorioDeDocumentosSql.ts.test.ts`
-      (o `.test.ts` junto al archivo, calco de `repositorioDeMarcaSql.ts`):
-      `leer` sobre `ayuntamientos.documentos`, `escribir` hace `UPDATE` sobre
-      la fila propia.
-- [ ] 3.7 GREEN `constancias/infrastructure/repositorioDeDocumentosSql.ts`.
-- [ ] 3.8 RED `constancias/application/configurarDocumentos.test.ts` (puertos
+- [x] 3.6 **Corregido contra `configuracion_de_documentos`, no
+      `ayuntamientos.documentos` (ver 2.14/2.25): la tabla se movio en la
+      correccion de la Fase 2, esta tarea todavia citaba el nombre viejo.**
+      RED `constancias/infrastructure/repositorioDeDocumentosSql.test.ts`
+      (calco de `catalogoDeAbreviaturasSql.test.ts`, `tx` fabricado a mano —
+      `repositorioDeMarcaSql.ts` no tiene `.test.ts` propio, asi que ese no
+      era el calco correcto): `leer` sobre `configuracion_de_documentos`;
+      `escribir` compone un `INSERT ... ON CONFLICT (ayuntamiento_id) DO
+      UPDATE`, no un `UPDATE` a secas (la tabla no tiene `GRANT` de
+      `DELETE`, design.md decision 8).
+- [x] 3.7 GREEN `constancias/infrastructure/repositorioDeDocumentosSql.ts`.
+- [x] 3.8 RED `constancias/application/configurarDocumentos.test.ts` (puertos
       mockeados): rechaza sin `puedeAdministrarDocumentos`; lee el `jsonb`
       actual, compone `{ ...actual, ...campos }`, valida el resultado
       completo, y escribe **el crudo compuesto, nunca la salida de Zod**
       (assert de que una clave desconocida en el valor actual sobrevive a la
       escritura — mismo mecanismo que `marcaConEscudo`).
-- [ ] 3.9 GREEN `constancias/application/configurarDocumentos.ts`.
-- [ ] 3.10 RED `constancias/application/documentosDelAyuntamiento.test.ts`:
+- [x] 3.9 GREEN `constancias/application/configurarDocumentos.ts`.
+- [x] 3.10 RED `constancias/application/documentosDelAyuntamiento.test.ts`:
       lectura sin guarda de rol propia — solo la escritura la exige.
-- [ ] 3.11 GREEN `constancias/application/documentosDelAyuntamiento.ts`.
-- [ ] 3.12 RED integration: `configurarDocumentos` seguido de
+- [x] 3.11 GREEN `constancias/application/documentosDelAyuntamiento.ts`.
+- [x] 3.12 RED integration: `configurarDocumentos` seguido de
       `documentosDelAyuntamiento` devuelve exactamente lo escrito; escribir
       dos veces conserva las claves no tocadas por la segunda escritura.
-- [ ] 3.13 GREEN (ajustar 3.7/3.9 si falla).
-- [ ] 3.14 `constancias/composicion.ts`, `application/index.ts`: componer
+- [x] 3.13 GREEN sin ajuste: 3.7/3.9 ya escribian sobre
+      `configuracion_de_documentos` con el upsert correcto, el test de
+      integracion paso en la primera corrida (3 casos, 3 verdes).
+- [x] 3.14 `constancias/composicion.ts`, `application/index.ts`: componer
       `configurarDocumentos`, `documentosDelAyuntamiento`.
-- [ ] 3.15 `constancias/ui/ConfiguracionDeDocumentos.tsx` (Server Component,
+- [x] 3.15 `constancias/ui/ConfiguracionDeDocumentos.tsx` (Server Component,
       `<form action>`); `ui/actions/configurarDocumentosAction.ts`;
       `src/app/(panel)/constancias/configuracion/page.tsx`.
-- [ ] 3.16 `AGENTS.md`: agregar `configurarDocumentosAction` a la tabla de
+- [x] 3.16 `AGENTS.md`: agregar `configurarDocumentosAction` a la tabla de
       Server Actions (fila de `capa-territorial/tasks.md` 3.21).
-- [ ] 3.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+- [x] 3.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 4: Rebanada 4 — Emision con folio bajo lock (~720 lineas, la mas ajustada junto con la 2)
 

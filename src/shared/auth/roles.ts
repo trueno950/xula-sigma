@@ -102,3 +102,12 @@ export const puedeFusionarPersonas = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
  */
 export const puedeAdministrarTerritorio = (rol: Rol) =>
   rol === "ADMIN_MUNICIPAL";
+
+/**
+ * Configurar y cancelar el bloque de firma de `constancias`. Mismo criterio
+ * que `puedeAdministrarTerritorio`: solo el municipio, nunca `SUPER_ADMIN`
+ * -quien opera la plataforma no decide quien firma un documento oficial de
+ * un municipio- (design.md de `constancias-oficios`, decision 8).
+ */
+export const puedeAdministrarDocumentos = (rol: Rol) =>
+  rol === "ADMIN_MUNICIPAL";
