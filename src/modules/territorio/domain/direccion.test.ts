@@ -60,6 +60,19 @@ describe("componerDireccion", () => {
     expect(texto).toContain("Calle 23");
   });
 
+  it("incluye la unica transversal presente -comisaria rural con un solo cruce conocido, valida segun transversalesValidas-", () => {
+    const texto = componerDireccion({
+      calle: "Calle 20",
+      numero: "105",
+      entreCalleA: "Calle 21",
+      entreCalleB: null,
+      referencia: null,
+      ancestros: [],
+    });
+
+    expect(texto).toContain("Calle 21");
+  });
+
   it("sin transversales ni referencia las omite sin dejar separadores huerfanos", () => {
     const texto = componerDireccion({
       calle: "Calle 20",
@@ -82,17 +95,17 @@ describe("componerDireccion", () => {
       entreCalleA: null,
       entreCalleB: null,
       referencia: null,
-      ancestros: ["Manzana 5", "Colonia Centro", "Sector 2", "Comisaria X"],
+      ancestros: ["Manzana 5", "Sector 2", "Colonia Centro", "Comisaria X"],
     });
 
     const indiceManzana = texto.indexOf("Manzana 5");
-    const indiceColonia = texto.indexOf("Colonia Centro");
     const indiceSector = texto.indexOf("Sector 2");
+    const indiceColonia = texto.indexOf("Colonia Centro");
     const indiceComisaria = texto.indexOf("Comisaria X");
 
     expect(indiceManzana).toBeGreaterThanOrEqual(0);
-    expect(indiceColonia).toBeGreaterThan(indiceManzana);
-    expect(indiceSector).toBeGreaterThan(indiceColonia);
-    expect(indiceComisaria).toBeGreaterThan(indiceSector);
+    expect(indiceSector).toBeGreaterThan(indiceManzana);
+    expect(indiceColonia).toBeGreaterThan(indiceSector);
+    expect(indiceComisaria).toBeGreaterThan(indiceColonia);
   });
 });

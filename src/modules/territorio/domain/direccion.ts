@@ -24,9 +24,10 @@ export const transversalesValidas = (
 /**
  * Entrada de `componerDireccion`, ya resuelta a nombres -sin ids, sin
  * `padreId` que subir a mano-. `ancestros` viene del mas profundo al mas
- * superficial (manzana -> colonia -> sector -> comisaria), el mismo orden
- * en el que `lectorDeDireccionesSql` recorre el `WITH RECURSIVE`
- * (design.md seccion 7).
+ * superficial (manzana -> sector -> colonia -> comisaria, el orden de
+ * rango de `tipoDeLugar.ts` invertido), el mismo orden en el que
+ * `lectorDeDireccionesSql` recorre el `WITH RECURSIVE` (design.md seccion
+ * 7).
  */
 export type PartesDeDireccion = {
   calle: string;
@@ -45,10 +46,15 @@ export type PartesDeDireccion = {
  */
 export const componerDireccion = (partes: PartesDeDireccion): string => {
   const numero = partes.numero ?? "S/N";
+  // Una comisaria rural puede conocer una sola transversal
+  // (`transversalesValidas` la acepta con la otra en null); omitir el
+  // segmento entero perdia esa calle en el texto impreso.
   const entreCalles =
     partes.entreCalleA && partes.entreCalleB
       ? `entre ${partes.entreCalleA} y ${partes.entreCalleB}`
-      : null;
+      : (partes.entreCalleA ?? partes.entreCalleB)
+        ? `entre ${partes.entreCalleA ?? partes.entreCalleB}`
+        : null;
 
   const segmentos = [
     `${partes.calle} ${numero}`,
