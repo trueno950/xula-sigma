@@ -31,3 +31,32 @@ export type RepositorioDeDocumentos = {
     datos: Record<string, unknown>,
   ): Promise<void>;
 };
+
+/** Lo que `emitirConstancia` necesita saber de `padron` sobre el titular. */
+export type TitularLeido = {
+  nombreCompleto: string;
+  bajaEn: Date | null;
+};
+
+/**
+ * Sin `tx`: se llama **antes** de abrir el `withTenant` de `emitirConstancia`
+ * (design.md de `constancias-oficios`, seccion 10). El adaptador real
+ * (`infrastructure/lectorDeTitularesPorPadron.ts`) abre su propio
+ * `withTenant` -el de `padron`- por dentro, mismo criterio que
+ * `LecturaDePersonas` de `territorio`.
+ */
+export type LecturaDeTitulares = {
+  porId(personaId: string): Promise<TitularLeido | null>;
+};
+
+/** Lo que `emitirConstancia` necesita saber de `territorio` sobre la direccion vigente. */
+export type DireccionLeida = {
+  texto: string;
+  residenciaId: string;
+  desdeEn: string;
+};
+
+/** Mismo criterio que `LecturaDeTitulares`: sin `tx`, fuera del `withTenant` propio. */
+export type LecturaDeDirecciones = {
+  vigenteDe(personaId: string): Promise<DireccionLeida | null>;
+};

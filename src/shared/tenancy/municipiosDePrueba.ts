@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import postgres from "postgres";
-import { comoAyuntamientoId } from "./ayuntamientoId";
+import postgres, { type TransactionSql } from "postgres";
+import { type AyuntamientoId, comoAyuntamientoId } from "./ayuntamientoId";
 import { bitacora } from "./esquema";
 import { withTenant } from "./withTenant";
 
@@ -61,6 +61,37 @@ export async function limpiar(): Promise<void> {
   // tabla intacta y el test siguiente contaminado. TRUNCATE es operacion
   // de tabla, no de fila, y RLS no interviene.
   await owner`TRUNCATE bitacora, ayuntamientos CASCADE`;
+}
+
+/**
+ * La segunda conexion, real e independiente, que necesita T6
+ * (`constancias/folio.integration.test.ts`, design.md de
+ * `constancias-oficios` seccion 4). Con `DB_POOL_MAX=1` en el proyecto
+ * `integration`, dos `withTenant` disparados con `Promise.all` no se
+ * cruzan: comparten la unica conexion del pool y se serializan solos,
+ * mismo hallazgo que ya documenta `mudanzas.integration.test.ts:100-112`.
+ * `appSinTenant` es un cliente `postgres()` propio, ajeno a ese pool, y
+ * `begin()` mantiene la transaccion abierta mientras `trabajo` no resuelva
+ * -es lo que le da al llamador el control de cuando hacer `COMMIT`-.
+ *
+ * Vive aca y no en el archivo de test: `scripts/reglas/reglas/tenancia.ts:43`
+ * reconoce el andamiaje por el nombre del archivo
+ * (`/DePrueba\.ts$|\.isolation\.test\.ts$/`), y un `*.integration.test.ts`
+ * que importara `postgres` directo es el antipatron 2 de `AGENTS.md`.
+ */
+export async function enTransaccionParalela<T>(
+  ayuntamientoId: AyuntamientoId,
+  trabajo: (tx: TransactionSql) => Promise<T>,
+): Promise<T> {
+  // `begin` tipa su retorno como `UnwrapPromiseArray<T>`, pensado para
+  // cuando `trabajo` devuelve un arreglo de promesas. Aca nunca es el
+  // caso -`trabajo` siempre devuelve `T` a secas-, asi que el cast es
+  // exacto y no un escape generico.
+  return appSinTenant.begin(async (tx) => {
+    await tx`SELECT set_config('app.tenant', ${ayuntamientoId}, true)`;
+
+    return trabajo(tx);
+  }) as Promise<T>;
 }
 
 /**

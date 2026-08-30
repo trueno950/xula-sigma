@@ -1,8 +1,17 @@
 import {
   crearConfigurarDocumentos,
+  crearConstanciaPorId,
   crearDocumentosDelAyuntamiento,
+  crearEmitirConstancia,
+  crearListarConstancias,
 } from "./application";
-import { repositorioDeDocumentosSql } from "./infrastructure";
+import {
+  contadorDeFoliosSql,
+  crearLectorDeDireccionesPorTerritorio,
+  crearLectorDeTitularesPorPadron,
+  repositorioDeConstanciasSql,
+  repositorioDeDocumentosSql,
+} from "./infrastructure";
 
 /**
  * Raiz de composicion del modulo: une la fabrica de cada caso de uso con
@@ -21,4 +30,17 @@ export const configurarDocumentos = crearConfigurarDocumentos(
 );
 export const documentosDelAyuntamiento = crearDocumentosDelAyuntamiento(
   repositorioDeDocumentosSql,
+);
+export const emitirConstancia = crearEmitirConstancia(
+  repositorioDeConstanciasSql,
+  contadorDeFoliosSql,
+  repositorioDeDocumentosSql,
+  crearLectorDeTitularesPorPadron,
+  crearLectorDeDireccionesPorTerritorio,
+);
+export const constanciaPorId = crearConstanciaPorId(
+  repositorioDeConstanciasSql,
+);
+export const listarConstancias = crearListarConstancias(
+  repositorioDeConstanciasSql,
 );
