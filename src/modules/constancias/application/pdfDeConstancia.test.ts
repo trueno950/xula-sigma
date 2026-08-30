@@ -136,6 +136,32 @@ describe("pdfDeConstancia", () => {
     });
   });
 
+  it("reimpresionId sin forma de UUID -> NoEncontradoError, misma rama que 'no existe'", async () => {
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue(constanciaGuardada);
+
+    await expect(
+      pdfDeConstancia()(
+        { id: constanciaId, reimpresionId: "no-es-un-uuid" },
+        contexto,
+      ),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+
+    expect(repositorio.existeReimpresion).not.toHaveBeenCalled();
+    expect(renderizador.aPdf).not.toHaveBeenCalled();
+  });
+
+  it("existeReimpresion rechaza por un fallo de infraestructura -> el error se propaga, no se traga como NoEncontradoError", async () => {
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue(constanciaGuardada);
+    const fallo = new Error("conexion perdida");
+    vi.mocked(repositorio.existeReimpresion).mockRejectedValue(fallo);
+
+    await expect(
+      pdfDeConstancia()({ id: constanciaId, reimpresionId }, contexto),
+    ).rejects.toBe(fallo);
+
+    expect(renderizador.aPdf).not.toHaveBeenCalled();
+  });
+
   it("camino feliz con reimpresion valida: el renderizador recibe reimpresion: true", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(constanciaGuardada);
     vi.mocked(repositorio.existeReimpresion).mockResolvedValue(true);

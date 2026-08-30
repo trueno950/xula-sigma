@@ -5,7 +5,11 @@ import {
   type TransaccionTenant,
   withTenant,
 } from "@/shared/tenancy/withTenant";
-import { type ConstanciaId, comoReimpresionId } from "../domain";
+import {
+  type ConstanciaId,
+  comoReimpresionId,
+  type ReimpresionId,
+} from "../domain";
 import type { RepositorioDeConstancias } from "./puertos";
 import type {
   AyuntamientoLeido,
@@ -37,54 +41,52 @@ export type SalidaDePdf = {
  */
 const dominioBase = () => process.env.DOMINIO_BASE ?? "localhost";
 
+type ContextoDeAcreditacion = {
+  repositorio: RepositorioDeConstancias;
+  tx: TransaccionTenant;
+  constanciaId: ConstanciaId;
+};
+
 /**
  * `true` solo si `reimpresionIdCrudo` acredita: existe **y** es de
  * `constanciaId` (design.md de `constancias-oficios`, seccion 11, FK
  * compuesto). Un `reimpresionId` ausente es simplemente "no es una
  * reimpresion" -`false`, sin lanzar-; uno presente que no acredita lanza
- * `NoEncontradoError` antes de que el llamador toque el renderizador. Un
- * `reimpresionId` que ni siquiera es un UUID cae en el mismo `catch` que
- * uno bien formado que no existe: las dos son la misma respuesta.
+ * `NoEncontradoError` antes de que el llamador toque el renderizador.
  */
 async function verificarReimpresion(
-  repositorio: RepositorioDeConstancias,
-  tx: TransaccionTenant,
+  contexto: ContextoDeAcreditacion,
   reimpresionIdCrudo: string | undefined,
-  constanciaId: ConstanciaId,
 ): Promise<boolean> {
   if (reimpresionIdCrudo === undefined) return false;
 
-  const acreditada = await intentarAcreditar(
-    repositorio,
-    tx,
-    reimpresionIdCrudo,
-    constanciaId,
-  );
+  const acreditada = await intentarAcreditar(contexto, reimpresionIdCrudo);
   if (!acreditada) throw new NoEncontradoError();
 
   return true;
 }
 
 /**
- * Separado de `verificarReimpresion` para que el `try/catch` cubra tambien
- * la construccion de `comoReimpresionId`, no solo la consulta: un
- * `reimpresionId` que ni siquiera tiene forma de UUID lanza **sincronico**
- * al construirse, y sin este `try` alrededor de las dos cosas ese throw se
- * escaparia crudo -sin convertirse en `NoEncontradoError`- en vez de caer en
- * la misma rama que "no existe".
+ * El `try` cubre unicamente la construccion **sincronica** de
+ * `comoReimpresionId`: un `reimpresionId` sin forma de UUID lanza ahi y cae
+ * en la misma rama que "no existe" -`false`-. La consulta a
+ * `existeReimpresion` queda fuera de ese `try`: un fallo real de
+ * infraestructura (conexion perdida, timeout) debe propagarse al 500
+ * generico de `conBorde`, no disfrazarse de "reimpresion no encontrada"
+ * (hallazgo de GGA en la revision de esta rebanada).
  */
 async function intentarAcreditar(
-  repositorio: RepositorioDeConstancias,
-  tx: TransaccionTenant,
+  { repositorio, tx, constanciaId }: ContextoDeAcreditacion,
   reimpresionIdCrudo: string,
-  constanciaId: ConstanciaId,
 ): Promise<boolean> {
+  let reimpresionId: ReimpresionId;
   try {
-    const reimpresionId = comoReimpresionId(reimpresionIdCrudo);
-    return await repositorio.existeReimpresion(tx, reimpresionId, constanciaId);
+    reimpresionId = comoReimpresionId(reimpresionIdCrudo);
   } catch {
     return false;
   }
+
+  return repositorio.existeReimpresion(tx, reimpresionId, constanciaId);
 }
 
 /**
@@ -138,10 +140,8 @@ export function crearPdfDeConstancia(
       if (!constancia) throw new NoEncontradoError();
 
       const reimpresion = await verificarReimpresion(
-        repositorio,
-        tx,
+        { repositorio, tx, constanciaId: constancia.id },
         entrada.reimpresionId,
-        constancia.id,
       );
       const ayuntamiento = await municipioDe(
         lecturaDeAyuntamiento,
