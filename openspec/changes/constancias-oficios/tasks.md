@@ -171,47 +171,47 @@ su FK compuesto contra `personas` en un estado intermedio, el mismo bypass
 entre municipios que este cambio existe para cerrar (mismo criterio que
 `capa-territorial` §17 aplico a su Rebanada 2).
 
-- [ ] 2.1 RED `constancias/domain/identificadores.test.ts`: `comoConstanciaId`
+- [x] 2.1 RED `constancias/domain/identificadores.test.ts`: `comoConstanciaId`
       y `comoReimpresionId` rechazan no-UUID y aceptan UUID valido.
-- [ ] 2.2 GREEN `constancias/domain/identificadores.ts` (`Identificador<N>` +
+- [x] 2.2 GREEN `constancias/domain/identificadores.ts` (`Identificador<N>` +
       `PATRON_UUID` propio — septimo y octavo lugar del mismo regex,
       design.md seccion 3, no se corrige aca).
-- [ ] 2.3 RED `constancias/domain/tipoDeDocumento.test.ts`: `PREFIJOS`
+- [x] 2.3 RED `constancias/domain/tipoDeDocumento.test.ts`: `PREFIJOS`
       recorriendo `TIPOS_DE_DOCUMENTO` entero (forma de tabla de
       `roles.test.ts`, para que un tipo nuevo **falte** en vez de heredar un
       prefijo por descarte).
-- [ ] 2.4 GREEN `constancias/domain/tipoDeDocumento.ts`: union cerrada
+- [x] 2.4 GREEN `constancias/domain/tipoDeDocumento.ts`: union cerrada
       `TIPOS_DE_DOCUMENTO = ["VECINDAD"]`, `PREFIJOS: Record<TipoDeDocumento,
       string>`.
-- [ ] 2.5 RED `constancias/domain/folio.test.ts`: `Folio.crear(prefijo, anio,
+- [x] 2.5 RED `constancias/domain/folio.test.ts`: `Folio.crear(prefijo, anio,
       consecutivo)` produce `"VEC-2026-000001"` para el primer consecutivo;
       consecutivo `1_000_001` se imprime con siete digitos y **no trunca**
       (spec: "El consecutivo un millon uno no rompe la unicidad"); consecutivo
       `0` o no entero se rechaza.
-- [ ] 2.6 GREEN `constancias/domain/folio.ts`: `padStart(6, "0")` sin
+- [x] 2.6 GREEN `constancias/domain/folio.ts`: `padStart(6, "0")` sin
       recorte.
-- [ ] 2.7 RED `constancias/domain/motivos.test.ts`: `MOTIVOS_DE_REIMPRESION`
+- [x] 2.7 RED `constancias/domain/motivos.test.ts`: `MOTIVOS_DE_REIMPRESION`
       = `["EXTRAVIO", "DETERIORO", "EJEMPLAR_ADICIONAL"]`,
       `MOTIVOS_DE_CANCELACION` = `["ERROR_DE_CAPTURA", "DATOS_INCORRECTOS",
       "SOLICITUD_DEL_INTERESADO"]`, ambas como uniones cerradas sin `OTRO`.
-- [ ] 2.8 GREEN `constancias/domain/motivos.ts`.
-- [ ] 2.9 RED `constancias/domain/validacion.test.ts` — el test que fija la
+- [x] 2.8 GREEN `constancias/domain/motivos.ts`.
+- [x] 2.9 RED `constancias/domain/validacion.test.ts` — el test que fija la
       uniformidad, comparando **identidad, no forma**: `fila === null` ->
       `toBe(NO_VALIDO)`; `fila.canceladaEn !== null` -> `toBe(NO_VALIDO)`
       (misma referencia que el caso anterior); `codigo === null` con fila
       vigente -> nivel 1 (`estado`, `tipo`, `emitidaEn`, sin `titular` ni
       `direccion`); `codigo` incorrecto -> `toBe(NO_VALIDO)`; `codigo`
       correcto -> nivel 2 con `titular` y `direccion`.
-- [ ] 2.10 GREEN `constancias/domain/validacion.ts`: `ResultadoDeValidacion`
+- [x] 2.10 GREEN `constancias/domain/validacion.ts`: `ResultadoDeValidacion`
       union con la variante negativa sin campos, `const NO_VALIDO =
       Object.freeze({ estado: "NO_VALIDO" } as const)`, `proyectarValidacion`.
-- [ ] 2.11 `constancias/domain/errores.ts`: `SinResidenciaVigenteError`,
+- [x] 2.11 `constancias/domain/errores.ts`: `SinResidenciaVigenteError`,
       `DocumentosNoConfiguradosError`, `TitularDadoDeBajaError`,
       `DocumentoCanceladoError`, `PlantillaDesconocidaError` — mismo patron
       que `shared/lib/errores.ts` (clase, `codigo` estable, `name`).
-- [ ] 2.12 `constancias/domain/index.ts`: barrel de dominio, reexport
+- [x] 2.12 `constancias/domain/index.ts`: barrel de dominio, reexport
       nombrado, nunca `export *` sobre nada que exponga un detalle interno.
-- [ ] 2.13 `constancias/infrastructure/esquema.ts`: las tres tablas
+- [x] 2.13 `constancias/infrastructure/esquema.ts`: las tres tablas
       (`constancias`, `folios_de_documentos`, `reimpresiones`) con
       `columnaTenant()` + `politicaTenant()` + `.enableRLS()`;
       `folios_de_documentos` con PK compuesta `(ayuntamientoId, tipo, anio)`,
@@ -227,15 +227,15 @@ entre municipios que este cambio existe para cerrar (mismo criterio que
       `identidadPorPuerto.test.ts` — `personaId` existe como columna
       `persona_id`, mismo motivo que `residencias_persona_idx` en
       `capa-territorial`).
-- [ ] 2.14 `shared/tenancy/esquema.ts` (modificar): agregar
+- [x] 2.14 `shared/tenancy/esquema.ts` (modificar): agregar
       `documentos: jsonb().notNull().default({})` a `ayuntamientos`, **no
       nullable** (correccion a la propuesta, design.md seccion 9; mismo
       patron que `marca`). Sin `GRANT` ni politica nueva:
       `ayuntamientos_escritura_propia` ya cubre el `UPDATE`.
-- [ ] 2.15 `constancias/infrastructure/index.ts`;
+- [x] 2.15 `constancias/infrastructure/index.ts`;
       `constancias/{index,types,composicion}.ts` esqueleto minimo, siguiendo
       el precedente de `marca`/`padron`/`territorio`.
-- [ ] 2.16 `drizzle/0008_constancias.sql`: generar con `drizzle-kit
+- [x] 2.16 `drizzle/0008_constancias.sql`: generar con `drizzle-kit
       generate`; en la cola, a mano: `FORCE ROW LEVEL SECURITY` para las tres
       tablas, los `GRANT` de la tabla de decision 5/6 (`constancias` con
       `UPDATE` solo por cancelacion; `reimpresiones` y `folios_de_documentos`
@@ -244,37 +244,37 @@ entre municipios que este cambio existe para cerrar (mismo criterio que
       ayuntamiento_id)`, con el mismo comentario de advertencia contra
       `drizzle-kit push` que `drizzle/0007_territorio.sql:103-120`
       (apuntando ahi, no repitiendolo — antipatron 23).
-- [ ] 2.17 RED `constancias/superficiePublica.test.ts`: el barrel no exporta
+- [x] 2.17 RED `constancias/superficiePublica.test.ts`: el barrel no exporta
       ningun objeto de tabla Drizzle — provocar el rojo exportando
       `constancias` (la tabla) temporalmente, confirmar el fallo, retirarlo.
-- [ ] 2.18 GREEN: barrel limpio, test en verde.
-- [ ] 2.19 RED `constancias/constancias.isolation.test.ts`: sin filtro en
+- [x] 2.18 GREEN: barrel limpio, test en verde.
+- [x] 2.19 RED `constancias/constancias.isolation.test.ts`: sin filtro en
       Motul solo devuelve constancias de Motul (T1); una fila con
       `persona_id` de una persona de Ticul insertada desde Motul es
       rechazada por Postgres nombrando `constancias_persona_tenant_fk`; una
       cancelacion a medias (`cancelada_en` sin `motivo_cancelacion`) es
       rechazada por `constancias_cancelacion_completa`.
-- [ ] 2.20 GREEN (ajustar RLS/FK/CHECK de 2.13/2.16 si algo falla).
-- [ ] 2.21 RED `constancias/folios.isolation.test.ts`: sin filtro en Motul
+- [x] 2.20 GREEN (ajustar RLS/FK/CHECK de 2.13/2.16 si algo falla).
+- [x] 2.21 RED `constancias/folios.isolation.test.ts`: sin filtro en Motul
       solo devuelve la fila de contador de Motul; dos filas para el mismo
       `(ayuntamientoId, tipo, anio)` son imposibles por la PK (insertar una
       segunda con SQL directo se rechaza).
-- [ ] 2.22 GREEN.
-- [ ] 2.23 RED `constancias/reimpresiones.isolation.test.ts`: sin filtro en
+- [x] 2.22 GREEN.
+- [x] 2.23 RED `constancias/reimpresiones.isolation.test.ts`: sin filtro en
       Motul solo devuelve reimpresiones de Motul; una fila con
       `constancia_id` de Ticul insertada desde Motul es rechazada por
       Postgres nombrando `reimpresiones_constancia_tenant_fk` (o el nombre
       real que 2.13 le de al `foreignKey` compuesto).
-- [ ] 2.24 GREEN.
-- [ ] 2.25 RED `constancias/documentos.isolation.test.ts` — espejo exacto de
+- [x] 2.24 GREEN.
+- [x] 2.25 RED `constancias/documentos.isolation.test.ts` — espejo exacto de
       `escudo.isolation.test.ts`: un bloque de firma configurado en
       `ayuntamientos.documentos` de Motul no aparece al consultar desde
       Ticul sin filtro explicito; RLS corta aunque el `ayuntamientoId` se
       falsee.
-- [ ] 2.26 GREEN.
-- [ ] 2.27 Verificar (no asumir) que `identidadPorPuerto.test.ts` sigue en
+- [x] 2.26 GREEN.
+- [x] 2.27 Verificar (no asumir) que `identidadPorPuerto.test.ts` sigue en
       verde con `constancias/infrastructure/esquema.ts` presente.
-- [ ] 2.28 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 2.28 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       confirmar piso 80/75 sobre `modules/constancias/domain`.
 
 ## Phase 3: Rebanada 3 — Configuracion del bloque de firma (~270 lineas)
