@@ -35,6 +35,7 @@ describe("cancelarConstancia", () => {
   const repositorio: RepositorioDeConstancias = {
     guardar: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
     listar: vi.fn(),
     paraValidar: vi.fn(),
     registrarReimpresion: vi.fn(),
@@ -52,6 +53,13 @@ describe("cancelarConstancia", () => {
   const cancelarConstancia = () => crearCancelarConstancia(repositorio);
 
   it("rechaza sin puedeAdministrarDocumentos(rol) antes de abrir withTenant", async () => {
+    // `cancelarConstancia` no recibe quien emitio el documento -su firma es
+    // (id, motivo, contexto)-, asi que "un OPERADOR que emitio tampoco puede
+    // cancelar" no es una rama que un test pueda ejercitar por separado: es
+    // estructural, la funcion no tiene forma de saber quien emitio para
+    // hacer una excepcion (hallazgo de GGA: el test que antes afirmaba
+    // cubrir ese caso pasaba con el mismo mock que este, sin construir
+    // ninguna constancia emitida por el `OPERADOR` del contexto).
     await expect(
       cancelarConstancia()(
         constanciaId,
@@ -61,18 +69,6 @@ describe("cancelarConstancia", () => {
     ).rejects.toBeInstanceOf(NoAutorizadoError);
 
     expect(withTenantMock).not.toHaveBeenCalled();
-    expect(repositorio.cancelar).not.toHaveBeenCalled();
-  });
-
-  it("un OPERADOR que emitio el documento tampoco puede cancelar -no hay excepcion por haber sido quien emitio-", async () => {
-    await expect(
-      cancelarConstancia()(
-        constanciaId,
-        "ERROR_DE_CAPTURA",
-        contextoCon("OPERADOR"),
-      ),
-    ).rejects.toBeInstanceOf(NoAutorizadoError);
-
     expect(repositorio.cancelar).not.toHaveBeenCalled();
   });
 

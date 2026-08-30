@@ -6,6 +6,7 @@ import {
   sembrarGente,
 } from "@/shared/auth/genteDePrueba";
 import {
+  enTransaccionParalela,
   limpiar,
   motivoDeFalla,
   motul,
@@ -261,5 +262,63 @@ describe("un OPERADOR reimprime sin necesitar puedeAdministrarDocumentos", () =>
     );
 
     expect(reimpresionId).toBeDefined();
+  });
+});
+
+describe("reimprimir y cancelar concurrentes, con una segunda conexion independiente", () => {
+  it("una cancelacion que confirma mientras reimprimir espera el lock deja DocumentoCanceladoError, no una reimpresion huerfana", async () => {
+    // Prueba real de la correccion de GGA en PR #40: sin `SELECT ... FOR
+    // UPDATE` en `bloquearPorId`, esta cancelacion paralela podria confirmar
+    // entre la lectura de `canceladaEn` de `reimprimirConstancia` y su
+    // `INSERT` en `reimpresiones`, dejando una fila de reimpresion para un
+    // documento ya cancelado. Mismo mecanismo de dos conexiones que T6 de
+    // `folio.integration.test.ts` -sin el, `reimprimirConstancia` resolveria
+    // antes de que la cancelacion paralela suelte el lock, y esta prueba
+    // pasaria en falso.
+    const id = await emitirParaPersonaDePrueba("CarreraReimprimirCancelar");
+
+    let liberarParalela: () => void = () => {};
+    const puedeConfirmar = new Promise<void>((resolve) => {
+      liberarParalela = resolve;
+    });
+
+    const paralela = enTransaccionParalela(motul, async (tx) => {
+      await tx`
+        UPDATE constancias
+           SET cancelada_en = now(),
+               cancelada_por_usuario_id = ${gente.motul.ADMIN_MUNICIPAL},
+               motivo_cancelacion = 'ERROR_DE_CAPTURA'
+         WHERE id = ${id} AND cancelada_en IS NULL
+      `;
+
+      // Se queda abierta -sin COMMIT- hasta que el test decida soltarla.
+      await puedeConfirmar;
+    });
+
+    // Le da tiempo a la paralela de terminar su UPDATE y tomar el lock
+    // antes de disparar la reimpresion real.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const reimpresion = reimprimirConstancia(id, "EXTRAVIO", actor("OPERADOR"));
+
+    const PENDIENTE = Symbol("pendiente");
+    const resultadoDeLaCarrera = await Promise.race([
+      reimpresion
+        .then(() => "resuelto" as const)
+        .catch(() => "rechazado" as const),
+      new Promise((resolve) => setTimeout(() => resolve(PENDIENTE), 300)),
+    ]);
+
+    expect(resultadoDeLaCarrera).toBe(PENDIENTE);
+
+    liberarParalela();
+    await paralela;
+
+    await expect(reimpresion).rejects.toBeInstanceOf(DocumentoCanceladoError);
+
+    const filas = await withTenant(motul, (tx) =>
+      tx.select().from(reimpresiones).where(eq(reimpresiones.constanciaId, id)),
+    );
+    expect(filas).toHaveLength(0);
   });
 });

@@ -68,6 +68,7 @@ describe("pdfDeConstancia", () => {
   const repositorio: RepositorioDeConstancias = {
     guardar: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
     listar: vi.fn(),
     paraValidar: vi.fn(),
     registrarReimpresion: vi.fn(),

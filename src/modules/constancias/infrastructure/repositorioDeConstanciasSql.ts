@@ -34,6 +34,22 @@ export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
     };
   },
 
+  async bloquearPorId(tx, id) {
+    const [fila] = await tx
+      .select()
+      .from(constancias)
+      .where(eq(constancias.id, id))
+      .for("update");
+
+    if (!fila) return null;
+
+    return {
+      ...fila,
+      id: comoConstanciaId(fila.id),
+      datos: fila.datos as Record<string, unknown>,
+    };
+  },
+
   async listar(tx, ayuntamientoId) {
     const filas = await tx
       .select()

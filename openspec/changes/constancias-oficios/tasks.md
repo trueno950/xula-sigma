@@ -697,10 +697,26 @@ revision visual haya cerrado**.
       camino feliz -> `cancelada_en`, `cancelada_por_usuario_id`,
       `motivo_cancelacion` en la misma sentencia, `registrar` con
       `CANCELAR_CONSTANCIA`.
+      **Correccion (GGA, ronda 1 de PR #40):** el test que decia cubrir "el
+      caso `OPERADOR` que emitio" era identico al de "rechaza sin
+      `puedeAdministrarDocumentos`" -mismo mock, mismo assert, sin construir
+      ninguna constancia emitida por ese `OPERADOR`-. La firma de
+      `cancelarConstancia(id, motivo, contexto)` no recibe quien emitio, asi
+      que esa rama no existe para probar: es estructural, no comportamiento.
+      Se elimino el test duplicado y se documento el porque en un comentario
+      del test que queda.
 - [x] 6.4 GREEN `constancias/application/cancelarConstancia.ts`: el `UPDATE`
       condicional es tambien el mecanismo de concurrencia (design.md seccion
       10) — sin rama adicional para la carrera de dos cancelaciones
       simultaneas.
+      **Correccion (GGA, ronda 1 de PR #40):** ese `UPDATE` es atomico
+      consigo mismo, pero no cierra la carrera del lado de
+      `reimprimirConstancia`, que lee `canceladaEn` sin bloquear la fila.
+      Se agrego `bloquearPorId` (`SELECT ... FOR UPDATE`) al puerto
+      `RepositorioDeConstancias` y `reimprimirConstancia` lo usa en vez de
+      `buscarPorId`; probado con una segunda conexion real
+      (`enTransaccionParalela`) en `reimpresionYCancelacion.integration.test.ts`,
+      mismo mecanismo de prueba que T6 de `folio.integration.test.ts`.
 - [x] 6.5 `constancias/infrastructure/repositorioDeConstanciasSql.ts`
       (modificar): implementar `registrarReimpresion` y `cancelar` contra el
       esquema de la Fase 2.

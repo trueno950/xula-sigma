@@ -58,6 +58,7 @@ describe("reimprimirConstancia", () => {
   const repositorio: RepositorioDeConstancias = {
     guardar: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
     listar: vi.fn(),
     paraValidar: vi.fn(),
     registrarReimpresion: vi.fn(),
@@ -84,7 +85,7 @@ describe("reimprimirConstancia", () => {
   });
 
   it("id inexistente -> NoEncontradoError", async () => {
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(null);
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(null);
 
     await expect(
       reimprimirConstancia()(constanciaId, "EXTRAVIO", contextoCon("OPERADOR")),
@@ -93,8 +94,8 @@ describe("reimprimirConstancia", () => {
     expect(repositorio.registrarReimpresion).not.toHaveBeenCalled();
   });
 
-  it("id de otro tenant -> NoEncontradoError (RLS ya deja buscarPorId en null)", async () => {
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(null);
+  it("id de otro tenant -> NoEncontradoError (RLS ya deja bloquearPorId en null)", async () => {
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(null);
 
     await expect(
       reimprimirConstancia()(constanciaId, "EXTRAVIO", contextoCon("OPERADOR")),
@@ -102,7 +103,7 @@ describe("reimprimirConstancia", () => {
   });
 
   it("constancia cancelada -> DocumentoCanceladoError, sin registrar reimpresion", async () => {
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(
       constanciaGuardada(new Date("2026-02-01T00:00:00Z")),
     );
 
@@ -123,7 +124,7 @@ describe("reimprimirConstancia", () => {
   });
 
   it("camino feliz: registrarReimpresion recibe {constanciaId, usuarioId, motivo}, registrar recibe REIMPRIMIR_CONSTANCIA con solo ids, devuelve el reimpresionId", async () => {
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(
       constanciaGuardada(null),
     );
     const reimpresionId = "22222222-2222-4222-8222-222222222222";

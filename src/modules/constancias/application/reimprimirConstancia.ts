@@ -30,7 +30,9 @@ export function crearReimprimirConstancia(
     if (!puedeEscribir(contexto.usuario.rol)) throw new NoAutorizadoError();
 
     return withTenant(contexto.ayuntamientoId, async (tx) => {
-      const constancia = await repositorio.buscarPorId(tx, id);
+      // `bloquearPorId`, no `buscarPorId`: el lock cierra la carrera con
+      // `cancelarConstancia` (ver el comentario del puerto en `puertos.ts`).
+      const constancia = await repositorio.bloquearPorId(tx, id);
       if (!constancia) throw new NoEncontradoError();
       if (constancia.canceladaEn !== null) {
         throw new DocumentoCanceladoError();
