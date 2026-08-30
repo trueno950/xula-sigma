@@ -266,6 +266,8 @@ que devuelva, y devolverlo sería código muerto.
 | `registrarMudanzaAction` | `territorio` | Server Component, `<form action={...}>` |
 | `configurarDocumentosAction` | `constancias` | Server Component, `<form action={...}>` |
 | `emitirConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
+| `reimprimirConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
+| `cancelarConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
 
 Notas que no caben en la tabla, una por fila que las necesita:
 

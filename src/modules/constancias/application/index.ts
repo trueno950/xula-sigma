@@ -1,3 +1,4 @@
+export * from "./cancelarConstancia";
 export * from "./configurarDocumentos";
 export * from "./constanciaPorId";
 export * from "./documentosDelAyuntamiento";
@@ -7,5 +8,6 @@ export * from "./pdfDeConstancia";
 export * from "./puertos";
 export * from "./puertosDeLectura";
 export * from "./puertosDeRender";
+export * from "./reimprimirConstancia";
 export * from "./validacionDeDocumentos";
 export * from "./validacionDeSnapshot";

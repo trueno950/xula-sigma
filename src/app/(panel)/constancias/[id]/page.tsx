@@ -1,27 +1,44 @@
 import { z } from "zod";
 import {
+  BotonDeCancelacion,
   BotonDeImprimir,
+  BotonDeReimpresion,
   comoConstanciaId,
   constanciaPorId,
   esquemaDeSnapshot,
 } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
+import { puedeAdministrarDocumentos } from "@/shared/auth/roles";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 const esquemaDeId = z.string().uuid();
+const esquemaDeParametros = z.object({ error: z.string().optional() });
 
 /**
- * Muestra el snapshot congelado como texto plano, mas el enlace de
- * impresion (`BotonDeImprimir`, design.md de `constancias-oficios`, seccion
- * 11). Mismo criterio que `padron/[id]/page.tsx` para "no existe"
- * -equivalente, no un 404 real, RLS ya deja `constanciaPorId` en `null`
- * para una constancia de otro tenant.
+ * Muestra el snapshot congelado como texto plano, mas los tres bordes de
+ * ciclo de vida del documento (design.md de `constancias-oficios`, secciones
+ * 10 y 11): imprimir (`BotonDeImprimir`), reimprimir con motivo
+ * (`BotonDeReimpresion`, disponible para cualquiera que escriba) y cancelar
+ * con motivo (`BotonDeCancelacion`, solo visible para quien administra
+ * documentos -ocultarlo no es la autorizacion real, que vive en
+ * `cancelarConstancia`-). Mismo criterio que `padron/[id]/page.tsx` para "no
+ * existe" -equivalente, no un 404 real, RLS ya deja `constanciaPorId` en
+ * `null` para una constancia de otro tenant.
+ *
+ * `?error=` efectivamente se lee aca -a diferencia del gap que la revision
+ * de la Fase 4b encontro en esta misma pantalla-: las dos acciones nuevas
+ * redirigen con ese parametro cuando `reimprimirConstancia` o
+ * `cancelarConstancia` rechazan.
  */
-export default async function PaginaDeDetalleDeConstancia({ params }: Props) {
+export default async function PaginaDeDetalleDeConstancia({
+  params,
+  searchParams,
+}: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
@@ -51,12 +68,31 @@ export default async function PaginaDeDetalleDeConstancia({ params }: Props) {
   }
 
   const datos = esquemaDeSnapshot.parse(constancia.datos);
+  const analisisDeParametros = esquemaDeParametros.safeParse(
+    await searchParams,
+  );
+  const error = analisisDeParametros.success
+    ? analisisDeParametros.data.error
+    : undefined;
+  const cancelada = constancia.canceladaEn !== null;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 p-6">
       <h1 className="text-2xl font-semibold text-caliza-tinta">
         {constancia.folio}
       </h1>
+
+      {error ? (
+        <p role="alert" className="text-[15px] text-senial-error">
+          {error}
+        </p>
+      ) : null}
+
+      {cancelada ? (
+        <p className="text-[15px] text-senial-error">
+          Documento cancelado: {constancia.motivoCancelacion}
+        </p>
+      ) : null}
 
       <dl className="flex flex-col gap-3">
         <div>
@@ -93,7 +129,16 @@ export default async function PaginaDeDetalleDeConstancia({ params }: Props) {
         </div>
       </dl>
 
-      <BotonDeImprimir id={constancia.id} />
+      <div className="flex flex-wrap gap-3">
+        <BotonDeImprimir id={constancia.id} />
+        {!cancelada ? (
+          <BotonDeReimpresion constanciaId={constancia.id} />
+        ) : null}
+      </div>
+
+      {!cancelada && puedeAdministrarDocumentos(contexto.usuario.rol) ? (
+        <BotonDeCancelacion constanciaId={constancia.id} />
+      ) : null}
     </main>
   );
 }
