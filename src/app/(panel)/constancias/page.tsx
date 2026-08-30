@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { listarConstancias } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
+import { fechaEnMerida } from "@/shared/lib/fecha";
 
 /**
  * Ruta fina: resuelve el contexto y lista. Sin `?q=` -`listarConstancias`
- * todavia no tiene busqueda- ni enlace generico "Emitir constancia": la
- * emision necesita un `personaId` en mano (`emitirConstancia`), y la unica
- * pantalla del repo que ya lo tiene es `/padron/[id]`, que enlaza aca.
+ * todavia no tiene busqueda- ni enlace generico "Emitir constancia": por
+ * que la emision no vive aca, ver el comentario de cabecera de
+ * `constancias/emitir/page.tsx`.
  */
 export default async function PaginaDeConstancias() {
   const contexto = await contextoActual();
@@ -43,7 +44,7 @@ export default async function PaginaDeConstancias() {
                   {constancia.folio}
                 </span>
                 <span className="text-[13px] text-caliza-apagada">
-                  {constancia.emitidaEn.toLocaleDateString("es-MX")}
+                  {fechaEnMerida(constancia.emitidaEn)}
                 </span>
               </Link>
             </li>

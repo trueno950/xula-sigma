@@ -5,6 +5,7 @@ import {
   esquemaDeSnapshot,
 } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
+import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -85,7 +86,7 @@ export default async function PaginaDeDetalleDeConstancia({ params }: Props) {
             Emitida
           </dt>
           <dd className="text-[15px] text-caliza-tinta">
-            {constancia.emitidaEn.toLocaleString("es-MX")}
+            {fechaYHoraEnMerida(constancia.emitidaEn)}
           </dd>
         </div>
       </dl>
