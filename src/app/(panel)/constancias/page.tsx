@@ -1,15 +1,26 @@
 import Link from "next/link";
+import { z } from "zod";
 import { listarConstancias } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
 import { fechaEnMerida } from "@/shared/lib/fecha";
+
+type Props = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const esquemaDeParametros = z.object({ error: z.string().optional() });
 
 /**
  * Ruta fina: resuelve el contexto y lista. Sin `?q=` -`listarConstancias`
  * todavia no tiene busqueda- ni enlace generico "Emitir constancia": por
  * que la emision no vive aca, ver el comentario de cabecera de
- * `constancias/emitir/page.tsx`.
+ * `constancias/emitir/page.tsx`. Lee `?error=` porque
+ * `emitirConstanciaAction` redirige aca con un mensaje redactado cuando el
+ * formulario llega invalido -sin este `searchParams`, ese mensaje se perdia
+ * en silencio (hallazgo de GGA en la revision de esta rebanada, mismo
+ * patron ya usado en `configuracion/page.tsx`).
  */
-export default async function PaginaDeConstancias() {
+export default async function PaginaDeConstancias({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
@@ -22,11 +33,19 @@ export default async function PaginaDeConstancias() {
     );
   }
 
+  const analisis = esquemaDeParametros.safeParse(await searchParams);
+  const error = analisis.success ? analisis.data.error : undefined;
   const constancias = await listarConstancias(contexto);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 p-6">
       <h1 className="text-2xl font-semibold text-caliza-tinta">Constancias</h1>
+
+      {error ? (
+        <p role="alert" className="text-[15px] text-senial-error">
+          {error}
+        </p>
+      ) : null}
 
       {constancias.length === 0 ? (
         <p className="text-[15px] text-caliza-apagada">
