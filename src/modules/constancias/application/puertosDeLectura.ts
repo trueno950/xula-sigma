@@ -22,9 +22,8 @@ export type RepositorioDeDocumentos = {
    */
   leer(tx: TransaccionTenant, ayuntamientoId: AyuntamientoId): Promise<unknown>;
   /**
-   * Reemplaza `datos` entero para ese ayuntamiento, dentro de `tx`, con
-   * `INSERT ... ON CONFLICT (ayuntamiento_id) DO UPDATE` -la tabla no tiene
-   * `GRANT` de `DELETE`, la configuracion se actualiza, nunca se borra.
+   * Reemplaza `datos` entero para ese ayuntamiento, dentro de `tx`, con un
+   * upsert sobre la PK (design.md de `constancias-oficios`, decision 8).
    */
   escribir(
     tx: TransaccionTenant,

@@ -49,9 +49,7 @@ describe("repositorioDeDocumentosSql", () => {
   });
 
   it("escribir compone un upsert sobre la PK, nunca dos caminos", async () => {
-    // La tabla no tiene GRANT de DELETE: la configuracion se actualiza via
-    // INSERT ... ON CONFLICT (ayuntamiento_id) DO UPDATE, nunca un UPDATE a
-    // secas que asuma que la fila ya existe (design.md decision 8).
+    // Motivo del upsert: design.md de `constancias-oficios`, decision 8.
     const { tx, insert, values, onConflictDoUpdate } = txDeEscritura();
     const datos = { firmanteNombre: "Juan Poot", firmanteCargo: "Secretario" };
 

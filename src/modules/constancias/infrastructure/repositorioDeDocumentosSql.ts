@@ -4,13 +4,8 @@ import { configuracionDeDocumentos } from "./esquema";
 
 /**
  * Implementacion real de `RepositorioDeDocumentos` contra
- * `configuracion_de_documentos`.
- *
- * `escribir` compone un `INSERT ... ON CONFLICT (ayuntamiento_id) DO
- * UPDATE`, nunca un `UPDATE` a secas: la tabla no tiene `GRANT` de
- * `DELETE`, asi que un ayuntamiento sin fila es "sin configurar" y la
- * primera escritura tiene que crear la fila, no asumir que ya existe
- * (design.md de `constancias-oficios`, decision 8).
+ * `configuracion_de_documentos` (design.md de `constancias-oficios`,
+ * decision 8, mismo motivo del upsert que en `puertosDeLectura.ts`).
  *
  * Igual que `repositorioDeMarcaSql`, no hay credenciales externas que
  * fakear en tests: el mismo Postgres que da RLS es el que aisla `escribir`,
