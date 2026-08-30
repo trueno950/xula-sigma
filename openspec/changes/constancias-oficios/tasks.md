@@ -211,9 +211,11 @@ entre municipios que este cambio existe para cerrar (mismo criterio que
       que `shared/lib/errores.ts` (clase, `codigo` estable, `name`).
 - [x] 2.12 `constancias/domain/index.ts`: barrel de dominio, reexport
       nombrado, nunca `export *` sobre nada que exponga un detalle interno.
-- [x] 2.13 `constancias/infrastructure/esquema.ts`: las tres tablas
-      (`constancias`, `folios_de_documentos`, `reimpresiones`) con
-      `columnaTenant()` + `politicaTenant()` + `.enableRLS()`;
+- [x] 2.13 `constancias/infrastructure/esquema.ts`: las **cuatro** tablas
+      (`constancias`, `folios_de_documentos`, `reimpresiones`,
+      `configuracion_de_documentos` — esta ultima agregada en la correccion
+      de 2.14, ver ahi) con `columnaTenant()` + `politicaTenant()` +
+      `.enableRLS()`;
       `folios_de_documentos` con PK compuesta `(ayuntamientoId, tipo, anio)`,
       **sin columna `id` sustituta** (design.md seccion 4); `unique(id,
       ayuntamientoId)` solo en `constancias` (destino de FK compuesto),
@@ -227,17 +229,27 @@ entre municipios que este cambio existe para cerrar (mismo criterio que
       `identidadPorPuerto.test.ts` — `personaId` existe como columna
       `persona_id`, mismo motivo que `residencias_persona_idx` en
       `capa-territorial`).
-- [x] 2.14 `shared/tenancy/esquema.ts` (modificar): agregar
-      `documentos: jsonb().notNull().default({})` a `ayuntamientos`, **no
-      nullable** (correccion a la propuesta, design.md seccion 9; mismo
-      patron que `marca`). Sin `GRANT` ni politica nueva:
-      `ayuntamientos_escritura_propia` ya cubre el `UPDATE`.
+- [x] 2.14 **Revertido y corregido tras hallazgo de GGA en la revision de
+      PR 35.** La version original de esta tarea agregaba `documentos:
+      jsonb().notNull().default({})` a `ayuntamientos`, calcando `marca`.
+      Hallazgo: `ayuntamientos` tiene `pgPolicy("ayuntamientos_directorio_publico",
+      {for: "select", using: sql\`true\`})` porque `resolverAyuntamientoPorSubdominio`
+      la lee antes de que exista tenant — el bloque de firma no tiene esa
+      necesidad y heredaba una lectura publica sin proposito.
+      `shared/tenancy/esquema.ts` queda sin cambios; en su lugar,
+      `constancias/infrastructure/esquema.ts` gana la tabla propia
+      `configuracion_de_documentos` (PK = `ayuntamientoId`, `datos jsonb
+      notNull default({})`, `politicaTenant()` normal, `GRANT SELECT,
+      INSERT, UPDATE` sin `DELETE`). Detalle completo en design.md seccion
+      9.
 - [x] 2.15 `constancias/infrastructure/index.ts`;
       `constancias/{index,types,composicion}.ts` esqueleto minimo, siguiendo
       el precedente de `marca`/`padron`/`territorio`.
 - [x] 2.16 `drizzle/0008_constancias.sql`: generar con `drizzle-kit
-      generate`; en la cola, a mano: `FORCE ROW LEVEL SECURITY` para las tres
-      tablas, los `GRANT` de la tabla de decision 5/6 (`constancias` con
+      generate` (regenerado desde cero tras la correccion de 2.14, ver ahi
+      — no llego a mergear antes de la correccion); en la cola, a mano:
+      `FORCE ROW LEVEL SECURITY` para las **cuatro** tablas, los `GRANT` de
+      la tabla de decision 5/6 (`constancias` con
       `UPDATE` solo por cancelacion; `reimpresiones` y `folios_de_documentos`
       sin `DELETE`, `reimpresiones` **tambien sin `UPDATE`**), y el FK
       compuesto a mano `constancias_persona_tenant_fk` hacia `personas(id,
@@ -266,11 +278,14 @@ entre municipios que este cambio existe para cerrar (mismo criterio que
       Postgres nombrando `reimpresiones_constancia_tenant_fk` (o el nombre
       real que 2.13 le de al `foreignKey` compuesto).
 - [x] 2.24 GREEN.
-- [x] 2.25 RED `constancias/documentos.isolation.test.ts` — espejo exacto de
-      `escudo.isolation.test.ts`: un bloque de firma configurado en
-      `ayuntamientos.documentos` de Motul no aparece al consultar desde
-      Ticul sin filtro explicito; RLS corta aunque el `ayuntamientoId` se
-      falsee.
+- [x] 2.25 RED `constancias/documentos.isolation.test.ts` sobre
+      `configuracion_de_documentos` (tabla propia, no
+      `ayuntamientos.documentos` — ver 2.14): una consulta sin filtro solo
+      devuelve el bloque de firma del tenant activo (T1, forma canonica, no
+      "espejo de `escudo.isolation.test.ts`" — esa version filtraba por el
+      propio `ayuntamientoId` en el `WHERE` y era una tautologia, hallazgo
+      de GGA); RLS corta un `UPDATE` contra otro ayuntamiento aunque el
+      `WHERE` lo nombre.
 - [x] 2.26 GREEN.
 - [x] 2.27 Verificar (no asumir) que `identidadPorPuerto.test.ts` sigue en
       verde con `constancias/infrastructure/esquema.ts` presente.

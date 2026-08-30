@@ -29,27 +29,27 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
-const constanciaDe = async (
-  ayuntamientoId: typeof motul,
-  personaId: string,
-  emitidaPorUsuarioId: string,
-  folio: string,
-  consecutivo: number,
-) => {
-  const [fila] = await withTenant(ayuntamientoId, (tx) =>
+const constanciaDe = async (opciones: {
+  ayuntamientoId: typeof motul;
+  personaId: string;
+  emitidaPorUsuarioId: string;
+  folio: string;
+  consecutivo: number;
+}) => {
+  const [fila] = await withTenant(opciones.ayuntamientoId, (tx) =>
     tx
       .insert(constancias)
       .values({
-        ayuntamientoId,
+        ayuntamientoId: opciones.ayuntamientoId,
         tipo: "VECINDAD",
-        folio,
+        folio: opciones.folio,
         anio: 2026,
-        consecutivo,
+        consecutivo: opciones.consecutivo,
         codigoVerificacion: "a1b2c3d4e5f60718",
-        personaId,
+        personaId: opciones.personaId,
         datos: {},
         plantillaVersion: "vecindad-v1",
-        emitidaPorUsuarioId,
+        emitidaPorUsuarioId: opciones.emitidaPorUsuarioId,
       })
       .returning({ id: constancias.id }),
   );
@@ -76,20 +76,20 @@ describe("aislamiento de reimpresiones", () => {
       },
       contextoDe(gente, "ticul", "ADMIN_MUNICIPAL"),
     );
-    const constanciaMotul = await constanciaDe(
-      motul,
-      personaMotul,
-      gente.motul.OPERADOR,
-      "VEC-2026-000010",
-      10,
-    );
-    const constanciaTicul = await constanciaDe(
-      ticul,
-      personaTicul,
-      gente.ticul.OPERADOR,
-      "VEC-2026-000010",
-      10,
-    );
+    const constanciaMotul = await constanciaDe({
+      ayuntamientoId: motul,
+      personaId: personaMotul,
+      emitidaPorUsuarioId: gente.motul.OPERADOR,
+      folio: "VEC-2026-000010",
+      consecutivo: 10,
+    });
+    const constanciaTicul = await constanciaDe({
+      ayuntamientoId: ticul,
+      personaId: personaTicul,
+      emitidaPorUsuarioId: gente.ticul.OPERADOR,
+      folio: "VEC-2026-000010",
+      consecutivo: 10,
+    });
 
     const [enMotul] = await withTenant(motul, (tx) =>
       tx
@@ -129,13 +129,13 @@ describe("aislamiento de reimpresiones", () => {
       },
       contextoDe(gente, "ticul", "ADMIN_MUNICIPAL"),
     );
-    const constanciaTicul = await constanciaDe(
-      ticul,
-      personaTicul,
-      gente.ticul.OPERADOR,
-      "VEC-2026-000011",
-      11,
-    );
+    const constanciaTicul = await constanciaDe({
+      ayuntamientoId: ticul,
+      personaId: personaTicul,
+      emitidaPorUsuarioId: gente.ticul.OPERADOR,
+      folio: "VEC-2026-000011",
+      consecutivo: 11,
+    });
 
     const motivo = await motivoDeFalla(() =>
       withTenant(motul, (tx) =>

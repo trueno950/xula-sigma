@@ -2,7 +2,8 @@ import type { TipoDeDocumento } from "./tipoDeDocumento";
 
 /**
  * Proyeccion publica de una constancia, en dos niveles (design.md seccion
- * 8). Puro, sin imports -ni siquiera Zod-.
+ * 8). Puro, sin dependencias de produccion -ni siquiera Zod-: el unico
+ * import es de tipo, se borra en la compilacion.
  */
 export type ResultadoDeValidacion =
   | { readonly estado: "NO_VALIDO" }

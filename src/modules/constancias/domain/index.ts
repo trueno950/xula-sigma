@@ -1,6 +1,31 @@
-export * from "./errores";
-export * from "./folio";
-export * from "./identificadores";
-export * from "./motivos";
-export * from "./tipoDeDocumento";
-export * from "./validacion";
+export {
+  DocumentoCanceladoError,
+  DocumentosNoConfiguradosError,
+  PlantillaDesconocidaError,
+  SinResidenciaVigenteError,
+  TitularDadoDeBajaError,
+} from "./errores";
+export { Folio } from "./folio";
+export {
+  type ConstanciaId,
+  comoConstanciaId,
+  comoReimpresionId,
+  type ReimpresionId,
+} from "./identificadores";
+export {
+  MOTIVOS_DE_CANCELACION,
+  MOTIVOS_DE_REIMPRESION,
+  type MotivoDeCancelacion,
+  type MotivoDeReimpresion,
+} from "./motivos";
+export {
+  PREFIJOS,
+  TIPOS_DE_DOCUMENTO,
+  type TipoDeDocumento,
+} from "./tipoDeDocumento";
+export {
+  type FilaDeValidacion,
+  NO_VALIDO,
+  proyectarValidacion,
+  type ResultadoDeValidacion,
+} from "./validacion";
