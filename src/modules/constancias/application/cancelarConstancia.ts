@@ -11,12 +11,11 @@ import type { RepositorioDeConstancias } from "./puertos";
  * `puedeEscribir` -decision 8 de design.md: haber emitido el documento no da
  * derecho a cancelarlo, solo el `ADMIN_MUNICIPAL` puede-.
  *
- * El `UPDATE ... WHERE cancelada_en IS NULL RETURNING id` de
- * `repositorio.cancelar` es tambien el mecanismo de concurrencia (design.md
- * seccion 10): sin fila afectada cubre por igual un id inexistente, uno de
- * otro tenant y una constancia ya cancelada -incluida la carrera de dos
- * cancelaciones simultaneas, que se serializan sobre la fila y la segunda
- * ve cero filas-. Ninguno de los tres casos necesita una rama propia.
+ * `repositorio.cancelar` es quien explica el mecanismo de concurrencia
+ * (`repositorioDeConstanciasSql.ts`): aca la consecuencia es que sin fila
+ * afectada cubre por igual un id inexistente, uno de otro tenant y una
+ * constancia ya cancelada, sin que ninguno de los tres necesite una rama
+ * propia.
  */
 export function crearCancelarConstancia(repositorio: RepositorioDeConstancias) {
   return async function cancelarConstancia(

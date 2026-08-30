@@ -793,14 +793,22 @@ revision visual haya cerrado**.
       de caso de uso) eliminado; `BotonDeReimpresion` no tenia el gate de
       `puedeEscribir` que su propio comentario decia que tenia -se agrego el
       gate en `[id]/page.tsx`, mismo patron que `BotonDeCancelacion`-.
-      **No aplicado:** la sugerencia de partir
-      `reimpresionYCancelacion.integration.test.ts` (324 lineas, sobre el
-      criterio de ≤200 que GGA aplica como guia, no como regla de
-      `pnpm reglas`) — el archivo prueba un solo ciclo de vida cohesivo
-      (reimprimir, cancelar, su interaccion) con fixtures compartidas
-      (`emitirParaPersonaDePrueba`, `gente`, `beforeEach` de truncado);
-      partirlo por partirlo duplicaria ese andamiaje o acoplaria archivos
-      por estado compartido, sin ganar legibilidad real.
+      **Correccion (GGA, ronda 3 de PR #40):** la decision de no partir
+      `reimpresionYCancelacion.integration.test.ts` (nota anterior de este
+      mismo punto) fue un error mio, no de GGA -el limite de 200 lineas por
+      archivo **si** esta explicito en la tabla de Metricas de `AGENTS.md`
+      linea 357, y no lo verifique antes de descartar el hallazgo-. El
+      archivo se partio en tres, cada uno bajo el limite: 153 lineas
+      `reimprimirConstancia.integration.test.ts` (ciclo de vida de
+      reimprimir en aislamiento), 179 lineas
+      `cancelarConstancia.integration.test.ts` (efecto de cancelar sobre el
+      historial y la carrera con reimprimir), 142 lineas
+      `pdfDeConstancia.integration.test.ts` (freeze de `plantillaVersion`,
+      que es comportamiento de `pdfDeConstancia`, no de `reimprimirConstancia`
+      -se reclasifico de paso, no solo se corto por tamano-). Ademas se trimio
+      el comentario duplicado de `cancelarConstancia.ts` sobre el mecanismo
+      de concurrencia -ya explicado en `repositorioDeConstanciasSql.ts`,
+      antipatron 23-.
 
 ## Phase 7: Rebanada 7 — Validacion publica de folio (~460 lineas)
 
