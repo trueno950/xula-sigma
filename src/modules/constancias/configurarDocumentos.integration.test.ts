@@ -102,6 +102,42 @@ describe("configurarDocumentos + documentosDelAyuntamiento", () => {
     });
   });
 
+  it("un campo opcional compuesto con undefined se borra, no sobrevive del merge anterior", async () => {
+    // El bug que esto prueba: la Server Action tiene que enviar `undefined`
+    // -no omitir la clave- para que una leyenda ya configurada se pueda
+    // vaciar (hallazgo de GGA en la revision de esta rebanada,
+    // `configurarDocumentosAction.ts`).
+    const configurarDocumentos = crearConfigurarDocumentos(
+      repositorioDeDocumentosSql,
+    );
+    const documentosDelAyuntamiento = crearDocumentosDelAyuntamiento(
+      repositorioDeDocumentosSql,
+    );
+    const contexto = actor("ADMIN_MUNICIPAL");
+
+    await configurarDocumentos(
+      {
+        firmanteNombre: "Juan Poot",
+        firmanteCargo: "Secretario Municipal",
+        leyendaDePie: "Documento sin validez fiscal.",
+      },
+      contexto,
+    );
+    await configurarDocumentos(
+      {
+        firmanteNombre: "Juan Poot",
+        firmanteCargo: "Secretario Municipal",
+        leyendaDePie: undefined,
+      },
+      contexto,
+    );
+
+    expect(await documentosDelAyuntamiento(contexto)).toEqual({
+      firmanteNombre: "Juan Poot",
+      firmanteCargo: "Secretario Municipal",
+    });
+  });
+
   it("un rol distinto de ADMIN_MUNICIPAL no puede configurar", async () => {
     const configurarDocumentos = crearConfigurarDocumentos(
       repositorioDeDocumentosSql,

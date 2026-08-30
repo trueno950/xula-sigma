@@ -60,13 +60,16 @@ export async function configurarDocumentosAction(
 
   if (!contexto) redirect("/acceso");
 
+  // `leyendaDePie` siempre entra a `campos`, aunque venga vacio: omitirla
+  // cuando se borra dejaba sobrevivir el valor viejo en el merge de
+  // `documentosCompuestos` -una leyenda ya configurada no se podia vaciar
+  // desde la UI (hallazgo de GGA en la revision de esta rebanada).
+  // `undefined` compone como ausencia; un string vacio no.
   const campos: Record<string, unknown> = {
     firmanteNombre: analisis.data.firmanteNombre,
     firmanteCargo: analisis.data.firmanteCargo,
+    leyendaDePie: analisis.data.leyendaDePie || undefined,
   };
-
-  if (analisis.data.leyendaDePie)
-    campos.leyendaDePie = analisis.data.leyendaDePie;
 
   try {
     await configurarDocumentos(campos, contexto);
