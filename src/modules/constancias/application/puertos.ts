@@ -77,6 +77,19 @@ export type RepositorioDeConstancias = {
       motivo: MotivoDeReimpresion;
     },
   ): Promise<ReimpresionId>;
+  /**
+   * Acredita una reimpresion para el PDF (design.md de `constancias-oficios`,
+   * seccion 11): `true` solo si `id` existe **y** es de `constanciaId` -el FK
+   * compuesto `(constanciaId, ayuntamientoId)` de `reimpresiones`, con el
+   * `ayuntamientoId` ya acotado por RLS dentro del mismo `withTenant` que
+   * `pdfDeConstancia` abrio para leer la constancia-. `pdfDeConstancia` nunca
+   * renderiza sin que esto responda `true`.
+   */
+  existeReimpresion(
+    tx: TransaccionTenant,
+    id: ReimpresionId,
+    constanciaId: ConstanciaId,
+  ): Promise<boolean>;
   cancelar(
     tx: TransaccionTenant,
     datos: {

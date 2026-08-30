@@ -60,3 +60,31 @@ export type DireccionLeida = {
 export type LecturaDeDirecciones = {
   vigenteDe(personaId: string): Promise<DireccionLeida | null>;
 };
+
+/**
+ * Lo que `pdfDeConstancia` necesita de `ayuntamientos` para armar
+ * `EntradaDeRender.municipio` (design.md de `constancias-oficios`, seccion 4:
+ * "`municipio.nombre` no se guarda, se lee de `ayuntamientos` al
+ * renderizar"). `escudo` ya sale validado -nunca el `unknown` crudo de la
+ * columna `marca`- porque el adaptador real reusa `leerMarca` de
+ * `shared/marca`, el mismo precedente que `modules/marca` usa para no
+ * confiar en JSON escrito a mano.
+ */
+export type AyuntamientoLeido = {
+  nombre: string;
+  subdominio: string;
+  escudo?: string;
+};
+
+/**
+ * Con `tx`, a diferencia de `LecturaDeTitulares` y `LecturaDeDirecciones`:
+ * `ayuntamientos` es una tabla de `shared/tenancy`, no de otro modulo, asi
+ * que leerla no anida un `withTenant` ajeno -mismo criterio que
+ * `RepositorioDeDocumentos.leer(tx, ayuntamientoId)`-.
+ */
+export type LecturaDeAyuntamiento = {
+  porId(
+    tx: TransaccionTenant,
+    ayuntamientoId: AyuntamientoId,
+  ): Promise<AyuntamientoLeido | null>;
+};

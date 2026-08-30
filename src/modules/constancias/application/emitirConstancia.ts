@@ -13,6 +13,7 @@ import {
   PREFIJOS,
   SinResidenciaVigenteError,
   TitularDadoDeBajaError,
+  VERSION_ACTUAL,
 } from "../domain";
 import type { ContadorDeFolios, RepositorioDeConstancias } from "./puertos";
 import type {
@@ -104,7 +105,12 @@ export function crearEmitirConstancia(
         codigoVerificacion: nuevoCodigo(),
         personaId,
         datos: snapshot,
-        plantillaVersion: "v1",
+        // `VERSION_ACTUAL[tipo]` y no un literal a mano (design.md de
+        // `constancias-oficios`, seccion 10): antes de la Fase 5 esto era
+        // `"v1"`, un valor que `PLANTILLAS` de la Fase 5 nunca reconoce
+        // -"vecindad-v1" es la unica clave-, y toda constancia emitida asi
+        // habria fallado al renderizarse con `PlantillaDesconocidaError`.
+        plantillaVersion: VERSION_ACTUAL[tipo],
         emitidaPorUsuarioId: contexto.usuario.id,
       });
 

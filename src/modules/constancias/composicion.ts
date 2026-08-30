@@ -4,11 +4,14 @@ import {
   crearDocumentosDelAyuntamiento,
   crearEmitirConstancia,
   crearListarConstancias,
+  crearPdfDeConstancia,
 } from "./application";
 import {
   contadorDeFoliosSql,
   crearLectorDeDireccionesPorTerritorio,
   crearLectorDeTitularesPorPadron,
+  lectorDeAyuntamientoSql,
+  renderizadorReactPdf,
   repositorioDeConstanciasSql,
   repositorioDeDocumentosSql,
 } from "./infrastructure";
@@ -43,4 +46,9 @@ export const constanciaPorId = crearConstanciaPorId(
 );
 export const listarConstancias = crearListarConstancias(
   repositorioDeConstanciasSql,
+);
+export const pdfDeConstancia = crearPdfDeConstancia(
+  repositorioDeConstanciasSql,
+  lectorDeAyuntamientoSql,
+  renderizadorReactPdf,
 );

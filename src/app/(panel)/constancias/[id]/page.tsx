@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  BotonDeImprimir,
   comoConstanciaId,
   constanciaPorId,
   esquemaDeSnapshot,
@@ -14,10 +15,11 @@ type Props = {
 const esquemaDeId = z.string().uuid();
 
 /**
- * Muestra el snapshot congelado como texto plano. La Fase 5 (render de PDF)
- * todavia no llego: sin enlace ni intento de render aca, mismo criterio que
- * `padron/[id]/page.tsx` para "no existe" -equivalente, no un 404 real, RLS
- * ya deja `constanciaPorId` en `null` para una constancia de otro tenant.
+ * Muestra el snapshot congelado como texto plano, mas el enlace de
+ * impresion (`BotonDeImprimir`, design.md de `constancias-oficios`, seccion
+ * 11). Mismo criterio que `padron/[id]/page.tsx` para "no existe"
+ * -equivalente, no un 404 real, RLS ya deja `constanciaPorId` en `null`
+ * para una constancia de otro tenant.
  */
 export default async function PaginaDeDetalleDeConstancia({ params }: Props) {
   const contexto = await contextoActual();
@@ -90,6 +92,8 @@ export default async function PaginaDeDetalleDeConstancia({ params }: Props) {
           </dd>
         </div>
       </dl>
+
+      <BotonDeImprimir id={constancia.id} />
     </main>
   );
 }

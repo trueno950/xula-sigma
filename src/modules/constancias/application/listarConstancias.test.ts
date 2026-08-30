@@ -23,6 +23,7 @@ describe("listarConstancias", () => {
     listar: vi.fn(),
     paraValidar: vi.fn(),
     registrarReimpresion: vi.fn(),
+    existeReimpresion: vi.fn(),
     cancelar: vi.fn(),
   };
 
