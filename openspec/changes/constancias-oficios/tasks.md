@@ -786,6 +786,21 @@ revision visual haya cerrado**.
       rebanada), tsc y depcruise limpios, `pnpm reglas` sin hallazgos.
       `pnpm test` (unit): 89 archivos, 491 tests. `pnpm test:integration`:
       54 archivos, 218 tests -el archivo nuevo aporta 7-.
+      **Correcciones (GGA, ronda 1 y 2 de PR #40):** ver 6.3/6.4 arriba
+      (carrera reimprimir-cancelar y test duplicado de `cancelarConstancia`),
+      mas: test duplicado equivalente en `reimprimirConstancia.test.ts`
+      ("de otro tenant" vs "inexistente", mismo mock, indistinguible a nivel
+      de caso de uso) eliminado; `BotonDeReimpresion` no tenia el gate de
+      `puedeEscribir` que su propio comentario decia que tenia -se agrego el
+      gate en `[id]/page.tsx`, mismo patron que `BotonDeCancelacion`-.
+      **No aplicado:** la sugerencia de partir
+      `reimpresionYCancelacion.integration.test.ts` (324 lineas, sobre el
+      criterio de ≤200 que GGA aplica como guia, no como regla de
+      `pnpm reglas`) — el archivo prueba un solo ciclo de vida cohesivo
+      (reimprimir, cancelar, su interaccion) con fixtures compartidas
+      (`emitirParaPersonaDePrueba`, `gente`, `beforeEach` de truncado);
+      partirlo por partirlo duplicaria ese andamiaje o acoplaria archivos
+      por estado compartido, sin ganar legibilidad real.
 
 ## Phase 7: Rebanada 7 — Validacion publica de folio (~460 lineas)
 

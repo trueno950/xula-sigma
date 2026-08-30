@@ -8,7 +8,7 @@ import {
   esquemaDeSnapshot,
 } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
-import { puedeAdministrarDocumentos } from "@/shared/auth/roles";
+import { puedeAdministrarDocumentos, puedeEscribir } from "@/shared/auth/roles";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 
 type Props = {
@@ -23,12 +23,15 @@ const esquemaDeParametros = z.object({ error: z.string().optional() });
  * Muestra el snapshot congelado como texto plano, mas los tres bordes de
  * ciclo de vida del documento (design.md de `constancias-oficios`, secciones
  * 10 y 11): imprimir (`BotonDeImprimir`), reimprimir con motivo
- * (`BotonDeReimpresion`, disponible para cualquiera que escriba) y cancelar
- * con motivo (`BotonDeCancelacion`, solo visible para quien administra
- * documentos -ocultarlo no es la autorizacion real, que vive en
- * `cancelarConstancia`-). Mismo criterio que `padron/[id]/page.tsx` para "no
- * existe" -equivalente, no un 404 real, RLS ya deja `constanciaPorId` en
- * `null` para una constancia de otro tenant.
+ * (`BotonDeReimpresion`, gateado por `puedeEscribir`) y cancelar con motivo
+ * (`BotonDeCancelacion`, gateado por `puedeAdministrarDocumentos`) -en los
+ * dos casos ocultar el boton no es la autorizacion real, que vive en
+ * `reimprimirConstancia`/`cancelarConstancia`; el gate aca es solo para no
+ * mostrar una accion que el caso de uso va a rechazar (hallazgo de GGA: el
+ * gate de `BotonDeReimpresion` faltaba, el comentario decia que existia)-.
+ * Mismo criterio que `padron/[id]/page.tsx` para "no existe" -equivalente,
+ * no un 404 real, RLS ya deja `constanciaPorId` en `null` para una
+ * constancia de otro tenant.
  *
  * `?error=` efectivamente se lee aca -a diferencia del gap que la revision
  * de la Fase 4b encontro en esta misma pantalla-: las dos acciones nuevas
@@ -131,7 +134,7 @@ export default async function PaginaDeDetalleDeConstancia({
 
       <div className="flex flex-wrap gap-3">
         <BotonDeImprimir id={constancia.id} />
-        {!cancelada ? (
+        {!cancelada && puedeEscribir(contexto.usuario.rol) ? (
           <BotonDeReimpresion constanciaId={constancia.id} />
         ) : null}
       </div>

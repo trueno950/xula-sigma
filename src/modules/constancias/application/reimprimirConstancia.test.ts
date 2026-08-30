@@ -94,13 +94,13 @@ describe("reimprimirConstancia", () => {
     expect(repositorio.registrarReimpresion).not.toHaveBeenCalled();
   });
 
-  it("id de otro tenant -> NoEncontradoError (RLS ya deja bloquearPorId en null)", async () => {
-    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(null);
-
-    await expect(
-      reimprimirConstancia()(constanciaId, "EXTRAVIO", contextoCon("OPERADOR")),
-    ).rejects.toBeInstanceOf(NoEncontradoError);
-  });
+  // Sin test separado de "id de otro tenant": a nivel de caso de uso es
+  // indistinguible de "id inexistente" -RLS lo oculta antes de que
+  // `bloquearPorId` devuelva la fila, asi que el mock no puede ejercitar esa
+  // rama, solo simularla-. El aislamiento real lo prueba el isolation test
+  // contra Postgres, no un mock aca (hallazgo de GGA en la revision de esta
+  // rebanada: mismo criterio ya aplicado al test eliminado de
+  // `cancelarConstancia.test.ts`).
 
   it("constancia cancelada -> DocumentoCanceladoError, sin registrar reimpresion", async () => {
     vi.mocked(repositorio.bloquearPorId).mockResolvedValue(
