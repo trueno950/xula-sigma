@@ -159,7 +159,7 @@ export const configuracionDeDocumentos = pgTable(
     ayuntamientoId: columnaTenant().primaryKey(),
     datos: jsonb().notNull().default({}),
   },
-  (t) => [politicaTenant("configuracion_de_documentos")],
+  () => [politicaTenant("configuracion_de_documentos")],
 ).enableRLS();
 
 /**
