@@ -4,6 +4,7 @@ import {
   crearAltaDeDomicilio,
   crearAltaDeLugar,
   crearDarDeBajaLugar,
+  crearDireccionVigenteDePersona,
   crearEditarLugar,
   crearHistorialDeResidencias,
   crearListarCalles,
@@ -16,6 +17,7 @@ import {
 } from "./application";
 import {
   crearLectorDePersonasPorPadron,
+  lectorDeDireccionesSql,
   repositorioDeCallesSql,
   repositorioDeDomiciliosSql,
   repositorioDeLugaresSql,
@@ -55,6 +57,11 @@ export const registrarMudanza = crearRegistrarMudanza(
 );
 export const historialDeResidencias = crearHistorialDeResidencias(
   repositorioDeResidenciasSql,
+  crearLectorDePersonasPorPadron,
+);
+export const direccionVigenteDePersona = crearDireccionVigenteDePersona(
+  repositorioDeResidenciasSql,
+  lectorDeDireccionesSql,
   crearLectorDePersonasPorPadron,
 );
 export const residentesDe = crearResidentesDe(

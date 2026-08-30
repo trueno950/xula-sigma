@@ -80,30 +80,30 @@ precedente de formato).
 Independiente. La necesita solo la Fase 4. Va primera porque es un cambio en
 otro modulo y su diff se lee mejor solo (`proposal.md`).
 
-- [ ] 1.1 RED `territorio/domain/residencia.test.ts` (archivo **nuevo**, ver
+- [x] 1.1 RED `territorio/domain/residencia.test.ts` (archivo **nuevo**, ver
       nota de discrepancia arriba): `vigenteDe` con historial vacio -> `null`;
       con una residencia abierta -> esa; con dos residencias donde solo una
       tiene `hastaEn === null` -> la abierta, usando `find` sobre un arreglo
       ya en el orden `desdeEn DESC, creadoEn DESC` (no reordena — pasar un
       arreglo deliberadamente "mal ordenado" y verificar que `vigenteDe`
       **no** lo corrige, porque ese es el contrato de `historialDe`).
-- [ ] 1.2 GREEN `territorio/domain/residencia.ts`:
+- [x] 1.2 GREEN `territorio/domain/residencia.ts`:
       `vigenteDe<R extends { hastaEn: string | null }>(historial): R | null`.
-- [ ] 1.3 RED `territorio/domain/direccion.test.ts` (modificar — el archivo
+- [x] 1.3 RED `territorio/domain/direccion.test.ts` (modificar — el archivo
       existe con `transversalesValidas`): `componerDireccion` con `numero:
       null` -> incluye `"S/N"` en el texto; con las dos transversales
       presentes -> las incluye con su conector; sin transversales ni
       referencia -> las omite sin dejar separadores huerfanos; con la cadena
       de ancestros completa (manzana -> colonia -> sector -> comisaria) ->
       aparecen del mas profundo al mas superficial, en ese orden.
-- [ ] 1.4 GREEN `territorio/domain/direccion.ts`: agregar `PartesDeDireccion`
+- [x] 1.4 GREEN `territorio/domain/direccion.ts`: agregar `PartesDeDireccion`
       y `componerDireccion`, sin tocar `transversalesValidas`.
-- [ ] 1.5 `territorio/application/puertosDeDirecciones.ts` (crear):
+- [x] 1.5 `territorio/application/puertosDeDirecciones.ts` (crear):
       `LectorDeDirecciones.partesDe(tx, domicilioId): Promise<PartesDeDireccion
       | null>` — **con `tx`**, a diferencia de `LecturaDePersonas`
       (design.md seccion 7: el `tx` en la firma marca si el adaptador cruza
       o no un limite de modulo; este vive dentro de `territorio`).
-- [ ] 1.6 RED `territorio/infrastructure/lectorDeDireccionesSql.test.ts`:
+- [x] 1.6 RED `territorio/infrastructure/lectorDeDireccionesSql.test.ts`:
       `WITH RECURSIVE` hacia arriba por `padreId` (mismo patron que
       `subarbol`, `sql` crudo y no builder — Drizzle 0.45.2 no expresa un CTE
       auto-referente) resuelve la cadena completa de ancestros de un
@@ -111,12 +111,12 @@ otro modulo y su diff se lee mejor solo (`proposal.md`).
       colonia (sin manzana ni sector) devuelve solo los niveles presentes,
       sin fallar; `WHERE profundidad < 8` como cinturon, mismo limite que
       `subarbol`.
-- [ ] 1.7 GREEN `territorio/infrastructure/lectorDeDireccionesSql.ts`: el CTE
+- [x] 1.7 GREEN `territorio/infrastructure/lectorDeDireccionesSql.ts`: el CTE
       de ascenso mas el `JOIN` a `calles` para resolver los nombres de
       `calle`, `entreCalleA`, `entreCalleB`. **Nombra `lugares`, `calles` y
       `domicilios` — ninguno dispara `identidadPorPuerto.test.ts`**
       (verificar, no asumir, en 1.16).
-- [ ] 1.8 RED `territorio/application/direccionVigenteDePersona.test.ts`
+- [x] 1.8 RED `territorio/application/direccionVigenteDePersona.test.ts`
       (puertos mockeados, mismo esqueleto que `historialDeResidencias.test.ts`):
       `identidades = []` (persona inexistente o de otro tenant) -> `null`,
       **sin abrir `withTenant`** (assert de orden con `invocationCallOrder`,
@@ -125,15 +125,15 @@ otro modulo y su diff se lee mejor solo (`proposal.md`).
       `null`; `partesDe` devuelve `null` (domicilio inexistente o escondido
       por RLS) -> `null`; camino feliz -> `{ residenciaId, domicilioId,
       desdeEn, texto }` con `texto = componerDireccion(partes)`.
-- [ ] 1.9 GREEN `territorio/application/direccionVigenteDePersona.ts`:
+- [x] 1.9 GREEN `territorio/application/direccionVigenteDePersona.ts`:
       `lecturaDePersonas.identidadesDe` **antes** de `withTenant`, nunca
       adentro (design.md seccion 7).
-- [ ] 1.10 RED integration: domicilio de una persona con identidad fusionada
+- [x] 1.10 RED integration: domicilio de una persona con identidad fusionada
       y dos residencias abiertas (una por cada mitad de la fusion, distinto
       `desdeEn`) — `direccionVigenteDePersona` resuelve la mas reciente por
       el mismo desempate de `historialDe`, sin ejecutar su propia consulta
       contra `residencias` (spec `residencias`, escenario de fusion).
-- [ ] 1.11 RED mismo archivo: domicilio con todos los niveles presentes
+- [x] 1.11 RED mismo archivo: domicilio con todos los niveles presentes
       (calle, numero, dos transversales, cadena completa de ancestros) — el
       texto compuesto incluye todo (spec `domicilios`, primer escenario);
       domicilio con niveles ausentes — el texto omite lo ausente sin fallar
@@ -142,23 +142,23 @@ otro modulo y su diff se lee mejor solo (`proposal.md`).
       no una copia congelada (spec `domicilios`, tercer escenario — esta
       lectura es deliberadamente viva; congelarla es trabajo de `constancias`
       en la Fase 4, no de aca).
-- [ ] 1.12 GREEN (ajustar el `JOIN`/`ORDER BY` de 1.7 y 1.9 si algun caso de
+- [x] 1.12 GREEN (ajustar el `JOIN`/`ORDER BY` de 1.7 y 1.9 si algun caso de
       1.10-1.11 no calza).
-- [ ] 1.13 `territorio/composicion.ts`, `application/index.ts`: componer y
+- [x] 1.13 `territorio/composicion.ts`, `application/index.ts`: componer y
       exportar `direccionVigenteDePersona`, sin guarda de rol propia — la
       autorizacion la decide el consumidor (`constancias`), mismo criterio
       que `personaPorId`.
-- [ ] 1.14 `territorio/ui/HistorialDeResidencias.tsx` (modificar): adopta
+- [x] 1.14 `territorio/ui/HistorialDeResidencias.tsx` (modificar): adopta
       `vigenteDe` para resolver cual fila resaltar como vigente en vez de
       recalcular el desempate a mano en la UI — pago concreto de la decision
       16 de `proposal.md`, en la misma rebanada que la funcion nace.
-- [ ] 1.15 RED `territorio/superficiePublica.test.ts` (modificar): assertion
+- [x] 1.15 RED `territorio/superficiePublica.test.ts` (modificar): assertion
       de que el barrel exporta `direccionVigenteDePersona` como valor, no
       como caso de uso sin verificacion de rol expuesto sin querer a un
       consumidor que espere una guarda.
-- [ ] 1.16 GREEN + verificar (no asumir) que `identidadPorPuerto.test.ts`
+- [x] 1.16 GREEN + verificar (no asumir) que `identidadPorPuerto.test.ts`
       sigue en verde con `lectorDeDireccionesSql.ts` presente.
-- [ ] 1.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+- [x] 1.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 2: Rebanada 2 — Esquema, dominio y aislamiento de `constancias` (~760 lineas)
 

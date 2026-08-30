@@ -1,3 +1,4 @@
+export { lectorDeDireccionesSql } from "./lectorDeDireccionesSql";
 export { crearLectorDePersonasPorPadron } from "./lectorDePersonasPorPadron";
 export { repositorioDeCallesSql } from "./repositorioDeCallesSql";
 export { repositorioDeDomiciliosSql } from "./repositorioDeDomiciliosSql";
