@@ -1,5 +1,5 @@
 import { manejarAuth } from "@/shared/auth";
-import { limitarRitmo } from "@/shared/auth/limitarRitmo";
+import { limitarRitmoDeAcceso } from "@/shared/auth/limitarRitmo";
 import { RitmoExcedidoError } from "@/shared/auth/ritmo";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
@@ -64,7 +64,7 @@ async function conRitmo(request: Request): Promise<Request> {
   const correo = await correoDe(request.clone());
   const { id } = await ayuntamientoActual();
 
-  await limitarRitmo(id, { correo, ip: ipDe(request) });
+  await limitarRitmoDeAcceso(id, { correo, ip: ipDe(request) });
 
   return request;
 }

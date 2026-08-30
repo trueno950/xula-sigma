@@ -11,3 +11,4 @@ export * from "./puertosDeRender";
 export * from "./reimprimirConstancia";
 export * from "./validacionDeDocumentos";
 export * from "./validacionDeSnapshot";
+export * from "./validarFolio";

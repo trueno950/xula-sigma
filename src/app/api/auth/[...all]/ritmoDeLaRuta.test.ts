@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const manejarAuth = vi.hoisted(() => vi.fn());
-const limitarRitmo = vi.hoisted(() => vi.fn());
+const limitarRitmoDeAcceso = vi.hoisted(() => vi.fn());
 const ayuntamientoActual = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/auth", () => ({ manejarAuth }));
-vi.mock("@/shared/auth/limitarRitmo", () => ({ limitarRitmo }));
+vi.mock("@/shared/auth/limitarRitmo", () => ({ limitarRitmoDeAcceso }));
 vi.mock("@/shared/tenancy/contexto", () => ({ ayuntamientoActual }));
 
 const { POST } = await import("./route");
@@ -27,11 +27,11 @@ const peticion = (
 describe("limitacion de ritmo en la ruta de auth", () => {
   beforeEach(() => {
     manejarAuth.mockReset();
-    limitarRitmo.mockReset();
+    limitarRitmoDeAcceso.mockReset();
     ayuntamientoActual.mockReset();
 
     manejarAuth.mockResolvedValue(Response.json({ ok: true }));
-    limitarRitmo.mockResolvedValue(undefined);
+    limitarRitmoDeAcceso.mockResolvedValue(undefined);
     ayuntamientoActual.mockResolvedValue({ id: TENANT });
   });
 
@@ -44,15 +44,15 @@ describe("limitacion de ritmo en la ruta de auth", () => {
      */
     await POST(peticion("sign-in/email"));
 
-    expect(limitarRitmo).toHaveBeenCalledTimes(1);
+    expect(limitarRitmoDeAcceso).toHaveBeenCalledTimes(1);
     expect(manejarAuth).toHaveBeenCalledTimes(1);
-    expect(limitarRitmo.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(limitarRitmoDeAcceso.mock.invocationCallOrder[0]).toBeLessThan(
       manejarAuth.mock.invocationCallOrder[0] as number,
     );
   });
 
   it("responde 429 y no llama a la instancia cuando corta", async () => {
-    limitarRitmo.mockRejectedValue(new RitmoExcedidoError("correo"));
+    limitarRitmoDeAcceso.mockRejectedValue(new RitmoExcedidoError("correo"));
 
     const respuesta = await POST(peticion("sign-in/email"));
 
@@ -66,7 +66,7 @@ describe("limitacion de ritmo en la ruta de auth", () => {
      * peor todavia, distingue la ventana de correo de la de IP y le dice a
      * quien prueba cual esquivar. Un solo mensaje para las dos.
      */
-    limitarRitmo.mockRejectedValue(new RitmoExcedidoError("correo"));
+    limitarRitmoDeAcceso.mockRejectedValue(new RitmoExcedidoError("correo"));
 
     const cuerpo = await (await POST(peticion("sign-in/email"))).text();
 
@@ -79,7 +79,7 @@ describe("limitacion de ritmo en la ruta de auth", () => {
     // limitarlas dejaria a alguien sin poder salir de su propia cuenta.
     await POST(peticion("sign-out", {}));
 
-    expect(limitarRitmo).not.toHaveBeenCalled();
+    expect(limitarRitmoDeAcceso).not.toHaveBeenCalled();
     expect(manejarAuth).toHaveBeenCalledTimes(1);
   });
 
@@ -92,7 +92,7 @@ describe("limitacion de ritmo en la ruta de auth", () => {
       ),
     );
 
-    expect(limitarRitmo).toHaveBeenCalledWith(TENANT, {
+    expect(limitarRitmoDeAcceso).toHaveBeenCalledWith(TENANT, {
       correo: "  Tesoreria@Example.com  ",
       // La primera de la lista es el cliente; las siguientes son los saltos
       // intermedios y las pone el propio proxy.
@@ -125,7 +125,7 @@ describe("limitacion de ritmo en la ruta de auth", () => {
     const respuesta = await POST(peticion("sign-in/email", { nada: true }));
 
     expect(respuesta.status).not.toBe(500);
-    expect(limitarRitmo).toHaveBeenCalledWith(TENANT, {
+    expect(limitarRitmoDeAcceso).toHaveBeenCalledWith(TENANT, {
       correo: null,
       ip: "sin-ip",
     });
@@ -144,7 +144,7 @@ describe("limitacion de ritmo en la ruta de auth", () => {
     const respuesta = await POST(rota);
 
     expect(respuesta.status).not.toBe(500);
-    expect(limitarRitmo).toHaveBeenCalledWith(TENANT, {
+    expect(limitarRitmoDeAcceso).toHaveBeenCalledWith(TENANT, {
       correo: null,
       ip: "sin-ip",
     });

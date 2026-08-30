@@ -67,14 +67,18 @@ export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
   async paraValidar(tx, folio) {
     const [fila] = await tx
       .select({
-        folio: constancias.folio,
-        codigoVerificacion: constancias.codigoVerificacion,
+        tipo: constancias.tipo,
+        emitidaEn: constancias.emitidaEn,
         canceladaEn: constancias.canceladaEn,
+        codigoVerificacion: constancias.codigoVerificacion,
+        datos: constancias.datos,
       })
       .from(constancias)
       .where(eq(constancias.folio, folio));
 
-    return fila ?? null;
+    if (!fila) return null;
+
+    return { ...fila, datos: fila.datos as Record<string, unknown> };
   },
 
   async registrarReimpresion(

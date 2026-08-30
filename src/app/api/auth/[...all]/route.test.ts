@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const manejarAuth = vi.hoisted(() => vi.fn());
-const limitarRitmo = vi.hoisted(() => vi.fn());
+const limitarRitmoDeAcceso = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/auth", () => ({ manejarAuth }));
 
@@ -10,7 +10,7 @@ vi.mock("@/shared/auth", () => ({ manejarAuth }));
  * limitador y un tenant aunque este archivo pruebe otra cosa. Lo que el
  * limitador hace tiene sus propios tests en `ritmoDeLaRuta.test.ts`.
  */
-vi.mock("@/shared/auth/limitarRitmo", () => ({ limitarRitmo }));
+vi.mock("@/shared/auth/limitarRitmo", () => ({ limitarRitmoDeAcceso }));
 vi.mock("@/shared/tenancy/contexto", () => ({
   ayuntamientoActual: async () => ({
     id: "11111111-1111-1111-1111-111111111111",
@@ -35,8 +35,8 @@ let registro: ReturnType<typeof vi.spyOn>;
 describe("borde de error de la ruta de auth", () => {
   beforeEach(() => {
     manejarAuth.mockReset();
-    limitarRitmo.mockReset();
-    limitarRitmo.mockResolvedValue(undefined);
+    limitarRitmoDeAcceso.mockReset();
+    limitarRitmoDeAcceso.mockResolvedValue(undefined);
     registro = vi.spyOn(console, "error").mockImplementation(() => {});
     registro.mockClear();
   });

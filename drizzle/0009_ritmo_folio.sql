@@ -1,0 +1,2 @@
+ALTER TABLE "intentos_acceso" DROP CONSTRAINT "intentos_acceso_tipo_valido";--> statement-breakpoint
+ALTER TABLE "intentos_acceso" ADD CONSTRAINT "intentos_acceso_tipo_valido" CHECK (tipo IN ('correo', 'ip', 'folio'));

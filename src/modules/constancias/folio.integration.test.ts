@@ -16,6 +16,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearEmitirConstancia } from "./application/emitirConstancia";
 import type { RepositorioDeConstancias } from "./application/puertos";
+import { crearValidarFolio } from "./application/validarFolio";
 import {
   configurarFirmaDePrueba,
   titularConResidenciaVigente,
@@ -47,6 +48,8 @@ const emitirConstancia = crearEmitirConstancia(
   crearLectorDeTitularesPorPadron,
   crearLectorDeDireccionesPorTerritorio,
 );
+
+const validarFolio = crearValidarFolio(repositorioDeConstanciasSql);
 
 beforeAll(async () => {
   await sembrar();
@@ -227,5 +230,64 @@ describe("el contador de folios bajo lock", () => {
 
     expect(guardada?.consecutivo).toBe(1);
     expect(guardada?.folio).toBe(`VEC-${anio}-000001`);
+  });
+});
+
+describe("validarFolio: RLS, no el codigo, es lo que aisla entre municipios", () => {
+  it("un folio de otro municipio no confirma su existencia, ni con el codigo de este", async () => {
+    /**
+     * Motul y Ticul emiten su primera constancia del anio: el mismo texto
+     * de folio para los dos, porque cada uno arranca su propia serie en 1
+     * (design.md de `constancias-oficios`, seccion 6, spec "Folio de otro
+     * municipio no confirma su existencia"). `validarFolio` desde el
+     * subdominio de Motul solo puede resolver la fila de Motul -RLS la
+     * acota dentro de `withTenant`- y nunca la de Ticul, aunque el texto del
+     * folio coincida caracter por caracter.
+     */
+    const adminMotul = actor("motul", "ADMIN_MUNICIPAL");
+    const adminTicul = actor("ticul", "ADMIN_MUNICIPAL");
+
+    const { personaId: personaMotul } = await titularConResidenciaVigente(
+      "ValidaMotul",
+      adminMotul,
+    );
+    const { personaId: personaTicul } = await titularConResidenciaVigente(
+      "ValidaTicul",
+      adminTicul,
+    );
+    await configurarFirmaDePrueba(adminMotul);
+    await configurarFirmaDePrueba(adminTicul);
+
+    const idMotul = await emitirConstancia(personaMotul, adminMotul);
+    const idTicul = await emitirConstancia(personaTicul, adminTicul);
+
+    const guardadaMotul = await withTenant(motul, (tx) =>
+      repositorioDeConstanciasSql.buscarPorId(tx, idMotul),
+    );
+    const guardadaTicul = await withTenant(ticul, (tx) =>
+      repositorioDeConstanciasSql.buscarPorId(tx, idTicul),
+    );
+    expect(guardadaMotul?.folio).toBe(guardadaTicul?.folio);
+
+    const folio = guardadaMotul?.folio as string;
+
+    // El codigo de Ticul, probado desde el subdominio de Motul contra el
+    // mismo texto de folio: NO_VALIDO. Si RLS no acotara, esto validaria
+    // -confirmando que el folio existe en Ticul, que es justo lo que la
+    // union cerrada de `proyectarValidacion` existe para no revelar.
+    const conCodigoDeTicul = await validarFolio({
+      ayuntamientoId: motul,
+      folio,
+      codigo: guardadaTicul?.codigoVerificacion as string,
+    });
+    expect(conCodigoDeTicul.estado).toBe("NO_VALIDO");
+
+    // El propio codigo de Motul, mismo folio, mismo subdominio: valido.
+    const conCodigoDeMotul = await validarFolio({
+      ayuntamientoId: motul,
+      folio,
+      codigo: guardadaMotul?.codigoVerificacion as string,
+    });
+    expect(conCodigoDeMotul.estado).toBe("VIGENTE");
   });
 });

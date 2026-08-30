@@ -18,8 +18,8 @@ import {
  * libreria, aca la que decidimos nosotros.
  */
 
-/** Las dos ventanas de la limitacion de ritmo se cuentan por separado. */
-export const TIPOS_INTENTO = ["correo", "ip"] as const;
+/** Las tres ventanas de la limitacion de ritmo se cuentan por separado. */
+export const TIPOS_INTENTO = ["correo", "ip", "folio"] as const;
 export type TipoIntento = (typeof TIPOS_INTENTO)[number];
 
 /**

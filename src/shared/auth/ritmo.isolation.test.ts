@@ -9,7 +9,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { intentosAcceso } from "./intentosAcceso";
-import { limitarRitmo } from "./limitarRitmo";
+import { limitarRitmoDeAcceso } from "./limitarRitmo";
 import { claveDe, LIMITES, VENTANA_MINUTOS } from "./ritmo";
 
 /**
@@ -22,11 +22,11 @@ const CORREO = "tesoreria@example.com";
 const IP = "189.203.10.7";
 
 const intentar = (ayuntamientoId: typeof motul, correo = CORREO, ip = IP) =>
-  limitarRitmo(ayuntamientoId, { correo, ip });
+  limitarRitmoDeAcceso(ayuntamientoId, { correo, ip });
 
 const fallaAlIntentarSinCorreo = async (ayuntamientoId: typeof motul) => {
   try {
-    await limitarRitmo(ayuntamientoId, { correo: null, ip: IP });
+    await limitarRitmoDeAcceso(ayuntamientoId, { correo: null, ip: IP });
   } catch (error) {
     return error as { codigo?: string; tipo?: string };
   }
