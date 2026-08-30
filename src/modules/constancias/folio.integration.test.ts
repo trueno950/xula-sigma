@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   contextoDe,
@@ -22,7 +23,7 @@ import {
   titularConResidenciaVigente,
 } from "./constanciaDePrueba";
 import { contadorDeFoliosSql } from "./infrastructure/contadorDeFoliosSql";
-import { foliosDeDocumentos } from "./infrastructure/esquema";
+import { constancias, foliosDeDocumentos } from "./infrastructure/esquema";
 import { crearLectorDeDireccionesPorTerritorio } from "./infrastructure/lectorDeDireccionesPorTerritorio";
 import { crearLectorDeTitularesPorPadron } from "./infrastructure/lectorDeTitularesPorPadron";
 import { repositorioDeConstanciasSql } from "./infrastructure/repositorioDeConstanciasSql";
@@ -271,10 +272,23 @@ describe("validarFolio: RLS, no el codigo, es lo que aisla entre municipios", ()
 
     const folio = guardadaMotul?.folio as string;
 
+    // La prueba de RLS en si: sin filtrar por codigo, que es aleatorio y por
+    // si solo ya distingue las filas (hallazgo de GGA en la revision de esta
+    // rebanada -el par de aserciones de mas abajo pasaria igual si RLS
+    // estuviera roto, porque comparan codigos distintos, no filas-. Contar
+    // las filas visibles del mismo texto de folio desde el subdominio de
+    // Motul es lo unico que depende de RLS y no del azar del codigo.
+    const filasVisiblesDesdeMotul = await withTenant(motul, (tx) =>
+      tx
+        .select({ id: constancias.id })
+        .from(constancias)
+        .where(eq(constancias.folio, folio)),
+    );
+    expect(filasVisiblesDesdeMotul).toEqual([{ id: idMotul }]);
+
     // El codigo de Ticul, probado desde el subdominio de Motul contra el
-    // mismo texto de folio: NO_VALIDO. Si RLS no acotara, esto validaria
-    // -confirmando que el folio existe en Ticul, que es justo lo que la
-    // union cerrada de `proyectarValidacion` existe para no revelar.
+    // mismo texto de folio: NO_VALIDO -por codigo incorrecto, ya con RLS
+    // probada arriba por conteo de filas, no por este par-.
     const conCodigoDeTicul = await validarFolio({
       ayuntamientoId: motul,
       folio,

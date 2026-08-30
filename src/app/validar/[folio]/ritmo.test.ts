@@ -10,7 +10,8 @@ import { RitmoExcedidoError } from "@/shared/auth/ritmo";
  * Esta pagina es un Server Component, no un Route Handler: no hay
  * `Response` que devuelva `.status`. La verificacion aca es del contrato de
  * comportamiento -orden, no-llamado, clave por IP-, no de un codigo HTTP
- * literal. `next/dist/client/components/http-access-fallback/http-access-fallback.d.ts`
+ * literal. En Next 16.3.1,
+ * `next/dist/client/components/http-access-fallback/http-access-fallback.d.ts`
  * solo reconoce 404/401/403 como codigos que un componente de servidor
  * puede forzar; no existe un equivalente para 429, asi que la pagina deja
  * propagar `RitmoExcedidoError` sin capturarla.
