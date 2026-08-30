@@ -15,7 +15,9 @@ limitacion de ritmo.
 
 Trae ademas **siete correcciones a la propuesta**, cada una argumentada
 donde aparece: el render usa `renderToBuffer` y no `renderToStream` (§11),
-`ayuntamientos.documentos` es `NOT NULL DEFAULT '{}'` y no nullable (§9), el
+`configuracion_de_documentos` es tabla propia y no `ayuntamientos.documentos`
+-la version original heredaba una lectura publica sin proposito, hallazgo de
+GGA (§9)-, el
 PDF **no se puede renderizar desde `src/app`** y necesita un puerto (§11),
 `reimpresiones.momento` pasa a `ocurridoEn` (§6), la URL del escudo **no se
 congela** en el snapshot (§5), el test de concurrencia del folio **no puede**
@@ -702,24 +704,52 @@ cambiar una rama de una funcion pura.
 
 ---
 
-## 9. Decision 8 — `ayuntamientos.documentos`: validador y quien escribe
+## 9. Decision 8 — `configuracion_de_documentos`: validador y quien escribe
 
-### La columna
+### La tabla
+
+**Correccion sobre la version original de esta decision, encontrada por
+GGA en la revision de la rebanada 2.** La primera version ponia el bloque
+de firma en `ayuntamientos.documentos` (`jsonb`), calcando el precedente
+de `marca`. El hallazgo: `ayuntamientos` tiene
+`pgPolicy("ayuntamientos_directorio_publico", {for: "select", using:
+sql\`true\`})` porque `resolverAyuntamientoPorSubdominio`
+(`shared/tenancy/contexto.ts:35`) la lee **antes** de que exista contexto
+de tenant —es lo que resuelve el tenant, no algo que ya lo tenga—, y por
+eso nombre/subdominio/marca tienen que ser publicos ("estan en la fachada
+del palacio", dice el comentario de esa politica). El bloque de firma no
+tiene esa necesidad: se lee siempre dentro de la transaccion de
+`emitirConstancia`, con el tenant ya resuelto. Ponerlo en `ayuntamientos`
+heredaba una lectura publica sin proposito —exactamente lo que el mismo
+comentario excluye a proposito ("lo que nunca se expone es la
+operacion")— y el test de aislamiento que se escribio para probar lo
+contrario resultaba una tautologia: filtraba por el propio `ayuntamientoId`
+en el `WHERE`, asi que nunca le preguntaba a Postgres si la fila ajena era
+alcanzable.
+
+La correccion: tabla propia, `configuracion_de_documentos`, con
+`politicaTenant()` normal —el mismo mecanismo que cualquier otra tabla
+operativa del repo, no una excepcion—.
 
 ```sql
-ALTER TABLE "ayuntamientos"
-  ADD COLUMN "documentos" jsonb DEFAULT '{}'::jsonb NOT NULL;
+CREATE TABLE "configuracion_de_documentos" (
+  "ayuntamiento_id" uuid PRIMARY KEY NOT NULL,
+  "datos" jsonb DEFAULT '{}'::jsonb NOT NULL
+);
 ```
 
-**Correccion a la propuesta**, que la esboza como `jsonb null`. `marca` ya es
-`jsonb().notNull().default({})` (`shared/tenancy/esquema.ts:58`), y con
-nullable habria dos representaciones de "sin configurar" —`NULL` y `{}`— que
-significan lo mismo y que todo lector tendria que tratar por separado. Se
-sigue el precedente.
+Sin columna `id` sustituta, mismo criterio que `folios_de_documentos`: la
+identidad es `ayuntamientoId`, una fila por municipio. `NOT NULL DEFAULT
+'{}'`, no nullable: mismo motivo que la version original —dos
+representaciones de "sin configurar" que todo lector tendria que tratar
+por separado—.
 
-**Sin `GRANT` nuevo y sin politica nueva:** `ayuntamientos_escritura_propia`
-(`esquema.ts:106-111`) ya cubre el `UPDATE` sobre la fila propia, y es la
-misma politica por la que `cambiarEscudo` escribe hoy.
+**Sin `GRANT` de `DELETE`:** la configuracion se actualiza (`UPSERT`
+sobre la PK), nunca se borra. Un ayuntamiento sin fila es "sin
+configurar", el mismo estado que una fila con `datos = '{}'` que
+`leerDocumentos` no puede distinguir de un bloque vacio configurado a
+proposito —por eso `configurarDocumentos` (Fase 3) siempre hace `INSERT
+... ON CONFLICT (ayuntamiento_id) DO UPDATE`, nunca dos caminos.
 
 ### Donde vive el validador, y por que no en `domain`
 
@@ -840,8 +870,8 @@ lock, asi que ningun rechazo llega a tocar el contador. El criterio de exito
 regla y pasa a ser una consecuencia del orden.
 
 **El paso 4a si va adentro, y tambien tiene prueba.** La lectura de
-`ayuntamientos.documentos` es del mismo tenant y no cruza modulos, asi que no
-anida nada; y si lanza, el ROLLBACK ocurre **antes** del incremento del
+`configuracion_de_documentos` es del mismo tenant y no cruza modulos, asi que
+no anida nada; y si lanza, el ROLLBACK ocurre **antes** del incremento del
 contador. Ponerlo afuera costaria una cuarta transaccion por emision sin
 ganar ninguna propiedad.
 
@@ -1359,9 +1389,10 @@ borde de §15, no aca.
 
 ## 19. Migracion y despliegue
 
-`drizzle/0008_constancias.sql` crea las tres tablas **y** agrega
-`ayuntamientos.documentos`, con `FORCE ROW LEVEL SECURITY`, los `GRANT` y el FK
-compuesto a `personas` escrito a mano **en el mismo archivo** (ADR 0001 §2: un
+`drizzle/0008_constancias.sql` crea las **cuatro** tablas -`constancias`,
+`reimpresiones`, `folios_de_documentos` y `configuracion_de_documentos`-, con
+`FORCE ROW LEVEL SECURITY`, los `GRANT` y el FK compuesto a `personas` escrito
+a mano **en el mismo archivo** (ADR 0001 §2: un
 diff que solo toque lo generado se veria identico a una migracion que se olvido
 del `FORCE`). El FK a mano lleva el mismo comentario que
 `drizzle/0007_territorio.sql:103-120`, incluida la advertencia de que
