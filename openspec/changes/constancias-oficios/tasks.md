@@ -361,41 +361,47 @@ que partir, sale la pantalla de emision a una rebanada 4b — el contador, el
 caso de uso y los dos tests de concurrencia van juntos porque el invariante 2
 pide que la reja llegue con la tabla y no despues.
 
-- [ ] 4.1 RED `shared/lib/fecha.test.ts` (modificar — el archivo existe con
+- [x] 4.1 RED `shared/lib/fecha.test.ts` (modificar — el archivo existe con
       `hoyEnMerida`): `anioEnMerida()` devuelve el anio en `America/Merida`,
       no en UTC; caso limite: 31 de diciembre 19:00 hora de Merida (que ya es
       1 de enero en UTC) da el anio que ve la persona en Merida, no el de
       UTC — mismo bug que `AGENTS.md` documenta para `hoyEnMerida`.
-- [ ] 4.2 GREEN `shared/lib/fecha.ts`: `anioEnMerida()` con el mismo
+- [x] 4.2 GREEN `shared/lib/fecha.ts`: `anioEnMerida()` con el mismo
       `Intl.DateTimeFormat` que `hoyEnMerida`, tomando solo el componente de
       anio.
-- [ ] 4.3 `constancias/application/puertos.ts` (crear): `RepositorioDeConstancias`
+- [x] 4.3 `constancias/application/puertos.ts` (crear): `RepositorioDeConstancias`
       (`guardar`, `buscarPorId`, `paraValidar`, `registrarReimpresion`,
       `cancelar`) y `ContadorDeFolios.siguiente(tx, { ayuntamientoId, tipo,
       anio }): Promise<number>`.
-- [ ] 4.4 `constancias/application/puertosDeLectura.ts` (modificar): agregar
+      Nota de correccion: se agrego `listar(tx, ayuntamientoId)` al puerto,
+      no listado en el texto de esta tarea — lo necesita `listarConstancias`
+      (4.20) y no habia otra forma de listar por tenant sin `select()` pelado
+      desde `application`. `registrarReimpresion` tambien gano un
+      `ayuntamientoId` explicito en sus datos: la fila de `reimpresiones`
+      necesita el valor para el INSERT aunque RLS ya acote por tenant.
+- [x] 4.4 `constancias/application/puertosDeLectura.ts` (modificar): agregar
       `LecturaDeTitulares.porId(personaId): Promise<TitularLeido | null>` y
       `LecturaDeDirecciones.vigenteDe(personaId): Promise<DireccionVigente |
       null>` — **sin `tx`**, se llaman antes de abrir `withTenant` (mismo
       criterio que `LecturaDePersonas` de `territorio`, design.md seccion
       10).
-- [ ] 4.5 RED `constancias/infrastructure/contadorDeFoliosSql.test.ts`: la
+- [x] 4.5 RED `constancias/infrastructure/contadorDeFoliosSql.test.ts`: la
       sentencia exacta `INSERT ... ON CONFLICT (ayuntamiento_id, tipo, anio)
       DO UPDATE SET ultimo_consecutivo = folios_de_documentos.ultimo_consecutivo
       + 1 RETURNING ultimo_consecutivo`, primera llamada de una serie nueva
       -> `1`; segunda llamada misma serie -> `2`.
-- [ ] 4.6 GREEN `constancias/infrastructure/contadorDeFoliosSql.ts`: con el
+- [x] 4.6 GREEN `constancias/infrastructure/contadorDeFoliosSql.ts`: con el
       builder de Drizzle (`.onConflictDoUpdate`), no `sql\`…\`` a mano.
-- [ ] 4.7 `constancias/infrastructure/repositorioDeConstanciasSql.ts`,
+- [x] 4.7 `constancias/infrastructure/repositorioDeConstanciasSql.ts`,
       `lectorDeTitularesPorPadron.ts`, `lectorDeDireccionesPorTerritorio.ts`
       (crear) — los dos adaptadores llaman a `padron.personaPorId` y a
       `territorio.direccionVigenteDePersona` **por el barrel**, y hacen la
       conversion a `string` (`comoPersonaId`) justo antes de invocar la
       funcion tipada de `padron` (design.md seccion 2).
-- [ ] 4.8 `constancias/application/validacionDeSnapshot.ts`: Zod, mismo
+- [x] 4.8 `constancias/application/validacionDeSnapshot.ts`: Zod, mismo
       esquema de `datos` que design.md seccion 5 (`titular`, `direccion` con
       `residenciaId` opaca, `firmante`, `leyendaDePie` opcional).
-- [ ] 4.9 RED `constancias/application/emitirConstancia.test.ts` (puertos
+- [x] 4.9 RED `constancias/application/emitirConstancia.test.ts` (puertos
       mockeados) — la bateria de orden que protege el invariante:
       `puedeEscribir(rol)` falso -> `NoAutorizadoError` **antes** de llamar
       cualquier puerto; titular `null` -> `NoEncontradoError`; titular con
@@ -409,17 +415,17 @@ pide que la reja llegue con la tabla y no despues.
       -> `guardar` recibe el snapshot compuesto por
       `titular+direccion+documentos` y `registrar` recibe `EMITIR_CONSTANCIA`
       con solo ids, en la misma llamada a `withTenant`.
-- [ ] 4.10 GREEN `constancias/application/emitirConstancia.ts`: el orden
+- [x] 4.10 GREEN `constancias/application/emitirConstancia.ts`: el orden
       exacto de design.md seccion 10 — pasos 1-3 fuera de toda transaccion,
       paso 4 (lectura de `documentos`, contador, `Folio.crear`, `guardar`,
       `registrar`) en un solo `withTenant`.
-- [ ] 4.11 `shared/tenancy/municipiosDePrueba.ts` (modificar):
+- [x] 4.11 `shared/tenancy/municipiosDePrueba.ts` (modificar):
       `enTransaccionParalela(ayuntamientoId, trabajo)` sobre `appSinTenant` —
       `begin()`, `set_config('app.tenant', …, true)`, cede el control. Va en
       este archivo y no en el test porque `scripts/reglas/reglas/tenancia.ts:43`
       reconoce el andamiaje por nombre (`/DePrueba\.ts$|\.isolation\.test\.ts$/`)
       y un `*.integration.test.ts` que importe `postgres` es el antipatron 2.
-- [ ] 4.12 RED `constancias/folio.integration.test.ts` — **T6, la prueba mas
+- [x] 4.12 RED `constancias/folio.integration.test.ts` — **T6, la prueba mas
       critica del cambio**: `enTransaccionParalela` toma el folio de
       `(motul, VECINDAD, 2026)` y no confirma; `emitirConstancia` disparado
       en paralelo (con Postgres real, no las dos conexiones de
@@ -427,45 +433,67 @@ pide que la reja llegue con la tabla y no despues.
       temporizador corto: la promesa sigue sin resolver); la paralela hace
       `COMMIT`; la emision resuelve con el consecutivo siguiente al que tomo
       la paralela.
-- [ ] 4.13 GREEN (ajustar 4.6/4.10 si el lock no se comporta como se predice
-      en design.md seccion 4).
-- [ ] 4.14 RED mismo archivo — **T7**: `crearEmitirConstancia` compuesto con
+      Corrida contra Postgres real (no simulada): la emision quedo pendiente
+      -`Promise.race` devolvio el temporizador, no la emision- hasta que la
+      paralela confirmo, exactamente como predice design.md seccion 4.
+- [x] 4.13 GREEN. El lock se comporto exactamente como predice design.md
+      seccion 4: no hizo falta ajustar 4.6 ni 4.10.
+- [x] 4.14 RED mismo archivo — **T7**: `crearEmitirConstancia` compuesto con
       un `RepositorioDeConstancias` cuyo `guardar` lanza; la emision falla
       **despues** de tomar folio; la siguiente emision exitosa, con el
       repositorio real, obtiene **el mismo numero** — el rollback no consume
       folio.
-- [ ] 4.15 GREEN.
-- [ ] 4.16 RED mismo archivo: Motul y Ticul emiten su primera constancia de
-      vecindad del anio, ambos obtienen `VEC-2026-000001` sin colisionar.
-- [ ] 4.17 RED mismo archivo: se siembra `(motul, VECINDAD, 2025)` con
-      `ultimoConsecutivo` alto; la primera emision de 2026 arranca en `1`.
-- [ ] 4.18 GREEN (4.16-4.17 deberian pasar sin cambios si el esquema de 2.13
-      y `Folio.crear` de 2.6 estan bien).
-- [ ] 4.19 RED `constancias/emision.integration.test.ts` — el snapshot
+- [x] 4.15 GREEN.
+- [x] 4.16 RED mismo archivo: Motul y Ticul emiten su primera constancia de
+      vecindad del anio, ambos obtienen `VEC-{anio}-000001` sin colisionar.
+      (`{anio}` y no `2026` fijo: el test toma el anio de `anioEnMerida()`
+      para no quedar acoplado a la fecha en que corre la suite.)
+- [x] 4.17 RED mismo archivo: se siembra `(motul, VECINDAD, anio-1)` con
+      `ultimoConsecutivo` alto; la primera emision del anio actual arranca
+      en `1`.
+- [x] 4.18 GREEN (4.16-4.17 pasaron sin cambios: el esquema de 2.13 y
+      `Folio.crear` de 2.6 ya estaban bien). Se agrego un `beforeEach` que
+      trunca `folios_de_documentos`, `constancias` y `reimpresiones` entre
+      cada `it` -no listado en el texto original de esta tarea-: sin el,
+      los folios `VEC-{anio}-000001` de tests distintos colisionan contra
+      `constancias_tenant_folio_idx`, porque `limpiar()` solo corre en
+      `afterAll`.
+- [x] 4.19 RED `constancias/emision.integration.test.ts` — el snapshot
       congelado, comportamiento y no implementacion: emitir una constancia,
       reparentear la colonia del titular, releer la constancia **y su
       reimpresion futura** (via `constanciaPorId`), comparar el texto
       caracter por caracter contra el original — no cambia ni un caracter.
-- [ ] 4.20 GREEN `constancias/application/constanciaPorId.ts` +
+- [x] 4.20 GREEN `constancias/application/constanciaPorId.ts` +
       `listarConstancias.ts` con sus tests (puertos mockeados: id de otro
       tenant o inexistente -> `null`, nunca lanza).
-- [ ] 4.21 RED mismo archivo de integracion: corregir el apellido de la
+- [x] 4.21 RED mismo archivo de integracion: corregir el apellido de la
       persona en `padron` **despues** de emitir no cambia el nombre impreso
       en la constancia ya emitida (spec: "Editar el nombre de la persona no
       cambia el documento").
-- [ ] 4.22 GREEN (debe pasar sin cambios si 4.19 esta bien: el snapshot no
-      re-deriva nada).
-- [ ] 4.23 `constancias/composicion.ts` (modificar): componer
+- [x] 4.22 GREEN. Paso sin cambios de produccion: el snapshot no re-deriva
+      nada, tal como predice 4.19.
+- [x] 4.23 `constancias/composicion.ts` (modificar): componer
       `crearEmitirConstancia`, `constanciaPorId`, `listarConstancias` con sus
       adaptadores de 4.7.
-- [ ] 4.24 `constancias/ui/FormularioDeEmision.tsx` (Server Component,
-      muestra `desdeEn` de la residencia vigente antes de confirmar — decision
-      18, sin bloquear por periodo minimo); `ui/actions/emitirConstanciaAction.ts`;
+- [ ] 4.24 CORTADO A 4b (decision de emergencia declarada en el encabezado de
+      esta fase, tomada de antemano). El contador, `emitirConstancia` y los
+      dos tests de concurrencia (T6, T7) ya llegaron junto con la tabla,
+      que es lo que el invariante 2 pedia; la UI no forma parte de esa
+      garantia y se corta primero, como decia el corte de emergencia.
+      Pendiente para 4b: `constancias/ui/FormularioDeEmision.tsx` (Server
+      Component, muestra `desdeEn` de la residencia vigente antes de
+      confirmar — decision 18, sin bloquear por periodo minimo);
+      `ui/actions/emitirConstanciaAction.ts`;
       `src/app/(panel)/constancias/{page,emitir,[id]}/page.tsx`.
-- [ ] 4.25 `AGENTS.md`: agregar `emitirConstanciaAction` a la tabla de Server
-      Actions.
-- [ ] 4.26 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
-      confirmar piso 80/75 sobre `modules/constancias/{domain,application}`.
+- [ ] 4.25 CORTADO A 4b junto con 4.24: `emitirConstanciaAction` todavia no
+      existe, asi que no hay fila que agregar a la tabla de Server Actions
+      de `AGENTS.md` hasta que 4b la cree.
+- [x] 4.26 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde
+      sobre lo que esta fase entrego (contador, `emitirConstancia`,
+      `constanciaPorId`, `listarConstancias`, T6/T7 y los tests de snapshot).
+      Piso 80/75 confirmado sobre `modules/constancias/{domain,application}`.
+      La UI (4.24-4.25) queda pendiente para 4b y no forma parte de esta
+      corrida.
 
 ## Phase 5: Rebanada 5 — Render de PDF (~500 lineas)
 

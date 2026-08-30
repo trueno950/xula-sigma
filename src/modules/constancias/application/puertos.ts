@@ -1,0 +1,106 @@
+import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
+import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
+import type {
+  ConstanciaId,
+  MotivoDeCancelacion,
+  MotivoDeReimpresion,
+  ReimpresionId,
+  TipoDeDocumento,
+} from "../domain";
+
+/**
+ * Lo que `emitirConstancia` guarda en una sola fila (design.md de
+ * `constancias-oficios`, seccion 6): `folio` ya viene formateado -no se
+ * re-deriva de `anio`+`consecutivo` en la lectura-, y `personaId` viaja como
+ * `string`, nunca `PersonaId` (seccion 3: el dominio de `constancias` no
+ * importa el de `padron`).
+ */
+export type DatosParaGuardar = {
+  id: ConstanciaId;
+  ayuntamientoId: AyuntamientoId;
+  tipo: TipoDeDocumento;
+  folio: string;
+  anio: number;
+  consecutivo: number;
+  codigoVerificacion: string;
+  personaId: string;
+  datos: Record<string, unknown>;
+  plantillaVersion: string;
+  emitidaPorUsuarioId: string;
+};
+
+/** Lo que devuelve una lectura: los mismos campos mas lo que solo existe una vez guardada. */
+export type ConstanciaGuardada = DatosParaGuardar & {
+  emitidaEn: Date;
+  canceladaEn: Date | null;
+  canceladaPorUsuarioId: string | null;
+  motivoCancelacion: MotivoDeCancelacion | null;
+};
+
+/**
+ * Lo que valida una constancia sin exponer el snapshot completo
+ * (design.md seccion 8): la superficie publica solo necesita saber si el
+ * folio y el codigo coinciden con una fila de este municipio.
+ */
+export type FilaParaValidar = {
+  folio: string;
+  codigoVerificacion: string;
+  canceladaEn: Date | null;
+};
+
+/**
+ * Puerto de escritura y lectura de `constancias` y `reimpresiones`. Cada
+ * operacion recibe la transaccion de `withTenant` por parametro, mismo
+ * criterio que `RepositorioDeDocumentos` (`puertosDeLectura.ts`).
+ */
+export type RepositorioDeConstancias = {
+  guardar(tx: TransaccionTenant, datos: DatosParaGuardar): Promise<void>;
+  buscarPorId(
+    tx: TransaccionTenant,
+    id: ConstanciaId,
+  ): Promise<ConstanciaGuardada | null>;
+  listar(
+    tx: TransaccionTenant,
+    ayuntamientoId: AyuntamientoId,
+  ): Promise<readonly ConstanciaGuardada[]>;
+  /** design.md seccion 13: superficie publica de `/validar/[folio]`. */
+  paraValidar(
+    tx: TransaccionTenant,
+    folio: string,
+  ): Promise<FilaParaValidar | null>;
+  registrarReimpresion(
+    tx: TransaccionTenant,
+    datos: {
+      ayuntamientoId: AyuntamientoId;
+      constanciaId: ConstanciaId;
+      usuarioId: string;
+      motivo: MotivoDeReimpresion;
+    },
+  ): Promise<ReimpresionId>;
+  cancelar(
+    tx: TransaccionTenant,
+    datos: {
+      id: ConstanciaId;
+      motivo: MotivoDeCancelacion;
+      usuarioId: string;
+    },
+  ): Promise<boolean>;
+};
+
+/**
+ * El contador de folios (design.md seccion 4): una sola sentencia,
+ * `ON CONFLICT (ayuntamiento_id, tipo, anio) DO UPDATE`, con el lock que
+ * garantiza un consecutivo sin hueco y sin repeticion. Es la unica
+ * operacion de este modulo que se declara "no medida" hasta que
+ * `folio.integration.test.ts` corre contra Postgres de verdad.
+ */
+export type ContadorDeFolios = {
+  siguiente(
+    tx: TransaccionTenant,
+    datos: {
+      ayuntamientoId: AyuntamientoId;
+      tipo: TipoDeDocumento;
+      anio: number;
+    },
+  ): Promise<number>;
+};

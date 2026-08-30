@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { hoyEnMerida } from "./fecha";
+import { anioEnMerida, hoyEnMerida } from "./fecha";
 
 /**
  * Bug que este archivo existe para atajar (design.md de `capa-territorial`
@@ -33,5 +33,40 @@ describe("hoyEnMerida", () => {
     vi.setSystemTime(new Date("2019-03-03T18:30:00.000Z"));
 
     expect(hoyEnMerida()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+/**
+ * Mismo bug que `hoyEnMerida`, un nivel mas arriba: el contador de folios
+ * (tasks.md Fase 4, 4.1) resuelve el anio de la serie con esta funcion, y no
+ * con `new Date().getUTCFullYear()`.
+ */
+describe("anioEnMerida", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("las 19:00 hora de Merida del 31 de diciembre ya son 1 de enero en UTC, pero el anio sigue siendo el anterior", () => {
+    // 19:00 en America/Merida (UTC-6) del 31 de diciembre de 2025 es
+    // 01:00 UTC del 1 de enero de 2026.
+    vi.setSystemTime(new Date("2026-01-01T01:00:00.000Z"));
+
+    expect(anioEnMerida()).toBe(2025);
+  });
+
+  it("las 08:00 UTC del 1 de enero ya son 1 de enero en Merida", () => {
+    vi.setSystemTime(new Date("2026-01-01T08:00:00.000Z"));
+
+    expect(anioEnMerida()).toBe(2026);
+  });
+
+  it("devuelve un numero, no un texto", () => {
+    vi.setSystemTime(new Date("2019-03-03T18:30:00.000Z"));
+
+    expect(anioEnMerida()).toBe(2019);
   });
 });
