@@ -475,7 +475,7 @@ pide que la reja llegue con la tabla y no despues.
 - [x] 4.23 `constancias/composicion.ts` (modificar): componer
       `crearEmitirConstancia`, `constanciaPorId`, `listarConstancias` con sus
       adaptadores de 4.7.
-- [ ] 4.24 CORTADO A 4b (decision de emergencia declarada en el encabezado de
+- [x] 4.24 CORTADO A 4b (decision de emergencia declarada en el encabezado de
       esta fase, tomada de antemano). El contador, `emitirConstancia` y los
       dos tests de concurrencia (T6, T7) ya llegaron junto con la tabla,
       que es lo que el invariante 2 pedia; la UI no forma parte de esa
@@ -485,15 +485,45 @@ pide que la reja llegue con la tabla y no despues.
       confirmar — decision 18, sin bloquear por periodo minimo);
       `ui/actions/emitirConstanciaAction.ts`;
       `src/app/(panel)/constancias/{page,emitir,[id]}/page.tsx`.
-- [ ] 4.25 CORTADO A 4b junto con 4.24: `emitirConstanciaAction` todavia no
+      **Cerrado en 4b**: los tres archivos existen. Correccion sobre el
+      texto literal — `{page,emitir,[id]}` fija exactamente tres rutas
+      (`constancias/page.tsx` lista, `constancias/emitir/page.tsx` emite,
+      `constancias/[id]/page.tsx` es el detalle de una constancia por su
+      propio id), y ninguna de las tres es un segmento dinamico de
+      `personaId`. `emitirConstancia` si necesita un `personaId` para
+      arrancar, asi que `emitir/page.tsx` lo lee de `?personaId=` -no de un
+      segmento- y `padron/[id]/page.tsx` (la unica pantalla del repo que ya
+      tiene un `personaId` en mano) gano un enlace
+      `/constancias/emitir?personaId={id}` junto al `FormularioDeMudanza`
+      existente, sin tocar nada mas de esa pagina. `[id]/page.tsx` muestra
+      el snapshot como texto plano (`datos.titular.nombreCompleto`,
+      `datos.direccion.texto`, `datos.direccion.desdeEn`, `folio`,
+      `emitidaEn`) sin render de PDF: la Fase 5 todavia no llego.
+      `constancias/index.ts` gano el reexport nombrado de `comoConstanciaId`
+      -mismo patron que `padron/index.ts` y `territorio/index.ts`-, que la
+      pagina de detalle necesita para validar el id de la ruta antes de
+      llamar a `constanciaPorId`.
+- [x] 4.25 CORTADO A 4b junto con 4.24: `emitirConstanciaAction` todavia no
       existe, asi que no hay fila que agregar a la tabla de Server Actions
       de `AGENTS.md` hasta que 4b la cree.
+      **Cerrado en 4b**: fila `emitirConstanciaAction` agregada a la tabla
+      de `AGENTS.md`, mismo transporte que `configurarDocumentosAction`
+      (`redirect` + `searchParams`, formulario nativo sin `use client`). Sin
+      test propio: ningun `ui/actions/*.ts` de formulario nativo del repo
+      tiene un test dedicado -verificado antes de escribir el archivo-, solo
+      lo tiene `cambiarEscudo.action.ts` de `marca`, que devuelve
+      `ActionResult<T>` para `useActionState` y por eso es una funcion pura
+      testeable; `emitirConstanciaAction` sigue el otro transporte.
 - [x] 4.26 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde
       sobre lo que esta fase entrego (contador, `emitirConstancia`,
       `constanciaPorId`, `listarConstancias`, T6/T7 y los tests de snapshot).
       Piso 80/75 confirmado sobre `modules/constancias/{domain,application}`.
       La UI (4.24-4.25) queda pendiente para 4b y no forma parte de esta
       corrida.
+      **4b**: `pnpm check` + `pnpm test` (137 archivos, 667 tests) +
+      `pnpm test:integration` (53 archivos, 211 tests) vuelven a correr en
+      verde sobre la UI agregada -mismos conteos que 4.26 porque la UI no
+      trajo ningun test nuevo, solo wiring sobre casos de uso ya probados-.
 
 ## Phase 5: Rebanada 5 — Render de PDF (~500 lineas)
 

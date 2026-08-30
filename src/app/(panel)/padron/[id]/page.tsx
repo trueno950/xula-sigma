@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { z } from "zod";
 import { comoPersonaId, personaPorId } from "@/modules/padron";
 import {
@@ -91,6 +92,17 @@ export default async function PaginaDeDetalleDePersona({
         </h2>
         <HistorialDeResidencias historial={historial} />
       </section>
+
+      {puedeEscribir(contexto.usuario.rol) ? (
+        <div className="border-t border-caliza-divisor pt-4">
+          <Link
+            href={`/constancias/emitir?personaId=${persona.id}`}
+            className="flex h-11 w-fit items-center rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
+          >
+            Emitir constancia de vecindad
+          </Link>
+        </div>
+      ) : null}
 
       {puedeEscribir(contexto.usuario.rol) ? (
         <div className="border-t border-caliza-divisor pt-4">
