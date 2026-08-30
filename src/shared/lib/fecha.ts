@@ -23,3 +23,27 @@ const formateadorDeAnio = new Intl.DateTimeFormat("en-CA", {
  */
 export const anioEnMerida = (): number =>
   Number(formateadorDeAnio.format(new Date()));
+
+const formateadorDeFechaYHora = new Intl.DateTimeFormat("es-MX", {
+  timeZone: "America/Merida",
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+/**
+ * Fecha y hora legibles de un instante ya guardado, en `America/Merida` -no
+ * "ahora": esto formatea un `Date` que llega por parametro, como
+ * `constancias.emitidaEn`. `toLocaleString` sin `timeZone` usa la del
+ * proceso (UTC en el servidor), el mismo bug que `hoyEnMerida` y
+ * `anioEnMerida` evitan para la fecha civil de hoy.
+ */
+export const fechaYHoraEnMerida = (fecha: Date): string =>
+  formateadorDeFechaYHora.format(fecha);
+
+const formateadorDeFecha = new Intl.DateTimeFormat("es-MX", {
+  timeZone: "America/Merida",
+  dateStyle: "medium",
+});
+
+export const fechaEnMerida = (fecha: Date): string =>
+  formateadorDeFecha.format(fecha);

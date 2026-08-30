@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { anioEnMerida, hoyEnMerida } from "./fecha";
+import {
+  anioEnMerida,
+  fechaEnMerida,
+  fechaYHoraEnMerida,
+  hoyEnMerida,
+} from "./fecha";
 
 /**
  * Bug que este archivo existe para atajar (design.md de `capa-territorial`
@@ -68,5 +73,31 @@ describe("anioEnMerida", () => {
     vi.setSystemTime(new Date("2019-03-03T18:30:00.000Z"));
 
     expect(anioEnMerida()).toBe(2019);
+  });
+});
+
+/**
+ * Mismo bug otra vez, esta vez formateando una fecha ya guardada -no "ahora"-
+ * para mostrarla en pantalla (GGA en la revision de constancias 4b:
+ * `toLocaleString`/`toLocaleDateString` sin `timeZone` usan la del proceso,
+ * UTC en el servidor, no la de Merida).
+ */
+describe("fechaYHoraEnMerida", () => {
+  it("las 19:00 hora de Merida del 31 de diciembre no se muestran como 1 de enero", () => {
+    // 19:00 en America/Merida (UTC-6) del 31 de diciembre de 2025 es
+    // 01:00 UTC del 1 de enero de 2026.
+    const emitida = new Date("2026-01-01T01:00:00.000Z");
+
+    expect(fechaYHoraEnMerida(emitida)).toContain("31 dic");
+    expect(fechaYHoraEnMerida(emitida)).not.toContain("1 ene");
+  });
+});
+
+describe("fechaEnMerida", () => {
+  it("las 19:00 hora de Merida del 31 de diciembre no se muestran como 1 de enero", () => {
+    const emitida = new Date("2026-01-01T01:00:00.000Z");
+
+    expect(fechaEnMerida(emitida)).toContain("31 dic");
+    expect(fechaEnMerida(emitida)).not.toContain("1 ene");
   });
 });
