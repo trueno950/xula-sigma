@@ -43,7 +43,7 @@ precedente de formato).
 | 4 | Emision con folio bajo lock: contador, `emitirConstancia`, snapshot congelado, T6/T7, `enTransaccionParalela`, UI | PR 4 | `pnpm test src/modules/constancias/application -- emitirConstancia` | `pnpm db:local`; `pnpm test:integration -- folio emision` | Revertir `application/{puertos,emitirConstancia,constanciaPorId,listarConstancias}.ts`+adaptadores+UI; esquema de PR2 intacto, `folios_de_documentos` queda vacia |
 | 5 | Render de PDF: puerto, `renderizadorReactPdf`, plantilla de vecindad, QR, Route Handler | PR 5 | `pnpm test src/modules/constancias/application -- pdfDeConstancia` | `pnpm db:local`; sin Postgres para el render puro (renderizador falso) | Revertir `application/{puertosDeRender,pdfDeConstancia}.ts`+`infrastructure/{renderizadorReactPdf,plantillas}`+route.ts; emision de PR4 sigue funcionando, solo sin PDF |
 | **Compuerta de producto** | Ronda de revision visual con el piloto, hoja impresa en su propia impresora. **La fase no cuenta como vendible hasta que cierre.** No es una tarea de codigo | — | — | — | — |
-| 6 | Reimpresion y cancelacion: tabla `reimpresiones`, casos de uso, marca de agua acreditada, motivos cerrados, UI | PR 6 | `pnpm test src/modules/constancias/application -- reimprimir cancelar` | `pnpm db:local`; `pnpm test:integration -- reimpresionYCancelacion` | Revertir `application/{reimprimirConstancia,cancelarConstancia}.ts`+UI; `constancias`/PDF de PR4-5 intactos |
+| 6 | Reimpresion y cancelacion: tabla `reimpresiones`, casos de uso, marca de agua acreditada, motivos cerrados, UI | PR 6 | `pnpm test src/modules/constancias/application -- reimprimir cancelar` | `pnpm db:local`; `pnpm test:integration -- reimprimirConstancia cancelarConstancia` | Revertir `application/{reimprimirConstancia,cancelarConstancia}.ts`+UI; `constancias`/PDF de PR4-5 intactos |
 | 7 | Validacion publica: `validarFolio`, generalizacion de `limitarRitmo`, migracion del CHECK, pagina publica | PR 7 | `pnpm test src/modules/constancias/application -- validarFolio` + `src/shared/auth -- ritmo` | `pnpm db:local`; `pnpm test:integration -- ritmo folio` | Quitar `src/app/validar/[folio]/page.tsx` sin tocar la base — el QR queda apuntando a 404, fallo visible y no fuga |
 | 8 | Exportacion: `PorcionExportable` de `constancias` | PR 8 | `pnpm test src/modules/constancias -- composicion` | N/A — cubre el propio test de composicion | Revertir `porcionesDeConstancias`/`porciones.ts`; exportacion de otros modulos intacta |
 
@@ -678,7 +678,7 @@ Depende de la Fase 4 (opera sobre constancias existentes) y de la Fase 5
 (reimprimir produce un PDF con marca de agua) **y de que la compuerta de
 revision visual haya cerrado**.
 
-- [ ] 6.1 RED `constancias/application/reimprimirConstancia.test.ts`
+- [x] 6.1 RED `constancias/application/reimprimirConstancia.test.ts`
       (puertos mockeados): rechaza sin `puedeEscribir`; id inexistente o de
       otro tenant -> `NoEncontradoError`; constancia cancelada ->
       `DocumentoCanceladoError`; motivo fuera de `MOTIVOS_DE_REIMPRESION`
@@ -687,8 +687,8 @@ revision visual haya cerrado**.
       camino feliz -> `repositorio.registrarReimpresion` recibe `{
       constanciaId, usuarioId, motivo }`, `registrar` recibe
       `REIMPRIMIR_CONSTANCIA` con solo ids, devuelve el `reimpresionId`.
-- [ ] 6.2 GREEN `constancias/application/reimprimirConstancia.ts`.
-- [ ] 6.3 RED `constancias/application/cancelarConstancia.test.ts`: rechaza
+- [x] 6.2 GREEN `constancias/application/reimprimirConstancia.ts`.
+- [x] 6.3 RED `constancias/application/cancelarConstancia.test.ts`: rechaza
       sin `puedeAdministrarDocumentos` (incluye caso `OPERADOR` que emitio el
       documento — spec: "no puede cancelar aunque emitio"); `UPDATE ... WHERE
       cancelada_en IS NULL RETURNING id` sin fila (inexistente, de otro
@@ -697,46 +697,131 @@ revision visual haya cerrado**.
       camino feliz -> `cancelada_en`, `cancelada_por_usuario_id`,
       `motivo_cancelacion` en la misma sentencia, `registrar` con
       `CANCELAR_CONSTANCIA`.
-- [ ] 6.4 GREEN `constancias/application/cancelarConstancia.ts`: el `UPDATE`
+      **Correccion (GGA, ronda 1 de PR #40):** el test que decia cubrir "el
+      caso `OPERADOR` que emitio" era identico al de "rechaza sin
+      `puedeAdministrarDocumentos`" -mismo mock, mismo assert, sin construir
+      ninguna constancia emitida por ese `OPERADOR`-. La firma de
+      `cancelarConstancia(id, motivo, contexto)` no recibe quien emitio, asi
+      que esa rama no existe para probar: es estructural, no comportamiento.
+      Se elimino el test duplicado y se documento el porque en un comentario
+      del test que queda.
+- [x] 6.4 GREEN `constancias/application/cancelarConstancia.ts`: el `UPDATE`
       condicional es tambien el mecanismo de concurrencia (design.md seccion
       10) — sin rama adicional para la carrera de dos cancelaciones
       simultaneas.
-- [ ] 6.5 `constancias/infrastructure/repositorioDeConstanciasSql.ts`
+      **Correccion (GGA, ronda 1 de PR #40):** ese `UPDATE` es atomico
+      consigo mismo, pero no cierra la carrera del lado de
+      `reimprimirConstancia`, que lee `canceladaEn` sin bloquear la fila.
+      Se agrego `bloquearPorId` (`SELECT ... FOR UPDATE`) al puerto
+      `RepositorioDeConstancias` y `reimprimirConstancia` lo usa en vez de
+      `buscarPorId`; probado con una segunda conexion real
+      (`enTransaccionParalela`) en `cancelarConstancia.integration.test.ts`
+      -nombre del archivo tras la correccion de la ronda 3-, mismo mecanismo
+      de prueba que T6 de `folio.integration.test.ts`.
+- [x] 6.5 `constancias/infrastructure/repositorioDeConstanciasSql.ts`
       (modificar): implementar `registrarReimpresion` y `cancelar` contra el
       esquema de la Fase 2.
-- [ ] 6.6 RED `constancias/reimpresionYCancelacion.integration.test.ts`:
+      **Ajuste:** no hizo falta escribir nada — la Fase 5 (nota de su tarea
+      5.3) ya habia dejado las dos operaciones completas contra el esquema
+      real, `WHERE cancelada_en IS NULL RETURNING id` incluido. 6.5 se
+      redujo a confirmarlo leyendo el archivo, y los tests de 6.6-6.13 son
+      quienes efectivamente lo ejercitan por primera vez contra Postgres.
+- [x] 6.6 RED `constancias/reimpresionYCancelacion.integration.test.ts`:
       reimprimir dos veces (una por extravio, una por deterioro) deja **dos**
       filas, cada una con su propio motivo/usuario/momento, sin modificar la
       anterior (spec: "Reimprimir dos veces deja dos filas"); el conteo
       (`COUNT(*)` sobre `reimpresiones`) nunca decrece porque no hay `UPDATE`
       ni `DELETE` permitido por `GRANT` (intentar un `UPDATE` directo con el
       rol `xula_app` es rechazado por falta de permiso, no por RLS).
-- [ ] 6.7 GREEN.
-- [ ] 6.8 RED mismo archivo: reimprimir con `plantillaVersion` congelada en
+- [x] 6.7 GREEN.
+- [x] 6.8 RED mismo archivo: reimprimir con `plantillaVersion` congelada en
       la version 1 mientras `VERSION_ACTUAL` avanza a la version 2 —
       `pdfDeConstancia` sigue resolviendo la version 1 para esa constancia
       (spec: "Cambiar la plantilla no altera una reimpresion posterior").
-- [ ] 6.9 GREEN (verifica el lookup de 5.6-5.7, no deberia requerir cambios).
-- [ ] 6.10 RED mismo archivo: cancelar una constancia, intentar reimprimirla
+      **Ajuste:** `domain/tipoDeDocumento.ts` solo registra una version
+      (`VECINDAD: "vecindad-v1"`) en esta rebanada; no existe una v2 real
+      contra la cual emitir sin agregar una segunda plantilla, fuera de
+      alcance de esta tarea. El test prueba el mismo invariante por el
+      lado que si se puede ejercitar sin tocar el dominio: inserta una fila
+      con una `plantillaVersion` que ya no esta en `PLANTILLAS` -el
+      equivalente exacto de "quedo atras cuando la version vigente
+      avanzo"- y confirma que `pdfDeConstancia` lanza
+      `PlantillaDesconocidaError` en vez de resolverla silenciosamente
+      contra `VERSION_ACTUAL` (si recalculara en vez de leer la columna
+      congelada, este test renderizaria en lugar de lanzar). Un segundo
+      test cubre el camino normal: emitir, reimprimir y releer la version
+      de una constancia real siguen devolviendo exactamente lo que quedo
+      grabado en la emision.
+- [x] 6.9 GREEN (verifica el lookup de 5.6-5.7, no deberia requerir cambios).
+- [x] 6.10 RED mismo archivo: cancelar una constancia, intentar reimprimirla
       -> `DocumentoCanceladoError`; emitir una constancia nueva para la
       misma persona despues de cancelar la anterior -> folio distinto, la
       cancelada permanece en el historial con su motivo (spec: "Cancelar no
       borra ni edita, deja historial").
-- [ ] 6.11 GREEN.
-- [ ] 6.12 RED mismo archivo: un `OPERADOR` que reimprime **no** necesita
+- [x] 6.11 GREEN.
+- [x] 6.12 RED mismo archivo: un `OPERADOR` que reimprime **no** necesita
       `puedeAdministrarDocumentos` (spec autorizacion-roles, "emite y
       reimprime sin necesitar la regla nueva") — se autoriza por
       `puedeEscribir`.
-- [ ] 6.13 GREEN (deberia pasar sin cambios si 6.1-6.2 estan bien).
-- [ ] 6.14 `constancias/composicion.ts` (modificar): componer
+- [x] 6.13 GREEN (paso sin cambios: 6.1-6.2 ya cubrian la guarda correcta).
+- [x] 6.14 `constancias/composicion.ts` (modificar): componer
       `reimprimirConstancia`, `cancelarConstancia`.
-- [ ] 6.15 `constancias/ui/`: boton de reimpresion con selector de motivo,
+- [x] 6.15 `constancias/ui/`: boton de reimpresion con selector de motivo,
       enlace al PDF con `?reimpresion=<id>` que devuelve `reimprimirConstancia`;
       boton de cancelacion con selector de motivo, visible solo para quien
       pasa `puedeAdministrarDocumentos`; `ui/actions/{reimprimirConstancia,
       cancelarConstancia}Action.ts`.
-- [ ] 6.16 `AGENTS.md`: agregar las dos Server Actions nuevas a la tabla.
-- [ ] 6.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+      **Ajuste:** tambien se modifico
+      `src/app/(panel)/constancias/[id]/page.tsx` para que reciba y lea
+      `searchParams` -no lo hacia antes de esta rebanada-: las dos acciones
+      nuevas redirigen con `?error=` a esa pantalla, y GGA ya penalizo en la
+      Fase 4b una redireccion con `?error=` hacia una pagina que no leia el
+      parametro. La pagina tambien gana el estado "documento cancelado" (con
+      su motivo) y oculta el boton de reimpresion cuando la constancia ya
+      esta cancelada, para no ofrecer una accion que `reimprimirConstancia`
+      va a rechazar de todas formas.
+- [x] 6.16 `AGENTS.md`: agregar las dos Server Actions nuevas a la tabla.
+- [x] 6.17 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+      `pnpm check`: biome (solo warnings preexistentes de
+      `noNonNullAssertion` en archivos de `territorio` no tocados por esta
+      rebanada), tsc y depcruise limpios, `pnpm reglas` sin hallazgos.
+      `pnpm test` (unit): 89 archivos, 491 tests. `pnpm test:integration`:
+      54 archivos, 218 tests -el archivo nuevo aporta 7-.
+      **Correcciones (GGA, ronda 1 y 2 de PR #40):** ver 6.3/6.4 arriba
+      (carrera reimprimir-cancelar y test duplicado de `cancelarConstancia`),
+      mas: test duplicado equivalente en `reimprimirConstancia.test.ts`
+      ("de otro tenant" vs "inexistente", mismo mock, indistinguible a nivel
+      de caso de uso) eliminado; `BotonDeReimpresion` no tenia el gate de
+      `puedeEscribir` que su propio comentario decia que tenia -se agrego el
+      gate en `[id]/page.tsx`, mismo patron que `BotonDeCancelacion`-.
+      **Correccion (GGA, ronda 3 de PR #40):** la decision de no partir
+      `reimpresionYCancelacion.integration.test.ts` (nota anterior de este
+      mismo punto) fue un error mio, no de GGA -el limite de 200 lineas por
+      archivo **si** esta explicito en la tabla de Metricas de `AGENTS.md`
+      linea 357, y no lo verifique antes de descartar el hallazgo-. El
+      archivo se partio en tres, cada uno bajo el limite: 153 lineas
+      `reimprimirConstancia.integration.test.ts` (ciclo de vida de
+      reimprimir en aislamiento), 179 lineas
+      `cancelarConstancia.integration.test.ts` (efecto de cancelar sobre el
+      historial y la carrera con reimprimir), 142 lineas
+      `pdfDeConstancia.integration.test.ts` (freeze de `plantillaVersion`,
+      que es comportamiento de `pdfDeConstancia`, no de `reimprimirConstancia`
+      -se reclasifico de paso, no solo se corto por tamano-). Ademas se trimio
+      el comentario duplicado de `cancelarConstancia.ts` sobre el mecanismo
+      de concurrencia -ya explicado en `repositorioDeConstanciasSql.ts`,
+      antipatron 23-.
+      **Correccion (GGA, ronda 4 de PR #40):** cabecera de
+      `repositorioDeConstanciasSql.ts` desactualizada -decia que
+      `registrarReimpresion`/`cancelar` eran para "una rebanada posterior",
+      siendo esta misma rebanada, y no mencionaba `bloquearPorId`-,
+      actualizada. `reimprimirConstancia` (la funcion interna) media 35
+      lineas sobre el limite de 30 de `AGENTS.md`; se extrajo
+      `guardarReimpresion` (el `registrarReimpresion` + `registrar` de
+      bitacora, un solo paso logico). Comentario de
+      `cancelarConstanciaAction.ts` se contradecia a si mismo -decia que la
+      accion "vuelve a validar el rol" y en la misma frase que
+      `cancelarConstancia` "ya lo hace"-, reescrito para no afirmar una
+      validacion que la accion no ejecuta.
 
 ## Phase 7: Rebanada 7 — Validacion publica de folio (~460 lineas)
 

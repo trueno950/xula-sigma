@@ -59,6 +59,21 @@ export type RepositorioDeConstancias = {
     tx: TransaccionTenant,
     id: ConstanciaId,
   ): Promise<ConstanciaGuardada | null>;
+  /**
+   * Igual que `buscarPorId`, pero con `SELECT ... FOR UPDATE`: toma el lock
+   * de fila que `reimprimirConstancia` necesita para que su lectura de
+   * `canceladaEn` y el `INSERT` en `reimpresiones` sean atomicos frente a un
+   * `cancelarConstancia` concurrente (hallazgo de GGA en la revision de esta
+   * rebanada). `cancelar` ya es atomico consigo mismo -su propio
+   * `UPDATE ... WHERE cancelada_en IS NULL`-, pero eso no alcanza cuando el
+   * lado de "reimprimir" lee esa misma columna sin bloquearla: sin este
+   * lock, una cancelacion podria confirmar entre la lectura y el `INSERT`,
+   * dejando una reimpresion de un documento ya cancelado.
+   */
+  bloquearPorId(
+    tx: TransaccionTenant,
+    id: ConstanciaId,
+  ): Promise<ConstanciaGuardada | null>;
   listar(
     tx: TransaccionTenant,
     ayuntamientoId: AyuntamientoId,

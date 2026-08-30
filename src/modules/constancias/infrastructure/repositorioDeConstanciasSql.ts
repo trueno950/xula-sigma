@@ -9,10 +9,11 @@ import { constancias, reimpresiones } from "./esquema";
  * aisla cada operacion, cubierto por `constancias.isolation.test.ts` y los
  * tests de integracion de esta rebanada, no por un mock de este archivo.
  *
- * `guardar` y `buscarPorId` son los unicos que usa `emitirConstancia` y
- * `constanciaPorId` en esta rebanada; `paraValidar`, `registrarReimpresion`
- * y `cancelar` completan el puerto que declara design.md seccion 10 para
- * los casos de uso de reimpresion y cancelacion de una rebanada posterior.
+ * `guardar` y `buscarPorId` los usan `emitirConstancia` y `constanciaPorId`;
+ * `paraValidar` es la superficie publica de `/validar/[folio]`;
+ * `registrarReimpresion`, `bloquearPorId` y `cancelar` implementan el
+ * ciclo de vida posterior a la emision que declara design.md seccion 10
+ * (`reimprimirConstancia`, `cancelarConstancia`).
  */
 export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
   async guardar(tx, datos) {
@@ -24,6 +25,22 @@ export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
       .select()
       .from(constancias)
       .where(eq(constancias.id, id));
+
+    if (!fila) return null;
+
+    return {
+      ...fila,
+      id: comoConstanciaId(fila.id),
+      datos: fila.datos as Record<string, unknown>,
+    };
+  },
+
+  async bloquearPorId(tx, id) {
+    const [fila] = await tx
+      .select()
+      .from(constancias)
+      .where(eq(constancias.id, id))
+      .for("update");
 
     if (!fila) return null;
 

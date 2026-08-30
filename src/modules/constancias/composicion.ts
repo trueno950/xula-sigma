@@ -1,10 +1,12 @@
 import {
+  crearCancelarConstancia,
   crearConfigurarDocumentos,
   crearConstanciaPorId,
   crearDocumentosDelAyuntamiento,
   crearEmitirConstancia,
   crearListarConstancias,
   crearPdfDeConstancia,
+  crearReimprimirConstancia,
 } from "./application";
 import {
   contadorDeFoliosSql,
@@ -51,4 +53,10 @@ export const pdfDeConstancia = crearPdfDeConstancia(
   repositorioDeConstanciasSql,
   lectorDeAyuntamientoSql,
   renderizadorReactPdf,
+);
+export const reimprimirConstancia = crearReimprimirConstancia(
+  repositorioDeConstanciasSql,
+);
+export const cancelarConstancia = crearCancelarConstancia(
+  repositorioDeConstanciasSql,
 );
