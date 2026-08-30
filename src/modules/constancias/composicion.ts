@@ -1,3 +1,4 @@
+import type { PorcionExportable } from "@/shared/exportacion/exportar";
 import {
   crearCancelarConstancia,
   crearConfigurarDocumentos,
@@ -18,6 +19,7 @@ import {
   repositorioDeConstanciasSql,
   repositorioDeDocumentosSql,
 } from "./infrastructure";
+import { constancias } from "./infrastructure/esquema";
 
 /**
  * Raiz de composicion del modulo: une la fabrica de cada caso de uso con
@@ -66,3 +68,42 @@ export const cancelarConstancia = crearCancelarConstancia(
  * sin sesion (design.md de `constancias-oficios`, secciones 7 y 8).
  */
 export const validarFolio = crearValidarFolio(repositorioDeConstanciasSql);
+
+/**
+ * Porcion que `constancias` aporta al exportador de plataforma (design.md
+ * seccion 8, rebanada 8). Se construye aca -no en `infrastructure`- mismo
+ * criterio que `porcionDePadron` y `porcionesDeTerritorio`.
+ *
+ * Columnas explicitas, nunca `select()` pelado. Incluye `codigoVerificacion`
+ * en claro: el archivo municipal tiene que poder reconstruir el documento, y
+ * la exportacion ya sale detras de `puedeExportar` con traza en bitacora
+ * (design.md seccion 8). Incluye `personaId` crudo -es un uuid, `personas`
+ * ya va en el mismo archivo, y esconderlo dejaria un registro emitido que no
+ * se puede vincular a su titular-. Excluye `ayuntamientoId` -redundante,
+ * mismo criterio que `porcionDePadron`- y el jsonb `datos` completo: no hay
+ * decision de que columnas de el exportar (design.md, pregunta abierta de
+ * la seccion 20), asi que esta rebanada no lo saca entero sin esa decision.
+ */
+export const porcionesDeConstancias: readonly [PorcionExportable] = [
+  {
+    nombre: "constancias",
+    leer: (tx) =>
+      tx
+        .select({
+          id: constancias.id,
+          tipo: constancias.tipo,
+          folio: constancias.folio,
+          anio: constancias.anio,
+          consecutivo: constancias.consecutivo,
+          codigoVerificacion: constancias.codigoVerificacion,
+          personaId: constancias.personaId,
+          plantillaVersion: constancias.plantillaVersion,
+          emitidaPorUsuarioId: constancias.emitidaPorUsuarioId,
+          emitidaEn: constancias.emitidaEn,
+          canceladaEn: constancias.canceladaEn,
+          canceladaPorUsuarioId: constancias.canceladaPorUsuarioId,
+          motivoCancelacion: constancias.motivoCancelacion,
+        })
+        .from(constancias),
+  },
+];
