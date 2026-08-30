@@ -533,56 +533,138 @@ con el piloto, hoja impresa en su propia impresora. La Fase 6 no arranca
 hasta que esa ronda cierre; la Fase 7 si puede arrancar en paralelo (ver
 "Dependencia real" arriba).
 
-- [ ] 5.1 `constancias/application/puertosDeRender.ts` (crear):
+- [x] 5.1 `constancias/application/puertosDeRender.ts` (crear):
       `EntradaDeRender` (folio, tipo, plantillaVersion, datos, municipio,
       urlDeValidacion, reimpresion) y `RenderizadorDeConstancias.aPdf(entrada):
       Promise<Uint8Array>`.
-- [ ] 5.2 RED `constancias/application/pdfDeConstancia.test.ts` (puertos
+      **Ajuste:** `plantillaVersion` queda tipado `string`, no una union
+      cerrada llamada `VersionDePlantilla` -esa union solo la conoce
+      `infrastructure/plantillas/registro.ts`, y `application` no puede
+      importar `infrastructure` (`application-no-importa-infra-ni-ui`). El
+      registro es quien decide si la version es conocida, con
+      `PlantillaDesconocidaError` si no.
+- [x] 5.2 RED `constancias/application/pdfDeConstancia.test.ts` (puertos
       mockeados, renderizador falso): id inexistente o de otro tenant ->
       `NoEncontradoError`; `?reimpresion=<uuid>` que no existe, o que
       existe pero es de **otra** constancia -> `NoEncontradoError` (nunca
       renderiza sin haber acreditado la reimpresion); camino feliz sin
       `reimpresion` -> el renderizador recibe `reimpresion: false`; con
-      `reimpresion` valido -> `reimpresion: true`.
-- [ ] 5.3 GREEN `constancias/application/pdfDeConstancia.ts`: la fila de
+      `reimpresion` valido -> `reimpresion: true`. Cinco tests, todos
+      verdes contra la implementacion de 5.3.
+- [x] 5.3 GREEN `constancias/application/pdfDeConstancia.ts`: la fila de
       `reimpresiones` se busca por FK compuesto `(constanciaId,
       ayuntamientoId)`, dentro del mismo `withTenant` que la lectura de la
       constancia.
-- [ ] 5.4 `constancias/infrastructure/plantillas/registro.ts`: `PLANTILLAS =
+      **Nota honesta sobre el alcance:** la tabla `reimpresiones` ya existia
+      completa desde la Fase 2 (`infrastructure/esquema.ts`, migrada en
+      `drizzle/0008_constancias.sql`, con `reimpresiones.isolation.test.ts`
+      ya verde) — la duda de la delegacion sobre si habria que recortar esta
+      tarea no aplicaba. Lo que si falto y se agrego aca: el puerto
+      `RepositorioDeConstancias` (Fase 4) no tenia forma de *leer* una
+      reimpresion, solo de escribirla (`registrarReimpresion`); se sumo
+      `existeReimpresion(tx, id, constanciaId): Promise<boolean>`, que hace
+      el FK compuesto explicito en el `WHERE` (`id = ... AND constancia_id
+      = ...`), implementado en `infrastructure/repositorioDeConstanciasSql.ts`.
+      Tambien se agrego el puerto `LecturaDeAyuntamiento`
+      (`application/puertosDeLectura.ts`) + su adaptador
+      `infrastructure/lectorDeAyuntamientoSql.ts` -no listado en el texto
+      original de esta tarea-, porque design.md seccion 4 exige que
+      `municipio.nombre` "se lea de `ayuntamientos` al renderizar" y no
+      existia ningun puerto que lo hiciera; reusa `leerMarca` de
+      `shared/marca` para el `escudo`, mismo precedente que `modules/marca`.
+      **Bug real de la Fase 4 corregido de paso:** `emitirConstancia.ts`
+      grababa `plantillaVersion: "v1"` a mano -design.md seccion 10 ya
+      pedia `VERSION_ACTUAL[tipo]`, pero esa constante todavia no existia
+      cuando se implemento la Fase 4-. Con `PLANTILLAS` de 5.4 solo
+      reconociendo `"vecindad-v1"`, toda constancia emitida con `"v1"`
+      habria fallado el render con `PlantillaDesconocidaError`. Se agrego
+      `VERSION_ACTUAL` a `domain/tipoDeDocumento.ts` (con su propio test de
+      tabla, mismo patron que `PREFIJOS`) y `emitirConstancia.ts` ahora usa
+      `VERSION_ACTUAL[tipo]`.
+- [x] 5.4 `constancias/infrastructure/plantillas/registro.ts`: `PLANTILLAS =
       { "vecindad-v1": ConstanciaDeVecindadV1 }`, `VERSION_ACTUAL = {
       VECINDAD: "vecindad-v1" }`.
-- [ ] 5.5 `constancias/infrastructure/plantillas/ConstanciaDeVecindadV1.tsx`:
+      **Ajuste:** `VERSION_ACTUAL` vive en `domain/tipoDeDocumento.ts`, no
+      aca -ver la nota de 5.3-. `registro.ts` la importa para construir la
+      clave de `PLANTILLAS`, asi que el literal `"vecindad-v1"` tiene un
+      solo origen. `PropsDePlantilla` y `ComponenteDePlantilla` terminaron
+      en `plantillas/tipos.ts` (no en `registro.ts`, como se penso primero):
+      `registro.ts` importa el componente y el componente necesitaba el
+      tipo de props, y las dos cosas en el mismo archivo cerraban un ciclo
+      (`sin-ciclos` de dependency-cruiser lo marco en rojo).
+- [x] 5.5 `constancias/infrastructure/plantillas/ConstanciaDeVecindadV1.tsx`:
       JSX de `@react-pdf/renderer`, hoja carta, escudo opcional (`Buffer |
       undefined`), QR embebido como `<Image>`, bloque de firma, `S/N` ya
       viene resuelto en `datos.direccion.texto` (no se recompone aca), `prop
       reimpresion: boolean` que agrega la marca de agua — **un componente,
       no una segunda plantilla**.
-- [ ] 5.6 RED `constancias/infrastructure/renderizadorReactPdf.test.ts`:
+      **Limite declarado, heredado de design.md seccion 16:** el texto legal
+      exacto no esta validado con el piloto -es precisamente lo que la
+      compuerta de producto de esta fase existe para cerrar-, asi que la
+      redaccion es un borrador funcional (estructura: encabezado, cuerpo,
+      folio, firma, QR), no la version final del documento.
+- [x] 5.6 RED `constancias/infrastructure/renderizadorReactPdf.test.ts`:
       `plantillaVersion` desconocida -> `PlantillaDesconocidaError`, **antes**
       de intentar renderizar nada; `qrcode.toDataURL` recibe
       `https://{subdominio}/validar/{folio}?c={codigo}`; escudo `undefined`
       -> renderiza sin la imagen, no lanza.
-- [ ] 5.7 GREEN `constancias/infrastructure/renderizadorReactPdf.ts`: unico
+      **Ajuste:** el test verifica que `qrcode.toDataURL` recibe
+      `entrada.urlDeValidacion` tal cual -esa URL ya la compuso
+      `pdfDeConstancia` con subdominio, folio y codigo (5.3)-, no que el
+      renderizador la recomponga: recomponerla ahi habria sido logica de
+      negocio filtrandose a `infrastructure`. Se sumaron ademas dos tests
+      no listados originalmente (descarga de escudo que falla por red, y
+      escudo descargado llegando como `Buffer` a la plantilla) para cubrir
+      el `catch -> undefined` de 5.7 sin dejarlo sin probar.
+- [x] 5.7 GREEN `constancias/infrastructure/renderizadorReactPdf.ts`: unico
       archivo del modulo que importa `@react-pdf/renderer` y `qrcode`;
       `renderToBuffer`, no `renderToStream` (correccion de design.md seccion
       11); descarga del escudo con tope de tiempo, `catch` -> `undefined`.
-- [ ] 5.8 `constancias/composicion.ts` (modificar): cablear
+      **Ajuste:** el archivo es `.tsx`, no `.ts` -construye la plantilla
+      como JSX (`<Plantilla {...props} />`) para que react-pdf la resuelva
+      por su propio reconciliador; llamarla como funcion pelada perderia
+      esa indireccion y el mock de `renderToBuffer` en el test dejaria de
+      ver las props que la ruta le pasa-. Y la frase "unico archivo... que
+      importa `@react-pdf/renderer`" se precisa a "unico archivo que invoca
+      `renderToBuffer` y `qrcode`": las plantillas de
+      `infrastructure/plantillas/` importan igual `@react-pdf/renderer`
+      para su JSX (`Document`, `Page`, `View`, `Text`, `Image`,
+      `StyleSheet`), que es inevitable ahi.
+- [x] 5.8 `constancias/composicion.ts` (modificar): cablear
       `RenderizadorDeConstancias` real, `crearPdfDeConstancia`.
-- [ ] 5.9 RED `src/app/(panel)/constancias/[id]/pdf/route.test.ts` (borde,
+- [x] 5.9 RED `src/app/(panel)/constancias/[id]/pdf/route.test.ts` (borde,
       `vi.mock` del caso de uso): cabecera `CABECERA_SUPERFICIE !==
       "ayuntamiento"` -> `notFound()` sin llamar al caso de uso;
       `contextoActual()` -> `null` -> `401` sin llamar al caso de uso;
       `NoEncontradoError` del caso de uso -> `404`; camino feliz ->
       `Content-Type: application/pdf`, `Content-Disposition: inline;
-      filename="{folio}.pdf"`, `Cache-Control: no-store`.
-- [ ] 5.10 GREEN `src/app/(panel)/constancias/[id]/pdf/route.ts`: `GET`
+      filename="{folio}.pdf"`, `Cache-Control: no-store`. Se sumaron dos
+      tests para el `?reimpresion=` del query string (se pasa cuando esta,
+      se omite la clave cuando no -bajo `exactOptionalPropertyTypes`, no es
+      lo mismo omitir `reimpresionId` que mandarlo `undefined`-).
+- [x] 5.10 GREEN `src/app/(panel)/constancias/[id]/pdf/route.ts`: `GET`
       **no consulta la base** — pasa por `pdfDeConstancia` (design.md seccion
       11, decisiva contra `app-no-importa-infrastructure`); `await params`
-      (Next 16).
-- [ ] 5.11 `constancias/ui/`: el boton de imprimir es `<a
+      (Next 16). El borde de error propio (`conBorde`) calca
+      `api/auth/[...all]/route.ts:96-117`: `NoEncontradoError` -id ajeno,
+      id con forma invalida, o reimpresion sin acreditar- a 404, todo lo
+      demas a 500 generico via `datosSegurosDeError`.
+- [x] 5.11 `constancias/ui/`: el boton de imprimir es `<a
       href={\`/constancias/${id}/pdf\`}>` desde un Server Component, cero
-      `"use client"` en el camino de emision-a-PDF.
-- [ ] 5.12 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+      `"use client"` en el camino de emision-a-PDF. Vive en
+      `ui/BotonDeImprimir.tsx` (`target="_blank"`, pestania nueva) y se usa
+      desde `src/app/(panel)/constancias/[id]/page.tsx`, que ya mostraba el
+      snapshot como texto plano desde la Fase 4b.
+- [x] 5.12 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+      `pnpm check`: biome, tsc, depcruise (`pnpm layers`) y las 8 reglas de
+      `pnpm reglas`, todo en verde -incluyendo la correccion del ciclo de
+      5.4 y de un `noExcessiveCognitiveComplexity` en `pdfDeConstancia.ts`
+      que se resolvio partiendo la funcion en `verificarReimpresion`,
+      `intentarAcreditar` y `municipioDe`-. `pnpm test` (unit): 87 archivos,
+      476 tests. `pnpm test:integration`: 53 archivos, 211 tests. Cobertura
+      sobre la suite completa (`unit` + `integration`, con Postgres):
+      97.6% statements / 91.84% branches / 98.11% functions / 98.28% lines
+      -muy por encima del piso 80/75.
 
 **Compuerta de producto — no es una tarea de codigo, es una condicion de
 avance.** Hoja impresa entregada al piloto en su propia impresora. La fase

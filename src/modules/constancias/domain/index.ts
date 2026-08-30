@@ -22,6 +22,7 @@ export {
   PREFIJOS,
   TIPOS_DE_DOCUMENTO,
   type TipoDeDocumento,
+  VERSION_ACTUAL,
 } from "./tipoDeDocumento";
 export {
   type FilaDeValidacion,

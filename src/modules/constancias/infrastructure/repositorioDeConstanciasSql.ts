@@ -78,6 +78,24 @@ export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
     return comoReimpresionId(fila.id);
   },
 
+  async existeReimpresion(tx, id, constanciaId) {
+    // `id` y `constanciaId` juntos en el WHERE: RLS ya acota `ayuntamiento_id`
+    // a la transaccion activa, y esta condicion agrega la otra mitad del FK
+    // compuesto -que la fila sea de **esta** constancia, no de otra del mismo
+    // tenant- (design.md de `constancias-oficios`, seccion 11).
+    const [fila] = await tx
+      .select({ id: reimpresiones.id })
+      .from(reimpresiones)
+      .where(
+        and(
+          eq(reimpresiones.id, id),
+          eq(reimpresiones.constanciaId, constanciaId),
+        ),
+      );
+
+    return fila !== undefined;
+  },
+
   async cancelar(tx, { id, motivo, usuarioId }) {
     // `WHERE cancelada_en IS NULL` es tambien el mecanismo de concurrencia
     // (design.md seccion 10): dos cancelaciones simultaneas se serializan
