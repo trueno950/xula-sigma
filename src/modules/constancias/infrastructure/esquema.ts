@@ -33,7 +33,7 @@ import {
 } from "../domain";
 
 /**
- * Ninguna de las tres se reexporta desde ningun barrel del modulo. El
+ * Ninguna de las cuatro se reexporta desde ningun barrel del modulo. El
  * porque esta en `superficiePublica.test.ts`, mismo patron que `territorio`.
  */
 export const constancias = pgTable(
