@@ -509,6 +509,17 @@ El snapshot resuelve las dos cosas.
 La marca de agua `REIMPRESIÓN` es un parámetro de renderizado, no un
 documento distinto.
 
+### Se sirve por Route Handler, no por página
+
+`src/app/(panel)/constancias/[id]/pdf/route.ts` es el primer precedente en
+el repo de un Route Handler que devuelve binario (`Content-Type:
+application/pdf`) en vez de HTML. La consecuencia que un componente de
+página nunca tiene que resolver: **los layouts no envuelven Route
+Handlers**. `(panel)/layout.tsx` no corre ahí, así que el handler repite a
+mano la guarda de superficie (`CABECERA_SUPERFICIE`) y la de sesión antes
+de tocar el caso de uso — el próximo Route Handler binario del repo
+necesita las dos mismas guardas, no solo la de sesión que ya es obvia.
+
 ---
 
 ## 10. Rendimiento

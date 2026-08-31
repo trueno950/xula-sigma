@@ -920,25 +920,35 @@ Depende de la Fase 2 (solo necesita los objetos de tabla). Se secuencia al
 final por conveniencia de revision, sin dependencia de codigo con las Fases
 3-7.
 
-- [ ] 8.1 RED `constancias/composicion.test.ts` (clon de
+- [x] 8.1 RED `constancias/composicion.test.ts` (clon de
       `padron/composicion.test.ts` / `territorio/composicion.test.ts`, `tx`
-      fabricado a mano, sin Postgres): `porcionDeConstancias` devuelve
+      fabricado a mano, sin Postgres): `porcionesDeConstancias` devuelve
       columnas listadas una por una, nunca `select()` pelado; incluye
       `codigoVerificacion` (decision 8 de design.md — el archivo municipal
       tiene que poder reconstruir el documento) pero **no** el `jsonb`
       `datos` completo sin decision explicita de que columnas de el
-      exportar.
-- [ ] 8.2 GREEN `porcionDeConstancias` en `constancias/composicion.ts`.
-- [ ] 8.3 RED verificar que `nombre: "constancias"` no choca con
-      `conjuntosDePlataforma`, `padron` ni `territorio`.
-- [ ] 8.4 GREEN (ajustar el nombre si hay colision).
-- [ ] 8.5 `src/app/exportacion/porciones.ts` (modificar): agregar
-      `porcionDeConstancias` al arreglo.
-- [ ] 8.6 `docs/06-frontend.md` §9 (modificar): nota del Route Handler de PDF
+      exportar. Nombre corregido de `porcionDeConstancias` (singular, como
+      decia esta tarea) a `porcionesDeConstancias` (plural, como fija
+      design.md linea 1249) — sigue el patron `readonly [PorcionExportable]`
+      de `porcionesDeTerritorio`, con una sola porcion por ahora.
+- [x] 8.2 GREEN `porcionesDeConstancias` en `constancias/composicion.ts`.
+- [x] 8.3 RED verificar que `nombre: "constancias"` no choca con
+      `conjuntosDePlataforma`, `padron` ni `territorio`. Cubierto en el mismo
+      test de 8.1 (`declara su nombre distinto de la plataforma, padron y
+      territorio`), mismo patron combinado que `territorio/composicion.test.ts`.
+- [x] 8.4 GREEN (ajustar el nombre si hay colision). Sin colision: el nombre
+      `"constancias"` paso al primer intento.
+- [x] 8.5 `src/app/exportacion/porciones.ts` (modificar): agregar
+      `porcionesDeConstancias` al arreglo.
+- [x] 8.6 `docs/06-frontend.md` §9 (modificar): nota del Route Handler de PDF
       como primer precedente de su clase en el repo.
-- [ ] 8.7 `docs/architecture/estructura.md` (modificar): agregar `constancias`
-      al mapa de modulos.
-- [ ] 8.8 `pnpm check` + `pnpm test` en verde.
+- [x] 8.7 `docs/architecture/estructura.md` (modificar): agregar `constancias`
+      al mapa de modulos. Verificado, no modificado: `constancias` ya figura
+      en el arbol de `src/modules/` (linea 37) desde el commit inicial de
+      Fase 0 (`18b1618`, docs de arquitectura, previo a esta implementacion)
+      — es el mapa de producto del roadmap completo, no una lista de modulos
+      ya construidos, y ya incluia `constancias` como modulo planeado.
+- [x] 8.8 `pnpm check` + `pnpm test` en verde.
 
 ---
 
