@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { metricas } from "../index";
 import { archivo, hallazgosDeMetrica } from "../pruebas";
 
-const deNLineas = (n: number) => Array(n).fill("x").join("\n");
+// Con salto de linea final, como un archivo real rastreado por `git ls-files`
+// (Biome lo exige): sin el, el caso "exactamente 200" enmascararia el bug de
+// conteo fuera por uno.
+const deNLineas = (n: number) => Array(n).fill("x").join("\n") + "\n";
 
 describe("el catalogo de metricas", () => {
   it("no repite identificadores", () => {
@@ -84,7 +87,29 @@ describe("metrica-params-3", () => {
     ).toEqual([]);
   });
 
-  it("no marca una flecha de cuerpo de expresion", () => {
+  it("no marca una anotacion de tipo con retorno objeto", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          "const handler: (a: string, b: number, c: boolean, d: Date) => { x: number } = impl;\n",
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("no marca una propiedad de interfaz como funcion", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          "interface X { handler: (a: string, b: number, c: boolean, d: Date) => void; }\n",
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("marca una flecha de cuerpo de expresion con cuatro parametros", () => {
     expect(
       hallazgosDeMetrica(id, [
         archivo(
@@ -92,7 +117,7 @@ describe("metrica-params-3", () => {
           "const f = (a, b, c, d) => a + b + c + d;\n",
         ),
       ]),
-    ).toEqual([]);
+    ).toHaveLength(1);
   });
 
   it("no marca la funcion de tres parametros", () => {

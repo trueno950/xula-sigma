@@ -41,6 +41,16 @@ const DEUDA_DE_ARCHIVO = new Set([
 ]);
 
 /**
+ * Cuenta las lineas de un archivo. `split("\n")` deja un elemento vacio por
+ * el salto de linea final que Biome exige, asi que un archivo de 200 lineas
+ * daria 201 sin este ajuste.
+ */
+const contarLineas = (contenido: string): number => {
+  const lineas = contenido.split("\n");
+  return lineas[lineas.length - 1] === "" ? lineas.length - 1 : lineas.length;
+};
+
+/**
  * Las metricas gobiernan el codigo de aplicacion en `src/`, no los scripts:
  * los scripts son herramienta, no aplicacion, y un verificador que se marca
  * a si mismo es el modo de falla que `main.ts` ya excluye para su propio
@@ -57,7 +67,7 @@ export const archivoDemasiadoLargo: Metrica = {
     return archivos
       .filter((a) => esCodigoDeMetrica(a.ruta))
       .filter((a) => !DEUDA_DE_ARCHIVO.has(a.ruta))
-      .map((a) => ({ ruta: a.ruta, lineas: a.contenido.split("\n").length }))
+      .map((a) => ({ ruta: a.ruta, lineas: contarLineas(a.contenido) }))
       .filter(({ lineas }) => lineas > 200)
       .map(({ ruta, lineas }) => ({
         ruta,
@@ -101,60 +111,127 @@ const contarParametros = (lista: string): number | null => {
   return comas + 1;
 };
 
-/** El primer indice no-espacio desde `desde`. */
+/** El primer indice no-espacio desde `desde`, hacia adelante. */
 const indiceDeNoEspacio = (codigo: string, desde: number): number => {
   let i = desde;
   while (i < codigo.length && /\s/.test(codigo[i] ?? "")) i++;
   return i;
 };
 
-/**
- * La lista de parametros entre `(` y su `)` balanceado, y el indice del
- * primer caracter no-espacio que le sigue. Devuelve null si no cierra.
- */
-const parametrosYCola = (
-  codigo: string,
-  abierto: number,
-): { lista: string; cola: number } | null => {
-  const lista = argumentosDeLlamada(codigo, abierto);
-  if (lista === null) return null;
-
-  return {
-    lista,
-    cola: indiceDeNoEspacio(codigo, abierto + 1 + lista.length + 1),
-  };
+/** El primer indice no-espacio desde `desde`, hacia atras. */
+const indiceDeNoEspacioAtras = (codigo: string, desde: number): number => {
+  let i = desde;
+  while (i >= 0 && /\s/.test(codigo[i] ?? "")) i--;
+  return i;
 };
 
 /**
- * Las listas de parametros de `function nombre(...) {` y de `(...) => {`,
- * con los parentesis balanceados a mano —no con `[^)]*`— para que una
- * llamada de cuatro argumentos seguida de una flecha no se cuente como una
- * firma de cuatro parametros.
- *
- * Solo se cuentan las funciones con CUERPO DE BLOQUE. `(...) => void` es una
- * anotacion de tipo de funcion, no una funcion, y un `(...) => expresion` se
- * salta por conservador: la regla prefiere callarse antes que marcar de mas.
+ * Salta un bloque balanceado `abre...cierra` desde `desde` (que apunta al
+ * caracter que abre) y devuelve el indice tras el cierre. Si no cierra,
+ * devuelve el final del archivo.
+ */
+const finDeBloque = (
+  codigo: string,
+  desde: number,
+  abre: string,
+  cierra: string,
+): number => {
+  let profundidad = 0;
+  let i = desde;
+  while (i < codigo.length) {
+    if (codigo[i] === abre) profundidad++;
+    else if (codigo[i] === cierra) {
+      profundidad--;
+      if (profundidad === 0) return i + 1;
+    }
+    i++;
+  }
+  return codigo.length;
+};
+
+/** El indice tras el `;` que cierra el statement, a profundidad 0 de `()[]{}<>`. */
+const finDeStatement = (codigo: string, desde: number): number => {
+  let profundidad = 0;
+  let i = desde;
+  while (i < codigo.length) {
+    const caracter = codigo[i] ?? "";
+    if ("([{<".includes(caracter)) profundidad++;
+    else if (")]}>".includes(caracter)) profundidad--;
+    else if (caracter === ";" && profundidad === 0) return i + 1;
+    i++;
+  }
+  return codigo.length;
+};
+
+/**
+ * Rangos [inicio, fin) de `type X = ...;` e `interface X { ... }`. Dentro de
+ * ellos un `(...) =>` es una anotacion de tipo de funcion, no una funcion de
+ * valor.
+ */
+const rangosDeTipo = (codigo: string): Array<[number, number]> => {
+  const rangos: Array<[number, number]> = [];
+
+  for (const encontrado of codigo.matchAll(/\b(type|interface)\s+[\w$]+/g)) {
+    const inicio = encontrado.index;
+    let i = indiceDeNoEspacio(codigo, inicio + encontrado[0].length);
+
+    if (codigo[i] === "<") i = finDeBloque(codigo, i, "<", ">");
+    i = indiceDeNoEspacio(codigo, i);
+
+    if (encontrado[1] === "interface") {
+      if (codigo[i] === "{") {
+        rangos.push([inicio, finDeBloque(codigo, i, "{", "}")]);
+      }
+    } else if (codigo[i] === "=") {
+      rangos.push([inicio, finDeStatement(codigo, i + 1)]);
+    }
+  }
+
+  return rangos;
+};
+
+/**
+ * ¿El `(` en `indice` vive en una posicion de tipo? Un rango `type`/`interface`
+ * o una anotacion (`:` inmediatamente antes) lo delatan. `{ clave: (...) => }`
+ * y los ternarios se saltan de mas (falso negativo), nunca de menos.
+ */
+const esPosicionDeTipo = (
+  codigo: string,
+  indice: number,
+  rangos: Array<[number, number]>,
+): boolean =>
+  rangos.some(([inicio, fin]) => indice >= inicio && indice < fin) ||
+  codigo[indiceDeNoEspacioAtras(codigo, indice - 1)] === ":";
+
+/**
+ * Las listas de parametros de `function nombre(...) {` y de `(...) =>`, con
+ * los parentesis balanceados a mano —no con `[^)]*`— para que una llamada de
+ * cuatro argumentos seguida de una flecha no se cuente como una firma de
+ * cuatro parametros. Las posiciones de tipo se descartan con
+ * `esPosicionDeTipo`.
  */
 const listasDeFunciones = (codigo: string) => {
   const listas: Array<{ lista: string; linea: number }> = [];
+  const rangos = rangosDeTipo(codigo);
 
   for (const encontrado of codigo.matchAll(/\bfunction(?:\s+[\w$]+)?\s*\(/g)) {
+    if (esPosicionDeTipo(codigo, encontrado.index, rangos)) continue;
+
     const abierto = encontrado.index + encontrado[0].length - 1;
-    const resultado = parametrosYCola(codigo, abierto);
-    if (resultado === null || codigo[resultado.cola] !== "{") continue;
-    listas.push({ lista: resultado.lista, linea: lineaDe(codigo, abierto) });
+    const lista = argumentosDeLlamada(codigo, abierto);
+    if (lista !== null) listas.push({ lista, linea: lineaDe(codigo, abierto) });
   }
 
   for (let i = 0; i < codigo.length; i++) {
     if (codigo[i] !== "(") continue;
+    if (esPosicionDeTipo(codigo, i, rangos)) continue;
 
-    const resultado = parametrosYCola(codigo, i);
-    if (resultado === null) continue;
-    if (codigo[resultado.cola] !== "=" || codigo[resultado.cola + 1] !== ">")
-      continue;
+    const lista = argumentosDeLlamada(codigo, i);
+    if (lista === null) continue;
 
-    if (codigo[indiceDeNoEspacio(codigo, resultado.cola + 2)] === "{") {
-      listas.push({ lista: resultado.lista, linea: lineaDe(codigo, i) });
+    const cola = indiceDeNoEspacio(codigo, i + 1 + lista.length + 1);
+    if (codigo[cola] === "=" && codigo[cola + 1] === ">") {
+      listas.push({ lista, linea: lineaDe(codigo, i) });
     }
   }
 
