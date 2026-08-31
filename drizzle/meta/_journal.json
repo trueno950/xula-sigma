@@ -71,6 +71,13 @@
       "when": 1788126083919,
       "tag": "0009_ritmo_folio",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788188979898,
+      "tag": "0010_reportes",
+      "breakpoints": true
     }
   ]
 }
