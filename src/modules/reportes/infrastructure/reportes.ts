@@ -31,11 +31,6 @@ import {
   TIPOS_DE_INCIDENCIA,
 } from "../domain";
 
-/**
- * No se reexporta desde ningun barrel del modulo. El porque esta en
- * `superficiePublica.test.ts`, mismo patron que `territorio` y
- * `constancias`.
- */
 export const reportes = pgTable(
   "reportes",
   {
