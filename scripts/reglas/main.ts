@@ -1,6 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { type Archivo, type Hallazgo, reglas, revisar } from "./index";
+import {
+  type Archivo,
+  type Hallazgo,
+  type HallazgoMetrica,
+  metricas,
+  reglas,
+  revisar,
+  revisarMetricas,
+} from "./index";
 
 /**
  * Revisa el repositorio ENTERO, no el diff.
@@ -78,19 +86,44 @@ function informar(hallazgos: Hallazgo[]): void {
   }
 }
 
+function informarMetricas(hallazgos: HallazgoMetrica[]): void {
+  const porMetrica = new Map<string, HallazgoMetrica[]>();
+
+  for (const hallazgo of hallazgos) {
+    const acumuladas = porMetrica.get(hallazgo.metrica) ?? [];
+    acumuladas.push(hallazgo);
+    porMetrica.set(hallazgo.metrica, acumuladas);
+  }
+
+  for (const [id, delGrupo] of porMetrica) {
+    const metrica = metricas.find((candidata) => candidata.id === id);
+
+    console.error(
+      `\n  ${metrica?.titulo ?? id}  (AGENTS.md, metrica ${metrica?.limite})`,
+    );
+
+    for (const hallazgo of delGrupo) {
+      console.error(`    ${hallazgo.ruta}:${hallazgo.linea}`);
+      console.error(`      ${hallazgo.mensaje}`);
+    }
+  }
+}
+
 const archivos = archivosRastreados();
 const hallazgos = revisar(archivos);
+const hallazgosMetricas = revisarMetricas(archivos);
 
-if (hallazgos.length === 0) {
+if (hallazgos.length === 0 && hallazgosMetricas.length === 0) {
   console.error(
-    `  ${reglas.length} reglas sobre ${archivos.length} archivos: sin hallazgos.`,
+    `  ${reglas.length} reglas y ${metricas.length} metricas sobre ${archivos.length} archivos: sin hallazgos.`,
   );
   console.error("  (excluidos: los *.test.ts del propio verificador)");
   process.exit(0);
 }
 
 informar(hallazgos);
+informarMetricas(hallazgosMetricas);
 console.error(
-  `\n  ${hallazgos.length} hallazgo(s). Las reglas estan en AGENTS.md.\n`,
+  `\n  ${hallazgos.length + hallazgosMetricas.length} hallazgo(s). Las reglas estan en AGENTS.md.\n`,
 );
 process.exit(1);

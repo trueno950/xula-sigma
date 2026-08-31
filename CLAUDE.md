@@ -166,7 +166,7 @@ Ver ADR 0001 §7.
 
 | Comando | Qué es | Cuándo |
 |---|---|---|
-| `pnpm reglas` | Determinista, un segundo, ocho antipatrones de AGENTS.md | `pre-commit`, `check` y CI |
+| `pnpm reglas` | Determinista, un segundo, ocho antipatrones y dos métricas de AGENTS.md | `pre-commit`, `check` y CI |
 | `pnpm revision` | El revisor de IA, mismo comando que CI | A demanda, cuando el PR es grande |
 
 Lo que un patrón decide, no paga un modelo.

@@ -4,11 +4,12 @@ import {
   identificadorConDiacriticos,
   moduloSinCuatroCapas,
 } from "./reglas/codigo";
+import { metricas } from "./reglas/metricas";
 import { rlsEnTablaNueva, secuenciaParaFolios } from "./reglas/migraciones";
 import { driverFueraDeTenancy, setSinLocal } from "./reglas/tenancia";
-import type { Archivo, Hallazgo, Regla } from "./tipos";
+import type { Archivo, Hallazgo, HallazgoMetrica, Regla } from "./tipos";
 
-export type { Archivo, Hallazgo, Regla } from "./tipos";
+export type { Archivo, Hallazgo, HallazgoMetrica, Regla } from "./tipos";
 
 export const reglas: Regla[] = [
   driverFueraDeTenancy,
@@ -21,11 +22,24 @@ export const reglas: Regla[] = [
   citaSinVersion,
 ];
 
+export { metricas };
+
 export function revisar(archivos: Archivo[]): Hallazgo[] {
   return reglas.flatMap((regla) =>
     regla.revisar(archivos).map((hallazgo) => ({
       regla: regla.id,
       antipatron: regla.antipatron,
+      ...hallazgo,
+    })),
+  );
+}
+
+export function revisarMetricas(archivos: Archivo[]): HallazgoMetrica[] {
+  return metricas.flatMap((metrica) =>
+    metrica.revisar(archivos).map((hallazgo) => ({
+      metrica: metrica.id,
+      titulo: metrica.titulo,
+      limite: metrica.limite,
       ...hallazgo,
     })),
   );
