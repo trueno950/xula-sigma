@@ -204,7 +204,7 @@ existe para cerrar (`design.md` seccion 21, mismo criterio que
 `capa-territorial` seccion 17). Requisito: `Aislamiento por ayuntamiento de
 las tres tablas nuevas`.
 
-- [ ] 3.1 `reportes/infrastructure/esquema.ts`: tabla `reportes` completa —
+- [x] 3.1 `reportes/infrastructure/esquema.ts`: tabla `reportes` completa —
       columnas de `design.md` seccion 5, `index("reportes_tenant_idx")`,
       `unique("reportes_id_tenant_key").on(id, ayuntamientoId)`,
       `uniqueIndex("reportes_tenant_folio_idx")`,
@@ -223,12 +223,12 @@ las tres tablas nuevas`.
       verde dejando entrar la fila que existe para rechazar),
       `reportes_sin_autoduplicado`, `reportes_consecutivo_positivo`;
       `politicaTenant("reportes")`.
-- [ ] 3.2 `reportes/infrastructure/esquema.ts`: tabla `folios_de_reportes` —
+- [x] 3.2 `reportes/infrastructure/esquema.ts`: tabla `folios_de_reportes` —
       PK compuesta `(ayuntamientoId, anio)`, **sin columna `id` sustituta y
       sin indice de tenant** (la identidad del contador es la tupla,
       `design.md` seccion 4), `check("folios_de_reportes_consecutivo_positivo",
       ...)`, `politicaTenant("folios_de_reportes")`.
-- [ ] 3.3 `reportes/infrastructure/esquema.ts`: tabla `movimientos_de_reportes`
+- [x] 3.3 `reportes/infrastructure/esquema.ts`: tabla `movimientos_de_reportes`
       — `foreignKey()` de Drizzle hacia `reportes(id, ayuntamientoId)` y hacia
       `usuarios(id, ayuntamientoId)`; CHECKs `movimientos_estado_anterior_valido`,
       `movimientos_estado_nuevo_valido`, `movimientos_area_valida`,
@@ -238,13 +238,13 @@ las tres tablas nuevas`.
       `index("movimientos_de_reportes_tenant_idx")`,
       `index("movimientos_de_reportes_reporte_idx")`;
       `politicaTenant("movimientos_de_reportes")`.
-- [ ] 3.4 `reportes/infrastructure/index.ts`: barrel sin reexportar ningun
+- [x] 3.4 `reportes/infrastructure/index.ts`: barrel sin reexportar ningun
       objeto de tabla.
-- [ ] 3.5 RED `reportes/superficiePublica.test.ts`: el barrel del modulo no
+- [x] 3.5 RED `reportes/superficiePublica.test.ts`: el barrel del modulo no
       expone ningun objeto de tabla Drizzle — provocar el rojo exportando
       `reportes` (la tabla) temporalmente, confirmar el fallo, retirarlo.
-- [ ] 3.6 GREEN, test en verde.
-- [ ] 3.7 `drizzle/0010_reportes.sql`: generar con `drizzle-kit generate`; en
+- [x] 3.6 GREEN, test en verde.
+- [x] 3.7 `drizzle/0010_reportes.sql`: generar con `drizzle-kit generate`; en
       la cola, a mano, en el **mismo archivo** (ADR 0001 seccion 2): `FORCE
       ROW LEVEL SECURITY` para las tres tablas; `GRANT SELECT, INSERT, UPDATE`
       en `reportes` y `folios_de_reportes`, `GRANT SELECT, INSERT` **sin
@@ -255,7 +255,7 @@ las tres tablas nuevas`.
       `personas(id, ayuntamiento_id)` — con el mismo comentario de advertencia
       contra `drizzle-kit push` que `drizzle/0008_constancias.sql:72-124` y
       `drizzle/0007_territorio.sql:103-125` (apuntar, no repetir).
-- [ ] 3.8 RED `reportes/reportes.isolation.test.ts`: sin filtro en Motul solo
+- [x] 3.8 RED `reportes/reportes.isolation.test.ts`: sin filtro en Motul solo
       devuelve reportes de Motul (T1); `lugarId`/`calleId`/`personaId` de
       Ticul insertados desde Motul rechazados por sus FK compuestos; un
       `duplicadoDeReporteId` de Ticul insertado desde Motul rechazado por
@@ -265,22 +265,22 @@ las tres tablas nuevas`.
       `motivo_de_rechazo` nulo **con** `duplicado_de_reporte_id` presente
       rechazado por `reportes_duplicado_con_motivo` — **el caso exacto que
       `=` en vez de `IS NOT DISTINCT FROM` dejaria pasar**.
-- [ ] 3.9 GREEN (ajustar esquema de 3.1 si algo falla).
-- [ ] 3.10 RED `reportes/foliosDeReportes.isolation.test.ts`: sin filtro en
+- [x] 3.9 GREEN (ajustar esquema de 3.1 si algo falla).
+- [x] 3.10 RED `reportes/foliosDeReportes.isolation.test.ts`: sin filtro en
       Motul solo devuelve la fila de contador de Motul; dos filas para el
       mismo `(ayuntamientoId, anio)` imposibles por la PK.
-- [ ] 3.11 GREEN.
-- [ ] 3.12 RED `reportes/movimientosDeReportes.isolation.test.ts`: sin filtro
+- [x] 3.11 GREEN.
+- [x] 3.12 RED `reportes/movimientosDeReportes.isolation.test.ts`: sin filtro
       en Motul solo devuelve movimientos de Motul; un `reporteId` de Ticul
       insertado desde Motul rechazado por su FK compuesto; intentar un
       `UPDATE` sobre una fila propia **espera error de permiso**, no lee el
       `.sql` (mismo mecanismo que `bitacora`).
-- [ ] 3.13 GREEN.
-- [ ] 3.14 Verificar (no asumir) que `identidadPorPuerto.test.ts` sigue en
+- [x] 3.13 GREEN.
+- [x] 3.14 Verificar (no asumir) que `identidadPorPuerto.test.ts` sigue en
       verde con `reportes/infrastructure/esquema.ts` presente: `personaId`
       existe como columna `persona_id`, y ninguna plantilla `` sql`...` `` de
       `reportes` nombra `persona_id` ni `personas` (`design.md` seccion 5).
-- [ ] 3.15 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 3.15 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       `pnpm reglas` confirma `ENABLE`, `FORCE`, politica y `GRANT` de las tres
       tablas nuevas.
 
