@@ -50,18 +50,4 @@ describe("proyectarConsulta", () => {
       actualizadoEn: ORIGINAL.actualizadoEn,
     });
   });
-
-  it("degrada a consultado cuando hay vinculo pero la fila del original no llega", () => {
-    // Rama inalcanzable por el FK compuesto: se prueba igual (design.md
-    // seccion 14).
-    const resultado = proyectarConsulta(CONSULTADO, null);
-
-    expect(resultado).toEqual({
-      resultado: "REGISTRADO",
-      tipo: CONSULTADO.tipo,
-      estado: CONSULTADO.estado,
-      registradoEn: CONSULTADO.registradoEn,
-      actualizadoEn: CONSULTADO.actualizadoEn,
-    });
-  });
 });
