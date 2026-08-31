@@ -65,3 +65,25 @@ export const componerDireccion = (partes: PartesDeDireccion): string => {
 
   return segmentos.join(", ");
 };
+
+/**
+ * Entrada de `componerUbicacion`: `lugarId` obligatorio, `calleId` opcional
+ * -sin domicilio ni residencia-, el corte que pide `jerarquia-territorial`
+ * para un reporte ciudadano. `ancestros` en el mismo orden que
+ * `PartesDeDireccion`: del mas profundo al mas superficial.
+ */
+export type PartesDeUbicacion = {
+  calle: string | null;
+  ancestros: readonly string[];
+};
+
+/**
+ * Pura, en `domain`, y funcion nueva -no reuso de `componerDireccion`
+ * (design.md seccion 9)-: `PartesDeDireccion` exige `calle: string` no nula
+ * y produce "S/N" cuando falta el numero, y esa suplencia no aplica a la
+ * ubicacion de un bache o una fuga sin domicilio.
+ */
+export const componerUbicacion = (partes: PartesDeUbicacion): string =>
+  [partes.calle, ...partes.ancestros]
+    .filter((segmento): segmento is string => segmento !== null)
+    .join(", ");

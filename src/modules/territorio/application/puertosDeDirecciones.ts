@@ -1,5 +1,11 @@
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
-import type { DomicilioId, PartesDeDireccion } from "../domain";
+import type {
+  CalleId,
+  DomicilioId,
+  LugarId,
+  PartesDeDireccion,
+  PartesDeUbicacion,
+} from "../domain";
 
 /**
  * `LectorDeDirecciones` **si** recibe `tx` -a diferencia de
@@ -17,4 +23,22 @@ export type LectorDeDirecciones = {
     tx: TransaccionTenant,
     domicilioId: DomicilioId,
   ): Promise<PartesDeDireccion | null>;
+};
+
+/**
+ * `LectorDeUbicaciones` **si** recibe `tx`, mismo criterio que
+ * `LectorDeDirecciones` de arriba: la implementacion vive en el mismo
+ * modulo y en la misma transaccion que `ubicacionDeLugar` abre (design.md
+ * seccion 9).
+ *
+ * Devuelve `null` cuando el lugar no existe, esta dado de baja, es de otro
+ * tenant, o la `calleId` provista no existe -nunca lanza-: quien decide que
+ * eso es `UbicacionInvalidaError` es `reportes`, no `territorio`.
+ */
+export type LectorDeUbicaciones = {
+  partesDe(
+    tx: TransaccionTenant,
+    lugarId: LugarId,
+    calleId: CalleId | null,
+  ): Promise<PartesDeUbicacion | null>;
 };

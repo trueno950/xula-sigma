@@ -15,3 +15,4 @@ export * from "./renombrarCalle";
 export * from "./reparentearLugar";
 export * from "./residentesDe";
 export * from "./subarbol";
+export * from "./ubicacionDeLugar";

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { componerDireccion, transversalesValidas } from "./direccion";
+import {
+  componerDireccion,
+  componerUbicacion,
+  transversalesValidas,
+} from "./direccion";
 import { comoCalleId } from "./identificadores";
 
 const calleA = comoCalleId("11111111-1111-4111-8111-111111111111");
@@ -107,5 +111,42 @@ describe("componerDireccion", () => {
     expect(indiceSector).toBeGreaterThan(indiceManzana);
     expect(indiceColonia).toBeGreaterThan(indiceSector);
     expect(indiceComisaria).toBeGreaterThan(indiceColonia);
+  });
+});
+
+describe("componerUbicacion", () => {
+  it("sin calle compone solo el ancestro, sin 'S/N' en ningun caso", () => {
+    const texto = componerUbicacion({
+      calle: null,
+      ancestros: ["Colonia Centro"],
+    });
+
+    expect(texto).toBe("Colonia Centro");
+    expect(texto).not.toContain("S/N");
+  });
+
+  it("con calle y cuatro ancestros, todos presentes del mas profundo al mas superficial", () => {
+    const texto = componerUbicacion({
+      calle: "Calle 20",
+      ancestros: ["Manzana 5", "Sector 2", "Colonia Centro", "Comisaria X"],
+    });
+
+    const indiceCalle = texto.indexOf("Calle 20");
+    const indiceManzana = texto.indexOf("Manzana 5");
+    const indiceSector = texto.indexOf("Sector 2");
+    const indiceColonia = texto.indexOf("Colonia Centro");
+    const indiceComisaria = texto.indexOf("Comisaria X");
+
+    expect(indiceCalle).toBe(0);
+    expect(indiceManzana).toBeGreaterThan(indiceCalle);
+    expect(indiceSector).toBeGreaterThan(indiceManzana);
+    expect(indiceColonia).toBeGreaterThan(indiceSector);
+    expect(indiceComisaria).toBeGreaterThan(indiceColonia);
+  });
+
+  it("sin calle ni ancestros compone una cadena vacia sin separadores huerfanos", () => {
+    const texto = componerUbicacion({ calle: null, ancestros: [] });
+
+    expect(texto).toBe("");
   });
 });
