@@ -14,10 +14,12 @@ import {
   crearReparentearLugar,
   crearResidentesDe,
   crearSubarbol,
+  crearUbicacionDeLugar,
 } from "./application";
 import {
   crearLectorDePersonasPorPadron,
   lectorDeDireccionesSql,
+  lectorDeUbicacionesSql,
   repositorioDeCallesSql,
   repositorioDeDomiciliosSql,
   repositorioDeLugaresSql,
@@ -68,6 +70,7 @@ export const residentesDe = crearResidentesDe(
   repositorioDeDomiciliosSql,
   repositorioDeResidenciasSql,
 );
+export const ubicacionDeLugar = crearUbicacionDeLugar(lectorDeUbicacionesSql);
 
 /**
  * Cuatro porciones planas, no una vista compuesta "domicilio con

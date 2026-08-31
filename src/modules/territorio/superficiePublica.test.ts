@@ -28,4 +28,17 @@ describe("superficie publica de territorio", () => {
   it("exporta direccionVigenteDePersona como funcion", () => {
     expect(typeof superficie.direccionVigenteDePersona).toBe("function");
   });
+
+  /**
+   * `comoCalleId`/`CalleId` y `ubicacionDeLugar` los agrega la Fase 1 de
+   * `reportes-ciudadanos` (tasks.md 1.9): `reportes` los necesita para
+   * construir la ubicacion compuesta de un reporte sin domicilio.
+   */
+  it("exporta comoCalleId como funcion", () => {
+    expect(typeof superficie.comoCalleId).toBe("function");
+  });
+
+  it("exporta ubicacionDeLugar como funcion, sin guarda de rol propia", () => {
+    expect(typeof superficie.ubicacionDeLugar).toBe("function");
+  });
 });
