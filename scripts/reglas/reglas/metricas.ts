@@ -40,19 +40,29 @@ const DEUDA_DE_ARCHIVO = new Set([
   "src/shared/auth/roles.test.ts",
 ]);
 
+/**
+ * Las metricas gobiernan el codigo de aplicacion en `src/`, no los scripts:
+ * los scripts son herramienta, no aplicacion, y un verificador que se marca
+ * a si mismo es el modo de falla que `main.ts` ya excluye para su propio
+ * corpus de prueba.
+ */
+const esCodigoDeMetrica = (ruta: string) =>
+  esTypeScript(ruta) && ruta.startsWith("src/");
+
 export const archivoDemasiadoLargo: Metrica = {
   id: "metrica-archivo-200",
   titulo: "Archivo de codigo de mas de 200 lineas",
   limite: "<= 200",
   revisar(archivos) {
     return archivos
-      .filter((a) => esTypeScript(a.ruta) && a.ruta.startsWith("src/"))
+      .filter((a) => esCodigoDeMetrica(a.ruta))
       .filter((a) => !DEUDA_DE_ARCHIVO.has(a.ruta))
       .map((a) => ({ ruta: a.ruta, lineas: a.contenido.split("\n").length }))
       .filter(({ lineas }) => lineas > 200)
       .map(({ ruta, lineas }) => ({
         ruta,
-        linea: 201,
+        // No hay una linea culpable unica: apunta a la ultima del archivo.
+        linea: lineas,
         mensaje: `Tiene ${lineas} lineas; el limite es 200. Partilo por tema.`,
       }));
   },
@@ -91,33 +101,60 @@ const contarParametros = (lista: string): number | null => {
   return comas + 1;
 };
 
+/** El primer indice no-espacio desde `desde`. */
+const indiceDeNoEspacio = (codigo: string, desde: number): number => {
+  let i = desde;
+  while (i < codigo.length && /\s/.test(codigo[i] ?? "")) i++;
+  return i;
+};
+
 /**
- * Las listas de parametros de `function nombre(...) {` y de `(...) =>`, con
- * los parentesis balanceados a mano —no con `[^)]*`— para que una llamada
- * de cuatro argumentos seguida de una flecha no se cuente como una firma de
- * cuatro parametros.
+ * La lista de parametros entre `(` y su `)` balanceado, y el indice del
+ * primer caracter no-espacio que le sigue. Devuelve null si no cierra.
+ */
+const parametrosYCola = (
+  codigo: string,
+  abierto: number,
+): { lista: string; cola: number } | null => {
+  const lista = argumentosDeLlamada(codigo, abierto);
+  if (lista === null) return null;
+
+  return {
+    lista,
+    cola: indiceDeNoEspacio(codigo, abierto + 1 + lista.length + 1),
+  };
+};
+
+/**
+ * Las listas de parametros de `function nombre(...) {` y de `(...) => {`,
+ * con los parentesis balanceados a mano —no con `[^)]*`— para que una
+ * llamada de cuatro argumentos seguida de una flecha no se cuente como una
+ * firma de cuatro parametros.
+ *
+ * Solo se cuentan las funciones con CUERPO DE BLOQUE. `(...) => void` es una
+ * anotacion de tipo de funcion, no una funcion, y un `(...) => expresion` se
+ * salta por conservador: la regla prefiere callarse antes que marcar de mas.
  */
 const listasDeFunciones = (codigo: string) => {
   const listas: Array<{ lista: string; linea: number }> = [];
 
   for (const encontrado of codigo.matchAll(/\bfunction(?:\s+[\w$]+)?\s*\(/g)) {
     const abierto = encontrado.index + encontrado[0].length - 1;
-    const lista = argumentosDeLlamada(codigo, abierto);
-    if (lista !== null) {
-      listas.push({ lista, linea: lineaDe(codigo, abierto) });
-    }
+    const resultado = parametrosYCola(codigo, abierto);
+    if (resultado === null || codigo[resultado.cola] !== "{") continue;
+    listas.push({ lista: resultado.lista, linea: lineaDe(codigo, abierto) });
   }
 
   for (let i = 0; i < codigo.length; i++) {
     if (codigo[i] !== "(") continue;
 
-    const lista = argumentosDeLlamada(codigo, i);
-    if (lista === null) continue;
+    const resultado = parametrosYCola(codigo, i);
+    if (resultado === null) continue;
+    if (codigo[resultado.cola] !== "=" || codigo[resultado.cola + 1] !== ">")
+      continue;
 
-    let j = i + 1 + lista.length + 1;
-    while (j < codigo.length && /\s/.test(codigo[j] ?? "")) j++;
-    if (codigo[j] === "=" && codigo[j + 1] === ">") {
-      listas.push({ lista, linea: lineaDe(codigo, i) });
+    if (codigo[indiceDeNoEspacio(codigo, resultado.cola + 2)] === "{") {
+      listas.push({ lista: resultado.lista, linea: lineaDe(codigo, i) });
     }
   }
 
@@ -132,7 +169,7 @@ export const demasiadosParametros: Metrica = {
     const hallazgos = [];
 
     for (const archivo of archivos) {
-      if (!esTypeScript(archivo.ruta)) continue;
+      if (!esCodigoDeMetrica(archivo.ruta)) continue;
 
       const codigo = sinComentariosNiCadenas(archivo.contenido);
 

@@ -73,6 +73,28 @@ describe("metrica-params-3", () => {
     ).toHaveLength(1);
   });
 
+  it("no marca una anotacion de tipo de funcion como una funcion", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          "type Handler = (a: string, b: number, c: boolean, d: Date) => void;\n",
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("no marca una flecha de cuerpo de expresion", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          "const f = (a, b, c, d) => a + b + c + d;\n",
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
   it("no marca la funcion de tres parametros", () => {
     expect(
       hallazgosDeMetrica(id, [
