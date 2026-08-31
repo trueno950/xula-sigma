@@ -40,12 +40,13 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
-const reporteDe = async (
-  municipio: Municipio,
-  nombreLugar: string,
-  folio: string,
-  consecutivo: number,
-) => {
+const reporteDe = async (opciones: {
+  municipio: Municipio;
+  nombreLugar: string;
+  folio: string;
+  consecutivo: number;
+}) => {
+  const { municipio, nombreLugar, folio, consecutivo } = opciones;
   const ayuntamientoId = municipio === "motul" ? motul : ticul;
   const { id: lugarId } = await altaDeLugar(
     { tipo: "comisaria", nombre: nombreLugar, padreId: null },
@@ -79,18 +80,18 @@ const reporteDe = async (
 
 describe("aislamiento de movimientos_de_reportes", () => {
   it("una consulta sin filtro solo devuelve los movimientos del tenant activo", async () => {
-    const reporteMotul = await reporteDe(
-      "motul",
-      "Comisaria Motul Movimientos 1",
-      "REP-2026-000001",
-      1,
-    );
-    const reporteTicul = await reporteDe(
-      "ticul",
-      "Comisaria Ticul Movimientos 1",
-      "REP-2026-000001",
-      1,
-    );
+    const reporteMotul = await reporteDe({
+      municipio: "motul",
+      nombreLugar: "Comisaria Motul Movimientos 1",
+      folio: "REP-2026-000001",
+      consecutivo: 1,
+    });
+    const reporteTicul = await reporteDe({
+      municipio: "ticul",
+      nombreLugar: "Comisaria Ticul Movimientos 1",
+      folio: "REP-2026-000001",
+      consecutivo: 1,
+    });
 
     const [enMotul] = await withTenant(motul, (tx) =>
       tx
@@ -127,12 +128,12 @@ describe("aislamiento de movimientos_de_reportes", () => {
   });
 
   it("un reporteId de otro municipio insertado desde este es rechazado por Postgres", async () => {
-    const reporteTicul = await reporteDe(
-      "ticul",
-      "Comisaria Ticul Movimientos 2",
-      "REP-2026-000002",
-      2,
-    );
+    const reporteTicul = await reporteDe({
+      municipio: "ticul",
+      nombreLugar: "Comisaria Ticul Movimientos 2",
+      folio: "REP-2026-000002",
+      consecutivo: 2,
+    });
 
     const motivo = await motivoDeFalla(() =>
       withTenant(motul, (tx) =>
@@ -152,12 +153,12 @@ describe("aislamiento de movimientos_de_reportes", () => {
   });
 
   it("un UPDATE sobre una fila propia espera error de permiso, no RLS", async () => {
-    const reporteMotul = await reporteDe(
-      "motul",
-      "Comisaria Motul Movimientos 3",
-      "REP-2026-000003",
-      3,
-    );
+    const reporteMotul = await reporteDe({
+      municipio: "motul",
+      nombreLugar: "Comisaria Motul Movimientos 3",
+      folio: "REP-2026-000003",
+      consecutivo: 3,
+    });
     const [fila] = await withTenant(motul, (tx) =>
       tx
         .insert(movimientosDeReportes)
