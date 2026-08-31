@@ -128,43 +128,43 @@ original`, `Un duplicado apunta siempre a un reporte que no es duplicado`, `Un
 folio duplicado responde el estado del original y la fecha de registro
 propia`, `Toda respuesta negativa es indistinguible`.
 
-- [ ] 2.1 RED `reportes/domain/identificadores.test.ts`: `comoReporteId` y
+- [x] 2.1 RED `reportes/domain/identificadores.test.ts`: `comoReporteId` y
       `comoMovimientoId` rechazan no-UUID y aceptan UUID valido.
-- [ ] 2.2 GREEN `reportes/domain/identificadores.ts` (`Identificador<N>` +
+- [x] 2.2 GREEN `reportes/domain/identificadores.ts` (`Identificador<N>` +
       `PATRON_UUID` propio — noveno y decimo lugar del mismo regex,
       `design.md` seccion 3, no se corrige aca).
-- [ ] 2.3 RED `reportes/domain/tipoDeIncidencia.test.ts`: `TIPOS_DE_INCIDENCIA`
+- [x] 2.3 RED `reportes/domain/tipoDeIncidencia.test.ts`: `TIPOS_DE_INCIDENCIA`
       = `["BACHE","ALUMBRADO","FUGA","BASURA","PARQUE","OTRO"]`, recorriendo
       la union entera (forma de tabla de `roles.test.ts`).
-- [ ] 2.4 GREEN `reportes/domain/tipoDeIncidencia.ts`.
-- [ ] 2.5 RED `reportes/domain/areaResponsable.test.ts`: `AREAS_RESPONSABLES`
+- [x] 2.4 GREEN `reportes/domain/tipoDeIncidencia.ts`.
+- [x] 2.5 RED `reportes/domain/areaResponsable.test.ts`: `AREAS_RESPONSABLES`
       con los seis valores de decision 3, recorriendo la union entera.
-- [ ] 2.6 GREEN `reportes/domain/areaResponsable.ts`.
-- [ ] 2.7 RED `reportes/domain/motivos.test.ts`: `MOTIVOS_DE_RECHAZO` =
+- [x] 2.6 GREEN `reportes/domain/areaResponsable.ts`.
+- [x] 2.7 RED `reportes/domain/motivos.test.ts`: `MOTIVOS_DE_RECHAZO` =
       `["DUPLICADO","FUERA_DE_COMPETENCIA","INFORMACION_INSUFICIENTE"]`, **sin
       `OTRO`**.
-- [ ] 2.8 GREEN `reportes/domain/motivos.ts`.
-- [ ] 2.9 RED `reportes/domain/estado.test.ts`: `transicionValida` como tabla
+- [x] 2.8 GREEN `reportes/domain/motivos.ts`.
+- [x] 2.9 RED `reportes/domain/estado.test.ts`: `transicionValida` como tabla
       de 16 pares recorriendo `ESTADOS_DE_REPORTE x ESTADOS_DE_REPORTE`, para
       que un estado nuevo **falte** en vez de heredar sin transiciones;
       **`RECIBIDO -> RESUELTO` directo es valido**; `esTerminal` en los
       cuatro estados.
-- [ ] 2.10 GREEN `reportes/domain/estado.ts`: `TRANSICIONES` como
+- [x] 2.10 GREEN `reportes/domain/estado.ts`: `TRANSICIONES` como
       `Record<EstadoDeReporte, readonly EstadoDeReporte[]>`, `transicionValida`,
       `esTerminal`.
-- [ ] 2.11 RED `reportes/domain/folio.test.ts`: `Folio.crear(anio,
+- [x] 2.11 RED `reportes/domain/folio.test.ts`: `Folio.crear(anio,
       consecutivo)` produce `"REP-2026-000123"`; consecutivo `1_000_001` con
       siete digitos y `padStart` que **no trunca**; consecutivo `0` o no
       entero se rechaza. Prefijo **no** es parametro (una sola serie,
       `design.md` seccion 4).
-- [ ] 2.12 GREEN `reportes/domain/folio.ts`.
-- [ ] 2.13 `reportes/domain/errores.ts`: `TransicionInvalidaError`,
+- [x] 2.12 GREEN `reportes/domain/folio.ts`.
+- [x] 2.13 `reportes/domain/errores.ts`: `TransicionInvalidaError`,
       `ReporteCerradoError`, `UbicacionInvalidaError`,
       `DuplicadoSinOriginalError`, `DuplicadoDeSiMismoError`,
       `ReportanteDadoDeBajaError` — clase, `codigo` estable, `name`, sin
       logica adentro. `DuplicadoDeSiMismoError` es la adicion de `design.md`
       seccion 7 sobre los cuatro que enumera la propuesta.
-- [ ] 2.14 RED `reportes/domain/duplicado.test.ts`: `originalDe` con
+- [x] 2.14 RED `reportes/domain/duplicado.test.ts`: `originalDe` con
       `duplicadoDeReporteId` nulo -> el propio id; con vinculo -> el vinculo,
       **no** el propio id; `vincularDuplicado(x, {id: x, ...})` ->
       `DuplicadoDeSiMismoError`; `vincularDuplicado(c, {id: b,
@@ -172,25 +172,27 @@ propia`, `Toda respuesta negativa es indistinguible`.
       guarda el original de la cadena); `vincularDuplicado(a, {id: b,
       duplicadoDeReporteId: a})` -> `DuplicadoDeSiMismoError` (ciclo de largo
       2 que la aplicacion si puede detectar).
-- [ ] 2.15 GREEN `reportes/domain/duplicado.ts`: `CandidatoAOriginal`,
+- [x] 2.15 GREEN `reportes/domain/duplicado.ts`: `CandidatoAOriginal`,
       `originalDe`, `vincularDuplicado` — sin `while`, sin `for`, sin
       recursion (`design.md` seccion 8: total, un solo salto).
-- [ ] 2.16 RED `reportes/domain/consulta.test.ts`: `proyectarConsulta` con
+- [x] 2.16 RED `reportes/domain/consulta.test.ts`: `proyectarConsulta` con
       `toBe(SIN_REGISTRO)` — **identidad, no forma** — en `consultado ===
       null`; sin salto (`original === null`) -> `tipo`/`estado`/fechas del
-      consultado; con salto -> `tipo` del consultado, `estado` y **las dos
-      fechas** del original; `original ?? consultado` como degradacion cuando
-      hay vinculo pero la fila del original no llega (rama inalcanzable por
-      el FK compuesto, se prueba igual — `design.md` seccion 14).
-- [ ] 2.17 GREEN `reportes/domain/consulta.ts`: `ConsultaDeReporte` union sin
+      consultado; con salto -> `tipo` **y `registradoEn` del consultado**,
+      `estado` y `actualizadoEn` del original (`registradoEn` responde "cuando
+      avise yo", hecho del consultado; `estado` responde "van a taparla", hecho
+      del original — `design.md` seccion 14); `original ?? consultado` como
+      degradacion cuando hay vinculo pero la fila del original no llega (rama
+      inalcanzable por el FK compuesto, se prueba igual).
+- [x] 2.17 GREEN `reportes/domain/consulta.ts`: `ConsultaDeReporte` union sin
       `folio`, sin `descripcion`, sin `referencia`, sin `areaResponsable`, sin
       dato del reportante y **sin campo que diga que es duplicado**; `const
       SIN_REGISTRO = Object.freeze({ resultado: "SIN_REGISTRO" } as const)`;
       `proyectarConsulta`.
-- [ ] 2.18 `reportes/domain/index.ts`: barrel, reexport nombrado.
-- [ ] 2.19 `reportes/{index,types}.ts`: esqueleto minimo del modulo, mismo
+- [x] 2.18 `reportes/domain/index.ts`: barrel, reexport nombrado.
+- [x] 2.19 `reportes/{index,types}.ts`: esqueleto minimo del modulo, mismo
       patron que `padron`/`marca`/`territorio`.
-- [ ] 2.20 `pnpm check` + `pnpm test` en verde; confirmar que la suite corre
+- [x] 2.20 `pnpm check` + `pnpm test` en verde; confirmar que la suite corre
       sin Postgres.
 
 ## Phase 3: Rebanada 3 — Esquema y aislamiento (~510 lineas)

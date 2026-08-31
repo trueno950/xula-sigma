@@ -1127,19 +1127,28 @@ export const proyectarConsulta = (
 
   return {
     resultado: "REGISTRADO",
-    tipo: consultado.tipo,          // del folio consultado
-    estado: vigente.estado,         // del original, si lo hay
-    registradoEn: vigente.registradoEn,
-    actualizadoEn: vigente.actualizadoEn,
+    tipo: consultado.tipo,                    // del folio consultado
+    estado: vigente.estado,                   // del original, si lo hay
+    registradoEn: consultado.registradoEn,    // SIEMPRE del consultado
+    actualizadoEn: vigente.actualizadoEn,     // del original, si lo hay
   };
 };
 ```
 
-**`tipo` del consultado; `estado` y las dos fechas del original.** Es la
-lectura literal de la decision 12, que enumera exactamente que conmuta —"el
-estado y las fechas"— y por omision deja `tipo` como el del folio que la
-persona tiene anotado. La incoherencia que eso produce en `registradoEn` queda
-como pregunta abierta (§20), no como correccion: la decision no se reabre.
+**`tipo` y `registradoEn` del consultado; `estado` y `actualizadoEn` del
+original.** El corte no es arbitrario: cada campo viene de la fila que responde
+la pregunta que ese campo hace.
+
+`registradoEn` responde **"¿cuando avise yo?"**, y eso es un hecho del reporte
+consultado — la vecina llamo hoy, y devolverle la fecha del original le
+mostraria una fecha de hace tres semanas que no corresponde a nada que ella
+haya hecho. `estado` responde **"¿van a taparla?"**, y eso si es un hecho de la
+fuga, o sea del original. `actualizadoEn` acompaña al estado porque fecha ese
+mismo hecho: es "cuando se movio esto que te estoy contando".
+
+`vigente` sigue existiendo para los dos campos que si conmutan; `registradoEn`
+sale de `consultado` explicitamente y no de `vigente`, que es la unica linea de
+esta funcion donde la distincion importa.
 
 `original ?? consultado` es una degradacion que **el FK compuesto vuelve
 inalcanzable**: si `duplicado_de_reporte_id` no es nulo, la fila destino existe
