@@ -82,11 +82,12 @@ export const archivoDemasiadoLargo: Metrica = {
  * Cuenta los parametros de una lista, ignorando las comas que viven dentro
  * de parentesis, corchetes o llaves: una desestructuracion (`{ a, b }`) o un
  * tipo de objeto es UN parametro. Devuelve null cuando la lista es ambigua
- * (genericos `<...>`, unions `|`, defaults `=` o tipos de funcion `=>`),
- * donde la regla prefiere callarse antes que marcar de mas.
+ * (genericos `<...>`, unions `|` o tipos de funcion `=>`), donde la regla
+ * prefiere callarse antes que marcar de mas. Un `=` de un valor por defecto
+ * no es ambiguo: las comas dentro del valor viven en `{}`/`[]`/`()`.
  */
 const contarParametros = (lista: string): number | null => {
-  if (/[<>=|]/.test(lista)) return null;
+  if (/[<>|]/.test(lista)) return null;
 
   const delta: Record<string, number> = {
     "(": 1,
@@ -129,6 +130,9 @@ const indiceDeNoEspacioAtras = (codigo: string, desde: number): number => {
  * Salta un bloque balanceado `abre...cierra` desde `desde` (que apunta al
  * caracter que abre) y devuelve el indice tras el cierre. Si no cierra,
  * devuelve el final del archivo.
+ *
+ * El `>` de una flecha `=>` no cierra un generico: no hay `<` que lo abra, y
+ * contarlo desbalancea la profundidad (`type X<T extends (a) => void>`).
  */
 const finDeBloque = (
   codigo: string,
@@ -139,8 +143,12 @@ const finDeBloque = (
   let profundidad = 0;
   let i = desde;
   while (i < codigo.length) {
-    if (codigo[i] === abre) profundidad++;
-    else if (codigo[i] === cierra) {
+    const cierraReal =
+      codigo[i] === cierra && !(cierra === ">" && codigo[i - 1] === "=");
+
+    if (codigo[i] === abre) {
+      profundidad++;
+    } else if (cierraReal) {
       profundidad--;
       if (profundidad === 0) return i + 1;
     }
@@ -149,15 +157,27 @@ const finDeBloque = (
   return codigo.length;
 };
 
-/** El indice tras el `;` que cierra el statement, a profundidad 0 de `()[]{}<>`. */
+/**
+ * El indice tras el `;` que cierra el statement, a profundidad 0 de
+ * `()[]{}<>`. El `>` de una flecha `=>` no cuenta como cierre, por la misma
+ * razon que en `finDeBloque`: desbalancearia la profundidad y el `;` del
+ * alias nunca se veria a profundidad 0.
+ */
 const finDeStatement = (codigo: string, desde: number): number => {
   let profundidad = 0;
   let i = desde;
   while (i < codigo.length) {
     const caracter = codigo[i] ?? "";
-    if ("([{<".includes(caracter)) profundidad++;
-    else if (")]}>".includes(caracter)) profundidad--;
-    else if (caracter === ";" && profundidad === 0) return i + 1;
+    const cierraReal =
+      ")]}>".includes(caracter) && !(caracter === ">" && codigo[i - 1] === "=");
+
+    if ("([{<".includes(caracter)) {
+      profundidad++;
+    } else if (cierraReal) {
+      profundidad--;
+    } else if (caracter === ";" && profundidad === 0) {
+      return i + 1;
+    }
     i++;
   }
   return codigo.length;

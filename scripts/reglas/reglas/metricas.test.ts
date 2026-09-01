@@ -109,6 +109,47 @@ describe("metrica-params-3", () => {
     ).toEqual([]);
   });
 
+  it("marca la funcion de cuatro parametros despues de un alias de funcion", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          [
+            "type Handler = (a: string) => void;",
+            "function procesar(a: string, b: number, c: boolean, d: Date) {}",
+            "",
+          ].join("\n"),
+        ),
+      ]),
+    ).toHaveLength(1);
+  });
+
+  it("marca la funcion despues de un alias generico con restriccion de funcion", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          [
+            "type Caja<T extends (a: string) => void> = { valor: T };",
+            "function procesar(a: string, b: number, c: boolean, d: Date) {}",
+            "",
+          ].join("\n"),
+        ),
+      ]),
+    ).toHaveLength(1);
+  });
+
+  it("marca la funcion con parametro por defecto", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          "function f(a: string, b: number, c: boolean, d = 1) {}\n",
+        ),
+      ]),
+    ).toHaveLength(1);
+  });
+
   it("marca una flecha de cuerpo de expresion con cuatro parametros", () => {
     expect(
       hallazgosDeMetrica(id, [
