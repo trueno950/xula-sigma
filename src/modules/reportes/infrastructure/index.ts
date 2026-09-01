@@ -1,5 +1,5 @@
-/**
- * Vacio de proposito: el esquema vive en `esquema.ts` y los adaptadores
- * entran en la Fase 4 (`tasks.md`).
- */
-export {};
+export * from "./contadorDeFoliosSql";
+export * from "./lectorDeReportantesPorPadron";
+export * from "./lectorDeUbicacionesPorTerritorio";
+export * from "./registroDeMovimientosSql";
+export * from "./repositorioDeReportesSql";
