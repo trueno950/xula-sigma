@@ -297,7 +297,7 @@ mismas protecciones`, `Vinculo opcional con una persona del padron, sin datos
 de contacto sueltos`, `Registrar es mostrador; cambiar estado y asignar area
 son estructura`, `Historial de movimientos de solo agregado`.
 
-- [ ] 4.1 `reportes/application/puertos.ts`: `DatosDeRegistroDeReporte`,
+- [x] 4.1 `reportes/application/puertos.ts`: `DatosDeRegistroDeReporte`,
       `ReporteGuardado`, `CandidatoAOriginal`, `FilaParaConsultaPublica`,
       `ReporteSimilar`, `RepositorioDeReportes` completo (`guardar`,
       `buscarPorId`, `candidatoAOriginal`, `aplicarTransicion`, `asignarArea`,
@@ -307,35 +307,35 @@ son estructura`, `Historial de movimientos de solo agregado`.
       — firmas exactas de `design.md` seccion 10. El contrato completo se
       declara aca aunque `cambiarEstadoDeReporte`/`buscarReportesSimilares`
       (Fases 5 y 7) sean quienes invoquen algunos metodos.
-- [ ] 4.2 `reportes/application/puertosDeLectura.ts`: `LecturaDeUbicaciones.de(
+- [x] 4.2 `reportes/application/puertosDeLectura.ts`: `LecturaDeUbicaciones.de(
       lugarId, calleId)`, `LecturaDeReportantes.porId(personaId)` — **sin
       `tx`**, calco de `LecturaDeTitulares`.
-- [ ] 4.3 RED `reportes/application/validacionDeReporte.test.ts`: Zod para el
+- [x] 4.3 RED `reportes/application/validacionDeReporte.test.ts`: Zod para el
       alta — `descripcion` 10..1000 obligatoria, `referencia` 0..200
       opcional, `tipo` union cerrada, `lugarId` UUID, `calleId` UUID opcional,
       `personaId` UUID opcional.
-- [ ] 4.4 GREEN `reportes/application/validacionDeReporte.ts` (Zod en
+- [x] 4.4 GREEN `reportes/application/validacionDeReporte.ts` (Zod en
       `application`, no en `domain`).
-- [ ] 4.5 RED `reportes/infrastructure/contadorDeFoliosSql.test.ts`: la
+- [x] 4.5 RED `reportes/infrastructure/contadorDeFoliosSql.test.ts`: la
       sentencia exacta `INSERT ... ON CONFLICT (ayuntamiento_id, anio) DO
       UPDATE SET ultimo_consecutivo = folios_de_reportes.ultimo_consecutivo +
       1 RETURNING ultimo_consecutivo`; primera llamada de una serie nueva ->
       `1`; segunda -> `2`.
-- [ ] 4.6 GREEN `reportes/infrastructure/contadorDeFoliosSql.ts` (builder de
+- [x] 4.6 GREEN `reportes/infrastructure/contadorDeFoliosSql.ts` (builder de
       Drizzle, `.onConflictDoUpdate`, no `sql` a mano).
-- [ ] 4.7 `reportes/infrastructure/repositorioDeReportesSql.ts`: `guardar`,
+- [x] 4.7 `reportes/infrastructure/repositorioDeReportesSql.ts`: `guardar`,
       `buscarPorId`, `listar` (los tres que esta rebanada necesita; el resto
       del contrato de 4.1 se completa en las Fases 5 y 7 sobre este mismo
       archivo).
-- [ ] 4.8 `reportes/infrastructure/registroDeMovimientosSql.ts`: `agregar`,
+- [x] 4.8 `reportes/infrastructure/registroDeMovimientosSql.ts`: `agregar`,
       `historialDe` — ordena por `ocurridoEn ASC`, parte del contrato.
-- [ ] 4.9 `reportes/infrastructure/lectorDeUbicacionesPorTerritorio.ts`: llama
+- [x] 4.9 `reportes/infrastructure/lectorDeUbicacionesPorTerritorio.ts`: llama
       `territorio.ubicacionDeLugar` por el barrel, convierte a `string` en el
       borde con `comoLugarId`/`comoCalleId` justo antes de invocar.
-- [ ] 4.10 `reportes/infrastructure/lectorDeReportantesPorPadron.ts`: llama
+- [x] 4.10 `reportes/infrastructure/lectorDeReportantesPorPadron.ts`: llama
       `padron.personaPorId` por el barrel, calco de
       `lectorDeTitularesPorPadron.ts`.
-- [ ] 4.11 RED `reportes/application/registrarReporte.test.ts` (puertos
+- [x] 4.11 RED `reportes/application/registrarReporte.test.ts` (puertos
       mockeados) — la bateria de orden: `puedeEscribir(rol)` falso ->
       `NoAutorizadoError` **antes** de llamar cualquier puerto; `lecturaDeUbicaciones.de`
       -> `null` -> `UbicacionInvalidaError`, **sin abrir `withTenant`**
@@ -349,44 +349,44 @@ son estructura`, `Historial de movimientos de solo agregado`.
       "RECIBIDO"` (la fila del alta, `design.md` seccion 11); `registrar`
       recibe `REGISTRAR_REPORTE` con solo ids; todo en la misma llamada a
       `withTenant`.
-- [ ] 4.12 GREEN `reportes/application/registrarReporte.ts`: orden exacto de
+- [x] 4.12 GREEN `reportes/application/registrarReporte.ts`: orden exacto de
       `design.md` seccion 11 — pasos 2 (ubicacion) y 3 (reportante) fuera de
       toda transaccion; paso 4 (contador, `Folio.crear`, `guardar`,
       `movimientos.agregar`, `registrar`) en un solo `withTenant`.
-- [ ] 4.13 RED `reportes/application/reportePorId.test.ts`: id inexistente o
+- [x] 4.13 RED `reportes/application/reportePorId.test.ts`: id inexistente o
       de otro tenant -> `null`, nunca lanza; sin guarda de rol.
-- [ ] 4.14 GREEN `reportes/application/reportePorId.ts`.
-- [ ] 4.15 RED `reportes/application/listarReportes.test.ts`: sin guarda de
+- [x] 4.14 GREEN `reportes/application/reportePorId.ts`.
+- [x] 4.15 RED `reportes/application/listarReportes.test.ts`: sin guarda de
       rol; filtros pasan tal cual al repositorio.
-- [ ] 4.16 GREEN `reportes/application/listarReportes.ts`.
-- [ ] 4.17 `reportes/composicion.ts` + `application/index.ts`: componer
+- [x] 4.16 GREEN `reportes/application/listarReportes.ts`.
+- [x] 4.17 `reportes/composicion.ts` + `application/index.ts`: componer
       `registrarReporte`, `reportePorId`, `listarReportes` con sus
       adaptadores de 4.9/4.10.
-- [ ] 4.18 RED `reportes/folio.integration.test.ts` — **T6, la prueba mas
+- [x] 4.18 RED `reportes/folio.integration.test.ts` — **T6, la prueba mas
       critica**: `enTransaccionParalela` toma el folio de `(motul, anio)` y no
       confirma; `registrarReporte` disparado en paralelo (Postgres real, no
       las dos conexiones de `DB_POOL_MAX=1`) **queda pendiente**
       (`Promise.race` contra un temporizador corto); la paralela hace
       `COMMIT`; el registro resuelve con el consecutivo siguiente.
-- [ ] 4.19 GREEN.
-- [ ] 4.20 RED mismo archivo — **T7**: `crearRegistrarReporte` compuesto con
+- [x] 4.19 GREEN.
+- [x] 4.20 RED mismo archivo — **T7**: `crearRegistrarReporte` compuesto con
       un `RepositorioDeReportes` cuyo `guardar` lanza; el registro falla
       **despues** de tomar folio; el siguiente registro exitoso obtiene **el
       mismo numero** — el rollback no consume folio.
-- [ ] 4.21 GREEN.
-- [ ] 4.22 RED mismo archivo: Motul y Ticul registran su primer reporte del
+- [x] 4.21 GREEN.
+- [x] 4.22 RED mismo archivo: Motul y Ticul registran su primer reporte del
       anio, ambos obtienen `REP-{anio}-000001` sin colisionar (`{anio}` de
       `anioEnMerida()`, no fijo); se siembra `(motul, anio-1)` con
       `ultimoConsecutivo` alto y la primera del anio actual arranca en `1`.
-- [ ] 4.23 GREEN.
-- [ ] 4.24 RED `reportes/registro.integration.test.ts`: registrar con persona
+- [x] 4.23 GREEN.
+- [x] 4.24 RED `reportes/registro.integration.test.ts`: registrar con persona
       del padron -> vinculado; registrar con `personaId` nulo -> anonimo, sin
       nombre/telefono/correo en ninguna columna (decision 11); un `lugarId` o
       `calleId` de otro municipio rechazado con `UbicacionInvalidaError`
       **no** con un `23503` crudo de Postgres, y ademas rechazado por el FK
       compuesto a nivel base si se fuerza con SQL directo.
-- [ ] 4.25 GREEN.
-- [ ] 4.26 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+- [x] 4.25 GREEN.
+- [x] 4.26 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       confirmar piso 80/75 sobre `modules/reportes/{domain,application}`.
 
 ---
