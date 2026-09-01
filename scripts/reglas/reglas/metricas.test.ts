@@ -194,7 +194,7 @@ describe("metrica-params-3", () => {
     ).toEqual([]);
   });
 
-  it("no marca una lista ambigua con genericos", () => {
+  it("marca la funcion con cuatro parametros aunque uno sea generico", () => {
     expect(
       hallazgosDeMetrica(id, [
         archivo(
@@ -202,7 +202,18 @@ describe("metrica-params-3", () => {
           "const f = (a: Map<string, number>, b: string, c: number, d: Date) => {};\n",
         ),
       ]),
-    ).toEqual([]);
+    ).toHaveLength(1);
+  });
+
+  it("marca la funcion con cuatro parametros aunque uno sea union", () => {
+    expect(
+      hallazgosDeMetrica(id, [
+        archivo(
+          "src/modules/reportes/application/x.ts",
+          "const f = (a: string | null, b: string, c: number, d: Date) => {};\n",
+        ),
+      ]),
+    ).toHaveLength(1);
   });
 
   it("no confunde una llamada de cuatro argumentos con una firma", () => {
