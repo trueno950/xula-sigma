@@ -37,3 +37,27 @@ export type Regla = {
   titulo: string;
   revisar(archivos: Archivo[]): Omit<Hallazgo, "regla" | "antipatron">[];
 };
+
+/**
+ * Una fila de la tabla "Metricas" de AGENTS.md, distinta de un antipatron:
+ * no tiene numero en la tabla de 25. Comparte el mecanismo (un patron que
+ * decide en milisegundos), pero se reporta aparte para que la cuenta de
+ * antipatrones de los documentos no se rompa.
+ */
+export type Metrica = {
+  id: string;
+  titulo: string;
+  limite: string;
+  revisar(
+    archivos: Archivo[],
+  ): Omit<HallazgoMetrica, "metrica" | "titulo" | "limite">[];
+};
+
+export type HallazgoMetrica = {
+  metrica: string;
+  titulo: string;
+  limite: string;
+  ruta: string;
+  linea: number;
+  mensaje: string;
+};

@@ -218,6 +218,11 @@ pero lo verifica Biome (`noExplicitAny`), no `pnpm reglas` — la distinción
 importa el día que alguien busque en `scripts/reglas/` la regla que lo cubre
 y no la encuentre.
 
+Además verifica dos de las métricas —líneas por archivo y parámetros por
+función— por la misma razón: un patrón las decide en milisegundos. Las otras
+dos (líneas por función y anidación) piden parsear TypeScript y quedan con
+el revisor de IA.
+
 Están igual en la lista porque la lista es el contrato; la diferencia es que
 esos no dependen de que alguien se acuerde. Los que quedan —código
 comentado, TODO sin issue, nombres vagos, anidación— piden criterio, y por

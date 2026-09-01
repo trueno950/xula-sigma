@@ -358,6 +358,14 @@ de acceso. Se referencia por ID.
 | Profundidad de anidación | ≤ 3 |
 | Parámetros por función | ≤ 3 (más, va objeto) |
 
+`pnpm reglas` verifica dos de estas cuatro —Líneas por archivo y Parámetros
+por función— porque un patrón las decide en milisegundos. Las otras dos
+quedan con el revisor de IA: medir el cuerpo de una función o su profundidad
+de anidación pide parsear TypeScript y contar llaves, no un patrón. Los
+archivos que ya pasaban las 200 líneas antes de que la métrica entrara al
+verificador están listados en `scripts/reglas/reglas/metricas.ts` y bajan a
+medida que se parten.
+
 ---
 
 ## Nomenclatura

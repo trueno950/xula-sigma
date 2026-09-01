@@ -1,4 +1,4 @@
-import { revisar } from "./index";
+import { revisar, revisarMetricas } from "./index";
 import type { Archivo } from "./tipos";
 
 /**
@@ -15,6 +15,9 @@ export const archivo = (ruta: string, contenido: string): Archivo => ({
 
 export const hallazgosDe = (id: string, archivos: Archivo[]) =>
   revisar(archivos).filter((hallazgo) => hallazgo.regla === id);
+
+export const hallazgosDeMetrica = (id: string, archivos: Archivo[]) =>
+  revisarMetricas(archivos).filter((hallazgo) => hallazgo.metrica === id);
 
 /**
  * Las dos mitades de una migracion, para los tests de `rls-tabla-nueva`.
