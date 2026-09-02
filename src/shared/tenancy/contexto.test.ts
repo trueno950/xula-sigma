@@ -17,8 +17,25 @@ vi.mock("next/headers", () => ({ headers: leerCabeceras }));
 
 const { ayuntamientoActual } = await import("./contexto");
 
+/**
+ * El mock responde por nombre de cabecera y no una sola cadena para todas.
+ * La version anterior devolvia el mismo valor a cualquier `get`, y con eso
+ * el respaldo por host no se ejercitaba nunca: con valor, cortaba en la
+ * cabecera del proxy; sin valor, los tres nombres daban `null`.
+ */
+const conCabeceras = (mapa: Record<string, string>) => {
+  leerCabeceras.mockResolvedValue({ get: (n: string) => mapa[n] ?? null });
+};
+
 const conCabecera = (valor: string | null) => {
-  leerCabeceras.mockResolvedValue({ get: () => valor });
+  conCabeceras(valor ? { "x-xula-subdominio": valor } : {});
+};
+
+const ticul = {
+  id: "11111111-1111-4111-8111-111111111111",
+  subdominio: "ticul",
+  nombre: "Ticul",
+  marca: {},
 };
 
 describe("ayuntamientoActual", () => {
@@ -29,12 +46,7 @@ describe("ayuntamientoActual", () => {
 
   it("devuelve el ayuntamiento que resuelve el subdominio de la cabecera", async () => {
     conCabecera("ticul");
-    resolver.mockResolvedValue({
-      id: "11111111-1111-4111-8111-111111111111",
-      subdominio: "ticul",
-      nombre: "Ticul",
-      marca: {},
-    });
+    resolver.mockResolvedValue(ticul);
 
     await expect(ayuntamientoActual()).resolves.toMatchObject({
       subdominio: "ticul",
@@ -42,7 +54,7 @@ describe("ayuntamientoActual", () => {
     expect(resolver).toHaveBeenCalledWith("ticul");
   });
 
-  it("sin cabecera lanza: es un error de configuracion del matcher", async () => {
+  it("sin cabecera ni host lanza: es un error de configuracion del matcher", async () => {
     conCabecera(null);
 
     await expect(ayuntamientoActual()).rejects.toBeInstanceOf(
@@ -71,5 +83,78 @@ describe("ayuntamientoActual", () => {
     expect(inexistente).toBeInstanceOf(TenantNoResueltoError);
     expect(ausente).toBeInstanceOf(TenantNoResueltoError);
     expect(inexistente.codigo).toBe(ausente.codigo);
+  });
+});
+
+/**
+ * El respaldo por host: el render sintetico del redirect de un Server
+ * Action no trae las cabeceras que escribio el proxy.
+ *
+ * Que este derivado del host —que lo manda el cliente— no lo vuelve una
+ * eleccion libre de tenant: quien nombra otro municipio pierde su propia
+ * sesion, porque la busqueda de sesion corre bajo RLS con este mismo
+ * tenant. Esa cadena se prueba contra Postgres en
+ * `shared/auth/accesoCruzado.integration.test.ts`; aca solo se fija de
+ * donde sale el valor y en que orden.
+ */
+describe("respaldo por host cuando el proxy no escribio su cabecera", () => {
+  beforeEach(() => {
+    resolver.mockReset();
+    leerCabeceras.mockReset();
+    resolver.mockResolvedValue(ticul);
+  });
+
+  it("deriva el tenant de `x-forwarded-host`", async () => {
+    conCabeceras({ "x-forwarded-host": "ticul.localhost:3000" });
+
+    await expect(ayuntamientoActual()).resolves.toMatchObject({
+      subdominio: "ticul",
+    });
+    expect(resolver).toHaveBeenCalledWith("ticul");
+  });
+
+  /**
+   * El orden importa y no es cosmetico: en el render sintetico `host` es
+   * el del propio servidor y el del municipio queda en `x-forwarded-host`.
+   * Invertir la precedencia resolveria el tenant equivocado justo en el
+   * unico caso para el que existe este respaldo.
+   */
+  it("`x-forwarded-host` gana sobre `host`", async () => {
+    conCabeceras({
+      "x-forwarded-host": "ticul.localhost:3000",
+      host: "localhost:3000",
+    });
+
+    await ayuntamientoActual();
+
+    expect(resolver).toHaveBeenCalledWith("ticul");
+  });
+
+  it("cae a `host` cuando no hay `x-forwarded-host`", async () => {
+    conCabeceras({ host: "ticul.localhost" });
+
+    await ayuntamientoActual();
+
+    expect(resolver).toHaveBeenCalledWith("ticul");
+  });
+
+  it("la cabecera del proxy gana: con ella el host ni se mira", async () => {
+    conCabeceras({
+      "x-xula-subdominio": "ticul",
+      "x-forwarded-host": "motul.localhost:3000",
+    });
+
+    await ayuntamientoActual();
+
+    expect(resolver).toHaveBeenCalledWith("ticul");
+  });
+
+  it("un host que no cuelga del dominio base no elige tenant", async () => {
+    conCabeceras({ "x-forwarded-host": "ticul.dominio-ajeno.mx" });
+
+    await expect(ayuntamientoActual()).rejects.toBeInstanceOf(
+      TenantNoResueltoError,
+    );
+    expect(resolver).not.toHaveBeenCalled();
   });
 });

@@ -28,9 +28,22 @@ import {
  * sintetico —`host` propio del servidor, sin las cabeceras que el
  * middleware escribio en el request original— y el host original queda en
  * `x-forwarded-host`. La resolucion es la misma que hace el proxy
- * (`leerSubdominio`), un nivel mas adentro, y la sesion sigue acotada por
- * cookie de subdominio, asi que un valor ajeno no alcanza a leer datos de
- * otro municipio.
+ * (`leerSubdominio`), un nivel mas adentro.
+ *
+ * **Estas dos cabeceras las controla quien hace la peticion**, asi que
+ * este respaldo no puede ser la unica reja. Lo que impide que un host
+ * ajeno lea otro municipio no es esta funcion ni el alcance de la cookie:
+ * es que `conAuth` (`shared/auth/instancia.ts`) abre `withTenant` con el
+ * ayuntamiento que sale de aca y Better Auth busca la sesion adentro de
+ * esa transaccion, bajo RLS. Nombrar otro municipio cambia tambien el
+ * tenant de esa busqueda, y la fila de `sesiones` propia deja de ser
+ * visible: no hay sesion, no hay contexto, no hay lectura. Elegir un
+ * tenant ajeno cuesta la sesion propia.
+ *
+ * Eso es comportamiento, no intencion, y por eso esta ejercitado: la
+ * cadena entera en `shared/auth/accesoCruzado.integration.test.ts` -"una
+ * sesion no se lee desde otro municipio"-, y la derivacion de estos dos
+ * hosts en `contexto.test.ts`.
  */
 const hostsDelRequest = (cabeceras: Headers): Array<string | null> => [
   cabeceras.get("x-forwarded-host"),
