@@ -1,3 +1,6 @@
+import { Printer } from "@phosphor-icons/react/ssr";
+import { clasesDeBoton } from "@/shared/ui";
+
 type Props = {
   id: string;
 };
@@ -9,6 +12,11 @@ type Props = {
  * pestania nueva -el Route Handler genera el PDF con `Content-Disposition:
  * inline`- sin que este componente sepa nada de PDFs ni de React Server
  * Actions.
+ *
+ * Toma las clases del boton pero no es `EnlaceDeAccion`: ese envuelve
+ * `next/link`, que prefetchea el destino al pasar el mouse. El destino aca
+ * es un Route Handler que **genera un PDF y escribe la impresion**, no una
+ * pantalla; prefetchearlo seria imprimir sin que nadie haya hecho clic.
  */
 export function BotonDeImprimir({ id }: Props) {
   return (
@@ -16,8 +24,9 @@ export function BotonDeImprimir({ id }: Props) {
       href={`/constancias/${id}/pdf`}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex h-11 items-center justify-center rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
+      className={clasesDeBoton("primaria")}
     >
+      <Printer size={18} aria-hidden="true" />
       Imprimir
     </a>
   );

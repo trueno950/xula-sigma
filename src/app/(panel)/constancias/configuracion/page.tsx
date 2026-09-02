@@ -5,6 +5,12 @@ import {
 } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarDocumentos } from "@/shared/auth/roles";
+import {
+  Aviso,
+  EnlaceDeAccion,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -27,11 +33,12 @@ export default async function PaginaDeConfiguracionDeDocumentos({
 
   if (!contexto || !puedeAdministrarDocumentos(contexto.usuario.rol)) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          Su rol no tiene permiso para configurar el bloque de firma.
-        </p>
-      </main>
+      <PantallaDeMensaje
+        mensaje="Su rol no tiene permiso para configurar el bloque de firma."
+        accion={
+          <EnlaceDeAccion href="/constancias">A constancias</EnlaceDeAccion>
+        }
+      />
     );
   }
 
@@ -40,18 +47,15 @@ export default async function PaginaDeConfiguracionDeDocumentos({
   const documentos = await documentosDelAyuntamiento(contexto);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-8 p-6">
-      <h1 className="text-2xl font-semibold text-caliza-tinta">
-        Configuracion de documentos
-      </h1>
+    <PaginaDePanel titulo="Bloque de firma" ancho="formulario">
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      {error ? (
-        <p role="alert" className="text-[15px] text-senial-error">
-          {error}
-        </p>
-      ) : null}
+      <p className="text-[15px] text-caliza-apagada">
+        Quien firma las constancias del municipio y con que cargo. Va impreso al
+        pie de cada documento; sin esto, no se emite ninguno.
+      </p>
 
       <ConfiguracionDeDocumentos documentos={documentos} />
-    </main>
+    </PaginaDePanel>
   );
 }

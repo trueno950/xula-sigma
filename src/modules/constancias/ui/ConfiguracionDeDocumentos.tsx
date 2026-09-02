@@ -1,9 +1,6 @@
+import { Boton, Campo } from "@/shared/ui";
 import type { Documentos } from "../application";
 import { configurarDocumentosAction } from "./actions/configurarDocumentosAction";
-
-const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
 
 type Props = {
   documentos: Documentos | null;
@@ -17,43 +14,38 @@ type Props = {
  */
 export function ConfiguracionDeDocumentos({ documentos }: Props) {
   return (
-    <form action={configurarDocumentosAction} className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-medium text-caliza-tinta">
-        Bloque de firma
-      </h2>
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Nombre de quien firma</span>
-        <input
-          name="firmanteNombre"
-          type="text"
-          defaultValue={documentos?.firmanteNombre ?? ""}
-          className={CLASE_CAMPO}
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Cargo</span>
-        <input
-          name="firmanteCargo"
-          type="text"
-          defaultValue={documentos?.firmanteCargo ?? ""}
-          className={CLASE_CAMPO}
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Leyenda de pie (opcional)</span>
-        <input
-          name="leyendaDePie"
-          type="text"
-          defaultValue={documentos?.leyendaDePie ?? ""}
-          className={CLASE_CAMPO}
-        />
-      </label>
-      <button
-        type="submit"
-        className="h-11 rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-      >
+    <form action={configurarDocumentosAction} className="flex flex-col gap-4">
+      <Campo
+        id="firmante-nombre"
+        name="firmanteNombre"
+        etiqueta="Nombre de quien firma"
+        defaultValue={documentos?.firmanteNombre ?? ""}
+        required
+        minLength={3}
+        maxLength={120}
+      />
+      <Campo
+        id="firmante-cargo"
+        name="firmanteCargo"
+        etiqueta="Cargo"
+        ayuda="Como aparece en el nombramiento: Secretario Municipal, Presidente Municipal."
+        defaultValue={documentos?.firmanteCargo ?? ""}
+        required
+        minLength={3}
+        maxLength={120}
+      />
+      <Campo
+        id="leyenda-de-pie"
+        name="leyendaDePie"
+        etiqueta="Leyenda de pie"
+        ayuda="Opcional. Se deja vacia para quitarla."
+        defaultValue={documentos?.leyendaDePie ?? ""}
+        maxLength={300}
+      />
+
+      <Boton type="submit" variante="primaria">
         Guardar
-      </button>
+      </Boton>
     </form>
   );
 }

@@ -10,6 +10,13 @@ import {
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarDocumentos, puedeEscribir } from "@/shared/auth/roles";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
+import {
+  Aviso,
+  CLASES_DE_ETIQUETA,
+  PaginaDePanel,
+  Panel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -18,6 +25,23 @@ type Props = {
 
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
+
+const Dato = ({
+  etiqueta,
+  valor,
+  dato,
+}: {
+  etiqueta: string;
+  valor: string;
+  dato?: boolean;
+}) => (
+  <div className="flex flex-col gap-1">
+    <dt className={CLASES_DE_ETIQUETA}>{etiqueta}</dt>
+    <dd className={`text-[15px] text-caliza-tinta${dato ? " font-mono" : ""}`}>
+      {valor}
+    </dd>
+  </div>
+);
 
 /**
  * Muestra el snapshot congelado como texto plano, mas los tres bordes de
@@ -37,6 +61,11 @@ const esquemaDeParametros = z.object({ error: z.string().optional() });
  * de la Fase 4b encontro en esta misma pantalla-: las dos acciones nuevas
  * redirigen con ese parametro cuando `reimprimirConstancia` o
  * `cancelarConstancia` rechazan.
+ *
+ * Reimprimir y cancelar van cada una en su propio panel y no en una hilera
+ * de botones: las dos piden un motivo antes de ejecutar, asi que son
+ * formularios, y un formulario suelto al pie de una ficha se lee como parte
+ * de la ficha.
  */
 export default async function PaginaDeDetalleDeConstancia({
   params,
@@ -45,13 +74,7 @@ export default async function PaginaDeDetalleDeConstancia({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          No se pudo determinar su sesion.
-        </p>
-      </main>
-    );
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
   const { id } = await params;
@@ -61,13 +84,7 @@ export default async function PaginaDeDetalleDeConstancia({
     : null;
 
   if (!constancia) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          Esa constancia no existe.
-        </p>
-      </main>
-    );
+    return <PantallaDeMensaje mensaje="Esa constancia no existe." />;
   }
 
   const datos = esquemaDeSnapshot.parse(constancia.datos);
@@ -80,68 +97,41 @@ export default async function PaginaDeDetalleDeConstancia({
   const cancelada = constancia.canceladaEn !== null;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 p-6">
-      <h1 className="text-2xl font-semibold text-caliza-tinta">
-        {constancia.folio}
-      </h1>
-
-      {error ? (
-        <p role="alert" className="text-[15px] text-senial-error">
-          {error}
-        </p>
-      ) : null}
+    <PaginaDePanel
+      titulo={constancia.folio}
+      ancho="detalle"
+      accion={<BotonDeImprimir id={constancia.id} />}
+    >
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       {cancelada ? (
-        <p className="text-[15px] text-senial-error">
-          Documento cancelado: {constancia.motivoCancelacion}
-        </p>
+        <Aviso tono="error">
+          {`Documento cancelado: ${constancia.motivoCancelacion}`}
+        </Aviso>
       ) : null}
 
-      <dl className="flex flex-col gap-3">
-        <div>
-          <dt className="text-[13px] font-medium text-caliza-apagada">
-            Titular
-          </dt>
-          <dd className="text-[15px] text-caliza-tinta">
-            {datos.titular.nombreCompleto}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[13px] font-medium text-caliza-apagada">
-            Direccion
-          </dt>
-          <dd className="text-[15px] text-caliza-tinta">
-            {datos.direccion.texto}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[13px] font-medium text-caliza-apagada">
-            Reside desde
-          </dt>
-          <dd className="text-[15px] text-caliza-tinta">
-            {datos.direccion.desdeEn}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-[13px] font-medium text-caliza-apagada">
-            Emitida
-          </dt>
-          <dd className="text-[15px] text-caliza-tinta">
-            {fechaYHoraEnMerida(constancia.emitidaEn)}
-          </dd>
-        </div>
+      <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
+        <Dato etiqueta="Titular" valor={datos.titular.nombreCompleto} />
+        <Dato etiqueta="Direccion" valor={datos.direccion.texto} />
+        <Dato etiqueta="Reside desde" valor={datos.direccion.desdeEn} dato />
+        <Dato
+          etiqueta="Emitida"
+          valor={fechaYHoraEnMerida(constancia.emitidaEn)}
+          dato
+        />
       </dl>
 
-      <div className="flex flex-wrap gap-3">
-        <BotonDeImprimir id={constancia.id} />
-        {!cancelada && puedeEscribir(contexto.usuario.rol) ? (
+      {!cancelada && puedeEscribir(contexto.usuario.rol) ? (
+        <Panel titulo="Reimprimir">
           <BotonDeReimpresion constanciaId={constancia.id} />
-        ) : null}
-      </div>
+        </Panel>
+      ) : null}
 
       {!cancelada && puedeAdministrarDocumentos(contexto.usuario.rol) ? (
-        <BotonDeCancelacion constanciaId={constancia.id} />
+        <Panel titulo="Cancelar">
+          <BotonDeCancelacion constanciaId={constancia.id} />
+        </Panel>
       ) : null}
-    </main>
+    </PaginaDePanel>
   );
 }
