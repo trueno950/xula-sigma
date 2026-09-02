@@ -1,3 +1,4 @@
+import { Aviso, Boton, Campo } from "@/shared/ui";
 import { altaDePersonaAction } from "./actions/altaDePersona.action";
 import { SugerenciaDeDuplicados } from "./SugerenciaDeDuplicados";
 
@@ -6,53 +7,42 @@ type Props = {
   error?: string;
 };
 
-const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
-
 /**
  * Server Component (tasks.md 2.14): `<form action={altaDePersonaAction}>`
- * es un POST nativo del navegador, sin `"use client"`. Etiquetas siempre
- * visibles arriba del campo, nunca como placeholder (`DESIGN.md`, Inputs) —
- * un placeholder desaparece al escribir y la operadora que se distrajo
- * pierde el contexto.
+ * es un POST nativo del navegador, sin `"use client"`.
  *
- * `nombres`/`primerApellido` los renderiza `SugerenciaDeDuplicados`
- * (`"use client"`, tasks.md 4.25): sus inputs llevan el mismo `name`, asi
- * que este `<form>` los sigue leyendo igual al enviar.
+ * Cuatro campos y ni uno mas (`DESIGN.md`, Don't): cada campo justifica que
+ * existe. Los dos primeros los renderiza `SugerenciaDeDuplicados`
+ * (`"use client"`, tasks.md 4.25) porque necesitan estado mientras se
+ * escribe; sus inputs llevan el mismo `name`, asi que este `<form>` los
+ * sigue leyendo igual al enviar.
  */
 export function FormularioDeAltaDePersona({ error }: Props) {
   return (
     <form action={altaDePersonaAction} className="flex flex-col gap-4">
-      {error ? (
-        <p role="alert" className="text-[15px] text-senial-error">
-          {error}
-        </p>
-      ) : null}
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       <SugerenciaDeDuplicados />
 
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Segundo apellido</span>
-        <input name="segundoApellido" type="text" className={CLASE_CAMPO} />
-      </label>
+      <Campo
+        id="segundoApellido"
+        name="segundoApellido"
+        etiqueta="Segundo apellido"
+        ayuda="Dejar vacio si la persona no lo usa."
+      />
 
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>CURP</span>
-        <input
-          name="curp"
-          type="text"
-          maxLength={18}
-          className={`${CLASE_CAMPO} font-mono uppercase`}
-        />
-      </label>
+      <Campo
+        id="curp"
+        name="curp"
+        etiqueta="CURP"
+        maxLength={18}
+        ayuda="18 caracteres. Se puede completar despues."
+        tipografia="dato"
+      />
 
-      <button
-        type="submit"
-        className="h-11 rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-      >
+      <Boton type="submit" variante="primaria">
         Guardar
-      </button>
+      </Boton>
     </form>
   );
 }

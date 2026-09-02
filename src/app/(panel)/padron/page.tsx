@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Plus } from "@phosphor-icons/react/ssr";
 import { z } from "zod";
 import {
   BuscadorDePersonas,
@@ -8,6 +8,7 @@ import {
 } from "@/modules/padron";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
+import { EnlaceDeAccion, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -29,18 +30,17 @@ const esquemaDeBusqueda = z.object({ q: z.string().trim().min(1).optional() });
  * a un formulario que igual lo iba a rechazar, un callejon sin salida.
  *
  * `?q=` y no un Server Action: `BuscadorDePersonas.tsx` explica por que.
+ *
+ * El mismo enlace se le pasa dos veces a la pantalla —arriba y como accion
+ * del vacio inicial— a proposito: en una lista con filas, la accion vive en
+ * la cabecera; en una pantalla vacia, tiene que estar donde el operador
+ * esta mirando, que es el centro.
  */
 export default async function PaginaDePadron({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          No se pudo determinar su sesion.
-        </p>
-      </main>
-    );
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
   const analisis = esquemaDeBusqueda.safeParse(await searchParams);
@@ -49,23 +49,17 @@ export default async function PaginaDePadron({ searchParams }: Props) {
     ? await buscarPersonas(q, contexto)
     : await listarPersonas(contexto);
 
+  const alta = puedeEscribir(contexto.usuario.rol) ? (
+    <EnlaceDeAccion href="/padron/alta" variante="primaria">
+      <Plus size={18} weight="bold" aria-hidden="true" />
+      Nueva persona
+    </EnlaceDeAccion>
+  ) : undefined;
+
   return (
-    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-caliza-tinta">
-          Padron de personas
-        </h1>
-        {puedeEscribir(contexto.usuario.rol) ? (
-          <Link
-            href="/padron/alta"
-            className="flex h-11 items-center rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-          >
-            Nueva persona
-          </Link>
-        ) : null}
-      </div>
+    <PaginaDePanel titulo="Padron de personas" accion={alta}>
       <BuscadorDePersonas {...(q ? { cadena: q } : {})} />
-      <ListadoDePersonas personas={personas} />
-    </main>
+      <ListadoDePersonas personas={personas} filtro={q} accionDeAlta={alta} />
+    </PaginaDePanel>
   );
 }
