@@ -170,5 +170,5 @@ chore(ci): validar links del indice de docs
 
 Tipos: `feat`, `fix`, `test`, `docs`, `refactor`, `chore`, `perf`.
 
-El scope es el módulo: `constancias`, `padron`, `apoyos`, `tenancy`,
-`campanias`, `juzgado`, `portal`.
+El scope es el módulo: `constancias`, `padron`, `territorio`, `apoyos`,
+`tenancy`, `campanias`, `juzgado`, `portal`.
