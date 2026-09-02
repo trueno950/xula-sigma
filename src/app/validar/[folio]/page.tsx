@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { validarFolio } from "@/modules/constancias";
 import { limitarRitmo } from "@/shared/auth/limitarRitmo";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
-import { CABECERA_SUPERFICIE } from "@/shared/tenancy/cabeceras";
-import { ayuntamientoActual } from "@/shared/tenancy/contexto";
+import {
+  ayuntamientoActual,
+  superficieActual,
+} from "@/shared/tenancy/contexto";
 
 type Props = {
   params: Promise<{ folio: string }>;
@@ -47,7 +49,7 @@ export default async function PaginaDeValidacion({
   searchParams,
 }: Props) {
   const cabeceras = await headers();
-  if (cabeceras.get(CABECERA_SUPERFICIE) !== "ayuntamiento") notFound();
+  if ((await superficieActual()) !== "ayuntamiento") notFound();
 
   const { id: ayuntamientoId } = await ayuntamientoActual();
   const { folio } = await params;

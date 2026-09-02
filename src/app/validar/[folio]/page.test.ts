@@ -21,6 +21,7 @@ vi.mock("@/shared/auth/limitarRitmo", () => ({
 }));
 vi.mock("@/shared/tenancy/contexto", () => ({
   ayuntamientoActual: ayuntamientoActualMock,
+  superficieActual: vi.fn().mockResolvedValue("ayuntamiento"),
 }));
 vi.mock("@/modules/constancias", () => ({ validarFolio: validarFolioMock }));
 

@@ -20,7 +20,11 @@ const peticion = (
 ) =>
   new Request(`http://motul.localhost:3000/api/auth/${ruta}`, {
     method: "POST",
-    headers: { "content-type": "application/json", ...cabeceras },
+    headers: {
+      "content-type": "application/json",
+      "x-xula-superficie": "ayuntamiento",
+      ...cabeceras,
+    },
     body: JSON.stringify(cuerpo),
   });
 
@@ -136,7 +140,10 @@ describe("limitacion de ritmo en la ruta de auth", () => {
       "http://motul.localhost:3000/api/auth/sign-in/email",
       {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-xula-superficie": "ayuntamiento",
+        },
         body: "{ esto no es json",
       },
     );

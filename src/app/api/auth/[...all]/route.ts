@@ -2,6 +2,7 @@ import { manejarAuth } from "@/shared/auth";
 import { limitarRitmoDeAcceso } from "@/shared/auth/limitarRitmo";
 import { RitmoExcedidoError } from "@/shared/auth/ritmo";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
+import { CABECERA_SUPERFICIE } from "@/shared/tenancy/cabeceras";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 
 /**
@@ -116,8 +117,16 @@ async function conBorde(trabajo: () => Promise<Response>): Promise<Response> {
   }
 }
 
-const manejar = (request: Request) =>
-  conBorde(async () => manejarAuth(await conRitmo(request)));
+const manejar = (request: Request) => {
+  // Misma guarda de superficie que los layouts de las paginas: sin tenant
+  // (dominio pelado, `admin`, `raiz`), 404 y no 500 — un 500 en superficie
+  // publica delata que ahi adentro hay algo que espera un tenant.
+  if (request.headers.get(CABECERA_SUPERFICIE) !== "ayuntamiento") {
+    return new Response(null, { status: 404 });
+  }
+
+  return conBorde(async () => manejarAuth(await conRitmo(request)));
+};
 
 export const POST = manejar;
 export const GET = manejar;

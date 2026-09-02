@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
+  CABECERA_RUTA,
   CABECERA_SUBDOMINIO,
   CABECERA_SUPERFICIE,
 } from "@/shared/tenancy/cabeceras";
@@ -34,6 +35,7 @@ export function proxy(request: NextRequest) {
    */
   cabeceras.delete(CABECERA_SUPERFICIE);
   cabeceras.delete(CABECERA_SUBDOMINIO);
+  cabeceras.set(CABECERA_RUTA, request.nextUrl.pathname);
 
   const resultado = leerSubdominio(
     request.headers.get("host"),

@@ -22,6 +22,7 @@ const { POST } = await import("./route");
 const peticion = () =>
   new Request("http://motul.localhost:3000/api/auth/sign-in/email", {
     method: "POST",
+    headers: { "x-xula-superficie": "ayuntamiento" },
   });
 
 /**
