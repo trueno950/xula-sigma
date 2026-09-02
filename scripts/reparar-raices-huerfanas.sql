@@ -26,6 +26,11 @@
 --
 -- Idempotente: una segunda corrida no encuentra nada porque ya no hay
 -- filas con `padre_id IS NULL` que no sean rango 0.
+--
+-- Falla ruidoso: si en algun municipio las filas reparadas no son las que
+-- se contaron, aborta y revierte TODO -el `DO` es una sola transaccion-.
+-- Un barrido a medias es peor que uno que no corrio, porque el que lo mira
+-- no sabe cual mitad quedo.
 
 CREATE TEMP TABLE reparaciones (
   subdominio text,
@@ -39,6 +44,8 @@ DO $$
 DECLARE
   municipio record;
   asentamiento uuid;
+  candidatos bigint;
+  reparados bigint;
 BEGIN
   FOR municipio IN
     SELECT id, subdominio FROM ayuntamientos ORDER BY subdominio
@@ -61,6 +68,17 @@ BEGIN
     IF asentamiento IS NULL THEN
       CONTINUE;
     END IF;
+
+    -- Se cuentan antes de escribir y se compara despues. Un UPDATE frenado
+    -- por RLS devuelve cero filas SIN error: sin esta comparacion el script
+    -- imprimiria `filas_reparadas = 0` y saldria con codigo 0, que es
+    -- indistinguible de "no habia nada que reparar". La regla de scripts de
+    -- AGENTS.md pide exactamente esto.
+    SELECT count(*) INTO candidatos
+    FROM lugares
+    WHERE padre_id IS NULL
+      AND baja_en IS NOT NULL
+      AND tipo NOT IN ('cabecera', 'comisaria');
 
     WITH movidos AS (
       UPDATE lugares
@@ -85,6 +103,15 @@ BEGIN
     INSERT INTO reparaciones
     SELECT municipio.subdominio, m.id, m.tipo, m.nombre, m.padre_id
     FROM movidos m;
+
+    GET DIAGNOSTICS reparados = ROW_COUNT;
+
+    IF reparados <> candidatos THEN
+      RAISE EXCEPTION
+        'En % se contaron % huerfanos de baja y se repararon %. La '
+        'transaccion se revierte entera: revisar si RLS freno el UPDATE.',
+        municipio.subdominio, candidatos, reparados;
+    END IF;
   END LOOP;
 END $$;
 
