@@ -18,7 +18,7 @@ import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "domicilio", etiqueta: "Domicilio", ancho: "minmax(0,2fr)" },
-  { clave: "entre", etiqueta: "Referencia", ancho: "minmax(0,1fr)" },
+  { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,1fr)" },
 ];
 
 /** "Calle 20 #5" o "Calle 20 S/N": el numero va en tipografia Dato. */
