@@ -41,9 +41,15 @@ import {
  * tenant ajeno cuesta la sesion propia.
  *
  * Eso es comportamiento, no intencion, y por eso esta ejercitado: la
- * cadena entera en `shared/auth/accesoCruzado.integration.test.ts` -"una
- * sesion no se lee desde otro municipio"-, y la derivacion de estos dos
- * hosts en `contexto.test.ts`.
+ * cadena entera en `shared/auth/sesionCruzada.integration.test.ts` -"no
+ * se lee desde otro municipio"-, y la derivacion de estos dos hosts en
+ * `contexto.test.ts`.
+ *
+ * **Lo que esa cadena NO cubre**: los consumidores de `ayuntamientoActual`
+ * que corren sin sesion -`(acceso)/layout.tsx`, `(acceso)/page.tsx`,
+ * `(acceso)/acceso/page.tsx` y `validar/[folio]/page.tsx`-. Ahi no hay
+ * fila de `sesiones` que se vuelva invisible, asi que un host ajeno si
+ * alcanza a resolver otro municipio.
  */
 const hostsDelRequest = (cabeceras: Headers): Array<string | null> => [
   cabeceras.get("x-forwarded-host"),
