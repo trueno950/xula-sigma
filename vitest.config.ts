@@ -119,6 +119,20 @@ export default defineConfig({
         "src/shared/auth/politicasPlataforma.ts",
         "src/shared/**/*DePrueba.ts",
         "src/shared/**/index.ts",
+        /**
+         * Los componentes de `shared/ui` quedan afuera por la misma razon
+         * que `esquema.ts`: son declaraciones. La logica que si decide algo
+         * —que variante de boton, cual de los dos vacios, si el filtro
+         * conto— vive en `estilos.ts` y `estadoDeLista.ts`, que son `.ts`,
+         * entran al piso y tienen sus tests.
+         *
+         * Cubrir el `.tsx` pediria montar un DOM y una libreria de
+         * renderizado nueva para afirmar que un `<button>` recibio las
+         * clases que la funcion de al lado ya devolvio. Eso es medir el
+         * numero, no la garantia; lo que de verdad prueba estas pantallas
+         * es el E2E de Playwright.
+         */
+        "src/shared/ui/**/*.tsx",
       ],
       thresholds: {
         lines: 80,
