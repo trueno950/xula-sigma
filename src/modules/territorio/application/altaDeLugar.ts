@@ -9,6 +9,8 @@ import {
   JerarquiaInvalidaError,
   type LugarId,
   puedeContener,
+  puedeSerRaiz,
+  RaizInvalidaError,
   type TipoDeLugar,
 } from "../domain";
 import type { RepositorioDeLugares } from "./puertos";
@@ -24,6 +26,13 @@ export type NuevoLugar = {
  * en `shared/auth/roles.ts`). Un solo `INSERT`: la jerarquia raggeada
  * (design.md seccion 7) permite que un sector cuelgue directo de una
  * comisaria sin fila de relleno para la colonia que falta.
+ *
+ * **Sin padre tambien hay que validar.** Faltaba: el chequeo corria solo
+ * cuando `padreId !== null`, asi que una manzana con `padreId: null` se
+ * creaba sin objecion y quedaba de raiz del municipio. Contra el MUST de
+ * `openspec/specs/jerarquia-territorial` -"ningun otro tipo MUST tener
+ * `padreId NULL`"- y contra la consecuencia (2) que el propio
+ * `tipoDeLugar.ts` enuncia: un rango 0 es raiz por construccion, y solo el.
  *
  * **`padreId` se valida igual que en `reparentearLugar`** (hallazgo de
  * GGA en la revision de esta rebanada): sin esto, un alta podia crear un
@@ -49,6 +58,8 @@ export function crearAltaDeLugar(repositorio: RepositorioDeLugares) {
         if (!puedeContener(padre.tipo, datos.tipo)) {
           throw new JerarquiaInvalidaError();
         }
+      } else if (!puedeSerRaiz(datos.tipo)) {
+        throw new RaizInvalidaError();
       }
 
       await repositorio.crear(tx, {

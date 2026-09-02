@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoLugarId } from "../domain";
-import { JerarquiaInvalidaError } from "../domain/errores";
+import { JerarquiaInvalidaError, RaizInvalidaError } from "../domain/errores";
 import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
@@ -48,6 +48,8 @@ describe("reparentearLugar", () => {
     contarHijosActivos: vi.fn(),
     contarDomiciliosColgados: vi.fn(),
     subarbol: vi.fn(),
+    listarRaices: vi.fn(),
+    listarLugares: vi.fn(),
   };
 
   beforeEach(() => {
@@ -120,17 +122,35 @@ describe("reparentearLugar", () => {
     expect(repositorio.actualizar).not.toHaveBeenCalled();
   });
 
-  it("nuevoPadreId = null saltea el chequeo de tipo y actualiza", async () => {
+  /**
+   * Este test afirmaba lo contrario -que un sector podia quedar de raiz- y
+   * lo respaldaba un comentario que citaba design.md contra el spec. Por
+   * que el spec gana, en la cabecera de `reparentearLugar.ts`.
+   */
+  it("un sector no puede quedar sin padre: solo el rango 0 es raiz", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(
       lugarGuardado({ id: sectorId, tipo: "sector", padreId: comisariaId }),
     );
     const reparentearLugar = crearReparentearLugar(repositorio);
 
-    await reparentearLugar(sectorId, null, contextoCon("ADMIN_MUNICIPAL"));
+    await expect(
+      reparentearLugar(sectorId, null, contextoCon("ADMIN_MUNICIPAL")),
+    ).rejects.toBeInstanceOf(RaizInvalidaError);
+
+    expect(repositorio.actualizar).not.toHaveBeenCalled();
+  });
+
+  it("una comisaria si puede quedar sin padre, y no lee ningun padre", async () => {
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue(
+      lugarGuardado({ id: comisariaId, tipo: "comisaria", padreId: null }),
+    );
+    const reparentearLugar = crearReparentearLugar(repositorio);
+
+    await reparentearLugar(comisariaId, null, contextoCon("ADMIN_MUNICIPAL"));
 
     expect(repositorio.buscarPorId).toHaveBeenCalledTimes(1);
     expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
-      id: sectorId,
+      id: comisariaId,
       nombre: "nombre",
       padreId: null,
       bajaEn: null,

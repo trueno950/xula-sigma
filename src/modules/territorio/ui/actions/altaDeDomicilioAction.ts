@@ -12,6 +12,7 @@ import {
   comoLugarId,
   TransversalRepetidaError,
 } from "../../domain";
+import { volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeCalleAction`. Formulario nativo sin `use client`. */
 
@@ -22,13 +23,11 @@ const esquemaDeEntrada = z.object({
   entreCalleAId: z.union([z.literal(""), z.string().trim().uuid()]),
   entreCalleBId: z.union([z.literal(""), z.string().trim().uuid()]),
   referencia: z.string().trim().optional(),
+  raiz: z.string().trim().uuid().optional(),
+  nodo: z.string().trim().uuid().optional(),
 });
-
 const MENSAJE_FORMULARIO_INVALIDO = "Lugar y calle son obligatorios.";
 const MENSAJE_GENERICO = "No se pudo completar el alta. Intente de nuevo.";
-
-const redirigirConError = (mensaje: string): never =>
-  redirect(`/territorio?error=${encodeURIComponent(mensaje)}`);
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -46,6 +45,8 @@ const mensajeDeError = (error: unknown): string => {
 };
 
 export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
+  const raiz = formData.get("raiz")?.toString() || undefined;
+  const nodo = formData.get("nodo")?.toString() || undefined;
   const analisis = esquemaDeEntrada.safeParse({
     lugarId: formData.get("lugarId"),
     calleId: formData.get("calleId"),
@@ -53,10 +54,12 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
     entreCalleAId: formData.get("entreCalleAId") ?? "",
     entreCalleBId: formData.get("entreCalleBId") ?? "",
     referencia: formData.get("referencia") ?? undefined,
+    raiz: formData.get("raiz")?.toString() || undefined,
+    nodo: formData.get("nodo")?.toString() || undefined,
   });
 
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -81,9 +84,8 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
       contexto,
     );
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
+    volverAlArbol(raiz, nodo, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");
-  redirect("/territorio");
 }

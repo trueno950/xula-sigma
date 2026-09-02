@@ -2,9 +2,9 @@ import { eq, sql } from "drizzle-orm";
 import type {
   DomicilioGuardado,
   RepositorioDeDomicilios,
-} from "../application/puertos";
+} from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
-import { domicilios } from "./esquema";
+import { calles, domicilios, lugares } from "./esquema";
 
 const columnasDeLectura = {
   id: domicilios.id,
@@ -88,5 +88,28 @@ export const repositorioDeDomiciliosSql: RepositorioDeDomicilios = {
       .where(eq(domicilios.calleId, calleId));
 
     return filas.map(aDomicilioGuardado);
+  },
+
+  /**
+   * Listado plano del municipio, con los nombres resueltos para la etiqueta
+   * del `<select>` de `FormularioDeMudanza`. RLS acota por tenant en la
+   * lectura de las tres tablas -no hay `WHERE ayuntamiento_id` a mano-.
+   * Orden estable: lugar, calle y numero, para que el select no salte
+   * entre corridas.
+   */
+  async listar(tx) {
+    const filas = await tx
+      .select({
+        id: domicilios.id,
+        calle: calles.nombre,
+        numero: domicilios.numero,
+        lugar: lugares.nombre,
+      })
+      .from(domicilios)
+      .innerJoin(calles, eq(calles.id, domicilios.calleId))
+      .innerJoin(lugares, eq(lugares.id, domicilios.lugarId))
+      .orderBy(lugares.nombre, calles.nombre, domicilios.numero);
+
+    return filas.map((fila) => ({ ...fila, id: comoDomicilioId(fila.id) }));
   },
 };

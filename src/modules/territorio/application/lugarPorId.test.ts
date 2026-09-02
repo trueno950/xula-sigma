@@ -36,6 +36,8 @@ describe("lugarPorId", () => {
     contarHijosActivos: vi.fn(),
     contarDomiciliosColgados: vi.fn(),
     subarbol: vi.fn(),
+    listarRaices: vi.fn(),
+    listarLugares: vi.fn(),
   };
 
   beforeEach(() => {

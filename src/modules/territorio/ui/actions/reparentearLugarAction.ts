@@ -7,26 +7,30 @@ import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { reparentearLugar } from "../../composicion";
-import { comoLugarId, JerarquiaInvalidaError } from "../../domain";
+import {
+  comoLugarId,
+  JerarquiaInvalidaError,
+  RaizInvalidaError,
+} from "../../domain";
+import { volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
 const esquemaDeEntrada = z.object({
   lugarId: z.string().trim().uuid(),
   nuevoPadreId: z.union([z.literal(""), z.string().trim().uuid()]),
+  raiz: z.string().trim().uuid().optional(),
+  nodo: z.string().trim().uuid().optional(),
 });
-
 const MENSAJE_FORMULARIO_INVALIDO = "Falta el lugar a mover.";
 const MENSAJE_GENERICO =
   "No se pudo completar el reparenteo. Intente de nuevo.";
-
-const redirigirConError = (mensaje: string): never =>
-  redirect(`/territorio?error=${encodeURIComponent(mensaje)}`);
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
   if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof JerarquiaInvalidaError) return error.message;
+  if (error instanceof RaizInvalidaError) return error.message;
 
   console.error("[territorio] reparenteo fallo", datosSegurosDeError(error));
 
@@ -36,13 +40,17 @@ const mensajeDeError = (error: unknown): string => {
 export async function reparentearLugarAction(
   formData: FormData,
 ): Promise<void> {
+  const raiz = formData.get("raiz")?.toString() || undefined;
+  const nodo = formData.get("nodo")?.toString() || undefined;
   const analisis = esquemaDeEntrada.safeParse({
     lugarId: formData.get("lugarId"),
     nuevoPadreId: formData.get("nuevoPadreId") ?? "",
+    raiz: formData.get("raiz")?.toString() || undefined,
+    nodo: formData.get("nodo")?.toString() || undefined,
   });
 
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -59,9 +67,8 @@ export async function reparentearLugarAction(
       contexto,
     );
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
+    volverAlArbol(raiz, nodo, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");
-  redirect("/territorio");
 }

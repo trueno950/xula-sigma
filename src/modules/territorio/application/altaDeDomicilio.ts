@@ -12,11 +12,8 @@ import {
   TransversalRepetidaError,
   transversalesValidas,
 } from "../domain";
-import type {
-  RepositorioDeCalles,
-  RepositorioDeDomicilios,
-  RepositorioDeLugares,
-} from "./puertos";
+import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
+import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
 
 export type NuevoDomicilio = {
   lugarId: LugarId;

@@ -10,8 +10,10 @@ import { altaDeLugar } from "../../composicion";
 import {
   comoLugarId,
   JerarquiaInvalidaError,
+  RaizInvalidaError,
   TIPOS_DE_LUGAR,
 } from "../../domain";
+import { volverAlArbol } from "./volverAlArbol";
 
 /**
  * Borde de sesion del alta (mismo reparto que `altaDePersonaAction`,
@@ -23,13 +25,12 @@ const esquemaDeEntrada = z.object({
   tipo: z.enum(TIPOS_DE_LUGAR),
   nombre: z.string().trim().min(1),
   padreId: z.union([z.literal(""), z.string().trim().uuid()]),
+  raiz: z.string().trim().uuid().optional(),
+  nodo: z.string().trim().uuid().optional(),
 });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Tipo y nombre son obligatorios.";
 const MENSAJE_GENERICO = "No se pudo completar el alta. Intente de nuevo.";
-
-const redirigirConError = (mensaje: string): never =>
-  redirect(`/territorio?error=${encodeURIComponent(mensaje)}`);
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -38,6 +39,9 @@ const mensajeDeError = (error: unknown): string => {
   // esconde antes de llegar al FK (altaDeLugar.ts).
   if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof JerarquiaInvalidaError) return error.message;
+  // Sin esto caia en el mensaje generico y el operador perdia lo unico que
+  // le dice como salir: que la raiz tiene que ser cabecera o comisaria.
+  if (error instanceof RaizInvalidaError) return error.message;
 
   console.error("[territorio] alta de lugar fallo", datosSegurosDeError(error));
 
@@ -45,14 +49,18 @@ const mensajeDeError = (error: unknown): string => {
 };
 
 export async function altaDeLugarAction(formData: FormData): Promise<void> {
+  const raiz = formData.get("raiz")?.toString() || undefined;
+  const nodo = formData.get("nodo")?.toString() || undefined;
   const analisis = esquemaDeEntrada.safeParse({
     tipo: formData.get("tipo"),
     nombre: formData.get("nombre"),
     padreId: formData.get("padreId") ?? "",
+    raiz: formData.get("raiz")?.toString() || undefined,
+    nodo: formData.get("nodo")?.toString() || undefined,
   });
 
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -72,9 +80,8 @@ export async function altaDeLugarAction(formData: FormData): Promise<void> {
       contexto,
     );
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
+    volverAlArbol(raiz, nodo, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");
-  redirect("/territorio");
 }

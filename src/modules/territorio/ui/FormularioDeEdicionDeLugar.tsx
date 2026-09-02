@@ -1,30 +1,43 @@
+import { Boton, Campo } from "@/shared/ui";
 import { editarLugarAction } from "./actions/editarLugarAction";
 
-const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
+type Props = {
+  /** Contexto del arbol: se renombra el nodo seleccionado. */
+  raiz: string;
+  nodo: string;
+  /** El nombre de hoy, para que el campo no arranque vacio. */
+  nombreActual: string;
+};
 
-/** Server Component, `<form action={...}>` nativo sin `"use client"`. */
-export function FormularioDeEdicionDeLugar() {
+/**
+ * Server Component, `<form action={...}>` nativo sin `"use client"`.
+ *
+ * El campo arranca con el nombre de hoy: renombrar casi siempre es
+ * corregir una letra, y un campo vacio obliga a escribir todo de nuevo de
+ * memoria, con el nombre viejo ya fuera de la pantalla.
+ */
+export function FormularioDeEdicionDeLugar({
+  raiz,
+  nodo,
+  nombreActual,
+}: Props) {
   return (
-    <form action={editarLugarAction} className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-medium text-caliza-tinta">
-        Renombrar lugar
-      </h2>
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Id del lugar</span>
-        <input name="id" type="text" className={CLASE_CAMPO} />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Nombre nuevo</span>
-        <input name="nombre" type="text" className={CLASE_CAMPO} />
-      </label>
-      <button
-        type="submit"
-        className="h-11 rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-      >
+    <form action={editarLugarAction} className="flex flex-col gap-4">
+      <input type="hidden" name="raiz" value={raiz} />
+      <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="id" value={nodo} />
+
+      <Campo
+        id="lugar-nombre-nuevo"
+        name="nombre"
+        etiqueta="Nombre nuevo"
+        required
+        defaultValue={nombreActual}
+      />
+
+      <Boton type="submit" variante="primaria">
         Renombrar
-      </button>
+      </Boton>
     </form>
   );
 }

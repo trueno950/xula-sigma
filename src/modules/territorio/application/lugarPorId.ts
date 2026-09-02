@@ -6,7 +6,7 @@ import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
 /**
  * Sin guarda de rol, mismo criterio que `personaPorId` de `padron`: leer
  * un lugar no es escribirlo. `subarbol` excluye la raiz de sus nodos
- * (`puertos.ts`, `NodoDeSubarbol`), asi que `ArbolDeLugares.tsx` necesita
+ * (`puertos.ts`, `NodoDeSubarbol`), asi que `ContenidoDeLugar.tsx` necesita
  * esta lectura aparte para el nombre y tipo de la raiz misma.
  */
 export function crearLugarPorId(repositorio: RepositorioDeLugares) {
