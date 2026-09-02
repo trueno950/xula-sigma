@@ -32,8 +32,23 @@ export const titularConResidenciaVigente = async (
     { nombres, primerApellido: "Poot", segundoApellido: null, curp: null },
     contexto,
   );
+  // El asentamiento existe para que la colonia tenga padre: `altaDeLugar`
+  // rechaza una colonia suelta desde que la regla de raiz del spec
+  // `jerarquia-territorial` es ejecutable (`RaizInvalidaError`).
+  //
+  // Comisaria y no cabecera porque el fixture corre una vez por titular y
+  // varios titulares comparten municipio: `lugares_una_cabecera` deja una
+  // sola cabecera por ayuntamiento, y no hay tope de comisarias.
+  const { id: asentamientoId } = await altaDeLugar(
+    { tipo: "comisaria", nombre: `Comisaria de ${nombres}`, padreId: null },
+    contexto,
+  );
   const { id: lugarId } = await altaDeLugar(
-    { tipo: "colonia", nombre: `Colonia de ${nombres}`, padreId: null },
+    {
+      tipo: "colonia",
+      nombre: `Colonia de ${nombres}`,
+      padreId: asentamientoId,
+    },
     contexto,
   );
   const { id: calleId } = await altaDeCalle(
