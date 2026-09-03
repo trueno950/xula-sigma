@@ -44,9 +44,10 @@ function subdominioDe(cabeceras: Headers): string | null {
 }
 
 /**
- * La superficie del request actual ("ayuntamiento", "admin", "raiz").
- * La misma resolucion que los layouts usaban sobre la cabecera pelada,
- * con la caida al host para el render sintetico de los redirects.
+ * La superficie del request actual ("ayuntamiento", "admin", "raiz"), tal
+ * como la escribio el proxy. Sin caidas ni derivacion: de donde sale ese
+ * valor lo decide `resolverHost` en `proxy.ts`, y el bloque de arriba
+ * explica por que ahi y no aca.
  */
 export async function superficieActual(): Promise<string | null> {
   return superficieDe(await headers());
