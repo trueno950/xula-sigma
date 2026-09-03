@@ -16,24 +16,6 @@ import {
 import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
 
 /**
- * Mueve un lugar a otro padre. `puedeAdministrarTerritorio`, no
- * `puedeEscribir` (criterio en `shared/auth/roles.ts`).
- *
- * `nuevoPadreId = null` **no saltea el chequeo**: sin padre, el tipo del
- * lugar tiene que poder ser raiz. El comentario anterior decia lo contrario
- * —"cualquier tipo puede volverse raiz (design.md seccion 9,
- * raggedness)"— y con el, el test que lo respaldaba. Los dos contradecian
- * el spec vigente, que lo pide como MUST: "Una fila de tipo `cabecera` o
- * `comisaria` MUST tener `padreId IS NULL`; ningun otro tipo MUST tener
- * `padreId NULL`" (`openspec/specs/jerarquia-territorial`).
- * `changes/archive/` es registro historico de una decision; `specs/` es la
- * regla vigente, y gana.
- *
- * La raggedness es otra cosa y sigue intacta: saltear niveles —un sector
- * colgado directo de una comisaria, sin la colonia intermedia— lo permite
- * `puedeContener`, que solo compara rangos.
- */
-/**
  * Que el destino sea valido para ese lugar: sin padre, el tipo tiene que
  * poder ser raiz; con padre, el padre tiene que poder contenerlo.
  *
@@ -64,6 +46,24 @@ async function validarDestino({
   }
 }
 
+/**
+ * Mueve un lugar a otro padre. `puedeAdministrarTerritorio`, no
+ * `puedeEscribir` (criterio en `shared/auth/roles.ts`).
+ *
+ * `nuevoPadreId = null` **no saltea el chequeo**: sin padre, el tipo del
+ * lugar tiene que poder ser raiz. El comentario anterior decia lo contrario
+ * —"cualquier tipo puede volverse raiz (design.md seccion 9,
+ * raggedness)"— y con el, el test que lo respaldaba. Los dos contradecian
+ * el spec vigente, que lo pide como MUST: "Una fila de tipo `cabecera` o
+ * `comisaria` MUST tener `padreId IS NULL`; ningun otro tipo MUST tener
+ * `padreId NULL`" (`openspec/specs/jerarquia-territorial`).
+ * `changes/archive/` es registro historico de una decision; `specs/` es la
+ * regla vigente, y gana.
+ *
+ * La raggedness es otra cosa y sigue intacta: saltear niveles —un sector
+ * colgado directo de una comisaria, sin la colonia intermedia— lo permite
+ * `puedeContener`, que solo compara rangos.
+ */
 export function crearReparentearLugar(repositorio: RepositorioDeLugares) {
   return async function reparentearLugar(
     lugarId: LugarId,
