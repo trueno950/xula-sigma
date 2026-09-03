@@ -1,25 +1,14 @@
 "use client";
 
-import {
-  type FocusEvent,
-  type KeyboardEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type FocusEvent, type KeyboardEvent, useRef, useState } from "react";
 import { CLASES_DE_ETIQUETA, clasesDeCampo } from "@/shared/ui";
-import {
-  type SugerenciaDeDuplicado,
-  sugerirDuplicadosAction,
-} from "./actions/sugerirDuplicados.action";
 import {
   ID_DE_LISTA,
   idDeOpcion,
   ListaDeSugerencias,
 } from "./ListaDeSugerencias";
-import { planDeConsulta } from "./planDeConsulta";
-
-const RETARDO_MS = 300;
+import { indicePrevio, siguienteIndice } from "./navegacionDeSugerencias";
+import { useSugerenciasDeDuplicados } from "./useSugerenciasDeDuplicados";
 
 /**
  * Unica hoja `"use client"` de la rebanada 4 (tasks.md 4.25): mostrar
@@ -45,58 +34,18 @@ const RETARDO_MS = 300;
 export function SugerenciaDeDuplicados() {
   const [nombres, setNombres] = useState("");
   const [primerApellido, setPrimerApellido] = useState("");
-  const [sugerencias, setSugerencias] = useState<
-    readonly SugerenciaDeDuplicado[]
-  >([]);
   /** -1 es "ninguna marcada", que es el estado en el que se escribe. */
   const [activa, setActiva] = useState(-1);
   /** La cierra Escape. Vuelve a abrirse en cuanto cambia lo escrito. */
   const [cerrada, setCerrada] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
-  const idDeConsulta = useRef(0);
-  const idDeRetardo = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-
-  // Sin esta limpieza, una consulta pendiente disparaba despues de enviar
-  // el formulario: el timer vencia cuando el router ya habia navegado a
-  // otra ruta y el POST llegaba ahi con un id de accion que no le
-  // pertenecia — 404 "This page could not be found".
-  useEffect(() => {
-    return () => clearTimeout(idDeRetardo.current);
-  }, []);
+  const { sugerencias, consultar: consultarDuplicados } =
+    useSugerenciasDeDuplicados();
 
   const consultar = (nombresNuevo: string, apellidoNuevo: string) => {
-    clearTimeout(idDeRetardo.current);
     setCerrada(false);
     setActiva(-1);
-    // La lista se vacia en cuanto cambia lo escrito, no cuando llega la
-    // respuesta. Entre el tecleo y el retardo quedaban visibles y
-    // seleccionables las personas de la consulta anterior, que ya no son
-    // las parecidas a lo que hay en el formulario.
-    setSugerencias([]);
-
-    const plan = planDeConsulta(
-      nombresNuevo,
-      apellidoNuevo,
-      () => ++idDeConsulta.current,
-    );
-
-    if (plan.tipo === "limpiar") return;
-
-    idDeRetardo.current = setTimeout(async () => {
-      // La accion ya atrapa sus propios errores y devuelve `[]`; este
-      // catch es para el rechazo de red -conexion caida a mitad del
-      // pedido-, que nunca llega a ejecutar la accion en el servidor.
-      const encontradas = await sugerirDuplicadosAction(plan.cadena).catch(
-        () => [] as const,
-      );
-      // Ignora una respuesta que ya no es la ultima tecla escrita: sin
-      // esto, una respuesta lenta de una consulta vieja puede llegar
-      // despues de una mas nueva y pisar sugerencias correctas con unas
-      // desactualizadas.
-      if (plan.id === idDeConsulta.current) setSugerencias(encontradas);
-    }, RETARDO_MS);
+    consultarDuplicados(nombresNuevo, apellidoNuevo);
   };
 
   const abierta = sugerencias.length > 0 && !cerrada;
@@ -119,15 +68,13 @@ export function SugerenciaDeDuplicados() {
 
     if (evento.key === "ArrowDown") {
       evento.preventDefault();
-      setActiva((previa) => (previa + 1) % sugerencias.length);
+      setActiva((previa) => siguienteIndice(previa, sugerencias.length));
       return;
     }
 
     if (evento.key === "ArrowUp") {
       evento.preventDefault();
-      setActiva((previa) =>
-        previa <= 0 ? sugerencias.length - 1 : previa - 1,
-      );
+      setActiva((previa) => indicePrevio(previa, sugerencias.length));
       return;
     }
 

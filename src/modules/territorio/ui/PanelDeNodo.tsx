@@ -1,5 +1,6 @@
-import { Migaja, type Pestana, Pestanas } from "@/shared/ui";
+import { Migaja, Pestanas } from "@/shared/ui";
 import type { LugarId, TipoDeLugar } from "../domain";
+import { pasosDeMigaja, pestanasDePanel } from "./vistaDePanel";
 
 /**
  * `tipo` es `TipoDeLugar` y no `string`: los dos origenes que lo arman
@@ -73,50 +74,14 @@ export function PanelDeNodo({
   cuentas,
   abreLaEdicion,
 }: Props) {
-  const ultimo = migaja[migaja.length - 1];
-  const pasos = [
-    { etiqueta: "Lugares", href: "/territorio" },
-    ...migaja.map((paso) => ({
-      etiqueta: paso.nombre,
-      ...(paso.id === ultimo?.id
-        ? {}
-        : { href: `/territorio?raiz=${raizId}&nodo=${paso.id}` }),
-    })),
-  ];
-
-  const pestanas: readonly Pestana[] = [
-    {
-      clave: "lugares",
-      etiqueta: "Lugares",
-      cuenta: cuentas.lugares,
-      href: `/territorio?raiz=${raizId}&nodo=${nodo.id}&vista=lugares`,
-      activa: vista === "lugares",
-    },
-    {
-      clave: "calles",
-      etiqueta: "Calles",
-      cuenta: cuentas.calles,
-      href: `/territorio?raiz=${raizId}&nodo=${nodo.id}&vista=calles`,
-      activa: vista === "calles",
-    },
-    {
-      clave: "domicilios",
-      etiqueta: "Domicilios",
-      cuenta: cuentas.domicilios,
-      href: `/territorio?raiz=${raizId}&nodo=${nodo.id}&vista=domicilios`,
-      activa: vista === "domicilios",
-    },
-    ...(abreLaEdicion
-      ? [
-          {
-            clave: "editar",
-            etiqueta: "Editar",
-            href: `/territorio?raiz=${raizId}&nodo=${nodo.id}&vista=editar`,
-            activa: vista === "editar",
-          },
-        ]
-      : []),
-  ];
+  const pasos = pasosDeMigaja(raizId, migaja);
+  const pestanas = pestanasDePanel({
+    raizId,
+    nodoId: nodo.id,
+    vista,
+    cuentas,
+    abreLaEdicion,
+  });
 
   return (
     <section

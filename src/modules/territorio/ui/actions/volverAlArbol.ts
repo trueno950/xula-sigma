@@ -32,9 +32,11 @@ export const rutaDelArbol = ({
  * El destino de error comun de las acciones de territorio: volver al arbol
  * con la raiz y el nodo seleccionado y el mensaje.
  *
- * El exito de las demas acciones NO redirige: revalidan y el re-render de
- * la pagina muestra el cambio al instante. La baja es la excepcion, y por
- * que lo es esta en `irAlArbol`.
+ * El exito de la mayoria de las acciones NO redirige: revalidan y el
+ * re-render de la pagina muestra el cambio al instante. La baja y el
+ * reparenteo son la excepcion -mueven o borran el nodo que la URL nombra,
+ * asi que quedarse ahi ya no resuelve nada- y por que lo son esta en
+ * `irAlArbol`.
  */
 export const volverAlArbol = (
   raiz: string | undefined,
@@ -43,9 +45,10 @@ export const volverAlArbol = (
 ): never => redirect(rutaDelArbol({ raiz, nodo, error }));
 
 /**
- * El destino de exito de la baja, que es la unica accion que no puede
- * quedarse donde estaba: el nodo que la URL nombra acaba de dejar de
- * existir, y la pagina no lo resuelve mas.
+ * El destino de exito de la baja y el reparenteo, las dos acciones que no
+ * pueden quedarse donde estaban: el nodo que la URL nombra o dejo de
+ * existir -baja- o ya no cuelga de esa raiz -reparenteo-, y la pagina no
+ * lo resuelve mas.
  *
  * Sin esto, `revalidatePath` volvia a renderizar la misma URL con
  * `?nodo=<dado de baja>`, `nodoResuelto` devolvia `null` y la pantalla
