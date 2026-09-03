@@ -25,6 +25,8 @@
 -- politica que ya permite ese SELECT sin tenant (misma que usa
 -- `resolverAyuntamientoPorSubdominio`).
 
+\set ON_ERROR_STOP on
+
 CREATE TEMP TABLE hallazgos_de_raiz (
   subdominio  text,
   municipio   text,

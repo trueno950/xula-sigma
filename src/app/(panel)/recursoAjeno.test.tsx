@@ -151,6 +151,27 @@ describe("un recurso que no es de este municipio", () => {
   });
 
   /**
+   * Regla 8 otra vez, con un segundo parametro roto en la URL: una raiz
+   * ajena junto a un `vista` que no es ninguna de las cuatro validas.
+   * `leerParametros` fallaba el objeto entero y `raizId` volvia
+   * `undefined`, asi que la pagina nunca llegaba a preguntar si la raiz
+   * es ajena.
+   */
+  it("con una raiz ajena y un vista invalido tambien da 404", async () => {
+    lugarPorIdMock.mockResolvedValue(null);
+
+    await expect(
+      PaginaDeTerritorio({
+        searchParams: Promise.resolve({
+          raiz: UUID_AJENO,
+          vista: "no-es-una-vista",
+        }),
+      }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(notFoundMock).toHaveBeenCalled();
+  });
+
+  /**
    * Control positivo: sin el, los cuatro de arriba pasarian aunque la
    * pagina llamara a `notFound()` siempre.
    */

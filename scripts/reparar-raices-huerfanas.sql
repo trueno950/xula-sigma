@@ -31,6 +31,15 @@
 -- se contaron, aborta y revierte TODO -el `DO` es una sola transaccion-.
 -- Un barrido a medias es peor que uno que no corrio, porque el que lo mira
 -- no sabe cual mitad quedo.
+--
+-- Y ese aborto tiene que llegarle a quien lo corre: un `RAISE EXCEPTION`
+-- dentro del `DO` no alcanza solo. Sin `ON_ERROR_STOP`, `psql -f` imprime
+-- el error, sigue con la proxima sentencia del archivo y sale con codigo
+-- 0 -medido con un `DO` que revienta a proposito-. Un script que falla
+-- ruidoso adentro y silencioso hacia afuera es el mismo defecto que las
+-- filas frenadas por RLS, una capa mas arriba.
+
+\set ON_ERROR_STOP on
 
 CREATE TEMP TABLE reparaciones (
   subdominio text,

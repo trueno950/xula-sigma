@@ -5,9 +5,31 @@ import {
   type SugerenciaDeDuplicado,
   sugerirDuplicadosAction,
 } from "./actions/sugerirDuplicados.action";
-import { planDeConsulta } from "./planDeConsulta";
+import { type PlanDeConsulta, planDeConsulta } from "./planDeConsulta";
 
 const RETARDO_MS = 300;
+
+/**
+ * El pedido al servidor y la carrera contra una respuesta vieja, aparte
+ * del hook: es el unico tramo con `await` en todo el flujo, y separarlo
+ * deja a `useSugerenciasDeDuplicados` en solo estado y temporizador.
+ */
+async function ejecutarConsulta(
+  plan: Extract<PlanDeConsulta, { tipo: "buscar" }>,
+  idDeConsultaActual: () => number,
+  setSugerencias: (sugerencias: readonly SugerenciaDeDuplicado[]) => void,
+) {
+  // La accion ya atrapa sus propios errores y devuelve `[]`; este catch es
+  // para el rechazo de red -conexion caida a mitad del pedido-, que nunca
+  // llega a ejecutar la accion en el servidor.
+  const encontradas = await sugerirDuplicadosAction(plan.cadena).catch(
+    () => [] as const,
+  );
+  // Ignora una respuesta que ya no es la ultima tecla escrita: sin esto,
+  // una respuesta lenta de una consulta vieja puede llegar despues de una
+  // mas nueva y pisar sugerencias correctas con unas desactualizadas.
+  if (plan.id === idDeConsultaActual()) setSugerencias(encontradas);
+}
 
 /**
  * El debounce y la carrera de respuestas de la busqueda de duplicados,
@@ -35,9 +57,8 @@ export function useSugerenciasDeDuplicados() {
   const consultar = (nombresNuevo: string, apellidoNuevo: string) => {
     clearTimeout(idDeRetardo.current);
     // La lista se vacia en cuanto cambia lo escrito, no cuando llega la
-    // respuesta. Entre el tecleo y el retardo quedaban visibles y
-    // seleccionables las personas de la consulta anterior, que ya no son
-    // las parecidas a lo que hay en el formulario.
+    // respuesta: entre el tecleo y el retardo quedaban visibles y
+    // seleccionables las personas de la consulta anterior.
     setSugerencias([]);
 
     const plan = planDeConsulta(
@@ -48,19 +69,10 @@ export function useSugerenciasDeDuplicados() {
 
     if (plan.tipo === "limpiar") return;
 
-    idDeRetardo.current = setTimeout(async () => {
-      // La accion ya atrapa sus propios errores y devuelve `[]`; este
-      // catch es para el rechazo de red -conexion caida a mitad del
-      // pedido-, que nunca llega a ejecutar la accion en el servidor.
-      const encontradas = await sugerirDuplicadosAction(plan.cadena).catch(
-        () => [] as const,
-      );
-      // Ignora una respuesta que ya no es la ultima tecla escrita: sin
-      // esto, una respuesta lenta de una consulta vieja puede llegar
-      // despues de una mas nueva y pisar sugerencias correctas con unas
-      // desactualizadas.
-      if (plan.id === idDeConsulta.current) setSugerencias(encontradas);
-    }, RETARDO_MS);
+    idDeRetardo.current = setTimeout(
+      () => ejecutarConsulta(plan, () => idDeConsulta.current, setSugerencias),
+      RETARDO_MS,
+    );
   };
 
   return { sugerencias, consultar };

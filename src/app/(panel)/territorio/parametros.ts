@@ -23,10 +23,21 @@ export type ParametrosDeTerritorio = {
   vista: TabDeLugar;
 };
 
+/**
+ * Cada campo cae a `undefined` por su cuenta -`.catch()`, no un
+ * `.safeParse()` de todo el objeto-. Con el objeto entero, un `vista`
+ * fuera de las cuatro validas tiraba tambien la `raiz`: `raizId` volvia
+ * `undefined` y `page.tsx` no llegaba a preguntar si la raiz es ajena,
+ * asi que una raiz de otro municipio con un `vista` roto caia al listado
+ * del municipio propio en 200 en vez del 404 de la regla 8.
+ */
 const esquemaDeParametros = z.object({
-  raiz: z.string().uuid().optional(),
-  nodo: z.string().uuid().optional(),
-  vista: z.enum(["lugares", "calles", "domicilios", "editar"]).optional(),
+  raiz: z.string().uuid().optional().catch(undefined),
+  nodo: z.string().uuid().optional().catch(undefined),
+  vista: z
+    .enum(["lugares", "calles", "domicilios", "editar"])
+    .optional()
+    .catch(undefined),
   accion: z
     .enum([
       "lugar",
@@ -37,8 +48,9 @@ const esquemaDeParametros = z.object({
       "baja",
       "reparentear",
     ])
-    .optional(),
-  error: z.string().optional(),
+    .optional()
+    .catch(undefined),
+  error: z.string().optional().catch(undefined),
 });
 
 /** A que pestana pertenece cada accion, para no perder el contexto. */
@@ -55,29 +67,17 @@ const pestanaDeAccion: Record<AccionDeNodo, TabDeLugar> = {
 export const leerParametros = (
   searchParams: Record<string, string | string[] | undefined>,
 ): ParametrosDeTerritorio => {
-  const analisis = esquemaDeParametros.safeParse(searchParams);
-
-  if (!analisis.success) {
-    return {
-      raizId: undefined,
-      nodoId: undefined,
-      accion: undefined,
-      error: undefined,
-      vista: "lugares",
-    };
-  }
-
-  const accion = analisis.data.accion as AccionDeNodo | undefined;
+  // Cada campo ya cae solo con `.catch()`: este parse no falla.
+  const datos = esquemaDeParametros.parse(searchParams);
+  const accion = datos.accion as AccionDeNodo | undefined;
 
   return {
-    raizId: analisis.data.raiz,
-    nodoId: analisis.data.nodo,
+    raizId: datos.raiz,
+    nodoId: datos.nodo,
     accion,
-    error: analisis.data.error,
+    error: datos.error,
     // La accion fija su pestana; sin accion vale la elegida (o Lugares).
-    vista: accion
-      ? pestanaDeAccion[accion]
-      : (analisis.data.vista ?? "lugares"),
+    vista: accion ? pestanaDeAccion[accion] : (datos.vista ?? "lugares"),
   };
 };
 

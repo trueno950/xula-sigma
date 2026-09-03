@@ -377,6 +377,14 @@ La lógica adentro de un componente (un `useMemo` de treinta líneas, un
 handler con anidación) sigue midiendo igual que en cualquier otro archivo:
 la excepción es sobre el marcado, no sobre el componente entero.
 
+**Y en cualquier función, la cuenta es de código, no de comentario.** La
+métrica mide complejidad -cuanto hay que sostener en la cabeza para leer
+una funcion-, y un comentario la baja, no la sube. Cortar un comentario
+que pasa el filtro 4 para bajar una funcion de 30 lineas es el mismo error
+que podar por porcentaje, que la seccion de Comentarios ya prohibe: mata
+primero los comentarios largos, que son justo los que cargan un hecho que
+no esta en ningun otro lado.
+
 ---
 
 ## Nomenclatura
