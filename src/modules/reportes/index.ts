@@ -27,6 +27,7 @@ export {
   consultarFolioDeReporte,
   historialDeReporte,
   listarReportes,
+  porcionesDeReportes,
   registrarReporte,
   reportePorId,
 } from "./composicion";
