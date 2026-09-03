@@ -261,8 +261,16 @@ que RLS sirva de algo.
 Obligatorio en:
 
 - login
-- validación pública de folio
-- alta de reportes ciudadanos desde el portal
+- validación pública de folio de constancia
+- consulta pública de folio de reporte ciudadano
 
 Las tres son superficies públicas y las tres se pueden usar para enumerar
 datos.
+
+Las dos últimas superficies de folio comparten la misma ventana `"folio"` de
+`TipoIntento`: la clave se deriva del origen del request (la IP), no del
+folio consultado, así que un origen que valida constancias y consulta
+reportes cuenta contra la misma cuota. Sin valor nuevo en el `CHECK` ni
+migración — es la decisión del usuario (`reportes-ciudadanos`), y la
+consecuencia es observable desde afuera: un origen puede agotar la ventana
+combinando las dos consultas.

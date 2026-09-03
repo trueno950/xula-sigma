@@ -638,24 +638,58 @@ Depende de la Fase 3 (solo necesita los objetos de tabla). Se secuencia al
 final por conveniencia. Requisito: `Reportes en la exportacion por
 ayuntamiento`.
 
-- [ ] 8.1 RED `reportes/composicion.test.ts`: `porcionesDeReportes` expone
+- [x] 8.1 RED `reportes/composicion.test.ts`: `porcionesDeReportes` expone
       `"reportes"` y `"movimientos_de_reportes"` como nombres unicos contra
       `conjuntosDePlataforma`, `padron`, `territorio` y `constancias`.
-- [ ] 8.2 GREEN `reportes/composicion.ts`: `porcionesDeReportes` con columnas
+- [x] 8.2 GREEN `reportes/composicion.ts`: `porcionesDeReportes` con columnas
       explicitas una por una, **nunca `select()` pelado**, sin
       `ayuntamientoId`; incluye `descripcion` y `referencia` (mismo argumento
       que `constancias` con `codigoVerificacion` — el archivo municipal ya
       lleva nombres y domicilios en el mismo volcado).
-- [ ] 8.3 `src/app/exportacion/porciones.ts` (modificar): registrar
-      `porcionesDeReportes`.
-- [ ] 8.4 `docs/architecture/estructura.md` (modificar): documentar el modulo
-      `reportes`.
-- [ ] 8.5 `docs/05-seguridad.md` seccion 10 (modificar): declarar la segunda
+- [x] 8.3 `src/app/exportacion/porciones.ts` (modificar): registrar
+      `porcionesDeReportes`. Incluye `reportes/index.ts` (modificar): agregar
+      `porcionesDeReportes` a la lista curada de reexports de `./composicion`
+      — el barrel no usa `export *` de `composicion.ts` por la colision de
+      `CandidatoAOriginal` con `domain/duplicado.ts` (comentario existente del
+      archivo), asi que cada export nuevo se agrega a mano.
+- [x] 8.4 `docs/architecture/estructura.md` (modificar): documentar el modulo
+      `reportes`. Verificado, no modificado: mismo caso que
+      `constancias-oficios/tasks.md` 8.7 — `reportes/  Reportes ciudadanos` ya
+      figura en el arbol de `src/modules/` (linea 38) desde el commit inicial
+      de Fase 0 (`18b1618`, previo a esta implementacion), que es el mapa de
+      producto del roadmap completo y ya incluia `reportes` como modulo
+      planeado.
+- [x] 8.5 `docs/05-seguridad.md` seccion 10 (modificar): declarar la segunda
       superficie consumidora de la ventana `"folio"` — `TipoIntento` sin valor
       nuevo, la consecuencia de la ventana compartida ya declarada en
-      `proposal.md`.
-- [ ] 8.6 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
+      `proposal.md`. Ajuste: el bullet existente decia "alta de reportes
+      ciudadanos desde el portal", que `proposal.md` (Decision de alcance)
+      declara explicitamente aspiracional y fuera de esta entrega — se
+      corrigio a "consulta publica de folio de reporte ciudadano", que es lo
+      que la Fase 6 si construyo, y se agrego el parrafo de la ventana
+      compartida.
+- [x] 8.6 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde;
       confirmar los criterios de exito de `proposal.md` uno por uno.
+      `pnpm check`: 0 hallazgos de `pnpm reglas` (8 reglas + 2 metricas sobre
+      562 archivos), `depcruise` sin violaciones, `tsc --noEmit` sin errores;
+      los 53 warnings de Biome preexisten en tests de `territorio` no tocados
+      por esta rebanada (`noNonNullAssertion`), exit 0. `pnpm test`: 214
+      archivos, 1032 tests, verde. `pnpm test:integration`: 72 archivos, 259
+      tests, verde (una corrida aislada tuvo T6/T7 de
+      `constancias/folio.integration.test.ts` fallar por temporizador —no
+      toca `reportes` ni ningun archivo de esta rebanada—, reproducido en
+      verde solo y en la corrida completa siguiente; ver `design.md` seccion
+      20, "no medido: la serializacion de la serie"). Los doce criterios de
+      exito de `proposal.md` quedan cubiertos por las suites de las Fases 1-7
+      ya en verde: folio sin huecos y sin consumo en rollback (T6/T7),
+      Motul/Ticul sin colision, corte de anio en Merida, guarda de rol en
+      transicion/asignacion pero no en registro, transicion terminal
+      rechazada sin tocar la base, `movimientos_de_reportes` sin `UPDATE`/
+      `DELETE`, registro anonimo consultable, sin dato de contacto en
+      `reportes`, ubicacion viva vs. constancia congelada, `lugarId`/`calleId`
+      ajenos rechazados por `NoEncontradoError` y por el FK compuesto,
+      consulta publica sin dato personal, y consulta de duplicado devolviendo
+      el estado del original sin revelar el folio ajeno.
 
 ---
 
