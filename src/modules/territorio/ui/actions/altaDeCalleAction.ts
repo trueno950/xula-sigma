@@ -8,15 +8,13 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeCalle } from "../../composicion";
 import { comoLugarId, NombreDeCalleDuplicadoError } from "../../domain";
-import { volverAlArbol } from "./volverAlArbol";
+import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
 const esquemaDeEntrada = z.object({
   nombre: z.string().trim().min(1),
   lugarId: z.string().trim().uuid(),
-  raiz: z.string().trim().uuid().optional(),
-  nodo: z.string().trim().uuid().optional(),
 });
 const MENSAJE_FORMULARIO_INVALIDO = "Nombre y lugar son obligatorios.";
 const MENSAJE_GENERICO = "No se pudo completar el alta. Intente de nuevo.";
@@ -34,14 +32,12 @@ const mensajeDeError = (error: unknown): string => {
 };
 
 export async function altaDeCalleAction(formData: FormData): Promise<void> {
-  const raiz = formData.get("raiz")?.toString() || undefined;
-  const nodo = formData.get("nodo")?.toString() || undefined;
   const analisis = esquemaDeEntrada.safeParse({
     nombre: formData.get("nombre"),
     lugarId: formData.get("lugarId"),
-    raiz: formData.get("raiz")?.toString() || undefined,
-    nodo: formData.get("nodo")?.toString() || undefined,
   });
+
+  const { raiz, nodo } = navegacionDe(formData);
 
   if (!analisis.success) {
     volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);

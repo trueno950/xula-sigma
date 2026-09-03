@@ -13,7 +13,7 @@ import {
   RaizInvalidaError,
   TIPOS_DE_LUGAR,
 } from "../../domain";
-import { volverAlArbol } from "./volverAlArbol";
+import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /**
  * Borde de sesion del alta (mismo reparto que `altaDePersonaAction`,
@@ -25,8 +25,6 @@ const esquemaDeEntrada = z.object({
   tipo: z.enum(TIPOS_DE_LUGAR),
   nombre: z.string().trim().min(1),
   padreId: z.union([z.literal(""), z.string().trim().uuid()]),
-  raiz: z.string().trim().uuid().optional(),
-  nodo: z.string().trim().uuid().optional(),
 });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Tipo y nombre son obligatorios.";
@@ -49,15 +47,13 @@ const mensajeDeError = (error: unknown): string => {
 };
 
 export async function altaDeLugarAction(formData: FormData): Promise<void> {
-  const raiz = formData.get("raiz")?.toString() || undefined;
-  const nodo = formData.get("nodo")?.toString() || undefined;
   const analisis = esquemaDeEntrada.safeParse({
     tipo: formData.get("tipo"),
     nombre: formData.get("nombre"),
     padreId: formData.get("padreId") ?? "",
-    raiz: formData.get("raiz")?.toString() || undefined,
-    nodo: formData.get("nodo")?.toString() || undefined,
   });
+
+  const { raiz, nodo } = navegacionDe(formData);
 
   if (!analisis.success) {
     volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);

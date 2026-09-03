@@ -8,15 +8,13 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { renombrarCalle } from "../../composicion";
 import { comoCalleId, NombreDeCalleDuplicadoError } from "../../domain";
-import { volverAlArbol } from "./volverAlArbol";
+import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `editarLugarAction`. Formulario nativo sin `use client`. */
 
 const esquemaDeEntrada = z.object({
   id: z.string().trim().uuid(),
   nombre: z.string().trim().min(1),
-  raiz: z.string().trim().uuid().optional(),
-  nodo: z.string().trim().uuid().optional(),
 });
 const MENSAJE_FORMULARIO_INVALIDO =
   "Seleccione una calle y escriba el nombre nuevo.";
@@ -36,14 +34,12 @@ const mensajeDeError = (error: unknown): string => {
 };
 
 export async function renombrarCalleAction(formData: FormData): Promise<void> {
-  const raiz = formData.get("raiz")?.toString() || undefined;
-  const nodo = formData.get("nodo")?.toString() || undefined;
   const analisis = esquemaDeEntrada.safeParse({
     id: formData.get("id"),
     nombre: formData.get("nombre"),
-    raiz: formData.get("raiz")?.toString() || undefined,
-    nodo: formData.get("nodo")?.toString() || undefined,
   });
+
+  const { raiz, nodo } = navegacionDe(formData);
 
   if (!analisis.success) {
     volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);

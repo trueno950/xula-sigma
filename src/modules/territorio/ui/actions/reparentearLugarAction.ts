@@ -12,15 +12,13 @@ import {
   JerarquiaInvalidaError,
   RaizInvalidaError,
 } from "../../domain";
-import { volverAlArbol } from "./volverAlArbol";
+import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
 const esquemaDeEntrada = z.object({
   lugarId: z.string().trim().uuid(),
   nuevoPadreId: z.union([z.literal(""), z.string().trim().uuid()]),
-  raiz: z.string().trim().uuid().optional(),
-  nodo: z.string().trim().uuid().optional(),
 });
 const MENSAJE_FORMULARIO_INVALIDO = "Falta el lugar a mover.";
 const MENSAJE_GENERICO =
@@ -40,14 +38,12 @@ const mensajeDeError = (error: unknown): string => {
 export async function reparentearLugarAction(
   formData: FormData,
 ): Promise<void> {
-  const raiz = formData.get("raiz")?.toString() || undefined;
-  const nodo = formData.get("nodo")?.toString() || undefined;
   const analisis = esquemaDeEntrada.safeParse({
     lugarId: formData.get("lugarId"),
     nuevoPadreId: formData.get("nuevoPadreId") ?? "",
-    raiz: formData.get("raiz")?.toString() || undefined,
-    nodo: formData.get("nodo")?.toString() || undefined,
   });
+
+  const { raiz, nodo } = navegacionDe(formData);
 
   if (!analisis.success) {
     volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
