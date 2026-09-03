@@ -102,9 +102,6 @@ test("tras guardar, el destino del redirect resuelve el municipio", async ({
 
   // La barra de identidad sale de `ayuntamientoActual()`: que nombre al
   // municipio es que el respaldo resolvio en el render sintetico. Sin el,
-  // esta pantalla es la que lanzaba `TenantNoResueltoError`.
-  // La barra de identidad sale de `ayuntamientoActual()`: que nombre al
-  // municipio es que el respaldo resolvio en el render sintetico. Sin el,
   // esta pantalla respondia 404 -superficie `raiz`- despues de guardar.
   await expect(
     page.getByText(MUNICIPIOS.motul.nombre, { exact: true }),
