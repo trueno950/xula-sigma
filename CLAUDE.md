@@ -5,6 +5,7 @@
 SaaS multi-tenant para ayuntamientos pequeños de Yucatán. Digitaliza
 trámites y operación interna del palacio municipal.
 
+- **Las reglas del proyecto: `AGENTS.md`**
 - Alcance y fases: `ROADMAP.md`
 - Índice de estándares: `docs/README.md`
 - Estructura, capas y stack: `docs/architecture/estructura.md`
@@ -23,31 +24,24 @@ proponer cualquier funcionalidad que toque esa frontera.
 
 ## Reglas duras
 
-### Tenancy
-Un error aquí es una fuga de datos entre municipios y termina el negocio.
+Las 12 reglas, los 25 antipatrones, las capas, la nomenclatura, los
+comentarios y los datos sensibles viven en **@AGENTS.md**. Este archivo no
+las repite: una regla escrita en dos lados diverge, y la copia que quede
+vieja no avisa. Es el antipatrón 23 aplicado a la raíz del repo.
 
-- Toda tabla operativa lleva `ayuntamiento_id` y política RLS con
-  `FORCE ROW LEVEL SECURITY`
-- Acceso a base de datos **siempre** por `shared/tenancy`. Nunca conexión
-  directa. `withTenant` para la operación, `withAltaDeAyuntamiento` para el
-  alta de un municipio cuando el tenant todavía no existe, y
-  `exigirRolSinPrivilegios`, que no es una puerta: lee `pg_roles` y solo
-  sabe negarse. La lista canónica y qué sanciona a cada una: `AGENTS.md`
-  regla 2 y ADR 0001 §2. Ninguna nueva entra sin actualizarlas, y los
-  comentarios del módulo no llevan la cuenta — por qué, en la misma regla.
-- Dentro de transacción: `SET LOCAL app.tenant`. **Nunca `SET` sin
-  `LOCAL`** — se queda pegado en el pooler y lo hereda el siguiente
-  request de otro municipio.
-- Tabla nueva sin test de aislamiento = no entra
+Lo que sigue es lo que **no** está en `AGENTS.md`: la forma del árbol, los
+pisos de cobertura, las herramientas de sesión, el flujo y el stack.
 
-### Capas
-```
-ui ──► application ──► domain ◄── infrastructure
-```
-- `domain` no importa nada. Ni Next.js, ni Drizzle, ni React.
-- `application` define puertos; `infrastructure` los implementa
-- Un módulo no importa de otro módulo: va por un puerto de su dominio
-- Enforzado por dependency-cruiser. Violarlo rompe el build.
+El corte es por audiencia y no por herramienta. `AGENTS.md` es además el
+`RULES_FILE` de `.gga`: viaja entero al revisor en cada ronda, así que no
+lleva stack ni flujo de trabajo, que no son criterio de revisión. Este
+archivo lleva eso y no lleva reglas.
+
+Cada agente llega a los dos por un camino distinto, y ninguno de los dos es
+automático en ambos lados: Claude carga `CLAUDE.md` y desde ahí importa
+`AGENTS.md` con `@`; opencode carga `AGENTS.md` solo y llega a este por
+`instructions` en `opencode.json`. Ese archivo existe para eso y para nada
+más.
 
 ### Estructura
 ```
@@ -82,48 +76,6 @@ Suites: `unit` corre sin base de datos. `integration` —que incluye los
 cobertura se mide sobre las dos**, en el job que tiene base: midiendo solo
 `unit`, `withTenant` daba 0% con sus tests de aislamiento en verde, y subir
 el número habría pedido tests unitarios que no prueban RLS.
-
-### Idioma
-- Dominio en español: `constancia`, `padron`, `apoyoTraslado`
-- Andamiaje técnico en inglés: `domain`, `useCase`, `repository`
-- Identificadores sin acentos ni eñes: `campanias`, `montoMinimo`
-- Comentarios, documentación y commits en español
-
-### Comentarios
-Un comentario no tiene CI. El día que deja de ser cierto, nada falla —
-sigue ahí, afirmando con autoridad algo que ya no pasa. Por eso se escribe
-el que carga algo que ningún test puede cargar, y solo ese.
-
-Cinco filtros, en orden. El primero que dispare decide:
-
-1. **¿Reformula el código?** → se borra. `// nulo mientras sigue activo`
-   sobre una columna nullable llamada `bajaEn` no informa nada.
-2. **¿Describe comportamiento?** → es un test, no un comentario. Un
-   `// esto devuelve 404, no 403` sin test al lado es una intención, no
-   una garantía.
-3. **¿Ya está dicho en otro archivo?** → se deja en UN lugar y el resto
-   apunta ahí. Dos copias de una explicación divergen; la que quede vieja
-   no avisa.
-4. **¿Trae un hecho de afuera del archivo** —línea de un bundle,
-   comportamiento de Postgres, regla de negocio— **o documenta una
-   ausencia?** → se queda. Es su único hogar. El código no puede explicar
-   por qué una columna NO existe.
-5. **¿Cita una versión o una línea de un paquete?** → o se vuelve test, o
-   lleva la versión escrita al lado. `index.mjs:286` se mueve solo en el
-   próximo bump y nadie se entera.
-
-El filtro 4 es el que justifica los comentarios largos de este repo, y no
-se recorta por porcentaje: podar por métrica mata primero los largos, que
-son justamente los que cargan lo que no está en ningún otro lado.
-
-Ejemplos y detalle: `docs/04-calidad.md` sección 8. GGA lo aplica vía
-`AGENTS.md` (antipatrones 17, 23, 24 y 25).
-
-### Datos sensibles
-- Motivo de traslado y tipo de asunto del juzgado: **categorías cerradas,
-  nunca texto libre**. Un diagnóstico o un pleito familiar en un campo
-  abierto es dato sensible sin protección.
-- Sin exportación masiva sin bitácora de acceso
 
 ---
 
@@ -172,12 +124,9 @@ Ver ADR 0001 §7.
 
 Lo que un patrón decide, no paga un modelo.
 
-**Y el proveedor no es el mismo en los dos lados.** En `opencode auth`,
-`deepseek` está como `api` y `openai` como `oauth`: la API key entra a un
-runner como secreto, el token OAuth de una suscripción está atado a la
-máquina. Por eso CI se queda con DeepSeek y el trabajo diario va con
-`pnpm revision:local`, que además usa caché — `--pr-mode` la desactiva
-siempre.
+**Y el proveedor no es el mismo en los dos lados** — el porqué está en `.gga`.
+El trabajo diario va con `pnpm revision:local`, que además usa caché —
+`--pr-mode` la desactiva siempre.
 
 Y el ciclo, cuando el revisor sí corre:
 
