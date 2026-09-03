@@ -10,21 +10,22 @@ import {
 } from "./municipios";
 
 /**
- * El respaldo por host de `shared/tenancy/contexto.ts`, y por que no es
- * una eleccion de tenant en manos del cliente.
+ * El respaldo por host de `resolverHost` en `proxy.ts`: que sostenga el
+ * redirect, y que no lo pueda mover quien hace la peticion.
  *
- * `ayuntamientoActual()` deriva el municipio de `x-forwarded-host` y
- * `host` cuando `x-xula-subdominio` no esta. Esa cabecera falta en un solo
- * caso: el render sintetico con el que Next resuelve el destino del
- * `redirect()` de un Server Action. Ahi `host` es el del propio servidor
- * -sin subdominio-, asi que sin el respaldo el destino no resuelve
- * municipio y la pantalla muere despues de guardar.
+ * El proxy deriva el municipio de `x-forwarded-host` en un solo caso:
+ * cuando `host` no cuelga del dominio base **en absoluto**. Esa es la
+ * firma del render sintetico con el que Next resuelve el destino del
+ * `redirect()` de un Server Action -ahi `host` es el del propio servidor-,
+ * y sin el respaldo la pantalla muere justo despues de guardar.
  *
- * Las dos cabeceras las manda quien hace la peticion, y de ahi la
- * pregunta: cambiarlas, ¿mueve el tenant? Los dos tests de abajo son la
- * respuesta medida, no razonada. Ninguno de los dos se puede escribir sin
- * navegador: el primero necesita el protocolo real de Server Actions, y el
- * segundo que el proxy corra de verdad sobre el request.
+ * Los dos tests de aca necesitan sesion. Que un host ajeno no mueva el
+ * municipio en las superficies **sin** sesion esta en
+ * `hostAjeno.spec.ts`, que es donde vive el caso que cerro el agujero.
+ *
+ * Ninguno de los dos se puede escribir sin navegador: hace falta el
+ * protocolo real de Server Actions y que el proxy corra de verdad sobre el
+ * request.
  */
 
 /**
