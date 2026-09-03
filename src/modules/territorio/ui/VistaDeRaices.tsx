@@ -86,9 +86,12 @@ export function VistaDeRaices({
                   {/*
                     `tipoDeLugar.ts` dice que un rango 0 es "raiz por
                     construccion". Lo contrario -una colonia, un sector o
-                    una manzana arriba de todo- no lo rechaza ningun caso de
-                    uso todavia, asi que la pantalla lo senala en vez de
-                    esconderlo: es dato que hay que mover, no ruido visual.
+                    una manzana arriba de todo- ya no se puede crear:
+                    `altaDeLugar` y `reparentearLugar` lanzan
+                    `RaizInvalidaError`. Lo que queda aca es dato anterior a
+                    esa regla, y la pantalla lo senala en vez de esconderlo
+                    porque hay que moverlo a mano. `scripts/auditar-raices.sql`
+                    es el mismo barrido del lado de la base.
                   */}
                   {puedeSerRaiz(raiz.tipo) ? null : (
                     <span className="flex items-center gap-1 text-[13px] font-medium text-senial-aviso">
