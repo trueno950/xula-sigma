@@ -486,7 +486,7 @@ y la fecha de registro propia`, `Toda respuesta negativa es indistinguible`,
 `Limitacion de ritmo por IP, nunca por folio`, `Limitacion de ritmo sin
 bloqueo persistente`.
 
-- [ ] 6.1 RED `reportes/application/consultarFolioDeReporte.test.ts`:
+- [x] 6.1 RED `reportes/application/consultarFolioDeReporte.test.ts`:
       `paraConsultaPublica` -> `null` -> `proyectarConsulta(null, null)` ===
       `SIN_REGISTRO` (`toBe`, identidad); consultado sin
       `duplicadoDeReporteId` -> **una sola** llamada al repositorio,
@@ -495,31 +495,39 @@ bloqueo persistente`.
       salto -> `tipo`/`estado`/fechas del propio consultado; camino feliz con
       salto -> `tipo` del consultado, `estado` y `actualizadoEn` del original,
       `registradoEn` **siempre** el del consultado, nunca el del original.
-- [ ] 6.2 GREEN `reportes/application/consultarFolioDeReporte.ts`:
+- [x] 6.2 GREEN `reportes/application/consultarFolioDeReporte.ts`:
       `crearConsultarFolioDeReporte(repositorio)`, firma propia sin
       `ContextoActual`, sin `usuario`, sin `codigo` — segunda vez que el repo
       la necesita (`validarFolio` es la primera).
-- [ ] 6.3 RED `reportes/application/consultarFolioDeReporte.ritmo.test.ts`:
+- [x] 6.3 RED `src/app/reportes/[folio]/ritmo.test.ts` (nombre de archivo
+      corregido durante el apply: el limitador vive en el borde de la ruta y
+      no adentro del caso de uso —design.md seccion 14, "El limitador vive
+      en el borde y no adentro del caso de uso"—, y el unico precedente en
+      el repo, `validarFolio.ritmo.test.ts`, tampoco vive en
+      `constancias/application/`, vive junto a su `page.tsx`):
       `invocationCallOrder` confirma que `limitarRitmo` corre **antes** que el
       caso de uso; `RitmoExcedidoError` responde 429 **sin haber consultado
       nada**.
-- [ ] 6.4 GREEN: wiring del limitador en el borde de la ruta —
+- [x] 6.4 GREEN: wiring del limitador en el borde de la ruta —
       `limitarRitmo(ayuntamientoId, [{ tipo: "folio", valor: ip }])`, mismo
       `TipoIntento` que `validarFolio`, sin valor nuevo y sin migracion del
       CHECK (decision del usuario).
-- [ ] 6.5 RED test de borde de `src/app/reportes/[folio]/page.tsx` (`vi.mock`
+- [x] 6.5 RED test de borde de `src/app/reportes/[folio]/page.tsx` (`vi.mock`
       del caso de uso): `CABECERA_SUPERFICIE !== "ayuntamiento"` ->
       `notFound()` sin invocar el caso de uso; **200 siempre** para los tres
       negativos (folio inexistente, de otro municipio, mal escrito) — nunca
       `notFound()` por folio inexistente; ningun folio ajeno, descripcion,
       ubicacion ni area presente en el HTML (assertion sobre el markup, no
       sobre el objeto).
-- [ ] 6.6 GREEN `src/app/reportes/[folio]/page.tsx`: calco de
+- [x] 6.6 GREEN `src/app/reportes/[folio]/page.tsx`: calco de
       `src/app/validar/[folio]/page.tsx`, `{ id } = await
       ayuntamientoActual()` sin sesion.
-- [ ] 6.7 `reportes/composicion.ts` (modificar) + `index.ts`: exponer
-      `consultarFolioDeReporte` como caso de uso publico.
-- [ ] 6.8 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+- [x] 6.7 `reportes/composicion.ts` (modificar) + `index.ts`: exponer
+      `consultarFolioDeReporte` como caso de uso publico. Incluye
+      `repositorioDeReportesSql.ts`: agrega `paraConsultaPublica` y
+      `paraConsultaPublicaPorId` (el comentario del archivo ya anticipaba
+      que el resto del contrato se completa en esta rebanada).
+- [x] 6.8 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 7: Rebanada 7 — Buscador de similares y UI de mostrador (~630 lineas)
 

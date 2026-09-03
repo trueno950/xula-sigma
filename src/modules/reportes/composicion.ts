@@ -1,6 +1,7 @@
 import {
   crearAsignarAreaDeReporte,
   crearCambiarEstadoDeReporte,
+  crearConsultarFolioDeReporte,
   crearListarReportes,
   crearRegistrarReporte,
   crearReportePorId,
@@ -41,3 +42,6 @@ export const asignarAreaDeReporte = crearAsignarAreaDeReporte({
   repositorio: repositorioDeReportesSql,
   movimientos: registroDeMovimientosSql,
 });
+export const consultarFolioDeReporte = crearConsultarFolioDeReporte(
+  repositorioDeReportesSql,
+);
