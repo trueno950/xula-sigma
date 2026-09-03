@@ -6,6 +6,14 @@ import type {
 import { comoReporteId } from "../domain";
 import { reportes } from "./esquema";
 
+const COLUMNAS_DE_CONSULTA_PUBLICA = {
+  tipo: reportes.tipo,
+  estado: reportes.estado,
+  registradoEn: reportes.registradoEn,
+  actualizadoEn: reportes.actualizadoEn,
+  duplicadoDeReporteId: reportes.duplicadoDeReporteId,
+} as const;
+
 /**
  * Implementacion real de `RepositorioDeReportes`, mismo criterio que
  * `repositorioDeConstanciasSql`: el mismo Postgres que da RLS es el que
@@ -16,8 +24,9 @@ import { reportes } from "./esquema";
  * `asignarArea` y `contarDuplicadosDe` -los cuatro que `cambiarEstadoDeReporte`,
  * `asignarAreaDeReporte` y el conteo de duplicados de tasks.md 5.13 necesitan-
  * (tasks.md 5.3, 5.14), sobre `guardar`, `buscarPorId` y `listar` de la
- * Fase 4. El resto del contrato (`similaresAbiertos`, `paraConsultaPublica*`)
- * se completa en las Fases 6 y 7 sobre este mismo archivo.
+ * Fase 4. `paraConsultaPublica`/`paraConsultaPublicaPorId` entran en esta
+ * rebanada (tasks.md Fase 6) para `consultarFolioDeReporte`; `similaresAbiertos`
+ * se completa en la Fase 7 sobre este mismo archivo.
  */
 const aReporteGuardado = (
   fila: typeof reportes.$inferSelect,
@@ -48,6 +57,8 @@ export const repositorioDeReportesSql: Pick<
   | "aplicarTransicion"
   | "asignarArea"
   | "contarDuplicadosDe"
+  | "paraConsultaPublica"
+  | "paraConsultaPublicaPorId"
 > = {
   async guardar(tx, datos) {
     await tx.insert(reportes).values(datos);
@@ -151,5 +162,29 @@ export const repositorioDeReportesSql: Pick<
       .where(condiciones.length > 0 ? and(...condiciones) : undefined);
 
     return filas.map(aReporteGuardado);
+  },
+
+  async paraConsultaPublica(tx, folio) {
+    // Un `SELECT` de cinco columnas, ninguna de datos personales: el borde
+    // publico nunca lee `descripcion`, `referencia`, `lugarId` ni `personaId`
+    // (design.md seccion 14). La politica de la tabla acota el tenant.
+    const [fila] = await tx
+      .select(COLUMNAS_DE_CONSULTA_PUBLICA)
+      .from(reportes)
+      .where(eq(reportes.folio, folio));
+
+    return fila ?? null;
+  },
+
+  async paraConsultaPublicaPorId(tx, id) {
+    // El segundo `SELECT` del salto de design.md seccion 14 -mismas cinco
+    // columnas, mismo criterio que `candidatoAOriginal` para el borde entre
+    // `string` y `ReporteId`.
+    const [fila] = await tx
+      .select(COLUMNAS_DE_CONSULTA_PUBLICA)
+      .from(reportes)
+      .where(eq(reportes.id, comoReporteId(id)));
+
+    return fila ?? null;
   },
 };
