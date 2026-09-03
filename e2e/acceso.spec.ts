@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { CLAVE, CORREO, MUNICIPIOS, urlDe } from "./municipios";
+import { CLAVE, CORREO, MUNICIPIOS, urlDe, urlDeLaRaiz } from "./municipios";
 
 /**
  * Lo que solo se puede probar con un navegador de verdad: el **alcance de
@@ -39,11 +39,11 @@ test("la pantalla de acceso muestra el municipio del subdominio", async ({
 
 test("en el dominio pelado no hay pantalla de acceso", async ({ page }) => {
   /**
-   * `xulasigma.mx/acceso` sin municipio es 404, no 500. Un 500 delata que
+   * El dominio base sin municipio: `/acceso` ahi es 404, no 500. Un 500 delata que
    * ahi adentro hay algo que espera un tenant; un 404 no dice nada. Antes
    * de la guarda del layout, esto respondia 500 —lo encontro este E2E.
    */
-  const respuesta = await page.goto("http://localhost:3000/acceso");
+  const respuesta = await page.goto(urlDeLaRaiz("/acceso"));
 
   expect(respuesta?.status()).toBe(404);
 });

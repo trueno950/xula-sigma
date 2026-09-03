@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { PUERTO } from "./e2e/municipios";
+import { DOMINIO_BASE, PUERTO } from "./e2e/municipios";
 
 /**
  * E2E contra la aplicacion construida, no contra `next dev`.
@@ -16,7 +16,7 @@ import { PUERTO } from "./e2e/municipios";
  */
 
 const ENTORNO = {
-  DOMINIO_BASE: "localhost",
+  DOMINIO_BASE,
   DATABASE_URL:
     process.env.DATABASE_URL ??
     "postgresql://xula_app:postgres@localhost:55432/xula_test",
@@ -55,14 +55,17 @@ export default defineConfig({
   webServer: {
     command: `pnpm build && PORT=${PUERTO} pnpm start`,
     /**
-     * Un endpoint que no toca la base ni resuelve tenant.
+     * Un endpoint que no toca la base ni resuelve tenant, **en el dominio
+     * base**. No en `localhost` pelado: desde que el dominio base es
+     * `xula.localhost`, un host que no cuelga de el es `invalido` y el
+     * proxy responde 404, asi que el chequeo esperaba para siempre.
      *
      * Playwright arranca el servidor **antes** del `globalSetup`, asi que
      * cuando corre este chequeo todavia no hay municipios sembrados.
      * Apuntarlo a `/acceso` de uno lo hacia esperar por datos que la
      * siembra iba a crear despues, y el servidor moria por timeout.
      */
-    url: `http://localhost:${PUERTO}/api/salud`,
+    url: `http://${DOMINIO_BASE}:${PUERTO}/api/salud`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     env: ENTORNO,

@@ -6,9 +6,12 @@
  * que abre el navegador y de la que Playwright espera, asi que tiene que
  * conocerse antes de arrancar.
  *
- * Con `DOMINIO_BASE=localhost`, `motul.localhost:3000` resuelve al
- * subdominio `motul`. Chromium mapea todo `*.localhost` al loopback por
+ * Con `DOMINIO_BASE=xula.localhost`, `motul.xula.localhost:3000` resuelve
+ * al subdominio `motul`. Chromium mapea todo `*.localhost` al loopback por
  * especificacion, asi que no hace falta tocar `/etc/hosts`.
+ *
+ * El dominio base **no puede ser `localhost` pelado**: es el host interno
+ * del servidor, y `proxy.ts` explica que pasa si coinciden.
  */
 
 export const MUNICIPIOS = {
@@ -39,5 +42,12 @@ export const CLAVE = "clave-larga-y-buena";
  */
 export const PUERTO = process.env.E2E_PUERTO ?? "3000";
 
+/** El mismo valor que `playwright.config.ts` le pasa al servidor. */
+export const DOMINIO_BASE = "xula.localhost";
+
 export const urlDe = (municipio: keyof typeof MUNICIPIOS, ruta = "/") =>
-  `http://${MUNICIPIOS[municipio].subdominio}.localhost:${PUERTO}${ruta}`;
+  `http://${MUNICIPIOS[municipio].subdominio}.${DOMINIO_BASE}:${PUERTO}${ruta}`;
+
+/** El dominio base pelado, sin municipio: la superficie `raiz`. */
+export const urlDeLaRaiz = (ruta = "/") =>
+  `http://${DOMINIO_BASE}:${PUERTO}${ruta}`;

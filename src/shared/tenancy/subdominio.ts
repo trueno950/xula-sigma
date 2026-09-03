@@ -10,6 +10,20 @@
  * calza exacto. Ante la duda, `invalido` — nunca un tenant por defecto.
  */
 
+/**
+ * El dominio base cuando el entorno no lo fija.
+ *
+ * **No es `localhost` a secas**, y el motivo esta en `proxy.ts`: si el
+ * dominio base coincidiera con el host interno del servidor, el render
+ * sintetico del redirect de un Server Action se leeria como `raiz` en vez
+ * de `invalido` y el respaldo por `x-forwarded-host` no correria.
+ *
+ * `xula.localhost` sirve para desarrollo sin tocar `/etc/hosts`: Chromium
+ * mapea todo `*.localhost` al loopback por especificacion, asi que
+ * `motul.xula.localhost` resuelve igual que `motul.localhost`.
+ */
+export const DOMINIO_BASE_POR_DEFECTO = "xula.localhost";
+
 export type Subdominio =
   | { tipo: "ayuntamiento"; subdominio: string }
   | { tipo: "admin" }

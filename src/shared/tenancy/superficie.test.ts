@@ -21,48 +21,35 @@ const conCabeceras = (mapa: Record<string, string>) => {
 };
 
 /**
- * La superficie del render sintetico, que es donde la cabecera del proxy
- * miente: ese request interno si pasa por el proxy, con `host` puesto al
- * dominio base pelado, y el proxy lo resuelve como `raiz`.
- *
- * Costo de no tener esto: `(panel)/layout.tsx` llamaba `notFound()` y la
- * pantalla respondia 404 justo despues de guardar.
+ * `superficieActual` lee la cabecera del proxy y nada mas. El respaldo por
+ * host vivio aca un tiempo y se movio a `resolverHost` en `proxy.ts`: los
+ * casos de derivacion se prueban alla.
  */
 describe("superficieActual", () => {
   beforeEach(() => {
     leerCabeceras.mockReset();
   });
 
-  it("un municipio nombrado por el host le gana a una `raiz` escrita", async () => {
-    conCabeceras({
-      "x-xula-superficie": "raiz",
-      host: "localhost:3000",
-      "x-forwarded-host": "ticul.localhost:3000",
-    });
+  it("devuelve la superficie que escribio el proxy", async () => {
+    conCabeceras({ "x-xula-superficie": "ayuntamiento" });
 
     await expect(superficieActual()).resolves.toBe("ayuntamiento");
   });
 
   /**
-   * `admin` es una superficie de verdad y no se pisa: el panel de
-   * SUPER_ADMIN vive fuera del espacio de tenants a proposito.
+   * Ni siquiera con un host que nombra municipio: el que decide es el
+   * proxy, y aca ya no hay derivacion que lo pise.
    */
-  it("`admin` no se pisa aunque un host nombre municipio", async () => {
+  it("un host ajeno no mueve la superficie escrita", async () => {
     conCabeceras({
-      "x-xula-superficie": "admin",
-      "x-forwarded-host": "ticul.localhost:3000",
+      "x-xula-superficie": "raiz",
+      "x-forwarded-host": "ticul.xula.localhost",
     });
-
-    await expect(superficieActual()).resolves.toBe("admin");
-  });
-
-  it("la raiz de verdad sigue siendo raiz", async () => {
-    conCabeceras({ "x-xula-superficie": "raiz", host: "localhost:3000" });
 
     await expect(superficieActual()).resolves.toBe("raiz");
   });
 
-  it("sin cabecera ni host no hay superficie", async () => {
+  it("sin cabecera no hay superficie", async () => {
     conCabeceras({});
 
     await expect(superficieActual()).resolves.toBeNull();

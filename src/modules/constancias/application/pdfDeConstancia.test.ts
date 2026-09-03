@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoEncontradoError } from "@/shared/lib/errores";
+import { DOMINIO_BASE_POR_DEFECTO } from "@/shared/tenancy/subdominio";
 import { comoConstanciaId, comoReimpresionId } from "../domain";
 import type { ConstanciaGuardada, RepositorioDeConstancias } from "./puertos";
 import type {
@@ -185,8 +186,7 @@ describe("pdfDeConstancia", () => {
       plantillaVersion: "vecindad-v1",
       datos: constanciaGuardada.datos,
       municipio: { nombre: "Motul", escudo: ayuntamientoLeido.escudo },
-      urlDeValidacion:
-        "https://motul.localhost/validar/VEC-2026-000001?c=abc123",
+      urlDeValidacion: `https://motul.${DOMINIO_BASE_POR_DEFECTO}/validar/VEC-2026-000001?c=abc123`,
       reimpresion: false,
     });
   });

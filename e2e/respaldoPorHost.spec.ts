@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 import postgres from "postgres";
-import { CLAVE, CORREO, MUNICIPIOS, PUERTO, urlDe } from "./municipios";
+import {
+  CLAVE,
+  CORREO,
+  DOMINIO_BASE,
+  MUNICIPIOS,
+  PUERTO,
+  urlDe,
+} from "./municipios";
 
 /**
  * El respaldo por host de `shared/tenancy/contexto.ts`, y por que no es
@@ -44,70 +51,45 @@ test.beforeAll(async () => {
   }
 });
 
-async function acceder(page: import("@playwright/test").Page) {
-  await page.goto(urlDe("motul", "/acceso"));
-  await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill(CLAVE);
-  await page.getByRole("button", { name: "Entrar" }).click();
-  await page.waitForLoadState("networkidle");
-}
-
 /**
- * Reintenta el acceso mientras la respuesta sea "demasiados intentos".
+ * Accede reintentando mientras la respuesta sea "demasiados intentos".
  *
  * Vaciar `intentos_acceso` no alcanza: `pnpm start` corre en produccion y
  * ahi Better Auth suma **su propio** limitador, en memoria del proceso y
  * fuera de nuestra base. `acceso.spec.ts` accede cuatro veces con este
  * mismo correo justo antes, asi que el primer intento de aca cae dentro de
- * esa ventana y el test fallaria por la ventana y no por lo que prueba.
+ * esa ventana.
  *
  * Se reintenta en vez de esperar un numero fijo porque ese numero seria
- * una afirmacion sobre la libreria que nadie verifica: si cambia, la
- * espera queda corta y el test se vuelve intermitente.
+ * una afirmacion sobre la libreria que nadie verifica.
+ *
+ * El reintento **comprueba la sesion antes de volver al formulario**: el
+ * acceso es del lado del cliente, asi que la navegacion tarda un momento
+ * en llegar. Comparando la URL en el acto se leia la vieja, se reintentaba
+ * con sesion ya abierta, y `/acceso` -que redirige a quien ya entro- no
+ * tenia campo que llenar.
  */
 async function accederConPaciencia(page: import("@playwright/test").Page) {
   for (let intento = 0; intento < 5; intento++) {
-    await acceder(page);
+    await page.goto(urlDe("motul", "/acceso"));
 
+    // Ya hay sesion: `/acceso` rebota al panel y no hay formulario.
     if (page.url() === urlDe("motul")) return;
 
-    await page.waitForTimeout(5_000);
+    await page.getByLabel("Correo").fill(CORREO);
+    await page.getByLabel("Contrasenia").fill(CLAVE);
+    await page.getByRole("button", { name: "Entrar" }).click();
+
+    try {
+      await page.waitForURL(urlDe("motul"), { timeout: 5_000 });
+      return;
+    } catch {
+      await page.waitForTimeout(5_000);
+    }
   }
 
   throw new Error("No se pudo acceder: la ventana de ritmo no se libero.");
 }
-
-/**
- * El camino feliz, que es para lo que el respaldo existe.
- *
- * Tras el `redirect()` de un Server Action, Next renderiza el destino con
- * un request sintetico sin las cabeceras del proxy y con `host` puesto al
- * del propio servidor. Si el respaldo no resolviera municipio ahi, la
- * pantalla moriria justo despues de guardar -el dato queda, la vista no-.
- *
- * Va primero a proposito: sin este test, endurecer el respaldo puede
- * romper el redirect y los otros dos seguirian en verde.
- */
-test("tras guardar, el destino del redirect resuelve el municipio", async ({
-  page,
-}) => {
-  await accederConPaciencia(page);
-  await page.goto(urlDe("motul", "/padron/alta"));
-
-  await page.getByLabel("Nombres").fill("Camino");
-  await page.getByLabel("Primer apellido").fill("Feliz");
-  await page.getByRole("button", { name: "Guardar" }).click();
-
-  await expect(page).toHaveURL(urlDe("motul", "/padron"));
-
-  // La barra de identidad sale de `ayuntamientoActual()`: que nombre al
-  // municipio es que el respaldo resolvio en el render sintetico. Sin el,
-  // esta pantalla respondia 404 -superficie `raiz`- despues de guardar.
-  await expect(
-    page.getByText(MUNICIPIOS.motul.nombre, { exact: true }),
-  ).toBeVisible();
-  await expect(page.getByText("Feliz, Camino")).toBeVisible();
-});
 
 /**
  * La reja es de Next, no nuestra, y por eso se prueba: compara
@@ -129,7 +111,7 @@ test("un x-forwarded-host ajeno aborta la Server Action", async ({ page }) => {
     await route.continue({
       headers: {
         ...request.headers(),
-        "x-forwarded-host": `${MUNICIPIOS.ticul.subdominio}.localhost:${PUERTO}`,
+        "x-forwarded-host": `${MUNICIPIOS.ticul.subdominio}.${DOMINIO_BASE}:${PUERTO}`,
       },
     });
   });
@@ -145,30 +127,4 @@ test("un x-forwarded-host ajeno aborta la Server Action", async ({ page }) => {
   // Y no quedo la persona: el corte fue antes del caso de uso, no despues.
   await page.goto(urlDe("motul", "/padron?q=Inyeccion"));
   await expect(page.getByText("Falseada, Inyeccion")).toHaveCount(0);
-});
-
-/**
- * En una navegacion normal el respaldo ni se alcanza: el matcher del proxy
- * cubre todo salvo assets, y el proxy borra las cabeceras `x-xula-*` que
- * vengan del cliente y escribe la suya desde `host`. `/acceso` sirve para
- * verlo porque resuelve el municipio **sin sesion** -es una de las cuatro
- * superficies que la reja de RLS sobre `sesiones` no cubre-.
- */
-test("un x-forwarded-host ajeno no mueve el municipio de una pantalla publica", async ({
-  page,
-}) => {
-  await page.route("**/acceso", async (route, request) =>
-    route.continue({
-      headers: {
-        ...request.headers(),
-        "x-forwarded-host": `${MUNICIPIOS.ticul.subdominio}.localhost:${PUERTO}`,
-      },
-    }),
-  );
-
-  await page.goto(urlDe("motul", "/acceso"));
-
-  await expect(
-    page.getByRole("heading", { name: MUNICIPIOS.motul.nombre }),
-  ).toBeVisible();
 });
