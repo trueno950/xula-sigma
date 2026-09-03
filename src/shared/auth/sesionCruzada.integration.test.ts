@@ -13,15 +13,19 @@ import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { altaDePersona } from "./alta";
 
 /**
- * La reja que sostiene el respaldo por host de `tenancy/contexto.ts`.
+ * La sesion esta atada a su municipio por RLS, no por el alcance de la
+ * cookie.
  *
- * Ese archivo deriva el tenant de `x-forwarded-host`/`host` cuando el proxy
- * no escribio su cabecera —el render sintetico del redirect de un Server
- * Action— y esas dos cabeceras las manda el cliente. Lo que impide que eso
- * sea elegir municipio es esta cadena: `conAuth` abre `withTenant` con el
- * tenant resuelto y Better Auth busca la sesion adentro, bajo RLS. Nombrar
- * otro municipio mueve tambien esa busqueda, y la fila propia de `sesiones`
- * deja de verse. Elegir un tenant ajeno cuesta la sesion propia.
+ * `conAuth` abre `withTenant` con el tenant que resolvio el servidor y
+ * Better Auth busca la sesion adentro de esa transaccion. Apuntar a otro
+ * municipio mueve tambien esa busqueda, y la fila propia de `sesiones`
+ * deja de verse: quien llegue con una sesion de Motul y un contexto de
+ * Ticul no lee nada, ni siquiera lo suyo.
+ *
+ * Es una reja por si sola y no la defensa de ningun atajo. Nacio
+ * justificando un respaldo que derivaba el tenant de las cabeceras de
+ * host; ese respaldo se fue a `proxy.ts` y esto quedo igual de valido,
+ * porque no dependia de el.
  *
  * Vive aparte de `accesoCruzado.integration.test.ts` porque es otro tema:
  * alla se prueba contra que persona resuelve el acceso, aca que alcanza a
