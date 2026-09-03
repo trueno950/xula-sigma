@@ -111,3 +111,12 @@ export const puedeAdministrarTerritorio = (rol: Rol) =>
  */
 export const puedeAdministrarDocumentos = (rol: Rol) =>
   rol === "ADMIN_MUNICIPAL";
+
+/**
+ * Cambiar de estado y asignar area de un reporte ciudadano. Mismo criterio
+ * que `puedeAdministrarTerritorio`/`puedeAdministrarDocumentos`: capturar es
+ * mostrador (`puedeEscribir`, ya cubre `registrarReporte`), decidir quien
+ * responde por algo es estructura (design.md de `reportes-ciudadanos`,
+ * decision 6, seccion 12). Nunca `SUPER_ADMIN`.
+ */
+export const puedeAdministrarReportes = (rol: Rol) => rol === "ADMIN_MUNICIPAL";

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   puedeAdministrarDocumentos,
+  puedeAdministrarReportes,
   puedeAdministrarTerritorio,
   puedeAdministrarUsuarios,
   puedeCambiarMarca,
@@ -196,6 +197,16 @@ describe("puedeAdministrarDocumentos", () => {
 
     for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
       expect(puedeAdministrarDocumentos(rol)).toBe(false);
+    }
+  });
+});
+
+describe("puedeAdministrarReportes", () => {
+  it("solo ADMIN_MUNICIPAL cambia de estado y asigna area de un reporte", () => {
+    expect(puedeAdministrarReportes("ADMIN_MUNICIPAL")).toBe(true);
+
+    for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
+      expect(puedeAdministrarReportes(rol)).toBe(false);
     }
   });
 });
