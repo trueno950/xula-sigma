@@ -1,7 +1,6 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
 import {
-  comoLugarId,
   listarCalles,
   listarDomicilios,
   listarLugares,
@@ -45,7 +44,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
   );
 
   const raices = await listarRaices(contexto);
-  const raiz = raizId ? await lugarPorId(comoLugarId(raizId), contexto) : null;
+  const raiz = raizId ? await lugarPorId(raizId, contexto) : null;
 
   // Regla 8. Sin esto una raiz de otro municipio volvia `null` y la
   // pantalla caia al listado del municipio propio: 200, y ademas otra cosa

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { clasesDeBoton, clasesDeCampo, VARIANTES_DE_BOTON } from "./estilos";
+import {
+  clasesDeBoton,
+  clasesDeCampo,
+  descripcionDeCampo,
+  plantillaDeColumnas,
+  presentacionDeAviso,
+  VARIANTES_DE_BOTON,
+} from "./estilos";
 
 /**
  * Estos tests no verifican una cadena de clases: verifican los invariantes
@@ -97,5 +104,55 @@ describe("clasesDeCampo", () => {
     expect(clases).toContain("outline-2");
     expect(clases).toContain("outline-marca");
     expect(clases).not.toContain("ring-");
+  });
+});
+
+describe("presentacionDeAviso", () => {
+  it("el error interrumpe al lector: role alert", () => {
+    expect(presentacionDeAviso("error").role).toBe("alert");
+  });
+
+  it("el exito no interrumpe: role status", () => {
+    expect(presentacionDeAviso("exito").role).toBe("status");
+  });
+
+  it("cada tono lleva su propio icono", () => {
+    expect(presentacionDeAviso("error").Icono).not.toBe(
+      presentacionDeAviso("exito").Icono,
+    );
+  });
+});
+
+describe("plantillaDeColumnas", () => {
+  it("una columna sin ancho propio reparte el espacio sobrante", () => {
+    expect(plantillaDeColumnas([{}])).toBe("minmax(0,1fr)");
+  });
+
+  it("respeta el ancho de cada columna, en orden", () => {
+    expect(plantillaDeColumnas([{ ancho: "2fr" }, {}, { ancho: "80px" }])).toBe(
+      "2fr minmax(0,1fr) 80px",
+    );
+  });
+});
+
+describe("descripcionDeCampo", () => {
+  const ids = { idDeAyuda: "campo-ayuda", idDeError: "campo-error" };
+
+  it("sin ayuda ni error, no describe nada", () => {
+    expect(descripcionDeCampo({}, ids)).toBeUndefined();
+  });
+
+  it("con ayuda, apunta a su id", () => {
+    expect(descripcionDeCampo({ ayuda: "texto" }, ids)).toBe("campo-ayuda");
+  });
+
+  it("con error, apunta a su id", () => {
+    expect(descripcionDeCampo({ error: "texto" }, ids)).toBe("campo-error");
+  });
+
+  it("con los dos, apunta a los dos ids en orden", () => {
+    expect(descripcionDeCampo({ ayuda: "a", error: "b" }, ids)).toBe(
+      "campo-ayuda campo-error",
+    );
   });
 });

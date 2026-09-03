@@ -76,7 +76,7 @@ describe("nodoResuelto", () => {
 
   it("sin raiz, no hay nodo que resolver", () => {
     expect(
-      nodoResuelto({ raiz: null, nodos: [], nodoId: RAIZ_AJENA }),
+      nodoResuelto({ raiz: null, nodos: [], nodoId: LUGAR_ID }),
     ).toBeNull();
   });
 });

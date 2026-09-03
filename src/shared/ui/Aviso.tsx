@@ -1,4 +1,4 @@
-import { CheckCircle, Warning } from "@phosphor-icons/react/ssr";
+import { presentacionDeAviso } from "./estilos";
 
 type Props = {
   tono: "error" | "exito";
@@ -16,14 +16,10 @@ type Props = {
  * eso se justifica cuando algo salio mal, no cuando salio bien.
  */
 export function Aviso({ tono, children }: Props) {
-  const Icono = tono === "error" ? Warning : CheckCircle;
-  const color = tono === "error" ? "text-senial-error" : "text-senial-exito";
+  const { Icono, color, role } = presentacionDeAviso(tono);
 
   return (
-    <p
-      role={tono === "error" ? "alert" : "status"}
-      className={`flex items-start gap-2 text-[15px] ${color}`}
-    >
+    <p role={role} className={`flex items-start gap-2 text-[15px] ${color}`}>
       <Icono size={20} weight="fill" className="mt-px shrink-0" />
       {children}
     </p>

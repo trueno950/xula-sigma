@@ -1,5 +1,9 @@
 import type { ComponentProps, ReactNode } from "react";
-import { CLASES_DE_ETIQUETA, clasesDeCampo } from "./estilos";
+import {
+  CLASES_DE_ETIQUETA,
+  clasesDeCampo,
+  descripcionDeCampo,
+} from "./estilos";
 
 type Props = Omit<ComponentProps<"input">, "className" | "id"> & {
   id: string;
@@ -38,10 +42,13 @@ export function Campo({
 }: Props) {
   const idDeAyuda = `${id}-ayuda`;
   const idDeError = `${id}-error`;
-  const descripcion =
-    [ayuda ? idDeAyuda : null, error ? idDeError : null]
-      .filter(Boolean)
-      .join(" ") || undefined;
+  const descripcion = descripcionDeCampo(
+    { ayuda, error },
+    {
+      idDeAyuda,
+      idDeError,
+    },
+  );
 
   return (
     <div className="flex flex-col gap-1">

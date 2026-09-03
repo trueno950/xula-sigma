@@ -1,3 +1,5 @@
+import { CheckCircle, Warning } from "@phosphor-icons/react/ssr";
+
 /**
  * Las clases que `DESIGN.md` seccion 5 declara, en un solo lugar.
  *
@@ -97,3 +99,37 @@ export const CLASES_DE_ETIQUETA =
  */
 export const CLASES_DE_DATO =
   "font-mono text-[14px] tabular-nums text-caliza-apagada";
+
+/**
+ * Icono, color y `role` segun el tono de `Aviso`. `role="alert"` solo en
+ * el error: interrumpe la lectura del operador, y eso se justifica cuando
+ * algo salio mal, no cuando salio bien (`DESIGN.md`, Do's).
+ */
+export const presentacionDeAviso = (tono: "error" | "exito") => ({
+  Icono: tono === "error" ? Warning : CheckCircle,
+  color: tono === "error" ? "text-senial-error" : "text-senial-exito",
+  role: tono === "error" ? ("alert" as const) : ("status" as const),
+});
+
+/**
+ * El `grid-template-columns` de `Tabla`, a partir del ancho declarado por
+ * columna. `minmax(0,1fr)` es el default: reparte el espacio sobrante sin
+ * desbordar cuando el contenido es mas ancho que la fraccion.
+ */
+export const plantillaDeColumnas = (
+  columnas: readonly { ancho?: string }[],
+): string =>
+  columnas.map((columna) => columna.ancho ?? "minmax(0,1fr)").join(" ");
+
+/**
+ * El `aria-describedby` de `CampoDeLista`: los ids de ayuda y error que
+ * existen, en ese orden. `undefined` cuando no hay ninguno de los dos,
+ * para no escribir el atributo vacio.
+ */
+export const descripcionDeCampo = (
+  campo: { ayuda?: unknown; error?: unknown },
+  ids: { idDeAyuda: string; idDeError: string },
+): string | undefined =>
+  [campo.ayuda ? ids.idDeAyuda : null, campo.error ? ids.idDeError : null]
+    .filter(Boolean)
+    .join(" ") || undefined;

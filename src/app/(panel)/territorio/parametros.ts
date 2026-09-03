@@ -1,8 +1,10 @@
 import { z } from "zod";
-import type {
-  AccionDeNodo,
-  NodoSeleccionado,
-  TabDeLugar,
+import {
+  type AccionDeNodo,
+  comoLugarId,
+  type LugarId,
+  type NodoSeleccionado,
+  type TabDeLugar,
 } from "@/modules/territorio";
 import type { NodoDeSubarbol } from "@/modules/territorio/application/puertos";
 
@@ -16,8 +18,8 @@ import type { NodoDeSubarbol } from "@/modules/territorio/application/puertos";
  * calle sumo su rama.
  */
 export type ParametrosDeTerritorio = {
-  raizId: string | undefined;
-  nodoId: string | undefined;
+  raizId: LugarId | undefined;
+  nodoId: LugarId | undefined;
   accion: AccionDeNodo | undefined;
   error: string | undefined;
   vista: TabDeLugar;
@@ -72,8 +74,8 @@ export const leerParametros = (
   const accion = datos.accion as AccionDeNodo | undefined;
 
   return {
-    raizId: datos.raiz,
-    nodoId: datos.nodo,
+    raizId: datos.raiz ? comoLugarId(datos.raiz) : undefined,
+    nodoId: datos.nodo ? comoLugarId(datos.nodo) : undefined,
     accion,
     error: datos.error,
     // La accion fija su pestana; sin accion vale la elegida (o Lugares).
@@ -88,7 +90,7 @@ export const nodoResuelto = ({
 }: {
   raiz: NodoSeleccionado | null;
   nodos: readonly NodoDeSubarbol[];
-  nodoId: string | undefined;
+  nodoId: LugarId | undefined;
 }): NodoSeleccionado | null => {
   if (!raiz) return null;
 

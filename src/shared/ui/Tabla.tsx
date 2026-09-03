@@ -1,6 +1,10 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
-import { CLASES_DE_DATO, CLASES_DE_ETIQUETA } from "./estilos";
+import {
+  CLASES_DE_DATO,
+  CLASES_DE_ETIQUETA,
+  plantillaDeColumnas,
+} from "./estilos";
 
 export type ColumnaDeTabla = {
   clave: string;
@@ -40,9 +44,7 @@ type PropsDeTabla = {
  * metia debajo de las dos al hacer scroll.
  */
 export function Tabla({ etiqueta, columnas, children }: PropsDeTabla) {
-  const plantilla = columnas
-    .map((columna) => columna.ancho ?? "minmax(0,1fr)")
-    .join(" ");
+  const plantilla = plantillaDeColumnas(columnas);
 
   return (
     <div

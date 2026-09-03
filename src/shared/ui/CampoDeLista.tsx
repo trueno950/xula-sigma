@@ -1,6 +1,10 @@
 import { CaretDown } from "@phosphor-icons/react/ssr";
 import type { ComponentProps, ReactNode } from "react";
-import { CLASES_DE_ETIQUETA, clasesDeCampo } from "./estilos";
+import {
+  CLASES_DE_ETIQUETA,
+  clasesDeCampo,
+  descripcionDeCampo,
+} from "./estilos";
 
 export type OpcionDeLista = { valor: string; etiqueta: string };
 
@@ -48,10 +52,13 @@ export function CampoDeLista({
 }: Props) {
   const idDeAyuda = `${id}-ayuda`;
   const idDeError = `${id}-error`;
-  const descripcion =
-    [ayuda ? idDeAyuda : null, error ? idDeError : null]
-      .filter(Boolean)
-      .join(" ") || undefined;
+  const descripcion = descripcionDeCampo(
+    { ayuda, error },
+    {
+      idDeAyuda,
+      idDeError,
+    },
+  );
 
   return (
     <div className="flex flex-col gap-1">
