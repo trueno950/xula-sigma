@@ -42,8 +42,14 @@ export default defineConfig({
             // `contextoActual()` arrastra ese import con solo importar el
             // barrel del modulo, aunque el test -como
             // `superficiePublica.test.ts`- nunca dialogue con ninguno de
-            // los dos. Ningun test de `unit` abre una conexion real ni
-            // firma una cookie: los valores no importan, solo que existan.
+            // los dos. Ningun test de `unit` abre una conexion real, asi
+            // que `DATABASE_URL` no importa mas que existir.
+            //
+            // `BETTER_AUTH_SECRET` es distinto desde `respaldoDeHost.ts`:
+            // `proxy.test.ts` y `proxyRespaldo.test.ts` SI firman y
+            // verifican una cookie con este valor -no hace falta que
+            // coincida con ningun secreto real, solo que firmar y
+            // verificar usen el mismo-.
             DATABASE_URL: "postgresql://no-se-usa@localhost:1/no-se-usa",
             BETTER_AUTH_SECRET: "secreto-de-prueba-no-usar-en-produccion",
           },

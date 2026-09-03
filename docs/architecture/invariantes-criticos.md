@@ -28,23 +28,25 @@ Este es el invariante raíz. Todo lo demás es secundario.
 - El `ayuntamiento_id` efectivo **siempre** viene del contexto de sesión
   resuelto en el servidor. Nunca del body, del query string, ni de un
   parámetro que el cliente controle.
-- **Deuda conocida, sin cerrar: `resolverHost` en `src/proxy.ts` decide con
-  el header `Host`, y `Host` lo escribe quien hace la peticion.** El
-  fallback a `x-forwarded-host` -que existe para que el redirect de un
-  Server Action no pierda el tenant en el render sintetico de Next- se
-  activa cuando `Host` es `localhost`, `127.0.0.1` o `[::1]`
-  (`esHostInterno`, `shared/tenancy/subdominio.ts`). Nada en el codigo
-  verifica que esa peticion vino por loopback de verdad: es una
-  comparacion de string, no una garantia de red. `src/proxyRespaldo.test.ts`
-  construye ese request exacto y lo prueba en verde -es la demostracion,
-  no un aviso especulativo-. Si Railway reenvia el `Host` del cliente sin
-  reescribirlo, `curl -H "Host: localhost" -H "x-forwarded-host:
-  <municipio>.xulasigma.mx" <dominio-de-produccion>` elige tenant sin
-  pasar por RLS. **No esta confirmado si Railway reescribe el header**: no
-  hay `railway.toml` en el repo y esto no se verifico contra el despliegue
-  real. Antes de production-ready: correr ese `curl` contra el dominio de
-  Railway, o repensar el fallback para que no dependa de un header que
-  controla el cliente.
+- **Cerrado el 2026-09-03: `resolverHost` en `src/proxy.ts` ya no confia
+  en `Host` ni en `x-forwarded-host` para el fallback del render sintetico
+  de Next.** Confiaba: bastaba que `Host` pareciera loopback
+  (`esHostInterno`, `shared/tenancy/subdominio.ts`) para leer el tenant de
+  `x-forwarded-host`, y las dos cabeceras las escribe quien hace la
+  peticion -no habia garantia de red de que el request viniera del propio
+  servidor-. `curl -H "Host: localhost" -H "x-forwarded-host:
+  <municipio>.xulasigma.mx"` armaba el mismo request que el render
+  sintetico sin haber pasado nunca por el servidor.
+  El fallback ahora usa una cookie HttpOnly firmada con HMAC-SHA256
+  (`shared/tenancy/respaldoDeHost.ts`, reusa `BETTER_AUTH_SECRET`): el
+  proxy la firma en cada respuesta que resuelve un municipio por `Host`
+  directo, y sin el secreto del servidor no hay forma de producir una
+  firma que verifique. No depende de que Railway reescriba ningun header
+  -no hace falta esperar al primer deploy para cerrarlo-. Verificado con
+  `e2e/bajaDeLugar.spec.ts` (el redirect de una Server Action sigue
+  funcionando: la cookie sobrevive el self-fetch interno de Next) y
+  `e2e/hostAjeno.spec.ts`/`src/proxyRespaldo.test.ts` (un `Host` o cookie
+  falsificados siguen dando 404).
 - Toda tabla operativa tiene columna `ayuntamiento_id` y política RLS con
   `FORCE ROW LEVEL SECURITY`.
 - **Hay una excepción, y vive en las reglas, no acá.** Un catálogo de
