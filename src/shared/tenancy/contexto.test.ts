@@ -104,8 +104,8 @@ describe("respaldo por host cuando el proxy no escribio su cabecera", () => {
     resolver.mockResolvedValue(ticul);
   });
 
-  it("deriva el tenant de `x-forwarded-host`", async () => {
-    conCabeceras({ "x-forwarded-host": "ticul.localhost:3000" });
+  it("deriva el tenant de `host`", async () => {
+    conCabeceras({ host: "ticul.localhost:3000" });
 
     await expect(ayuntamientoActual()).resolves.toMatchObject({
       subdominio: "ticul",
@@ -114,15 +114,14 @@ describe("respaldo por host cuando el proxy no escribio su cabecera", () => {
   });
 
   /**
-   * El orden importa y no es cosmetico: en el render sintetico `host` es
-   * el del propio servidor y el del municipio queda en `x-forwarded-host`.
-   * Invertir la precedencia resolveria el tenant equivocado justo en el
-   * unico caso para el que existe este respaldo.
+   * El render sintetico: `host` es el del propio servidor -no nombra
+   * municipio- y el original quedo en `x-forwarded-host`. Es el unico caso
+   * para el que existe este respaldo.
    */
-  it("`x-forwarded-host` gana sobre `host`", async () => {
+  it("cae a `x-forwarded-host` cuando `host` no nombra municipio", async () => {
     conCabeceras({
-      "x-forwarded-host": "ticul.localhost:3000",
       host: "localhost:3000",
+      "x-forwarded-host": "ticul.localhost:3000",
     });
 
     await ayuntamientoActual();
@@ -130,12 +129,24 @@ describe("respaldo por host cuando el proxy no escribio su cabecera", () => {
     expect(resolver).toHaveBeenCalledWith("ticul");
   });
 
-  it("cae a `host` cuando no hay `x-forwarded-host`", async () => {
-    conCabeceras({ host: "ticul.localhost" });
+  /**
+   * El orden es la reja, no una preferencia.
+   *
+   * `x-forwarded-host` es la unica de las dos que un cliente agrega sin
+   * tocar la que su navegador ya fija. Con `host` primero, uno ajeno no le
+   * gana a un `host` que si nombra municipio. Invertirlo -como estaba-
+   * dejaba que lo eligiera quien mandara la cabecera.
+   */
+  it("un `x-forwarded-host` ajeno no le gana a un `host` valido", async () => {
+    conCabeceras({
+      host: "ticul.localhost:3000",
+      "x-forwarded-host": "motul.localhost:3000",
+    });
 
     await ayuntamientoActual();
 
     expect(resolver).toHaveBeenCalledWith("ticul");
+    expect(resolver).not.toHaveBeenCalledWith("motul");
   });
 
   it("la cabecera del proxy gana: con ella el host ni se mira", async () => {

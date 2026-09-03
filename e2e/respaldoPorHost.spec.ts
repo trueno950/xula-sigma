@@ -78,6 +78,41 @@ async function accederConPaciencia(page: import("@playwright/test").Page) {
 }
 
 /**
+ * El camino feliz, que es para lo que el respaldo existe.
+ *
+ * Tras el `redirect()` de un Server Action, Next renderiza el destino con
+ * un request sintetico sin las cabeceras del proxy y con `host` puesto al
+ * del propio servidor. Si el respaldo no resolviera municipio ahi, la
+ * pantalla moriria justo despues de guardar -el dato queda, la vista no-.
+ *
+ * Va primero a proposito: sin este test, endurecer el respaldo puede
+ * romper el redirect y los otros dos seguirian en verde.
+ */
+test("tras guardar, el destino del redirect resuelve el municipio", async ({
+  page,
+}) => {
+  await accederConPaciencia(page);
+  await page.goto(urlDe("motul", "/padron/alta"));
+
+  await page.getByLabel("Nombres").fill("Camino");
+  await page.getByLabel("Primer apellido").fill("Feliz");
+  await page.getByRole("button", { name: "Guardar" }).click();
+
+  await expect(page).toHaveURL(urlDe("motul", "/padron"));
+
+  // La barra de identidad sale de `ayuntamientoActual()`: que nombre al
+  // municipio es que el respaldo resolvio en el render sintetico. Sin el,
+  // esta pantalla es la que lanzaba `TenantNoResueltoError`.
+  // La barra de identidad sale de `ayuntamientoActual()`: que nombre al
+  // municipio es que el respaldo resolvio en el render sintetico. Sin el,
+  // esta pantalla respondia 404 -superficie `raiz`- despues de guardar.
+  await expect(
+    page.getByText(MUNICIPIOS.motul.nombre, { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Feliz, Camino")).toBeVisible();
+});
+
+/**
  * La reja es de Next, no nuestra, y por eso se prueba: compara
  * `x-forwarded-host` contra `Origin` en toda peticion de Server Action y
  * aborta si no coinciden ("Invalid Server Actions request", verificado en
