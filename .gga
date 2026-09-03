@@ -7,6 +7,16 @@
 # de codigo tiene que ser reproducible: el modelo se fija aca.
 PROVIDER="opencode:deepseek/deepseek-v4-pro"
 
+# Y sigue siendo DeepSeek aunque en local se revise con otro modelo. No es
+# preferencia: en `opencode auth`, `deepseek` esta como `api` y `openai`
+# como `oauth`. La API key entra a un runner como secreto y se rota; el
+# token OAuth de una suscripcion esta atado a la maquina y a la cuenta, y
+# llevarlo a GitHub seria publicar la credencial personal.
+#
+# De ahi el reparto: `pnpm revision:local` revisa con la suscripcion
+# mientras se trabaja, CI revisa con la API key. Lo fija `GGA_PROVIDER`,
+# que gana sobre esta linea sin tocarla.
+
 # Que se revisa.
 # Los .sql entran a proposito: una migracion que olvida FORCE ROW LEVEL
 # SECURITY es el error mas caro del proyecto y no vive en un .ts.

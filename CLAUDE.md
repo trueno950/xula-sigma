@@ -167,9 +167,17 @@ Ver ADR 0001 §7.
 | Comando | Qué es | Cuándo |
 |---|---|---|
 | `pnpm reglas` | Determinista, un segundo, ocho antipatrones y dos métricas de AGENTS.md | `pre-commit`, `check` y CI |
+| `pnpm revision:local` | El revisor con la suscripción de OpenAI, sobre lo que está en *stage* y con caché | Mientras se trabaja |
 | `pnpm revision` | El revisor de IA, mismo comando que CI | A demanda, cuando el PR es grande |
 
 Lo que un patrón decide, no paga un modelo.
+
+**Y el proveedor no es el mismo en los dos lados.** En `opencode auth`,
+`deepseek` está como `api` y `openai` como `oauth`: la API key entra a un
+runner como secreto, el token OAuth de una suscripción está atado a la
+máquina. Por eso CI se queda con DeepSeek y el trabajo diario va con
+`pnpm revision:local`, que además usa caché — `--pr-mode` la desactiva
+siempre.
 
 Y el ciclo, cuando el revisor sí corre:
 
