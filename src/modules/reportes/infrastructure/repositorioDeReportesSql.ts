@@ -1,19 +1,16 @@
-import { and, count, eq, type SQL } from "drizzle-orm";
+import { and, count, eq, inArray, type SQL } from "drizzle-orm";
 import type {
   ReporteGuardado,
   RepositorioDeReportes,
 } from "../application/puertos";
-import { comoReporteId } from "../domain";
+import { comoReporteId, ESTADOS_DE_REPORTE, esTerminal } from "../domain";
+import { consultaPublicaDeReportesSql } from "./consultaPublicaDeReportesSql";
 import { reportes } from "./esquema";
 import { similaresDeReportesSql } from "./similaresDeReportesSql";
 
-const COLUMNAS_DE_CONSULTA_PUBLICA = {
-  tipo: reportes.tipo,
-  estado: reportes.estado,
-  registradoEn: reportes.registradoEn,
-  actualizadoEn: reportes.actualizadoEn,
-  duplicadoDeReporteId: reportes.duplicadoDeReporteId,
-} as const;
+const ESTADOS_NO_TERMINALES = ESTADOS_DE_REPORTE.filter(
+  (estado) => !esTerminal(estado),
+);
 
 /**
  * Implementacion real de `RepositorioDeReportes`, mismo criterio que
@@ -116,17 +113,25 @@ export const repositorioDeReportesSql: Pick<
   },
 
   async asignarArea(tx, datos) {
-    // Mismo esqueleto de UPDATE condicionado, sin `estado` en el WHERE: la
-    // asignacion no depende de un estado de partida, solo de que el reporte
-    // no este ya cerrado -eso lo verifica `esTerminal` en el caso de uso
-    // antes de llegar aca (design.md seccion 12)-.
+    // Mismo mecanismo de concurrencia que `aplicarTransicion`: el `WHERE`
+    // decide, no la lectura previa. `asignarAreaDeReporte` ya evalua
+    // `esTerminal` antes de llegar aca, pero esa lectura y este UPDATE
+    // corren en la misma transaccion bajo READ COMMITTED -una transicion a
+    // terminal que confirma en el medio no la ve una consulta anterior de
+    // esta misma transaccion. Sin este WHERE, esa asignacion pasaba sobre
+    // un reporte ya cerrado (verify-report.md de `reportes-ciudadanos`).
     const filas = await tx
       .update(reportes)
       .set({
         areaResponsable: datos.areaResponsable,
         actualizadoEn: new Date(),
       })
-      .where(eq(reportes.id, datos.id))
+      .where(
+        and(
+          eq(reportes.id, datos.id),
+          inArray(reportes.estado, ESTADOS_NO_TERMINALES),
+        ),
+      )
       .returning({ id: reportes.id });
 
     return filas.length > 0;
@@ -166,29 +171,6 @@ export const repositorioDeReportesSql: Pick<
     return filas.map(aReporteGuardado);
   },
 
-  async paraConsultaPublica(tx, folio) {
-    // Un `SELECT` de cinco columnas, ninguna de datos personales: el borde
-    // publico nunca lee `descripcion`, `referencia`, `lugarId` ni `personaId`
-    // (design.md seccion 14). La politica de la tabla acota el tenant.
-    const [fila] = await tx
-      .select(COLUMNAS_DE_CONSULTA_PUBLICA)
-      .from(reportes)
-      .where(eq(reportes.folio, folio));
-
-    return fila ?? null;
-  },
-
-  async paraConsultaPublicaPorId(tx, id) {
-    // El segundo `SELECT` del salto de design.md seccion 14 -mismas cinco
-    // columnas, mismo criterio que `candidatoAOriginal` para el borde entre
-    // `string` y `ReporteId`.
-    const [fila] = await tx
-      .select(COLUMNAS_DE_CONSULTA_PUBLICA)
-      .from(reportes)
-      .where(eq(reportes.id, comoReporteId(id)));
-
-    return fila ?? null;
-  },
-
+  ...consultaPublicaDeReportesSql,
   ...similaresDeReportesSql,
 };
