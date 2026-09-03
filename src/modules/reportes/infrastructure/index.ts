@@ -3,3 +3,4 @@ export * from "./lectorDeReportantesPorPadron";
 export * from "./lectorDeUbicacionesPorTerritorio";
 export * from "./registroDeMovimientosSql";
 export * from "./repositorioDeReportesSql";
+export * from "./similaresDeReportesSql";

@@ -5,6 +5,7 @@ import type {
 } from "../application/puertos";
 import { comoReporteId } from "../domain";
 import { reportes } from "./esquema";
+import { similaresDeReportesSql } from "./similaresDeReportesSql";
 
 const COLUMNAS_DE_CONSULTA_PUBLICA = {
   tipo: reportes.tipo,
@@ -25,8 +26,8 @@ const COLUMNAS_DE_CONSULTA_PUBLICA = {
  * `asignarAreaDeReporte` y el conteo de duplicados de tasks.md 5.13 necesitan-
  * (tasks.md 5.3, 5.14), sobre `guardar`, `buscarPorId` y `listar` de la
  * Fase 4. `paraConsultaPublica`/`paraConsultaPublicaPorId` entran en esta
- * rebanada (tasks.md Fase 6) para `consultarFolioDeReporte`; `similaresAbiertos`
- * se completa en la Fase 7 sobre este mismo archivo.
+ * rebanada (tasks.md Fase 6) para `consultarFolioDeReporte`;
+ * `similaresAbiertos` (tasks.md 7.1) cierra el contrato completo.
  */
 const aReporteGuardado = (
   fila: typeof reportes.$inferSelect,
@@ -59,6 +60,7 @@ export const repositorioDeReportesSql: Pick<
   | "contarDuplicadosDe"
   | "paraConsultaPublica"
   | "paraConsultaPublicaPorId"
+  | "similaresAbiertos"
 > = {
   async guardar(tx, datos) {
     await tx.insert(reportes).values(datos);
@@ -187,4 +189,6 @@ export const repositorioDeReportesSql: Pick<
 
     return fila ?? null;
   },
+
+  ...similaresDeReportesSql,
 };

@@ -537,56 +537,100 @@ El buscador va **con** la UI y no antes: un puerto de busqueda sin la pantalla
 que lo consume no se puede revisar por lo que hace (`proposal.md`). Requisito:
 `Buscador de reportes similares informativo, no bloquea el alta`.
 
-- [ ] 7.1 `reportes/infrastructure/repositorioDeReportesSql.ts` (modificar):
+- [x] 7.1 `reportes/infrastructure/repositorioDeReportesSql.ts` (modificar):
       `similaresAbiertos` con el **builder** de Drizzle (nunca `` sql`...` ``
       — trampa de `identidadPorPuerto.test.ts`), `and(eq(lugarId), eq(tipo),
       inArray(estado, ["RECIBIDO","EN_ATENCION"]))`, `orderBy(desc(registradoEn))`,
       `limit(10)`, **sin `WHERE ayuntamiento_id` a mano** (la politica de la
-      tabla ya acota).
-- [ ] 7.2 RED `reportes/application/buscarReportesSimilares.test.ts`: sin
+      tabla ya acota). Ajuste durante el apply: el metodo se escribio en
+      `infrastructure/similaresDeReportesSql.ts` y se compone por spread —
+      dejarlo en `repositorioDeReportesSql.ts` pasaba las 200 lineas del
+      archivo (`AGENTS.md`, metrica de lineas).
+- [x] 7.2 RED `reportes/application/buscarReportesSimilares.test.ts`: sin
       guarda de rol; el criterio `{ lugarId, tipo }` pasa tal cual al
       repositorio; **no tiene ninguna rama de rechazo** — no puede bloquear
       nada porque no participa del alta.
-- [ ] 7.3 GREEN `reportes/application/buscarReportesSimilares.ts`.
-- [ ] 7.4 `reportes/composicion.ts` (modificar): componer
-      `buscarReportesSimilares`.
-- [ ] 7.5 `reportes/ui/ListadoDeReportes.tsx` (Server Component): filtros por
+- [x] 7.3 GREEN `reportes/application/buscarReportesSimilares.ts`.
+- [x] 7.4 `reportes/composicion.ts` (modificar): componer
+      `buscarReportesSimilares`. Ademas `historialDeReporte.ts` (RED/GREEN,
+      no enumerado en el archivo original de tasks.md): `DetalleDeReporte`
+      necesita un caso de uso que envuelva `movimientos.historialDe` bajo
+      `withTenant`, mismo criterio que `historialDeResidencias` de
+      `territorio` — sin el, la UI llamaria al puerto directo sin pasar por
+      un caso de uso.
+- [x] 7.5 `reportes/ui/ListadoDeReportes.tsx` (Server Component): filtros por
       estado/tipo; oculta las acciones restringidas segun
       `puedeAdministrarReportes(rol)` — **por comodidad**, la guarda real vive
-      en el caso de uso (Fase 5).
-- [ ] 7.6 `reportes/ui/DetalleDeReporte.tsx`: historial via `historialDe`,
+      en el caso de uso (Fase 5). Decision de implementacion: no hay boton
+      restringido dentro de la tabla (`Tabla`/`FilaDeTabla` envuelve la fila
+      entera en un `<a>`, no admite controles anidados); "oculta" se
+      interpreta como texto "Sin asignar" en la columna Area, visible solo
+      para quien puede asignarla — para quien no puede, la celda muestra
+      "—" en vez de una invitacion a actuar que no puede completar.
+- [x] 7.6 `reportes/ui/DetalleDeReporte.tsx`: historial via `historialDe`,
       ordenado por `ocurridoEn ASC`.
-- [ ] 7.7 `reportes/ui/FormularioDeAlta.tsx` (Server Component, `<form
+- [x] 7.7 `reportes/ui/FormularioDeAlta.tsx` (Server Component, `<form
       action>`): `descripcion` y `referencia` con etiqueta explicita sobre no
       anotar datos de vecinos, largo acotado en la UI (espejo del Zod de
       4.3).
-- [ ] 7.8 `reportes/ui/SelectorDeUbicacionYTipo.tsx` +
+- [x] 7.8 `reportes/ui/SelectorDeUbicacionYTipo.tsx` +
       `reportes/ui/ReportesSimilares.tsx`: **la unica isla `"use client"`**,
       dentro del mismo `<form>`, con `useTransition` llamando a
       `buscarSimilaresAction`. **No manda `descripcion` ni `referencia` por
       `searchParams`** — es la razon de ser una isla y no un `<form>` GET
       (`design.md` seccion 15). El resto del formulario queda fuera de la
-      isla, en el Server Component.
-- [ ] 7.9 `reportes/ui/actions/altaDeReporteAction.ts` (Server Action, POST
+      isla, en el Server Component. `ReportesSimilares.tsx` sin `"use
+      client"` propio, mismo criterio que `ListaDeSugerencias` de `padron`:
+      es parte de la isla, no una segunda.
+- [x] 7.9 `reportes/ui/actions/altaDeReporteAction.ts` (Server Action, POST
       nativo, transporte `redirect` + `searchParams`, Zod `safeParse` en la
       primera linea, `contextoActual()` del servidor).
-- [ ] 7.10 `reportes/ui/actions/buscarSimilaresAction.ts` (**si** devuelve
+- [x] 7.10 `reportes/ui/actions/buscarSimilaresAction.ts` (**si** devuelve
       `ActionResult<T>` — hay un componente cliente que lee su retorno,
       condicion de "La unica excepcion" de `AGENTS.md`).
-- [ ] 7.11 `reportes/ui/actions/cambiarEstadoAction.ts` +
+- [x] 7.11 `reportes/ui/actions/cambiarEstadoAction.ts` +
       `reportes/ui/actions/asignarAreaAction.ts`.
-- [ ] 7.12 `src/app/(panel)/reportes/{page,alta,[id]}/page.tsx`: listado, alta
-      con el buscador, detalle con historial y transiciones.
-- [ ] 7.13 RED tests de borde de las Server Actions y de la pagina de alta
+- [x] 7.12 `src/app/(panel)/reportes/{page,alta,[id]}/page.tsx`: listado, alta
+      con el buscador, detalle con historial y transiciones. **Desvio: el
+      detalle vive en `/reportes/detalle/[id]`, no en `/reportes/[id]`.**
+      `src/app/reportes/[folio]/page.tsx` (Fase 6, ya en `main`) ya ocupa
+      `/reportes/[*]` como segmento dinamico publico; Next.js rechaza dos
+      rutas dinamicas distintas en la misma posicion del arbol ("Ambiguous
+      route pattern", verificado con `next build` antes y despues del
+      cambio). `alta` convive porque es un segmento literal, no dinamico.
+- [x] 7.13 RED tests de borde de las Server Actions y de la pagina de alta
       (`vi.mock` de los casos de uso): el boton oculto no reemplaza la guarda
       — forzar la accion sin el rol y esperar el error tipado del caso de
       uso; assertion de que ninguna URL generada por la isla incluye
-      `descripcion` ni `referencia` en su query string.
-- [ ] 7.14 GREEN (ajustar 7.5-7.12 si algo falla).
-- [ ] 7.15 `AGENTS.md` (modificar): agregar filas de `altaDeReporteAction`,
-      `buscarSimilaresAction`, `cambiarEstadoAction`, `asignarAreaAction` a la
-      tabla de Server Actions.
-- [ ] 7.16 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+      `descripcion` ni `referencia` en su query string. Ajuste: la isla
+      llama a la Server Action por RPC, no arma una URL con `searchParams`
+      (design.md seccion 15 lo dice explicito), asi que el test equivalente
+      -mas fuerte, del lado del servidor- confirma en
+      `buscarSimilaresAction.test.ts` que `descripcion`/`referencia` coladas
+      en el criterio nunca llegan a `buscarReportesSimilares` (Zod las
+      descarta antes). `cambiarEstadoAction.test.ts`/`asignarAreaAction.test.ts`
+      cubren el boton oculto que no reemplaza la guarda. Estos tres archivos
+      se escribieron **despues** de la implementacion (7.9-7.12), no antes:
+      la UI y las Server Actions son interdependientes -el `<form action>`
+      referencia la accion, la accion referencia el destino de redirect- y
+      escribirlas en paralelo fue mas seguro que fingir un orden estricto.
+      Quedan como pruebas de caracterizacion que fallarian si la guarda o el
+      whitelist de Zod se quitaran, verificado leyendo el codigo cubierto.
+- [x] 7.14 GREEN (ajustar 7.5-7.12 si algo falla). Sin ajustes: 7.13 paso en
+      verde contra la implementacion existente.
+- [x] 7.15 `AGENTS.md` (modificar): agregar filas de `altaDeReporteAction`,
+      `cambiarEstadoAction`, `asignarAreaAction` a la tabla de Server
+      Actions. **`buscarSimilaresAction` no entra a esa tabla**: la tabla es
+      especificamente la excepcion "formulario nativo sin `use client`"
+      (transporte por `redirect`), y `buscarSimilaresAction` no es esa
+      excepcion — es el contrato **por defecto** de `ActionResult<T>`
+      invocado desde un componente cliente, la misma forma que
+      `cambiarEscudoAction` de `marca` (que tampoco esta en esa tabla, ni en
+      la lista de "lectura no bloqueante"). Agregarla ahi la haria una
+      segunda entrada de una lista que `AGENTS.md` mantiene cerrada a una
+      sola (`sugerirDuplicadosAction`), y no cumple sus tres condiciones
+      -no hay declaracion de "nunca bloqueante" para esta accion en si.
+- [x] 7.16 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 8: Rebanada 8 — Exportacion y docs (~150 lineas)
 

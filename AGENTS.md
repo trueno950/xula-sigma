@@ -268,6 +268,9 @@ que devuelva, y devolverlo sería código muerto.
 | `emitirConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
 | `reimprimirConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
 | `cancelarConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
+| `altaDeReporteAction` | `reportes` | Server Component, `<form action={...}>` |
+| `cambiarEstadoAction` | `reportes` | Server Component, `<form action={...}>` |
+| `asignarAreaAction` | `reportes` | Server Component, `<form action={...}>` |
 
 Notas que no caben en la tabla, una por fila que las necesita:
 
@@ -297,6 +300,21 @@ Notas que no caben en la tabla, una por fila que las necesita:
   un `lugarId` de otro municipio o inexistente, que `altaDeCalle.ts` lee
   bajo RLS antes de insertar (mismo patron que `padreId` en
   `altaDeLugarAction`).
+- `altaDeReporteAction` (`reportes`, rebanada 7): mismo motivo exacto que
+  `altaDePersonaAction`. `FormularioDeAlta` renderiza la isla
+  `SelectorDeUbicacionYTipo` + `ReportesSimilares` (`"use client"`), pero
+  esa isla llama a `buscarSimilaresAction` -la accion por defecto de
+  `ActionResult<T>`, no una excepcion de esta tabla-, no a
+  `altaDeReporteAction`: el envio del formulario sigue siendo el POST
+  nativo. Redacta `NoAutorizadoError`, `NoEncontradoError`,
+  `UbicacionInvalidaError` y `ReportanteDadoDeBajaError`.
+- `cambiarEstadoAction`/`asignarAreaAction` (`reportes`, rebanada 7): mismo
+  motivo que `darDeBajaLugarAction`, cada boton de `AccionesDeReporte` su
+  propio `<form>`. `cambiarEstadoAction` redacta `NoAutorizadoError`,
+  `NoEncontradoError`, `ReporteCerradoError`, `TransicionInvalidaError`,
+  `DuplicadoSinOriginalError` y `DuplicadoDeSiMismoError` -el vinculo de
+  duplicado, decision 14 de `reportes-ciudadanos`-; `asignarAreaAction`
+  redacta `NoAutorizadoError`, `NoEncontradoError` y `ReporteCerradoError`.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un

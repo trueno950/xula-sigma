@@ -1,7 +1,9 @@
 import {
   crearAsignarAreaDeReporte,
+  crearBuscarReportesSimilares,
   crearCambiarEstadoDeReporte,
   crearConsultarFolioDeReporte,
+  crearHistorialDeReporte,
   crearListarReportes,
   crearRegistrarReporte,
   crearReportePorId,
@@ -44,4 +46,10 @@ export const asignarAreaDeReporte = crearAsignarAreaDeReporte({
 });
 export const consultarFolioDeReporte = crearConsultarFolioDeReporte(
   repositorioDeReportesSql,
+);
+export const buscarReportesSimilares = crearBuscarReportesSimilares(
+  repositorioDeReportesSql,
+);
+export const historialDeReporte = crearHistorialDeReporte(
+  registroDeMovimientosSql,
 );
