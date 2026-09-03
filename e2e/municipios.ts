@@ -32,5 +32,12 @@ export const MUNICIPIOS = {
 export const CORREO = "tesoreria@example.com";
 export const CLAVE = "clave-larga-y-buena";
 
+/**
+ * El puerto sale del entorno para poder correr el E2E con un `next dev`
+ * ocupando el 3000. Sin esto habia que apagar el servidor de trabajo para
+ * verificar un test.
+ */
+export const PUERTO = process.env.E2E_PUERTO ?? "3000";
+
 export const urlDe = (municipio: keyof typeof MUNICIPIOS, ruta = "/") =>
-  `http://${MUNICIPIOS[municipio].subdominio}.localhost:3000${ruta}`;
+  `http://${MUNICIPIOS[municipio].subdominio}.localhost:${PUERTO}${ruta}`;

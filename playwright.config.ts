@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { PUERTO } from "./e2e/municipios";
 
 /**
  * E2E contra la aplicacion construida, no contra `next dev`.
@@ -52,7 +53,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: devices["Desktop Chrome"] }],
   webServer: {
-    command: "pnpm build && pnpm start",
+    command: `pnpm build && PORT=${PUERTO} pnpm start`,
     /**
      * Un endpoint que no toca la base ni resuelve tenant.
      *
@@ -61,7 +62,7 @@ export default defineConfig({
      * Apuntarlo a `/acceso` de uno lo hacia esperar por datos que la
      * siembra iba a crear despues, y el servidor moria por timeout.
      */
-    url: "http://localhost:3000/api/salud",
+    url: `http://localhost:${PUERTO}/api/salud`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     env: ENTORNO,
