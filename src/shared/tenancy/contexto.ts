@@ -30,26 +30,35 @@ import {
  * `x-forwarded-host`. La resolucion es la misma que hace el proxy
  * (`leerSubdominio`), un nivel mas adentro.
  *
- * **Estas dos cabeceras las controla quien hace la peticion**, asi que
- * este respaldo no puede ser la unica reja. Lo que impide que un host
- * ajeno lea otro municipio no es esta funcion ni el alcance de la cookie:
- * es que `conAuth` (`shared/auth/instancia.ts`) abre `withTenant` con el
- * ayuntamiento que sale de aca y Better Auth busca la sesion adentro de
- * esa transaccion, bajo RLS. Nombrar otro municipio cambia tambien el
- * tenant de esa busqueda, y la fila de `sesiones` propia deja de ser
- * visible: no hay sesion, no hay contexto, no hay lectura. Elegir un
- * tenant ajeno cuesta la sesion propia.
+ * **Estas dos cabeceras las controla quien hace la peticion**, asi que la
+ * pregunta obligada es si cambiarlas mueve el tenant. Se midio, no se
+ * dedujo, y son dos rejas distintas segun por donde entre:
  *
- * Eso es comportamiento, no intencion, y por eso esta ejercitado: la
- * cadena entera en `shared/auth/sesionCruzada.integration.test.ts` -"no
- * se lee desde otro municipio"-, y la derivacion de estos dos hosts en
- * `contexto.test.ts`.
+ * 1. **Navegacion normal**: el respaldo no se alcanza. El matcher del
+ *    proxy cubre todo salvo assets, y `proxy.ts` borra las `x-xula-*` que
+ *    vengan del cliente y escribe la suya desde `host`. Un
+ *    `x-forwarded-host` ajeno queda ignorado.
+ * 2. **El POST de un Server Action**, que es el unico camino hasta el
+ *    render sintetico: Next compara `x-forwarded-host` contra `Origin` y
+ *    aborta con "Invalid Server Actions request" si no coinciden. La
+ *    cabecera falseada nunca llega a este archivo.
  *
- * **Lo que esa cadena NO cubre**: los consumidores de `ayuntamientoActual`
- * que corren sin sesion -`(acceso)/layout.tsx`, `(acceso)/page.tsx`,
- * `(acceso)/acceso/page.tsx` y `validar/[folio]/page.tsx`-. Ahi no hay
- * fila de `sesiones` que se vuelva invisible, asi que un host ajeno si
- * alcanza a resolver otro municipio.
+ * La 2 es de Next y no nuestra -verificado en 16.3.1-, asi que el dia que
+ * la saquen esto se queda sin piso. Por eso las dos son test y no prosa:
+ * `e2e/respaldoPorHost.spec.ts`. Hacen falta las dos: la 1 cubre las
+ * superficies que resuelven municipio **sin sesion**
+ * -`(acceso)/layout.tsx`, `(acceso)/page.tsx`, `(acceso)/acceso/page.tsx`
+ * y `validar/[folio]/page.tsx`-, donde no hay sesion que perder.
+ *
+ * Donde si hay sesion, hay una tercera reja que no depende de ninguna
+ * cabecera: `conAuth` (`shared/auth/instancia.ts`) abre `withTenant` con
+ * el ayuntamiento que sale de aca y Better Auth busca la sesion adentro de
+ * esa transaccion, bajo RLS. Nombrar otro municipio mueve tambien esa
+ * busqueda y la fila propia de `sesiones` deja de verse: elegir un tenant
+ * ajeno cuesta la sesion propia. Ejercitado en
+ * `shared/auth/sesionCruzada.integration.test.ts`.
+ *
+ * La derivacion en si -orden y forma- esta en `contexto.test.ts`.
  */
 const hostsDelRequest = (cabeceras: Headers): Array<string | null> => [
   cabeceras.get("x-forwarded-host"),

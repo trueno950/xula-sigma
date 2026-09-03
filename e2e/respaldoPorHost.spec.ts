@@ -1,0 +1,142 @@
+import { expect, test } from "@playwright/test";
+import postgres from "postgres";
+import { CLAVE, CORREO, MUNICIPIOS, PUERTO, urlDe } from "./municipios";
+
+/**
+ * El respaldo por host de `shared/tenancy/contexto.ts`, y por que no es
+ * una eleccion de tenant en manos del cliente.
+ *
+ * `ayuntamientoActual()` deriva el municipio de `x-forwarded-host` y
+ * `host` cuando `x-xula-subdominio` no esta. Esa cabecera falta en un solo
+ * caso: el render sintetico con el que Next resuelve el destino del
+ * `redirect()` de un Server Action. Ahi `host` es el del propio servidor
+ * -sin subdominio-, asi que sin el respaldo el destino no resuelve
+ * municipio y la pantalla muere despues de guardar.
+ *
+ * Las dos cabeceras las manda quien hace la peticion, y de ahi la
+ * pregunta: cambiarlas, ¿mueve el tenant? Los dos tests de abajo son la
+ * respuesta medida, no razonada. Ninguno de los dos se puede escribir sin
+ * navegador: el primero necesita el protocolo real de Server Actions, y el
+ * segundo que el proxy corra de verdad sobre el request.
+ */
+
+/**
+ * La ventana de ritmo es de 5 intentos por correo cada 15 minutos
+ * (`shared/auth/ritmo.ts`) y es estado global: `acceso.spec.ts` accede
+ * cuatro veces con este mismo correo antes que este archivo. Sin vaciarla,
+ * el primer acceso de aca entra al sexto intento y el test falla por la
+ * ventana, no por lo que prueba.
+ *
+ * `TRUNCATE` con el rol owner porque `intentos_acceso` tiene FORCE RLS: un
+ * `DELETE` no veria ninguna fila.
+ */
+test.beforeAll(async () => {
+  const url = process.env.MIGRATION_DATABASE_URL;
+
+  if (!url) throw new Error("Falta MIGRATION_DATABASE_URL para el E2E.");
+
+  const owner = postgres(url, { max: 1 });
+
+  try {
+    await owner`TRUNCATE intentos_acceso`;
+  } finally {
+    await owner.end();
+  }
+});
+
+async function acceder(page: import("@playwright/test").Page) {
+  await page.goto(urlDe("motul", "/acceso"));
+  await page.getByLabel("Correo").fill(CORREO);
+  await page.getByLabel("Contrasenia").fill(CLAVE);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.waitForLoadState("networkidle");
+}
+
+/**
+ * Reintenta el acceso mientras la respuesta sea "demasiados intentos".
+ *
+ * Vaciar `intentos_acceso` no alcanza: `pnpm start` corre en produccion y
+ * ahi Better Auth suma **su propio** limitador, en memoria del proceso y
+ * fuera de nuestra base. `acceso.spec.ts` accede cuatro veces con este
+ * mismo correo justo antes, asi que el primer intento de aca cae dentro de
+ * esa ventana y el test fallaria por la ventana y no por lo que prueba.
+ *
+ * Se reintenta en vez de esperar un numero fijo porque ese numero seria
+ * una afirmacion sobre la libreria que nadie verifica: si cambia, la
+ * espera queda corta y el test se vuelve intermitente.
+ */
+async function accederConPaciencia(page: import("@playwright/test").Page) {
+  for (let intento = 0; intento < 5; intento++) {
+    await acceder(page);
+
+    if (page.url() === urlDe("motul")) return;
+
+    await page.waitForTimeout(5_000);
+  }
+
+  throw new Error("No se pudo acceder: la ventana de ritmo no se libero.");
+}
+
+/**
+ * La reja es de Next, no nuestra, y por eso se prueba: compara
+ * `x-forwarded-host` contra `Origin` en toda peticion de Server Action y
+ * aborta si no coinciden ("Invalid Server Actions request", verificado en
+ * Next 16.3.1). Sin esta validacion, un `x-forwarded-host` ajeno viajaria
+ * hasta el render sintetico del destino y ahi si elegiria municipio.
+ *
+ * El dia que Next la saque, este test se pone en rojo y avisa. Esa es toda
+ * su razon de existir.
+ */
+test("un x-forwarded-host ajeno aborta la Server Action", async ({ page }) => {
+  await accederConPaciencia(page);
+  await page.goto(urlDe("motul", "/padron/alta"));
+
+  await page.route("**/padron/alta", async (route, request) => {
+    if (request.method() !== "POST") return route.continue();
+
+    await route.continue({
+      headers: {
+        ...request.headers(),
+        "x-forwarded-host": `${MUNICIPIOS.ticul.subdominio}.localhost:${PUERTO}`,
+      },
+    });
+  });
+
+  await page.getByLabel("Nombres").fill("Inyeccion");
+  await page.getByLabel("Primer apellido").fill("Falseada");
+  await page.getByRole("button", { name: "Guardar" }).click();
+  await page.waitForLoadState("networkidle");
+
+  // El alta exitosa vuelve al listado. Que siga aca es que no se ejecuto.
+  await expect(page).toHaveURL(urlDe("motul", "/padron/alta"));
+
+  // Y no quedo la persona: el corte fue antes del caso de uso, no despues.
+  await page.goto(urlDe("motul", "/padron?q=Inyeccion"));
+  await expect(page.getByText("Falseada, Inyeccion")).toHaveCount(0);
+});
+
+/**
+ * En una navegacion normal el respaldo ni se alcanza: el matcher del proxy
+ * cubre todo salvo assets, y el proxy borra las cabeceras `x-xula-*` que
+ * vengan del cliente y escribe la suya desde `host`. `/acceso` sirve para
+ * verlo porque resuelve el municipio **sin sesion** -es una de las cuatro
+ * superficies que la reja de RLS sobre `sesiones` no cubre-.
+ */
+test("un x-forwarded-host ajeno no mueve el municipio de una pantalla publica", async ({
+  page,
+}) => {
+  await page.route("**/acceso", async (route, request) =>
+    route.continue({
+      headers: {
+        ...request.headers(),
+        "x-forwarded-host": `${MUNICIPIOS.ticul.subdominio}.localhost:${PUERTO}`,
+      },
+    }),
+  );
+
+  await page.goto(urlDe("motul", "/acceso"));
+
+  await expect(
+    page.getByRole("heading", { name: MUNICIPIOS.motul.nombre }),
+  ).toBeVisible();
+});
