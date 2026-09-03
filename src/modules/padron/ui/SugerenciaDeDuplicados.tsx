@@ -17,6 +17,7 @@ import {
   idDeOpcion,
   ListaDeSugerencias,
 } from "./ListaDeSugerencias";
+import { planDeConsulta } from "./planDeConsulta";
 
 const RETARDO_MS = 300;
 
@@ -70,26 +71,29 @@ export function SugerenciaDeDuplicados() {
     setCerrada(false);
     setActiva(-1);
 
-    const cadena = `${nombresNuevo} ${apellidoNuevo}`.trim();
-    if (!cadena) {
+    const plan = planDeConsulta(
+      nombresNuevo,
+      apellidoNuevo,
+      () => ++idDeConsulta.current,
+    );
+
+    if (plan.tipo === "limpiar") {
       setSugerencias([]);
       return;
     }
-
-    const consultaActual = ++idDeConsulta.current;
 
     idDeRetardo.current = setTimeout(async () => {
       // La accion ya atrapa sus propios errores y devuelve `[]`; este
       // catch es para el rechazo de red -conexion caida a mitad del
       // pedido-, que nunca llega a ejecutar la accion en el servidor.
-      const encontradas = await sugerirDuplicadosAction(cadena).catch(
+      const encontradas = await sugerirDuplicadosAction(plan.cadena).catch(
         () => [] as const,
       );
       // Ignora una respuesta que ya no es la ultima tecla escrita: sin
       // esto, una respuesta lenta de una consulta vieja puede llegar
       // despues de una mas nueva y pisar sugerencias correctas con unas
       // desactualizadas.
-      if (consultaActual === idDeConsulta.current) setSugerencias(encontradas);
+      if (plan.id === idDeConsulta.current) setSugerencias(encontradas);
     }, RETARDO_MS);
   };
 
