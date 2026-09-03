@@ -95,6 +95,58 @@ async function resolverOriginal({
 }
 
 /**
+ * Aplica la transicion y dejar su rastro: `aplicarTransicion`,
+ * `movimientos.agregar` y `registrar` en la misma llamada (design.md
+ * seccion 12, paso 2e-2f) -separado del cuerpo de `cambiarEstadoDeReporte`
+ * solo por la metrica de lineas por funcion, no por una razon de diseño.
+ */
+async function confirmarTransicion({
+  repositorio,
+  movimientos,
+  tx,
+  contexto,
+  datos,
+  estadoAnterior,
+  duplicadoDeReporteId,
+}: {
+  repositorio: Pick<RepositorioDeReportes, "aplicarTransicion">;
+  movimientos: Pick<RegistroDeMovimientos, "agregar">;
+  tx: TransaccionTenant;
+  contexto: ContextoActual;
+  datos: EntradaDeCambioDeEstado;
+  estadoAnterior: EstadoDeReporte;
+  duplicadoDeReporteId: string | null;
+}): Promise<void> {
+  const movio = await repositorio.aplicarTransicion(tx, {
+    id: datos.id,
+    estadoAnterior,
+    estadoNuevo: datos.estadoNuevo,
+    motivoDeRechazo: datos.motivoDeRechazo,
+    duplicadoDeReporteId,
+  });
+  if (!movio) throw new NoEncontradoError();
+
+  await movimientos.agregar(tx, {
+    ayuntamientoId: contexto.ayuntamientoId,
+    reporteId: datos.id,
+    usuarioId: contexto.usuario.id,
+    estadoAnterior,
+    estadoNuevo: datos.estadoNuevo,
+    areaAsignada: null,
+    motivo: datos.motivoDeRechazo,
+  });
+
+  await registrar(tx, {
+    ayuntamientoId: contexto.ayuntamientoId,
+    actor: contexto.usuario.id,
+    origen: contexto.origen,
+    accion: "CAMBIAR_ESTADO_REPORTE",
+    entidad: "reportes",
+    entidadId: datos.id,
+  });
+}
+
+/**
  * `cambiarEstadoDeReporte`: el orden exacto de design.md seccion 12.
  *
  * No hay caso de uso "marcar duplicado": el vinculo es un parametro mas de
@@ -133,32 +185,14 @@ export function crearCambiarEstadoDeReporte({
         duplicadoDe: datos.duplicadoDe,
       });
 
-      const movio = await repositorio.aplicarTransicion(tx, {
-        id: datos.id,
+      await confirmarTransicion({
+        repositorio,
+        movimientos,
+        tx,
+        contexto,
+        datos,
         estadoAnterior: actual.estado,
-        estadoNuevo: datos.estadoNuevo,
-        motivoDeRechazo: datos.motivoDeRechazo,
         duplicadoDeReporteId: original,
-      });
-      if (!movio) throw new NoEncontradoError();
-
-      await movimientos.agregar(tx, {
-        ayuntamientoId: contexto.ayuntamientoId,
-        reporteId: datos.id,
-        usuarioId: contexto.usuario.id,
-        estadoAnterior: actual.estado,
-        estadoNuevo: datos.estadoNuevo,
-        areaAsignada: null,
-        motivo: datos.motivoDeRechazo,
-      });
-
-      await registrar(tx, {
-        ayuntamientoId: contexto.ayuntamientoId,
-        actor: contexto.usuario.id,
-        origen: contexto.origen,
-        accion: "CAMBIAR_ESTADO_REPORTE",
-        entidad: "reportes",
-        entidadId: datos.id,
       });
     });
   };
