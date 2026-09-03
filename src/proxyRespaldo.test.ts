@@ -101,4 +101,45 @@ describe("proxy — respaldo por x-forwarded-host", () => {
 
     expect(res.status).toBe(404);
   });
+
+  it.each(["127.0.0.1:3000", "[::1]:3000"])(
+    "el respaldo tambien corre con el host interno %s",
+    (host) => {
+      const res = pedir(host, { "x-forwarded-host": "ticul.xulasigma.mx" });
+
+      expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBe(
+        "ticul",
+      );
+    },
+  );
+});
+
+/**
+ * El agujero que quedaba abierto despues de mover la resolucion al proxy.
+ *
+ * "El host no cuelga del dominio base" no alcanza como firma del render
+ * sintetico: el hosting sirve la misma aplicacion en mas de un nombre. En
+ * Railway, `<app>.up.railway.app` responde ademas del dominio propio, y
+ * ese nombre tampoco cuelga de la base. Una peticion ahi caia en el
+ * respaldo y elegia municipio con su propia cabecera.
+ *
+ * La firma real es mas angosta: el request lo emite el servidor contra si
+ * mismo, asi que su `host` es el loopback. Lo demas no habilita nada.
+ *
+ * Si algun dia Next emitiera ese request con otro host, el redirect
+ * volveria a romperse -404 despues de guardar-, no a filtrar. Ese es el
+ * lado correcto para fallar, y es la regla del proyecto: ante la duda,
+ * `invalido`, nunca un tenant por defecto.
+ */
+describe("proxy — el respaldo solo corre desde el propio servidor", () => {
+  it.each([
+    "xula-produccion.up.railway.app",
+    "xula-produccion.up.railway.app:8080",
+    "dominio-ajeno.mx",
+  ])("un x-forwarded-host ajeno no elige municipio desde %s", (host) => {
+    const res = pedir(host, { "x-forwarded-host": "ticul.xulasigma.mx" });
+
+    expect(res.status).toBe(404);
+    expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBeNull();
+  });
 });

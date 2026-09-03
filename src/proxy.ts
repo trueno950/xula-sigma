@@ -6,6 +6,7 @@ import {
 } from "@/shared/tenancy/cabeceras";
 import {
   DOMINIO_BASE_POR_DEFECTO,
+  esHostInterno,
   leerSubdominio,
 } from "@/shared/tenancy/subdominio";
 
@@ -25,11 +26,11 @@ import {
  * De donde sale el tenant, y el unico lugar donde sale.
  *
  * `host` manda siempre que nombre algo nuestro. `x-forwarded-host` se mira
- * en un solo caso: cuando `host` no cuelga del dominio base **en
- * absoluto**, que es la firma del render sintetico con el que Next
- * resuelve el destino del `redirect()` de un Server Action. Ese request lo
- * emite el propio servidor contra si mismo -medido: `host: localhost:3100`
- * con `DOMINIO_BASE=xula.localhost`- y trae el host original en
+ * en un solo caso: cuando `host` es el del **propio servidor**, que es la
+ * firma del render sintetico con el que Next resuelve el destino del
+ * `redirect()` de un Server Action. Ese request lo emite el servidor
+ * contra si mismo -medido: `host: localhost:3100` con
+ * `DOMINIO_BASE=xula.localhost`- y trae el host original en
  * `x-forwarded-host`. Sin esto el proxy le responde 404 y la pantalla
  * muere justo despues de guardar.
  *
@@ -40,6 +41,13 @@ import {
  * con `x-forwarded-host: motul.<base>` se servia como Motul -reproducido
  * con curl, y es lo que cierra `e2e/respaldoPorHost.spec.ts`-.
  *
+ * **Y la condicion es `esHostInterno`, no "el host no cuelga de la base".**
+ * El hosting sirve la misma aplicacion en mas de un nombre -en Railway,
+ * `<app>.up.railway.app` ademas del dominio propio-, y ninguno de esos
+ * cuelga de la base: con la condicion ancha, una peticion ahi elegia
+ * municipio con su propia cabecera. El caso esta en
+ * `proxyRespaldo.test.ts`.
+ *
  * De ahi que `DOMINIO_BASE` **no pueda ser nunca el host interno del
  * servidor**. Si lo fuera -`localhost` a secas, que era el valor por
  * defecto- el render sintetico daria `raiz` en vez de `invalido`: el
@@ -49,9 +57,11 @@ import {
  */
 function resolverHost(cabeceras: Headers) {
   const base = process.env.DOMINIO_BASE ?? DOMINIO_BASE_POR_DEFECTO;
-  const delHost = leerSubdominio(cabeceras.get("host"), base);
+  const host = cabeceras.get("host");
+  const delHost = leerSubdominio(host, base);
 
   if (delHost.tipo !== "invalido") return delHost;
+  if (!esHostInterno(host)) return delHost;
 
   return leerSubdominio(cabeceras.get("x-forwarded-host"), base);
 }
