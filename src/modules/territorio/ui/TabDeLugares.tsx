@@ -11,6 +11,7 @@ import { tiposContenidosPor } from "../domain";
 import { hijosDirectosDe, type PropsDeContenido, rutaDe } from "./contenido";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import { puedeAbrir } from "./permisos";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,2fr)" },
@@ -23,8 +24,9 @@ export function TabDeLugares({
   lugar,
   nodos,
   accion,
-  puedeActuar,
+  permisos,
 }: PropsDeContenido) {
+  const puedeActuar = puedeAbrir("lugar", permisos);
   const hijos = hijosDirectosDe(nodos, lugar.id);
   const abierta = accion === "lugar";
   // Una manzana es el ultimo rango: no hay tipo que pueda ir adentro, asi

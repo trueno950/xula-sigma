@@ -6,6 +6,7 @@ import type {
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
 import type { LugarId } from "../domain";
 import type { AccionDeNodo, NodoSeleccionado, TabDeLugar } from "./PanelDeNodo";
+import type { PermisosDeTerritorio } from "./permisos";
 
 /**
  * Lo que las cuatro pestanas comparten: su forma de props, la ruta que las
@@ -24,7 +25,7 @@ export type PropsDeContenido = {
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   domicilios: readonly DomicilioParaListado[];
   accion: AccionDeNodo | undefined;
-  puedeActuar: boolean;
+  permisos: PermisosDeTerritorio;
 };
 
 /** La ruta del lugar actual con pestana y accion opcionales. */

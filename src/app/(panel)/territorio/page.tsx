@@ -1,4 +1,5 @@
 import { Plus } from "@phosphor-icons/react/ssr";
+import { notFound } from "next/navigation";
 import {
   comoLugarId,
   listarCalles,
@@ -9,8 +10,9 @@ import {
   subarbol,
   VistaDeRaices,
 } from "@/modules/territorio";
+import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 import { contextoActual } from "@/shared/auth";
-import { puedeAdministrarTerritorio, puedeEscribir } from "@/shared/auth/roles";
+import { puedeEscribir } from "@/shared/auth/roles";
 import {
   Aviso,
   EnlaceDeAccion,
@@ -44,18 +46,25 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
 
   const raices = await listarRaices(contexto);
   const raiz = raizId ? await lugarPorId(comoLugarId(raizId), contexto) : null;
+
+  // Regla 8. Sin esto una raiz de otro municipio volvia `null` y la
+  // pantalla caia al listado del municipio propio: 200, y ademas otra cosa
+  // que la pedida.
+  if (raizId && !raiz) notFound();
   const nodos = raiz ? await subarbol(raiz.id, contexto) : [];
   const domicilios = await listarDomicilios(contexto);
   const nodo = nodoResuelto({ raiz, nodos, nodoId });
+
+  // Con raiz propia pero `?nodo=` que no cuelga de ella -ajeno, o dado de
+  // baja-: antes se renderizaba el panel vacio.
+  if (raiz && !nodo) notFound();
   const calles = nodo ? await listarCalles(nodo.id, contexto) : [];
   // El municipio entero, con raiz abierta o sin ella: alimenta el arbol de
   // la entrada y el destino del reparenteo, que mueve un lugar a cualquier
   // rama. Recortarlo al subarbol de la raiz abierta dejaba ese selector con
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
   const lugares = await listarLugares(contexto);
-  const puedeActuar =
-    puedeEscribir(contexto.usuario.rol) ||
-    puedeAdministrarTerritorio(contexto.usuario.rol);
+  const permisos = permisosDeTerritorio(contexto.usuario.rol);
 
   const alta =
     !raiz && puedeEscribir(contexto.usuario.rol) && accion !== "lugar" ? (
@@ -92,7 +101,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
           lugares={lugares}
           vista={vista}
           accion={accion}
-          puedeActuar={puedeActuar}
+          permisos={permisos}
         />
       ) : null}
     </PaginaDePanel>

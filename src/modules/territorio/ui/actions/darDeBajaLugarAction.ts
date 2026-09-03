@@ -8,7 +8,7 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { darDeBajaLugar } from "../../composicion";
 import { comoLugarId, LugarConDependientesError } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
@@ -35,6 +35,7 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
   });
 
   const { raiz, nodo } = navegacionDe(formData);
+  const padre = formData.get("padre")?.toString() || undefined;
 
   if (!analisis.success) {
     volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
@@ -52,4 +53,9 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
+
+  // El nodo abierto es justo el que se dio de baja, asi que la URL actual
+  // ya no resuelve: se sube al padre. Dando de baja la raiz misma no queda
+  // arbol que abrir y el destino es el listado.
+  irAlArbol(nodo === raiz ? undefined : raiz, padre);
 }

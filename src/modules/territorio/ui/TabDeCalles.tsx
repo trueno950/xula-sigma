@@ -10,6 +10,7 @@ import { type PropsDeContenido, rutaDe } from "./contenido";
 import { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 import { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import { puedeAbrir } from "./permisos";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "calle", etiqueta: "Calle" },
@@ -28,15 +29,17 @@ export function TabDeCalles({
   lugar,
   calles,
   accion,
-  puedeActuar,
+  permisos,
 }: PropsDeContenido) {
   const abierta = accion === "calle" || accion === "renombrarCalle";
+  const puedeAgregar = puedeAbrir("calle", permisos);
+  const puedeRenombrar = puedeAbrir("renombrarCalle", permisos);
 
   return (
     <div className="flex flex-col gap-4">
-      {puedeActuar && !abierta ? (
+      {(puedeAgregar || puedeRenombrar) && !abierta ? (
         <BarraDeAcciones>
-          {calles.length > 0 ? (
+          {puedeRenombrar && calles.length > 0 ? (
             <EnlaceDeAccion
               href={rutaDe({
                 raizId: raizId,
@@ -49,18 +52,20 @@ export function TabDeCalles({
               Renombrar calle
             </EnlaceDeAccion>
           ) : null}
-          <EnlaceDeAccion
-            href={rutaDe({
-              raizId: raizId,
-              nodoId: lugar.id,
-              vista: "calles",
-              accion: "calle",
-            })}
-            variante="primaria"
-          >
-            <Plus size={18} weight="bold" aria-hidden="true" />
-            Agregar calle
-          </EnlaceDeAccion>
+          {puedeAgregar ? (
+            <EnlaceDeAccion
+              href={rutaDe({
+                raizId: raizId,
+                nodoId: lugar.id,
+                vista: "calles",
+                accion: "calle",
+              })}
+              variante="primaria"
+            >
+              <Plus size={18} weight="bold" aria-hidden="true" />
+              Agregar calle
+            </EnlaceDeAccion>
+          ) : null}
         </BarraDeAcciones>
       ) : null}
 
@@ -78,7 +83,7 @@ export function TabDeCalles({
         </p>
       )}
 
-      {puedeActuar && accion === "calle" ? (
+      {puedeAgregar && accion === "calle" ? (
         <PanelDeAccion
           titulo={`Agregar una calle en ${lugar.nombre}`}
           volverA={rutaDe({
@@ -91,7 +96,7 @@ export function TabDeCalles({
         </PanelDeAccion>
       ) : null}
 
-      {puedeActuar && accion === "renombrarCalle" ? (
+      {puedeRenombrar && accion === "renombrarCalle" ? (
         <PanelDeAccion
           titulo="Renombrar una calle"
           volverA={rutaDe({

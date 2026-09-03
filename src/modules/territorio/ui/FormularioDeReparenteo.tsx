@@ -8,6 +8,7 @@ import {
 } from "../domain";
 import { reparentearLugarAction } from "./actions/reparentearLugarAction";
 import { opcionesDeLugares } from "./opciones";
+import { ofertaDeReparenteo } from "./reparenteo";
 
 type Props = {
   /** Contexto del arbol: se mueve el nodo seleccionado. */
@@ -17,6 +18,8 @@ type Props = {
   tipoDelLugar: TipoDeLugar;
   /** Todos los lugares activos del municipio, sin filtrar. */
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
+  /** De quien cuelga hoy. Ausente si ya es una raiz del municipio. */
+  padre?: LugarId | undefined;
 };
 
 /**
@@ -28,23 +31,29 @@ type Props = {
  * -su destino nunca estaba en la lista-, y una raiz sin hijos daba un
  * select con cero opciones, que es como se encontro `norte`.
  *
- * Un tipo de rango 0 no tiene destino posible: `puedeContener` lo descarta
- * contra los cinco tipos. Por eso ese caso no muestra un select vacio ni la
- * opcion "sin lugar padre" -que era un envio que no movia nada-, sino la
- * frase que explica por que no hay a donde moverlo.
+ * Que se ofrece lo decide `ofertaDeReparenteo`, y ahi esta el por que de
+ * las tres salidas: el select, soltarlo del padre, o la frase que explica
+ * que no hay nada que hacer.
  */
 export function FormularioDeReparenteo({
   raiz,
   nodo,
   tipoDelLugar,
   lugares,
+  padre,
 }: Props) {
   const destinos = destinosDeReparenteo(
     { id: nodo, tipo: tipoDelLugar },
     lugares,
   );
 
-  if (destinos.length === 0) {
+  const oferta = ofertaDeReparenteo({
+    destinos: destinos.length,
+    puedeSerRaiz: puedeSerRaiz(tipoDelLugar),
+    tienePadre: padre !== undefined,
+  });
+
+  if (!oferta.muestraDestinos && !oferta.muestraDesanclar) {
     return (
       <p className="text-[15px] text-caliza-apagada">
         {puedeSerRaiz(tipoDelLugar)
@@ -60,17 +69,46 @@ export function FormularioDeReparenteo({
       <input type="hidden" name="nodo" value={nodo} />
       <input type="hidden" name="lugarId" value={nodo} />
 
-      <CampoDeLista
-        id="lugar-padre-nuevo-id"
-        name="nuevoPadreId"
-        etiqueta="Nuevo lugar padre"
-        marcador={`Elija donde va esta ${tipoDelLugar}`}
-        opciones={opcionesDeLugares(destinos)}
-        ayuda="Todo lo que cuelga de este lugar se mueve con el."
-      />
+      {/*
+        El input oculto solo cuando no hay select. Con los dos, el `<form>`
+        tendria dos campos `nuevoPadreId` y `formData.get` devuelve el
+        primero: soltar ganaria siempre y el select no moveria nada. Con
+        select, soltar entra como una opcion mas.
+      */}
+      {oferta.muestraDesanclar && !oferta.muestraDestinos ? (
+        <>
+          <input type="hidden" name="nuevoPadreId" value="" />
+          <p className="text-[15px] text-caliza-tinta">
+            Esta {tipoDelLugar} cuelga de otro lugar, y no deberia: es un
+            asentamiento del municipio. Soltarla la deja en el primer nivel con
+            todo lo que tiene adentro.
+          </p>
+        </>
+      ) : null}
+
+      {oferta.muestraDestinos ? (
+        <CampoDeLista
+          id="lugar-padre-nuevo-id"
+          name="nuevoPadreId"
+          etiqueta="Nuevo lugar padre"
+          marcador={`Elija donde va esta ${tipoDelLugar}`}
+          opciones={[
+            ...(oferta.muestraDesanclar
+              ? [
+                  {
+                    valor: "",
+                    etiqueta: "Sin lugar padre (asentamiento del municipio)",
+                  },
+                ]
+              : []),
+            ...opcionesDeLugares(destinos),
+          ]}
+          ayuda="Todo lo que cuelga de este lugar se mueve con el."
+        />
+      ) : null}
 
       <Boton type="submit" variante="primaria">
-        Mover lugar
+        {oferta.muestraDestinos ? "Mover lugar" : "Soltar del lugar padre"}
       </Boton>
     </form>
   );

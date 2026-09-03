@@ -12,6 +12,7 @@ import { FormularioDeEdicionDeLugar } from "./FormularioDeEdicionDeLugar";
 import { FormularioDeReparenteo } from "./FormularioDeReparenteo";
 import { PanelDeAccion } from "./PanelDeAccion";
 import type { AccionDeNodo } from "./PanelDeNodo";
+import { puedeAbrir } from "./permisos";
 
 type ItemDeEdicion = {
   clave: Extract<AccionDeNodo, "renombrar" | "reparentear" | "baja">;
@@ -48,22 +49,40 @@ const ACCIONES: readonly ItemDeEdicion[] = [
   },
 ];
 
+/**
+ * De que lugar cuelga este, para poder subir cuando se da de baja. La raiz
+ * del arbol no esta en el subarbol y no cuelga de nada: `undefined`.
+ */
+const padreDe = (
+  nodos: PropsDeContenido["nodos"],
+  lugarId: PropsDeContenido["lugar"]["id"],
+) => {
+  const propio = nodos.find((nodo) => nodo.id === lugarId);
+
+  return propio?.clase === "lugar" ? (propio.padreId ?? undefined) : undefined;
+};
+
 /** Pestana Editar: los cambios al lugar mismo, fuera del camino diario. */
 export function TabDeEdicion({
   raizId,
   lugar,
+  nodos,
   lugares,
   accion,
-  puedeActuar,
+  permisos,
 }: PropsDeContenido) {
-  if (!puedeActuar) return null;
+  const disponibles = ACCIONES.filter((item) =>
+    puedeAbrir(item.clave, permisos),
+  );
+
+  if (disponibles.length === 0) return null;
 
   const volverA = rutaDe({ raizId: raizId, nodoId: lugar.id, vista: "editar" });
 
   return (
     <div className="flex flex-col gap-4">
       <ul className="flex flex-col">
-        {ACCIONES.map((item) => (
+        {disponibles.map((item) => (
           <li key={item.clave} className="border-b border-caliza-divisor">
             <Link
               href={rutaDe({
@@ -102,7 +121,7 @@ export function TabDeEdicion({
         ))}
       </ul>
 
-      {accion === "renombrar" ? (
+      {accion === "renombrar" && puedeAbrir("renombrar", permisos) ? (
         <PanelDeAccion titulo={`Renombrar ${lugar.nombre}`} volverA={volverA}>
           <FormularioDeEdicionDeLugar
             raiz={raizId}
@@ -112,22 +131,24 @@ export function TabDeEdicion({
         </PanelDeAccion>
       ) : null}
 
-      {accion === "reparentear" ? (
+      {accion === "reparentear" && puedeAbrir("reparentear", permisos) ? (
         <PanelDeAccion titulo={`Mover ${lugar.nombre}`} volverA={volverA}>
           <FormularioDeReparenteo
             raiz={raizId}
             nodo={lugar.id}
             tipoDelLugar={lugar.tipo}
             lugares={lugares}
+            padre={padreDe(nodos, lugar.id)}
           />
         </PanelDeAccion>
       ) : null}
 
-      {accion === "baja" ? (
+      {accion === "baja" && puedeAbrir("baja", permisos) ? (
         <PanelDeAccion titulo={`Dar de baja ${lugar.nombre}`} volverA={volverA}>
           <FormularioDeBajaDeLugar
             raiz={raizId}
             nodo={lugar.id}
+            padre={padreDe(nodos, lugar.id)}
             nombre={lugar.nombre}
           />
         </PanelDeAccion>

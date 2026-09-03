@@ -42,8 +42,12 @@ type Props = {
   /** La pestana activa: la unica categoria visible. */
   vista: TabDeLugar;
   cuentas: CuentasDeLugar;
-  /** La guarda fina la hace cada caso de uso; aca solo se esconde Editar. */
-  puedeActuar: boolean;
+  /**
+   * Si queda al menos una accion de Editar para este rol. Llega calculado
+   * -`permisosDeTerritorio` en `permisos.ts`- y no como rol, para que este
+   * componente no vuelva a decidir permisos por su cuenta.
+   */
+  abreLaEdicion: boolean;
 };
 
 /**
@@ -67,7 +71,7 @@ export function PanelDeNodo({
   migaja,
   vista,
   cuentas,
-  puedeActuar,
+  abreLaEdicion,
 }: Props) {
   const ultimo = migaja[migaja.length - 1];
   const pasos = [
@@ -102,7 +106,7 @@ export function PanelDeNodo({
       href: `/territorio?raiz=${raizId}&nodo=${nodo.id}&vista=domicilios`,
       activa: vista === "domicilios",
     },
-    ...(puedeActuar
+    ...(abreLaEdicion
       ? [
           {
             clave: "editar",

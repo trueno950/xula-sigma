@@ -15,6 +15,7 @@ import {
 } from "./contenido";
 import { FormularioDeDomicilio } from "./FormularioDeDomicilio";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import { puedeAbrir } from "./permisos";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "domicilio", etiqueta: "Domicilio", ancho: "minmax(0,2fr)" },
@@ -38,8 +39,9 @@ export function TabDeDomicilios({
   calles,
   domicilios,
   accion,
-  puedeActuar,
+  permisos,
 }: PropsDeContenido) {
+  const puedeActuar = puedeAbrir("domicilio", permisos);
   const colgados = domiciliosDirectosDe(nodos, domicilios, lugar.id);
   const abierta = accion === "domicilio";
   const sinCalles = calles.length === 0;

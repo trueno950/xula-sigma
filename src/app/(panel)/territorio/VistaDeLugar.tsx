@@ -13,6 +13,7 @@ import type {
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioParaListado } from "@/modules/territorio/application/puertosDeDomicilios";
+import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 
 type Props = {
   raiz: Pick<LugarGuardado, "id" | "tipo" | "nombre">;
@@ -23,7 +24,7 @@ type Props = {
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   vista: TabDeLugar;
   accion: AccionDeNodo | undefined;
-  puedeActuar: boolean;
+  permisos: PermisosDeTerritorio;
 };
 
 /**
@@ -98,7 +99,7 @@ export function VistaDeLugar({
   lugares,
   vista,
   accion,
-  puedeActuar,
+  permisos,
 }: Props) {
   return (
     <>
@@ -108,7 +109,7 @@ export function VistaDeLugar({
         migaja={migajaDe(raiz, nodos, nodo)}
         vista={vista}
         cuentas={cuentasDe({ nodos, domicilios, calles, nodo })}
-        puedeActuar={puedeActuar}
+        abreLaEdicion={permisos.abreLaEdicion}
       />
 
       <ContenidoDeLugar
@@ -120,7 +121,7 @@ export function VistaDeLugar({
         domicilios={domicilios}
         vista={vista}
         accion={accion}
-        puedeActuar={puedeActuar}
+        permisos={permisos}
       />
     </>
   );
