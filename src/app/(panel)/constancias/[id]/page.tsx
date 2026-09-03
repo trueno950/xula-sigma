@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import {
   BotonDeCancelacion,
@@ -83,9 +84,8 @@ export default async function PaginaDeDetalleDeConstancia({
     ? await constanciaPorId(comoConstanciaId(analisisDeId.data), contexto)
     : null;
 
-  if (!constancia) {
-    return <PantallaDeMensaje mensaje="Esa constancia no existe." />;
-  }
+  // Regla 8, igual que en la ficha de una persona.
+  if (!constancia) notFound();
 
   const datos = esquemaDeSnapshot.parse(constancia.datos);
   const analisisDeParametros = esquemaDeParametros.safeParse(

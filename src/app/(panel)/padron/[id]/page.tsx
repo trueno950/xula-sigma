@@ -1,4 +1,5 @@
 import { FileText } from "@phosphor-icons/react/ssr";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { comoPersonaId, personaPorId } from "@/modules/padron";
 import {
@@ -63,16 +64,9 @@ export default async function PaginaDeDetalleDePersona({
     ? await personaPorId(comoPersonaId(analisisDeId.data), contexto)
     : null;
 
-  if (!persona) {
-    return (
-      <PantallaDeMensaje
-        mensaje="Esa persona no existe."
-        accion={
-          <EnlaceDeAccion href="/padron">Volver al padron</EnlaceDeAccion>
-        }
-      />
-    );
-  }
+  // Regla 8: un id de otro municipio ya vuelve `null` por RLS, y desde
+  // aca es indistinguible de uno inexistente. Los dos son 404.
+  if (!persona) notFound();
 
   const historial = await historialDeResidencias(persona.id, contexto);
   const domicilios = await listarDomicilios(contexto);
