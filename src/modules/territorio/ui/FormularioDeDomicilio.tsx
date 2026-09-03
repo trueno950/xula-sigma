@@ -1,61 +1,76 @@
+import { Boton, Campo, CampoDeLista } from "@/shared/ui";
 import type { CalleGuardada } from "../application/puertos";
 import { altaDeDomicilioAction } from "./actions/altaDeDomicilioAction";
-import { SelectorDeCalle } from "./SelectorDeCalle";
-
-const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
+import { opcionesDeCalles } from "./opciones";
 
 type Props = {
-  /** Precargado con la raiz que la pagina ya tiene seleccionada (mismo criterio que `FormularioDeAltaDeCalle`). */
-  lugarId: string;
+  /** Contexto del arbol: el domicilio cuelga del nodo seleccionado. */
+  raiz: string;
+  nodo: string;
   calles: readonly Pick<CalleGuardada, "id" | "nombre">[];
 };
 
-/** Server Component, `<form action={...}>` nativo sin `"use client"` (tasks.md 5.16). */
-export function FormularioDeDomicilio({ lugarId, calles }: Props) {
+/**
+ * Server Component, `<form action={...}>` nativo sin `"use client"` (tasks.md 5.16).
+ *
+ * Las tres calles salen del mismo catalogo del lugar. Antes cada `<label>`
+ * envolvia solo su texto y el `<select>` quedaba afuera: el `htmlFor`
+ * apuntaba bien, pero el campo no tenia ayuda ni podia mostrar error.
+ * `CampoDeLista` ata las tres cosas.
+ */
+export function FormularioDeDomicilio({ raiz, nodo, calles }: Props) {
+  const opciones = opcionesDeCalles(calles);
+
   return (
-    <form action={altaDeDomicilioAction} className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-medium text-caliza-tinta">
-        Nuevo domicilio
-      </h2>
-      <input type="hidden" name="lugarId" value={lugarId} />
-      <label htmlFor="domicilio-calle-id" className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Calle</span>
-      </label>
-      <SelectorDeCalle name="calleId" id="domicilio-calle-id" calles={calles} />
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Numero</span>
-        <input name="numero" type="text" className={CLASE_CAMPO} />
-      </label>
-      <label htmlFor="domicilio-entre-a-id" className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Entre calle</span>
-      </label>
-      <SelectorDeCalle
-        name="entreCalleAId"
+    <form action={altaDeDomicilioAction} className="flex flex-col gap-4">
+      <input type="hidden" name="raiz" value={raiz} />
+      <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="lugarId" value={nodo} />
+
+      <CampoDeLista
+        id="domicilio-calle-id"
+        name="calleId"
+        etiqueta="Calle"
+        marcador="Seleccione una calle"
+        opciones={opciones}
+      />
+
+      <Campo
+        id="domicilio-numero"
+        name="numero"
+        etiqueta="Numero"
+        tipografia="dato"
+        ayuda="Dejar vacio si el domicilio no tiene numero."
+      />
+
+      <CampoDeLista
         id="domicilio-entre-a-id"
-        calles={calles}
+        name="entreCalleAId"
+        etiqueta="Entre calle"
+        marcador="Ninguna"
         opcional
+        opciones={opciones}
       />
-      <label htmlFor="domicilio-entre-b-id" className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Y calle</span>
-      </label>
-      <SelectorDeCalle
-        name="entreCalleBId"
+
+      <CampoDeLista
         id="domicilio-entre-b-id"
-        calles={calles}
+        name="entreCalleBId"
+        etiqueta="Y calle"
+        marcador="Ninguna"
         opcional
+        opciones={opciones}
       />
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Referencia</span>
-        <input name="referencia" type="text" className={CLASE_CAMPO} />
-      </label>
-      <button
-        type="submit"
-        className="h-11 rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-      >
+
+      <Campo
+        id="domicilio-referencia"
+        name="referencia"
+        etiqueta="Referencia"
+        ayuda="Una sena para encontrarlo: junto a la cancha, porton azul."
+      />
+
+      <Boton type="submit" variante="primaria">
         Dar de alta
-      </button>
+      </Boton>
     </form>
   );
 }

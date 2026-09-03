@@ -14,6 +14,32 @@ export class LugarConDependientesError extends Error {
 }
 
 /**
+ * Un lugar sin padre que no es del rango superior.
+ *
+ * `openspec/specs/jerarquia-territorial` lo pide como MUST: "Una fila de
+ * tipo `cabecera` o `comisaria` MUST tener `padreId IS NULL`; ningun otro
+ * tipo MUST tener `padreId NULL`". Es un error aparte de
+ * `JerarquiaInvalidaError` porque no hay ningun padre del cual hablar: el
+ * mensaje "Ese lugar no puede contener a este" no le sirve a nadie cuando
+ * el problema es que no se eligio ninguno.
+ *
+ * No confundir con la raggedness (design.md decision 6), que es poder
+ * saltear niveles —un sector colgado directo de una comisaria, sin colonia
+ * intermedia—. Un `padreId NULL` en un tipo que no es rango 0 significa
+ * "sin padre conocido", nunca "esto es la cabecera": lo dice el mismo spec.
+ */
+export class RaizInvalidaError extends Error {
+  readonly codigo = "RAIZ_INVALIDA";
+
+  constructor(
+    mensaje = "Solo una cabecera o una comisaria puede estar sin lugar padre.",
+  ) {
+    super(mensaje);
+    this.name = "RaizInvalidaError";
+  }
+}
+
+/**
  * `reparentearLugar` rechaza si `puedeContener(nuevoPadre.tipo, hijo.tipo)`
  * es falso (design.md seccion 9): una cabecera no puede colgar de una
  * comisaria, un sector no puede volverse padre de su propia colonia.

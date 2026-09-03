@@ -8,6 +8,7 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { editarLugar } from "../../composicion";
 import { comoLugarId } from "../../domain";
+import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
@@ -15,12 +16,8 @@ const esquemaDeEntrada = z.object({
   id: z.string().trim().uuid(),
   nombre: z.string().trim().min(1),
 });
-
 const MENSAJE_FORMULARIO_INVALIDO = "El nombre es obligatorio.";
 const MENSAJE_GENERICO = "No se pudo completar la edicion. Intente de nuevo.";
-
-const redirigirConError = (mensaje: string): never =>
-  redirect(`/territorio?error=${encodeURIComponent(mensaje)}`);
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -40,8 +37,10 @@ export async function editarLugarAction(formData: FormData): Promise<void> {
     nombre: formData.get("nombre"),
   });
 
+  const { raiz, nodo } = navegacionDe(formData);
+
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -55,9 +54,8 @@ export async function editarLugarAction(formData: FormData): Promise<void> {
       contexto,
     );
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
+    volverAlArbol(raiz, nodo, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");
-  redirect("/territorio");
 }

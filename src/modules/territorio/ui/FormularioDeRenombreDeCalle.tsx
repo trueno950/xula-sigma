@@ -1,36 +1,55 @@
+import { Boton, Campo, CampoDeLista } from "@/shared/ui";
 import type { CalleGuardada } from "../application/puertos";
 import { renombrarCalleAction } from "./actions/renombrarCalleAction";
-import { SelectorDeCalle } from "./SelectorDeCalle";
-
-const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
+import { opcionesDeCalles } from "./opciones";
 
 type Props = {
+  /** Contexto del arbol: a donde volver despues del renombre. */
+  raiz: string;
+  nodo: string;
   calles: readonly Pick<CalleGuardada, "id" | "nombre">[];
 };
 
-/** Server Component, `<form action={...}>` nativo sin `"use client"`. */
-export function FormularioDeRenombreDeCalle({ calles }: Props) {
+/**
+ * Server Component, `<form action={...}>` nativo sin `"use client"`.
+ *
+ * **Existia y no se renderizaba en ningun lado.** Estaba exportado desde el
+ * barrel del modulo desde la rebanada 4, pero ninguna pestana lo montaba:
+ * `renombrarCalleAction` era codigo alcanzable solo por un POST a mano. Una
+ * calle mal escrita quedaba mal escrita en todos los domicilios que
+ * colgaran de ella. Ahora vive en la pestana Calles, que es donde el
+ * operador la esta mirando.
+ *
+ * Los `raiz`/`nodo` ocultos son nuevos: la accion ya los leia -su esquema
+ * los declara opcionales- pero el formulario nunca se los mandaba, asi que
+ * un renombre invalido volvia a `/territorio` sin raiz ni nodo, o sea a la
+ * lista de lugares principales, y el operador perdia donde estaba.
+ */
+export function FormularioDeRenombreDeCalle({ raiz, nodo, calles }: Props) {
   return (
-    <form action={renombrarCalleAction} className="flex flex-col gap-3">
-      <h2 className="text-[15px] font-medium text-caliza-tinta">
-        Renombrar calle
-      </h2>
-      <label htmlFor="renombrar-calle-id" className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Calle</span>
-      </label>
-      <SelectorDeCalle name="id" id="renombrar-calle-id" calles={calles} />
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Nombre nuevo</span>
-        <input name="nombre" type="text" className={CLASE_CAMPO} />
-      </label>
-      <button
-        type="submit"
-        className="h-11 rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-      >
+    <form action={renombrarCalleAction} className="flex flex-col gap-4">
+      <input type="hidden" name="raiz" value={raiz} />
+      <input type="hidden" name="nodo" value={nodo} />
+
+      <CampoDeLista
+        id="renombrar-calle-id"
+        name="id"
+        etiqueta="Calle"
+        marcador="Seleccione una calle"
+        opciones={opcionesDeCalles(calles)}
+      />
+
+      <Campo
+        id="renombrar-calle-nombre"
+        name="nombre"
+        etiqueta="Nombre nuevo"
+        required
+        ayuda="El cambio alcanza a todos los domicilios de esa calle."
+      />
+
+      <Boton type="submit" variante="primaria">
         Renombrar
-      </button>
+      </Boton>
     </form>
   );
 }

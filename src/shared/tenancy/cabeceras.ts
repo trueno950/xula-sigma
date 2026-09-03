@@ -11,3 +11,9 @@
 
 export const CABECERA_SUPERFICIE = "x-xula-superficie";
 export const CABECERA_SUBDOMINIO = "x-xula-subdominio";
+
+/**
+ * La ruta de la URL, para que el layout del panel marque el modulo activo
+ * sin un componente cliente. La escribe el proxy, que es quien ya la lee.
+ */
+export const CABECERA_RUTA = "x-xula-ruta";

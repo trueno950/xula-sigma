@@ -1,12 +1,10 @@
+import { Boton, CampoDeLista } from "@/shared/ui";
 import { MOTIVOS_DE_CANCELACION } from "../domain";
 import { cancelarConstanciaAction } from "./actions/cancelarConstanciaAction";
 
 type Props = {
   constanciaId: string;
 };
-
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
 
 /**
  * Server Component, `<form action={...}>` nativo sin `"use client"`
@@ -15,32 +13,29 @@ const CLASE_CAMPO =
  * design.md de `constancias-oficios` decision 8-, no este archivo: ocultar
  * un boton no es autorizacion, la autorizacion real vive en
  * `cancelarConstancia`.
+ *
+ * Variante `peligro` y no la marca del municipio: cancelar un documento
+ * emitido no se deshace, y en un ayuntamiento de marca roja el boton de
+ * marca y el de cancelar se veian identicos (`DESIGN.md`, Don'ts).
  */
 export function BotonDeCancelacion({ constanciaId }: Props) {
   return (
-    <form action={cancelarConstanciaAction} className="flex items-end gap-2">
+    <form action={cancelarConstanciaAction} className="flex flex-col gap-4">
       <input type="hidden" name="constanciaId" value={constanciaId} />
-      <label className="flex flex-col gap-1">
-        <span className="text-[13px] font-medium text-caliza-apagada">
-          Motivo de cancelacion
-        </span>
-        <select name="motivo" className={CLASE_CAMPO} defaultValue="">
-          <option value="" disabled>
-            Seleccione un motivo
-          </option>
-          {MOTIVOS_DE_CANCELACION.map((motivo) => (
-            <option key={motivo} value={motivo}>
-              {motivo}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button
-        type="submit"
-        className="h-11 rounded-sm border border-senial-error px-4 text-[15px] font-medium text-senial-error"
-      >
+      <CampoDeLista
+        id="motivo-de-cancelacion"
+        name="motivo"
+        etiqueta="Motivo de cancelacion"
+        marcador="Seleccione un motivo"
+        opciones={MOTIVOS_DE_CANCELACION.map((motivo) => ({
+          valor: motivo,
+          etiqueta: motivo,
+        }))}
+        ayuda="No se deshace. El documento queda cancelado con este motivo."
+      />
+      <Boton type="submit" variante="peligro">
         Cancelar constancia
-      </button>
+      </Boton>
     </form>
   );
 }

@@ -1,6 +1,7 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
+import { DOMINIO_BASE_POR_DEFECTO } from "@/shared/tenancy/subdominio";
 import {
   type TransaccionTenant,
   withTenant,
@@ -33,13 +34,16 @@ export type SalidaDePdf = {
 };
 
 /**
- * El mismo `DOMINIO_BASE` que resuelve el tenant en `proxy.ts:40`, con el
- * mismo `?? "localhost"`. No hay un `shared/lib/configuracion.ts` que lo
- * centralice, y crear uno para una sola linea es mas costoso que
- * duplicarla (design.md de `constancias-oficios`, seccion 11: "los dos
- * insumos ya existen").
+ * El mismo `DOMINIO_BASE` que resuelve el tenant en `proxy.ts`, y el mismo
+ * defecto.
+ *
+ * Antes eran dos `?? "localhost"` separados, con un comentario que decia
+ * que eran iguales. Cuando el del proxy paso a `xula.localhost` -por que,
+ * en `subdominio.ts`- este se habria quedado atras sin que nada fallara, y
+ * la URL de validacion impresa en una constancia apuntaria a un dominio
+ * que no sirve al municipio. El papel no se puede reimprimir.
  */
-const dominioBase = () => process.env.DOMINIO_BASE ?? "localhost";
+const dominioBase = () => process.env.DOMINIO_BASE ?? DOMINIO_BASE_POR_DEFECTO;
 
 type ContextoDeAcreditacion = {
   repositorio: RepositorioDeConstancias;

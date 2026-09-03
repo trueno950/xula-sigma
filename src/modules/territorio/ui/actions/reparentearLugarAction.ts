@@ -7,7 +7,13 @@ import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { reparentearLugar } from "../../composicion";
-import { comoLugarId, JerarquiaInvalidaError } from "../../domain";
+import {
+  comoLugarId,
+  JerarquiaInvalidaError,
+  RaizInvalidaError,
+} from "../../domain";
+import { destinoDeReparenteo } from "../reparenteo";
+import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
@@ -15,18 +21,15 @@ const esquemaDeEntrada = z.object({
   lugarId: z.string().trim().uuid(),
   nuevoPadreId: z.union([z.literal(""), z.string().trim().uuid()]),
 });
-
 const MENSAJE_FORMULARIO_INVALIDO = "Falta el lugar a mover.";
 const MENSAJE_GENERICO =
   "No se pudo completar el reparenteo. Intente de nuevo.";
-
-const redirigirConError = (mensaje: string): never =>
-  redirect(`/territorio?error=${encodeURIComponent(mensaje)}`);
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
   if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof JerarquiaInvalidaError) return error.message;
+  if (error instanceof RaizInvalidaError) return error.message;
 
   console.error("[territorio] reparenteo fallo", datosSegurosDeError(error));
 
@@ -41,8 +44,10 @@ export async function reparentearLugarAction(
     nuevoPadreId: formData.get("nuevoPadreId") ?? "",
   });
 
+  const { raiz, nodo } = navegacionDe(formData);
+
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -59,9 +64,12 @@ export async function reparentearLugarAction(
       contexto,
     );
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
+    volverAlArbol(raiz, nodo, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");
-  redirect("/territorio");
+
+  const destino = destinoDeReparenteo(analisis.data);
+
+  irAlArbol(destino.raiz, destino.nodo);
 }

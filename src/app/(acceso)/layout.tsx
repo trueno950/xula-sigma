@@ -1,9 +1,10 @@
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { leerMarca } from "@/shared/marca";
-import { CABECERA_SUPERFICIE } from "@/shared/tenancy/cabeceras";
-import { ayuntamientoActual } from "@/shared/tenancy/contexto";
+import {
+  ayuntamientoActual,
+  superficieActual,
+} from "@/shared/tenancy/contexto";
 import { variablesDeMarca } from "@/shared/ui/marca";
 
 /**
@@ -33,7 +34,7 @@ export default async function LayoutDeAcceso({
 }: {
   children: ReactNode;
 }) {
-  const superficie = (await headers()).get(CABECERA_SUPERFICIE);
+  const superficie = await superficieActual();
 
   if (superficie !== "ayuntamiento") notFound();
 

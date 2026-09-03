@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoDomicilioId, comoResidenciaId } from "../domain";
-import type { DomicilioGuardado, RepositorioDeDomicilios } from "./puertos";
+import type {
+  DomicilioGuardado,
+  RepositorioDeDomicilios,
+} from "./puertosDeDomicilios";
 import type {
   LecturaDePersonas,
   RepositorioDeResidencias,
@@ -63,6 +66,7 @@ describe("registrarMudanza", () => {
     buscarPorId: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
+    listar: vi.fn(),
   };
 
   let ordenDeLlamadas: string[];

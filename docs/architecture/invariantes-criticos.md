@@ -28,6 +28,25 @@ Este es el invariante raíz. Todo lo demás es secundario.
 - El `ayuntamiento_id` efectivo **siempre** viene del contexto de sesión
   resuelto en el servidor. Nunca del body, del query string, ni de un
   parámetro que el cliente controle.
+- **Cerrado el 2026-09-03: `resolverHost` en `src/proxy.ts` ya no confia
+  en `Host` ni en `x-forwarded-host` para el fallback del render sintetico
+  de Next.** Confiaba: bastaba que `Host` pareciera loopback
+  (`esHostInterno`, `shared/tenancy/subdominio.ts`) para leer el tenant de
+  `x-forwarded-host`, y las dos cabeceras las escribe quien hace la
+  peticion -no habia garantia de red de que el request viniera del propio
+  servidor-. `curl -H "Host: localhost" -H "x-forwarded-host:
+  <municipio>.xulasigma.mx"` armaba el mismo request que el render
+  sintetico sin haber pasado nunca por el servidor.
+  El fallback ahora usa una cookie HttpOnly firmada con HMAC-SHA256
+  (`shared/tenancy/respaldoDeHost.ts`, reusa `BETTER_AUTH_SECRET`): el
+  proxy la firma en cada respuesta que resuelve un municipio por `Host`
+  directo, y sin el secreto del servidor no hay forma de producir una
+  firma que verifique. No depende de que Railway reescriba ningun header
+  -no hace falta esperar al primer deploy para cerrarlo-. Verificado con
+  `e2e/bajaDeLugar.spec.ts` (el redirect de una Server Action sigue
+  funcionando: la cookie sobrevive el self-fetch interno de Next) y
+  `e2e/hostAjeno.spec.ts`/`src/proxyRespaldo.test.ts` (un `Host` o cookie
+  falsificados siguen dando 404).
 - Toda tabla operativa tiene columna `ayuntamiento_id` y política RLS con
   `FORCE ROW LEVEL SECURITY`.
 - **Hay una excepción, y vive en las reglas, no acá.** Un catálogo de

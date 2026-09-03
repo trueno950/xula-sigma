@@ -22,6 +22,7 @@ export default {
         "campanias",
         "juzgado",
         "portal",
+        "territorio",
         "tenancy",
         "auth",
         "ui",

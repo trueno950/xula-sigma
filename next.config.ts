@@ -8,7 +8,10 @@ import type { NextConfig } from "next";
  */
 const configuracion: NextConfig = {
   experimental: {
-    optimizePackageImports: ["@phosphor-icons/react"],
+    optimizePackageImports: [
+      "@phosphor-icons/react",
+      "@phosphor-icons/react/ssr",
+    ],
   },
 };
 

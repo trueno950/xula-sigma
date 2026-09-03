@@ -29,3 +29,28 @@ const RANGO: Record<TipoDeLugar, number> = {
 
 export const puedeContener = (padre: TipoDeLugar, hijo: TipoDeLugar): boolean =>
   RANGO[padre] < RANGO[hijo];
+
+/**
+ * Si ese tipo puede estar arriba de todo, sin padre.
+ *
+ * Es la consecuencia (2) que el comentario de arriba ya enunciaba —"un nodo
+ * de rango 0 nunca es hijo de nadie, raiz por construccion"— escrita como
+ * funcion en vez de como prosa. Mientras vivio solo en el comentario, nada
+ * la consultaba: `altaDeLugar` valida `puedeContener` unicamente cuando hay
+ * `padreId`, asi que con `padreId: null` aceptaba los cinco tipos y una
+ * manzana suelta quedaba de raiz del municipio.
+ */
+export const puedeSerRaiz = (tipo: TipoDeLugar): boolean => RANGO[tipo] === 0;
+
+/**
+ * Los tipos que ese padre acepta adentro, en el orden del catalogo.
+ *
+ * La usa el alta para ofrecer solo lo que va a pasar la validacion: antes
+ * el formulario ofrecia los cinco tipos siempre, asi que elegir "comisaria"
+ * dentro de una cabecera era un camino abierto que terminaba en
+ * `JerarquiaInvalidaError` despues de enviar.
+ */
+export const tiposContenidosPor = (
+  padre: TipoDeLugar,
+): readonly TipoDeLugar[] =>
+  TIPOS_DE_LUGAR.filter((hijo) => puedeContener(padre, hijo));

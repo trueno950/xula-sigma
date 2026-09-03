@@ -90,6 +90,10 @@ export type RepositorioDeLugares = {
     tx: TransaccionTenant,
     raizId: LugarId,
   ): Promise<readonly NodoDeSubarbol[]>;
+  /** Lugares de nivel superior activos (`padreId IS NULL`, `bajaEn IS NULL`), para la entrada de `/territorio`. */
+  listarRaices(tx: TransaccionTenant): Promise<readonly LugarGuardado[]>;
+  /** Todos los lugares activos (`bajaEn IS NULL`), raices y anidados, para el catalogo de "lugar padre" del alta. */
+  listarLugares(tx: TransaccionTenant): Promise<readonly LugarGuardado[]>;
 };
 
 export type DatosDeAltaDeCalle = {
@@ -138,62 +142,9 @@ export type RepositorioDeCalles = {
   ): Promise<readonly CalleGuardada[]>;
 };
 
-export type DatosDeAltaDeDomicilio = {
-  id: DomicilioId;
-  ayuntamientoId: AyuntamientoId;
-  lugarId: LugarId;
-  calleId: CalleId;
-  numero: string | null;
-  entreCalleAId: CalleId | null;
-  entreCalleBId: CalleId | null;
-  referencia: string | null;
-};
-
-export type DomicilioGuardado = {
-  id: DomicilioId;
-  lugarId: LugarId;
-  calleId: CalleId;
-  numero: string | null;
-  entreCalleAId: CalleId | null;
-  entreCalleBId: CalleId | null;
-  referencia: string | null;
-};
-
 /**
- * `porLugarYSubarbol` reusa el mismo `WITH RECURSIVE` que
- * `RepositorioDeLugares.subarbol` (tasks.md 3.12), pero devuelve el detalle
- * completo del domicilio en vez del nodo minimo del arbol. `porCalle` no
- * necesita CTE: `calleId` ya identifica la fila sin bajar por jerarquia
- * (design.md seccion 12, "POR CALLE").
- */
-export type RepositorioDeDomicilios = {
-  crear(tx: TransaccionTenant, datos: DatosDeAltaDeDomicilio): Promise<void>;
-  /**
-   * `registrarMudanza` la usa para validar `domicilioId` bajo RLS antes de
-   * insertar la residencia -mismo motivo que `RepositorioDeCalles.buscarPorId`
-   * en `altaDeDomicilio` (hallazgo de GGA en la revision de PR 30): sin
-   * este chequeo, un `domicilioId` de otro tenant o inexistente cae en el
-   * `23503` crudo de `residencias_domicilio_tenant_fk` en vez de un
-   * `NoEncontradoError` limpio.
-   */
-  buscarPorId(
-    tx: TransaccionTenant,
-    id: DomicilioId,
-  ): Promise<DomicilioGuardado | null>;
-  porLugarYSubarbol(
-    tx: TransaccionTenant,
-    lugarId: LugarId,
-  ): Promise<readonly DomicilioGuardado[]>;
-  porCalle(
-    tx: TransaccionTenant,
-    calleId: CalleId,
-  ): Promise<readonly DomicilioGuardado[]>;
-};
-
-/**
- * Los puertos de residencias (`RepositorioDeResidencias`,
- * `LecturaDePersonas` y sus tipos de datos) viven en
- * `puertosDeResidencias.ts`, no aca (hallazgo de GGA en la revision de
- * esta rebanada: "Lineas por archivo de codigo <= 200" — este archivo
- * llego a 288 antes del split).
+ * Los puertos de domicilios viven en `puertosDeDomicilios.ts`, y los de
+ * residencias en `puertosDeResidencias.ts`, no aca (hallazgo de GGA en la
+ * revision de esta rebanada: "Lineas por archivo de codigo <= 200" — este
+ * archivo llego a 288 antes del split).
  */

@@ -5,7 +5,7 @@ import type { NodoDeSubarbol, RepositorioDeLugares } from "./puertos";
 
 /**
  * Sin guarda de rol, mismo criterio que `personaPorId` de `padron`: leer
- * el arbol territorial no es escribirlo. `ui/ArbolDeLugares.tsx` la
+ * el arbol territorial no es escribirlo. `ui/ContenidoDeLugar.tsx` lo
  * consume para no importar `infrastructure` (tabla de capas,
  * `docs/architecture/estructura.md`).
  */

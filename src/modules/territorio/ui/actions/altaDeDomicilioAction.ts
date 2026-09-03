@@ -12,6 +12,7 @@ import {
   comoLugarId,
   TransversalRepetidaError,
 } from "../../domain";
+import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeCalleAction`. Formulario nativo sin `use client`. */
 
@@ -23,12 +24,8 @@ const esquemaDeEntrada = z.object({
   entreCalleBId: z.union([z.literal(""), z.string().trim().uuid()]),
   referencia: z.string().trim().optional(),
 });
-
 const MENSAJE_FORMULARIO_INVALIDO = "Lugar y calle son obligatorios.";
 const MENSAJE_GENERICO = "No se pudo completar el alta. Intente de nuevo.";
-
-const redirigirConError = (mensaje: string): never =>
-  redirect(`/territorio?error=${encodeURIComponent(mensaje)}`);
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -55,8 +52,10 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
     referencia: formData.get("referencia") ?? undefined,
   });
 
+  const { raiz, nodo } = navegacionDe(formData);
+
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -81,9 +80,8 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
       contexto,
     );
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
+    volverAlArbol(raiz, nodo, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");
-  redirect("/territorio");
 }

@@ -42,8 +42,14 @@ export default defineConfig({
             // `contextoActual()` arrastra ese import con solo importar el
             // barrel del modulo, aunque el test -como
             // `superficiePublica.test.ts`- nunca dialogue con ninguno de
-            // los dos. Ningun test de `unit` abre una conexion real ni
-            // firma una cookie: los valores no importan, solo que existan.
+            // los dos. Ningun test de `unit` abre una conexion real, asi
+            // que `DATABASE_URL` no importa mas que existir.
+            //
+            // `BETTER_AUTH_SECRET` es distinto desde `respaldoDeHost.ts`:
+            // `proxy.test.ts` y `proxyRespaldo.test.ts` SI firman y
+            // verifican una cookie con este valor -no hace falta que
+            // coincida con ningun secreto real, solo que firmar y
+            // verificar usen el mismo-.
             DATABASE_URL: "postgresql://no-se-usa@localhost:1/no-se-usa",
             BETTER_AUTH_SECRET: "secreto-de-prueba-no-usar-en-produccion",
           },
@@ -119,6 +125,20 @@ export default defineConfig({
         "src/shared/auth/politicasPlataforma.ts",
         "src/shared/**/*DePrueba.ts",
         "src/shared/**/index.ts",
+        /**
+         * Los componentes de `shared/ui` quedan afuera por la misma razon
+         * que `esquema.ts`: son declaraciones. La logica que si decide algo
+         * —que variante de boton, cual de los dos vacios, si el filtro
+         * conto— vive en `estilos.ts` y `estadoDeLista.ts`, que son `.ts`,
+         * entran al piso y tienen sus tests.
+         *
+         * Cubrir el `.tsx` pediria montar un DOM y una libreria de
+         * renderizado nueva para afirmar que un `<button>` recibio las
+         * clases que la funcion de al lado ya devolvio. Eso es medir el
+         * numero, no la garantia; lo que de verdad prueba estas pantallas
+         * es el E2E de Playwright.
+         */
+        "src/shared/ui/**/*.tsx",
       ],
       thresholds: {
         lines: 80,

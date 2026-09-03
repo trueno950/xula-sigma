@@ -1,0 +1,97 @@
+import { Plus } from "@phosphor-icons/react/ssr";
+import {
+  CeldaDeDato,
+  CeldaPrincipal,
+  type ColumnaDeTabla,
+  EnlaceDeAccion,
+  FilaDeTabla,
+  Tabla,
+} from "@/shared/ui";
+import { tiposContenidosPor } from "../domain";
+import { hijosDirectosDe, type PropsDeContenido, rutaDe } from "./contenido";
+import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
+import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import { puedeAbrir } from "./permisos";
+
+const COLUMNAS: readonly ColumnaDeTabla[] = [
+  { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,2fr)" },
+  { clave: "tipo", etiqueta: "Tipo", ancho: "minmax(0,1fr)" },
+];
+
+/** Pestana Lugares: los hijos directos para entrar, y el alta de uno nuevo. */
+export function TabDeLugares({
+  raizId,
+  lugar,
+  nodos,
+  accion,
+  permisos,
+}: PropsDeContenido) {
+  const puedeActuar = puedeAbrir("lugar", permisos);
+  const hijos = hijosDirectosDe(nodos, lugar.id);
+  const abierta = accion === "lugar";
+  // Una manzana es el ultimo rango: no hay tipo que pueda ir adentro, asi
+  // que ofrecer "Agregar lugar" abriria un formulario sin una sola opcion.
+  const admiteLugares = tiposContenidosPor(lugar.tipo).length > 0;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {puedeActuar && admiteLugares && !abierta ? (
+        <BarraDeAcciones>
+          <EnlaceDeAccion
+            href={rutaDe({
+              raizId: raizId,
+              nodoId: lugar.id,
+              vista: "lugares",
+              accion: "lugar",
+            })}
+            variante="primaria"
+          >
+            <Plus size={18} weight="bold" aria-hidden="true" />
+            Agregar lugar
+          </EnlaceDeAccion>
+        </BarraDeAcciones>
+      ) : null}
+
+      {hijos.length > 0 ? (
+        <Tabla
+          etiqueta={`Lugares dentro de ${lugar.nombre}`}
+          columnas={COLUMNAS}
+        >
+          {hijos.map((hijo) => (
+            <FilaDeTabla
+              key={hijo.id}
+              href={`/territorio?raiz=${raizId}&nodo=${hijo.id}`}
+            >
+              <CeldaPrincipal>{hijo.nombre}</CeldaPrincipal>
+              <CeldaDeDato>{hijo.tipo}</CeldaDeDato>
+            </FilaDeTabla>
+          ))}
+        </Tabla>
+      ) : (
+        <p className="py-6 text-[15px] text-caliza-apagada">
+          {admiteLugares
+            ? `${lugar.nombre} no tiene lugares adentro todavia.`
+            : `Una ${lugar.tipo} es el ultimo nivel: no lleva lugares adentro, solo calles y domicilios.`}
+        </p>
+      )}
+
+      {puedeActuar && abierta ? (
+        <PanelDeAccion
+          titulo={`Agregar un lugar dentro de ${lugar.nombre}`}
+          volverA={rutaDe({
+            raizId: raizId,
+            nodoId: lugar.id,
+            vista: "lugares",
+          })}
+        >
+          <FormularioDeAltaDeLugar
+            raiz={raizId}
+            nodo={lugar.id}
+            padreId={lugar.id}
+            tipoDelPadre={lugar.tipo}
+          />
+        </PanelDeAccion>
+      ) : null}
+    </div>
+  );
+}

@@ -10,6 +10,41 @@
  * calza exacto. Ante la duda, `invalido` — nunca un tenant por defecto.
  */
 
+/**
+ * El dominio base cuando el entorno no lo fija.
+ *
+ * **No es `localhost` a secas**, y el motivo esta en `proxy.ts`: si el
+ * dominio base coincidiera con el host interno del servidor, el render
+ * sintetico del redirect de un Server Action se leeria como `raiz` en vez
+ * de `invalido` y el respaldo por `x-forwarded-host` no correria.
+ *
+ * `xula.localhost` sirve para desarrollo sin tocar `/etc/hosts`: Chromium
+ * mapea todo `*.localhost` al loopback por especificacion, asi que
+ * `motul.xula.localhost` resuelve igual que `motul.localhost`.
+ */
+export const DOMINIO_BASE_POR_DEFECTO = "xula.localhost";
+
+/**
+ * Hosts con los que el servidor se llama a si mismo.
+ *
+ * `proxy.ts` exige esta firma antes de mirar `x-forwarded-host`. Por que
+ * hace falta que sea esta y no "el host no cuelga del dominio base" esta
+ * en `proxyRespaldo.test.ts`.
+ *
+ * La forma con corchetes es la del Host header: RFC 7230 exige que una
+ * direccion IPv6 viaje como `[::1]`, nunca pelada. Eso es lo que deja
+ * recortar el puerto con un solo patron -`[::1]` termina en `]`, asi que
+ * no matchea-, y es la razon de que `::1` no este en la lista: no puede
+ * llegar por Host.
+ */
+const HOSTS_INTERNOS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+export function esHostInterno(host: string | null | undefined): boolean {
+  if (!host) return false;
+
+  return HOSTS_INTERNOS.has(host.toLowerCase().replace(/:\d+$/, ""));
+}
+
 export type Subdominio =
   | { tipo: "ayuntamiento"; subdominio: string }
   | { tipo: "admin" }

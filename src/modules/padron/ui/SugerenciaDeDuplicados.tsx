@@ -1,15 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import {
-  type SugerenciaDeDuplicado,
-  sugerirDuplicadosAction,
-} from "./actions/sugerirDuplicados.action";
-
-const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
-const RETARDO_MS = 300;
+import { CLASES_DE_ETIQUETA } from "@/shared/ui";
+import { crearAlTeclear, crearPropsDeCampo } from "./interaccionDeSugerencias";
+import { ListaDeSugerencias } from "./ListaDeSugerencias";
+import { useSugerenciasDeDuplicados } from "./useSugerenciasDeDuplicados";
 
 /**
  * Unica hoja `"use client"` de la rebanada 4 (tasks.md 4.25): mostrar
@@ -19,55 +14,59 @@ const RETARDO_MS = 300;
  * Reemplaza los campos `nombres`/`primerApellido` de
  * `FormularioDeAltaDePersona` en vez de vivir al lado: los dos siguen
  * llevando su `name` nativo, asi que el `<form action>` que los envuelve
- * los sigue leyendo igual al enviar. La sugerencia nunca bloquea ese envio
- * (spec, "nunca bloqueante") — es un panel informativo, no una validacion.
+ * los sigue leyendo igual al enviar.
+ *
+ * **Es el componente de firma de `DESIGN.md`, y lo que lo define es lo que
+ * NO hace.** No roba el foco: la opcion marcada se anuncia con
+ * `aria-activedescendant` y el cursor nunca sale del campo. No frena el
+ * envio: no hay estado "confirme que no es duplicado", y la operadora
+ * puede escribir hasta el final y guardar sin mirar la lista. Una
+ * validacion que bloquea manda el tramite al papel, y el papel no tiene
+ * RLS ni bitacora.
+ *
+ * La marca es la senal de aviso **mas la palabra "posible duplicado"**,
+ * nunca solo el color: la marca del municipio puede ser de ese mismo tono.
  */
 export function SugerenciaDeDuplicados() {
   const [nombres, setNombres] = useState("");
   const [primerApellido, setPrimerApellido] = useState("");
-  const [sugerencias, setSugerencias] = useState<
-    readonly SugerenciaDeDuplicado[]
-  >([]);
-  const idDeConsulta = useRef(0);
-  const idDeRetardo = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
+  /** -1 es "ninguna marcada", que es el estado en el que se escribe. */
+  const [activa, setActiva] = useState(-1);
+  /** La cierra Escape. Vuelve a abrirse en cuanto cambia lo escrito. */
+  const [cerrada, setCerrada] = useState(false);
+  const contenedor = useRef<HTMLDivElement>(null);
+  const { sugerencias, consultar: consultarDuplicados } =
+    useSugerenciasDeDuplicados();
 
   const consultar = (nombresNuevo: string, apellidoNuevo: string) => {
-    clearTimeout(idDeRetardo.current);
-
-    const cadena = `${nombresNuevo} ${apellidoNuevo}`.trim();
-    if (!cadena) {
-      setSugerencias([]);
-      return;
-    }
-
-    const consultaActual = ++idDeConsulta.current;
-
-    idDeRetardo.current = setTimeout(async () => {
-      // La accion ya atrapa sus propios errores y devuelve `[]`; este
-      // catch es para el rechazo de red -conexion caida a mitad del
-      // pedido-, que nunca llega a ejecutar la accion en el servidor.
-      const encontradas = await sugerirDuplicadosAction(cadena).catch(
-        () => [] as const,
-      );
-      // Ignora una respuesta que ya no es la ultima tecla escrita: sin
-      // esto, una respuesta lenta de una consulta vieja puede llegar
-      // despues de una mas nueva y pisar sugerencias correctas con unas
-      // desactualizadas.
-      if (consultaActual === idDeConsulta.current) setSugerencias(encontradas);
-    }, RETARDO_MS);
+    setCerrada(false);
+    setActiva(-1);
+    consultarDuplicados(nombresNuevo, apellidoNuevo);
   };
 
+  const abierta = sugerencias.length > 0 && !cerrada;
+  const alTeclear = crearAlTeclear({
+    abierta,
+    activa,
+    sugerencias,
+    setActiva,
+    setCerrada,
+  });
+  const propsDeCampo = crearPropsDeCampo({
+    abierta,
+    activa,
+    alTeclear,
+    contenedor,
+    setCerrada,
+  });
+
   return (
-    <>
+    <div ref={contenedor} className="relative flex flex-col gap-4">
       <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Nombres</span>
+        <span className={CLASES_DE_ETIQUETA}>Nombres</span>
         <input
+          {...propsDeCampo}
           name="nombres"
-          type="text"
-          required
-          className={CLASE_CAMPO}
           value={nombres}
           onChange={(evento) => {
             setNombres(evento.target.value);
@@ -77,12 +76,10 @@ export function SugerenciaDeDuplicados() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Primer apellido</span>
+        <span className={CLASES_DE_ETIQUETA}>Primer apellido</span>
         <input
+          {...propsDeCampo}
           name="primerApellido"
-          type="text"
-          required
-          className={CLASE_CAMPO}
           value={primerApellido}
           onChange={(evento) => {
             setPrimerApellido(evento.target.value);
@@ -91,29 +88,9 @@ export function SugerenciaDeDuplicados() {
         />
       </label>
 
-      {sugerencias.length > 0 ? (
-        <div
-          role="status"
-          className="flex flex-col gap-1 rounded-sm border border-caliza-borde bg-caliza-lienzo p-3"
-        >
-          <span className={CLASE_ETIQUETA}>
-            Ya existen personas parecidas. Revisa antes de continuar:
-          </span>
-          <ul className="flex flex-col gap-1 text-[15px] text-caliza-tinta">
-            {sugerencias.map((persona) => (
-              <li key={persona.id}>
-                {[
-                  persona.nombres,
-                  persona.primerApellido,
-                  persona.segundoApellido,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              </li>
-            ))}
-          </ul>
-        </div>
+      {abierta ? (
+        <ListaDeSugerencias sugerencias={sugerencias} activa={activa} />
       ) : null}
-    </>
+    </div>
   );
 }

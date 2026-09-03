@@ -6,9 +6,9 @@ import type {
   CalleGuardada,
   LugarGuardado,
   RepositorioDeCalles,
-  RepositorioDeDomicilios,
   RepositorioDeLugares,
 } from "./puertos";
+import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -57,6 +57,7 @@ describe("altaDeDomicilio", () => {
     buscarPorId: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
+    listar: vi.fn(),
   };
   const repositorioDeLugares: RepositorioDeLugares = {
     crear: vi.fn(),
@@ -65,6 +66,8 @@ describe("altaDeDomicilio", () => {
     contarHijosActivos: vi.fn(),
     contarDomiciliosColgados: vi.fn(),
     subarbol: vi.fn(),
+    listarRaices: vi.fn(),
+    listarLugares: vi.fn(),
   };
   const repositorioDeCalles: RepositorioDeCalles = {
     crear: vi.fn(),

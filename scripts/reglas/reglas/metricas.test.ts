@@ -5,7 +5,7 @@ import { archivo, hallazgosDeMetrica } from "../pruebas";
 // Con salto de linea final, como un archivo real rastreado por `git ls-files`
 // (Biome lo exige): sin el, el caso "exactamente 200" enmascararia el bug de
 // conteo fuera por uno.
-const deNLineas = (n: number) => Array(n).fill("x").join("\n") + "\n";
+const deNLineas = (n: number) => `${Array(n).fill("x").join("\n")}\n`;
 
 describe("el catalogo de metricas", () => {
   it("no repite identificadores", () => {

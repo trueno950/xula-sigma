@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import { comoLugarId, JerarquiaInvalidaError } from "../domain";
+import {
+  comoLugarId,
+  JerarquiaInvalidaError,
+  RaizInvalidaError,
+} from "../domain";
 import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
@@ -44,6 +48,8 @@ describe("altaDeLugar", () => {
     contarHijosActivos: vi.fn(),
     contarDomiciliosColgados: vi.fn(),
     subarbol: vi.fn(),
+    listarRaices: vi.fn(),
+    listarLugares: vi.fn(),
   };
 
   beforeEach(() => {
@@ -141,6 +147,27 @@ describe("altaDeLugar", () => {
       ),
     ).rejects.toBeInstanceOf(JerarquiaInvalidaError);
 
+    expect(repositorio.crear).not.toHaveBeenCalled();
+  });
+
+  /**
+   * El otro lado de `padreId = null`: sin padre, el unico chequeo posible
+   * es el del propio tipo. `altaDeLugar` no lo hacia -solo validaba
+   * `puedeContener` cuando habia padre-, asi que una manzana suelta era una
+   * raiz aceptada, contra el MUST de `openspec/specs/jerarquia-territorial`
+   * ("ningun otro tipo MUST tener `padreId NULL`").
+   */
+  it("rechaza una manzana sin padre: solo el rango 0 es raiz", async () => {
+    const altaDeLugar = crearAltaDeLugar(repositorio);
+
+    await expect(
+      altaDeLugar(
+        { tipo: "manzana", nombre: "Manzana 4", padreId: null },
+        contextoCon("OPERADOR"),
+      ),
+    ).rejects.toBeInstanceOf(RaizInvalidaError);
+
+    expect(repositorio.buscarPorId).not.toHaveBeenCalled();
     expect(repositorio.crear).not.toHaveBeenCalled();
   });
 });

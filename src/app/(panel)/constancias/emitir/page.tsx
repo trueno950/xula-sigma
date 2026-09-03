@@ -1,10 +1,19 @@
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import { z } from "zod";
-import { FormularioDeEmision } from "@/modules/constancias";
+import {
+  documentosDelAyuntamiento,
+  FormularioDeEmision,
+} from "@/modules/constancias";
 import { comoPersonaId, personaPorId } from "@/modules/padron";
 import { direccionVigenteDePersona } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
-import { puedeEscribir } from "@/shared/auth/roles";
+import { puedeAdministrarDocumentos, puedeEscribir } from "@/shared/auth/roles";
+import {
+  Aviso,
+  EnlaceDeAccion,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -21,6 +30,16 @@ const esquemaDeParametros = z.object({
  * `{page,emitir,[id]}`, y `[id]` ahi es la constancia, no la persona. La
  * unica pantalla del repo que ya tiene un `personaId` en mano es
  * `/padron/[id]`, que enlaza aca con el parametro puesto.
+ *
+ * **El bloque de firma se consulta antes de dibujar el formulario.** Antes
+ * no: se emitia, `emitirConstancia` tiraba `DocumentosNoConfiguradosError`
+ * y la accion volvia aca con el mensaje puesto. El mensaje era correcto y
+ * no llevaba a ningun lado -`/constancias/configuracion` no estaba
+ * enlazada desde ninguna pantalla-, asi que el operador quedaba con un
+ * boton que no podia funcionar y sin forma de arreglarlo. Mismo criterio
+ * que `FormularioDeAltaDeLugar`: no ofrecer un camino que termina en error
+ * despues de enviar. El caso de uso lo vuelve a validar igual
+ * (`05-seguridad.md` seccion 6).
  */
 export default async function PaginaDeEmisionDeConstancia({
   searchParams,
@@ -28,22 +47,12 @@ export default async function PaginaDeEmisionDeConstancia({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          No se pudo determinar su sesion.
-        </p>
-      </main>
-    );
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
   if (!puedeEscribir(contexto.usuario.rol)) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          Su rol no tiene permiso para emitir constancias.
-        </p>
-      </main>
+      <PantallaDeMensaje mensaje="Su rol no tiene permiso para emitir constancias." />
     );
   }
 
@@ -53,26 +62,38 @@ export default async function PaginaDeEmisionDeConstancia({
 
   if (!personaId) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          Elija una persona desde el padron para emitir su constancia.
-        </p>
-        <Link href="/padron" className="text-[15px] text-marca">
-          Ir al padron
-        </Link>
-      </main>
+      <PantallaDeMensaje
+        mensaje="Elija una persona desde el padron para emitir su constancia."
+        accion={<EnlaceDeAccion href="/padron">Ir al padron</EnlaceDeAccion>}
+      />
     );
   }
 
   const persona = await personaPorId(comoPersonaId(personaId), contexto);
 
-  if (!persona) {
+  // Regla 8, igual que en la ficha de una persona: `?personaId=` es la
+  // misma superficie con otra forma de URL.
+  if (!persona) notFound();
+
+  const documentos = await documentosDelAyuntamiento(contexto);
+
+  if (!documentos) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          Esa persona no existe.
-        </p>
-      </main>
+      <PaginaDePanel titulo="Emitir constancia" ancho="formulario">
+        <Aviso tono="error">
+          El ayuntamiento todavia no configuro el bloque de firma. Sin quien
+          firma y con que cargo, la constancia no se puede emitir.
+        </Aviso>
+        {puedeAdministrarDocumentos(contexto.usuario.rol) ? (
+          <EnlaceDeAccion href="/constancias/configuracion" variante="primaria">
+            Configurar el bloque de firma
+          </EnlaceDeAccion>
+        ) : (
+          <p className="text-[15px] text-caliza-apagada">
+            Lo configura quien administra el ayuntamiento.
+          </p>
+        )}
+      </PaginaDePanel>
     );
   }
 
@@ -86,16 +107,8 @@ export default async function PaginaDeEmisionDeConstancia({
     .join(" ");
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-8 p-6">
-      <h1 className="text-2xl font-semibold text-caliza-tinta">
-        Emitir constancia
-      </h1>
-
-      {error ? (
-        <p role="alert" className="text-[15px] text-senial-error">
-          {error}
-        </p>
-      ) : null}
+    <PaginaDePanel titulo="Emitir constancia" ancho="formulario">
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       <FormularioDeEmision
         personaId={personaId}
@@ -106,6 +119,6 @@ export default async function PaginaDeEmisionDeConstancia({
             : null
         }
       />
-    </main>
+    </PaginaDePanel>
   );
 }

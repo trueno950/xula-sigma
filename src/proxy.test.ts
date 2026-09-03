@@ -28,7 +28,10 @@ function cabeceraQueRecibeElServidor(
   return respuesta.headers.get(`x-middleware-request-${nombre}`);
 }
 
-function pedir(host: string, cabecerasDelCliente: Record<string, string> = {}) {
+async function pedir(
+  host: string,
+  cabecerasDelCliente: Record<string, string> = {},
+) {
   return proxy(
     new NextRequest(`https://${host}/constancias`, {
       headers: { host, ...cabecerasDelCliente },
@@ -45,8 +48,8 @@ afterEach(() => {
 });
 
 describe("proxy — resolucion de tenant", () => {
-  it("publica el subdominio del municipio", () => {
-    const res = pedir("ticul.xulasigma.mx");
+  it("publica el subdominio del municipio", async () => {
+    const res = await pedir("ticul.xulasigma.mx");
 
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUPERFICIE)).toBe(
       "ayuntamiento",
@@ -54,22 +57,22 @@ describe("proxy — resolucion de tenant", () => {
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBe("ticul");
   });
 
-  it("marca el panel de super admin sin subdominio de municipio", () => {
-    const res = pedir("admin.xulasigma.mx");
+  it("marca el panel de super admin sin subdominio de municipio", async () => {
+    const res = await pedir("admin.xulasigma.mx");
 
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUPERFICIE)).toBe("admin");
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBeNull();
   });
 
-  it("marca la raiz", () => {
-    const res = pedir("xulasigma.mx");
+  it("marca la raiz", async () => {
+    const res = await pedir("xulasigma.mx");
 
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUPERFICIE)).toBe("raiz");
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBeNull();
   });
 
-  it("responde 404 a un host que no es nuestro", () => {
-    expect(pedir("ticul.otrodominio.mx").status).toBe(404);
+  it("responde 404 a un host que no es nuestro", async () => {
+    expect((await pedir("ticul.otrodominio.mx")).status).toBe(404);
   });
 });
 
@@ -95,18 +98,18 @@ describe("proxy — cabeceras falsificadas por el cliente", () => {
    * esos dos caen, los otros no.
    */
 
-  it("descarta un subdominio inyectado por el cliente", () => {
-    const res = pedir("ticul.xulasigma.mx", {
+  it("descarta un subdominio inyectado por el cliente", async () => {
+    const res = await pedir("ticul.xulasigma.mx", {
       [CABECERA_SUBDOMINIO]: "motul",
     });
 
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBe("ticul");
   });
 
-  it("descarta una superficie inyectada por el cliente", () => {
+  it("descarta una superficie inyectada por el cliente", async () => {
     // Sin esto, cualquiera se declararia `admin` desde el subdominio de su
     // propio municipio.
-    const res = pedir("ticul.xulasigma.mx", {
+    const res = await pedir("ticul.xulasigma.mx", {
       [CABECERA_SUPERFICIE]: "admin",
     });
 
@@ -115,26 +118,26 @@ describe("proxy — cabeceras falsificadas por el cliente", () => {
     );
   });
 
-  it("no deja pasar un subdominio inyectado desde el panel de admin", () => {
+  it("no deja pasar un subdominio inyectado desde el panel de admin", async () => {
     // `admin` no pertenece a ningun municipio. Si el cliente adjunta uno,
     // no tiene que quedar nada.
-    const res = pedir("admin.xulasigma.mx", {
+    const res = await pedir("admin.xulasigma.mx", {
       [CABECERA_SUBDOMINIO]: "ticul",
     });
 
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBeNull();
   });
 
-  it("no deja pasar un subdominio inyectado desde la raiz", () => {
-    const res = pedir("xulasigma.mx", {
+  it("no deja pasar un subdominio inyectado desde la raiz", async () => {
+    const res = await pedir("xulasigma.mx", {
       [CABECERA_SUBDOMINIO]: "ticul",
     });
 
     expect(cabeceraQueRecibeElServidor(res, CABECERA_SUBDOMINIO)).toBeNull();
   });
 
-  it("no deja pasar nada desde un host invalido", () => {
-    const res = pedir("ticul.otrodominio.mx", {
+  it("no deja pasar nada desde un host invalido", async () => {
+    const res = await pedir("ticul.otrodominio.mx", {
       [CABECERA_SUBDOMINIO]: "motul",
       [CABECERA_SUPERFICIE]: "ayuntamiento",
     });

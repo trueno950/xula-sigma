@@ -1,14 +1,33 @@
-import Link from "next/link";
+import { Gear } from "@phosphor-icons/react/ssr";
 import { z } from "zod";
 import { listarConstancias } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
+import { puedeAdministrarDocumentos } from "@/shared/auth/roles";
 import { fechaEnMerida } from "@/shared/lib/fecha";
+import {
+  Aviso,
+  CeldaDeDato,
+  CeldaPrincipal,
+  type ColumnaDeTabla,
+  EnlaceDeAccion,
+  EstadoVacio,
+  estadoDeLista,
+  FilaDeTabla,
+  PaginaDePanel,
+  PantallaDeMensaje,
+  Tabla,
+} from "@/shared/ui";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 const esquemaDeParametros = z.object({ error: z.string().optional() });
+
+const COLUMNAS: readonly ColumnaDeTabla[] = [
+  { clave: "folio", etiqueta: "Folio", ancho: "minmax(0,2fr)" },
+  { clave: "emitida", etiqueta: "Emitida", ancho: "minmax(0,1fr)" },
+];
 
 /**
  * Ruta fina: resuelve el contexto y lista. Sin `?q=` -`listarConstancias`
@@ -19,57 +38,62 @@ const esquemaDeParametros = z.object({ error: z.string().optional() });
  * formulario llega invalido -sin este `searchParams`, ese mensaje se perdia
  * en silencio (hallazgo de GGA en la revision de esta rebanada, mismo
  * patron ya usado en `configuracion/page.tsx`).
+ *
+ * La accion de cabecera es la configuracion del bloque de firma, y es la
+ * unica entrada que tiene: `/constancias/configuracion` no estaba enlazada
+ * desde ninguna pantalla del panel, asi que el ayuntamiento que no lo tenia
+ * configurado no podia configurarlo sin escribir la URL a mano.
  */
 export default async function PaginaDeConstancias({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          No se pudo determinar su sesion.
-        </p>
-      </main>
-    );
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
   const analisis = esquemaDeParametros.safeParse(await searchParams);
   const error = analisis.success ? analisis.data.error : undefined;
   const constancias = await listarConstancias(contexto);
+  const estado = estadoDeLista({ total: constancias.length });
+
+  const configuracion = puedeAdministrarDocumentos(contexto.usuario.rol) ? (
+    <EnlaceDeAccion href="/constancias/configuracion">
+      <Gear size={18} aria-hidden="true" />
+      Bloque de firma
+    </EnlaceDeAccion>
+  ) : undefined;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 p-6">
-      <h1 className="text-2xl font-semibold text-caliza-tinta">Constancias</h1>
+    <PaginaDePanel titulo="Constancias" accion={configuracion}>
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      {error ? (
-        <p role="alert" className="text-[15px] text-senial-error">
-          {error}
-        </p>
-      ) : null}
-
-      {constancias.length === 0 ? (
-        <p className="text-[15px] text-caliza-apagada">
-          Todavia no hay constancias emitidas.
-        </p>
+      {estado.clase !== "con-filas" ? (
+        <EstadoVacio
+          estado={estado}
+          mensajeInicial="Todavia no hay constancias emitidas. Se emiten desde la ficha de la persona, en el padron."
+          hrefSinFiltro="/constancias"
+          accion={<EnlaceDeAccion href="/padron">Ir al padron</EnlaceDeAccion>}
+        />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <Tabla etiqueta="Constancias emitidas" columnas={COLUMNAS}>
           {constancias.map((constancia) => (
-            <li key={constancia.id}>
-              <Link
-                href={`/constancias/${constancia.id}`}
-                className="flex items-center justify-between rounded-sm border border-caliza-borde px-3 py-2"
-              >
-                <span className="text-[15px] text-caliza-tinta">
-                  {constancia.folio}
-                </span>
-                <span className="text-[13px] text-caliza-apagada">
-                  {fechaEnMerida(constancia.emitidaEn)}
-                </span>
-              </Link>
-            </li>
+            <FilaDeTabla
+              key={constancia.id}
+              href={`/constancias/${constancia.id}`}
+            >
+              <CeldaPrincipal>
+                <span className="font-mono">{constancia.folio}</span>
+                {constancia.canceladaEn ? (
+                  <span className="ml-2 font-sans text-[13px] font-normal text-senial-error">
+                    Cancelada
+                  </span>
+                ) : null}
+              </CeldaPrincipal>
+              <CeldaDeDato>{fechaEnMerida(constancia.emitidaEn)}</CeldaDeDato>
+            </FilaDeTabla>
           ))}
-        </ul>
+        </Tabla>
       )}
-    </main>
+    </PaginaDePanel>
   );
 }

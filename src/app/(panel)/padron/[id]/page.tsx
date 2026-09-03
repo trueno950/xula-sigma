@@ -1,13 +1,22 @@
-import Link from "next/link";
+import { FileText } from "@phosphor-icons/react/ssr";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { comoPersonaId, personaPorId } from "@/modules/padron";
 import {
   FormularioDeMudanza,
   HistorialDeResidencias,
   historialDeResidencias,
+  listarDomicilios,
 } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
+import {
+  Aviso,
+  CLASES_DE_DATO,
+  EnlaceDeAccion,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -35,13 +44,7 @@ export default async function PaginaDeDetalleDePersona({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          No se pudo determinar su sesion.
-        </p>
-      </main>
-    );
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
   const { id } = await params;
@@ -61,54 +64,52 @@ export default async function PaginaDeDetalleDePersona({
     ? await personaPorId(comoPersonaId(analisisDeId.data), contexto)
     : null;
 
-  if (!persona) {
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-[15px] text-caliza-apagada">
-          Esa persona no existe.
-        </p>
-      </main>
-    );
-  }
+  // Regla 8: un id de otro municipio ya vuelve `null` por RLS, y desde
+  // aca es indistinguible de uno inexistente. Los dos son 404.
+  if (!persona) notFound();
 
   const historial = await historialDeResidencias(persona.id, contexto);
+  const domicilios = await listarDomicilios(contexto);
+  const nombre = `${persona.nombres} ${persona.primerApellido}${
+    persona.segundoApellido ? ` ${persona.segundoApellido}` : ""
+  }`;
+
+  /**
+   * Emitir la constancia es la accion primaria de esta pantalla: es a lo
+   * que se entra a la ficha de alguien desde el mostrador. Antes vivia al
+   * pie, debajo del historial, detras de un scroll.
+   */
+  const emitir = puedeEscribir(contexto.usuario.rol) ? (
+    <EnlaceDeAccion
+      href={`/constancias/emitir?personaId=${persona.id}`}
+      variante="primaria"
+    >
+      <FileText size={18} aria-hidden="true" />
+      Emitir constancia
+    </EnlaceDeAccion>
+  ) : undefined;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 p-6">
-      <h1 className="text-2xl font-semibold text-caliza-tinta">
-        {persona.nombres} {persona.primerApellido}
-        {persona.segundoApellido ? ` ${persona.segundoApellido}` : ""}
-      </h1>
+    <PaginaDePanel titulo={nombre} accion={emitir} ancho="detalle">
+      {persona.curp ? <p className={CLASES_DE_DATO}>{persona.curp}</p> : null}
 
-      {error ? (
-        <p role="alert" className="text-[15px] text-senial-error">
-          {error}
-        </p>
-      ) : null}
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-medium text-caliza-tinta">
+        <h2 className="text-[15px] font-semibold text-caliza-tinta">
           Historial de residencias
         </h2>
         <HistorialDeResidencias historial={historial} />
       </section>
 
       {puedeEscribir(contexto.usuario.rol) ? (
-        <div className="border-t border-caliza-divisor pt-4">
-          <Link
-            href={`/constancias/emitir?personaId=${persona.id}`}
-            className="flex h-11 w-fit items-center rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-          >
-            Emitir constancia de vecindad
-          </Link>
-        </div>
+        <section className="flex flex-col gap-3 border-t border-caliza-divisor pt-6">
+          <h2 className="text-[15px] font-semibold text-caliza-tinta">
+            Registrar mudanza
+          </h2>
+          <FormularioDeMudanza personaId={persona.id} domicilios={domicilios} />
+        </section>
       ) : null}
-
-      {puedeEscribir(contexto.usuario.rol) ? (
-        <div className="border-t border-caliza-divisor pt-4">
-          <FormularioDeMudanza personaId={persona.id} />
-        </div>
-      ) : null}
-    </main>
+    </PaginaDePanel>
   );
 }

@@ -1,51 +1,67 @@
-import Link from "next/link";
+import type { ReactNode } from "react";
+import {
+  CeldaDeDato,
+  CeldaPrincipal,
+  type ColumnaDeTabla,
+  EstadoVacio,
+  estadoDeLista,
+  FilaDeTabla,
+  Tabla,
+} from "@/shared/ui";
 import type { PersonaGuardada } from "../application/puertos";
 
 type Props = {
   /** Ya filtradas: `bajaEn` no nulo se excluye del lado del repositorio. */
   personas: readonly PersonaGuardada[];
+  /** El `?q=` que produjo esta lista, si lo hubo. Distingue los dos vacios. */
+  filtro?: string | undefined;
+  /** El boton que llena la pantalla cuando todavia no tiene a nadie. */
+  accionDeAlta?: ReactNode;
 };
+
+const COLUMNAS: readonly ColumnaDeTabla[] = [
+  { clave: "persona", etiqueta: "Persona", ancho: "minmax(0,2fr)" },
+  { clave: "curp", etiqueta: "CURP", ancho: "minmax(0,1fr)" },
+];
+
+/** Apellidos primero: es el orden en que se busca a alguien en un padron. */
+const nombreDeLista = (persona: PersonaGuardada) =>
+  `${persona.primerApellido}${
+    persona.segundoApellido ? ` ${persona.segundoApellido}` : ""
+  }, ${persona.nombres}`;
 
 /**
  * Sin calculo de negocio (`DESIGN.md`, Tablas): recibe los datos ya
- * resueltos. Es una lista de `<li>` en flex y no un `<table>` porque por
- * debajo de 640px la misma fila se reordena en dos renglones -- apellido y
- * nombre arriba, CURP abajo -- y esa reflexion no tiene equivalente limpio
- * con marcado de tabla. Sin scroll horizontal en ningun ancho.
+ * resueltos.
+ *
+ * Los dos vacios son distintos y por eso recibe `filtro`. Antes tenia uno
+ * solo: `/padron?q=xyz` sin resultados respondia "Todavia no hay personas
+ * en el padron", que es la pantalla que manda a dar de alta a alguien que
+ * ya existe con el apellido escrito de otra forma. Es el unico error de
+ * esta lista que le cuesta trabajo real a la operadora.
  */
-export function ListadoDePersonas({ personas }: Props) {
-  if (personas.length === 0) {
+export function ListadoDePersonas({ personas, filtro, accionDeAlta }: Props) {
+  const estado = estadoDeLista({ total: personas.length, filtro });
+
+  if (estado.clase !== "con-filas") {
     return (
-      <p className="text-[15px] text-caliza-apagada">
-        Todavia no hay personas en el padron.
-      </p>
+      <EstadoVacio
+        estado={estado}
+        mensajeInicial="Todavia no hay personas en el padron."
+        hrefSinFiltro="/padron"
+        {...(accionDeAlta ? { accion: accionDeAlta } : {})}
+      />
     );
   }
 
   return (
-    <ul className="flex flex-col">
+    <Tabla etiqueta="Personas del padron" columnas={COLUMNAS}>
       {personas.map((persona) => (
-        <li
-          key={persona.id}
-          className="flex min-h-11 flex-col justify-center gap-0.5 border-b border-caliza-divisor px-3 py-2 sm:h-11 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-0"
-        >
-          <Link
-            href={`/padron/${persona.id}`}
-            className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4"
-          >
-            <span className="text-[15px] font-medium text-caliza-tinta">
-              {persona.primerApellido}
-              {persona.segundoApellido ? ` ${persona.segundoApellido}` : ""},{" "}
-              {persona.nombres}
-            </span>
-            {persona.curp ? (
-              <span className="font-mono text-[14px] text-caliza-apagada tabular-nums">
-                {persona.curp}
-              </span>
-            ) : null}
-          </Link>
-        </li>
+        <FilaDeTabla key={persona.id} href={`/padron/${persona.id}`}>
+          <CeldaPrincipal>{nombreDeLista(persona)}</CeldaPrincipal>
+          <CeldaDeDato>{persona.curp ?? "Sin CURP"}</CeldaDeDato>
+        </FilaDeTabla>
       ))}
-    </ul>
+    </Tabla>
   );
 }

@@ -6,7 +6,7 @@ import { registrar } from "@/shared/tenancy/bitacora";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { DomicilioId, ResidenciaId } from "../domain";
-import type { RepositorioDeDomicilios } from "./puertos";
+import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
 import type {
   LecturaDePersonas,
   RepositorioDeResidencias,

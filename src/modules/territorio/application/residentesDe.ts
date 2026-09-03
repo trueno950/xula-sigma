@@ -1,7 +1,7 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { LugarId } from "../domain";
-import type { RepositorioDeDomicilios } from "./puertos";
+import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
 import type { RepositorioDeResidencias } from "./puertosDeResidencias";
 
 /**

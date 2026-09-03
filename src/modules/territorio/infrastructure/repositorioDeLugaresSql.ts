@@ -140,4 +140,29 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
 
     return filas.map(aNodoDeSubarbol);
   },
+
+  async listarRaices(tx) {
+    const filas = await tx
+      .select(columnasDeLectura)
+      .from(lugares)
+      .where(and(isNull(lugares.padreId), isNull(lugares.bajaEn)))
+      .orderBy(lugares.nombre);
+
+    return filas.map(aLugarGuardado);
+  },
+
+  /**
+   * Todos los lugares activos, no solo las raices: alimenta el selector de
+   * "lugar padre" del alta desde la vista de raices, donde la pagina no
+   * carga subarbol (solo lo hace con `?raiz=`).
+   */
+  async listarLugares(tx) {
+    const filas = await tx
+      .select(columnasDeLectura)
+      .from(lugares)
+      .where(isNull(lugares.bajaEn))
+      .orderBy(lugares.nombre);
+
+    return filas.map(aLugarGuardado);
+  },
 };

@@ -17,8 +17,25 @@ vi.mock("next/headers", () => ({ headers: leerCabeceras }));
 
 const { ayuntamientoActual } = await import("./contexto");
 
+/**
+ * El mock responde por nombre de cabecera y no una sola cadena para todas.
+ * La version anterior devolvia el mismo valor a cualquier `get`, y con eso
+ * el respaldo por host no se ejercitaba nunca: con valor, cortaba en la
+ * cabecera del proxy; sin valor, los tres nombres daban `null`.
+ */
+const conCabeceras = (mapa: Record<string, string>) => {
+  leerCabeceras.mockResolvedValue({ get: (n: string) => mapa[n] ?? null });
+};
+
 const conCabecera = (valor: string | null) => {
-  leerCabeceras.mockResolvedValue({ get: () => valor });
+  conCabeceras(valor ? { "x-xula-subdominio": valor } : {});
+};
+
+const ticul = {
+  id: "11111111-1111-4111-8111-111111111111",
+  subdominio: "ticul",
+  nombre: "Ticul",
+  marca: {},
 };
 
 describe("ayuntamientoActual", () => {
@@ -29,12 +46,7 @@ describe("ayuntamientoActual", () => {
 
   it("devuelve el ayuntamiento que resuelve el subdominio de la cabecera", async () => {
     conCabecera("ticul");
-    resolver.mockResolvedValue({
-      id: "11111111-1111-4111-8111-111111111111",
-      subdominio: "ticul",
-      nombre: "Ticul",
-      marca: {},
-    });
+    resolver.mockResolvedValue(ticul);
 
     await expect(ayuntamientoActual()).resolves.toMatchObject({
       subdominio: "ticul",
@@ -42,7 +54,7 @@ describe("ayuntamientoActual", () => {
     expect(resolver).toHaveBeenCalledWith("ticul");
   });
 
-  it("sin cabecera lanza: es un error de configuracion del matcher", async () => {
+  it("sin cabecera ni host lanza: es un error de configuracion del matcher", async () => {
     conCabecera(null);
 
     await expect(ayuntamientoActual()).rejects.toBeInstanceOf(

@@ -41,4 +41,12 @@ describe("superficie publica de territorio", () => {
   it("exporta ubicacionDeLugar como funcion, sin guarda de rol propia", () => {
     expect(typeof superficie.ubicacionDeLugar).toBe("function");
   });
+
+  it("exporta listarDomicilios como funcion, sin guarda de rol propia", () => {
+    expect(typeof superficie.listarDomicilios).toBe("function");
+  });
+
+  it("exporta listarRaices como funcion, sin guarda de rol propia", () => {
+    expect(typeof superficie.listarRaices).toBe("function");
+  });
 });
