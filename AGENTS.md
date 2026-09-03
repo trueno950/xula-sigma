@@ -366,6 +366,17 @@ archivos que ya pasaban las 200 líneas antes de que la métrica entrara al
 verificador están listados en `scripts/reglas/reglas/metricas.ts` y bajan a
 medida que se parten.
 
+**Líneas por función, en un componente de `ui` con JSX, cuenta la lógica:
+hooks, handlers, cálculos previos al `return`. No cuenta el árbol que
+`return (...)` arma.** Un componente entero rara vez es una decisión: es
+la vista de una, y esa vista tiene el largo que tiene el layout que
+describe. Entró el 2026-09-03 porque la regla, tomada al pie de la letra,
+marcaba prácticamente cada componente de `territorio/ui` y `shared/ui` en
+la misma revisión —no treinta hallazgos, sino la regla sin esta excepción.
+La lógica adentro de un componente (un `useMemo` de treinta líneas, un
+handler con anidación) sigue midiendo igual que en cualquier otro archivo:
+la excepción es sobre el marcado, no sobre el componente entero.
+
 ---
 
 ## Nomenclatura

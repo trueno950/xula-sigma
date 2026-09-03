@@ -28,6 +28,23 @@ Este es el invariante raíz. Todo lo demás es secundario.
 - El `ayuntamiento_id` efectivo **siempre** viene del contexto de sesión
   resuelto en el servidor. Nunca del body, del query string, ni de un
   parámetro que el cliente controle.
+- **Deuda conocida, sin cerrar: `resolverHost` en `src/proxy.ts` decide con
+  el header `Host`, y `Host` lo escribe quien hace la peticion.** El
+  fallback a `x-forwarded-host` -que existe para que el redirect de un
+  Server Action no pierda el tenant en el render sintetico de Next- se
+  activa cuando `Host` es `localhost`, `127.0.0.1` o `[::1]`
+  (`esHostInterno`, `shared/tenancy/subdominio.ts`). Nada en el codigo
+  verifica que esa peticion vino por loopback de verdad: es una
+  comparacion de string, no una garantia de red. `src/proxyRespaldo.test.ts`
+  construye ese request exacto y lo prueba en verde -es la demostracion,
+  no un aviso especulativo-. Si Railway reenvia el `Host` del cliente sin
+  reescribirlo, `curl -H "Host: localhost" -H "x-forwarded-host:
+  <municipio>.xulasigma.mx" <dominio-de-produccion>` elige tenant sin
+  pasar por RLS. **No esta confirmado si Railway reescribe el header**: no
+  hay `railway.toml` en el repo y esto no se verifico contra el despliegue
+  real. Antes de production-ready: correr ese `curl` contra el dominio de
+  Railway, o repensar el fallback para que no dependa de un header que
+  controla el cliente.
 - Toda tabla operativa tiene columna `ayuntamiento_id` y política RLS con
   `FORCE ROW LEVEL SECURITY`.
 - **Hay una excepción, y vive en las reglas, no acá.** Un catálogo de
