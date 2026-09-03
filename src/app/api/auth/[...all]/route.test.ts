@@ -136,3 +136,34 @@ describe("borde de error de la ruta de auth", () => {
     );
   });
 });
+
+describe("guarda de superficie de la ruta de auth", () => {
+  beforeEach(() => {
+    manejarAuth.mockReset();
+    limitarRitmoDeAcceso.mockReset();
+    limitarRitmoDeAcceso.mockResolvedValue(undefined);
+  });
+
+  const peticionCon = (superficie: string | undefined) =>
+    new Request("http://motul.localhost:3000/api/auth/sign-in/email", {
+      method: "POST",
+      headers: superficie ? { "x-xula-superficie": superficie } : {},
+    });
+
+  it("sin la cabecera de superficie da 404 y no delega", async () => {
+    const respuesta = await POST(peticionCon(undefined));
+
+    expect(respuesta.status).toBe(404);
+    expect(manejarAuth).not.toHaveBeenCalled();
+  });
+
+  it.each(["admin", "raiz"])(
+    "con superficie %s da 404 y no delega",
+    async (superficie) => {
+      const respuesta = await POST(peticionCon(superficie));
+
+      expect(respuesta.status).toBe(404);
+      expect(manejarAuth).not.toHaveBeenCalled();
+    },
+  );
+});

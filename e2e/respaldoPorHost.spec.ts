@@ -10,14 +10,11 @@ import {
 } from "./municipios";
 
 /**
- * El respaldo por host de `resolverHost` en `proxy.ts`: que sostenga el
- * redirect, y que no lo pueda mover quien hace la peticion.
+ * El respaldo por host: que sostenga el redirect de un Server Action, y
+ * que no lo pueda mover quien hace la peticion.
  *
- * El proxy deriva el municipio de `x-forwarded-host` en un solo caso:
- * cuando `host` no cuelga del dominio base **en absoluto**. Esa es la
- * firma del render sintetico con el que Next resuelve el destino del
- * `redirect()` de un Server Action -ahi `host` es el del propio servidor-,
- * y sin el respaldo la pantalla muere justo despues de guardar.
+ * Cuando corre y por que la condicion es la que es vive en `resolverHost`
+ * (`src/proxy.ts`), que es su unico hogar.
  *
  * Los dos tests de aca necesitan sesion. Que un host ajeno no mueva el
  * municipio en las superficies **sin** sesion esta en
@@ -125,7 +122,7 @@ test("un x-forwarded-host ajeno aborta la Server Action", async ({ page }) => {
   // El alta exitosa vuelve al listado. Que siga aca es que no se ejecuto.
   await expect(page).toHaveURL(urlDe("motul", "/padron/alta"));
 
-  // Y no quedo la persona: el corte fue antes del caso de uso, no despues.
+  // El corte fue antes del caso de uso, no despues de ejecutarlo.
   await page.goto(urlDe("motul", "/padron?q=Inyeccion"));
   await expect(page.getByText("Falseada, Inyeccion")).toHaveCount(0);
 });

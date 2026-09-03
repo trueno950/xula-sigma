@@ -10,6 +10,7 @@ import {
   Panel,
 } from "@/shared/ui";
 import { type LugarId, puedeSerRaiz, type TipoDeLugar } from "../domain";
+import { masAdentroDe } from "./conteo";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 
 /** Lo minimo para dibujar el arbol: lo tienen `LugarGuardado` y el subarbol. */
@@ -61,9 +62,6 @@ export function VistaDeRaices({
   const estado = estadoDeLista({ total: raices.length });
   const hijosDe = (padreId: LugarId) =>
     lugares.filter((lugar) => lugar.padreId === padreId);
-  const nietosDe = (ids: readonly LugarId[]) =>
-    lugares.filter((lugar) => lugar.padreId && ids.includes(lugar.padreId))
-      .length;
 
   return (
     <div className="flex flex-col gap-4">
@@ -71,7 +69,10 @@ export function VistaDeRaices({
         <ul aria-label="Asentamientos del municipio" className="flex flex-col">
           {raices.map((raiz) => {
             const hijos = hijosDe(raiz.id);
-            const masAdentro = nietosDe(hijos.map((h) => h.id));
+            const masAdentro = masAdentroDe(
+              hijos.map((h) => h.id),
+              lugares,
+            );
 
             return (
               <li key={raiz.id} className="border-b border-caliza-divisor py-1">

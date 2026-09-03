@@ -64,12 +64,17 @@ const PADRE = `Baja padre ${marca}`;
 const HIJO = `Baja hijo ${marca}`;
 
 /**
- * El id del lugar recien creado, leido con el rol owner.
+ * El id del lugar recien creado.
  *
  * Se consulta la base en vez de navegar por la UI a proposito: lo que este
  * test mide es a donde deja la baja, y encadenar clics para llegar hasta
- * el hijo mete fallas de navegacion que no son las que se buscan. `lugares`
- * tiene FORCE RLS, asi que un rol de aplicacion no veria estas filas.
+ * el hijo mete fallas de navegacion que no son las que se buscan.
+ *
+ * Se lee con el rol de aplicacion y `app.tenant` puesto, no con el owner.
+ * `FORCE ROW LEVEL SECURITY` no exceptua al dueno de la tabla: la consulta
+ * con el rol de migraciones devolvia cero filas siempre, y este test fallo
+ * cuatro veces senialando al proxy antes de que se viera que el problema
+ * era la lente con la que miraba.
  */
 async function idDelLugar(nombre: string): Promise<string> {
   const url = process.env.DATABASE_URL;

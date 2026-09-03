@@ -6,10 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  *
  * RLS ya hace que la busqueda de otro municipio vuelva `null`, asi que no
  * habia fuga: un id ajeno se veia igual que uno inexistente. Lo que faltaba
- * era el estado HTTP. Las tres pantallas respondian 200 con "Esa persona no
- * existe.", y un 200 dice "esta ruta es tuya y no hay nada"; el 404 dice
- * "aca no hay nada que ver", que es la unica respuesta que estas tres
- * pueden dar sin contar de mas.
+ * era el estado HTTP. Respondian 200 con "Esa persona no existe.", y un 200
+ * dice "esta ruta es tuya y no hay nada"; el 404 dice "aca no hay nada que
+ * ver", que es la unica respuesta que se puede dar sin contar de mas.
  *
  * `notFound` se moquea lanzando, como hace Next: la pagina tiene que
  * abortar ahi, no seguir armando pantalla.
@@ -39,7 +38,9 @@ vi.mock("@/modules/constancias", () => ({
   BotonDeReimpresion: () => null,
   comoConstanciaId: (id: string) => id,
   constanciaPorId: constanciaPorIdMock,
+  documentosDelAyuntamiento: vi.fn().mockResolvedValue(null),
   esquemaDeSnapshot: { parse: (d: unknown) => d },
+  FormularioDeEmision: () => null,
 }));
 
 vi.mock("@/modules/territorio", () => ({
@@ -50,6 +51,7 @@ vi.mock("@/modules/territorio", () => ({
   listarCalles: vi.fn().mockResolvedValue([]),
   listarDomicilios: vi.fn().mockResolvedValue([]),
   listarLugares: vi.fn().mockResolvedValue([]),
+  direccionVigenteDePersona: vi.fn().mockResolvedValue(null),
   listarRaices: vi.fn().mockResolvedValue([]),
   lugarPorId: lugarPorIdMock,
   subarbol: subarbolMock,
@@ -59,6 +61,7 @@ vi.mock("@/modules/territorio", () => ({
 const { default: PaginaDePersona } = await import("./padron/[id]/page");
 const { default: PaginaDeConstancia } = await import("./constancias/[id]/page");
 const { default: PaginaDeTerritorio } = await import("./territorio/page");
+const { default: PaginaDeEmision } = await import("./constancias/emitir/page");
 
 const UUID_AJENO = "11111111-1111-4111-8111-111111111111";
 const UUID_OTRO = "22222222-2222-4222-8222-222222222222";
@@ -94,6 +97,21 @@ describe("un recurso que no es de este municipio", () => {
     await expect(PaginaDeConstancia(conId(UUID_AJENO))).rejects.toThrow(
       "NEXT_NOT_FOUND",
     );
+    expect(notFoundMock).toHaveBeenCalled();
+  });
+
+  /**
+   * `/constancias/emitir?personaId=` toma el id de la barra igual que una
+   * ficha, asi que es la misma superficie con otra forma de URL.
+   */
+  it("al emitir para una persona ajena da 404", async () => {
+    personaPorIdMock.mockResolvedValue(null);
+
+    await expect(
+      PaginaDeEmision({
+        searchParams: Promise.resolve({ personaId: UUID_AJENO }),
+      }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFoundMock).toHaveBeenCalled();
   });
 

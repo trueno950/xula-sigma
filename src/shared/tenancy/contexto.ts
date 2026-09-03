@@ -20,7 +20,8 @@ import {
 
 /**
  * `superficieActual` y `ayuntamientoActual` leen **solo** lo que escribio
- * el proxy, y si no esta, fallan.
+ * el proxy. Sin esa cabecera no derivan nada: `ayuntamientoActual` falla y
+ * `superficieActual` devuelve `null`.
  *
  * Hubo una version que derivaba el tenant de `host`/`x-forwarded-host`
  * cuando la cabecera faltaba, para sostener el render sintetico del

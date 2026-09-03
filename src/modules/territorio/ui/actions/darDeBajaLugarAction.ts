@@ -34,8 +34,7 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
     id: formData.get("id"),
   });
 
-  const { raiz, nodo } = navegacionDe(formData);
-  const padre = formData.get("padre")?.toString() || undefined;
+  const { raiz, nodo, padre } = navegacionDe(formData);
 
   if (!analisis.success) {
     volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);

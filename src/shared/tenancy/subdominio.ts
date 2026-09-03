@@ -27,9 +27,9 @@ export const DOMINIO_BASE_POR_DEFECTO = "xula.localhost";
 /**
  * Hosts con los que el servidor se llama a si mismo.
  *
- * Es la unica firma que habilita el respaldo por `x-forwarded-host` en
- * `proxy.ts`. Por que hace falta que sea esta y no "el host no cuelga del
- * dominio base" esta en `proxyRespaldo.test.ts`.
+ * `proxy.ts` exige esta firma antes de mirar `x-forwarded-host`. Por que
+ * hace falta que sea esta y no "el host no cuelga del dominio base" esta
+ * en `proxyRespaldo.test.ts`.
  *
  * La forma con corchetes es la del Host header: RFC 7230 exige que una
  * direccion IPv6 viaje como `[::1]`, nunca pelada. Eso es lo que deja

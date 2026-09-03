@@ -70,6 +70,11 @@ export function SugerenciaDeDuplicados() {
     clearTimeout(idDeRetardo.current);
     setCerrada(false);
     setActiva(-1);
+    // La lista se vacia en cuanto cambia lo escrito, no cuando llega la
+    // respuesta. Entre el tecleo y el retardo quedaban visibles y
+    // seleccionables las personas de la consulta anterior, que ya no son
+    // las parecidas a lo que hay en el formulario.
+    setSugerencias([]);
 
     const plan = planDeConsulta(
       nombresNuevo,
@@ -77,10 +82,7 @@ export function SugerenciaDeDuplicados() {
       () => ++idDeConsulta.current,
     );
 
-    if (plan.tipo === "limpiar") {
-      setSugerencias([]);
-      return;
-    }
+    if (plan.tipo === "limpiar") return;
 
     idDeRetardo.current = setTimeout(async () => {
       // La accion ya atrapa sus propios errores y devuelve `[]`; este

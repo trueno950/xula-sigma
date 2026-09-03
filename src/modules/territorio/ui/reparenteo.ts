@@ -35,3 +35,29 @@ export const ofertaDeReparenteo = ({
   muestraDestinos: destinos > 0,
   muestraDesanclar: puedeSerRaiz && tienePadre,
 });
+
+/**
+ * A donde va la pantalla despues de un movimiento exitoso.
+ *
+ * El reparenteo es la segunda accion que no puede quedarse donde estaba.
+ * La URL trae la raiz desde la que se entro, y mover el nodo a otra rama lo
+ * saca de ese subarbol: `nodoResuelto` deja de encontrarlo y la pagina
+ * responde 404 despues de una operacion que salio bien.
+ *
+ * El destino se arma con el padre nuevo como raiz visible, que contiene al
+ * nodo movido por construccion. Desanclado no hay padre, y el nodo pasa a
+ * ser su propia raiz. En los dos casos el destino existe sin consultar la
+ * base: la accion no sabe cual es la raiz real de la rama de destino, y
+ * `?raiz=` no exige una raiz del arbol -la pagina abre el subarbol de
+ * cualquier lugar-.
+ */
+export const destinoDeReparenteo = ({
+  lugarId,
+  nuevoPadreId,
+}: {
+  lugarId: string;
+  nuevoPadreId: string;
+}): { readonly raiz: string; readonly nodo: string } => ({
+  raiz: nuevoPadreId || lugarId,
+  nodo: lugarId,
+});

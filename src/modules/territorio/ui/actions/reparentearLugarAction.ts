@@ -12,7 +12,8 @@ import {
   JerarquiaInvalidaError,
   RaizInvalidaError,
 } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { destinoDeReparenteo } from "../reparenteo";
+import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
@@ -67,4 +68,8 @@ export async function reparentearLugarAction(
   }
 
   revalidatePath("/territorio");
+
+  const destino = destinoDeReparenteo(analisis.data);
+
+  irAlArbol(destino.raiz, destino.nodo);
 }

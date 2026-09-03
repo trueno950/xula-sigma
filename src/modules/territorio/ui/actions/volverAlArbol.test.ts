@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rutaDelArbol } from "./volverAlArbol";
+import { navegacionDe, rutaDelArbol } from "./volverAlArbol";
 
 /**
  * La ruta a la que vuelven las acciones de territorio.
@@ -31,6 +31,54 @@ describe("rutaDelArbol", () => {
   it("escapa el mensaje de error", () => {
     expect(rutaDelArbol({ raiz: "r1", error: "Falla A & B" })).toBe(
       "/territorio?raiz=r1&error=Falla+A+%26+B",
+    );
+  });
+});
+
+describe("navegacionDe", () => {
+  const conCampos = (campos: Record<string, string>) => {
+    const formData = new FormData();
+    for (const [clave, valor] of Object.entries(campos)) {
+      formData.set(clave, valor);
+    }
+
+    return formData;
+  };
+
+  const RAIZ = "11111111-1111-4111-8111-111111111111";
+  const NODO = "22222222-2222-4222-8222-222222222222";
+  const PADRE = "33333333-3333-4333-8333-333333333333";
+
+  it("lee los tres campos de navegacion", () => {
+    expect(
+      navegacionDe(conCampos({ raiz: RAIZ, nodo: NODO, padre: PADRE })),
+    ).toEqual({ raiz: RAIZ, nodo: NODO, padre: PADRE });
+  });
+
+  it("un campo vacio vale lo mismo que uno ausente", () => {
+    expect(navegacionDe(conCampos({ raiz: "", nodo: NODO }))).toEqual({
+      raiz: undefined,
+      nodo: NODO,
+      padre: undefined,
+    });
+  });
+
+  /**
+   * El campo lo escribe quien manda el formulario. Un `padre` falseado
+   * elegiria a donde cae el operador despues de una baja exitosa; sin UUID
+   * el destino cae al listado, que siempre existe.
+   */
+  it("descarta lo que no es un UUID en vez de llevarlo al destino", () => {
+    expect(
+      navegacionDe(
+        conCampos({ raiz: RAIZ, nodo: NODO, padre: "../../otra-cosa" }),
+      ),
+    ).toEqual({ raiz: RAIZ, nodo: NODO, padre: undefined });
+  });
+
+  it("un campo invalido no arrastra a los demas", () => {
+    expect(navegacionDe(conCampos({ raiz: "no-es-uuid", nodo: NODO }))).toEqual(
+      { raiz: undefined, nodo: NODO, padre: undefined },
     );
   });
 });

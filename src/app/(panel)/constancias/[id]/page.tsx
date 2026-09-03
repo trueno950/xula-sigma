@@ -54,9 +54,9 @@ const Dato = ({
  * `reimprimirConstancia`/`cancelarConstancia`; el gate aca es solo para no
  * mostrar una accion que el caso de uso va a rechazar (hallazgo de GGA: el
  * gate de `BotonDeReimpresion` faltaba, el comentario decia que existia)-.
- * Mismo criterio que `padron/[id]/page.tsx` para "no existe" -equivalente,
- * no un 404 real, RLS ya deja `constanciaPorId` en `null` para una
- * constancia de otro tenant.
+ * Mismo criterio que `padron/[id]/page.tsx` para "no existe": RLS ya deja
+ * `constanciaPorId` en `null` para una constancia de otro tenant, y la
+ * pantalla responde 404 sin distinguirla de una inexistente.
  *
  * `?error=` efectivamente se lee aca -a diferencia del gap que la revision
  * de la Fase 4b encontro en esta misma pantalla-: las dos acciones nuevas

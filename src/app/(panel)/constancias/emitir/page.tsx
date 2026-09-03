@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import {
   documentosDelAyuntamiento,
@@ -70,9 +71,9 @@ export default async function PaginaDeEmisionDeConstancia({
 
   const persona = await personaPorId(comoPersonaId(personaId), contexto);
 
-  if (!persona) {
-    return <PantallaDeMensaje mensaje="Esa persona no existe." />;
-  }
+  // Regla 8, igual que en la ficha de una persona: `?personaId=` es la
+  // misma superficie con otra forma de URL.
+  if (!persona) notFound();
 
   const documentos = await documentosDelAyuntamiento(contexto);
 

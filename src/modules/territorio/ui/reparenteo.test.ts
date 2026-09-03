@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ofertaDeReparenteo } from "./reparenteo";
+import { destinoDeReparenteo, ofertaDeReparenteo } from "./reparenteo";
 
 describe("ofertaDeReparenteo", () => {
   it("con destinos muestra el select", () => {
@@ -47,5 +47,31 @@ describe("ofertaDeReparenteo", () => {
 
     expect(oferta.muestraDestinos).toBe(false);
     expect(oferta.muestraDesanclar).toBe(false);
+  });
+});
+
+describe("destinoDeReparenteo", () => {
+  const lugarId = "11111111-1111-4111-8111-111111111111";
+  const nuevoPadreId = "22222222-2222-4222-8222-222222222222";
+
+  it("abre el nodo bajo su nuevo padre", () => {
+    expect(destinoDeReparenteo({ lugarId, nuevoPadreId })).toEqual({
+      raiz: nuevoPadreId,
+      nodo: lugarId,
+    });
+  });
+
+  it("desanclado, el nodo es su propia raiz", () => {
+    expect(destinoDeReparenteo({ lugarId, nuevoPadreId: "" })).toEqual({
+      raiz: lugarId,
+      nodo: lugarId,
+    });
+  });
+
+  it("nunca devuelve la raiz de la que se venia", () => {
+    const raizAnterior = "33333333-3333-4333-8333-333333333333";
+    const destino = destinoDeReparenteo({ lugarId, nuevoPadreId });
+
+    expect(destino.raiz).not.toBe(raizAnterior);
   });
 });

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 /**
  * El destino de las acciones de territorio: el arbol, con la raiz y el
@@ -59,21 +60,35 @@ export const irAlArbol = (
 ): never => redirect(rutaDelArbol({ raiz, nodo }));
 
 /**
- * La raiz y el nodo abiertos, para poder volver al arbol donde estaba
- * quien envio el formulario.
+ * La raiz, el nodo y el padre abiertos, para poder volver al arbol donde
+ * estaba quien envio el formulario. Los tres se leen aca y en ningun otro
+ * lado: es el unico sitio donde vive esta decision.
  *
  * Se leen aparte del `safeParse` y **despues**, no antes: son navegacion,
  * no datos del caso de uso, y la regla de Server Actions de `AGENTS.md`
  * pide que la validacion sea lo primero.
  *
- * No van en el esquema de Zod. Estuvieron, con `.uuid().optional()`, y
- * ningun archivo leia `analisis.data.raiz`: en el camino de exito no se
- * redirige, y en el de error el parseo fallo y no hay `data` que leer.
- * Era validacion que nadie consultaba. Un valor raro no hace danio -el
- * destino siempre es `/territorio`, `URLSearchParams` lo escapa, y la
- * pagina reparsea sus propios parametros-.
+ * Se validan aca, con su propio esquema, y no en el del caso de uso: son
+ * navegacion, no datos, y el orden que pide la regla de Server Actions es
+ * que la validacion del caso de uso vaya primero.
+ *
+ * Estuvieron sin validar mientras ningun camino de exito redirigia: el
+ * destino siempre era `/territorio`, `URLSearchParams` escapaba el valor y
+ * la pagina reparseaba sus propios parametros. Dejo de alcanzar cuando la
+ * baja y el reparenteo empezaron a redirigir con estos campos: un `padre`
+ * falseado elige a donde cae el operador despues de una operacion que
+ * salio bien. Lo que no sea un UUID se descarta y el destino cae al
+ * listado, que siempre existe.
  */
-export const navegacionDe = (formData: FormData) => ({
-  raiz: formData.get("raiz")?.toString() || undefined,
-  nodo: formData.get("nodo")?.toString() || undefined,
+const esquemaDeNavegacion = z.object({
+  raiz: z.string().uuid().optional().catch(undefined),
+  nodo: z.string().uuid().optional().catch(undefined),
+  padre: z.string().uuid().optional().catch(undefined),
 });
+
+export const navegacionDe = (formData: FormData) =>
+  esquemaDeNavegacion.parse({
+    raiz: formData.get("raiz")?.toString() || undefined,
+    nodo: formData.get("nodo")?.toString() || undefined,
+    padre: formData.get("padre")?.toString() || undefined,
+  });
