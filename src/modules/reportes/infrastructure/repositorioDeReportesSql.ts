@@ -1,8 +1,9 @@
-import { and, eq, type SQL } from "drizzle-orm";
+import { and, count, eq, type SQL } from "drizzle-orm";
 import type {
   ReporteGuardado,
   RepositorioDeReportes,
 } from "../application/puertos";
+import { comoReporteId } from "../domain";
 import { reportes } from "./esquema";
 
 /**
@@ -11,12 +12,12 @@ import { reportes } from "./esquema";
  * aisla cada operacion, cubierto por los tests de aislamiento y los de
  * integracion de esta rebanada, no por un mock de este archivo.
  *
- * Esta rebanada solo implementa `guardar`, `buscarPorId` y `listar` -los
- * tres que `registrarReporte`, `reportePorId` y `listarReportes` necesitan-
- * (tasks.md 4.7). El resto del contrato de `RepositorioDeReportes` se
- * completa en las Fases 5 (`candidatoAOriginal`, `aplicarTransicion`,
- * `asignarArea`) y 7 (`similaresAbiertos`, `contarDuplicadosDe`,
- * `paraConsultaPublica*`) sobre este mismo archivo.
+ * Esta rebanada agrega `candidatoAOriginal`, `aplicarTransicion`,
+ * `asignarArea` y `contarDuplicadosDe` -los cuatro que `cambiarEstadoDeReporte`,
+ * `asignarAreaDeReporte` y el conteo de duplicados de tasks.md 5.13 necesitan-
+ * (tasks.md 5.3, 5.14), sobre `guardar`, `buscarPorId` y `listar` de la
+ * Fase 4. El resto del contrato (`similaresAbiertos`, `paraConsultaPublica*`)
+ * se completa en las Fases 6 y 7 sobre este mismo archivo.
  */
 const aReporteGuardado = (
   fila: typeof reportes.$inferSelect,
@@ -40,7 +41,13 @@ const aReporteGuardado = (
 
 export const repositorioDeReportesSql: Pick<
   RepositorioDeReportes,
-  "guardar" | "buscarPorId" | "listar"
+  | "guardar"
+  | "buscarPorId"
+  | "listar"
+  | "candidatoAOriginal"
+  | "aplicarTransicion"
+  | "asignarArea"
+  | "contarDuplicadosDe"
 > = {
   async guardar(tx, datos) {
     await tx.insert(reportes).values(datos);
@@ -50,6 +57,80 @@ export const repositorioDeReportesSql: Pick<
     const [fila] = await tx.select().from(reportes).where(eq(reportes.id, id));
 
     return fila ? aReporteGuardado(fila) : null;
+  },
+
+  async candidatoAOriginal(tx, id) {
+    // `id` llega como `string` desde el caso de uso -es el `duplicadoDe`
+    // que eligio el operador, todavia sin verificar (design.md seccion 3)-;
+    // `comoReporteId` es el borde donde se vuelve el tipo marcado que espera
+    // la columna, mismo criterio que `?raiz=` en `territorio`.
+    const [fila] = await tx
+      .select({
+        id: reportes.id,
+        duplicadoDeReporteId: reportes.duplicadoDeReporteId,
+      })
+      .from(reportes)
+      .where(eq(reportes.id, comoReporteId(id)));
+
+    return fila ?? null;
+  },
+
+  async aplicarTransicion(tx, datos) {
+    // `WHERE id = $1 AND estado = $anterior` es el mecanismo de concurrencia
+    // (design.md seccion 12, mismo criterio que `cancelarConstancia`): dos
+    // transiciones simultaneas se serializan sobre la fila y la segunda
+    // afecta cero filas porque el estado que leyo ya no esta.
+    const filas = await tx
+      .update(reportes)
+      .set({
+        estado: datos.estadoNuevo,
+        motivoDeRechazo: datos.motivoDeRechazo,
+        duplicadoDeReporteId:
+          datos.duplicadoDeReporteId === null
+            ? null
+            : comoReporteId(datos.duplicadoDeReporteId),
+        actualizadoEn: new Date(),
+      })
+      .where(
+        and(
+          eq(reportes.id, datos.id),
+          eq(reportes.estado, datos.estadoAnterior),
+        ),
+      )
+      .returning({ id: reportes.id });
+
+    return filas.length > 0;
+  },
+
+  async asignarArea(tx, datos) {
+    // Mismo esqueleto de UPDATE condicionado, sin `estado` en el WHERE: la
+    // asignacion no depende de un estado de partida, solo de que el reporte
+    // no este ya cerrado -eso lo verifica `esTerminal` en el caso de uso
+    // antes de llegar aca (design.md seccion 12)-.
+    const filas = await tx
+      .update(reportes)
+      .set({
+        areaResponsable: datos.areaResponsable,
+        actualizadoEn: new Date(),
+      })
+      .where(eq(reportes.id, datos.id))
+      .returning({ id: reportes.id });
+
+    return filas.length > 0;
+  },
+
+  async contarDuplicadosDe(tx, id) {
+    // Consulta directa sobre `reportes_duplicado_idx`
+    // `(ayuntamiento_id, duplicado_de_reporte_id)`: RLS aporta la igualdad
+    // de tenant, esta aporta la de `duplicado_de_reporte_id`, y las dos
+    // juntas son las columnas lider del indice (design.md seccion 13, mismo
+    // argumento que `contarHijosActivos`).
+    const [fila] = await tx
+      .select({ total: count() })
+      .from(reportes)
+      .where(eq(reportes.duplicadoDeReporteId, id));
+
+    return fila?.total ?? 0;
   },
 
   async listar(tx, filtros) {

@@ -413,18 +413,18 @@ duplicado apunta siempre a un reporte que no es duplicado`, `Historial de
 movimientos de solo agregado`, `Regla de autorizacion para administrar
 reportes ciudadanos`.
 
-- [ ] 5.1 RED `shared/auth/roles.test.ts` (modificar): fila para
+- [x] 5.1 RED `shared/auth/roles.test.ts` (modificar): fila para
       `puedeAdministrarReportes` — `ADMIN_MUNICIPAL` si, `OPERADOR` /
       `CONSULTA` / `SUPER_ADMIN` no, recorriendo `ROLES` (mismo patron que
       `puedeAdministrarTerritorio`/`puedeAdministrarDocumentos`).
-- [ ] 5.2 GREEN `shared/auth/roles.ts`: `puedeAdministrarReportes = (rol) =>
+- [x] 5.2 GREEN `shared/auth/roles.ts`: `puedeAdministrarReportes = (rol) =>
       rol === "ADMIN_MUNICIPAL"`, junto a las otras reglas restringidas.
-- [ ] 5.3 `reportes/infrastructure/repositorioDeReportesSql.ts` (modificar):
+- [x] 5.3 `reportes/infrastructure/repositorioDeReportesSql.ts` (modificar):
       completar `candidatoAOriginal` (`SELECT id, duplicado_de_reporte_id`),
       `aplicarTransicion` (`UPDATE ... WHERE estado = $anterior RETURNING id`
       — el control de concurrencia, `design.md` seccion 12), `asignarArea`
       (mismo esqueleto de `UPDATE` condicionado).
-- [ ] 5.4 RED `reportes/application/cambiarEstadoDeReporte.test.ts` (puertos
+- [x] 5.4 RED `reportes/application/cambiarEstadoDeReporte.test.ts` (puertos
       mockeados): `puedeAdministrarReportes(rol)` falso ->
       `NoAutorizadoError` **antes** de abrir `withTenant`; `buscarPorId` ->
       `null` -> `NoEncontradoError`; `esTerminal(actual.estado)` ->
@@ -441,40 +441,40 @@ reportes ciudadanos`.
       `NoEncontradoError` (cero filas: otra transaccion ya movio el reporte);
       camino feliz -> `movimientos.agregar` con `estadoAnterior`/`estadoNuevo`
       correctos y `registrar(CAMBIAR_ESTADO_REPORTE)` en la misma llamada.
-- [ ] 5.5 GREEN `reportes/application/cambiarEstadoDeReporte.ts`: orden exacto
+- [x] 5.5 GREEN `reportes/application/cambiarEstadoDeReporte.ts`: orden exacto
       de `design.md` seccion 12 (sin caso de uso "marcar duplicado" — el
       vinculo es un parametro mas de la transicion).
-- [ ] 5.6 RED `reportes/application/asignarAreaDeReporte.test.ts`:
+- [x] 5.6 RED `reportes/application/asignarAreaDeReporte.test.ts`:
       `puedeAdministrarReportes` falso -> `NoAutorizadoError`; `buscarPorId`
       -> `null` -> `NoEncontradoError`; `esTerminal` -> `ReporteCerradoError`;
       `asignarArea` -> `false` -> `NoEncontradoError`; camino feliz ->
       `movimientos.agregar` con `estadoAnterior: null, estadoNuevo: null,
       areaAsignada` presente; `registrar(ASIGNAR_AREA_REPORTE)`.
-- [ ] 5.7 GREEN `reportes/application/asignarAreaDeReporte.ts`.
-- [ ] 5.8 `reportes/composicion.ts` (modificar) + `application/index.ts`:
+- [x] 5.7 GREEN `reportes/application/asignarAreaDeReporte.ts`.
+- [x] 5.8 `reportes/composicion.ts` (modificar) + `application/index.ts`:
       componer `cambiarEstadoDeReporte`, `asignarAreaDeReporte`.
-- [ ] 5.9 RED `reportes/duplicados.integration.test.ts`: marcar C duplicado de
+- [x] 5.9 RED `reportes/duplicados.integration.test.ts`: marcar C duplicado de
       B (que ya es duplicado de A) guarda `C -> A` (cadena resuelta antes de
       guardar); rechazar con motivo `DUPLICADO` sin id del original falla con
       `DuplicadoSinOriginalError` **y no se escribe ni estado, ni vinculo, ni
       movimiento** (atomicidad de la transaccion); un `duplicadoDeReporteId`
       de otro municipio rechazado por `reportes_duplicado_tenant_fk` a nivel
       base si se fuerza con SQL directo.
-- [ ] 5.10 RED mismo archivo — **ciclo por SQL crudo**: `UPDATE` directo que
+- [x] 5.10 RED mismo archivo — **ciclo por SQL crudo**: `UPDATE` directo que
       arma `A -> B` y `B -> A`; marcar C duplicado de A resuelve con **dos**
       consultas (`candidatoAOriginal` + la resolucion pura) y guarda un
       estado equivocado, visible y acotado — **nunca un bucle** (`design.md`
       seccion 8, tabla de comportamiento).
-- [ ] 5.11 RED mismo archivo — **atomicidad**: un `registroDeMovimientos.agregar`
+- [x] 5.11 RED mismo archivo — **atomicidad**: un `registroDeMovimientos.agregar`
       que lanza deja el `estado` del reporte **sin cambiar** (rollback de la
       transaccion completa).
-- [ ] 5.12 GREEN (ajustar 5.3/5.5 si algun caso de 5.9-5.11 no calza).
-- [ ] 5.13 RED mismo archivo: `contarDuplicadosDe` es una consulta directa
+- [x] 5.12 GREEN (ajustar 5.3/5.5 si algun caso de 5.9-5.11 no calza).
+- [x] 5.13 RED mismo archivo: `contarDuplicadosDe` es una consulta directa
       sobre `reportes_duplicado_idx`, sin recorrer la tabla (verificar plan
       de consulta o conteo de filas leidas, criterio de exito de
       `proposal.md`).
-- [ ] 5.14 GREEN.
-- [ ] 5.15 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
+- [x] 5.14 GREEN.
+- [x] 5.15 `pnpm check` + `pnpm test` + `pnpm test:integration` en verde.
 
 ## Phase 6: Rebanada 6 — Consulta publica (~380 lineas)
 
