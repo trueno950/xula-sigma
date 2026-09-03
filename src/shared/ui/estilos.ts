@@ -35,10 +35,14 @@ export const VARIANTES_DE_BOTON = [
 export type VarianteDeBoton = (typeof VARIANTES_DE_BOTON)[number];
 
 /**
- * Compartido por las tres variantes: el alto tactil, el radio apenas
+ * Compartido por todas las variantes: el alto tactil, el radio apenas
  * quebrado y el apagado por token. El `disabled:` va aca —y no por
- * variante— porque un boton inhabilitado deja de tener jerarquia: los tres
- * se apagan igual.
+ * variante— porque un boton inhabilitado deja de tener jerarquia: se apagan
+ * todas igual.
+ *
+ * Sin contarlas: `peligro` entro despues y el comentario siguio diciendo
+ * "las tres" sin que nada fallara. El numero vive en `VARIANTES_DE_BOTON`,
+ * que es donde el tipo lo sostiene.
  */
 const BASE_DE_BOTON =
   "inline-flex h-11 shrink-0 items-center justify-center gap-2 " +
