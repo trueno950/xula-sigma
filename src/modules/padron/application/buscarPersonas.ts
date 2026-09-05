@@ -1,10 +1,12 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { normalizarParaBusqueda } from "../domain";
+import type { OrdenDePersonas } from "../domain";
+import { normalizarParaBusqueda, resolverPagina } from "../domain";
+import { TAMANO_DE_PAGINA } from "./listarPersonas";
 import type {
   CatalogoDeAbreviaturas,
-  PersonaGuardada,
   RepositorioDePersonas,
+  ResultadoDeListado,
 } from "./puertos";
 
 /**
@@ -23,6 +25,11 @@ export const UMBRAL_BUSQUEDA = 0.3;
  * `normalizarParaBusqueda` que usa el adaptador al guardar — si la cadena
  * de busqueda y la columna guardada no pasaran por la misma funcion, la
  * comparacion de trigramas no significaria nada.
+ *
+ * Pagina igual que `listarPersonas`: pide `limite + 1` y recorta con
+ * `resolverPagina`. `opciones.orden` reemplaza el orden por relevancia
+ * (`similarity` descendente, el default del repositorio) por
+ * apellido/nombre cuando el operador lo pide -las dos no se combinan.
  */
 export function crearBuscarPersonas(
   repositorio: RepositorioDePersonas,
@@ -31,12 +38,25 @@ export function crearBuscarPersonas(
   return function buscarPersonas(
     cadena: string,
     contexto: ContextoActual,
-  ): Promise<readonly PersonaGuardada[]> {
+    opciones?: {
+      limite?: number | undefined;
+      orden?: OrdenDePersonas | undefined;
+    },
+  ): Promise<ResultadoDeListado> {
+    const limite = opciones?.limite ?? TAMANO_DE_PAGINA;
+
     return withTenant(contexto.ayuntamientoId, async (tx) => {
       const expansiones = await catalogo.leer(tx);
       const cadenaExpandida = normalizarParaBusqueda(cadena, expansiones);
 
-      return repositorio.buscar(tx, cadenaExpandida, UMBRAL_BUSQUEDA);
+      const filas = await repositorio.buscar(tx, cadenaExpandida, {
+        umbral: UMBRAL_BUSQUEDA,
+        limite: limite + 1,
+        ...(opciones?.orden ? { orden: opciones.orden } : {}),
+      });
+      const pagina = resolverPagina(filas, limite);
+
+      return { personas: pagina.filas, hayMas: pagina.hayMas };
     });
   };
 }

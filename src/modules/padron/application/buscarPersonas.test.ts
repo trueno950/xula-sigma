@@ -16,6 +16,7 @@ vi.mock("@/shared/tenancy/withTenant", () => ({
 const { crearBuscarPersonas, UMBRAL_BUSQUEDA } = await import(
   "./buscarPersonas"
 );
+const { TAMANO_DE_PAGINA } = await import("./listarPersonas");
 
 const contexto: ContextoActual = {
   ayuntamientoId: "motul" as ContextoActual["ayuntamientoId"],
@@ -56,11 +57,11 @@ describe("buscarPersonas", () => {
     expect(repositorio.buscar).toHaveBeenCalledExactlyOnceWith(
       expect.anything(),
       "guadalupe kumul",
-      UMBRAL_BUSQUEDA,
+      { umbral: UMBRAL_BUSQUEDA, limite: TAMANO_DE_PAGINA + 1 },
     );
   });
 
-  it("devuelve lo que responde el repositorio", async () => {
+  it("devuelve lo que responde el repositorio dentro de personas", async () => {
     const buscarPersonas = crearBuscarPersonas(repositorio, catalogo);
     const encontrada = {
       id: "persona-1" as PersonaId,
@@ -74,6 +75,48 @@ describe("buscarPersonas", () => {
 
     const resultado = await buscarPersonas("gpe kumul", contexto);
 
-    expect(resultado).toEqual([encontrada]);
+    expect(resultado).toEqual({ personas: [encontrada], hayMas: false });
+  });
+
+  it("pide limite + 1 y recorta la fila de mas, igual que listarPersonas", async () => {
+    const personas = Array.from({ length: 3 }, (_, i) => ({
+      id: `p${i}` as PersonaId,
+      nombres: "Nombre",
+      primerApellido: "Apellido",
+      segundoApellido: null,
+      curp: null,
+      bajaEn: null,
+    }));
+    vi.mocked(repositorio.buscar).mockResolvedValue(personas);
+
+    const buscarPersonas = crearBuscarPersonas(repositorio, catalogo);
+    const resultado = await buscarPersonas("gpe kumul", contexto, {
+      limite: 2,
+    });
+
+    expect(repositorio.buscar).toHaveBeenCalledWith(
+      expect.anything(),
+      "guadalupe kumul",
+      { umbral: UMBRAL_BUSQUEDA, limite: 3 },
+    );
+    expect(resultado).toEqual({ personas: personas.slice(0, 2), hayMas: true });
+  });
+
+  it("reenvia el orden pedido al repositorio, sobre la relevancia por defecto", async () => {
+    const buscarPersonas = crearBuscarPersonas(repositorio, catalogo);
+
+    await buscarPersonas("gpe kumul", contexto, {
+      orden: { campo: "persona", direccion: "asc" },
+    });
+
+    expect(repositorio.buscar).toHaveBeenCalledWith(
+      expect.anything(),
+      "guadalupe kumul",
+      {
+        umbral: UMBRAL_BUSQUEDA,
+        limite: TAMANO_DE_PAGINA + 1,
+        orden: { campo: "persona", direccion: "asc" },
+      },
+    );
   });
 });
