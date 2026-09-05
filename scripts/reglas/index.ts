@@ -6,6 +6,7 @@ import {
 } from "./reglas/codigo";
 import { metricas } from "./reglas/metricas";
 import { rlsEnTablaNueva, secuenciaParaFolios } from "./reglas/migraciones";
+import { paginaAnidadaSinMigaja } from "./reglas/navegacion";
 import { driverFueraDeTenancy, setSinLocal } from "./reglas/tenancia";
 import type { Archivo, Hallazgo, HallazgoMetrica, Regla } from "./tipos";
 
@@ -20,6 +21,7 @@ export const reglas: Regla[] = [
   identificadorConDiacriticos,
   moduloSinCuatroCapas,
   citaSinVersion,
+  paginaAnidadaSinMigaja,
 ];
 
 export { metricas };

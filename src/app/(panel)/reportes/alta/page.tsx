@@ -3,7 +3,7 @@ import { FormularioDeAlta, TIPOS_DE_INCIDENCIA } from "@/modules/reportes";
 import { listarCalles, listarLugares } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -63,7 +63,19 @@ export default async function PaginaDeAltaDeReporte({ searchParams }: Props) {
   }));
 
   return (
-    <PaginaDePanel titulo="Registrar reporte" ancho="formulario">
+    <PaginaDePanel
+      titulo="Registrar reporte"
+      ancho="formulario"
+      migaja={
+        <Migaja
+          pasos={[
+            { etiqueta: "Reportes", href: "/reportes" },
+            { etiqueta: "Registrar reporte" },
+          ]}
+          etiqueta="Ruta"
+        />
+      }
+    >
       <FormularioDeAlta
         lugares={lugares}
         calles={calles}

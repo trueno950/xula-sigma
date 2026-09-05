@@ -13,6 +13,8 @@ type Props = {
   titulo: string;
   /** La unica accion primaria de la pantalla, si la hay. */
   accion?: ReactNode;
+  /** El `<Migaja>` de `shared/ui`, si la pantalla esta a mas de un nivel. */
+  migaja?: ReactNode;
   ancho?: keyof typeof ANCHOS;
   children: ReactNode;
 };
@@ -33,6 +35,7 @@ type Props = {
 export function PaginaDePanel({
   titulo,
   accion,
+  migaja,
   ancho = "lista",
   children,
 }: Props) {
@@ -40,6 +43,7 @@ export function PaginaDePanel({
     <main
       className={`mx-auto flex w-full flex-col gap-6 px-4 py-6 md:px-6 ${ANCHOS[ancho]}`}
     >
+      {migaja}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight text-caliza-tinta">
           {titulo}

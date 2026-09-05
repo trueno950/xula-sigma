@@ -14,6 +14,7 @@ import {
   Aviso,
   CLASES_DE_DATO,
   EnlaceDeAccion,
+  Migaja,
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
@@ -90,7 +91,20 @@ export default async function PaginaDeDetalleDePersona({
   ) : undefined;
 
   return (
-    <PaginaDePanel titulo={nombre} accion={emitir} ancho="detalle">
+    <PaginaDePanel
+      titulo={nombre}
+      accion={emitir}
+      ancho="detalle"
+      migaja={
+        <Migaja
+          pasos={[
+            { etiqueta: "Padron", href: "/padron" },
+            { etiqueta: nombre },
+          ]}
+          etiqueta="Ruta"
+        />
+      }
+    >
       {persona.curp ? <p className={CLASES_DE_DATO}>{persona.curp}</p> : null}
 
       {error ? <Aviso tono="error">{error}</Aviso> : null}

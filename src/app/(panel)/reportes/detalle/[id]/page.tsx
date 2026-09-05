@@ -12,6 +12,7 @@ import { puedeAdministrarReportes } from "@/shared/auth/roles";
 import {
   Aviso,
   CLASES_DE_ETIQUETA,
+  Migaja,
   PaginaDePanel,
   Panel,
   PantallaDeMensaje,
@@ -76,7 +77,19 @@ export default async function PaginaDeDetalleDeReporte({
     : undefined;
 
   return (
-    <PaginaDePanel titulo={reporte.folio} ancho="detalle">
+    <PaginaDePanel
+      titulo={reporte.folio}
+      ancho="detalle"
+      migaja={
+        <Migaja
+          pasos={[
+            { etiqueta: "Reportes", href: "/reportes" },
+            { etiqueta: reporte.folio },
+          ]}
+          etiqueta="Ruta"
+        />
+      }
+    >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">

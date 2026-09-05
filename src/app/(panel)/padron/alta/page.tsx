@@ -1,7 +1,12 @@
 import { FormularioDeAltaDePersona } from "@/modules/padron";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { EnlaceDeAccion, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import {
+  EnlaceDeAccion,
+  Migaja,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 type Props = {
   searchParams: Promise<{ error?: string }>;
@@ -34,7 +39,19 @@ export default async function PaginaDeAltaDePersona({ searchParams }: Props) {
   }
 
   return (
-    <PaginaDePanel titulo="Nueva persona" ancho="formulario">
+    <PaginaDePanel
+      titulo="Nueva persona"
+      ancho="formulario"
+      migaja={
+        <Migaja
+          pasos={[
+            { etiqueta: "Padron", href: "/padron" },
+            { etiqueta: "Nueva persona" },
+          ]}
+          etiqueta="Ruta"
+        />
+      }
+    >
       <FormularioDeAltaDePersona {...(error ? { error } : {})} />
     </PaginaDePanel>
   );

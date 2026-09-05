@@ -8,7 +8,9 @@ import { puedeAdministrarDocumentos } from "@/shared/auth/roles";
 import {
   Aviso,
   EnlaceDeAccion,
+  Migaja,
   PaginaDePanel,
+  Panel,
   PantallaDeMensaje,
 } from "@/shared/ui";
 
@@ -47,7 +49,19 @@ export default async function PaginaDeConfiguracionDeDocumentos({
   const documentos = await documentosDelAyuntamiento(contexto);
 
   return (
-    <PaginaDePanel titulo="Bloque de firma" ancho="formulario">
+    <PaginaDePanel
+      titulo="Bloque de firma"
+      ancho="formulario"
+      migaja={
+        <Migaja
+          pasos={[
+            { etiqueta: "Constancias", href: "/constancias" },
+            { etiqueta: "Bloque de firma" },
+          ]}
+          etiqueta="Ruta"
+        />
+      }
+    >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       <p className="text-[15px] text-caliza-apagada">
@@ -56,6 +70,29 @@ export default async function PaginaDeConfiguracionDeDocumentos({
       </p>
 
       <ConfiguracionDeDocumentos documentos={documentos} />
+
+      <Panel titulo="Vista previa">
+        {documentos ? (
+          <div className="flex flex-col items-center gap-1 border-t border-caliza-divisor pt-4 text-center">
+            <p className="text-[15px] font-semibold text-caliza-tinta">
+              {documentos.firmanteNombre}
+            </p>
+            <p className="text-[13px] text-caliza-apagada">
+              {documentos.firmanteCargo}
+            </p>
+            {documentos.leyendaDePie ? (
+              <p className="mt-3 text-[13px] text-caliza-apagada">
+                {documentos.leyendaDePie}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="text-[15px] text-caliza-apagada">
+            Todavia no hay nada guardado. Asi se va a ver al pie de cada
+            constancia una vez que guarde.
+          </p>
+        )}
+      </Panel>
     </PaginaDePanel>
   );
 }
