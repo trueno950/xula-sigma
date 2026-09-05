@@ -4,10 +4,14 @@ import type {
   AreaResponsable,
   EstadoDeReporte,
   MotivoDeRechazo,
-  MovimientoId,
   ReporteId,
   TipoDeIncidencia,
 } from "../domain";
+import type {
+  FiltrosDeListado,
+  OpcionesDeBusqueda,
+  OpcionesDeListado,
+} from "./puertosDeListado";
 
 /**
  * Lo que `registrarReporte` guarda en una sola fila (design.md seccion 10).
@@ -81,10 +85,28 @@ export type ReporteSimilar = {
   registradoEn: Date;
 };
 
-/** Filtros del listado del panel. `estado` y `tipo` opcionales; RLS acota el resto. */
-export type FiltrosDeListado = {
-  estado?: EstadoDeReporte;
-  tipo?: TipoDeIncidencia;
+/**
+ * `FiltrosDeListado`, `OpcionesDeListado` y `OpcionesDeBusqueda` viven en
+ * `puertosDeListado.ts` -tema propio, mismo criterio que
+ * `puertosDeMovimientos.ts`- pero se re-exportan aca para que
+ * `import { ... } from "./puertos"` siga funcionando.
+ */
+export type {
+  FiltrosDeListado,
+  OpcionesDeBusqueda,
+  OpcionesDeListado,
+} from "./puertosDeListado";
+
+/**
+ * Lo que `listarReportes`/`buscarReportes` devuelven a la pantalla:
+ * `reportes` ya recortado a la pagina pedida, y `hayMas` -de
+ * `resolverPagina`- para que `ListadoDeReportes` sepa si pintar "Ver mas".
+ * Se queda aca -y no en `puertosDeListado.ts`- porque depende de
+ * `ReporteGuardado`, definido arriba en este mismo archivo.
+ */
+export type ResultadoDeListado = {
+  readonly reportes: readonly ReporteGuardado[];
+  readonly hayMas: boolean;
 };
 
 /**
@@ -125,9 +147,30 @@ export type RepositorioDeReportes = {
     tx: TransaccionTenant,
     datos: { id: ReporteId; areaResponsable: AreaResponsable },
   ): Promise<boolean>;
+  /**
+   * `opciones.limite` es el `LIMIT` de Postgres tal cual -sin `OFFSET`:
+   * "Ver mas" crece el limite, no pagina por indice (`design.md`,
+   * "Paginacion")-, y `opciones.orden` cambia el `ORDER BY`; sin orden,
+   * sigue el default del metodo (`registradoEn DESC`, design.md seccion
+   * 10).
+   */
   listar(
     tx: TransaccionTenant,
     filtros: FiltrosDeListado,
+    opciones: OpcionesDeListado,
+  ): Promise<readonly ReporteGuardado[]>;
+  /**
+   * Texto libre sobre `folio`/`descripcion`/`referencia` con `ILIKE`
+   * (`design.md`, "Buscador"). `opciones.filtros` convive con la busqueda
+   * -"nunca los reemplaza"-, mismo `estado`/`tipo` que `listar`. Sin
+   * infraestructura de trigramas propia: a diferencia de `padron`, esta
+   * rebanada no monto un indice GIN para `reportes`, asi que `ILIKE` sobre
+   * las tres columnas alcanza (tasks.md, esta rebanada).
+   */
+  buscar(
+    tx: TransaccionTenant,
+    cadena: string,
+    opciones: OpcionesDeBusqueda,
   ): Promise<readonly ReporteGuardado[]>;
   similaresAbiertos(
     tx: TransaccionTenant,
@@ -145,49 +188,9 @@ export type RepositorioDeReportes = {
 };
 
 /**
- * El contador de folios (design.md seccion 4): una sola sentencia,
- * `ON CONFLICT (ayuntamiento_id, anio) DO UPDATE`, con el lock que garantiza
- * un consecutivo sin hueco y sin repeticion. Mismo mecanismo que
- * `constancias`, con una columna menos en la PK -la decision 2 cerro que no
- * se segmenta por tipo de incidencia-.
+ * `ContadorDeFolios` y el historial de movimientos (`DatosDeMovimiento`,
+ * `MovimientoGuardado`, `RegistroDeMovimientos`) viven en
+ * `puertosDeMovimientos.ts` -tema propio, otro regimen de permisos, otra
+ * tabla- y se importan de ahi directo: metrica de lineas por archivo
+ * (`AGENTS.md`), sin este archivo de por medio.
  */
-export type ContadorDeFolios = {
-  siguiente(
-    tx: TransaccionTenant,
-    datos: { ayuntamientoId: AyuntamientoId; anio: number },
-  ): Promise<number>;
-};
-
-/**
- * Lo que `movimientos.agregar` persiste en una fila del historial. Sin `id`
- * ni `ocurridoEn`: los aporta la base (design.md seccion 10).
- */
-export type DatosDeMovimiento = {
-  ayuntamientoId: AyuntamientoId;
-  reporteId: ReporteId;
-  usuarioId: string;
-  estadoAnterior: EstadoDeReporte | null;
-  estadoNuevo: EstadoDeReporte | null;
-  areaAsignada: AreaResponsable | null;
-  motivo: MotivoDeRechazo | null;
-};
-
-/** Lo que devuelve `historialDe`: la fila completa, con su id y su momento. */
-export type MovimientoGuardado = DatosDeMovimiento & {
-  id: MovimientoId;
-  ocurridoEn: Date;
-};
-
-/**
- * `RegistroDeMovimientos` es puerto propio y no un metodo del repositorio
- * (design.md seccion 10): la tabla tiene otro regimen de permisos -solo
- * agregado, seccion 6- y separarlo lo deja escrito en el tipo. `historialDe`
- * ordena por `ocurridoEn ASC` y ese orden es parte del contrato.
- */
-export type RegistroDeMovimientos = {
-  agregar(tx: TransaccionTenant, datos: DatosDeMovimiento): Promise<void>;
-  historialDe(
-    tx: TransaccionTenant,
-    reporteId: ReporteId,
-  ): Promise<readonly MovimientoGuardado[]>;
-};

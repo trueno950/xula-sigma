@@ -1,11 +1,10 @@
-import { and, count, eq, inArray, type SQL } from "drizzle-orm";
-import type {
-  ReporteGuardado,
-  RepositorioDeReportes,
-} from "../application/puertos";
+import { and, count, eq, inArray } from "drizzle-orm";
+import type { RepositorioDeReportes } from "../application/puertos";
 import { comoReporteId, ESTADOS_DE_REPORTE, esTerminal } from "../domain";
+import { aReporteGuardado } from "./aReporteGuardado";
 import { consultaPublicaDeReportesSql } from "./consultaPublicaDeReportesSql";
 import { reportes } from "./esquema";
+import { listadoDeReportesSql } from "./listadoDeReportesSql";
 import { similaresDeReportesSql } from "./similaresDeReportesSql";
 
 const ESTADOS_NO_TERMINALES = ESTADOS_DE_REPORTE.filter(
@@ -24,33 +23,17 @@ const ESTADOS_NO_TERMINALES = ESTADOS_DE_REPORTE.filter(
  * (tasks.md 5.3, 5.14), sobre `guardar`, `buscarPorId` y `listar` de la
  * Fase 4. `paraConsultaPublica`/`paraConsultaPublicaPorId` entran en esta
  * rebanada (tasks.md Fase 6) para `consultarFolioDeReporte`;
- * `similaresAbiertos` (tasks.md 7.1) cierra el contrato completo.
+ * `similaresAbiertos` (tasks.md 7.1) cierra el contrato completo. `listar`
+ * y `buscar` se completan por spread desde `listadoDeReportesSql.ts` -
+ * mismo mecanismo que `consultaPublicaDeReportesSql`/`similaresDeReportesSql`,
+ * separados por la metrica de lineas por archivo (`AGENTS.md`).
  */
-const aReporteGuardado = (
-  fila: typeof reportes.$inferSelect,
-): ReporteGuardado => ({
-  id: fila.id,
-  folio: fila.folio,
-  tipo: fila.tipo,
-  estado: fila.estado,
-  areaResponsable: fila.areaResponsable,
-  lugarId: fila.lugarId,
-  calleId: fila.calleId,
-  referencia: fila.referencia,
-  descripcion: fila.descripcion,
-  personaId: fila.personaId,
-  motivoDeRechazo: fila.motivoDeRechazo,
-  duplicadoDeReporteId: fila.duplicadoDeReporteId,
-  registradoPorUsuarioId: fila.registradoPorUsuarioId,
-  registradoEn: fila.registradoEn,
-  actualizadoEn: fila.actualizadoEn,
-});
-
 export const repositorioDeReportesSql: Pick<
   RepositorioDeReportes,
   | "guardar"
   | "buscarPorId"
   | "listar"
+  | "buscar"
   | "candidatoAOriginal"
   | "aplicarTransicion"
   | "asignarArea"
@@ -151,26 +134,7 @@ export const repositorioDeReportesSql: Pick<
     return fila?.total ?? 0;
   },
 
-  async listar(tx, filtros) {
-    // Sin `WHERE ayuntamiento_id` a mano: la politica de la tabla ya acota
-    // el SELECT al tenant de la transaccion (mismo criterio que
-    // `similaresAbiertos`, design.md seccion 13).
-    const condiciones: SQL[] = [];
-    if (filtros.estado !== undefined) {
-      condiciones.push(eq(reportes.estado, filtros.estado));
-    }
-    if (filtros.tipo !== undefined) {
-      condiciones.push(eq(reportes.tipo, filtros.tipo));
-    }
-
-    const filas = await tx
-      .select()
-      .from(reportes)
-      .where(condiciones.length > 0 ? and(...condiciones) : undefined);
-
-    return filas.map(aReporteGuardado);
-  },
-
+  ...listadoDeReportesSql,
   ...consultaPublicaDeReportesSql,
   ...similaresDeReportesSql,
 };

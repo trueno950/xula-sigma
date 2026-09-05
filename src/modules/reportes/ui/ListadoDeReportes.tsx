@@ -2,8 +2,6 @@ import type { Rol } from "@/shared/auth/roles";
 import { puedeAdministrarReportes } from "@/shared/auth/roles";
 import { fechaEnMerida } from "@/shared/lib/fecha";
 import {
-  Boton,
-  CampoDeLista,
   CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,
@@ -13,18 +11,20 @@ import {
   Tabla,
 } from "@/shared/ui";
 import type { FiltrosDeListado, ReporteGuardado } from "../application/puertos";
-import {
-  type AreaResponsable,
-  ESTADOS_DE_REPORTE,
-  type EstadoDeReporte,
-  TIPOS_DE_INCIDENCIA,
-} from "../domain";
-import { opcionesDeCatalogo } from "./opciones";
+import type { OrdenDeReportes } from "../domain";
+import { resolverOrdenDeColumnas } from "./columnasOrdenables";
+import { ESTADOS_LEGIBLES, textoDeArea } from "./estadosLegibles";
+import { FiltrosDeReportes } from "./FiltrosDeReportes";
+import { hrefDeVerMas } from "./hrefsDeListado";
 
 type Props = {
   reportes: readonly ReporteGuardado[];
+  hayMas: boolean;
   estadoDeLista: EstadoDeLista;
   filtros: FiltrosDeListado;
+  q?: string | undefined;
+  orden?: OrdenDeReportes | undefined;
+  limite?: number | undefined;
   rol: Rol;
 };
 
@@ -36,73 +36,32 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "registrado", etiqueta: "Registrado", ancho: "minmax(0,1fr)" },
 ];
 
-const ESTADOS_LEGIBLES: Record<EstadoDeReporte, string> = {
-  RECIBIDO: "Recibido",
-  EN_ATENCION: "En atencion",
-  RESUELTO: "Resuelto",
-  RECHAZADO: "Rechazado",
-};
-
-/** "Sin asignar" solo tiene sentido para quien puede asignar (decision 6). */
-const textoDeArea = (
-  area: AreaResponsable | null,
-  puedeAdministrar: boolean,
-): string => {
-  if (area) return area;
-  return puedeAdministrar ? "Sin asignar" : "—";
-};
-
 /**
- * `<form method="get">` nativo, mismo criterio que `BuscadorDePersonas`:
- * filtrar es una lectura, y una lectura ya tiene URL propia -`?estado=` y
- * `?tipo=`-, sin Server Action ni JavaScript.
- */
-function FiltrosDeReportes({ estado, tipo }: FiltrosDeListado) {
-  return (
-    <form method="get" className="flex flex-wrap items-end gap-3">
-      <CampoDeLista
-        id="filtro-estado"
-        name="estado"
-        etiqueta="Estado"
-        marcador="Todos"
-        opcional
-        defaultValue={estado ?? ""}
-        opciones={opcionesDeCatalogo(ESTADOS_DE_REPORTE)}
-      />
-      <CampoDeLista
-        id="filtro-tipo"
-        name="tipo"
-        etiqueta="Tipo"
-        marcador="Todos"
-        opcional
-        defaultValue={tipo ?? ""}
-        opciones={opcionesDeCatalogo(TIPOS_DE_INCIDENCIA)}
-      />
-      <Boton type="submit" variante="secundaria">
-        Filtrar
-      </Boton>
-    </form>
-  );
-}
-
-/**
- * Listado con filtros por `estado`/`tipo` (tasks.md 7.5). El area solo se
- * lee como "Sin asignar" para quien puede asignarla
- * (`puedeAdministrarReportes`, design.md seccion 12): ocultar esa lectura no
- * es autorizacion -la guarda real vive en `asignarAreaDeReporte`, Fase 5-,
- * solo evita mostrarle a quien no puede actuar una llamada a hacerlo.
+ * Listado con busqueda (`?q=`), filtros por `estado`/`tipo` (con su chip),
+ * paginacion (`?limite=`) y orden (`?ordenar=&direccion=`) -las cuatro
+ * secciones de `design.md` que esta rebanada agrega sobre el listado con
+ * solo filtros de la Fase 4. El area solo se lee como "Sin asignar" para
+ * quien puede asignarla (`puedeAdministrarReportes`, design.md seccion
+ * 12): ocultar esa lectura no es autorizacion -la guarda real vive en
+ * `asignarAreaDeReporte`-, solo evita mostrarle a quien no puede actuar
+ * una llamada a hacerlo.
  */
 export function ListadoDeReportes({
   reportes,
+  hayMas,
   estadoDeLista: estado,
   filtros,
+  q,
+  orden,
+  limite,
   rol,
 }: Props) {
   const puedeAdministrar = puedeAdministrarReportes(rol);
+  const columnas = resolverOrdenDeColumnas(COLUMNAS, { orden, filtros, q });
 
   return (
     <div className="flex flex-col gap-4">
-      <FiltrosDeReportes {...filtros} />
+      <FiltrosDeReportes {...filtros} q={q} />
 
       {estado.clase !== "con-filas" ? (
         <EstadoVacio
@@ -111,7 +70,13 @@ export function ListadoDeReportes({
           hrefSinFiltro="/reportes"
         />
       ) : (
-        <Tabla etiqueta="Reportes ciudadanos" columnas={COLUMNAS}>
+        <Tabla
+          etiqueta="Reportes ciudadanos"
+          columnas={columnas}
+          {...(hayMas
+            ? { verMas: hrefDeVerMas({ filtros, q, limite, orden }) }
+            : {})}
+        >
           {reportes.map((reporte) => (
             <FilaDeTabla
               key={reporte.id}

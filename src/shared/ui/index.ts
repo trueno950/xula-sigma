@@ -2,6 +2,7 @@ export { Aviso } from "./Aviso";
 export { Boton, EnlaceDeAccion } from "./Boton";
 export { Campo } from "./Campo";
 export { CampoDeLista, type OpcionDeLista } from "./CampoDeLista";
+export { ChipDeFiltro } from "./ChipDeFiltro";
 export { EsqueletoDeFilas } from "./EsqueletoDeFilas";
 export { EstadoVacio } from "./EstadoVacio";
 export { type EstadoDeLista, estadoDeLista } from "./estadoDeLista";

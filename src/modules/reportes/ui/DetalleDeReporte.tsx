@@ -1,5 +1,5 @@
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
-import type { MovimientoGuardado } from "../application/puertos";
+import type { MovimientoGuardado } from "../application/puertosDeMovimientos";
 
 type Props = {
   historial: readonly MovimientoGuardado[];

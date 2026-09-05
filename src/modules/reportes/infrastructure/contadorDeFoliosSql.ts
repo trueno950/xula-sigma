@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import type { ContadorDeFolios } from "../application/puertos";
+import type { ContadorDeFolios } from "../application/puertosDeMovimientos";
 import { foliosDeReportes } from "./esquema";
 
 /**

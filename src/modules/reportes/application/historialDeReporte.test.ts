@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { comoMovimientoId, comoReporteId } from "../domain";
-import type { MovimientoGuardado, RegistroDeMovimientos } from "./puertos";
+import type {
+  MovimientoGuardado,
+  RegistroDeMovimientos,
+} from "./puertosDeMovimientos";
 
 /**
  * Lectura del historial para `DetalleDeReporte` (tasks.md 7.6), mismo
