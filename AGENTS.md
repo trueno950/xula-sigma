@@ -142,6 +142,7 @@ toca datos, marcá el hallazgo.
 | 23 | La misma explicación en dos archivos | Dejarla en uno, el resto apunta |
 | 24 | Comentario que afirma comportamiento sin test | Escribir el test |
 | 25 | Cita a línea de un paquete sin la versión | `archivo:línea` + versión |
+| 26 | `PaginaDePanel` anidado sin `migaja` | Prop `migaja` con la ruta hasta ahí |
 
 ---
 

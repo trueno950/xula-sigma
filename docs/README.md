@@ -11,6 +11,8 @@ lee cuando el trabajo lo toca, no de corrido.
 |---|---|---|
 | **Producto** | | |
 | — | [Roadmap](../ROADMAP.md) | Alcance, fases, qué NO construimos |
+| — | [PRODUCT.md](../PRODUCT.md) | Quién usa el sistema, roles, contexto real de uso |
+| — | [DESIGN.md](../DESIGN.md) | Sistema de diseño: colores, tipografía, componentes, patrones de pantalla |
 | — | [CLAUDE.md](../CLAUDE.md) | Reglas operativas para sesiones con IA |
 | **Estándares** | | |
 | 01 | [Principios](./01-principios.md) | SOLID, KISS, YAGNI, regla de oro |

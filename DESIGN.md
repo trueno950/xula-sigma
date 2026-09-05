@@ -378,6 +378,52 @@ entendiéndose, la sombra sobraba.
   Un filtro escondido en un panel plegado es un resultado vacío que el
   operador no sabe explicar.
 - **Ninguno bloquea.** Filtrar no recarga la pantalla ni pierde el scroll.
+- **Un filtro de lista cerrada (`<select>`) igual se pinta como chip aplicado.** El control
+  que lo captura puede ser un select; lo que el operador ve arriba de la tabla es siempre el
+  chip. Un select que cambia de valor sin nada más arriba no le dice al operador que hay un
+  filtro puesto — se lee como la lista completa.
+
+### Paginación
+
+Toda lista que puede crecer sin techo —personas, reportes, constancias emitidas— pagina por
+`?limite=` en la URL. Ninguna trae la tabla entera.
+
+- **"Ver más" por link, no numerada.** Un enlace al pie de la tabla que suma el tamaño de
+  página al límite actual, mismo tratamiento visual que un botón secundario. No hay "página 3
+  de 12": el operador no navega por índice, sigue leyendo donde se quedó.
+- **Tamaño de página fijo: 50 filas.** Bajarlo no ahorra en la red rural —sigue siendo una
+  sola respuesta HTML—, y subirlo pierde el punto de paginar.
+- **El link desaparece cuando ya no hay más.** Si la respuesta trae menos filas que el tamaño
+  de página, no hay "Ver más": no existe una página vacía a la que llegar.
+- **Sin cliente.** Es un link con query param, igual que el buscador y los filtros: recarga
+  la pantalla y no pierde nada, porque no hay estado que perder.
+
+### Buscador
+
+Texto libre en `?q=`, formulario GET resuelto en el servidor —mismo criterio que Filtros:
+ningún buscador bloquea ni pierde el resto de la pantalla al escribir.
+
+- **Un campo, sin autocompletar en vivo.** No es la sugerencia de duplicados: ese componente
+  existe donde bloquear la captura tiene costo real (personas parecidas mientras se da de
+  alta). Un buscador de listado espera Enter, como cualquier form nativo.
+- **Convive con los filtros de la misma pantalla, nunca los reemplaza.** `q` busca texto; los
+  filtros acotan categoría.
+
+### Ordenamiento de columnas
+
+Encabezado clicable en columnas que admiten orden natural (fecha, folio, nombre). Resuelto
+con `@tanstack/table-core` —el núcleo sin React de TanStack Table— corriendo en el Server
+Component: el estado de orden sale de `?ordenar=columna&direccion=asc|desc` en la URL, nunca
+de `useState`. `@tanstack/react-table` no se usa —es el hook, pide `"use client"` y guarda el
+estado en el navegador, lo que rompe el mismo patrón GET que ya usan Buscador, Filtros y
+Paginación.
+
+- **El encabezado es un link**, no un botón con `onClick`. Mismo criterio que "Ver más": es
+  navegación, no interacción de cliente.
+- **Un ícono de flecha marca la columna y dirección activas.** Nunca solo un cambio de peso
+  de fuente —el color/peso solo no alcanza (sección 2, "todo estado lleva texto o icono").
+- **No todas las columnas ordenan.** Solo las que tienen un orden natural que el operador
+  reconoce. Una columna de "acciones" no es clicable.
 
 ### Estados de lista
 
@@ -407,6 +453,50 @@ nombre, aparece debajo del campo una lista de hasta 5 personas parecidas.
   bloquea manda el trámite al papel, y el papel no tiene RLS ni bitácora.
 - Navegable con flechas y Enter, cerrable con Escape, anunciada por lector
   de pantalla como región viva y educada (`aria-live="polite"`).
+
+### Navegación (migas de pan)
+
+Toda pantalla que no es la raíz de su sección —tiene una pantalla padre a
+la que volver tiene sentido— lleva `<Migaja>` arriba del título. La raíz
+de una sección (`/constancias`, `/padron`, `/territorio`) no lleva: no hay
+padre al que subir, y una migaja de un solo paso es ruido en vez de
+orientación.
+
+- **Va por el prop `migaja` de `PaginaDePanel`**, nunca un `<Migaja>`
+  suelto al borde de cada pantalla: la posición y el espaciado son del
+  contenedor, no de quien lo usa.
+- **El último paso nunca es un enlace.** Es donde el operador está parado.
+- Entró el 2026-09-04 porque `territorio` la tenía y `constancias` no,
+  sin que nada lo hiciera evidente hasta que alguien navegó la pantalla.
+
+### Divulgación progresiva (acciones raras o irreversibles)
+
+Una acción que el operador toma poco —reimprimir, dar de baja, cancelar—
+y que además pide un motivo, no se muestra abierta por defecto junto al
+dato principal de la pantalla: compite por atención con lo que el
+operador vino a ver, y una acción irreversible visible sin pedirla se
+toca por error más seguido que una que hay que abrir primero.
+
+- **`<details>`/`<summary>` nativo, nunca un `"use client"` nuevo.**
+  Colapsar y expandir es estado del navegador, no de React: resolverlo
+  con una isla de cliente es el antipatrón 1 de `docs/06-frontend.md` con
+  otro nombre.
+- **El disparador lleva ícono y texto**, nunca solo ícono (antipatrón 16).
+- **Sin animación en la flecha de estado.** Un `rotate-90` instantáneo
+  atado a `[open]` comunica el estado; agregarle `transition` es la
+  animación decorativa que la sección 4 prohíbe.
+
+### Formularios de configuración: vista previa de lo que producen
+
+Un formulario que configura cómo se ve un documento —el bloque de firma
+de una constancia, y cualquier otro que llegue después con el mismo
+formato— no se llena a ciegas. Al lado o debajo va una vista previa
+server-rendered de la última configuración guardada, con la misma
+estructura que la plantilla real (`infrastructure/plantillas/*`).
+
+No hace falta que se actualice mientras se escribe: eso pediría un
+`"use client"` que esta pantalla no necesita, y guardar-y-ver es un ciclo
+aceptable para una configuración que se edita pocas veces.
 
 ## 6. Do's and Don'ts
 
