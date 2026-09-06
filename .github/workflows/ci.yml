@@ -169,5 +169,5 @@ jobs:
       - name: Revisar el PR
         if: env.DEEPSEEK_API_KEY != ''
         env:
-          GGA_OPENCODE_VARIANT: high
+          GGA_OPENCODE_VARIANT: max
         run: gga run --pr-mode --diff-only

@@ -7,8 +7,9 @@
 # de codigo tiene que ser reproducible: el modelo se fija aca.
 #
 # `deepseek-v4-flash` y no `-pro`: mismo proveedor -sigue valiendo el
-# reparto de credenciales de abajo-, variante mas barata. `CI` ya compensa
-# con `GGA_OPENCODE_VARIANT=high` (ci.yml).
+# reparto de credenciales de abajo-, variante mas barata. `CI` compensa
+# con `GGA_OPENCODE_VARIANT=max` (ci.yml) -el techo de esfuerzo de
+# razonamiento que expone este modelo, arriba de `high`.
 PROVIDER="opencode:deepseek/deepseek-v4-flash"
 
 # Y sigue siendo DeepSeek aunque en local se revise con otro modelo. No es
