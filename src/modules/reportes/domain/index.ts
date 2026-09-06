@@ -35,6 +35,12 @@ export {
   type ReporteId,
 } from "./identificadores";
 export { MOTIVOS_DE_RECHAZO, type MotivoDeRechazo } from "./motivos";
+export type {
+  CampoDeOrdenDeReportes,
+  DireccionDeOrden,
+  OrdenDeReportes,
+} from "./ordenDeReportes";
+export { resolverPagina } from "./paginacion";
 export {
   TIPOS_DE_INCIDENCIA,
   type TipoDeIncidencia,

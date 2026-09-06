@@ -1,4 +1,5 @@
 export * from "./asignarAreaDeReporte";
+export * from "./buscarReportes";
 export * from "./buscarReportesSimilares";
 export * from "./cambiarEstadoDeReporte";
 export * from "./consultarFolioDeReporte";

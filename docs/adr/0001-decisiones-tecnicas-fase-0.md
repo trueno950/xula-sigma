@@ -634,7 +634,7 @@ de `pre-push` más la de CI. Con tres empujones de corrección, once.
 | A demanda | `pnpm revision` — el mismo comando que CI | Cuando quien escribe lo pide |
 
 El criterio: **lo que se puede decidir con un patrón no paga un modelo.**
-`pnpm reglas` cubre ocho antipatrones (2, 3, 5, 9, 12, 20, 21 y 25) y dos
+`pnpm reglas` cubre nueve antipatrones (2, 3, 5, 9, 12, 20, 21, 25 y 26) y dos
 métricas (líneas por archivo y parámetros por función), corre en un segundo
 sobre el repositorio entero y da el mismo resultado en las dos máquinas.
 

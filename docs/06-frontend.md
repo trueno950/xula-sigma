@@ -564,3 +564,6 @@ Consecuencias prácticas:
 | 14 | Icono de Lucide sobreviviendo en un componente shadcn copiado | Reemplazar por su equivalente Phosphor |
 | 15 | Pesos de Phosphor mezclados sin criterio | `regular`, y `fill` solo para estado activo |
 | 16 | Acción destructiva representada solo con icono | Icono más texto |
+| 17 | Pantalla anidada sin migas de pan | Prop `migaja` en `PaginaDePanel` |
+| 18 | Acción rara o irreversible con formulario siempre abierto | `<details>`/`<summary>` nativo, colapsado |
+| 19 | Formulario que configura un documento sin vista previa | Panel de vista previa server-rendered |

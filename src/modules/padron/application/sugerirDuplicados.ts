@@ -37,12 +37,13 @@ export function crearSugerirDuplicados(
     return withTenant(contexto.ayuntamientoId, async (tx) => {
       const expansiones = await catalogo.leer(tx);
       const cadenaExpandida = normalizarParaBusqueda(cadena, expansiones);
-      const encontradas = await repositorio.buscar(
-        tx,
-        cadenaExpandida,
-        UMBRAL_SUGERENCIA,
-      );
+      const encontradas = await repositorio.buscar(tx, cadenaExpandida, {
+        umbral: UMBRAL_SUGERENCIA,
+        limite: TOPE_SUGERENCIAS,
+      });
 
+      // El repositorio ya limita a `TOPE_SUGERENCIAS`; el slice queda como
+      // defensa si algun dia otra implementacion del puerto no lo respeta.
       return encontradas.slice(0, TOPE_SUGERENCIAS);
     });
   };

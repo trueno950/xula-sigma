@@ -74,7 +74,7 @@ describe("busqueda tolerante a variantes", () => {
     const resultado = await buscarPersonas("gpe kumul", contexto);
 
     expect(
-      resultado.some(
+      resultado.personas.some(
         (persona) =>
           persona.nombres === "Maria Guadalupe" &&
           persona.primerApellido === "Kumul",
@@ -99,7 +99,7 @@ describe("busqueda tolerante a variantes", () => {
 
     const resultado = await buscarPersonas("guadalupe chan", contexto);
 
-    expect(resultado.some((persona) => persona.id === id)).toBe(false);
+    expect(resultado.personas.some((persona) => persona.id === id)).toBe(false);
   });
 
   it("una persona redirigida por fusion no aparece por su nombre viejo (rebanada 4)", async () => {
@@ -126,7 +126,9 @@ describe("busqueda tolerante a variantes", () => {
 
     const resultado = await buscarPersonas("guadalupe fusionada", contexto);
 
-    expect(resultado.some((persona) => persona.id === perdedoraId)).toBe(false);
+    expect(
+      resultado.personas.some((persona) => persona.id === perdedoraId),
+    ).toBe(false);
   });
 
   it("el operador % es sargable: sin RLS de por medio, el plan usa el indice GIN", async () => {

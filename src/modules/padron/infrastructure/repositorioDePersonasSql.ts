@@ -1,5 +1,7 @@
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, or, sql } from "drizzle-orm";
 import type {
+  OpcionesDeBusqueda,
+  OpcionesDeListado,
   PersonaGuardada,
   PersonaParaGuardar,
   RepositorioDePersonas,
@@ -56,6 +58,17 @@ const aPersonaGuardada = (fila: {
  */
 const terminalDe = (id: string) =>
   sql`COALESCE((SELECT ${personas.fusionadaEn} FROM ${personas} WHERE ${personas.id} = ${id}), ${id})`;
+
+/**
+ * El unico campo ordenable de `OpcionesDeListado` (`domain/ordenDePersonas.ts`,
+ * "persona") es el mismo criterio que ya usa `listar` por defecto:
+ * apellido, despues nombre. Compartido por `listar` y `buscar` para que las
+ * dos ordenen exactamente igual cuando el operador lo pide.
+ */
+const ordenPorPersona = (direccion: "asc" | "desc") => {
+  const aplicar = direccion === "desc" ? desc : asc;
+  return [aplicar(personas.primerApellido), aplicar(personas.nombres)];
+};
 
 export const repositorioDePersonasSql: RepositorioDePersonas = {
   async guardar(tx, { id, ayuntamientoId, persona, expansiones }) {
@@ -123,7 +136,12 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
     return filas.map((fila) => comoPersonaId(fila.id));
   },
 
-  async listar(tx): Promise<readonly PersonaGuardada[]> {
+  async listar(
+    tx,
+    opciones: OpcionesDeListado,
+  ): Promise<readonly PersonaGuardada[]> {
+    const orden = ordenPorPersona(opciones.orden?.direccion ?? "asc");
+
     const filas = await tx
       .select(columnasDeLectura)
       .from(personas)
@@ -131,12 +149,13 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       // -listarla dejaria un duplicado fantasma con nombre viejo, cuando
       // el puerto de lectura ya tiene su terminal actual con `buscarPorId`.
       .where(and(isNull(personas.bajaEn), isNull(personas.fusionadaEn)))
-      .orderBy(personas.primerApellido, personas.nombres);
+      .orderBy(...orden)
+      .limit(opciones.limite);
 
     return filas.map(aPersonaGuardada);
   },
 
-  async buscar(tx, cadenaExpandida, umbral) {
+  async buscar(tx, cadenaExpandida, opciones: OpcionesDeBusqueda) {
     /**
      * `%` y no `similarity(...) >= umbral` a secas: es el operador que
      * `gin_trgm_ops` sabe resolver con el indice (test de sargabilidad de
@@ -149,7 +168,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
      * de la busqueda de otro municipio heredaria el umbral de este.
      */
     await tx.execute(
-      sql`SELECT set_config('pg_trgm.similarity_threshold', ${String(umbral)}, true)`,
+      sql`SELECT set_config('pg_trgm.similarity_threshold', ${String(opciones.umbral)}, true)`,
     );
 
     const filas = await tx
@@ -164,8 +183,13 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
         ),
       )
       .orderBy(
-        sql`similarity(${personas.nombreNormalizado}, ${cadenaExpandida}) desc`,
-      );
+        ...(opciones.orden
+          ? ordenPorPersona(opciones.orden.direccion)
+          : [
+              sql`similarity(${personas.nombreNormalizado}, ${cadenaExpandida}) desc`,
+            ]),
+      )
+      .limit(opciones.limite);
 
     return filas.map(aPersonaGuardada);
   },

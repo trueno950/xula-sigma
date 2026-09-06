@@ -7,6 +7,8 @@ trámites y operación interna del palacio municipal.
 
 - **Las reglas del proyecto: `AGENTS.md`**
 - Alcance y fases: `ROADMAP.md`
+- Quién usa esto y por qué: `PRODUCT.md`
+- Cómo se ve: `DESIGN.md`
 - Índice de estándares: `docs/README.md`
 - Estructura, capas y stack: `docs/architecture/estructura.md`
 - **Invariantes que no se rompen: `docs/architecture/invariantes-criticos.md`**
@@ -14,7 +16,9 @@ trámites y operación interna del palacio municipal.
 
 Este archivo es el resumen operativo. Cuando el trabajo toca base de datos,
 una tabla nueva o una superficie pública, leer los invariantes críticos
-antes de escribir código.
+antes de escribir código. Cuando toca una pantalla o un componente, leer
+`DESIGN.md` antes de escribir JSX — es el sistema de diseño real del
+proyecto, no una convención tácita, y nada lo carga solo.
 
 **No es un sistema de tesorería.** No se cobra dinero, no se emite CFDI, no
 se hace contabilidad gubernamental. Ver sección 2 del roadmap antes de
@@ -24,7 +28,7 @@ proponer cualquier funcionalidad que toque esa frontera.
 
 ## Reglas duras
 
-Las 12 reglas, los 25 antipatrones, las capas, la nomenclatura, los
+Las 12 reglas, los 26 antipatrones, las capas, la nomenclatura, los
 comentarios y los datos sensibles viven en **@AGENTS.md**. Este archivo no
 las repite: una regla escrita en dos lados diverge, y la copia que quede
 vieja no avisa. Es el antipatrón 23 aplicado a la raíz del repo.
@@ -118,7 +122,7 @@ Ver ADR 0001 §7.
 
 | Comando | Qué es | Cuándo |
 |---|---|---|
-| `pnpm reglas` | Determinista, un segundo, ocho antipatrones y dos métricas de AGENTS.md | `pre-commit`, `check` y CI |
+| `pnpm reglas` | Determinista, un segundo, nueve antipatrones y dos métricas de AGENTS.md | `pre-commit`, `check` y CI |
 | `pnpm revision:local` | El revisor con la suscripción de OpenAI, sobre lo que está en *stage* y con caché | Mientras se trabaja |
 | `pnpm revision` | El revisor de IA, mismo comando que CI | A demanda, cuando el PR es grande |
 

@@ -2,15 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { ReportanteDadoDeBajaError, UbicacionInvalidaError } from "../domain";
-import type {
-  ContadorDeFolios,
-  RegistroDeMovimientos,
-  RepositorioDeReportes,
-} from "./puertos";
+import type { RepositorioDeReportes } from "./puertos";
 import type {
   LecturaDeReportantes,
   LecturaDeUbicaciones,
 } from "./puertosDeLectura";
+import type {
+  ContadorDeFolios,
+  RegistroDeMovimientos,
+} from "./puertosDeMovimientos";
 
 /**
  * Puertos mockeados, mismo patron que `constancias/application/

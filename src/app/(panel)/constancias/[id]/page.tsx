@@ -1,4 +1,10 @@
+import {
+  ArrowsClockwise,
+  CaretRight,
+  Prohibit,
+} from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { z } from "zod";
 import {
   BotonDeCancelacion,
@@ -12,10 +18,11 @@ import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarDocumentos, puedeEscribir } from "@/shared/auth/roles";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
+  ANILLO_DE_FOCO,
   Aviso,
   CLASES_DE_ETIQUETA,
+  Migaja,
   PaginaDePanel,
-  Panel,
   PantallaDeMensaje,
 } from "@/shared/ui";
 
@@ -26,6 +33,41 @@ type Props = {
 
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
+
+/**
+ * Reimprimir y cancelar son acciones raras y, la segunda, irreversible: no
+ * se muestran abiertas por defecto junto a los datos del documento.
+ * `<details>` es nativo -sin `"use client"`, mismo criterio que
+ * `AccionesDeReporte`- asi que colapsar no cuesta JavaScript.
+ */
+const AccionColegable = ({
+  titulo,
+  Icono,
+  children,
+}: {
+  titulo: string;
+  Icono: typeof ArrowsClockwise;
+  children: ReactNode;
+}) => (
+  <details className="group rounded-md border border-caliza-divisor bg-caliza-superficie">
+    <summary
+      className={`flex h-11 w-full cursor-pointer list-none items-center justify-between gap-2 rounded-md px-4 text-[15px] font-medium text-caliza-tinta hover:bg-caliza-relleno [&::-webkit-details-marker]:hidden ${ANILLO_DE_FOCO}`}
+    >
+      <span className="flex items-center gap-2">
+        <Icono size={18} aria-hidden="true" />
+        {titulo}
+      </span>
+      <CaretRight
+        size={16}
+        aria-hidden="true"
+        className="shrink-0 group-open:rotate-90"
+      />
+    </summary>
+    <div className="flex flex-col gap-4 border-t border-caliza-divisor p-4">
+      {children}
+    </div>
+  </details>
+);
 
 const Dato = ({
   etiqueta,
@@ -101,6 +143,15 @@ export default async function PaginaDeDetalleDeConstancia({
       titulo={constancia.folio}
       ancho="detalle"
       accion={<BotonDeImprimir id={constancia.id} />}
+      migaja={
+        <Migaja
+          pasos={[
+            { etiqueta: "Constancias", href: "/constancias" },
+            { etiqueta: constancia.folio },
+          ]}
+          etiqueta="Ruta"
+        />
+      }
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
@@ -122,15 +173,15 @@ export default async function PaginaDeDetalleDeConstancia({
       </dl>
 
       {!cancelada && puedeEscribir(contexto.usuario.rol) ? (
-        <Panel titulo="Reimprimir">
+        <AccionColegable titulo="Reimprimir constancia" Icono={ArrowsClockwise}>
           <BotonDeReimpresion constanciaId={constancia.id} />
-        </Panel>
+        </AccionColegable>
       ) : null}
 
       {!cancelada && puedeAdministrarDocumentos(contexto.usuario.rol) ? (
-        <Panel titulo="Cancelar">
+        <AccionColegable titulo="Cancelar constancia" Icono={Prohibit}>
           <BotonDeCancelacion constanciaId={constancia.id} />
-        </Panel>
+        </AccionColegable>
       ) : null}
     </PaginaDePanel>
   );

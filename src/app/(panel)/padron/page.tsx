@@ -5,6 +5,7 @@ import {
   buscarPersonas,
   ListadoDePersonas,
   listarPersonas,
+  TAMANO_DE_PAGINA,
 } from "@/modules/padron";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
@@ -19,8 +20,24 @@ type Props = {
  * este `safeParse`, ese caso pasaba `string[]` a `buscarPersonas(cadena:
  * string, ...)`, que termina en `texto.normalize()` dentro de
  * `normalizarParaBusqueda` y revienta con un 500 sobre una URL publica.
+ *
+ * `limite`/`ordenar`/`direccion` son `?limite=` ("Ver mas") y
+ * `?ordenar=&direccion=` (encabezado clicable) de `design.md`. Un `limite`
+ * fuera de rango o un `ordenar` que no sea una columna real invalida el
+ * objeto entero -mismo criterio que `q`- y la pantalla cae a los defaults
+ * en vez de un 500.
  */
-const esquemaDeBusqueda = z.object({ q: z.string().trim().min(1).optional() });
+const esquemaDeBusqueda = z.object({
+  q: z.string().trim().min(1).optional(),
+  limite: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(TAMANO_DE_PAGINA * 40)
+    .optional(),
+  ordenar: z.enum(["persona"]).optional(),
+  direccion: z.enum(["asc", "desc"]).optional(),
+});
 
 /**
  * Ruta fina: resuelve el contexto, lista o busca, y compone. Por que la
@@ -45,9 +62,22 @@ export default async function PaginaDePadron({ searchParams }: Props) {
 
   const analisis = esquemaDeBusqueda.safeParse(await searchParams);
   const q = analisis.success ? analisis.data.q : undefined;
-  const personas = q
-    ? await buscarPersonas(q, contexto)
-    : await listarPersonas(contexto);
+  const limite = analisis.success ? analisis.data.limite : undefined;
+  const ordenar = analisis.success ? analisis.data.ordenar : undefined;
+  const orden = ordenar
+    ? {
+        campo: ordenar,
+        direccion: (analisis.success && analisis.data.direccion) || "asc",
+      }
+    : undefined;
+  const opciones = {
+    ...(limite ? { limite } : {}),
+    ...(orden ? { orden } : {}),
+  };
+
+  const { personas, hayMas } = q
+    ? await buscarPersonas(q, contexto, opciones)
+    : await listarPersonas(contexto, opciones);
 
   const alta = puedeEscribir(contexto.usuario.rol) ? (
     <EnlaceDeAccion href="/padron/alta" variante="primaria">
@@ -59,7 +89,14 @@ export default async function PaginaDePadron({ searchParams }: Props) {
   return (
     <PaginaDePanel titulo="Padron de personas" accion={alta}>
       <BuscadorDePersonas {...(q ? { cadena: q } : {})} />
-      <ListadoDePersonas personas={personas} filtro={q} accionDeAlta={alta} />
+      <ListadoDePersonas
+        personas={personas}
+        filtro={q}
+        accionDeAlta={alta}
+        orden={orden}
+        limite={limite}
+        hayMas={hayMas}
+      />
     </PaginaDePanel>
   );
 }

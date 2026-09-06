@@ -7,6 +7,7 @@
  * adaptadores reales, nunca la fabrica sin componer.
  */
 
+export { TAMANO_DE_PAGINA } from "./application/listarReportes";
 /**
  * Curado y no `export type * from "./application"`: `puertos.ts` declara
  * su propio `CandidatoAOriginal` -la fila minima que
@@ -16,12 +17,13 @@
  */
 export type {
   FiltrosDeListado,
-  MovimientoGuardado,
   ReporteGuardado,
   ReporteSimilar,
 } from "./application/puertos";
+export type { MovimientoGuardado } from "./application/puertosDeMovimientos";
 export {
   asignarAreaDeReporte,
+  buscarReportes,
   buscarReportesSimilares,
   cambiarEstadoDeReporte,
   consultarFolioDeReporte,

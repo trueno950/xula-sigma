@@ -1,7 +1,10 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { ReporteId } from "../domain";
-import type { MovimientoGuardado, RegistroDeMovimientos } from "./puertos";
+import type {
+  MovimientoGuardado,
+  RegistroDeMovimientos,
+} from "./puertosDeMovimientos";
 
 /**
  * Lectura del historial para `DetalleDeReporte` (tasks.md 7.6). Sin guarda

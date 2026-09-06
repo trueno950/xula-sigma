@@ -210,10 +210,11 @@ Violarlo rompe el build. No es una convención que se recuerda.
 
 ## 4. Checklist pre-commit
 
-**Ocho de estos puntos los verifica `pnpm reglas`**, que corre en el hook de
+**Nueve de estos puntos los verifica `pnpm reglas`**, que corre en el hook de
 `pre-commit` y en CI: acentos en identificadores, `withTenant`, `SET LOCAL`,
 RLS de tabla nueva, secuencia para folios, assets al filesystem, capas de un
-módulo y cita a línea de paquete sin versión. `any` también es automático,
+módulo, cita a línea de paquete sin versión y `PaginaDePanel` anidado sin
+`migaja`. `any` también es automático,
 pero lo verifica Biome (`noExplicitAny`), no `pnpm reglas` — la distinción
 importa el día que alguien busque en `scripts/reglas/` la regla que lo cubre
 y no la encuentre.

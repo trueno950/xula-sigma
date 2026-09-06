@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import type {
   MovimientoGuardado,
   RegistroDeMovimientos,
-} from "../application/puertos";
+} from "../application/puertosDeMovimientos";
 import { movimientosDeReportes } from "./esquema";
 
 const aMovimientoGuardado = (

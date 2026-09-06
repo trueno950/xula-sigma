@@ -1,6 +1,7 @@
 import type { PorcionExportable } from "@/shared/exportacion/exportar";
 import {
   crearAsignarAreaDeReporte,
+  crearBuscarReportes,
   crearBuscarReportesSimilares,
   crearCambiarEstadoDeReporte,
   crearConsultarFolioDeReporte,
@@ -38,6 +39,7 @@ export const registrarReporte = crearRegistrarReporte({
 });
 export const reportePorId = crearReportePorId(repositorioDeReportesSql);
 export const listarReportes = crearListarReportes(repositorioDeReportesSql);
+export const buscarReportes = crearBuscarReportes(repositorioDeReportesSql);
 export const cambiarEstadoDeReporte = crearCambiarEstadoDeReporte({
   repositorio: repositorioDeReportesSql,
   movimientos: registroDeMovimientosSql,

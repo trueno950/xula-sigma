@@ -5,7 +5,8 @@ import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { AreaResponsable } from "../domain";
 import { esTerminal, ReporteCerradoError, type ReporteId } from "../domain";
-import type { RegistroDeMovimientos, RepositorioDeReportes } from "./puertos";
+import type { RepositorioDeReportes } from "./puertos";
+import type { RegistroDeMovimientos } from "./puertosDeMovimientos";
 
 export type EntradaDeAsignacionDeArea = {
   id: ReporteId;

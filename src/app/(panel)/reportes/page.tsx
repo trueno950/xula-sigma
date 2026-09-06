@@ -1,11 +1,8 @@
 import { Plus } from "@phosphor-icons/react/ssr";
-import { z } from "zod";
 import {
-  ESTADOS_DE_REPORTE,
-  type FiltrosDeListado,
+  buscarReportes,
   ListadoDeReportes,
   listarReportes,
-  TIPOS_DE_INCIDENCIA,
 } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
@@ -16,23 +13,23 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+import { leerParametros } from "./parametros";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const esquemaDeParametros = z.object({
-  estado: z.enum(ESTADOS_DE_REPORTE).optional(),
-  tipo: z.enum(TIPOS_DE_INCIDENCIA).optional(),
-  error: z.string().optional(),
-});
-
 /**
- * Ruta fina: resuelve el contexto, filtra y compone (tasks.md 7.12). Sin
- * guarda de rol propia -leer no es escribir, `listarReportes.ts`-; el
- * enlace de alta si exige `puedeEscribir`, mismo criterio que
+ * Ruta fina: resuelve el contexto, busca o lista, y compone (tasks.md
+ * 7.12). Sin guarda de rol propia -leer no es escribir, `listarReportes.ts`-;
+ * el enlace de alta si exige `puedeEscribir`, mismo criterio que
  * `PaginaDePadron`: sin el, el rol de solo lectura llegaria a un
  * formulario que el caso de uso igual rechaza.
+ *
+ * `q` decide entre `buscarReportes` y `listarReportes` -mismo patron que
+ * `PaginaDePadron`-, pero a diferencia de esa pantalla los filtros de
+ * `estado`/`tipo` viajan en los dos casos: `design.md`, "Buscador",
+ * "convive con los filtros, nunca los reemplaza".
  */
 export default async function PaginaDeReportes({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -41,21 +38,20 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
     return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
-  const analisis = esquemaDeParametros.safeParse(await searchParams);
-  const filtros: FiltrosDeListado = {
-    ...(analisis.success && analisis.data.estado
-      ? { estado: analisis.data.estado }
-      : {}),
-    ...(analisis.success && analisis.data.tipo
-      ? { tipo: analisis.data.tipo }
-      : {}),
-  };
-  const error = analisis.success ? analisis.data.error : undefined;
+  const { filtros, q, limite, orden, error } = leerParametros(
+    await searchParams,
+  );
 
-  const reportes = await listarReportes(filtros, contexto);
+  const opciones = {
+    ...(limite ? { limite } : {}),
+    ...(orden ? { orden } : {}),
+  };
+  const { reportes, hayMas } = q
+    ? await buscarReportes(q, contexto, { filtros, ...opciones })
+    : await listarReportes(filtros, contexto, opciones);
   const estado = estadoDeLista({
     total: reportes.length,
-    filtro: filtros.estado ?? filtros.tipo,
+    filtro: q ?? filtros.estado ?? filtros.tipo,
   });
 
   const alta = puedeEscribir(contexto.usuario.rol) ? (
@@ -71,8 +67,12 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
 
       <ListadoDeReportes
         reportes={reportes}
+        hayMas={hayMas}
         estadoDeLista={estado}
         filtros={filtros}
+        q={q}
+        orden={orden}
+        limite={limite}
         rol={contexto.usuario.rol}
       />
     </PaginaDePanel>

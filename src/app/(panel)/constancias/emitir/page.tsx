@@ -11,6 +11,7 @@ import { puedeAdministrarDocumentos, puedeEscribir } from "@/shared/auth/roles";
 import {
   Aviso,
   EnlaceDeAccion,
+  Migaja,
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
@@ -75,11 +76,34 @@ export default async function PaginaDeEmisionDeConstancia({
   // misma superficie con otra forma de URL.
   if (!persona) notFound();
 
+  const nombreCompleto = [
+    persona.nombres,
+    persona.primerApellido,
+    persona.segundoApellido,
+  ]
+    .filter((parte): parte is string => Boolean(parte))
+    .join(" ");
+
+  const migaja = (
+    <Migaja
+      pasos={[
+        { etiqueta: "Padron", href: "/padron" },
+        { etiqueta: nombreCompleto, href: `/padron/${personaId}` },
+        { etiqueta: "Emitir constancia" },
+      ]}
+      etiqueta="Ruta"
+    />
+  );
+
   const documentos = await documentosDelAyuntamiento(contexto);
 
   if (!documentos) {
     return (
-      <PaginaDePanel titulo="Emitir constancia" ancho="formulario">
+      <PaginaDePanel
+        titulo="Emitir constancia"
+        ancho="formulario"
+        migaja={migaja}
+      >
         <Aviso tono="error">
           El ayuntamiento todavia no configuro el bloque de firma. Sin quien
           firma y con que cargo, la constancia no se puede emitir.
@@ -98,16 +122,13 @@ export default async function PaginaDeEmisionDeConstancia({
   }
 
   const direccion = await direccionVigenteDePersona(personaId, contexto);
-  const nombreCompleto = [
-    persona.nombres,
-    persona.primerApellido,
-    persona.segundoApellido,
-  ]
-    .filter((parte): parte is string => Boolean(parte))
-    .join(" ");
 
   return (
-    <PaginaDePanel titulo="Emitir constancia" ancho="formulario">
+    <PaginaDePanel
+      titulo="Emitir constancia"
+      ancho="formulario"
+      migaja={migaja}
+    >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       <FormularioDeEmision

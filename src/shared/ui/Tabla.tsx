@@ -1,8 +1,10 @@
+import { CaretDown, CaretUp } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import {
   CLASES_DE_DATO,
   CLASES_DE_ETIQUETA,
+  clasesDeBoton,
   plantillaDeColumnas,
 } from "./estilos";
 
@@ -11,6 +13,16 @@ export type ColumnaDeTabla = {
   etiqueta: string;
   /** Fraccion de la fila en escritorio. `minmax(0,...)` evita el desborde. */
   ancho?: string;
+  /**
+   * Presente solo en columnas con orden natural (`design.md`, "Ordenamiento
+   * de columnas"). Quien compone la pantalla ya resolvio `href` y `activa`
+   * -con `@tanstack/table-core` corriendo del lado del servidor-; `Tabla`
+   * solo decide si pintar un link o un texto quieto.
+   */
+  orden?: {
+    href: string;
+    activa: false | "asc" | "desc";
+  };
 };
 
 type PropsDeTabla = {
@@ -18,6 +30,17 @@ type PropsDeTabla = {
   etiqueta: string;
   columnas: readonly ColumnaDeTabla[];
   children: ReactNode;
+  /**
+   * El link "Ver mas" de `design.md`, "Paginacion". Ausente cuando la
+   * respuesta trajo menos filas que el tamano de pagina -no hay una pagina
+   * vacia a la que llegar.
+   */
+  verMas?: string;
+};
+
+const ETIQUETA_DE_DIRECCION: Record<"asc" | "desc", string> = {
+  asc: "ascendente",
+  desc: "descendente",
 };
 
 /**
@@ -29,9 +52,14 @@ type PropsDeTabla = {
  * anuncia bien es ese. Un `role="row"` sobre un `<a>` le quita al enlace su
  * propia semantica, que es la que el operador usa para navegar.
  *
- * Por eso el encabezado lleva `aria-hidden`: es una guia visual de columnas
- * y nada mas. Lo que el lector de pantalla necesita saber de cada celda va
- * en el texto del enlace, que se lee entero.
+ * Por eso las columnas sin orden llevan `aria-hidden`: son una guia visual
+ * y nada mas, y lo que el lector de pantalla necesita saber de cada celda
+ * va en el texto del enlace de fila, que se lee entero. Una columna
+ * ordenable (`columna.orden`) es la excepcion: ahi el encabezado deja de
+ * ser decorativo -es un link real que reordena la lista-, asi que pierde el
+ * `aria-hidden` y gana un `aria-label` con la direccion activa, porque el
+ * peso visual del icono solo no alcanza (`DESIGN.md`, "todo estado lleva
+ * texto o icono").
  *
  * El encabezado se esconde por debajo de 640px porque abajo de ese ancho no
  * hay columnas que encabezar: la fila se reordena en dos renglones
@@ -43,7 +71,7 @@ type PropsDeTabla = {
  * la fila de modulos de 48px. Con `top-0` el encabezado de la tabla se
  * metia debajo de las dos al hacer scroll.
  */
-export function Tabla({ etiqueta, columnas, children }: PropsDeTabla) {
+export function Tabla({ etiqueta, columnas, children, verMas }: PropsDeTabla) {
   const plantilla = plantillaDeColumnas(columnas);
 
   return (
@@ -51,19 +79,47 @@ export function Tabla({ etiqueta, columnas, children }: PropsDeTabla) {
       className="flex flex-col"
       style={{ "--columnas-de-tabla": plantilla } as CSSProperties}
     >
-      <div
-        aria-hidden="true"
-        className="sticky top-28 z-[5] hidden md:top-16 h-9 items-center gap-4 border-b border-caliza-divisor bg-caliza-superficie px-3 sm:grid sm:[grid-template-columns:var(--columnas-de-tabla)]"
-      >
-        {columnas.map((columna) => (
-          <span key={columna.clave} className={CLASES_DE_ETIQUETA}>
-            {columna.etiqueta}
-          </span>
-        ))}
+      <div className="sticky top-28 z-[5] hidden md:top-16 h-9 items-center gap-4 border-b border-caliza-divisor bg-caliza-superficie px-3 sm:grid sm:[grid-template-columns:var(--columnas-de-tabla)]">
+        {columnas.map((columna) =>
+          columna.orden ? (
+            <Link
+              key={columna.clave}
+              href={columna.orden.href}
+              className={`inline-flex items-center gap-1 ${CLASES_DE_ETIQUETA} hover:text-caliza-tinta`}
+              aria-label={`${columna.etiqueta}, ${
+                columna.orden.activa
+                  ? `ordenado ${ETIQUETA_DE_DIRECCION[columna.orden.activa]}`
+                  : "sin ordenar"
+              }`}
+            >
+              {columna.etiqueta}
+              {columna.orden.activa === "asc" ? (
+                <CaretUp size={12} weight="bold" aria-hidden="true" />
+              ) : columna.orden.activa === "desc" ? (
+                <CaretDown size={12} weight="bold" aria-hidden="true" />
+              ) : null}
+            </Link>
+          ) : (
+            <span
+              key={columna.clave}
+              aria-hidden="true"
+              className={CLASES_DE_ETIQUETA}
+            >
+              {columna.etiqueta}
+            </span>
+          ),
+        )}
       </div>
       <ul aria-label={etiqueta} className="flex flex-col">
         {children}
       </ul>
+      {verMas ? (
+        <div className="flex justify-center border-t border-caliza-divisor py-3">
+          <Link href={verMas} className={clasesDeBoton("secundaria")}>
+            Ver mas
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

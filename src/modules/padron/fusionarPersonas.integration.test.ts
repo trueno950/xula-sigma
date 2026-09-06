@@ -168,8 +168,12 @@ describe("fusionarPersonas", () => {
 
     const listado = await listarPersonas(contexto);
 
-    expect(listado.some((persona) => persona.id === perdedora)).toBe(false);
-    expect(listado.some((persona) => persona.id === ganadora)).toBe(true);
+    expect(listado.personas.some((persona) => persona.id === perdedora)).toBe(
+      false,
+    );
+    expect(listado.personas.some((persona) => persona.id === ganadora)).toBe(
+      true,
+    );
   });
 
   it("fusion entre dos municipios distintos no encuentra a la de otro tenant", async () => {

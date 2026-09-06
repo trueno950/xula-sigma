@@ -13,15 +13,15 @@ import {
   type TipoDeIncidencia,
   UbicacionInvalidaError,
 } from "../domain";
-import type {
-  ContadorDeFolios,
-  RegistroDeMovimientos,
-  RepositorioDeReportes,
-} from "./puertos";
+import type { RepositorioDeReportes } from "./puertos";
 import type {
   LecturaDeReportantes,
   LecturaDeUbicaciones,
 } from "./puertosDeLectura";
+import type {
+  ContadorDeFolios,
+  RegistroDeMovimientos,
+} from "./puertosDeMovimientos";
 
 /** Lo que el mostrador captura. Ya paso por el Zod del borde (design.md seccion 11). */
 export type EntradaDeRegistroDeReporte = {

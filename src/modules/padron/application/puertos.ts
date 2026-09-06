@@ -1,6 +1,6 @@
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
-import type { PersonaId } from "../domain";
+import type { OrdenDePersonas, PersonaId } from "../domain";
 
 /**
  * Lo que `padron` necesita para expandir abreviaturas antes de normalizar
@@ -67,6 +67,39 @@ export type DatosDeEdicion = {
 };
 
 /**
+ * Lo que `listar`/`buscar` reciben del caso de uso para paginar y ordenar
+ * (`design.md`, "Paginacion" y "Ordenamiento de columnas"). `limite` ya
+ * llega con el `+1` de `resolverPagina` sumado -el repositorio no sabe del
+ * truco, solo ejecuta el `LIMIT`/`ORDER BY` que se le pide. `orden` ausente
+ * conserva el orden por defecto de cada metodo: alfabetico en `listar`,
+ * relevancia (`similarity`) en `buscar`.
+ */
+export type OpcionesDeListado = {
+  readonly limite: number;
+  readonly orden?: OrdenDePersonas;
+};
+
+/**
+ * `OpcionesDeListado` mas `umbral`, para que `buscar` siga en 3 parametros
+ * (metrica de AGENTS.md): `tx`, `cadenaExpandida`, `opciones`. `umbral` no
+ * vive en `OpcionesDeListado` porque `listar` no tiene nocion de similitud.
+ */
+export type OpcionesDeBusqueda = OpcionesDeListado & {
+  readonly umbral: number;
+};
+
+/**
+ * Lo que `listarPersonas`/`buscarPersonas` devuelven a la pantalla:
+ * `personas` ya recortada a la pagina pedida, y `hayMas` -de
+ * `resolverPagina`- para que `ListadoDePersonas` sepa si pintar el link
+ * "Ver mas".
+ */
+export type ResultadoDeListado = {
+  readonly personas: readonly PersonaGuardada[];
+  readonly hayMas: boolean;
+};
+
+/**
  * Lo que el caso de uso necesita para persistir una persona, sin componer
  * SQL a mano (antipatron 7 de `AGENTS.md`). `guardar` y `actualizar`
  * reciben la transaccion de `withTenant` por parametro: el INSERT/UPDATE y
@@ -98,20 +131,31 @@ export type RepositorioDePersonas = {
    * Listado para la pantalla de padron de esta rebanada. Excluye `bajaEn`
    * no nulo por defecto (mismo criterio que exige el spec para la busqueda
    * de la rebanada 3): una persona dada de baja no vuelve a aparecer sola,
-   * sin que alguien la pida explicitamente.
+   * sin que alguien la pida explicitamente. `opciones.limite` es el `LIMIT`
+   * de Postgres tal cual -sin `OFFSET`: "Ver mas" crece el limite, no pagina
+   * por indice (`design.md`, "Paginacion")-, y `opciones.orden` cambia el
+   * `ORDER BY` a apellido/nombre en la direccion pedida; sin orden, sigue el
+   * alfabetico de siempre.
    */
-  listar(tx: TransaccionTenant): Promise<readonly PersonaGuardada[]>;
+  listar(
+    tx: TransaccionTenant,
+    opciones: OpcionesDeListado,
+  ): Promise<readonly PersonaGuardada[]>;
   /**
    * `cadenaExpandida` ya paso por `normalizarParaBusqueda` con el catalogo
    * leido — el caso de uso expande UNA vez, este metodo no vuelve a llamar
    * a la funcion de expansion por fila (spec, escenario "la expansion no
    * corre por fila"). Excluye `bajaEn` no nulo por defecto, mismo criterio
-   * que `listar`.
+   * que `listar`. `opciones` es el mismo contrato que `listar`:
+   * `opciones.orden` ausente conserva el orden por relevancia
+   * (`similarity` descendente); presente, lo reemplaza por
+   * apellido/nombre -el operador pidio alfabetico, y relevancia y
+   * alfabetico no se combinan.
    */
   buscar(
     tx: TransaccionTenant,
     cadenaExpandida: string,
-    umbral: number,
+    opciones: OpcionesDeBusqueda,
   ): Promise<readonly PersonaGuardada[]>;
   /**
    * `perdedoraId`/`ganadoraId` ya son terminales (el caso de uso los

@@ -19,11 +19,8 @@ import {
   transicionValida,
   vincularDuplicado,
 } from "../domain";
-import type {
-  RegistroDeMovimientos,
-  ReporteGuardado,
-  RepositorioDeReportes,
-} from "./puertos";
+import type { ReporteGuardado, RepositorioDeReportes } from "./puertos";
+import type { RegistroDeMovimientos } from "./puertosDeMovimientos";
 
 /** Lo que eligio el operador; NO es lo que se guarda (design.md seccion 8). */
 export type EntradaDeCambioDeEstado = {

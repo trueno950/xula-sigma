@@ -63,7 +63,7 @@ describe("sugerirDuplicados", () => {
     expect(repositorio.buscar).toHaveBeenCalledExactlyOnceWith(
       expect.anything(),
       "guadalupe kumul",
-      UMBRAL_SUGERENCIA,
+      { umbral: UMBRAL_SUGERENCIA, limite: TOPE_SUGERENCIAS },
     );
   });
 

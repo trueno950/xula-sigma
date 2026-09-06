@@ -9,6 +9,9 @@ import {
   Tabla,
 } from "@/shared/ui";
 import type { PersonaGuardada } from "../application/puertos";
+import type { OrdenDePersonas } from "../domain";
+import { resolverOrdenDeColumnas } from "./columnasOrdenables";
+import { hrefDeVerMas } from "./hrefsDeListado";
 
 type Props = {
   /** Ya filtradas: `bajaEn` no nulo se excluye del lado del repositorio. */
@@ -17,9 +20,15 @@ type Props = {
   filtro?: string | undefined;
   /** El boton que llena la pantalla cuando todavia no tiene a nadie. */
   accionDeAlta?: ReactNode;
+  /** El `?ordenar=&direccion=` vigente, si el operador pidio uno. */
+  orden?: OrdenDePersonas | undefined;
+  /** El `?limite=` vigente -50 si no vino en la URL. */
+  limite?: number | undefined;
+  /** De `resolverPagina`: si hay una pagina siguiente que pintar. */
+  hayMas?: boolean | undefined;
 };
 
-const COLUMNAS: readonly ColumnaDeTabla[] = [
+const COLUMNAS_BASE: readonly ColumnaDeTabla[] = [
   { clave: "persona", etiqueta: "Persona", ancho: "minmax(0,2fr)" },
   { clave: "curp", etiqueta: "CURP", ancho: "minmax(0,1fr)" },
 ];
@@ -40,7 +49,14 @@ const nombreDeLista = (persona: PersonaGuardada) =>
  * ya existe con el apellido escrito de otra forma. Es el unico error de
  * esta lista que le cuesta trabajo real a la operadora.
  */
-export function ListadoDePersonas({ personas, filtro, accionDeAlta }: Props) {
+export function ListadoDePersonas({
+  personas,
+  filtro,
+  accionDeAlta,
+  orden,
+  limite,
+  hayMas,
+}: Props) {
   const estado = estadoDeLista({ total: personas.length, filtro });
 
   if (estado.clase !== "con-filas") {
@@ -54,8 +70,14 @@ export function ListadoDePersonas({ personas, filtro, accionDeAlta }: Props) {
     );
   }
 
+  const columnas = resolverOrdenDeColumnas(COLUMNAS_BASE, { orden, filtro });
+
   return (
-    <Tabla etiqueta="Personas del padron" columnas={COLUMNAS}>
+    <Tabla
+      etiqueta="Personas del padron"
+      columnas={columnas}
+      {...(hayMas ? { verMas: hrefDeVerMas({ filtro, limite, orden }) } : {})}
+    >
       {personas.map((persona) => (
         <FilaDeTabla key={persona.id} href={`/padron/${persona.id}`}>
           <CeldaPrincipal>{nombreDeLista(persona)}</CeldaPrincipal>
