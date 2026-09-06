@@ -16,16 +16,11 @@ type Props = FiltrosDeListado & { q?: string | undefined };
 
 /**
  * Un solo `<form method="get">` para busqueda y filtro, no dos separados
- * (`design.md`, "Buscador": "convive con los filtros de la misma pantalla,
- * nunca los reemplaza"). Mismo motivo que
- * `reportes/ui/FiltrosDeReportes.tsx`: con dos forms, cambiar el `<select>`
- * de estado mandaria un GET que no lleva `q`, y la busqueda escrita se
- * perderia sin que nada lo avise.
+ * -mismo motivo que `reportes/ui/FiltrosDeReportes.tsx` (`design.md`,
+ * "Buscador").
  *
- * Sin `<select>` de tipo de documento: `TIPOS_DE_DOCUMENTO` tiene un solo
- * valor hoy (`VECINDAD`, `domain/tipoDeDocumento.ts`), y un filtro sobre una
- * lista cerrada de una sola opcion util no acota nada -se agrega el dia que
- * exista un segundo tipo de documento.
+ * Sin `<select>` de tipo de documento -motivo en `FiltrosDeListado`,
+ * `application/puertosDeListado.ts`.
  */
 export function FiltrosDeConstancias({ q, estado }: Props) {
   return (

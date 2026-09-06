@@ -17,9 +17,7 @@ const columnHelper = createColumnHelper<ConstanciaGuardada>();
 /**
  * "folio" y "emitida" son las dos columnas del listado y las dos tienen
  * orden natural (`domain/ordenDeConstancias.ts`). `sortDescFirst: false`
- * fuerza que el primer clic sea ascendente en las dos -mismo criterio que
- * `reportes/ui/columnasOrdenables.ts`, sin que table-core lo infiera del
- * tipo del primer valor.
+ * -motivo en `reportes/ui/columnasOrdenables.ts`.
  */
 const COLUMNAS_TANSTACK = [
   columnHelper.accessor("folio", {
@@ -33,6 +31,27 @@ const COLUMNAS_TANSTACK = [
     sortDescFirst: false,
   }),
 ];
+
+/**
+ * La tabla de `@tanstack/table-core` con el estado de orden ya puesto -sin
+ * esto, `resolverOrdenDeColumnas` pasaba las 30 lineas de la metrica de
+ * `AGENTS.md` (hallazgo del revisor de IA sobre esta rebanada).
+ */
+const tablaDeOrden = (orden: OrdenDeConstancias | undefined) => {
+  const sorting: SortingState = orden
+    ? [{ id: orden.campo, desc: orden.direccion === "desc" }]
+    : [];
+
+  return createTable({
+    data: [] as ConstanciaGuardada[],
+    columns: COLUMNAS_TANSTACK,
+    state: { sorting },
+    onStateChange: () => {},
+    renderFallbackValue: null,
+    getCoreRowModel: getCoreRowModel(),
+    enableSortingRemoval: false,
+  });
+};
 
 /**
  * Resuelve el estado de orden de cada columna con `@tanstack/table-core`
@@ -53,24 +72,7 @@ export function resolverOrdenDeColumnas(
     q?: string | undefined;
   },
 ): readonly ColumnaDeTabla[] {
-  const sorting: SortingState = parametros.orden
-    ? [
-        {
-          id: parametros.orden.campo,
-          desc: parametros.orden.direccion === "desc",
-        },
-      ]
-    : [];
-
-  const table = createTable({
-    data: [] as ConstanciaGuardada[],
-    columns: COLUMNAS_TANSTACK,
-    state: { sorting },
-    onStateChange: () => {},
-    renderFallbackValue: null,
-    getCoreRowModel: getCoreRowModel(),
-    enableSortingRemoval: false,
-  });
+  const table = tablaDeOrden(parametros.orden);
 
   return columnasBase.map((columna) => {
     const columnaTanstack = table.getColumn(columna.clave);
