@@ -113,8 +113,8 @@ describe("cancelar bloquea la reimpresion y no borra el historial", () => {
     expect(primera?.motivoCancelacion).toBe("DATOS_INCORRECTOS");
     expect(segunda?.canceladaEn).toBeNull();
 
-    const listado = await listarConstancias(admin);
-    const folios = listado.map((constancia) => constancia.folio);
+    const listado = await listarConstancias({}, admin);
+    const folios = listado.constancias.map((constancia) => constancia.folio);
     expect(folios).toContain(primera?.folio);
     expect(folios).toContain(segunda?.folio);
   });

@@ -44,6 +44,7 @@ const repositorioCon = (
   buscarPorId: vi.fn(),
   bloquearPorId: vi.fn(),
   listar: vi.fn(),
+  buscar: vi.fn(),
   paraValidar: vi.fn().mockResolvedValue(fila),
   registrarReimpresion: vi.fn(),
   existeReimpresion: vi.fn(),

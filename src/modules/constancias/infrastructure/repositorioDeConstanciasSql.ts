@@ -1,7 +1,9 @@
 import { and, eq, isNull } from "drizzle-orm";
 import type { RepositorioDeConstancias } from "../application/puertos";
-import { comoConstanciaId, comoReimpresionId } from "../domain";
+import { comoReimpresionId } from "../domain";
+import { aConstanciaGuardada } from "./aConstanciaGuardada";
 import { constancias, reimpresiones } from "./esquema";
+import { listadoDeConstanciasSql } from "./listadoDeConstanciasSql";
 
 /**
  * Implementacion real de `RepositorioDeConstancias`, mismo criterio que
@@ -13,7 +15,9 @@ import { constancias, reimpresiones } from "./esquema";
  * `paraValidar` es la superficie publica de `/validar/[folio]`;
  * `registrarReimpresion`, `bloquearPorId` y `cancelar` implementan el
  * ciclo de vida posterior a la emision que declara design.md seccion 10
- * (`reimprimirConstancia`, `cancelarConstancia`).
+ * (`reimprimirConstancia`, `cancelarConstancia`). `listar`/`buscar` viven en
+ * `listadoDeConstanciasSql.ts` y se incorporan aca por spread (metrica de
+ * lineas por archivo, `AGENTS.md`).
  */
 export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
   async guardar(tx, datos) {
@@ -26,13 +30,7 @@ export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
       .from(constancias)
       .where(eq(constancias.id, id));
 
-    if (!fila) return null;
-
-    return {
-      ...fila,
-      id: comoConstanciaId(fila.id),
-      datos: fila.datos as Record<string, unknown>,
-    };
+    return fila ? aConstanciaGuardada(fila) : null;
   },
 
   async bloquearPorId(tx, id) {
@@ -42,27 +40,10 @@ export const repositorioDeConstanciasSql: RepositorioDeConstancias = {
       .where(eq(constancias.id, id))
       .for("update");
 
-    if (!fila) return null;
-
-    return {
-      ...fila,
-      id: comoConstanciaId(fila.id),
-      datos: fila.datos as Record<string, unknown>,
-    };
+    return fila ? aConstanciaGuardada(fila) : null;
   },
 
-  async listar(tx, ayuntamientoId) {
-    const filas = await tx
-      .select()
-      .from(constancias)
-      .where(eq(constancias.ayuntamientoId, ayuntamientoId));
-
-    return filas.map((fila) => ({
-      ...fila,
-      id: comoConstanciaId(fila.id),
-      datos: fila.datos as Record<string, unknown>,
-    }));
-  },
+  ...listadoDeConstanciasSql,
 
   async paraValidar(tx, folio) {
     const [fila] = await tx

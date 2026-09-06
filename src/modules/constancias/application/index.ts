@@ -1,3 +1,4 @@
+export * from "./buscarConstancias";
 export * from "./cancelarConstancia";
 export * from "./configurarDocumentos";
 export * from "./constanciaPorId";
