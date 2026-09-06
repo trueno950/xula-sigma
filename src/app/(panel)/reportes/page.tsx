@@ -1,13 +1,8 @@
 import { Plus } from "@phosphor-icons/react/ssr";
-import { z } from "zod";
 import {
   buscarReportes,
-  ESTADOS_DE_REPORTE,
-  type FiltrosDeListado,
   ListadoDeReportes,
   listarReportes,
-  TAMANO_DE_PAGINA,
-  TIPOS_DE_INCIDENCIA,
 } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
@@ -18,64 +13,11 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+import { leerParametros } from "./parametros";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
-
-/**
- * `?estado=a&estado=b` llega como `string[]`, no `string` -mismo caso que
- * documenta `app/(panel)/padron/page.tsx`. Sin este `safeParse`, ese caso
- * invalidaria un `z.enum` con un 500 en vez de caer a los defaults.
- * `limite`/`ordenar`/`direccion` son `?limite=` ("Ver mas") y
- * `?ordenar=&direccion=` (encabezado clicable) de `design.md`.
- */
-const esquemaDeParametros = z.object({
-  estado: z.enum(ESTADOS_DE_REPORTE).optional(),
-  tipo: z.enum(TIPOS_DE_INCIDENCIA).optional(),
-  q: z.string().trim().min(1).optional(),
-  limite: z.coerce
-    .number()
-    .int()
-    .positive()
-    .max(TAMANO_DE_PAGINA * 40)
-    .optional(),
-  ordenar: z.enum(["folio", "registrado"]).optional(),
-  direccion: z.enum(["asc", "desc"]).optional(),
-  error: z.string().optional(),
-});
-
-/**
- * Separada de la funcion de pagina para que `PaginaDeReportes` no repita el
- * `analisis.success ? ... : undefined` de cada campo -eso era lo que le
- * costaba la complejidad ciclomatica a una sola funcion (Biome,
- * `noExcessiveCognitiveComplexity`). Devuelve los defaults directo cuando
- * el `safeParse` fallo -mismo criterio que `PaginaDePadron`.
- */
-function resolverParametros(
-  analisis: ReturnType<typeof esquemaDeParametros.safeParse>,
-) {
-  if (!analisis.success) {
-    return {
-      filtros: {} as FiltrosDeListado,
-      q: undefined,
-      limite: undefined,
-      orden: undefined,
-      error: undefined,
-    };
-  }
-
-  const { estado, tipo, q, limite, ordenar, direccion, error } = analisis.data;
-  const filtros: FiltrosDeListado = {
-    ...(estado ? { estado } : {}),
-    ...(tipo ? { tipo } : {}),
-  };
-  const orden = ordenar
-    ? { campo: ordenar, direccion: direccion || "asc" }
-    : undefined;
-
-  return { filtros, q, limite, orden, error };
-}
 
 /**
  * Ruta fina: resuelve el contexto, busca o lista, y compone (tasks.md
@@ -96,8 +38,9 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
     return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
-  const analisis = esquemaDeParametros.safeParse(await searchParams);
-  const { filtros, q, limite, orden, error } = resolverParametros(analisis);
+  const { filtros, q, limite, orden, error } = leerParametros(
+    await searchParams,
+  );
 
   const opciones = {
     ...(limite ? { limite } : {}),

@@ -5,6 +5,7 @@ import type {
   RepositorioDeReportes,
 } from "../application/puertos";
 import { aReporteGuardado } from "./aReporteGuardado";
+import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
 import { reportes } from "./esquema";
 
 /**
@@ -69,12 +70,17 @@ export const listadoDeReportesSql: Pick<
     // necesita tolerancia a variantes para encontrar un folio o una
     // palabra de la descripcion. `%` no es sargable sin GIN, pero la
     // politica de tenant ya acota el barrido a un solo municipio.
+    //
+    // `escaparComodinesDeLike` va antes de armar el patron: sin escapar,
+    // un "%" o un "_" en lo que tipeo el operador actua como comodin de
+    // Postgres en vez de como texto literal.
+    const cadenaEscapada = escaparComodinesDeLike(cadena);
     const condiciones = [
       ...condicionesDeFiltros(opciones.filtros ?? {}),
       or(
-        ilike(reportes.folio, `%${cadena}%`),
-        ilike(reportes.descripcion, `%${cadena}%`),
-        ilike(reportes.referencia, `%${cadena}%`),
+        ilike(reportes.folio, `%${cadenaEscapada}%`),
+        ilike(reportes.descripcion, `%${cadenaEscapada}%`),
+        ilike(reportes.referencia, `%${cadenaEscapada}%`),
       ) as SQL,
     ];
 
