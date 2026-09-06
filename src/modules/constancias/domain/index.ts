@@ -5,6 +5,10 @@ export {
   SinResidenciaVigenteError,
   TitularDadoDeBajaError,
 } from "./errores";
+export {
+  ESTADOS_DE_CONSTANCIA,
+  type EstadoDeConstancia,
+} from "./estadoDeConstancia";
 export { Folio } from "./folio";
 export {
   type ConstanciaId,
@@ -18,6 +22,12 @@ export {
   type MotivoDeCancelacion,
   type MotivoDeReimpresion,
 } from "./motivos";
+export type {
+  CampoDeOrdenDeConstancias,
+  DireccionDeOrden,
+  OrdenDeConstancias,
+} from "./ordenDeConstancias";
+export { resolverPagina } from "./paginacion";
 export {
   PREFIJOS,
   TIPOS_DE_DOCUMENTO,

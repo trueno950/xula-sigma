@@ -7,6 +7,11 @@ import type {
   ReimpresionId,
   TipoDeDocumento,
 } from "../domain";
+import type {
+  FiltrosDeListado,
+  OpcionesDeBusqueda,
+  OpcionesDeListado,
+} from "./puertosDeListado";
 
 /**
  * Lo que `emitirConstancia` guarda en una sola fila (design.md de
@@ -53,6 +58,30 @@ export type FilaParaValidar = {
 };
 
 /**
+ * `FiltrosDeListado`, `OpcionesDeListado` y `OpcionesDeBusqueda` viven en
+ * `puertosDeListado.ts` -tema propio, mismo criterio que `puertos.ts` de
+ * `reportes`- pero se re-exportan aca para que `import { ... } from
+ * "./puertos"` siga funcionando.
+ */
+export type {
+  FiltrosDeListado,
+  OpcionesDeBusqueda,
+  OpcionesDeListado,
+} from "./puertosDeListado";
+
+/**
+ * Lo que `listarConstancias`/`buscarConstancias` devuelven a la pantalla:
+ * `constancias` ya recortado a la pagina pedida, y `hayMas` -de
+ * `resolverPagina`- para que `ListadoDeConstancias` sepa si pintar "Ver
+ * mas". Se queda aca -y no en `puertosDeListado.ts`- porque depende de
+ * `ConstanciaGuardada`, definido arriba en este mismo archivo.
+ */
+export type ResultadoDeListado = {
+  readonly constancias: readonly ConstanciaGuardada[];
+  readonly hayMas: boolean;
+};
+
+/**
  * Puerto de escritura y lectura de `constancias` y `reimpresiones`. Cada
  * operacion recibe la transaccion de `withTenant` por parametro, mismo
  * criterio que `RepositorioDeDocumentos` (`puertosDeLectura.ts`).
@@ -78,9 +107,27 @@ export type RepositorioDeConstancias = {
     tx: TransaccionTenant,
     id: ConstanciaId,
   ): Promise<ConstanciaGuardada | null>;
+  /**
+   * `opciones.limite` es el `LIMIT` de Postgres tal cual -sin `OFFSET`:
+   * "Ver mas" crece el limite, no pagina por indice (`design.md`,
+   * "Paginacion")-, y `opciones.orden` cambia el `ORDER BY`; sin orden,
+   * sigue el default del metodo (`emitidaEn DESC`).
+   */
   listar(
     tx: TransaccionTenant,
-    ayuntamientoId: AyuntamientoId,
+    filtros: FiltrosDeListado,
+    opciones: OpcionesDeListado,
+  ): Promise<readonly ConstanciaGuardada[]>;
+  /**
+   * Texto libre sobre `folio` y sobre el nombre del titular congelado en el
+   * snapshot (`datos->'titular'->>'nombreCompleto'`, design.md, "Buscador").
+   * `opciones.filtros` convive con la busqueda -nunca la reemplaza-, mismo
+   * `estado` que `listar`.
+   */
+  buscar(
+    tx: TransaccionTenant,
+    cadena: string,
+    opciones: OpcionesDeBusqueda,
   ): Promise<readonly ConstanciaGuardada[]>;
   /** design.md seccion 13: superficie publica de `/validar/[folio]`. */
   paraValidar(

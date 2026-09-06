@@ -9,6 +9,12 @@
  */
 export * from "./application";
 export * from "./composicion";
-export { type ConstanciaId, comoConstanciaId } from "./domain";
+export {
+  type ConstanciaId,
+  comoConstanciaId,
+  ESTADOS_DE_CONSTANCIA,
+  type EstadoDeConstancia,
+  type OrdenDeConstancias,
+} from "./domain";
 export type * from "./types";
 export * from "./ui";

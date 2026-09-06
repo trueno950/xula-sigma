@@ -43,6 +43,7 @@ describe("constanciaPorId", () => {
     buscarPorId: vi.fn(),
     bloquearPorId: vi.fn(),
     listar: vi.fn(),
+    buscar: vi.fn(),
     paraValidar: vi.fn(),
     registrarReimpresion: vi.fn(),
     existeReimpresion: vi.fn(),

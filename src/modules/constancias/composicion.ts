@@ -1,5 +1,6 @@
 import type { PorcionExportable } from "@/shared/exportacion/exportar";
 import {
+  crearBuscarConstancias,
   crearCancelarConstancia,
   crearConfigurarDocumentos,
   crearConstanciaPorId,
@@ -50,6 +51,9 @@ export const constanciaPorId = crearConstanciaPorId(
   repositorioDeConstanciasSql,
 );
 export const listarConstancias = crearListarConstancias(
+  repositorioDeConstanciasSql,
+);
+export const buscarConstancias = crearBuscarConstancias(
   repositorioDeConstanciasSql,
 );
 export const pdfDeConstancia = crearPdfDeConstancia(
