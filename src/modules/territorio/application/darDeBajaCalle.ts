@@ -16,8 +16,10 @@ export function crearDarDeBajaCalle(repositorio: RepositorioDeCalles) {
     }
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
-      const existente = await repositorio.buscarPorId(tx, id);
-      if (!existente) throw new NoEncontradoError();
+      const existente = await repositorio.bloquearPorId(tx, id);
+      if (!existente || existente.bajaEn !== null) {
+        throw new NoEncontradoError();
+      }
 
       const domicilios = await repositorio.contarDomiciliosQueLaUsan(tx, id);
       if (domicilios > 0) throw new CalleConDomiciliosError();

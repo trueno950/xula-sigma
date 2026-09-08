@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 import {
   CalleConDomiciliosError,
   comoCalleId,
@@ -44,6 +45,7 @@ const calleGuardada: CalleGuardada = {
 const repositorioDeCalles = (): RepositorioDeCalles => ({
   crear: vi.fn(),
   buscarPorId: vi.fn(),
+  bloquearPorId: vi.fn(),
   actualizar: vi.fn(),
   contarDomiciliosQueLaUsan: vi.fn(),
   listarPorLugar: vi.fn(),
@@ -59,7 +61,7 @@ describe("dar de baja calles", () => {
 
   it("permite la baja si solo hay reportes y deja bitacora", async () => {
     const repositorio = repositorioDeCalles();
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
     vi.mocked(repositorio.contarDomiciliosQueLaUsan).mockResolvedValue(0);
     vi.mocked(repositorio.actualizar).mockResolvedValue({
       ...calleGuardada,
@@ -85,9 +87,21 @@ describe("dar de baja calles", () => {
     );
   });
 
+  it("rechaza un rol no autorizado sin abrir transaccion ni escribir", async () => {
+    const repositorio = repositorioDeCalles();
+
+    await expect(
+      crearDarDeBajaCalle(repositorio)(calleId, contextoCon("OPERADOR")),
+    ).rejects.toBeInstanceOf(NoAutorizadoError);
+
+    expect(withTenantMock).not.toHaveBeenCalled();
+    expect(repositorio.actualizar).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
   it("bloquea la baja cuando existe un domicilio principal o transversal", async () => {
     const repositorio = repositorioDeCalles();
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
     vi.mocked(repositorio.contarDomiciliosQueLaUsan).mockResolvedValue(1);
 
     await expect(

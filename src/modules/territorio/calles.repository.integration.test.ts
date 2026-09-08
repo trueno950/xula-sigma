@@ -7,8 +7,13 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+import {
+  contarUsoDeCalle,
+  crearCallesParaConteo,
+  crearDomiciliosParaConteo,
+} from "./callesRepositoryDePrueba";
 import { comoCalleId } from "./domain";
-import { calles, domicilios } from "./infrastructure/esquema";
+import { calles } from "./infrastructure/esquema";
 import { repositorioDeCallesSql } from "./infrastructure/repositorioDeCallesSql";
 import { crearLugar } from "./lugarDePrueba";
 
@@ -74,48 +79,16 @@ describe("comportamiento del repositorio de calles", () => {
 
   it("cuenta domicilios que usan una calle como principal o transversal", async () => {
     const lugarId = await crearLugar("comisaria", "Domicilios calle");
-    const [callePrincipal, calleA, calleB, calleNoUsada] = await withTenant(
-      motul,
-      (tx) =>
-        tx
-          .insert(calles)
-          .values([
-            { ayuntamientoId: motul, nombre: "Principal", lugarId },
-            { ayuntamientoId: motul, nombre: "Transversal A", lugarId },
-            { ayuntamientoId: motul, nombre: "Transversal B", lugarId },
-            { ayuntamientoId: motul, nombre: "No usada", lugarId },
-          ])
-          .returning({ id: calles.id }),
-    );
-    if (!callePrincipal || !calleA || !calleB || !calleNoUsada) {
-      throw new Error("Las calles no fueron creadas.");
-    }
-    await withTenant(motul, (tx) =>
-      tx.insert(domicilios).values({
-        ayuntamientoId: motul,
-        lugarId,
-        calleId: callePrincipal.id,
-        entreCalleAId: calleA.id,
-        entreCalleBId: calleB.id,
-      }),
-    );
-    await withTenant(motul, (tx) =>
-      tx.insert(domicilios).values({
-        ayuntamientoId: motul,
-        lugarId,
-        calleId: calleNoUsada.id,
-      }),
-    );
+    const callesDePrueba = await crearCallesParaConteo(lugarId);
+    await crearDomiciliosParaConteo(callesDePrueba);
+    const cuentas = await Promise.all([
+      contarUsoDeCalle(callesDePrueba.principal),
+      contarUsoDeCalle(callesDePrueba.transversalA),
+      contarUsoDeCalle(callesDePrueba.transversalB),
+      contarUsoDeCalle(callesDePrueba.noUsada),
+    ]);
 
-    const cuenta = (id: string) =>
-      withTenant(motul, (tx) =>
-        repositorioDeCallesSql.contarDomiciliosQueLaUsan(tx, comoCalleId(id)),
-      );
-
-    await expect(cuenta(callePrincipal.id)).resolves.toBe(1);
-    await expect(cuenta(calleA.id)).resolves.toBe(1);
-    await expect(cuenta(calleB.id)).resolves.toBe(1);
-    await expect(cuenta(calleNoUsada.id)).resolves.toBe(1);
+    expect(cuentas).toEqual([1, 1, 1, 1]);
   });
 
   it("conserva exactamente el punto al cambiar de lugar", async () => {

@@ -47,7 +47,7 @@ export type RepositorioDeDomicilios = {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeDomicilio): Promise<void>;
   /**
    * `registrarMudanza` la usa para validar `domicilioId` bajo RLS antes de
-   * insertar la residencia -mismo motivo que `RepositorioDeCalles.buscarPorId`
+   * insertar la residencia -mismo motivo que `RepositorioDeCalles.bloquearPorId`
    * en `altaDeDomicilio` (hallazgo de GGA en la revision de PR 30): sin
    * este chequeo, un `domicilioId` de otro tenant o inexistente cae en el
    * `23503` crudo de `residencias_domicilio_tenant_fk` en vez de un

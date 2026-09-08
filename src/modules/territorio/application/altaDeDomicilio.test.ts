@@ -73,6 +73,7 @@ describe("altaDeDomicilio", () => {
   const repositorioDeCalles: RepositorioDeCalles = {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
     actualizar: vi.fn(),
     contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),
@@ -87,6 +88,9 @@ describe("altaDeDomicilio", () => {
       lugarGuardado,
     );
     vi.mocked(repositorioDeCalles.buscarPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorioDeCalles.bloquearPorId).mockResolvedValue(
+      calleGuardada,
+    );
   });
 
   const datosValidos = {
@@ -131,7 +135,7 @@ describe("altaDeDomicilio", () => {
   });
 
   it("rechaza como si no existiera un calleId de otro tenant o inexistente", async () => {
-    vi.mocked(repositorioDeCalles.buscarPorId).mockResolvedValue(null);
+    vi.mocked(repositorioDeCalles.bloquearPorId).mockResolvedValue(null);
     const altaDeDomicilio = crearAltaDeDomicilio(
       repositorio,
       repositorioDeLugares,
@@ -221,5 +225,39 @@ describe("altaDeDomicilio", () => {
         entidadId: id,
       }),
     );
+  });
+
+  it("bloquea todas las calles referenciadas en orden estable antes de insertar", async () => {
+    const eventos: string[] = [];
+    vi.mocked(repositorioDeCalles.bloquearPorId).mockImplementation(
+      async (_tx, id) => {
+        eventos.push(`bloquear:${id}`);
+        return { ...calleGuardada, id };
+      },
+    );
+    vi.mocked(repositorio.crear).mockImplementation(async () => {
+      eventos.push("crear");
+    });
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await altaDeDomicilio(
+      {
+        ...datosValidos,
+        entreCalleAId: entreCalleBId,
+        entreCalleBId: entreCalleAId,
+      },
+      contextoCon("OPERADOR"),
+    );
+
+    expect(eventos).toEqual([
+      `bloquear:${calleId}`,
+      `bloquear:${entreCalleAId}`,
+      `bloquear:${entreCalleBId}`,
+      "crear",
+    ]);
   });
 });

@@ -12,7 +12,11 @@ import {
   TransversalRepetidaError,
   transversalesValidas,
 } from "../domain";
-import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
+import type {
+  CalleGuardada,
+  RepositorioDeCalles,
+  RepositorioDeLugares,
+} from "./puertos";
 import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
 
 export type NuevoDomicilio = {
@@ -29,14 +33,34 @@ export type NuevoDomicilio = {
  * diferencia de `altaDeCalle`, esto es trabajo de mostrador -capturar la
  * direccion de una casa- no reestructuracion territorial.
  *
- * Lee `lugarId` y `calleId` bajo RLS con `buscarPorId` antes de insertar
- * -mismo precedente que `altaDeCalle.ts` con `lugarId`: sin esto, un id de
- * otro tenant o inexistente llegaba crudo al FK compuesto de Postgres en
- * vez de un `NoEncontradoError` limpio (hallazgo de GGA en la revision de
- * esta rebanada). Las transversales no se validan asi -son opcionales y
- * su choque de tenant ya lo frena el mismo FK, solo pierde el mensaje
- * limpio-.
+ * Lee `lugarId` bajo RLS y bloquea todas las calles referenciadas antes de
+ * insertar. El orden estable de esos locks evita deadlocks cuando dos altas
+ * comparten transversales; el lock tambien cierra la carrera con la baja de
+ * una calle.
  */
+
+const idsDeCalles = (datos: NuevoDomicilio): CalleId[] =>
+  [datos.calleId, datos.entreCalleAId, datos.entreCalleBId]
+    .filter((id): id is CalleId => id !== null)
+    .filter((id, indice, ids) => ids.indexOf(id) === indice)
+    .sort();
+
+const bloquearCalles = async (
+  repositorio: RepositorioDeCalles,
+  tx: Parameters<RepositorioDeCalles["bloquearPorId"]>[0],
+  ids: readonly CalleId[],
+): Promise<readonly CalleGuardada[]> => {
+  const bloqueadas: CalleGuardada[] = [];
+
+  for (const id of ids) {
+    const calle = await repositorio.bloquearPorId(tx, id);
+    if (!calle) throw new NoEncontradoError();
+    bloqueadas.push(calle);
+  }
+
+  return bloqueadas;
+};
+
 export function crearAltaDeDomicilio(
   repositorio: RepositorioDeDomicilios,
   repositorioDeLugares: RepositorioDeLugares,
@@ -67,8 +91,13 @@ export function crearAltaDeDomicilio(
       const lugar = await repositorioDeLugares.buscarPorId(tx, datos.lugarId);
       if (!lugar) throw new NoEncontradoError();
 
-      const calle = await repositorioDeCalles.buscarPorId(tx, datos.calleId);
-      if (!calle) throw new NoEncontradoError();
+      const callesBloqueadas = await bloquearCalles(
+        repositorioDeCalles,
+        tx,
+        idsDeCalles(datos),
+      );
+      const calle = callesBloqueadas.find(({ id }) => id === datos.calleId);
+      if (!calle || calle.bajaEn !== null) throw new NoEncontradoError();
 
       await repositorio.crear(tx, {
         id,

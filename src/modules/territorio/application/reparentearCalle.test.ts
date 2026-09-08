@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { NoEncontradoError } from "@/shared/lib/errores";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoCalleId, comoLugarId, type PuntoGeografico } from "../domain";
 import type {
   CalleGuardada,
@@ -45,6 +45,7 @@ const calleGuardada: CalleGuardada = {
 const repositorioDeCalles = (): RepositorioDeCalles => ({
   crear: vi.fn(),
   buscarPorId: vi.fn(),
+  bloquearPorId: vi.fn(),
   actualizar: vi.fn(),
   contarDomiciliosQueLaUsan: vi.fn(),
   listarPorLugar: vi.fn(),
@@ -78,7 +79,7 @@ describe("reparentear calles", () => {
 
   it("reparentear conserva el punto y rechaza un destino ajeno o inexistente", async () => {
     const repositorio = repositorioDeCalles();
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
     vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(null);
 
     await expect(
@@ -93,9 +94,25 @@ describe("reparentear calles", () => {
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
+  it("rechaza un rol no autorizado sin abrir transaccion ni escribir", async () => {
+    const repositorio = repositorioDeCalles();
+
+    await expect(
+      crearReparentearCalle(repositorio, repositorioDeLugares)(
+        calleId,
+        destinoId,
+        contextoCon("OPERADOR"),
+      ),
+    ).rejects.toBeInstanceOf(NoAutorizadoError);
+
+    expect(withTenantMock).not.toHaveBeenCalled();
+    expect(repositorio.actualizar).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
   it("reparentear escribe solo la calle y registra la accion", async () => {
     const repositorio = repositorioDeCalles();
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
     vi.mocked(repositorio.actualizar).mockResolvedValue({
       ...calleGuardada,
       lugarId: destinoId,

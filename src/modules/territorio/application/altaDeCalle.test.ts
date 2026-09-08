@@ -52,6 +52,7 @@ describe("altaDeCalle", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
     actualizar: vi.fn(),
     contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),

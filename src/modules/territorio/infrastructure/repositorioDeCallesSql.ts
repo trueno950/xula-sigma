@@ -91,6 +91,16 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
     return fila ? aCalleGuardada(fila) : null;
   },
 
+  async bloquearPorId(tx, id) {
+    const [fila] = await tx
+      .select(columnasDeLectura)
+      .from(calles)
+      .where(eq(calles.id, id))
+      .for("update");
+
+    return fila ? aCalleGuardada(fila) : null;
+  },
+
   async actualizar(tx, { id, nombre, lugarId, punto, bajaEn }) {
     try {
       const [fila] = await tx

@@ -23,8 +23,10 @@ export function crearRenombrarCalle(repositorio: RepositorioDeCalles) {
     }
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
-      const existente = await repositorio.buscarPorId(tx, id);
-      if (!existente) throw new NoEncontradoError();
+      const existente = await repositorio.bloquearPorId(tx, id);
+      if (!existente || existente.bajaEn !== null) {
+        throw new NoEncontradoError();
+      }
 
       const actualizada = await repositorio.actualizar(tx, {
         id,

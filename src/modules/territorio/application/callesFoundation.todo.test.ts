@@ -45,6 +45,7 @@ const calleGuardada: CalleGuardada = {
 const repositorioDeCalles = (): RepositorioDeCalles => ({
   crear: vi.fn(),
   buscarPorId: vi.fn(),
+  bloquearPorId: vi.fn(),
   actualizar: vi.fn(),
   contarDomiciliosQueLaUsan: vi.fn(),
   listarPorLugar: vi.fn(),
@@ -60,7 +61,7 @@ describe("casos de uso de calles", () => {
 
   it("ubica y redondea el punto, y deja bitacora en la misma transaccion", async () => {
     const repositorio = repositorioDeCalles();
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
     vi.mocked(repositorio.actualizar).mockResolvedValue(calleGuardada);
 
     await crearUbicarCalle(repositorio)(

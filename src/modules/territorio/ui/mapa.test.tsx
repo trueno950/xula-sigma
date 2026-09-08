@@ -1,8 +1,22 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CAJA_DE_YUCATAN } from "../domain";
 import { SelectorDePunto } from "./SelectorDePunto";
-import { configuracionDeMapa, mensajeDeFalloDeTiles } from "./useMapaDePunto";
+import {
+  configuracionDeMapa,
+  mensajeDeFalloDeTiles,
+  prepararMapa,
+} from "./useMapaDePunto";
+
+type MapaFalso = {
+  setView: (centro: [number, number], zoom: number) => MapaFalso;
+  on: (evento: string, listener: unknown) => MapaFalso;
+};
+
+type CapaFalsa = {
+  on: (evento: string, listener: () => void) => CapaFalsa;
+  addTo: (mapa: MapaFalso) => CapaFalsa;
+};
 
 describe("selector de punto", () => {
   it("expone la configuracion publica acotada a Yucatan y la atribucion de OSM", () => {
@@ -62,5 +76,36 @@ describe("selector de punto", () => {
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('name="latitud"');
     expect(html).toContain('name="longitud"');
+  });
+
+  it("avisa cuando la capa de tiles emite tileerror", () => {
+    const listeners = new Map<string, () => void>();
+    const mapa: MapaFalso = {
+      setView: vi.fn((_centro, _zoom) => mapa),
+      on: vi.fn((_evento, _listener) => mapa),
+    };
+    const tiles: CapaFalsa = {
+      on: vi.fn((evento, listener) => {
+        listeners.set(evento, listener);
+        return tiles;
+      }),
+      addTo: vi.fn((_mapa) => tiles),
+    };
+    const leaflet = {
+      map: vi.fn(() => mapa),
+      tileLayer: vi.fn(() => tiles),
+    } as unknown as typeof import("leaflet");
+    const onTileError = vi.fn();
+
+    prepararMapa({
+      leaflet,
+      elemento: {} as HTMLDivElement,
+      punto: null,
+      onSelect: vi.fn(),
+      onTileError,
+    });
+    listeners.get("tileerror")?.();
+
+    expect(onTileError).toHaveBeenCalledTimes(1);
   });
 });

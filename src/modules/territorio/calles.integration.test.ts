@@ -9,7 +9,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearReparentearCalle } from "./application/reparentearCalle";
-import { comoCalleId } from "./domain";
+import { type CalleId, comoCalleId, type DomicilioId } from "./domain";
 import { calles } from "./infrastructure/esquema";
 import { repositorioDeCallesSql } from "./infrastructure/repositorioDeCallesSql";
 import { repositorioDeDomiciliosSql } from "./infrastructure/repositorioDeDomiciliosSql";
@@ -30,6 +30,17 @@ afterAll(async () => {
   await owner.end();
   await cerrarConexion();
 });
+
+const reparentearCalle = crearReparentearCalle(
+  repositorioDeCallesSql,
+  repositorioDeLugaresSql,
+);
+
+const leerCalle = (id: CalleId) =>
+  withTenant(motul, (tx) => repositorioDeCallesSql.buscarPorId(tx, id));
+
+const leerDomicilio = (id: DomicilioId) =>
+  withTenant(motul, (tx) => repositorioDeDomiciliosSql.buscarPorId(tx, id));
 
 describe("persistencia de coordenadas y estado de calles", () => {
   it("guarda una calle nueva sin punto con ambas columnas NULL", async () => {
@@ -98,24 +109,14 @@ describe("persistencia de coordenadas y estado de calles", () => {
     const calleId = await crearCalle(lugarOrigen, "Calle con domicilio");
     const domicilioId = await crearDomicilioEnCalle(lugarOrigen, calleId);
 
-    const domicilioAntes = await withTenant(motul, (tx) =>
-      repositorioDeDomiciliosSql.buscarPorId(tx, domicilioId),
-    );
+    const domicilioAntes = await leerDomicilio(domicilioId);
     if (!domicilioAntes)
       throw new Error("El domicilio de prueba no fue creado.");
 
-    const reparentearCalle = crearReparentearCalle(
-      repositorioDeCallesSql,
-      repositorioDeLugaresSql,
-    );
     await reparentearCalle(calleId, lugarDestino, contextoDe());
 
-    const calleDespues = await withTenant(motul, (tx) =>
-      repositorioDeCallesSql.buscarPorId(tx, calleId),
-    );
-    const domicilioDespues = await withTenant(motul, (tx) =>
-      repositorioDeDomiciliosSql.buscarPorId(tx, domicilioId),
-    );
+    const calleDespues = await leerCalle(calleId);
+    const domicilioDespues = await leerDomicilio(domicilioId);
 
     expect(calleDespues?.lugarId).toBe(lugarDestino);
     expect(domicilioDespues).toEqual(domicilioAntes);
