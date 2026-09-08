@@ -10,7 +10,12 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearDarDeBajaCalle } from "./application/darDeBajaCalle";
 import { crearReparentearCalle } from "./application/reparentearCalle";
-import { type CalleId, comoCalleId, type DomicilioId } from "./domain";
+import {
+  type CalleId,
+  comoCalleId,
+  type DomicilioId,
+  type LugarId,
+} from "./domain";
 import { calles } from "./infrastructure/esquema";
 import { repositorioDeCallesSql } from "./infrastructure/repositorioDeCallesSql";
 import { repositorioDeDomiciliosSql } from "./infrastructure/repositorioDeDomiciliosSql";
@@ -40,10 +45,48 @@ const darDeBajaCalle = crearDarDeBajaCalle(repositorioDeCallesSql);
 
 const leerCalle = (id: CalleId) =>
   withTenant(motul, (tx) => repositorioDeCallesSql.buscarPorId(tx, id));
-
 const leerDomicilio = (id: DomicilioId) =>
   withTenant(motul, (tx) => repositorioDeDomiciliosSql.buscarPorId(tx, id));
 
+const crearCalleDadaDeBaja = async (lugarId: LugarId): Promise<CalleId> => {
+  const [calle] = await withTenant(motul, (tx) =>
+    tx
+      .insert(calles)
+      .values({ ayuntamientoId: motul, nombre: "Calle baja", lugarId })
+      .returning({ id: calles.id }),
+  );
+  if (!calle) throw new Error("La calle de prueba no fue creada.");
+
+  const calleId = comoCalleId(calle.id);
+  await withTenant(motul, (tx) =>
+    tx.update(calles).set({ bajaEn: new Date() }).where(eq(calles.id, calleId)),
+  );
+  return calleId;
+};
+const verificarCalleDadaDeBaja = async (
+  calleId: CalleId,
+  lugarId: LugarId,
+): Promise<void> => {
+  await expect(
+    withTenant(motul, (tx) =>
+      repositorioDeCallesSql.actualizar(tx, {
+        id: calleId,
+        nombre: "Calle baja editada",
+        lugarId,
+        punto: null,
+        bajaEn: null,
+      }),
+    ),
+  ).resolves.toBeNull();
+  await expect(
+    withTenant(motul, (tx) => repositorioDeCallesSql.buscarPorId(tx, calleId)),
+  ).resolves.toBeNull();
+  await expect(
+    withTenant(motul, (tx) =>
+      repositorioDeCallesSql.listarPorLugar(tx, lugarId),
+    ),
+  ).resolves.toEqual([]);
+};
 describe("persistencia de coordenadas y estado de calles", () => {
   it("guarda una calle nueva sin punto con ambas columnas NULL", async () => {
     const lugarId = await crearLugar("comisaria", "Calle sin punto");
@@ -147,41 +190,8 @@ describe("persistencia de coordenadas y estado de calles", () => {
 
   it("una calle dada de baja no aparece ni se puede actualizar", async () => {
     const lugarId = await crearLugar("comisaria", "Guarda activa");
-    const [calle] = await withTenant(motul, (tx) =>
-      tx
-        .insert(calles)
-        .values({ ayuntamientoId: motul, nombre: "Calle baja", lugarId })
-        .returning({ id: calles.id }),
-    );
-    if (!calle) throw new Error("La calle de prueba no fue creada.");
-    const calleId = comoCalleId(calle.id);
-    await withTenant(motul, (tx) =>
-      tx
-        .update(calles)
-        .set({ bajaEn: new Date() })
-        .where(eq(calles.id, calleId)),
-    );
+    const calleId = await crearCalleDadaDeBaja(lugarId);
 
-    await expect(
-      withTenant(motul, (tx) =>
-        repositorioDeCallesSql.actualizar(tx, {
-          id: calleId,
-          nombre: "Calle baja editada",
-          lugarId,
-          punto: null,
-          bajaEn: null,
-        }),
-      ),
-    ).resolves.toBeNull();
-    await expect(
-      withTenant(motul, (tx) =>
-        repositorioDeCallesSql.buscarPorId(tx, calleId),
-      ),
-    ).resolves.toBeNull();
-    await expect(
-      withTenant(motul, (tx) =>
-        repositorioDeCallesSql.listarPorLugar(tx, lugarId),
-      ),
-    ).resolves.toEqual([]);
+    await verificarCalleDadaDeBaja(calleId, lugarId);
   });
 });
