@@ -90,11 +90,9 @@ export const calles = pgTable(
       foreignColumns: [lugares.id, lugares.ayuntamientoId],
       name: "calles_lugar_tenant_fk",
     }),
-    uniqueIndex("calles_tenant_lugar_nombre_idx").on(
-      t.ayuntamientoId,
-      t.lugarId,
-      t.nombre,
-    ),
+    uniqueIndex("calles_tenant_lugar_nombre_idx")
+      .on(t.ayuntamientoId, t.lugarId, t.nombre)
+      .where(isNull(t.bajaEn)),
     check(
       "calles_punto_completo",
       sql`(${t.latitud} IS NULL) = (${t.longitud} IS NULL)`,

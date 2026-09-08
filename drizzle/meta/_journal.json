@@ -85,6 +85,13 @@
       "when": 1788723714000,
       "tag": "0011_calles_coordenadas",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788874381000,
+      "tag": "0012_calles_nombre_activo",
+      "breakpoints": true
     }
   ]
 }

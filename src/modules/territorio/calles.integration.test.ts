@@ -8,6 +8,7 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+import { crearDarDeBajaCalle } from "./application/darDeBajaCalle";
 import { crearReparentearCalle } from "./application/reparentearCalle";
 import { type CalleId, comoCalleId, type DomicilioId } from "./domain";
 import { calles } from "./infrastructure/esquema";
@@ -35,6 +36,7 @@ const reparentearCalle = crearReparentearCalle(
   repositorioDeCallesSql,
   repositorioDeLugaresSql,
 );
+const darDeBajaCalle = crearDarDeBajaCalle(repositorioDeCallesSql);
 
 const leerCalle = (id: CalleId) =>
   withTenant(motul, (tx) => repositorioDeCallesSql.buscarPorId(tx, id));
@@ -121,6 +123,26 @@ describe("persistencia de coordenadas y estado de calles", () => {
     expect(calleDespues?.lugarId).toBe(lugarDestino);
     expect(domicilioDespues).toEqual(domicilioAntes);
     expect(domicilioDespues?.lugarId).toBe(lugarOrigen);
+  });
+
+  it("reparenta al destino si su calle con el mismo nombre esta dada de baja", async () => {
+    const lugarOrigen = await crearLugar("comisaria", "Origen nombre liberado");
+    const lugarDestino = await crearLugar(
+      "comisaria",
+      "Destino nombre liberado",
+    );
+    const nombre = "Calle 21";
+    const calleDadaDeBaja = await crearCalle(lugarDestino, nombre);
+    await darDeBajaCalle(calleDadaDeBaja, contextoDe());
+    const calleActiva = await crearCalle(lugarOrigen, nombre);
+
+    await expect(
+      reparentearCalle(calleActiva, lugarDestino, contextoDe()),
+    ).resolves.toBeUndefined();
+    await expect(leerCalle(calleActiva)).resolves.toMatchObject({
+      lugarId: lugarDestino,
+      bajaEn: null,
+    });
   });
 
   it("una calle dada de baja no aparece ni se puede actualizar", async () => {
