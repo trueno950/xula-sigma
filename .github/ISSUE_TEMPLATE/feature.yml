@@ -1,0 +1,63 @@
+name: Feature request
+description: Propose a product or engineering change
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve XULA SIGMA. Please describe the municipal problem before proposing an implementation.
+
+  - type: input
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem should this change solve for a municipal operator?
+      placeholder: Describe the observable problem and who experiences it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed solution
+      description: What outcome or behavior would solve the problem?
+      placeholder: Describe the expected behavior without prescribing internal implementation details.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which product area is primarily affected?
+      options:
+        - Territorio
+        - Padron
+        - Constancias
+        - Reportes
+        - Shared
+        - Platform
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: What concrete behavior should be true when this change is complete?
+      placeholder: List the observable outcomes or scenarios that define completion.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope checklist
+      options:
+        - label: I have searched existing issues for an equivalent request.
+          required: true
+        - label: This request stays within the product scope and does not add treasury, CFDI, accounting, payroll, or collections functionality.
+          required: true
