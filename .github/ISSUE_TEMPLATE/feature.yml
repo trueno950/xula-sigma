@@ -57,7 +57,7 @@ body:
     attributes:
       label: Scope checklist
       options:
-        - label: I have searched existing issues for an equivalent request.
+        - label: Existing issues have been searched for an equivalent request.
           required: true
-        - label: This request stays within the product scope and does not add treasury, CFDI, accounting, payroll, or collections functionality.
+        - label: The request stays within the product scope and does not add treasury, CFDI, accounting, payroll, or collections functionality.
           required: true
