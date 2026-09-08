@@ -62,7 +62,10 @@ export function PanelDeCalle({
   accion,
   permisos,
 }: Props) {
-  const accionAbierta = esAccionDeCalle(accion) ? accion : undefined;
+  const accionAbierta =
+    esAccionDeCalle(accion) && puedeAbrir(accion, permisos)
+      ? accion
+      : undefined;
   const volver = rutaDe({
     raizId,
     nodoId,
