@@ -1,5 +1,6 @@
 import {
   type AccionDeNodo,
+  type CalleId,
   ContenidoDeLugar,
   type CuentasDeLugar,
   type NodoSeleccionado,
@@ -20,10 +21,11 @@ type Props = {
   nodos: readonly NodoDeSubarbol[];
   domicilios: readonly DomicilioParaListado[];
   nodo: NodoSeleccionado;
-  calles: readonly Pick<CalleGuardada, "id" | "nombre">[];
+  calles: readonly Pick<CalleGuardada, "id" | "nombre" | "lugarId" | "punto">[];
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   vista: TabDeLugar;
   accion: AccionDeNodo | undefined;
+  calleId: CalleId | undefined;
   permisos: PermisosDeTerritorio;
 };
 
@@ -99,6 +101,7 @@ export function VistaDeLugar({
   lugares,
   vista,
   accion,
+  calleId,
   permisos,
 }: Props) {
   return (
@@ -119,6 +122,7 @@ export function VistaDeLugar({
         calles={calles}
         lugares={lugares}
         domicilios={domicilios}
+        calleId={calleId}
         vista={vista}
         accion={accion}
         permisos={permisos}

@@ -20,6 +20,9 @@ import { permisosDeTerritorio, puedeAbrir } from "./permisos";
  */
 const ADMINISTRAR: readonly AccionDeNodo[] = [
   "calle",
+  "ubicarCalle",
+  "reparentearCalle",
+  "bajaCalle",
   "renombrarCalle",
   "reparentear",
 ];

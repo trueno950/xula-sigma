@@ -105,9 +105,14 @@ export const CLASES_DE_DATO =
  * el error: interrumpe la lectura del operador, y eso se justifica cuando
  * algo salio mal, no cuando salio bien (`DESIGN.md`, Do's).
  */
-export const presentacionDeAviso = (tono: "error" | "exito") => ({
-  Icono: tono === "error" ? Warning : CheckCircle,
-  color: tono === "error" ? "text-senial-error" : "text-senial-exito",
+export const presentacionDeAviso = (tono: "error" | "exito" | "aviso") => ({
+  Icono: tono === "exito" ? CheckCircle : Warning,
+  color:
+    tono === "error"
+      ? "text-senial-error"
+      : tono === "aviso"
+        ? "text-senial-aviso"
+        : "text-senial-exito",
   role: tono === "error" ? ("alert" as const) : ("status" as const),
 });
 

@@ -44,7 +44,7 @@ export default async function preparar() {
           nombre: `Tesoreria de ${municipio.nombre}`,
           email: CORREO,
           clave: CLAVE,
-          rol: "OPERADOR",
+          rol: "ADMIN_MUNICIPAL",
         }),
       );
     }

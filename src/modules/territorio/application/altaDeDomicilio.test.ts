@@ -48,6 +48,7 @@ const calleGuardada: CalleGuardada = {
   id: calleId,
   nombre: "Calle 21",
   lugarId,
+  punto: null,
   bajaEn: null,
 };
 
@@ -73,6 +74,7 @@ describe("altaDeDomicilio", () => {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
     actualizar: vi.fn(),
+    contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),
   };
 

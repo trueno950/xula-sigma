@@ -2,6 +2,7 @@ import { isNull, sql } from "drizzle-orm";
 import {
   check,
   date,
+  doublePrecision,
   foreignKey,
   index,
   pgTable,
@@ -24,7 +25,6 @@ import type {
   TipoDeLugar,
 } from "../domain";
 import { TIPOS_DE_LUGAR } from "../domain";
-
 /**
  * Ninguna de las cuatro se reexporta desde ningun barrel del modulo. El
  * porque esta en `superficiePublica.test.ts`.
@@ -66,7 +66,6 @@ export const lugares = pgTable(
     politicaTenant("lugares"),
   ],
 ).enableRLS();
-
 export const calles = pgTable(
   "calles",
   {
@@ -77,6 +76,8 @@ export const calles = pgTable(
     // con `cabecera` como su propio `tipo` (design.md decision 3), toda
     // calle -incluida la de la cabecera- cuelga de un `lugares` real.
     lugarId: uuid().notNull().$type<LugarId>(),
+    latitud: doublePrecision(),
+    longitud: doublePrecision(),
     bajaEn: timestamp({ withTimezone: true }),
     creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
     actualizadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -94,10 +95,13 @@ export const calles = pgTable(
       t.lugarId,
       t.nombre,
     ),
+    check(
+      "calles_punto_completo",
+      sql`(${t.latitud} IS NULL) = (${t.longitud} IS NULL)`,
+    ),
     politicaTenant("calles"),
   ],
 ).enableRLS();
-
 export const domicilios = pgTable(
   "domicilios",
   {
@@ -151,7 +155,6 @@ export const domicilios = pgTable(
     politicaTenant("domicilios"),
   ],
 ).enableRLS();
-
 export const residencias = pgTable(
   "residencias",
   {

@@ -1,7 +1,7 @@
 import { presentacionDeAviso } from "./estilos";
 
 type Props = {
-  tono: "error" | "exito";
+  tono: "error" | "exito" | "aviso";
   children: string;
 };
 

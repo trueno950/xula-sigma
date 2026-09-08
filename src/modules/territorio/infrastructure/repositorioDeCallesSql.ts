@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull, or } from "drizzle-orm";
 import type {
   CalleGuardada,
   RepositorioDeCalles,
@@ -8,12 +8,14 @@ import {
   comoLugarId,
   NombreDeCalleDuplicadoError,
 } from "../domain";
-import { calles } from "./esquema";
+import { calles, domicilios } from "./esquema";
 
 const columnasDeLectura = {
   id: calles.id,
   nombre: calles.nombre,
   lugarId: calles.lugarId,
+  latitud: calles.latitud,
+  longitud: calles.longitud,
   bajaEn: calles.bajaEn,
 };
 
@@ -21,11 +23,17 @@ const aCalleGuardada = (fila: {
   id: string;
   nombre: string;
   lugarId: string;
+  latitud: number | null;
+  longitud: number | null;
   bajaEn: Date | null;
 }): CalleGuardada => ({
   ...fila,
   id: comoCalleId(fila.id),
   lugarId: comoLugarId(fila.lugarId),
+  punto:
+    fila.latitud === null || fila.longitud === null
+      ? null
+      : { latitud: fila.latitud, longitud: fila.longitud },
 });
 
 /**
@@ -83,12 +91,19 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
     return fila ? aCalleGuardada(fila) : null;
   },
 
-  async actualizar(tx, { id, nombre }) {
+  async actualizar(tx, { id, nombre, lugarId, punto, bajaEn }) {
     try {
       const [fila] = await tx
         .update(calles)
-        .set({ nombre, actualizadoEn: new Date() })
-        .where(eq(calles.id, id))
+        .set({
+          nombre,
+          lugarId,
+          latitud: punto?.latitud ?? null,
+          longitud: punto?.longitud ?? null,
+          bajaEn,
+          actualizadoEn: new Date(),
+        })
+        .where(and(eq(calles.id, id), isNull(calles.bajaEn)))
         .returning(columnasDeLectura);
 
       return fila ? aCalleGuardada(fila) : null;
@@ -98,6 +113,21 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
       }
       throw error;
     }
+  },
+
+  async contarDomiciliosQueLaUsan(tx, calleId) {
+    const [fila] = await tx
+      .select({ total: count() })
+      .from(domicilios)
+      .where(
+        or(
+          eq(domicilios.calleId, calleId),
+          eq(domicilios.entreCalleAId, calleId),
+          eq(domicilios.entreCalleBId, calleId),
+        ),
+      );
+
+    return Number(fila?.total ?? 0);
   },
 
   async listarPorLugar(tx, lugarId) {

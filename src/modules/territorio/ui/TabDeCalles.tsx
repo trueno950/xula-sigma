@@ -1,57 +1,56 @@
-import { PencilSimple, Plus } from "@phosphor-icons/react/ssr";
+import { Plus } from "@phosphor-icons/react/ssr";
 import {
+  CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,
   EnlaceDeAccion,
+  EstadoVacio,
   FilaDeTabla,
   Tabla,
 } from "@/shared/ui";
 import { type PropsDeContenido, rutaDe } from "./contenido";
 import { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
-import { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import { PanelDeCalle } from "./PanelDeCalle";
 import { puedeAbrir } from "./permisos";
+import { formatoDePunto } from "./vistaDeCalles";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "calle", etiqueta: "Calle" },
+  { clave: "ubicacion", etiqueta: "Ubicacion" },
 ];
 
 /**
  * Pestana Calles: las calles del lugar, el alta de una nueva y el renombre
  * de una existente.
  *
- * Las filas no llevan enlace: una calle no tiene pantalla propia, y darles
- * hover prometia un clic que no llevaba a ningun lado. Antes eran chips
- * grises en una fila que se envolvia, que ademas escondia cuantas habia.
+ * Cada fila abre el panel de la calle: ahora concentra ubicacion, renombre,
+ * movimiento y baja sin inventar una segunda lista para elegirla.
  */
 export function TabDeCalles({
   raizId,
   lugar,
   calles,
+  lugares,
   accion,
   permisos,
+  calleId,
 }: PropsDeContenido) {
-  const abierta = accion === "calle" || accion === "renombrarCalle";
+  const abierta =
+    accion === "calle" ||
+    accion === "renombrarCalle" ||
+    accion === "ubicarCalle" ||
+    accion === "reparentearCalle" ||
+    accion === "bajaCalle";
   const puedeAgregar = puedeAbrir("calle", permisos);
-  const puedeRenombrar = puedeAbrir("renombrarCalle", permisos);
+  const calleSeleccionada = calleId
+    ? calles.find((calle) => calle.id === calleId)
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4">
-      {(puedeAgregar || puedeRenombrar) && !abierta ? (
+      {puedeAgregar && !abierta ? (
         <BarraDeAcciones>
-          {puedeRenombrar && calles.length > 0 ? (
-            <EnlaceDeAccion
-              href={rutaDe({
-                raizId: raizId,
-                nodoId: lugar.id,
-                vista: "calles",
-                accion: "renombrarCalle",
-              })}
-            >
-              <PencilSimple size={18} aria-hidden="true" />
-              Renombrar calle
-            </EnlaceDeAccion>
-          ) : null}
           {puedeAgregar ? (
             <EnlaceDeAccion
               href={rutaDe({
@@ -72,15 +71,46 @@ export function TabDeCalles({
       {calles.length > 0 ? (
         <Tabla etiqueta={`Calles de ${lugar.nombre}`} columnas={COLUMNAS}>
           {calles.map((calle) => (
-            <FilaDeTabla key={calle.id}>
+            <FilaDeTabla
+              key={calle.id}
+              href={rutaDe({
+                raizId: raizId,
+                nodoId: lugar.id,
+                vista: "calles",
+                calleId: calle.id,
+              })}
+            >
               <CeldaPrincipal>{calle.nombre}</CeldaPrincipal>
+              <CeldaDeDato>{formatoDePunto(calle.punto)}</CeldaDeDato>
             </FilaDeTabla>
           ))}
         </Tabla>
       ) : (
-        <p className="py-6 text-[15px] text-caliza-apagada">
-          {lugar.nombre} no tiene calles todavia. Un domicilio necesita una.
-        </p>
+        <EstadoVacio
+          estado={{ clase: "vacio-inicial" }}
+          mensajeInicial={`${lugar.nombre} no tiene calles todavia. Un domicilio necesita una.`}
+          accion={
+            puedeAgregar ? (
+              <EnlaceDeAccion
+                href={rutaDe({
+                  raizId: raizId,
+                  nodoId: lugar.id,
+                  vista: "calles",
+                  accion: "calle",
+                })}
+                variante="primaria"
+              >
+                <Plus size={18} weight="bold" aria-hidden="true" />
+                Agregar calle
+              </EnlaceDeAccion>
+            ) : undefined
+          }
+          hrefSinFiltro={rutaDe({
+            raizId: raizId,
+            nodoId: lugar.id,
+            vista: "calles",
+          })}
+        />
       )}
 
       {puedeAgregar && accion === "calle" ? (
@@ -96,21 +126,15 @@ export function TabDeCalles({
         </PanelDeAccion>
       ) : null}
 
-      {puedeRenombrar && accion === "renombrarCalle" ? (
-        <PanelDeAccion
-          titulo="Renombrar una calle"
-          volverA={rutaDe({
-            raizId: raizId,
-            nodoId: lugar.id,
-            vista: "calles",
-          })}
-        >
-          <FormularioDeRenombreDeCalle
-            raiz={raizId}
-            nodo={lugar.id}
-            calles={calles}
-          />
-        </PanelDeAccion>
+      {calleSeleccionada ? (
+        <PanelDeCalle
+          raizId={raizId}
+          nodoId={lugar.id}
+          calle={calleSeleccionada}
+          lugares={lugares}
+          accion={accion}
+          permisos={permisos}
+        />
       ) : null}
     </div>
   );

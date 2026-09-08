@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 /**
  * Layout raiz. Deliberadamente vacio de todo lo que sea de un municipio.

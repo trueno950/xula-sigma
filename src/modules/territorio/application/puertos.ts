@@ -1,6 +1,12 @@
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
-import type { CalleId, DomicilioId, LugarId, TipoDeLugar } from "../domain";
+import type {
+  CalleId,
+  DomicilioId,
+  LugarId,
+  PuntoGeografico,
+  TipoDeLugar,
+} from "../domain";
 
 export type DatosDeAltaDeLugar = {
   id: LugarId;
@@ -107,12 +113,16 @@ export type CalleGuardada = {
   id: CalleId;
   nombre: string;
   lugarId: LugarId;
+  punto: PuntoGeografico | null;
   bajaEn: Date | null;
 };
 
 export type DatosDeActualizacionDeCalle = {
   id: CalleId;
   nombre: string;
+  lugarId: LugarId;
+  punto: PuntoGeografico | null;
+  bajaEn: Date | null;
 };
 
 /**
@@ -135,6 +145,10 @@ export type RepositorioDeCalles = {
     tx: TransaccionTenant,
     datos: DatosDeActualizacionDeCalle,
   ): Promise<CalleGuardada | null>;
+  contarDomiciliosQueLaUsan(
+    tx: TransaccionTenant,
+    calleId: CalleId,
+  ): Promise<number>;
   /** Calles activas (`bajaEn IS NULL`) de un lugar, para el catalogo y `SelectorDeCalle`. */
   listarPorLugar(
     tx: TransaccionTenant,

@@ -53,6 +53,7 @@ describe("altaDeCalle", () => {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
     actualizar: vi.fn(),
+    contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),
   };
   const repositorioDeLugares: RepositorioDeLugares = {
