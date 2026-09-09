@@ -86,3 +86,23 @@ export class TransversalRepetidaError extends Error {
     this.name = "TransversalRepetidaError";
   }
 }
+
+export class PuntoFueraDeYucatanError extends Error {
+  readonly codigo = "PUNTO_FUERA_DE_YUCATAN";
+
+  constructor(mensaje = "El punto debe estar dentro de Yucatan.") {
+    super(mensaje);
+    this.name = "PuntoFueraDeYucatanError";
+  }
+}
+
+export class CalleConDomiciliosError extends Error {
+  readonly codigo = "CALLE_CON_DOMICILIOS";
+
+  constructor(
+    mensaje = "La calle tiene domicilios y no se puede dar de baja.",
+  ) {
+    super(mensaje);
+    this.name = "CalleConDomiciliosError";
+  }
+}

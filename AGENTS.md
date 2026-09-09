@@ -263,6 +263,9 @@ que devuelva, y devolverlo sería código muerto.
 | `reparentearLugarAction` | `territorio` | Server Component, `<form action={...}>` |
 | `altaDeCalleAction` | `territorio` | Server Component, `<form action={...}>` |
 | `renombrarCalleAction` | `territorio` | Server Component, `<form action={...}>` |
+| `ubicarCalleAction` | `territorio` | Server Component, `<form action={...}>` |
+| `reparentearCalleAction` | `territorio` | Server Component, `<form action={...}>` |
+| `darDeBajaCalleAction` | `territorio` | Server Component, `<form action={...}>` |
 | `altaDeDomicilioAction` | `territorio` | Server Component, `<form action={...}>` |
 | `registrarMudanzaAction` | `territorio` | Server Component, `<form action={...}>` |
 | `configurarDocumentosAction` | `constancias` | Server Component, `<form action={...}>` |
@@ -301,6 +304,12 @@ Notas que no caben en la tabla, una por fila que las necesita:
   un `lugarId` de otro municipio o inexistente, que `altaDeCalle.ts` lee
   bajo RLS antes de insertar (mismo patron que `padreId` en
   `altaDeLugarAction`).
+- `ubicarCalleAction` (`territorio`, coordenadas de calles): el formulario
+  sigue siendo un POST nativo aunque `SelectorDePunto` contenga la unica hoja
+  cliente del mapa. Esa hoja solo escribe en los campos visibles `latitud` y
+  `longitud`; si Leaflet o sus tiles fallan, el operador conserva el camino
+  sin JavaScript. Redacta `NoAutorizadoError`, `NoEncontradoError` y
+  `PuntoFueraDeYucatanError`.
 - `altaDeReporteAction` (`reportes`, rebanada 7): mismo motivo exacto que
   `altaDePersonaAction`. `FormularioDeAlta` renderiza la isla
   `SelectorDeUbicacionYTipo` + `ReportesSimilares` (`"use client"`), pero

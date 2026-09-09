@@ -1,6 +1,7 @@
 export * from "./altaDeCalle";
 export * from "./altaDeDomicilio";
 export * from "./altaDeLugar";
+export * from "./darDeBajaCalle";
 export * from "./darDeBajaLugar";
 export * from "./direccionVigenteDePersona";
 export * from "./editarLugar";
@@ -16,7 +17,9 @@ export type * from "./puertosDeDomicilios";
 export type * from "./puertosDeResidencias";
 export * from "./registrarMudanza";
 export * from "./renombrarCalle";
+export * from "./reparentearCalle";
 export * from "./reparentearLugar";
 export * from "./residentesDe";
 export * from "./subarbol";
 export * from "./ubicacionDeLugar";
+export * from "./ubicarCalle";

@@ -25,6 +25,27 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+type ContextoDeAltaDeLugar = {
+  puedeCrearLugar: boolean;
+  tieneRaiz: boolean;
+  accion: string | undefined;
+};
+
+const altaDeLugar = ({
+  puedeCrearLugar,
+  tieneRaiz,
+  accion,
+}: ContextoDeAltaDeLugar) => {
+  if (!puedeCrearLugar || tieneRaiz || accion === "lugar") return undefined;
+
+  return (
+    <EnlaceDeAccion href="/territorio?accion=lugar" variante="primaria">
+      <Plus size={18} weight="bold" aria-hidden="true" />
+      Agregar lugar
+    </EnlaceDeAccion>
+  );
+};
+
 /**
  * El registro territorial: navegar es entrar. Sin `?raiz=` se listan las
  * raices del municipio para entrar con un clic; con `?raiz=` el lugar
@@ -39,7 +60,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
     return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
   }
 
-  const { raizId, nodoId, accion, error, vista } = leerParametros(
+  const { raizId, nodoId, calleId, accion, error, vista } = leerParametros(
     await searchParams,
   );
 
@@ -58,20 +79,20 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
   // baja-: antes se renderizaba el panel vacio.
   if (raiz && !nodo) notFound();
   const calles = nodo ? await listarCalles(nodo.id, contexto) : [];
+  if (calleId && !calles.some((calle) => calle.id === calleId)) notFound();
   // El municipio entero, con raiz abierta o sin ella: alimenta el arbol de
   // la entrada y el destino del reparenteo, que mueve un lugar a cualquier
   // rama. Recortarlo al subarbol de la raiz abierta dejaba ese selector con
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
   const lugares = await listarLugares(contexto);
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
+  const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
 
-  const alta =
-    !raiz && puedeEscribir(contexto.usuario.rol) && accion !== "lugar" ? (
-      <EnlaceDeAccion href="/territorio?accion=lugar" variante="primaria">
-        <Plus size={18} weight="bold" aria-hidden="true" />
-        Agregar lugar
-      </EnlaceDeAccion>
-    ) : undefined;
+  const alta = altaDeLugar({
+    puedeCrearLugar,
+    tieneRaiz: Boolean(raiz),
+    accion,
+  });
 
   return (
     <PaginaDePanel titulo="Territorio" accion={alta}>
@@ -81,7 +102,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
         <VistaDeRaices
           raices={raices}
           lugares={lugares}
-          puedeEscribir={puedeEscribir(contexto.usuario.rol)}
+          puedeEscribir={puedeCrearLugar}
           altaAbierta={accion === "lugar"}
           accionDeAlta={
             <EnlaceDeAccion href="/territorio?accion=lugar" variante="primaria">
@@ -100,6 +121,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
           lugares={lugares}
           vista={vista}
           accion={accion}
+          calleId={calleId}
           permisos={permisos}
         />
       ) : null}

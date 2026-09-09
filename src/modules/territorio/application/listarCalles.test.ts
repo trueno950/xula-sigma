@@ -24,7 +24,9 @@ describe("listarCalles", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
     actualizar: vi.fn(),
+    contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),
   };
 
@@ -41,6 +43,7 @@ describe("listarCalles", () => {
         id: comoCalleId("22222222-2222-4222-8222-222222222222"),
         nombre: "Calle 21",
         lugarId,
+        punto: null,
         bajaEn: null,
       },
     ];

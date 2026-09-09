@@ -3,6 +3,7 @@ import {
   crearAltaDeCalle,
   crearAltaDeDomicilio,
   crearAltaDeLugar,
+  crearDarDeBajaCalle,
   crearDarDeBajaLugar,
   crearDireccionVigenteDePersona,
   crearEditarLugar,
@@ -14,10 +15,12 @@ import {
   crearLugarPorId,
   crearRegistrarMudanza,
   crearRenombrarCalle,
+  crearReparentearCalle,
   crearReparentearLugar,
   crearResidentesDe,
   crearSubarbol,
   crearUbicacionDeLugar,
+  crearUbicarCalle,
 } from "./application";
 import {
   crearLectorDePersonasPorPadron,
@@ -41,7 +44,12 @@ import {
 export const altaDeLugar = crearAltaDeLugar(repositorioDeLugaresSql);
 export const editarLugar = crearEditarLugar(repositorioDeLugaresSql);
 export const darDeBajaLugar = crearDarDeBajaLugar(repositorioDeLugaresSql);
+export const darDeBajaCalle = crearDarDeBajaCalle(repositorioDeCallesSql);
 export const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
+export const reparentearCalle = crearReparentearCalle(
+  repositorioDeCallesSql,
+  repositorioDeLugaresSql,
+);
 export const subarbol = crearSubarbol(repositorioDeLugaresSql);
 export const lugarPorId = crearLugarPorId(repositorioDeLugaresSql);
 export const altaDeCalle = crearAltaDeCalle(
@@ -49,6 +57,7 @@ export const altaDeCalle = crearAltaDeCalle(
   repositorioDeLugaresSql,
 );
 export const renombrarCalle = crearRenombrarCalle(repositorioDeCallesSql);
+export const ubicarCalle = crearUbicarCalle(repositorioDeCallesSql);
 export const listarCalles = crearListarCalles(repositorioDeCallesSql);
 export const listarDomicilios = crearListarDomicilios(
   repositorioDeDomiciliosSql,
@@ -116,6 +125,8 @@ export const porcionesDeTerritorio: readonly PorcionExportable[] = [
           id: calles.id,
           nombre: calles.nombre,
           lugarId: calles.lugarId,
+          latitud: calles.latitud,
+          longitud: calles.longitud,
           bajaEn: calles.bajaEn,
           creadoEn: calles.creadoEn,
           actualizadoEn: calles.actualizadoEn,

@@ -36,6 +36,7 @@ const calleGuardada: CalleGuardada = {
   id: calleId,
   nombre: "Calle Veintiuno",
   lugarId,
+  punto: null,
   bajaEn: null,
 };
 
@@ -43,7 +44,9 @@ describe("renombrarCalle", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
     actualizar: vi.fn(),
+    contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),
   };
 
@@ -51,6 +54,10 @@ describe("renombrarCalle", () => {
     vi.clearAllMocks();
     withTenantMock.mockImplementation(
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
+    );
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.bloquearPorId).mockImplementation((_tx, id) =>
+      repositorio.buscarPorId(_tx, id),
     );
   });
 
@@ -79,6 +86,9 @@ describe("renombrarCalle", () => {
     expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
       id: calleId,
       nombre: "Calle Veintiuno",
+      lugarId,
+      punto: null,
+      bajaEn: null,
     });
     expect(registrarMock).toHaveBeenCalledWith(
       expect.anything(),
@@ -94,6 +104,7 @@ describe("renombrarCalle", () => {
   });
 
   it("rechaza como si no existiera cuando el UPDATE afecta cero filas", async () => {
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue(calleGuardada);
     vi.mocked(repositorio.actualizar).mockResolvedValue(null);
     const renombrarCalle = crearRenombrarCalle(repositorio);
 
@@ -105,6 +116,13 @@ describe("renombrarCalle", () => {
       ),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
+    expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
+      id: calleId,
+      nombre: "Calle Veintiuno",
+      lugarId,
+      punto: null,
+      bajaEn: null,
+    });
     expect(registrarMock).not.toHaveBeenCalled();
   });
 

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
   type AccionDeNodo,
+  type CalleId,
+  comoCalleId,
   comoLugarId,
   type LugarId,
   type NodoSeleccionado,
@@ -18,6 +20,7 @@ import type { NodoDeSubarbol } from "@/modules/territorio/application/puertos";
  * calle sumo su rama.
  */
 export type ParametrosDeTerritorio = {
+  calleId: CalleId | undefined;
   raizId: LugarId | undefined;
   nodoId: LugarId | undefined;
   accion: AccionDeNodo | undefined;
@@ -34,6 +37,7 @@ export type ParametrosDeTerritorio = {
  * del municipio propio en 200 en vez del 404 de la regla 8.
  */
 const esquemaDeParametros = z.object({
+  calle: z.string().uuid().optional().catch(undefined),
   raiz: z.string().uuid().optional().catch(undefined),
   nodo: z.string().uuid().optional().catch(undefined),
   vista: z
@@ -44,6 +48,9 @@ const esquemaDeParametros = z.object({
     .enum([
       "lugar",
       "calle",
+      "ubicarCalle",
+      "reparentearCalle",
+      "bajaCalle",
       "renombrarCalle",
       "domicilio",
       "renombrar",
@@ -59,6 +66,9 @@ const esquemaDeParametros = z.object({
 const pestanaDeAccion: Record<AccionDeNodo, TabDeLugar> = {
   lugar: "lugares",
   calle: "calles",
+  ubicarCalle: "calles",
+  reparentearCalle: "calles",
+  bajaCalle: "calles",
   renombrarCalle: "calles",
   domicilio: "domicilios",
   renombrar: "editar",
@@ -74,6 +84,7 @@ export const leerParametros = (
   const accion = datos.accion as AccionDeNodo | undefined;
 
   return {
+    calleId: datos.calle ? comoCalleId(datos.calle) : undefined,
     raizId: datos.raiz ? comoLugarId(datos.raiz) : undefined,
     nodoId: datos.nodo ? comoLugarId(datos.nodo) : undefined,
     accion,

@@ -37,6 +37,13 @@ describe("leerParametros", () => {
     expect(parametros.raizId).toBe(RAIZ_AJENA);
   });
 
+  it("una raiz valida sobrevive aunque calle sea invalida", () => {
+    const parametros = leerParametros({ raiz: RAIZ_AJENA, calle: "xx" });
+
+    expect(parametros.raizId).toBe(RAIZ_AJENA);
+    expect(parametros.calleId).toBeUndefined();
+  });
+
   it("un raiz que no es UUID cae a undefined, no rompe los demas campos", () => {
     const parametros = leerParametros({
       raiz: "../../otra-cosa",
@@ -53,6 +60,18 @@ describe("leerParametros", () => {
       vista: "domicilios",
     });
 
+    expect(parametros.vista).toBe("calles");
+  });
+
+  it("lee una accion de calle y conserva su id para el panel", () => {
+    const parametros = leerParametros({
+      accion: "ubicarCalle",
+      calle: RAIZ_AJENA,
+      vista: "lugares",
+    });
+
+    expect(parametros.accion).toBe("ubicarCalle");
+    expect(parametros.calleId).toBe(RAIZ_AJENA);
     expect(parametros.vista).toBe("calles");
   });
 

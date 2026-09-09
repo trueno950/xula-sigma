@@ -23,6 +23,9 @@ const EXIGE: Record<AccionDeNodo, (rol: Rol) => boolean> = {
   renombrar: puedeEscribir,
   baja: puedeEscribir,
   calle: puedeAdministrarTerritorio,
+  ubicarCalle: puedeAdministrarTerritorio,
+  reparentearCalle: puedeAdministrarTerritorio,
+  bajaCalle: puedeAdministrarTerritorio,
   renombrarCalle: puedeAdministrarTerritorio,
   reparentear: puedeAdministrarTerritorio,
 };

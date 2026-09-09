@@ -19,6 +19,9 @@ export type PasoDeMigaja = { id: LugarId; nombre: string };
 export type AccionDeNodo =
   | "lugar"
   | "calle"
+  | "ubicarCalle"
+  | "reparentearCalle"
+  | "bajaCalle"
   | "renombrarCalle"
   | "domicilio"
   | "renombrar"

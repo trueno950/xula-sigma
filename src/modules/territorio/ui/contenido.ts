@@ -4,7 +4,7 @@ import type {
   NodoDeSubarbol,
 } from "../application/puertos";
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
-import type { LugarId } from "../domain";
+import type { CalleId, LugarId } from "../domain";
 import type { AccionDeNodo, NodoSeleccionado, TabDeLugar } from "./PanelDeNodo";
 import type { PermisosDeTerritorio } from "./permisos";
 
@@ -21,9 +21,10 @@ export type PropsDeContenido = {
   raizId: LugarId;
   lugar: NodoSeleccionado;
   nodos: readonly NodoDeSubarbol[];
-  calles: readonly Pick<CalleGuardada, "id" | "nombre">[];
+  calles: readonly Pick<CalleGuardada, "id" | "nombre" | "lugarId" | "punto">[];
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   domicilios: readonly DomicilioParaListado[];
+  calleId: CalleId | undefined;
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
 };
@@ -34,15 +35,17 @@ export const rutaDe = ({
   nodoId,
   vista,
   accion,
+  calleId,
 }: {
   raizId: LugarId;
   nodoId: LugarId;
   vista: TabDeLugar;
   accion?: AccionDeNodo;
+  calleId?: CalleId;
 }) =>
   `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=${vista}${
     accion ? `&accion=${accion}` : ""
-  }`;
+  }${calleId ? `&calle=${calleId}` : ""}`;
 
 export const hijosDirectosDe = (
   nodos: readonly NodoDeSubarbol[],
