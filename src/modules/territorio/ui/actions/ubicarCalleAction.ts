@@ -14,6 +14,10 @@ import {
 } from "../../domain";
 import { volverAlArbol } from "./volverAlArbol";
 
+const MENSAJE_FORMULARIO_INVALIDO = "Coordenada invalida.";
+const MENSAJE_PUNTO_FUERA_DE_YUCATAN = "El punto debe estar dentro de Yucatan.";
+const MENSAJE_GENERICO = "No se pudo guardar la ubicacion. Intente de nuevo.";
+
 const coordenada = z
   .string()
   .trim()
@@ -39,18 +43,20 @@ const esquemaDeEntrada = z
     ) {
       ctx.addIssue({
         code: "custom",
-        message: "El punto debe estar dentro de Yucatan.",
+        message: MENSAJE_PUNTO_FUERA_DE_YUCATAN,
       });
     }
   });
-
-const MENSAJE_FORMULARIO_INVALIDO = "Coordenada invalida.";
-const MENSAJE_GENERICO = "No se pudo guardar la ubicacion. Intente de nuevo.";
 
 const puntoDe = (datos: z.infer<typeof esquemaDeEntrada>) =>
   datos.latitud === null || datos.longitud === null
     ? null
     : { latitud: datos.latitud, longitud: datos.longitud };
+
+const mensajeDeValidacion = (error: z.ZodError): string =>
+  error.issues.some(({ message }) => message === MENSAJE_PUNTO_FUERA_DE_YUCATAN)
+    ? MENSAJE_PUNTO_FUERA_DE_YUCATAN
+    : MENSAJE_FORMULARIO_INVALIDO;
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -71,7 +77,7 @@ export async function ubicarCalleAction(formData: FormData): Promise<void> {
     longitud: formData.get("longitud")?.toString() ?? "",
   });
   if (!analisis.success) {
-    volverAlArbol(undefined, undefined, MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(undefined, undefined, mensajeDeValidacion(analisis.error));
     return;
   }
 

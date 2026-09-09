@@ -60,6 +60,23 @@ describe("acciones publicas de calles", () => {
     expect(ubicarCalleMock).not.toHaveBeenCalled();
   });
 
+  it("explica cuando el punto esta fuera de Yucatan", async () => {
+    await expect(
+      ubicarCalleAction(
+        formulario({
+          calleId: CALLE,
+          latitud: "20",
+          longitud: "-100",
+        }),
+      ),
+    ).rejects.toThrow(
+      "REDIRECT:/territorio?error=El+punto+debe+estar+dentro+de+Yucatan.",
+    );
+
+    expect(contextoActualMock).not.toHaveBeenCalled();
+    expect(ubicarCalleMock).not.toHaveBeenCalled();
+  });
+
   it("ignora un ayuntamiento enviado por el formulario y usa el contexto del servidor", async () => {
     await ubicarCalleAction(
       formulario({
