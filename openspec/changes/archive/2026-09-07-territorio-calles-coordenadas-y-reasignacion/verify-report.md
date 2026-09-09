@@ -51,7 +51,7 @@ Los artefactos requeridos fueron leidos antes de juzgar: `proposal.md`, las dos 
 
 | Dimension | Comando exacto | Exit code | Resultado / hash de salida |
 |---|---|---:|---|
-| Runtime Postgres | `pnpm db:local` | 0 | Migraciones `0000`-`0011`; `sha256:0869204d5d1267a54cafc89bd75204d895397d64fbb8b03bcb76066105aa3161` |
+| Runtime Postgres (evidencia histórica) | `pnpm db:local` | 0 | Migraciones `0000`-`0011` aplicadas antes de `0012`; `sha256:0869204d5d1267a54cafc89bd75204d895397d64fbb8b03bcb76066105aa3161` |
 | Remediacion unit/UI | `DATABASE_URL=postgresql://xula_app:postgres@localhost:55432/xula_test MIGRATION_DATABASE_URL=postgresql://xula_migrator:postgres@localhost:55432/xula_test SUPER_ADMIN_DATABASE_URL=postgresql://xula_super_admin:postgres@localhost:55432/xula_test pnpm exec vitest run --project unit src/modules/territorio/application/callesFoundation.todo.test.ts src/modules/territorio/ui/mapa.test.tsx` | 0 | 2 archivos, 11 tests; `sha256:54a1fb57e67afd23d2c29cc49b66dc7e23a25a319bea1f2175fc65064697edea` |
 | Remediacion Postgres | `DATABASE_URL=postgresql://xula_app:postgres@localhost:55432/xula_test MIGRATION_DATABASE_URL=postgresql://xula_migrator:postgres@localhost:55432/xula_test SUPER_ADMIN_DATABASE_URL=postgresql://xula_super_admin:postgres@localhost:55432/xula_test pnpm exec vitest run --project integration src/modules/territorio/calles.integration.test.ts` | 0 | 1 archivo, 5 tests; `sha256:a8bd9e73e069565a5449348380786aa0f97dfac7d6dda64dd49b7d571635c618` |
 | Tests completos | `DATABASE_URL=postgresql://xula_app:postgres@localhost:55432/xula_test MIGRATION_DATABASE_URL=postgresql://xula_migrator:postgres@localhost:55432/xula_test SUPER_ADMIN_DATABASE_URL=postgresql://xula_super_admin:postgres@localhost:55432/xula_test pnpm test` | 0 | 241 archivos, 1204 tests; `sha256:70575fe45b9508ffca6f52b0721451e5e1af9bb05da769a6e9444641a5da3f1e` |
@@ -200,3 +200,11 @@ Las 13 tareas estan marcadas `[x]`. La implementacion contiene las cuatro capas 
 **PASS WITH WARNINGS**
 
 Los 10 requisitos y 13 escenarios MUST estan cubiertos por pruebas que pasaron en runtime, incluidos los tres casos remediados. La candidata compila, pasa las suites completas, coverage, E2E y quality gates; las advertencias restantes son de trazabilidad TDD y profundidad de pruebas, no bloqueadores de admision. El siguiente paso recomendado es `sdd-archive` despues del settlement nativo del intento ya adquirido.
+
+## Addendum de migraciones — 2026-09-08
+
+La evidencia histórica anterior precede a la migración `0012`. Una ejecución
+fresca de `pnpm db:local` aplicó la cadena completa `0000`–`0012` sin error;
+`drizzle.__drizzle_migrations` confirmó los identificadores `13`, `12` y `11`
+para `0012`, `0011` y `0010`. Hash de salida:
+`sha256:7ba93dc12fecaf298610e56083be27499000f299f728bd92bb570b2327f35c73`.

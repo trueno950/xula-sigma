@@ -106,12 +106,12 @@
 ## Runtime harness
 
 - `pnpm db:local` → **paso**: contenedor local recreado, roles provisionados y
-  migraciones `0000`–`0011` aplicadas.
+  migraciones históricas `0000`–`0011` aplicadas antes de la migración `0012`.
 - La integracion enfocada verifico en Postgres real RLS, CHECK parcial, NULL,
   baja activa, count de domicilios principal/transversal, punto exacto y
   update cruzado en cero filas.
-- `pnpm db:local` → **paso**: base local recreada y migraciones 0000–0011
-  aplicadas.
+- `pnpm db:local` → **paso**: base local recreada y migraciones históricas
+  0000–0011 aplicadas antes de la migración `0012`.
 - Integracion de territorio en Postgres real → **19 archivos pasaron, 63 tests
   pasaron**.
 - `./node_modules/.bin/playwright test e2e/calles.spec.ts` → **1 escenario
@@ -185,7 +185,8 @@ permita, es ejecutar `sdd-verify`.
   `pnpm check` no termina en verde.
 - **Modo:** verification-only. No se modificaron código de producción, tests,
   migraciones, package files ni documentación del cambio para ocultar fallos.
-- **Base local:** `pnpm db:local` pasó y aplicó las migraciones `0000`–`0011`.
+- **Base local:** `pnpm db:local` pasó y aplicó las migraciones históricas
+  `0000`–`0011`, antes de la migración `0012`.
 
 ### Evidencia de comandos obligatorios
 
@@ -256,7 +257,7 @@ verde.
 
 | Comando | Resultado | Evidencia |
 |---|---|---|
-| `pnpm db:local` | **Pasó** | Base `xula_test` recreada; roles provisionados y migraciones `0000`–`0011` aplicadas. Se repitió al final para retirar el sentinel del rollback. |
+| `pnpm db:local` | **Pasó** | Base `xula_test` recreada; roles provisionados y migraciones históricas `0000`–`0011` aplicadas antes de `0012`. Se repitió al final para retirar el sentinel del rollback. |
 | `pnpm test` | **Pasó** | 241 archivos, 1200 tests; duración 306.29 s, con las tres URLs locales de Postgres exportadas. |
 | `pnpm test:integration` | **Pasó** | 78 archivos, 288 tests; duración 297.07 s. Incluye aislamiento por tenant sin `rtk`. |
 | Primer `pnpm test:e2e` | **Falló por harness** | 2/11 pasaron y 9/11 fallaron porque el intento literal reutilizó el servidor/proceso existente del puerto 3000; no fue una ejecución fresca. |
@@ -326,7 +327,7 @@ corregir esos diagnósticos fuera de los dos archivos E2E.
 
 | Comando | Resultado | Evidencia |
 |---|---|---|
-| `pnpm db:local` | **Pasó** | Base `xula_test` recreada, roles provisionados y migraciones `0000`–`0011` aplicadas; se repitió al final para limpiar el sentinel. |
+| `pnpm db:local` | **Pasó** | Base `xula_test` recreada, roles provisionados y migraciones históricas `0000`–`0011` aplicadas antes de `0012`; se repitió al final para limpiar el sentinel. |
 | `DATABASE_URL=... MIGRATION_DATABASE_URL=... SUPER_ADMIN_DATABASE_URL=... pnpm test` | **Pasó** | 241 archivos y 1200 tests; duración 291.81 s. |
 | `DATABASE_URL=... MIGRATION_DATABASE_URL=... SUPER_ADMIN_DATABASE_URL=... pnpm test:integration` | **Pasó** | 78 archivos y 288 tests; duración 256.98 s; incluye aislamiento tenant sin `rtk`. |
 | `CI=1 E2E_PUERTO=3001 ... pnpm test:e2e` | **Pasó** | Build/start frescos, 11/11 escenarios en 1.1 min; tiles OSM bloqueados deliberadamente. |
@@ -367,3 +368,11 @@ menor privilegio para cada operación:
 
 La implementación y la verificación de apply están completas. El siguiente
 paso recomendado es `sdd-verify`; archive queda para después de esa fase.
+
+## Evidencia posterior a la migración `0012` — 2026-09-08
+
+- `pnpm db:local` → **pasó**: la base `xula_test` fue recreada, los roles
+  fueron provisionados y la cadena completa hasta `0012` se aplicó sin error.
+- `drizzle.__drizzle_migrations` confirmó los identificadores `13`, `12` y
+  `11`, correspondientes a las migraciones `0012`, `0011` y `0010`.
+- Hash de salida de esta ejecución: `sha256:7ba93dc12fecaf298610e56083be27499000f299f728bd92bb570b2327f35c73`.
