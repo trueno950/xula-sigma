@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "XULA SIGMA · Mapa de construcción",
+    "output": "docs/architecture/xula-construccion.lifecycle.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 720],
+    "views": [
+      {
+        "id": "main-road",
+        "label": "Ruta entregada",
+        "focus": ["foundation", "core", "documents", "reports", "next"],
+        "note": "Progreso visible desde las bases del producto hasta el siguiente corte."
+      },
+      {
+        "id": "gates",
+        "label": "Gates abiertos",
+        "focus": ["documents", "pilot", "privacy", "research"],
+        "note": "Pendientes que pueden cambiar la disponibilidad o el orden de construcción."
+      },
+      {
+        "id": "portfolio",
+        "label": "Siguiente cartera",
+        "focus": ["next", "privacy", "research"],
+        "note": "Trabajo planeado que necesita una decisión de prioridad o una condición previa."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Producto" },
+    { "id": "waiting", "label": "Gates" },
+    { "id": "recovery", "label": "Planeado" },
+    { "id": "terminal", "label": "Fuera del corte" }
+  ],
+  "states": [
+    {
+      "id": "foundation",
+      "type": "active",
+      "label": "Fundamentos",
+      "sublabel": "cierre pendiente",
+      "lane": "main",
+      "col": 0,
+      "step": "00",
+      "tag": "base"
+    },
+    {
+      "id": "core",
+      "type": "success",
+      "label": "Padrón + territorio",
+      "sublabel": "completos",
+      "lane": "main",
+      "col": 1,
+      "step": "01",
+      "tag": "hecho"
+    },
+    {
+      "id": "documents",
+      "type": "decision",
+      "label": "Constancias",
+      "sublabel": "listas; piloto pendiente",
+      "lane": "main",
+      "col": 2,
+      "step": "02",
+      "tag": "gate"
+    },
+    {
+      "id": "reports",
+      "type": "success",
+      "label": "Reportes ciudadanos",
+      "sublabel": "listos para operación",
+      "lane": "main",
+      "col": 3,
+      "step": "03",
+      "tag": "hecho"
+    },
+    {
+      "id": "next",
+      "type": "waiting",
+      "label": "Siguiente corte",
+      "sublabel": "prioridad por decidir",
+      "lane": "main",
+      "col": 4,
+      "step": "04",
+      "tag": "decisión"
+    },
+    {
+      "id": "pilot",
+      "type": "waiting",
+      "label": "Piloto físico",
+      "sublabel": "habilita constancias",
+      "lane": "waiting",
+      "col": 0,
+      "tag": "abierto"
+    },
+    {
+      "id": "privacy",
+      "type": "waiting",
+      "label": "Privacidad completa",
+      "sublabel": "requisito para apoyos",
+      "lane": "waiting",
+      "col": 1,
+      "tag": "abierto"
+    },
+    {
+      "id": "research",
+      "type": "waiting",
+      "label": "Investigación juzgado",
+      "sublabel": "verificar libro físico",
+      "lane": "waiting",
+      "col": 2,
+      "tag": "abierto"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "foundation-to-core",
+      "from": "foundation",
+      "to": "core",
+      "route": "auto"
+    },
+    {
+      "id": "core-to-documents",
+      "from": "core",
+      "to": "documents",
+      "route": "auto"
+    },
+    {
+      "id": "documents-to-reports",
+      "from": "documents",
+      "to": "reports",
+      "route": "auto"
+    },
+    {
+      "id": "reports-to-next",
+      "from": "reports",
+      "to": "next",
+      "route": "auto"
+    },
+    {
+      "id": "documents-to-pilot",
+      "from": "documents",
+      "to": "pilot",
+      "route": "drop",
+      "variant": "security"
+    },
+    {
+      "id": "next-to-privacy",
+      "from": "next",
+      "to": "privacy",
+      "route": "drop",
+      "variant": "security"
+    },
+    {
+      "id": "next-to-research",
+      "from": "next",
+      "to": "research",
+      "route": "drop",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Dónde estamos",
+      "items": [
+        "Padrón, territorio y reportes ciudadanos están completos",
+        "Constancias están implementadas, pero el piloto físico sigue abierto"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Qué desbloquea decisiones",
+      "items": [
+        "Privacidad completa precede a apoyos sociales",
+        "La investigación del libro físico precede al módulo de juzgado"
+      ]
+    }
+  ]
+}
