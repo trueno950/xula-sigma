@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { comoCalleId, comoLugarId } from "../domain";
 import type { LectorDeUbicaciones } from "./puertosDeDirecciones";
 
@@ -9,7 +10,8 @@ vi.mock("@/shared/tenancy/withTenant", () => ({
   withTenant: withTenantMock,
 }));
 
-const { crearUbicacionDeLugar } = await import("./ubicacionDeLugar");
+const { crearUbicacionDeLugar, crearUbicacionDeLugarEnTransaccion } =
+  await import("./ubicacionDeLugar");
 
 const contexto: ContextoActual = {
   ayuntamientoId: "motul" as ContextoActual["ayuntamientoId"],
@@ -57,5 +59,21 @@ describe("ubicacionDeLugar", () => {
       lugarId,
       calleId,
     );
+  });
+
+  it("lee con la transaccion recibida sin abrir otra", async () => {
+    const tx = {} as TransaccionTenant;
+    vi.mocked(lector.partesDe).mockResolvedValue({
+      calle: null,
+      ancestros: ["Motul"],
+    });
+
+    const leer = crearUbicacionDeLugarEnTransaccion(lector);
+    await expect(leer(tx, { lugarId, calleId: null })).resolves.toEqual({
+      texto: "Motul",
+    });
+
+    expect(lector.partesDe).toHaveBeenCalledWith(tx, lugarId, null);
+    expect(withTenantMock).not.toHaveBeenCalled();
   });
 });

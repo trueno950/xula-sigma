@@ -65,7 +65,7 @@ beforeEach(async () => {
   // Aisla la serie del contador y los reportes entre `it`: cada escenario
   // asume que arranca de tablas vacias. `lugares` no necesita el mismo
   // reinicio: cada `it` crea su propio lugar con un nombre nuevo.
-  await owner`TRUNCATE folios_de_reportes, reportes, movimientos_de_reportes`;
+  await owner`TRUNCATE revisiones_de_intervenciones, folios_de_reportes, reportes, movimientos_de_reportes, intervenciones`;
 });
 
 afterAll(async () => {
@@ -96,7 +96,12 @@ describe("el contador de folios bajo lock", () => {
     // design.md seccion 4, escrita en SQL crudo -no Drizzle- porque
     // `enTransaccionParalela` corre sobre `postgres()` puro, ajeno al pool
     // de Drizzle que usa `withTenant`.
-    let consecutivoTomado = -1;
+    let resolverFolioTomado: (consecutivo: number) => void = () => {};
+    let rechazarFolioTomado: (error: unknown) => void = () => {};
+    const folioTomado = new Promise<number>((resolve, reject) => {
+      resolverFolioTomado = resolve;
+      rechazarFolioTomado = reject;
+    });
     const paralela = enTransaccionParalela(motul, async (tx) => {
       const [fila] = await tx<{ ultimo_consecutivo: number }[]>`
         INSERT INTO folios_de_reportes (ayuntamiento_id, anio, ultimo_consecutivo)
@@ -105,42 +110,50 @@ describe("el contador de folios bajo lock", () => {
            SET ultimo_consecutivo = folios_de_reportes.ultimo_consecutivo + 1
         RETURNING ultimo_consecutivo
       `;
-      consecutivoTomado = fila!.ultimo_consecutivo;
+      if (!fila) throw new Error("El contador paralelo no devolvio fila.");
+      resolverFolioTomado(fila.ultimo_consecutivo);
 
       // Se queda abierta -sin COMMIT- hasta que el test decida soltarla.
       await puedeConfirmar;
     });
+    void paralela.catch(rechazarFolioTomado);
 
-    // Le da tiempo a la paralela de terminar su INSERT y tomar el lock.
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(consecutivoTomado).toBe(1);
+    try {
+      // Espera la consulta real: un sleep fijo podia vencer antes de tomar el
+      // lock y dejar la transaccion abierta cuando la asercion fallaba.
+      const consecutivoTomado = await folioTomado;
+      expect(consecutivoTomado).toBe(1);
 
-    const registro = registrarReporte(
-      entrada(lugarId),
-      actor("motul", "OPERADOR"),
-    );
+      const registro = registrarReporte(
+        entrada(lugarId),
+        actor("motul", "OPERADOR"),
+      );
 
-    const PENDIENTE = Symbol("pendiente");
-    const resultadoDeLaCarrera = await Promise.race([
-      registro.then(() => "resuelto" as const),
-      new Promise((resolve) => setTimeout(() => resolve(PENDIENTE), 300)),
-    ]);
+      const PENDIENTE = Symbol("pendiente");
+      const resultadoDeLaCarrera = await Promise.race([
+        registro.then(() => "resuelto" as const),
+        new Promise((resolve) => setTimeout(() => resolve(PENDIENTE), 300)),
+      ]);
 
-    // Lo que este test existe para probar: sin una segunda conexion real,
-    // el registro resolveria antes de que la paralela suelte el lock.
-    expect(resultadoDeLaCarrera).toBe(PENDIENTE);
+      // Lo que este test existe para probar: sin una segunda conexion real,
+      // el registro resolveria antes de que la paralela suelte el lock.
+      expect(resultadoDeLaCarrera).toBe(PENDIENTE);
 
-    liberarParalela();
-    await paralela;
+      liberarParalela();
+      await paralela;
 
-    const id = await registro;
-    const guardada = await withTenant(motul, (tx) =>
-      repositorioDeReportesSql.buscarPorId(tx, id),
-    );
-    // `ReporteGuardado` no trae `consecutivo` (design.md seccion 10): el
-    // folio impreso codifica anio y consecutivo, asi que este texto es la
-    // prueba de que tomo el siguiente a `consecutivoTomado`.
-    expect(guardada?.folio).toBe(`REP-${anio}-000002`);
+      const id = await registro;
+      const guardada = await withTenant(motul, (tx) =>
+        repositorioDeReportesSql.buscarPorId(tx, id),
+      );
+      // `ReporteGuardado` no trae `consecutivo` (design.md seccion 10): el
+      // folio impreso codifica anio y consecutivo, asi que este texto es la
+      // prueba de que tomo el siguiente a `consecutivoTomado`.
+      expect(guardada?.folio).toBe(`REP-${anio}-000002`);
+    } finally {
+      liberarParalela();
+      await paralela;
+    }
   });
 
   it("T7: un registro que revierte despues de tomar folio no lo consume", async () => {

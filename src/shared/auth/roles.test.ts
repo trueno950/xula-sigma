@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   puedeAdministrarDocumentos,
+  puedeAdministrarIntervenciones,
   puedeAdministrarReportes,
   puedeAdministrarTerritorio,
   puedeAdministrarUsuarios,
@@ -207,6 +208,16 @@ describe("puedeAdministrarReportes", () => {
 
     for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
       expect(puedeAdministrarReportes(rol)).toBe(false);
+    }
+  });
+});
+
+describe("puedeAdministrarIntervenciones", () => {
+  it("solo ADMIN_MUNICIPAL corrige intervenciones", () => {
+    expect(puedeAdministrarIntervenciones("ADMIN_MUNICIPAL")).toBe(true);
+
+    for (const rol of todosMenos("ADMIN_MUNICIPAL")) {
+      expect(puedeAdministrarIntervenciones(rol)).toBe(false);
     }
   });
 });

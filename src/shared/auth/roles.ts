@@ -120,3 +120,6 @@ export const puedeAdministrarDocumentos = (rol: Rol) =>
  * decision 6, seccion 12). Nunca `SUPER_ADMIN`.
  */
 export const puedeAdministrarReportes = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
+
+export const puedeAdministrarIntervenciones = (rol: Rol) =>
+  rol === "ADMIN_MUNICIPAL";

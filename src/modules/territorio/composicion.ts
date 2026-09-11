@@ -20,6 +20,7 @@ import {
   crearResidentesDe,
   crearSubarbol,
   crearUbicacionDeLugar,
+  crearUbicacionDeLugarEnTransaccion,
   crearUbicarCalle,
 } from "./application";
 import {
@@ -88,6 +89,9 @@ export const residentesDe = crearResidentesDe(
   repositorioDeResidenciasSql,
 );
 export const ubicacionDeLugar = crearUbicacionDeLugar(lectorDeUbicacionesSql);
+export const ubicacionDeLugarEnTransaccion = crearUbicacionDeLugarEnTransaccion(
+  lectorDeUbicacionesSql,
+);
 
 /**
  * Cuatro porciones planas, no una vista compuesta "domicilio con

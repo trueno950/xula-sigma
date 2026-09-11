@@ -92,6 +92,20 @@
       "when": 1788874381000,
       "tag": "0012_calles_nombre_activo",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789049065173,
+      "tag": "0013_intervenciones",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789049065174,
+      "tag": "0014_revisiones_intervenciones",
+      "breakpoints": true
     }
   ]
 }

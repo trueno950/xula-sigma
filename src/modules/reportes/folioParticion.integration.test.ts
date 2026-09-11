@@ -60,7 +60,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await owner`TRUNCATE folios_de_reportes, reportes, movimientos_de_reportes`;
+  await owner`TRUNCATE revisiones_de_intervenciones, folios_de_reportes, reportes, movimientos_de_reportes, intervenciones`;
 });
 
 afterAll(async () => {

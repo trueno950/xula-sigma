@@ -1,5 +1,8 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import {
+  type TransaccionTenant,
+  withTenant,
+} from "@/shared/tenancy/withTenant";
 import { type CalleId, componerUbicacion, type LugarId } from "../domain";
 import type { LectorDeUbicaciones } from "./puertosDeDirecciones";
 
@@ -7,6 +10,18 @@ export type EntradaDeUbicacion = {
   lugarId: LugarId;
   calleId: CalleId | null;
 };
+
+export function crearUbicacionDeLugarEnTransaccion(
+  lector: LectorDeUbicaciones,
+) {
+  return async function ubicacionDeLugarEnTransaccion(
+    tx: TransaccionTenant,
+    entrada: EntradaDeUbicacion,
+  ): Promise<{ texto: string } | null> {
+    const partes = await lector.partesDe(tx, entrada.lugarId, entrada.calleId);
+    return partes === null ? null : { texto: componerUbicacion(partes) };
+  };
+}
 
 /**
  * Una sola pregunta, un solo caso de uso, mismo corte que
@@ -20,17 +35,14 @@ export type EntradaDeUbicacion = {
  * es `reportes`, no `territorio`.
  */
 export function crearUbicacionDeLugar(lector: LectorDeUbicaciones) {
+  const leerEnTransaccion = crearUbicacionDeLugarEnTransaccion(lector);
+
   return function ubicacionDeLugar(
     entrada: EntradaDeUbicacion,
     contexto: ContextoActual,
   ): Promise<{ texto: string } | null> {
-    return withTenant(contexto.ayuntamientoId, async (tx) => {
-      const partes = await lector.partesDe(
-        tx,
-        entrada.lugarId,
-        entrada.calleId,
-      );
-      return partes === null ? null : { texto: componerUbicacion(partes) };
-    });
+    return withTenant(contexto.ayuntamientoId, (tx) =>
+      leerEnTransaccion(tx, entrada),
+    );
   };
 }
