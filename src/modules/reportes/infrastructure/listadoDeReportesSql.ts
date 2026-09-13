@@ -4,6 +4,7 @@ import type {
   OpcionesDeListado,
   RepositorioDeReportes,
 } from "../application/puertos";
+import type { LectorDeReportesDeMapa } from "../application/puertosDeLecturaDeReportes";
 import { aReporteGuardado } from "./aReporteGuardado";
 import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
 import { reportes } from "./esquema";
@@ -14,6 +15,9 @@ import { reportes } from "./esquema";
  * `repositorioDeReportesSql.ts` por la metrica de lineas por archivo
  * (`AGENTS.md`, <= 200) -mismo criterio que `similaresDeReportesSql.ts`.
  * `repositorioDeReportesSql.ts` lo incorpora por spread.
+ *
+ * Tambien vive aca `lectorDeReportesDeMapaSql`: el contrato completo esta
+ * en `puertosDeLecturaDeReportes.ts`.
  */
 
 /** `estado`/`tipo` de `FiltrosDeListado`, compartidas por `listar` y `buscar`. */
@@ -92,5 +96,26 @@ export const listadoDeReportesSql: Pick<
       .limit(opciones.limite);
 
     return filas.map(aReporteGuardado);
+  },
+};
+
+/**
+ * El `select` explicito es la garantia de que `descripcion` y `referencia`
+ * no salen por aca: un `select()` pelado las arrastraria. Sin `WHERE` de
+ * `calle_id`, mismo criterio que la politica de tenant: las filas sin calle
+ * son cobertura faltante valida.
+ */
+export const lectorDeReportesDeMapaSql: LectorDeReportesDeMapa = {
+  async listarParaMapa(tx) {
+    return tx
+      .select({
+        id: reportes.id,
+        folio: reportes.folio,
+        tipo: reportes.tipo,
+        estado: reportes.estado,
+        calleId: reportes.calleId,
+        lugarId: reportes.lugarId,
+      })
+      .from(reportes);
   },
 };

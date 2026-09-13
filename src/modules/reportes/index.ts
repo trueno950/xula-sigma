@@ -20,6 +20,7 @@ export type {
   ReporteGuardado,
   ReporteSimilar,
 } from "./application/puertos";
+export type { ReporteParaMapa } from "./application/puertosDeLecturaDeReportes";
 export type { MovimientoGuardado } from "./application/puertosDeMovimientos";
 export {
   asignarAreaDeReporte,
@@ -29,6 +30,7 @@ export {
   consultarFolioDeReporte,
   historialDeReporte,
   listarReportes,
+  listarReportesParaMapa,
   porcionesDeReportes,
   registrarReporte,
   reportePorId,

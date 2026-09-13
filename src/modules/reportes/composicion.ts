@@ -7,6 +7,7 @@ import {
   crearConsultarFolioDeReporte,
   crearHistorialDeReporte,
   crearListarReportes,
+  crearListarReportesParaMapa,
   crearRegistrarReporte,
   crearReportePorId,
 } from "./application";
@@ -14,6 +15,7 @@ import {
   contadorDeFoliosSql,
   crearLectorDeReportantesPorPadron,
   crearLectorDeUbicacionesPorTerritorio,
+  lectorDeReportesDeMapaSql,
   registroDeMovimientosSql,
   repositorioDeReportesSql,
 } from "./infrastructure";
@@ -39,6 +41,9 @@ export const registrarReporte = crearRegistrarReporte({
 });
 export const reportePorId = crearReportePorId(repositorioDeReportesSql);
 export const listarReportes = crearListarReportes(repositorioDeReportesSql);
+export const listarReportesParaMapa = crearListarReportesParaMapa(
+  lectorDeReportesDeMapaSql,
+);
 export const buscarReportes = crearBuscarReportes(repositorioDeReportesSql);
 export const cambiarEstadoDeReporte = crearCambiarEstadoDeReporte({
   repositorio: repositorioDeReportesSql,
