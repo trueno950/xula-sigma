@@ -10,6 +10,7 @@ import type { CalleGuardada, RepositorioDeCalles } from "./puertos";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
+const publicarMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/tenancy/withTenant", () => ({
   withTenant: withTenantMock,
@@ -17,6 +18,10 @@ vi.mock("@/shared/tenancy/withTenant", () => ({
 
 vi.mock("@/shared/tenancy/bitacora", () => ({
   registrar: registrarMock,
+}));
+
+vi.mock("@/shared/notificaciones/notificar", () => ({
+  publicarActualizacion: publicarMock,
 }));
 
 const { crearRenombrarCalle } = await import("./renombrarCalle");
@@ -76,6 +81,7 @@ describe("renombrarCalle", () => {
     expect(repositorio.actualizar).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
+    expect(publicarMock).not.toHaveBeenCalled();
   });
 
   it("renombra y registra bitacora", async () => {
@@ -103,6 +109,11 @@ describe("renombrarCalle", () => {
     expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeUbicacion).not.toHaveBeenCalled();
+    expect(publicarMock).toHaveBeenCalledWith(tx, "motul", {
+      tipo: "calle",
+      id: calleId,
+      cambio: "estructura",
+    });
     expect(registrarMock).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
@@ -138,6 +149,7 @@ describe("renombrarCalle", () => {
     });
     expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
+    expect(publicarMock).not.toHaveBeenCalled();
   });
 
   it("propaga NombreDeCalleDuplicadoError del repositorio sin envolverlo", async () => {

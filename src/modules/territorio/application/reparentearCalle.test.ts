@@ -10,6 +10,7 @@ import type {
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
+const publicarMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/tenancy/withTenant", () => ({
   withTenant: withTenantMock,
@@ -17,6 +18,10 @@ vi.mock("@/shared/tenancy/withTenant", () => ({
 
 vi.mock("@/shared/tenancy/bitacora", () => ({
   registrar: registrarMock,
+}));
+
+vi.mock("@/shared/notificaciones/notificar", () => ({
+  publicarActualizacion: publicarMock,
 }));
 
 const { crearReparentearCalle } = await import("./reparentearCalle");
@@ -97,6 +102,7 @@ describe("reparentear calles", () => {
     expect(repositorio.actualizar).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
+    expect(publicarMock).not.toHaveBeenCalled();
   });
 
   it("rechaza un rol no autorizado sin abrir transaccion ni escribir", async () => {
@@ -114,6 +120,7 @@ describe("reparentear calles", () => {
     expect(repositorio.actualizar).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
+    expect(publicarMock).not.toHaveBeenCalled();
   });
 
   it("reparentear escribe solo la calle y registra la accion", async () => {
@@ -145,6 +152,11 @@ describe("reparentear calles", () => {
     expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeUbicacion).not.toHaveBeenCalled();
+    expect(publicarMock).toHaveBeenCalledWith(tx, "motul", {
+      tipo: "calle",
+      id: calleId,
+      cambio: "estructura",
+    });
     expect(registrarMock).toHaveBeenCalledWith(
       tx,
       expect.objectContaining({

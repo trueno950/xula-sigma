@@ -1,6 +1,7 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeAdministrarTerritorio } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { CalleId } from "../domain";
@@ -40,6 +41,12 @@ export function crearRenombrarCalle(repositorio: RepositorioDeCalles) {
       await repositorio.registrarEventoDeRenombre(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         calleId: id,
+      });
+
+      await publicarActualizacion(tx, contexto.ayuntamientoId, {
+        tipo: "calle",
+        id,
+        cambio: "estructura",
       });
 
       await registrar(tx, {
