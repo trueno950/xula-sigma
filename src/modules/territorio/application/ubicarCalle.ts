@@ -39,6 +39,11 @@ export function crearUbicarCalle(repositorio: RepositorioDeCalles) {
       });
       if (!actualizada) throw new NoEncontradoError();
 
+      await repositorio.registrarEventoDeUbicacion(tx, {
+        ayuntamientoId: contexto.ayuntamientoId,
+        calleId: id,
+      });
+
       await registrar(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         actor: contexto.usuario.id,

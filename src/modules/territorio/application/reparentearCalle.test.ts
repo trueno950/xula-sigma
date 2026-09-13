@@ -49,6 +49,10 @@ const repositorioDeCalles = (): RepositorioDeCalles => ({
   actualizar: vi.fn(),
   contarDomiciliosQueLaUsan: vi.fn(),
   listarPorLugar: vi.fn(),
+  registrarEventoDeAlta: vi.fn(),
+  registrarEventoDeRenombre: vi.fn(),
+  registrarEventoDeReparenteo: vi.fn(),
+  registrarEventoDeUbicacion: vi.fn(),
 });
 
 const repositorioDeLugares: RepositorioDeLugares = {
@@ -91,6 +95,7 @@ describe("reparentear calles", () => {
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
@@ -107,6 +112,7 @@ describe("reparentear calles", () => {
 
     expect(withTenantMock).not.toHaveBeenCalled();
     expect(repositorio.actualizar).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
@@ -132,6 +138,13 @@ describe("reparentear calles", () => {
       punto,
       bajaEn: null,
     });
+    expect(repositorio.registrarEventoDeReparenteo).toHaveBeenCalledWith(tx, {
+      ayuntamientoId: "motul",
+      calleId,
+    });
+    expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeUbicacion).not.toHaveBeenCalled();
     expect(registrarMock).toHaveBeenCalledWith(
       tx,
       expect.objectContaining({

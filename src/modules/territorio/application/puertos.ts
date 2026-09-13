@@ -126,6 +126,15 @@ export type DatosDeActualizacionDeCalle = {
 };
 
 /**
+ * Un evento estructural nuevo. El `ayuntamientoId` sale del contexto del
+ * servidor y `ocurridoEn` lo asigna Postgres.
+ */
+export type EventoDeCalleNuevo = {
+  ayuntamientoId: AyuntamientoId;
+  calleId: CalleId;
+};
+
+/**
  * `actualizar` devuelve la fila actualizada o `null` si el `UPDATE` afecto
  * cero filas -id inexistente o de otro tenant, RLS ya lo esconde-. De ahi
  * sale `NoEncontradoError` despues de que los casos de uso releen la fila con
@@ -134,6 +143,9 @@ export type DatosDeActualizacionDeCalle = {
  * pueda responder 404 despues de tomar el lock. `crear` y `actualizar`
  * pueden lanzar `NombreDeCalleDuplicadoError`; el porque esta en
  * `domain/errores.ts`, unico lugar que lo explica.
+ *
+ * Las cuatro operaciones de evento son una por naturaleza, no un escritor
+ * generico: cada mutacion llama a la suya y ninguna sale del modulo.
  */
 export type RepositorioDeCalles = {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeCalle): Promise<void>;
@@ -159,6 +171,22 @@ export type RepositorioDeCalles = {
     tx: TransaccionTenant,
     lugarId: LugarId,
   ): Promise<readonly CalleGuardada[]>;
+  registrarEventoDeAlta(
+    tx: TransaccionTenant,
+    evento: EventoDeCalleNuevo,
+  ): Promise<void>;
+  registrarEventoDeRenombre(
+    tx: TransaccionTenant,
+    evento: EventoDeCalleNuevo,
+  ): Promise<void>;
+  registrarEventoDeReparenteo(
+    tx: TransaccionTenant,
+    evento: EventoDeCalleNuevo,
+  ): Promise<void>;
+  registrarEventoDeUbicacion(
+    tx: TransaccionTenant,
+    evento: EventoDeCalleNuevo,
+  ): Promise<void>;
 };
 
 /**

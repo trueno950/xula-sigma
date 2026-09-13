@@ -1,4 +1,5 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
+import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { motul } from "@/shared/tenancy/municipiosDePrueba";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
@@ -9,6 +10,11 @@ import {
   type LugarId,
 } from "./domain";
 import { calles, domicilios, lugares } from "./infrastructure/esquema";
+
+const exigirFila = <T>(fila: T | undefined): T => {
+  if (!fila) throw new Error("La insercion de prueba no devolvio una fila");
+  return fila;
+};
 
 /**
  * Helpers de integracion compartidos por los `*.integration.test.ts` de
@@ -37,7 +43,21 @@ export const crearLugar = (
       .insert(lugares)
       .values({ ayuntamientoId: motul, tipo, nombre, padreId })
       .returning({ id: lugares.id });
-    return comoLugarId(fila!.id);
+    return comoLugarId(exigirFila(fila).id);
+  });
+
+/** Igual que `crearLugar`, pero para cualquier municipio. */
+export const crearLugarEn = (
+  ayuntamientoId: AyuntamientoId,
+  tipo: (typeof lugares.$inferInsert)["tipo"],
+  nombre: string,
+) =>
+  withTenant(ayuntamientoId, async (tx) => {
+    const [fila] = await tx
+      .insert(lugares)
+      .values({ ayuntamientoId, tipo, nombre })
+      .returning({ id: lugares.id });
+    return comoLugarId(exigirFila(fila).id);
   });
 
 export const crearCalle = (lugarId: LugarId, nombre: string) =>
@@ -46,7 +66,21 @@ export const crearCalle = (lugarId: LugarId, nombre: string) =>
       .insert(calles)
       .values({ ayuntamientoId: motul, nombre, lugarId })
       .returning({ id: calles.id });
-    return comoCalleId(fila!.id);
+    return comoCalleId(exigirFila(fila).id);
+  });
+
+/** Igual que `crearCalle`, pero para cualquier municipio. */
+export const crearCalleEn = (
+  ayuntamientoId: AyuntamientoId,
+  lugarId: LugarId,
+  nombre: string,
+) =>
+  withTenant(ayuntamientoId, async (tx) => {
+    const [fila] = await tx
+      .insert(calles)
+      .values({ ayuntamientoId, nombre, lugarId })
+      .returning({ id: calles.id });
+    return comoCalleId(exigirFila(fila).id);
   });
 
 export const crearDomicilio = (lugarId: LugarId, nombreCalle: string) =>
@@ -55,11 +89,12 @@ export const crearDomicilio = (lugarId: LugarId, nombreCalle: string) =>
       .insert(calles)
       .values({ ayuntamientoId: motul, nombre: nombreCalle, lugarId })
       .returning({ id: calles.id });
+    const calleCreada = exigirFila(calle);
     const [domicilio] = await tx
       .insert(domicilios)
-      .values({ ayuntamientoId: motul, lugarId, calleId: calle!.id })
+      .values({ ayuntamientoId: motul, lugarId, calleId: calleCreada.id })
       .returning({ id: domicilios.id });
-    return comoDomicilioId(domicilio!.id);
+    return comoDomicilioId(exigirFila(domicilio).id);
   });
 
 /** Cuelga un domicilio de una `calleId` ya existente -precedente `crearDomicilio`, sin crear la calle-. */
@@ -69,5 +104,5 @@ export const crearDomicilioEnCalle = (lugarId: LugarId, calleId: CalleId) =>
       .insert(domicilios)
       .values({ ayuntamientoId: motul, lugarId, calleId })
       .returning({ id: domicilios.id });
-    return comoDomicilioId(domicilio!.id);
+    return comoDomicilioId(exigirFila(domicilio).id);
   });

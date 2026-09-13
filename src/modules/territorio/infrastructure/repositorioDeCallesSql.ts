@@ -1,40 +1,11 @@
 import { and, count, eq, isNull, or } from "drizzle-orm";
-import type {
-  CalleGuardada,
-  RepositorioDeCalles,
-} from "../application/puertos";
+import type { RepositorioDeCalles } from "../application/puertos";
+import { NombreDeCalleDuplicadoError } from "../domain";
+import { calles, domicilios, eventosDeCalles } from "./esquema";
 import {
-  comoCalleId,
-  comoLugarId,
-  NombreDeCalleDuplicadoError,
-} from "../domain";
-import { calles, domicilios } from "./esquema";
-
-const columnasDeLectura = {
-  id: calles.id,
-  nombre: calles.nombre,
-  lugarId: calles.lugarId,
-  latitud: calles.latitud,
-  longitud: calles.longitud,
-  bajaEn: calles.bajaEn,
-};
-
-const aCalleGuardada = (fila: {
-  id: string;
-  nombre: string;
-  lugarId: string;
-  latitud: number | null;
-  longitud: number | null;
-  bajaEn: Date | null;
-}): CalleGuardada => ({
-  ...fila,
-  id: comoCalleId(fila.id),
-  lugarId: comoLugarId(fila.lugarId),
-  punto:
-    fila.latitud === null || fila.longitud === null
-      ? null
-      : { latitud: fila.latitud, longitud: fila.longitud },
-});
+  aCalleGuardada,
+  columnasDeLecturaDeCalle as columnasDeLectura,
+} from "./lecturaDeCalle";
 
 /**
  * `postgres.js` (el driver, `shared/tenancy/withTenant.ts`) marca la
@@ -147,5 +118,29 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
       .where(and(eq(calles.lugarId, lugarId), isNull(calles.bajaEn)));
 
     return filas.map(aCalleGuardada);
+  },
+
+  async registrarEventoDeAlta(tx, { ayuntamientoId, calleId }) {
+    await tx
+      .insert(eventosDeCalles)
+      .values({ ayuntamientoId, calleId, naturaleza: "ALTA" });
+  },
+
+  async registrarEventoDeRenombre(tx, { ayuntamientoId, calleId }) {
+    await tx
+      .insert(eventosDeCalles)
+      .values({ ayuntamientoId, calleId, naturaleza: "RENOMBRE" });
+  },
+
+  async registrarEventoDeReparenteo(tx, { ayuntamientoId, calleId }) {
+    await tx
+      .insert(eventosDeCalles)
+      .values({ ayuntamientoId, calleId, naturaleza: "REPARENTEO" });
+  },
+
+  async registrarEventoDeUbicacion(tx, { ayuntamientoId, calleId }) {
+    await tx
+      .insert(eventosDeCalles)
+      .values({ ayuntamientoId, calleId, naturaleza: "UBICACION" });
   },
 };

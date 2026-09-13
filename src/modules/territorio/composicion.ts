@@ -3,6 +3,9 @@ import {
   crearAltaDeCalle,
   crearAltaDeDomicilio,
   crearAltaDeLugar,
+  crearCallePorId,
+  crearCallePorIdEnTransaccion,
+  crearCallesParaMapa,
   crearDarDeBajaCalle,
   crearDarDeBajaLugar,
   crearDireccionVigenteDePersona,
@@ -25,6 +28,7 @@ import {
 } from "./application";
 import {
   crearLectorDePersonasPorPadron,
+  lectorDeCallesDeMapaSql,
   lectorDeDireccionesSql,
   lectorDeUbicacionesSql,
   repositorioDeCallesSql,
@@ -60,6 +64,11 @@ export const altaDeCalle = crearAltaDeCalle(
 export const renombrarCalle = crearRenombrarCalle(repositorioDeCallesSql);
 export const ubicarCalle = crearUbicarCalle(repositorioDeCallesSql);
 export const listarCalles = crearListarCalles(repositorioDeCallesSql);
+export const callesParaMapa = crearCallesParaMapa(lectorDeCallesDeMapaSql);
+export const callePorId = crearCallePorId(lectorDeCallesDeMapaSql);
+export const callePorIdEnTransaccion = crearCallePorIdEnTransaccion(
+  lectorDeCallesDeMapaSql,
+);
 export const listarDomicilios = crearListarDomicilios(
   repositorioDeDomiciliosSql,
 );

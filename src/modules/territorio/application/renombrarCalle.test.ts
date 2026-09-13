@@ -48,6 +48,10 @@ describe("renombrarCalle", () => {
     actualizar: vi.fn(),
     contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),
+    registrarEventoDeAlta: vi.fn(),
+    registrarEventoDeRenombre: vi.fn(),
+    registrarEventoDeReparenteo: vi.fn(),
+    registrarEventoDeUbicacion: vi.fn(),
   };
 
   beforeEach(() => {
@@ -70,6 +74,7 @@ describe("renombrarCalle", () => {
 
     expect(withTenantMock).not.toHaveBeenCalled();
     expect(repositorio.actualizar).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
@@ -90,6 +95,14 @@ describe("renombrarCalle", () => {
       punto: null,
       bajaEn: null,
     });
+    const tx = vi.mocked(repositorio.actualizar).mock.calls[0]?.[0];
+    expect(repositorio.registrarEventoDeRenombre).toHaveBeenCalledWith(tx, {
+      ayuntamientoId: "motul",
+      calleId,
+    });
+    expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeUbicacion).not.toHaveBeenCalled();
     expect(registrarMock).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
@@ -123,6 +136,7 @@ describe("renombrarCalle", () => {
       punto: null,
       bajaEn: null,
     });
+    expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 

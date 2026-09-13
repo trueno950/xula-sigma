@@ -49,6 +49,10 @@ const repositorioDeCalles = (): RepositorioDeCalles => ({
   actualizar: vi.fn(),
   contarDomiciliosQueLaUsan: vi.fn(),
   listarPorLugar: vi.fn(),
+  registrarEventoDeAlta: vi.fn(),
+  registrarEventoDeRenombre: vi.fn(),
+  registrarEventoDeReparenteo: vi.fn(),
+  registrarEventoDeUbicacion: vi.fn(),
 });
 
 describe("casos de uso de calles", () => {
@@ -78,6 +82,13 @@ describe("casos de uso de calles", () => {
       punto,
       bajaEn: null,
     });
+    expect(repositorio.registrarEventoDeUbicacion).toHaveBeenCalledWith(tx, {
+      ayuntamientoId: "motul",
+      calleId,
+    });
+    expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
     expect(registrarMock).toHaveBeenCalledWith(tx, {
       ayuntamientoId: "motul",
       actor: "usuario-1",
@@ -97,6 +108,7 @@ describe("casos de uso de calles", () => {
 
     expect(withTenantMock).not.toHaveBeenCalled();
     expect(repositorio.actualizar).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeUbicacion).not.toHaveBeenCalled();
   });
 
   it("rechaza un punto fuera de Yucatan y no escribe la calle", async () => {

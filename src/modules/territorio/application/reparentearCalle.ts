@@ -37,6 +37,11 @@ export function crearReparentearCalle(
       });
       if (!actualizada) throw new NoEncontradoError();
 
+      await repositorio.registrarEventoDeReparenteo(tx, {
+        ayuntamientoId: contexto.ayuntamientoId,
+        calleId: id,
+      });
+
       await registrar(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         actor: contexto.usuario.id,

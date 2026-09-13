@@ -37,6 +37,11 @@ export function crearRenombrarCalle(repositorio: RepositorioDeCalles) {
       });
       if (!actualizada) throw new NoEncontradoError();
 
+      await repositorio.registrarEventoDeRenombre(tx, {
+        ayuntamientoId: contexto.ayuntamientoId,
+        calleId: id,
+      });
+
       await registrar(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         actor: contexto.usuario.id,

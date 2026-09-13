@@ -49,6 +49,10 @@ const repositorioDeCalles = (): RepositorioDeCalles => ({
   actualizar: vi.fn(),
   contarDomiciliosQueLaUsan: vi.fn(),
   listarPorLugar: vi.fn(),
+  registrarEventoDeAlta: vi.fn(),
+  registrarEventoDeRenombre: vi.fn(),
+  registrarEventoDeReparenteo: vi.fn(),
+  registrarEventoDeUbicacion: vi.fn(),
 });
 
 describe("dar de baja calles", () => {

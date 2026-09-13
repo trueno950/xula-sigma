@@ -50,6 +50,11 @@ export function crearAltaDeCalle(
         lugarId: datos.lugarId,
       });
 
+      await repositorio.registrarEventoDeAlta(tx, {
+        ayuntamientoId: contexto.ayuntamientoId,
+        calleId: id,
+      });
+
       await registrar(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         actor: contexto.usuario.id,

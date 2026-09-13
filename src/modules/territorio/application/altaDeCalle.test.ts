@@ -47,7 +47,6 @@ const comisariaGuardada: LugarGuardado = {
   padreId: cabeceraId,
   bajaEn: null,
 };
-
 describe("altaDeCalle", () => {
   const repositorio: RepositorioDeCalles = {
     crear: vi.fn(),
@@ -56,6 +55,10 @@ describe("altaDeCalle", () => {
     actualizar: vi.fn(),
     contarDomiciliosQueLaUsan: vi.fn(),
     listarPorLugar: vi.fn(),
+    registrarEventoDeAlta: vi.fn(),
+    registrarEventoDeRenombre: vi.fn(),
+    registrarEventoDeReparenteo: vi.fn(),
+    registrarEventoDeUbicacion: vi.fn(),
   };
   const repositorioDeLugares: RepositorioDeLugares = {
     crear: vi.fn(),
@@ -90,6 +93,7 @@ describe("altaDeCalle", () => {
 
     expect(withTenantMock).not.toHaveBeenCalled();
     expect(repositorio.crear).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
@@ -105,6 +109,7 @@ describe("altaDeCalle", () => {
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(repositorio.crear).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
@@ -153,6 +158,27 @@ describe("altaDeCalle", () => {
       nombre: "Calle 21",
       lugarId: comisariaId,
     });
+    const primerTx = vi.mocked(repositorio.crear).mock.calls[0]?.[0];
+    const segundoTx = vi.mocked(repositorio.crear).mock.calls[1]?.[0];
+    expect(repositorio.registrarEventoDeAlta).toHaveBeenNthCalledWith(
+      1,
+      primerTx,
+      {
+        ayuntamientoId: "motul",
+        calleId: dela.id,
+      },
+    );
+    expect(repositorio.registrarEventoDeAlta).toHaveBeenNthCalledWith(
+      2,
+      segundoTx,
+      {
+        ayuntamientoId: "motul",
+        calleId: delaOtra.id,
+      },
+    );
+    expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeUbicacion).not.toHaveBeenCalled();
     expect(registrarMock).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
