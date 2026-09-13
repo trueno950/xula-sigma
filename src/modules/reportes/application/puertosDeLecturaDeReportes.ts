@@ -24,3 +24,15 @@ export type ReporteParaMapa = {
 export type LectorDeReportesDeMapa = {
   listarParaMapa(tx: TransaccionTenant): Promise<readonly ReporteParaMapa[]>;
 };
+
+export type ReporteParaHistorial = {
+  id: ReporteId;
+  registradoEn: Date;
+};
+
+export type LectorDeReportesDeHistorial = {
+  listarPorCalle(
+    tx: TransaccionTenant,
+    calleId: string,
+  ): Promise<readonly ReporteParaHistorial[]>;
+};

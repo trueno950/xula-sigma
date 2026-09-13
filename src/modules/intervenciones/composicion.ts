@@ -1,3 +1,4 @@
+import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import {
   crearCambiarEstadoDeIntervencion,
   crearCorregirIntervencion,
@@ -17,6 +18,10 @@ export const registrarIntervencion = crearRegistrarIntervencion({
 export const intervencionPorId = crearIntervencionPorId(
   repositorioDeIntervencionesSql,
 );
+export const listarIntervencionesDeCalleEnTransaccion = (
+  tx: TransaccionTenant,
+  calleId: string,
+) => repositorioDeIntervencionesSql.listarPorCalle(tx, calleId);
 
 export const corregirIntervencion = crearCorregirIntervencion({
   repositorio: repositorioDeIntervencionesSql,

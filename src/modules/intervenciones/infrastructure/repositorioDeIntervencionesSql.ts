@@ -17,6 +17,16 @@ export const repositorioDeIntervencionesSql: RepositorioDeIntervenciones = {
     return fila ? aIntervencionGuardada(fila) : null;
   },
 
+  listarPorCalle(tx, calleId) {
+    return tx
+      .select({
+        id: intervenciones.id,
+        fechaDeOcurrencia: intervenciones.fechaDeOcurrencia,
+      })
+      .from(intervenciones)
+      .where(eq(intervenciones.calleId, calleId));
+  },
+
   async corregir(tx, datos) {
     const [actual] = await tx
       .select()

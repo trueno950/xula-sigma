@@ -1,4 +1,5 @@
 import type { PorcionExportable } from "@/shared/exportacion/exportar";
+import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import {
   crearAsignarAreaDeReporte,
   crearBuscarReportes,
@@ -44,6 +45,10 @@ export const listarReportes = crearListarReportes(repositorioDeReportesSql);
 export const listarReportesParaMapa = crearListarReportesParaMapa(
   lectorDeReportesDeMapaSql,
 );
+export const listarReportesDeCalleEnTransaccion = (
+  tx: TransaccionTenant,
+  calleId: string,
+) => lectorDeReportesDeMapaSql.listarPorCalle(tx, calleId);
 export const buscarReportes = crearBuscarReportes(repositorioDeReportesSql);
 export const cambiarEstadoDeReporte = crearCambiarEstadoDeReporte({
   repositorio: repositorioDeReportesSql,

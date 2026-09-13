@@ -27,6 +27,11 @@ export type IntervencionGuardada = Omit<
   actualizadoEn: Date;
 };
 
+export type IntervencionParaHistorial = Pick<
+  IntervencionGuardada,
+  "id" | "fechaDeOcurrencia"
+>;
+
 export type ValoresAnterioresDeIntervencion = Pick<
   IntervencionGuardada,
   | "tipo"
@@ -70,4 +75,8 @@ export type RepositorioDeIntervenciones = {
       estadoNuevo: EstadoDeIntervencion;
     },
   ): Promise<boolean>;
+  listarPorCalle(
+    tx: TransaccionTenant,
+    calleId: string,
+  ): Promise<readonly IntervencionParaHistorial[]>;
 };

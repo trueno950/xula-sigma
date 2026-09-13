@@ -30,6 +30,7 @@ export {
   consultarFolioDeReporte,
   historialDeReporte,
   listarReportes,
+  listarReportesDeCalleEnTransaccion,
   listarReportesParaMapa,
   porcionesDeReportes,
   registrarReporte,

@@ -7,6 +7,7 @@ export {
   cambiarEstadoDeIntervencion,
   corregirIntervencion,
   intervencionPorId,
+  listarIntervencionesDeCalleEnTransaccion,
   registrarIntervencion,
 } from "./composicion";
 export * from "./domain";

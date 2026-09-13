@@ -4,7 +4,10 @@ import type {
   OpcionesDeListado,
   RepositorioDeReportes,
 } from "../application/puertos";
-import type { LectorDeReportesDeMapa } from "../application/puertosDeLecturaDeReportes";
+import type {
+  LectorDeReportesDeHistorial,
+  LectorDeReportesDeMapa,
+} from "../application/puertosDeLecturaDeReportes";
 import { aReporteGuardado } from "./aReporteGuardado";
 import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
 import { reportes } from "./esquema";
@@ -105,7 +108,8 @@ export const listadoDeReportesSql: Pick<
  * `calle_id`, mismo criterio que la politica de tenant: las filas sin calle
  * son cobertura faltante valida.
  */
-export const lectorDeReportesDeMapaSql: LectorDeReportesDeMapa = {
+export const lectorDeReportesDeMapaSql: LectorDeReportesDeMapa &
+  LectorDeReportesDeHistorial = {
   async listarParaMapa(tx) {
     return tx
       .select({
@@ -117,5 +121,15 @@ export const lectorDeReportesDeMapaSql: LectorDeReportesDeMapa = {
         lugarId: reportes.lugarId,
       })
       .from(reportes);
+  },
+
+  listarPorCalle(tx, calleId) {
+    return tx
+      .select({
+        id: reportes.id,
+        registradoEn: reportes.registradoEn,
+      })
+      .from(reportes)
+      .where(eq(reportes.calleId, calleId));
   },
 };
