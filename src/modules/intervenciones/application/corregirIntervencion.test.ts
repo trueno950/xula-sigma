@@ -38,9 +38,11 @@ describe("corregirIntervencion", () => {
     corregir: vi.fn().mockResolvedValue(true),
   };
   const lectura = { de: vi.fn().mockResolvedValue({ texto: "Centro" }) };
+  const lecturaDeReportes = { porId: vi.fn() };
   const corregir = crearCorregirIntervencion({
     repositorio,
     crearLecturaDeUbicaciones: () => lectura,
+    crearLecturaDeReportes: () => lecturaDeReportes,
   });
 
   beforeEach(() => {
@@ -49,6 +51,7 @@ describe("corregirIntervencion", () => {
       (_id: unknown, trabajo: (actualTx: unknown) => unknown) => trabajo(tx),
     );
     vi.mocked(repositorio.corregir).mockResolvedValue(true);
+    vi.mocked(lecturaDeReportes.porId).mockResolvedValue(true);
   });
 
   it("niega roles que no administran antes de abrir transaccion", async () => {
@@ -57,6 +60,7 @@ describe("corregirIntervencion", () => {
         NoAutorizadoError,
       );
     }
+
   });
 
   it("valida la entrada y no acepta tenant del cliente", async () => {
@@ -75,6 +79,24 @@ describe("corregirIntervencion", () => {
       corregir(entrada, contexto("ADMIN_MUNICIPAL")),
     ).rejects.toBeInstanceOf(NoEncontradoError);
   });
+
+  it.each([
+    ["un reporte de otro municipio", "44444444-4444-4444-8444-444444444444"],
+    ["un reporte inexistente", "55555555-5555-4555-8555-555555555555"],
+  ])(
+    "rechaza %s antes de corregir, revisar o auditar",
+    async (_caso, reporteId) => {
+      vi.mocked(lecturaDeReportes.porId).mockResolvedValue(false);
+
+      await expect(
+        corregir({ ...entrada, reporteId }, contexto("ADMIN_MUNICIPAL")),
+      ).rejects.toBeInstanceOf(NoEncontradoError);
+
+      expect(lecturaDeReportes.porId).toHaveBeenCalledWith(tx, reporteId);
+      expect(repositorio.corregir).not.toHaveBeenCalled();
+      expect(registrarMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("ADMIN_MUNICIPAL corrige en su tenant y audita solo por ids", async () => {
     await corregir(entrada, contexto("ADMIN_MUNICIPAL"));

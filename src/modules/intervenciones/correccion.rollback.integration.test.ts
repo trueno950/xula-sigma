@@ -14,7 +14,10 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearCorregirIntervencion } from "./application/corregirIntervencion";
 import { crearRegistrarIntervencion } from "./application/registrarIntervencion";
-import { repositorioDeIntervencionesSql } from "./infrastructure";
+import {
+  crearLectorDeReportesPorReportes,
+  repositorioDeIntervencionesSql,
+} from "./infrastructure";
 import { revisionesDeIntervenciones } from "./infrastructure/esquema";
 import { crearLectorDeUbicacionesPorTerritorio } from "./infrastructure/lectorDeUbicacionesPorTerritorio";
 
@@ -38,6 +41,7 @@ afterAll(async () => {
 const registrar = crearRegistrarIntervencion({
   repositorio: repositorioDeIntervencionesSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
+  crearLecturaDeReportes: crearLectorDeReportesPorReportes,
 });
 const lugarDe = async (nombre: string) => {
   const { id } = await altaDeLugar(
@@ -63,6 +67,7 @@ describe("rollback de correccion de intervenciones", () => {
     const corregirConAuditoriaFallida = crearCorregirIntervencion({
       repositorio: repositorioDeIntervencionesSql,
       crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
+      crearLecturaDeReportes: crearLectorDeReportesPorReportes,
       registrarBitacora: async () => {
         throw new Error("fallo de bitacora");
       },

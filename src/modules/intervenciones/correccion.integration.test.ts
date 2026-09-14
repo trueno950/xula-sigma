@@ -18,8 +18,18 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearCorregirIntervencion } from "./application/corregirIntervencion";
 import { crearRegistrarIntervencion } from "./application/registrarIntervencion";
-import { repositorioDeIntervencionesSql } from "./infrastructure";
+import {
+  intervencionDe,
+  intervencionPorId,
+  trazasDeCorreccion,
+} from "./correccionDePrueba";
+import {
+  crearLectorDeReportesPorReportes,
+  repositorioDeIntervencionesSql,
+} from "./infrastructure";
+import { revisionesDeIntervenciones } from "./infrastructure/esquema";
 import { crearLectorDeUbicacionesPorTerritorio } from "./infrastructure/lectorDeUbicacionesPorTerritorio";
+import { registrarReporteDePrueba } from "./reporteVinculadoDePrueba";
 
 let gente: GentePorMunicipio;
 
@@ -29,7 +39,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await owner`TRUNCATE revisiones_de_intervenciones, intervenciones`;
+  await owner`TRUNCATE revisiones_de_intervenciones, intervenciones, reportes, movimientos_de_reportes, folios_de_reportes`;
 });
 
 afterAll(async () => {
@@ -41,31 +51,31 @@ afterAll(async () => {
 const registrar = crearRegistrarIntervencion({
   repositorio: repositorioDeIntervencionesSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
+  crearLecturaDeReportes: crearLectorDeReportesPorReportes,
 });
 const corregir = crearCorregirIntervencion({
   repositorio: repositorioDeIntervencionesSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
+  crearLecturaDeReportes: crearLectorDeReportesPorReportes,
 });
-const lugarDe = async (nombre: string) => {
+const lugarDe = async (
+  nombre: string,
+  municipio: "motul" | "ticul" = "motul",
+) => {
   const { id } = await altaDeLugar(
     { tipo: "comisaria", nombre, padreId: null },
-    contextoDe(gente, "motul", "ADMIN_MUNICIPAL"),
+    contextoDe(gente, municipio, "ADMIN_MUNICIPAL"),
   );
   return id;
 };
-
 describe("correccion real de intervenciones", () => {
   it("corrige y deja bitacora atomica referenciada solo por id", async () => {
     const lugarId = await lugarDe("Comisaria Correccion Aplicacion");
     const admin = contextoDe(gente, "motul", "ADMIN_MUNICIPAL");
-    const original = {
-      tipo: "OBRA" as const,
-      fechaDeOcurrencia: "2026-01-15",
+    const original = intervencionDe(
       lugarId,
-      calleId: null,
-      reporteId: null,
-      descripcion: "Descripcion original de intervencion",
-    };
+      "Descripcion original de intervencion",
+    );
     const id = await registrar(original, admin);
 
     await corregir(
@@ -98,55 +108,38 @@ describe("correccion real de intervenciones", () => {
 
   it("rechaza una ubicacion de otro municipio sin modificar la intervencion", async () => {
     const lugarMotul = await lugarDe("Comisaria Correccion Ubicacion Propia");
-    const { id: lugarTicul } = await altaDeLugar(
-      {
-        tipo: "comisaria",
-        nombre: "Comisaria Correccion Ubicacion Ajena",
-        padreId: null,
-      },
-      contextoDe(gente, "ticul", "ADMIN_MUNICIPAL"),
+    const lugarTicul = await lugarDe(
+      "Comisaria Correccion Ubicacion Ajena",
+      "ticul",
     );
     const admin = contextoDe(gente, "motul", "ADMIN_MUNICIPAL");
-    const original = {
-      tipo: "OBRA" as const,
-      fechaDeOcurrencia: "2026-01-15",
-      lugarId: lugarMotul,
-      calleId: null,
-      reporteId: null,
-      descripcion: "Descripcion original de ubicacion",
-    };
+    const original = intervencionDe(
+      lugarMotul,
+      "Descripcion original de ubicacion",
+    );
     const id = await registrar(original, admin);
 
     await expect(
       corregir({ ...original, id, lugarId: lugarTicul }, admin),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
-    await expect(
-      withTenant(motul, (tx) =>
-        repositorioDeIntervencionesSql.buscarPorId(tx, id),
-      ),
-    ).resolves.toMatchObject(original);
+    await expect(intervencionPorId(motul, id)).resolves.toMatchObject(original);
   });
 
   it("trata una intervencion de otro municipio como no encontrada", async () => {
-    const { id: lugarTicul } = await altaDeLugar(
-      {
-        tipo: "comisaria",
-        nombre: "Comisaria Correccion Intervencion Ajena",
-        padreId: null,
-      },
-      contextoDe(gente, "ticul", "ADMIN_MUNICIPAL"),
+    const lugarTicul = await lugarDe(
+      "Comisaria Correccion Intervencion Ajena",
+      "ticul",
     );
-    const contextoTicul = contextoDe(gente, "ticul", "ADMIN_MUNICIPAL");
     const ajena = {
+      ...intervencionDe(lugarTicul, "Descripcion de intervencion de Ticul"),
       tipo: "MEJORA" as const,
       fechaDeOcurrencia: "2026-02-20",
-      lugarId: lugarTicul,
-      calleId: null,
-      reporteId: null,
-      descripcion: "Descripcion de intervencion de Ticul",
     };
-    const id = await registrar(ajena, contextoTicul);
+    const id = await registrar(
+      ajena,
+      contextoDe(gente, "ticul", "ADMIN_MUNICIPAL"),
+    );
     const adminMotul = contextoDe(gente, "motul", "ADMIN_MUNICIPAL");
     const lugarMotul = await lugarDe(
       "Comisaria Correccion Intervencion Propia",
@@ -156,10 +149,50 @@ describe("correccion real de intervenciones", () => {
       corregir({ ...ajena, id, lugarId: lugarMotul }, adminMotul),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
-    await expect(
-      withTenant(ticul, (tx) =>
-        repositorioDeIntervencionesSql.buscarPorId(tx, id),
-      ),
-    ).resolves.toMatchObject(ajena);
+    await expect(intervencionPorId(ticul, id)).resolves.toMatchObject(ajena);
   });
+
+  it.each([
+    [
+      "un reporte de otro municipio",
+      async () => {
+        const lugarTicul = await lugarDe("Comisaria Reporte Ajeno", "ticul");
+        return registrarReporteDePrueba(
+          lugarTicul,
+          contextoDe(gente, "ticul", "OPERADOR"),
+        );
+      },
+    ],
+    [
+      "un reporte inexistente",
+      async () => "55555555-5555-4555-8555-555555555555",
+    ],
+  ])(
+    "rechaza corregir con %s sin actualizar, revisar o auditar",
+    async (_caso, crearReporteId) => {
+      const lugarId = await lugarDe("Comisaria Correccion Reporte");
+      const admin = contextoDe(gente, "motul", "ADMIN_MUNICIPAL");
+      const original = intervencionDe(
+        lugarId,
+        "Descripcion original de intervencion",
+      );
+      const id = await registrar(original, admin);
+      const reporteId = await crearReporteId();
+      const trazasAntes = await trazasDeCorreccion();
+
+      await expect(
+        corregir({ ...original, id, reporteId }, admin),
+      ).rejects.toBeInstanceOf(NoEncontradoError);
+
+      await expect(intervencionPorId(motul, id)).resolves.toMatchObject(
+        original,
+      );
+      const revisiones = await withTenant(motul, (tx) =>
+        tx.select().from(revisionesDeIntervenciones),
+      );
+      const trazas = await trazasDeCorreccion();
+      expect(revisiones).toHaveLength(0);
+      expect(trazas).toHaveLength(trazasAntes.length);
+    },
+  );
 });

@@ -7,10 +7,16 @@ import {
   ValidacionError,
 } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import {
+  type TransaccionTenant,
+  withTenant,
+} from "@/shared/tenancy/withTenant";
 import { comoIntervencionId, TIPOS_DE_INTERVENCION } from "../domain";
 import type { RepositorioDeIntervenciones } from "./puertos";
-import type { LecturaDeUbicaciones } from "./puertosDeLectura";
+import type {
+  LecturaDeReportes,
+  LecturaDeUbicaciones,
+} from "./puertosDeLectura";
 
 const esquemaDeEntrada = z.strictObject({
   id: z.string().trim().uuid(),
@@ -28,6 +34,17 @@ export type EntradaDeCorreccionDeIntervencion = z.infer<
 
 type RegistrarDeBitacora = (...args: Parameters<typeof registrar>) => unknown;
 
+type SolicitudDeCorreccionEnTenant = {
+  entrada: EntradaDeCorreccionDeIntervencion;
+  id: string;
+  cambios: Omit<EntradaDeCorreccionDeIntervencion, "id">;
+  contexto: ContextoActual;
+  repositorio: Pick<RepositorioDeIntervenciones, "corregir">;
+  crearLecturaDeUbicaciones: () => LecturaDeUbicaciones;
+  crearLecturaDeReportes: () => LecturaDeReportes;
+  registrarBitacora: RegistrarDeBitacora;
+};
+
 const validarEntrada = (datos: unknown): EntradaDeCorreccionDeIntervencion => {
   const resultado = esquemaDeEntrada.safeParse(datos);
   if (resultado.success) return resultado.data;
@@ -35,13 +52,58 @@ const validarEntrada = (datos: unknown): EntradaDeCorreccionDeIntervencion => {
   throw new ValidacionError();
 };
 
+const validarReferenciasDeCorreccion = async (
+  tx: TransaccionTenant,
+  solicitud: SolicitudDeCorreccionEnTenant,
+): Promise<void> => {
+  const ubicacion = await solicitud
+    .crearLecturaDeUbicaciones()
+    .de(tx, solicitud.entrada.lugarId, solicitud.entrada.calleId);
+  if (!ubicacion) throw new NoEncontradoError();
+
+  if (
+    solicitud.entrada.reporteId !== null &&
+    !(await solicitud
+      .crearLecturaDeReportes()
+      .porId(tx, solicitud.entrada.reporteId))
+  ) {
+    throw new NoEncontradoError();
+  }
+};
+
+const corregirIntervencionEnTenant = async (
+  tx: TransaccionTenant,
+  solicitud: SolicitudDeCorreccionEnTenant,
+): Promise<void> => {
+  const { contexto, repositorio, registrarBitacora } = solicitud;
+  await validarReferenciasDeCorreccion(tx, solicitud);
+  const corregida = await repositorio.corregir(tx, {
+    id: comoIntervencionId(solicitud.id),
+    ayuntamientoId: contexto.ayuntamientoId,
+    usuarioId: contexto.usuario.id,
+    cambios: solicitud.cambios,
+  });
+  if (!corregida) throw new NoEncontradoError();
+
+  await registrarBitacora(tx, {
+    ayuntamientoId: contexto.ayuntamientoId,
+    actor: contexto.usuario.id,
+    origen: contexto.origen,
+    accion: "CORREGIR_INTERVENCION",
+    entidad: "intervenciones",
+    entidadId: solicitud.id,
+  });
+};
+
 export function crearCorregirIntervencion({
   repositorio,
   crearLecturaDeUbicaciones,
+  crearLecturaDeReportes,
   registrarBitacora = registrar,
 }: {
   repositorio: Pick<RepositorioDeIntervenciones, "corregir">;
   crearLecturaDeUbicaciones: () => LecturaDeUbicaciones;
+  crearLecturaDeReportes: () => LecturaDeReportes;
   registrarBitacora?: RegistrarDeBitacora;
 }) {
   return async function corregirIntervencion(
@@ -54,30 +116,19 @@ export function crearCorregirIntervencion({
 
     const entrada = validarEntrada(datos);
     const { id, ...cambios } = entrada;
-    await withTenant(contexto.ayuntamientoId, async (tx) => {
-      const ubicacion = await crearLecturaDeUbicaciones().de(
-        tx,
-        entrada.lugarId,
-        entrada.calleId,
-      );
-      if (!ubicacion) throw new NoEncontradoError();
+    const solicitud: SolicitudDeCorreccionEnTenant = {
+      entrada,
+      id,
+      cambios,
+      contexto,
+      repositorio,
+      crearLecturaDeUbicaciones,
+      crearLecturaDeReportes,
+      registrarBitacora,
+    };
 
-      const corregida = await repositorio.corregir(tx, {
-        id: comoIntervencionId(id),
-        ayuntamientoId: contexto.ayuntamientoId,
-        usuarioId: contexto.usuario.id,
-        cambios,
-      });
-      if (!corregida) throw new NoEncontradoError();
-
-      await registrarBitacora(tx, {
-        ayuntamientoId: contexto.ayuntamientoId,
-        actor: contexto.usuario.id,
-        origen: contexto.origen,
-        accion: "CORREGIR_INTERVENCION",
-        entidad: "intervenciones",
-        entidadId: id,
-      });
-    });
+    await withTenant(contexto.ayuntamientoId, (tx) =>
+      corregirIntervencionEnTenant(tx, solicitud),
+    );
   };
 }

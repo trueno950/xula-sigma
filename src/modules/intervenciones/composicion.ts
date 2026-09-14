@@ -28,6 +28,7 @@ export const listarIntervencionesDeCalleEnTransaccion = (
 export const corregirIntervencion = crearCorregirIntervencion({
   repositorio: repositorioDeIntervencionesSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
+  crearLecturaDeReportes: crearLectorDeReportesPorReportes,
 });
 
 export const cambiarEstadoDeIntervencion = crearCambiarEstadoDeIntervencion({
