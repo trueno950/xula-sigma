@@ -11,6 +11,7 @@ export type Scenario = {
   duplicada: string;
   domicilio: string;
   reporte: string;
+  intervencionId: string;
 };
 
 type IdRow = { id: string };
@@ -141,6 +142,13 @@ const sembrarEscenario = async (tx: TransactionSql): Promise<Scenario> => {
     calleId: calles.reporte.id,
     usuarioId: usuario.id,
   });
+  const [intervencion = { id: filaAusente("intervencion") }] = await tx<
+    IdRow[]
+  >`
+    INSERT INTO intervenciones (ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id, calle_id, descripcion, registrado_por_usuario_id)
+    VALUES (${MUNICIPIOS.motul.id}, 'OBRA', 'PLANIFICADA', '2026-01-15', ${lugares.origen.id}, ${calles.domicilio.id}, 'Rehabilitacion del parque municipal', ${usuario.id})
+    RETURNING id
+  `;
 
   return {
     origenId: lugares.origen.id,
@@ -152,6 +160,7 @@ const sembrarEscenario = async (tx: TransactionSql): Promise<Scenario> => {
     duplicada: nombres.libre,
     domicilio: nombres.domicilio,
     reporte: nombres.reporte,
+    intervencionId: intervencion.id,
   };
 };
 

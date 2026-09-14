@@ -6,6 +6,12 @@ import {
 } from "./calles.fixture";
 import { CLAVE, CORREO, urlDe } from "./municipios";
 
+let escenario: Scenario;
+
+test.beforeAll(async () => {
+  escenario = await prepararEscenario();
+});
+
 const territorio = (lugarId: string) =>
   `/territorio?raiz=${lugarId}&nodo=${lugarId}&vista=calles`;
 
@@ -106,11 +112,38 @@ async function darDeBajaReporte(
   expect(page.url()).toBe(urlDe("motul", "/territorio"));
 }
 
+test("intervenciones conserva la ficha y la correccion nativa", async ({
+  page,
+}) => {
+  await acceder(page);
+
+  await page.goto(
+    urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
+  );
+  await expect(
+    page.getByRole("heading", { name: "Intervencion OBRA", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Fecha de ocurrencia")).toBeVisible();
+
+  await page
+    .getByLabel("Descripcion corregida")
+    .fill("Descripcion corregida en E2E");
+  await page.getByRole("button", { name: "Guardar correccion" }).click();
+
+  await expect(page).toHaveURL(
+    urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
+  );
+  await expect(
+    page
+      .getByRole("definition")
+      .filter({ hasText: "Descripcion corregida en E2E" }),
+  ).toBeVisible();
+});
+
 test("calles conserva el flujo nativo, los estados vacios y las reglas de baja", async ({
   page,
 }) => {
   await prepararTiles(page);
-  const escenario = await prepararEscenario();
   await acceder(page);
   await verificarLugarVacio(page, escenario.vacioId);
   await ubicarYReparentear(page, escenario);

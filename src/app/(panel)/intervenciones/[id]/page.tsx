@@ -1,0 +1,128 @@
+import { notFound } from "next/navigation";
+import { z } from "zod";
+import {
+  AccionesDeIntervencion,
+  comoIntervencionId,
+  FormularioDeCorreccion,
+  intervencionPorId,
+} from "@/modules/intervenciones";
+import { contextoActual } from "@/shared/auth";
+import { puedeAdministrarIntervenciones } from "@/shared/auth/roles";
+import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
+import {
+  Aviso,
+  CLASES_DE_DATO,
+  CLASES_DE_ETIQUETA,
+  Migaja,
+  PaginaDePanel,
+  Panel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
+
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const esquemaDeId = z.string().uuid();
+const esquemaDeParametros = z.object({ error: z.string().optional() });
+
+const Dato = ({
+  etiqueta,
+  valor,
+  dato = false,
+}: {
+  etiqueta: string;
+  valor: string;
+  dato?: boolean;
+}) => (
+  <div className="flex flex-col gap-1">
+    <dt className={CLASES_DE_ETIQUETA}>{etiqueta}</dt>
+    <dd className={dato ? CLASES_DE_DATO : "text-[15px] text-caliza-tinta"}>
+      {valor}
+    </dd>
+  </div>
+);
+
+export default async function PaginaDeDetalleDeIntervencion({
+  params,
+  searchParams,
+}: Props) {
+  const contexto = await contextoActual();
+
+  if (!contexto) {
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+  }
+
+  const { id } = await params;
+  const analisisDeId = esquemaDeId.safeParse(id);
+  const intervencion = analisisDeId.success
+    ? await intervencionPorId(comoIntervencionId(analisisDeId.data), contexto)
+    : null;
+
+  if (!intervencion) notFound();
+
+  const analisisDeParametros = esquemaDeParametros.safeParse(
+    await searchParams,
+  );
+  const error = analisisDeParametros.success
+    ? analisisDeParametros.data.error
+    : undefined;
+  const puedeAdministrar = puedeAdministrarIntervenciones(contexto.usuario.rol);
+
+  return (
+    <PaginaDePanel
+      titulo={`Intervencion ${intervencion.tipo}`}
+      ancho="detalle"
+      migaja={
+        <Migaja
+          pasos={[
+            { etiqueta: "Intervenciones", href: "/intervenciones" },
+            { etiqueta: intervencion.tipo },
+          ]}
+          etiqueta="Ruta"
+        />
+      }
+    >
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
+
+      <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
+        <Dato etiqueta="Tipo" valor={intervencion.tipo} />
+        <Dato etiqueta="Estado" valor={intervencion.estado} />
+        <Dato
+          etiqueta="Fecha de ocurrencia"
+          valor={intervencion.fechaDeOcurrencia}
+          dato
+        />
+        <Dato
+          etiqueta="Capturado en"
+          valor={fechaYHoraEnMerida(intervencion.capturadoEn)}
+          dato
+        />
+        <Dato
+          etiqueta="Actualizado en"
+          valor={fechaYHoraEnMerida(intervencion.actualizadoEn)}
+          dato
+        />
+        <Dato etiqueta="Lugar" valor={intervencion.lugarId} />
+        <Dato etiqueta="Calle" valor={intervencion.calleId ?? "Sin calle"} />
+        <Dato
+          etiqueta="Reporte de origen"
+          valor={intervencion.reporteId ?? "Sin reporte"}
+        />
+        <Dato etiqueta="Descripcion" valor={intervencion.descripcion} />
+      </dl>
+
+      {puedeAdministrar ? (
+        <>
+          <Panel titulo="Cambiar estado">
+            <AccionesDeIntervencion intervencion={intervencion} />
+          </Panel>
+          <Panel titulo="Corregir intervencion">
+            <FormularioDeCorreccion intervencion={intervencion} />
+          </Panel>
+        </>
+      ) : null}
+    </PaginaDePanel>
+  );
+}

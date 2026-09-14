@@ -4,6 +4,7 @@ import {
   Palette,
   UsersThree,
   Warning,
+  Wrench,
 } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { ComponentType } from "react";
@@ -23,6 +24,7 @@ const MODULOS: readonly Modulo[] = [
   { nombre: "Padron", ruta: "/padron", Icono: UsersThree },
   { nombre: "Territorio", ruta: "/territorio", Icono: MapTrifold },
   { nombre: "Reportes", ruta: "/reportes", Icono: Warning },
+  { nombre: "Intervenciones", ruta: "/intervenciones", Icono: Wrench },
   { nombre: "Constancias", ruta: "/constancias", Icono: FileText },
   { nombre: "Marca", ruta: "/marca", Icono: Palette },
 ];
@@ -36,7 +38,7 @@ const MODULOS: readonly Modulo[] = [
  * los anchos menores, donde una columna se comeria media pantalla.
  *
  * Los iconos no son decoracion: son la unica forma de que la fila de 768px
- * para abajo distinga cinco destinos sin cinco palabras completas.
+ * para abajo distinga los destinos sin repetir palabras completas.
  *
  * Marca la ubicacion con `aria-current="page"` **y** con fondo y peso de
  * tipografia. Solo con color, el operador que no distingue tonos no sabe en
