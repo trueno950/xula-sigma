@@ -12,3 +12,4 @@ export {
 } from "./composicion";
 export * from "./domain";
 export { AccionesDeIntervencion } from "./ui/AccionesDeIntervencion";
+export { FormularioDeCorreccion } from "./ui/FormularioDeCorreccion";

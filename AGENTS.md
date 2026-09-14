@@ -274,6 +274,7 @@ que devuelva, y devolverlo sería código muerto.
 | `cancelarConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
 | `altaDeReporteAction` | `reportes` | Server Component, `<form action={...}>` |
 | `cambiarEstadoAction` | `reportes` | Server Component, `<form action={...}>` |
+| `corregirIntervencionAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `asignarAreaAction` | `reportes` | Server Component, `<form action={...}>` |
 
 Notas que no caben en la tabla, una por fila que las necesita:
@@ -325,6 +326,9 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `DuplicadoSinOriginalError` y `DuplicadoDeSiMismoError` -el vinculo de
   duplicado, decision 14 de `reportes-ciudadanos`-; `asignarAreaAction`
   redacta `NoAutorizadoError`, `NoEncontradoError` y `ReporteCerradoError`.
+- `corregirIntervencionAction` (`intervenciones`, rebanada 1): mismo motivo
+  que `cambiarEstadoAction`; redacta `NoAutorizadoError`, `NoEncontradoError`,
+  `ValidacionError` y el fallo de resolucion del tenant, sin exponer detalles.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un
