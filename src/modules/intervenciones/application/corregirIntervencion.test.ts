@@ -61,6 +61,7 @@ describe("corregirIntervencion", () => {
       );
     }
 
+    expect(withTenantMock).not.toHaveBeenCalled();
   });
 
   it("valida la entrada y no acepta tenant del cliente", async () => {

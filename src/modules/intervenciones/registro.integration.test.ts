@@ -6,6 +6,10 @@ import {
   type GentePorMunicipio,
   sembrarGente,
 } from "@/shared/auth/genteDePrueba";
+import {
+  puedeAdministrarIntervenciones,
+  puedeEscribir,
+} from "@/shared/auth/roles";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import { bitacora } from "@/shared/tenancy/esquema";
 import {
@@ -63,9 +67,12 @@ const trazasDeRegistro = () =>
   );
 
 describe("registro real de intervenciones", () => {
-  it("persiste fecha de ocurrencia, captura del servidor y bitacora por id", async () => {
+  it("permite a OPERADOR registrar por puedeEscribir sin administrar", async () => {
     const contexto = contextoDe(gente, "motul", "OPERADOR");
     const lugarId = await lugarDe("Comisaria Registro Intervencion");
+
+    expect(puedeEscribir(contexto.usuario.rol)).toBe(true);
+    expect(puedeAdministrarIntervenciones(contexto.usuario.rol)).toBe(false);
 
     const id = await registrar(
       {
@@ -90,12 +97,14 @@ describe("registro real de intervenciones", () => {
     );
 
     expect(guardada).toMatchObject({
+      id,
       tipo: "OBRA",
       estado: "PLANIFICADA",
       fechaDeOcurrencia: "2026-01-15",
       lugarId,
       calleId: null,
       reporteId: null,
+      registradoPorUsuarioId: contexto.usuario.id,
     });
     expect(guardada?.capturadoEn).toBeInstanceOf(Date);
     expect(trazas).toEqual([

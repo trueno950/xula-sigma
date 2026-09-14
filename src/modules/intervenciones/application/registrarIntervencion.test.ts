@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import {
+  puedeAdministrarIntervenciones,
+  puedeEscribir,
+} from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import type {
   IntervencionGuardada,
@@ -65,6 +69,15 @@ describe("registrarIntervencion", () => {
 
     expect(lectura.de).not.toHaveBeenCalled();
     expect(withTenantMock).not.toHaveBeenCalled();
+  });
+
+  it("permite registrar a OPERADOR sin concederle administrar", async () => {
+    expect(puedeEscribir("OPERADOR")).toBe(true);
+    expect(puedeAdministrarIntervenciones("OPERADOR")).toBe(false);
+
+    await registrar()(entrada, contextoCon("OPERADOR"));
+
+    expect(repositorio.guardar).toHaveBeenCalledOnce();
   });
 
   it("rechaza una ubicacion inexistente sin escribir", async () => {
