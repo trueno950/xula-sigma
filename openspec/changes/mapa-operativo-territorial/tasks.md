@@ -2,56 +2,80 @@
 
 ## Pronóstico de carga de revisión
 
-Estimación: 1,300–1,700 líneas; supera sesión 800 y límite 400.
-División: 9 unidades. Estrategia `ask-on-risk`; slices encadenados por
-`feature-branch-chain`.
+| Campo | Valor |
+|---|---|
+| Código autoral | 700–950 líneas; presupuesto fijo 400; riesgo High |
+| Excepción generada | Solo `drizzle/meta/0014_snapshot.json`, 3,350–3,500 líneas; excepción estrecha; ninguna unidad manuscrita tiene excepción |
+| Cadena | L0 → U3a → U3b → U4a → U5 → U6 → U7 → U8 |
+| Estrategia | `ask-on-risk`; `feature-branch-chain` confirmada |
 
-Decision needed before apply: Resuelto por el usuario: `feature-branch-chain`
+Decision needed before apply: Yes
 Chained PRs recommended: Yes
 Chain strategy: feature-branch-chain
 400-line budget risk: High
 
 ### Unidades de trabajo sugeridas
 
-| U | Alcance, dependencias y archivos | RED primero / comando | Runtime | Rollback / líneas |
-|---|---|---|---|---|
-| 0 | Completar `openspec/changes/mapa-operativo-territorial/specs/territorio/spec.md` para `eventos_de_calles`, `callesParaMapa`, `callePorId`; bloquea U3/U5/U6/U7/U8. | `sdd-spec` define RED; no inventar / N/A | N/A: planificación | Retirar prerrequisito / 20–40 |
-| 1 | Dominio, RLS, revisiones, `drizzle/0013_intervenciones.sql`, `src/shared/auth/roles.ts`. | RED dominio + `src/modules/intervenciones/{intervenciones,revisionesDeIntervenciones}.isolation.test.ts` / `pnpm test` + integración | `pnpm db:local`; alta/corrección por rol | Migración, módulo, permisos / 180–240 |
-| 2 | Aplicación/UI en `src/modules/intervenciones/**`, ruta `src/app/(panel)/intervenciones/**`; depende U1. | RED registrar/estado/corrección, acciones, 403/404 / `pnpm test -- intervenciones` | Alta/corrección autenticadas | Revertir módulo/rutas / 160–220 |
-| 3 | Eventos, lecturas, NOTIFY en `src/modules/territorio/**`, `drizzle/0014_territorio_eventos.sql`; bloqueada por U0. | RED + `eventosDeCalles.isolation.test.ts` según delta / `pnpm test:integration` | Mutaciones territoriales | Migración 0014 y cambios / 140–190 |
-| 4 | Lectura operativa/NOTIFY en `src/modules/reportes/{application,infrastructure}/**`; independiente de U0. | RED campos, nulos, tenant, emisiones / `pnpm test -- reportes` | Registrar/cambiar/asignar reporte | Adaptadores y NOTIFY / 80–120 |
-| 5 | Proyección/UI `src/modules/historial-de-calle/**`, ruta `[id]`; bloqueada por U0/U1/U3/U4. | RED naturalezas, orden, 404, vacío / `pnpm test -- historial-de-calle` | Historial con tres fuentes | Retirar módulo/ruta / 130–180 |
-| 6 | Agregación/filtros/UI `src/modules/mapa-operativo/**`, ruta mapa; bloqueada por U0/U1/U3/U4. | RED marcadores, cobertura, conteos, tenant / `pnpm test -- mapa-operativo` | Mapa autenticado filtrable | Retirar mapa; snapshot intacto / 180–250 |
-| 7 | Hub LISTEN/NOTIFY, SSE e isla en `src/shared/{notificaciones,tenancy,ui}/**`, `AGENTS.md`, `src/app/(panel)/eventos/route.ts`; bloqueada por U0/U6. | RED sin sesión→401; canal ignora cliente y deriva tenant; payload tipo/id/cambio+RLS; heartbeat; cierre→desconectada+resync / `pnpm test -- eventos` | E2E con desconexión controlada | Desmontar ruta/hub; snapshot sigue / 180–240 |
-| 8 | Navegación y E2E en `src/app/(panel)/NavegacionDeModulos.tsx`, `e2e/mapa-operativo.spec.ts`; bloqueada por U5–U7. | RED sesión, mapa, historial, push / `pnpm test:e2e` | Flujo operador Motul/Ticul | Revertir navegación / 80–120 |
+| U | Entrega | Test enfocado | Runtime / rollback |
+|---|---|---|---|
+| L0 | Solo `drizzle/meta/0014_snapshot.json`; N/A aplicación | N/A; `pnpm db:local && pnpm db:generate && pnpm db:migrate` + `No schema changes` | Borrar snapshot; preservar SQL/journal |
+| U3a | Eventos, RLS y lecturas; no NOTIFY | `pnpm vitest run --project integration src/modules/territorio/eventosDeCalles.isolation.test.ts` | `pnpm db:local && pnpm db:migrate && pnpm test:integration`; revertir U3a |
+| U3b | NOTIFY transaccional de calle; sin LISTEN/SSE | `pnpm vitest run --project unit src/shared/notificaciones/notificar.test.ts` | `pnpm test:integration -- notificar`; retirar notificaciones |
+| U4a | Lectura de reportes; U4b separada | `pnpm vitest run --project unit src/modules/reportes/application/listarReportesParaMapa.test.ts` | `pnpm test:integration -- mapa`; revertir lectura |
+| U5 | Historial solo lectura | `pnpm vitest run --project unit src/modules/historial-de-calle/application/leerHistorialDeCalle.test.ts` | `pnpm test:integration -- historial`; retirar módulo |
+| U6 | Mapa y snapshot | `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` | `pnpm test:e2e --grep mapa`; retirar módulo/ruta |
+| U7 | LISTEN/SSE, hub, selección/consumo de canal y resync; sin polling | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` | `pnpm test:e2e --grep desconexión` después de D1/D2; desmontar |
+| U8 | Navegación y journey | `pnpm test:e2e --grep "mapa operativo"` | Sesión + pérdida SSE; revertir navegación/journey |
+
+0014 está confirmada por el mantenedor en `xula_dev` y ya en `xula_test`; no
+se afirma staging ni producción.
+
+### Bloqueadores y decisiones explícitas
+
+- **D1:** falta owner para publicar en vivo alta, estado y corrección de
+  `intervenciones`.
+- **D2:** falta aprobar el payload exacto de `reporte` e `intervencion`.
+- Programables: L0, U3a, U3b, U4a, U5 y U6. U4b-publicación, U7-live y U8
+  quedan bloqueadas por D1/D2; no se inventa resolución.
 
 ## Fases TDD
 
 ### Fase 1: Contrato y fundación
-- [x] 1.1 Ejecutar U0; resolver el delta de `territorio` sin inventar aceptación.
-- [ ] 1.2 RED y GREEN de U1; RLS y aislamiento de ambas tablas en el mismo slice. (U1a completa; U1b de aplicacion completa, acciones/UI pendientes.)
-  - [x] 1.2a U1a; dominio, tabla `intervenciones`, RLS, FKs compuestos, registro base y aislamiento.
-  - [ ] 1.2b U1b; revisiones append-only, correcciones y administración de estados (acciones/UI pendientes).
-      - [x] 1.2b.1 U1b hardening; valores anteriores exactos, rollback atómico y lock concurrente.
-      - [x] 1.2b.2 U1b-correction-application; permiso, corrección validada y bitácora atómica por id.
-      - [x] 1.2b.2a U1b-correction-transaction-hardening; validación de ubicación y corrección/auditoría en la misma transacción, aislamiento y rollback.
-      - [ ] 1.2b.3 U1b-state-administration; transiciones, acciones y UI de administración quedan pendientes.
-        - [x] 1.2b.3a U1b-state-application; caso de uso ADMIN_MUNICIPAL, transiciones, tenant, bitácora y pruebas.
-        - [x] 1.2b.3a.1 U1b-state-evidence-hardening; concurrencia condicional y rollback atómico de bitácora contra Postgres real.
-- [ ] 1.2b.3b U1b-state-actions-ui; Server Actions, UI de administración y navegación.
-  - [x] 1.2b.3b.1 U1b-state-action-form; Server Action estricta y formulario nativo de destinos válidos.
-    - [x] 1.2b.3b.1a U1b-state-action-hardening; capturar fallos de resolución de sesión/tenant y mapear el error conocido sin exponer detalles.
-  - [ ] 1.2b.3b.2 U1b-state-detail-navigation; ficha, corrección e ingreso desde navegación.
-- [ ] 1.3 RED y GREEN de U2; `puedeEscribir` para registrar, regla nueva para administrar.
+- [x] 1.1 U0: delta de territorio.
+  - [x] 1.2 U1: RLS/FK/aislamiento.
+  - [x] 1.2a U1a: dominio/tablas.
+  - [x] 1.2b U1b: revisiones/correcciones/estados/UI.
+    - [x] 1.2b.1 Hardening.
+    - [x] 1.2b.2 Corrección.
+    - [x] 1.2b.2a Transacción.
+    - [x] 1.2b.2b `reporteId` tenant-scoped.
+    - [x] 1.2b.3 Estados/UI.
+    - [x] 1.2b.3a Transiciones.
+    - [x] 1.2b.3a.1 Carrera/rollback.
+  - [x] 1.2b.3b Actions/UI/navegación.
+    - [x] 1.2b.3b.1 Acción/formulario.
+    - [x] 1.2b.3b.1a Sesión/tenant.
+    - [x] 1.2b.3b.2 Ficha/corrección.
+- [x] 1.3 U2: `puedeEscribir` registra; regla nueva administra.
 
-### Fase 2: Integración de lecturas
-- [ ] 2.1 RED y GREEN de U3; permanece bloqueada hasta U0.
-- [ ] 2.2 RED y GREEN de U4; excluir `descripcion` y `referencia`.
+### Fase 2: Persistencia y publicación acotada
+- [x] 2.1 L0 N/A→GREEN: generar solo `drizzle/meta/0014_snapshot.json` en copia con journal a 0013; preservar `drizzle/0014_revisiones_intervenciones.sql` (read-only) y `drizzle/meta/_journal.json` (read-only) byte a byte.
+- [x] 2.2 U3a RED: tests `eventosDeCalles.isolation.test.ts`, `callesParaMapa.test.ts`, `callePorId.test.ts` en `src/modules/territorio/`.
+- [x] 2.3 U3a GREEN: `drizzle/0015_eventos_de_calles.sql` y `src/modules/territorio/{infrastructure/{esquema.ts,repositorioDeCallesSql.ts,index.ts},application/{puertos.ts,altaDeCalle.ts,renombrarCalle.ts,reparentearCalle.ts,ubicarCalle.ts},composicion.ts}`; RLS/FORCE/GRANT S-I/FK, naturaleza/referencias cerradas sin JSON/nombres/coordenadas/descripciones/PII, misma tx, conserva `puedeAdministrarTerritorio`, sin writer genérico, lecturas sin permiso administrativo, `ALTA` excluida y orden determinista.
+- [x] 2.4 U3b RED: tests de payload, canal y rollback en `src/shared/notificaciones/`.
+- [x] 2.5 U3b GREEN: crear `src/shared/notificaciones/{canales.ts,notificar.ts}`; publicar solo `{ tipo: "calle", id, cambio: "estructura" }`, sin LISTEN/SSE.
+- [x] 2.6 U4a RED: tests de lectura en `src/modules/reportes/` para nulos, tenant y campos protegidos.
+- [x] 2.7 U4a GREEN: modificar `src/modules/reportes/application/{puertos.ts,listarReportesParaMapa.ts}` y `src/modules/reportes/infrastructure/{listadoDeReportesSql.ts,index.ts}`; sin NOTIFY. U4b queda separada y bloqueada por D1/D2.
 
-### Fase 3: Proyecciones, mapa y vivo
-- [ ] 3.1 RED y GREEN de U5 y U6; bloqueadas hasta U0 y dependencias.
-- [ ] 3.2 RED y GREEN de U7; cada amenaza SSE falla antes del código.
+### Fase 3: Proyección y mapa
+- [x] 3.1 U5 RED: tipos, empate, 404 y vacío.
+- [x] 3.2 U5 GREEN: `src/modules/historial-de-calle/`; solo lectura, tres naturalezas.
+- [ ] 3.3 U6 RED: cobertura, filtros, conteos y tenant.
+- [ ] 3.4 U6 GREEN: `src/modules/mapa-operativo/`; snapshot, enlaces, sin GIS.
 
-### Fase 4: Navegación y verificación
-- [ ] 4.1 RED y GREEN de U8; ejecutar después de U5–U7.
-- [ ] 4.2 Ejecutar `pnpm test`, integración, E2E y `pnpm check` sin compresión.
+### Fase 4: Vivo y navegación
+- [ ] 4.1 U7 RED: 401/canal/heartbeat/resync/tenant/no polling; D1/D2.
+- [ ] 4.2 U7 GREEN: hub/ruta/isla; refresh manual, no polling.
+- [ ] 4.3 U8 RED: sesión/mapa/historial/push.
+- [ ] 4.4 U8 GREEN: navegación/ruta; live bloqueado por D1/D2.
+- [ ] 4.5 Verificar sin `rtk`: `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, cobertura y `pnpm check`.

@@ -3,34 +3,40 @@
 ## Estado
 
 - Modo: Strict TDD.
-- Token nativo actual: `sha256:9ff1a2d2bf930b59a155ca44ca083e247fea6fda9421e8687a59147d5400b33a`.
-- Work unit actual: `U1b-state-action-hardening`.
+- Token nativo actual: el orquestador conserva `sha256:3d3d3abc0b16aa09fe21226a5331f6b046163d0f79fe4be3bfdd8eb82c50e5fb`;
+  este ejecutor no lo adquiere ni lo asienta.
+- Work unit actual: `U2-permisos-evidence-remediation`.
 - Estrategia: `ask-on-risk`; chain `feature-branch-chain`, confirmada por el
   usuario. No se usa `stacked-to-main` ni `size:exception`.
 - Alcance acumulado: U1a, persistencia append-only de U1b, hardening,
-  aplicacion de correccion, administracion de estados, formulario de acciones
-  y hardening de su frontera siguen documentados abajo. La ficha, correccion y
-  navegacion quedan para una unidad posterior.
+  aplicacion de correccion, administracion de estados, formulario de acciones,
+  hardening de su frontera y ficha/correccion/navegacion siguen documentados
+  abajo; U2 agrega evidencia de la separacion de permisos.
+
+> Las filas de calidad y los comandos de las secciones siguientes conservan
+> resultados historicos de cada unidad. No describen por si solos el estado
+> actual del repositorio; la seccion final registra la ultima verificacion.
 
 ## Tareas
 
 - [x] 1.1 — U0: delta de `territorio` sin inventar aceptacion.
-- [ ] 1.2 — U1: dominio, RLS y revisiones de intervenciones. (U1a completa; U1b de aplicacion completa, acciones/UI parciales.)
+- [x] 1.2 — U1: dominio, RLS y revisiones de intervenciones. (U1a y U1b completas; U2 queda completa en 1.3.)
 - [x] 1.2a — U1a: dominio, tabla, RLS, FKs compuestos, registro base y aislamiento.
-- [ ] 1.2b — U1b: revisiones append-only, correcciones y administracion de estados (acciones/UI parciales).
+- [x] 1.2b — U1b: revisiones append-only, correcciones y administracion de estados, acciones y UI.
 - [x] 1.2b.2a — U1b-correction-transaction-hardening: validacion de ubicacion,
   correccion y bitacora con la misma transaccion; aislamiento y rollback.
 - [x] 1.2b.3a — U1b-state-application: caso de uso ADMIN_MUNICIPAL,
   transiciones, tenant, bitacora ID-only y pruebas.
-- [ ] 1.2b.3b — U1b-state-actions-ui: Server Actions, UI de administracion y
+- [x] 1.2b.3b — U1b-state-actions-ui: Server Actions, UI de administracion y
   navegacion.
 - [x] 1.2b.3b.1 — U1b-state-action-form: Server Action estricta y formulario
   nativo para destinos de estado validos.
 - [x] 1.2b.3b.1a — U1b-state-action-hardening: fallos de resolucion de
   sesion/tenant dentro del limite de error y mapeo seguro del tenant ausente.
-- [ ] 1.2b.3b.2 — U1b-state-detail-navigation: ficha, correccion e ingreso
-  desde navegacion; queda para una rebanada posterior.
-- [ ] 1.3 — U2: aplicacion/UI de intervenciones y autorizacion.
+- [x] 1.2b.3b.2 — U1b-state-detail-navigation: ficha, correccion e ingreso
+  desde navegacion.
+- [x] 1.3 — U2: registro por `puedeEscribir` y administracion por
+  `puedeAdministrarIntervenciones`.
 - [ ] 2.1 — U3: eventos, lecturas y NOTIFY de `territorio`.
 - [ ] 2.2 — U4: lectura operativa y NOTIFY de reportes.
 - [ ] 3.1 — U5/U6: historial de calle y mapa operativo.
@@ -58,8 +64,8 @@ parte de esta rebanada.
 
 | Evidencia | Resultado |
 |---|---|
-| Test enfocado | `DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test" MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test" pnpm vitest run src/modules/intervenciones/domain/intervencion.test.ts src/modules/intervenciones/application/registrarIntervencion.test.ts src/modules/intervenciones/superficiePublica.test.ts src/modules/intervenciones/intervenciones.isolation.test.ts src/modules/intervenciones/intervenciones.clavesForaneas.isolation.test.ts src/modules/intervenciones/intervenciones.checks.isolation.test.ts src/modules/intervenciones/registro.integration.test.ts` → paso; 7 archivos, 27 tests. |
-| Runtime harness | `DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test" MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test" pnpm test:integration` → paso; 84 archivos, 308 tests. |
+| Test enfocado | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run src/modules/intervenciones/domain/intervencion.test.ts src/modules/intervenciones/application/registrarIntervencion.test.ts src/modules/intervenciones/superficiePublica.test.ts src/modules/intervenciones/intervenciones.isolation.test.ts src/modules/intervenciones/intervenciones.clavesForaneas.isolation.test.ts src/modules/intervenciones/intervenciones.checks.isolation.test.ts src/modules/intervenciones/registro.integration.test.ts` → paso; 7 archivos, 27 tests. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm test:integration` → paso; 84 archivos, 308 tests. |
 | Suite completa | Con las mismas tres variables, `pnpm test` → paso; 254 archivos, 1247 tests. |
 | Rollback boundary | Retirar `src/modules/intervenciones/`, `drizzle/0013_intervenciones.sql`, `drizzle/meta/0013_snapshot.json`, revertir la entrada `0013_intervenciones` del journal y revertir unicamente los truncados de los siete tests de `reportes`; U0 permanece intacto. |
 
@@ -194,7 +200,7 @@ registro.
 | Test enfocado | `pnpm vitest run --project integration src/modules/intervenciones/intervenciones.isolation.test.ts` con los tres roles locales → paso; 1 archivo, 5 tests. |
 | Runtime harness | La misma suite contra Postgres real verifica correccion, RLS y permisos append-only; paso. |
 | Verificacion adicional | `pnpm test -- intervenciones` → paso; 254 archivos, 1248 tests. `pnpm test:integration` → paso; 84 archivos, 309 tests. `pnpm typecheck`, `pnpm layers` y `pnpm reglas` → paso. |
-| Migracion y permisos | `MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" pnpm db:migrate` → paso; `relrowsecurity=true`, `relforcerowsecurity=true`, grants de `xula_app`: `INSERT`, `SELECT`. |
+| Migracion y permisos | `MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" pnpm db:migrate` → paso; `relrowsecurity=true`, `relforcerowsecurity=true`, grants de `xula_app`: `INSERT`, `SELECT`. |
 | Quality gate | `pnpm check` sigue fallando solo por el formato preexistente de `opencode.json`; 50 advertencias preexistentes. Lint dirigido de U1b → paso. |
 | Rollback boundary | Retirar `drizzle/0014_revisiones_intervenciones.sql`, su entrada de journal, la tabla/export y `corregir` del repositorio, mas las aserciones/truncados de revisiones; conservar U1a y el resto del ledger. |
 
@@ -260,7 +266,7 @@ registro.
 | Evidencia | Resultado |
 |---|---|
 | Test enfocado | `pnpm vitest run --project unit src/modules/intervenciones/application/corregirIntervencion.test.ts src/shared/auth/roles.test.ts` → paso; 2 archivos, 25 tests. |
-| Runtime harness | `DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test" MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test" pnpm test:integration` → paso; 84 archivos, 312 tests contra Postgres real, incluida la correccion y bitacora por ID. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm test:integration` → paso; 84 archivos, 312 tests contra Postgres real, incluida la correccion y bitacora por ID. |
 | Verificacion completa | Con las mismas variables, `pnpm test -- intervenciones` → paso; 255 archivos, 1255 tests. `pnpm test:integration` → paso; 84 archivos, 312 tests. `pnpm typecheck`, `pnpm layers` → paso; 666 modulos/2922 dependencias. `pnpm reglas` → paso; 9 reglas, 2 metricas, 652 archivos. |
 | Lint dirigido | `rtk lint check` sobre los archivos de esta rebanada → paso; sin issues. |
 | Quality gate | `pnpm check` sigue bloqueado en lint por el formato preexistente de `opencode.json` y advertencias preexistentes; no reporta diagnosticos en los archivos de esta rebanada. |
@@ -350,7 +356,7 @@ registro.
 | Evidencia | Resultado |
 |---|---|
 | Test enfocado | `pnpm vitest run --project unit src/modules/intervenciones/domain/intervencion.test.ts src/modules/intervenciones/application/cambiarEstadoDeIntervencion.test.ts` → paso; 2 archivos, 20 tests. |
-| Runtime harness | `DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test" MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test" pnpm vitest run --project integration src/modules/intervenciones/intervenciones.isolation.test.ts` → paso; 1 archivo, 8 tests contra Postgres real. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/intervenciones/intervenciones.isolation.test.ts` → paso; 1 archivo, 8 tests contra Postgres real. |
 | Suite solicitada | Con las mismas tres variables, `pnpm test -- intervenciones` → paso; 256 archivos, 1270 tests. |
 | Integracion completa | Con las mismas tres variables, `pnpm test:integration` → paso; 84 archivos, 316 tests. |
 | Typecheck | `pnpm typecheck` → paso. |
@@ -405,7 +411,7 @@ registro.
 | Evidencia | Resultado |
 |---|---|
 | Test enfocado unitario | `pnpm vitest run --project unit src/modules/intervenciones/domain/intervencion.test.ts src/modules/intervenciones/application/cambiarEstadoDeIntervencion.test.ts` → paso; 2 archivos, 20 tests. |
-| Test enfocado de integracion | `DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test" MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test" pnpm vitest run --project integration src/modules/intervenciones/intervenciones.isolation.test.ts` → paso; 1 archivo, 10 tests. |
+| Test enfocado de integracion | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/intervenciones/intervenciones.isolation.test.ts` → paso; 1 archivo, 10 tests. |
 | Runtime harness | La misma suite contra Postgres real coordina una lectura stale con `enTransaccionParalela`, confirma el nuevo `CANCELADA`, recibe `NoEncontradoError` y verifica que no fue pisado; el actor invalido hace fallar el INSERT UUID de bitacora y deja estado `PLANIFICADA` sin traza. Paso. |
 | Suite solicitada | Con las mismas tres variables, `pnpm test -- intervenciones` → paso; 256 archivos, 1272 tests, 190.34 s. |
 | Integracion completa | Con las mismas tres variables, `pnpm test:integration` → paso; 84 archivos, 318 tests, 156.30 s. |
@@ -458,7 +464,7 @@ registro.
 | Evidencia | Resultado |
 |---|---|
 | Test enfocado | `pnpm vitest run --project unit "src/modules/intervenciones/ui/actions/acciones.test.ts" "src/modules/intervenciones/ui/AccionesDeIntervencion.test.tsx"` → paso; 2 archivos, 5 tests. |
-| Runtime harness | `DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test" MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test" pnpm test -- intervenciones` → paso; 258 archivos, 1277 tests, 228.45 s. La ruta Next no se agrego en esta costura; el arnes real cubre el caso de uso y su persistencia contra Postgres. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm test -- intervenciones` → paso; 258 archivos, 1277 tests, 228.45 s. La ruta Next no se agrego en esta costura; el arnes real cubre el caso de uso y su persistencia contra Postgres. |
 | Typecheck | `pnpm typecheck` → paso. |
 | Capas | `pnpm layers` → paso; 672 modulos, 2963 dependencias, sin violaciones. |
 | Reglas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 652 archivos. |
@@ -538,7 +544,7 @@ registro.
 | Evidencia | Resultado |
 |---|---|
 | Test enfocado | `pnpm vitest run --project unit "src/modules/intervenciones/ui/actions/acciones.test.ts" "src/modules/intervenciones/ui/AccionesDeIntervencion.test.tsx"` → paso; 2 archivos, 12 tests. |
-| Runtime harness | `DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test" MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test" SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test" pnpm test -- intervenciones` → paso; 258 archivos, 1283 tests, 131.43 s. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm test -- intervenciones` → paso; 258 archivos, 1283 tests, 131.43 s. |
 | Typecheck | `pnpm typecheck` → paso. |
 | Reglas | `pnpm reglas` → paso; 9 reglas, 2 metricas, 652 archivos. |
 | Seguridad | El fallo generico redirige con mensaje fijo y el log solo recibe `datosSegurosDeError`; el detalle secreto no aparece. |
@@ -585,3 +591,544 @@ registro.
   over 687 files, with no findings. Targeted lint also passed with no issues.
 - The rollback boundary is the test-file split and this ledger section only; no
   production file is included.
+
+## U1b: validacion tenant-scoped de reporte (remediacion actual)
+
+- Work unit: `U1b-report-link-validation`.
+- La tentativa nativa fue recibida por el orquestador; esta unidad no adquiere,
+  asienta, reinicia ni resetea otro intento.
+- Alcance: validar un `reporteId` no nulo bajo el `TransaccionTenant` actual
+  antes de registrar o corregir una intervencion. Un reporte inexistente o
+  invisible por RLS devuelve `NoEncontradoError` sin escritura, revision ni
+  bitacora; la FK compuesta existente permanece como defensa final.
+- La tarea no estaba descrita con este caso de seguridad en `tasks.md`; se
+  agrego y marco `1.2b.2b` completa, sin abrir otra unidad funcional.
+- Limite solicitado: 220 lineas cambiadas. Resultado medido de codigo y
+  pruebas: 370 lineas; no se eliminaron aserciones ni se comprimieron tests
+  para perseguir el numero. Requiere `size:exception` o una division posterior
+  antes de asentarse como una sola rebanada.
+
+### TDD Cycle Evidence — validacion de reporte
+
+| Tarea | Tests | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|
+| 1.2b.2b | `registrarIntervencion.test.ts`, `corregirIntervencion.test.ts`, `registro.integration.test.ts`, `correccion.integration.test.ts` | ✅ Las pruebas de reporte inexistente y de otro municipio se escribieron antes del puerto, adaptador y cableado; la lectura requerida estaba ausente | ✅ Registro y correccion rechazan ambos casos con `NoEncontradoError` antes de guardar, corregir, revisar o auditar | ✅ Postgres real confirma aislamiento RLS, ausencia de intervencion/revision y bitacora sin cambios; suite completa, typecheck, capas y reglas en verde | ✅ El puerto pertenece a `intervenciones`; infraestructura usa la superficie publica de `reportes`; los helpers de prueba se extrajeron para respetar el limite de archivo |
+
+### Work Unit Evidence — validacion de reporte
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm test -- src/modules/intervenciones/application/registrarIntervencion.test.ts src/modules/intervenciones/application/corregirIntervencion.test.ts` → paso; Vitest ejecuto los proyectos configurados: 265 archivos, 1292 tests. |
+| Runtime harness | Con las mismas tres variables, `pnpm test:integration -- src/modules/intervenciones/registro.integration.test.ts src/modules/intervenciones/correccion.integration.test.ts` → paso; 91 archivos, 322 tests contra Postgres real. |
+| Quality gates | `pnpm typecheck` → paso; `pnpm layers` → paso, 682 modulos y 3045 dependencias; `pnpm reglas` → paso, 9 reglas y 2 metricas sobre 694 archivos. Biome dirigido (`pnpm exec biome check --write` sobre los 16 archivos cambiados) → sin issues. `pnpm check` → falla solo por el formato preexistente de `opencode.json` y 50 advertencias preexistentes; no reporta archivos de esta unidad. |
+| Rollback boundary | Retirar `src/modules/intervenciones/application/{puertosDeLectura,registrarIntervencion,corregirIntervencion}.ts`, sus dos pruebas, `composicion.ts`, `infrastructure/{index,lectorDeReportesPorReportes}.ts`, los tres tests de integracion y sus dos helpers; retirar `crearReporteExisteEnTransaccion` y su exportacion de `src/modules/reportes/{application/reportePorId,composicion,index}.ts`, junto con la tarea `1.2b.2b` y esta seccion. Conservar U1a, revisiones, correcciones, estados y sus pruebas previas. |
+
+### Resultado de la validacion de reporte
+
+- El lector real consulta el reporte dentro del `tx` abierto por
+  `withTenant`; no crea una segunda conexion ni recibe `ayuntamientoId` del
+  cliente.
+- Los casos de registro y correccion cubren un UUID de otro municipio y uno
+  inexistente. Ambos se traducen a `NoEncontradoError` antes de cualquier
+  efecto observable.
+- El diff de esta rebanada mide 370 lineas de codigo y pruebas, 150 por encima
+  del limite explicito de 220. La implementacion queda funcionalmente verde,
+  pero no debe asentarse sin una decision de `size:exception` o una futura
+  division de entrega.
+
+## U1b: revalidacion del intento activo
+
+- Work unit: `U1b-report-link-validation`.
+- Token nativo activo recibido del orquestador: `sha256:dd19ad9522fc92c9ea56ce3ac0c13930ba18e3eedcf164dcc898842b28af648c`.
+- El ejecutor no adquirio, asento, reinicio ni reseteo otro intento.
+- La implementacion de la unidad ya estaba presente en el worktree al inicio
+  de esta revalidacion. No se modificaron los cinco paths excluidos por el
+  orquestador ni se altero codigo fuente adicional.
+
+### TDD Cycle Evidence — revalidacion
+
+| Tarea | Tests | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|
+| 1.2b.2b | `registrarIntervencion.test.ts`, `corregirIntervencion.test.ts`, `registro.integration.test.ts`, `correccion.integration.test.ts` | ✅ La evidencia RED persistida confirma que los escenarios se escribieron antes del puerto, adaptador y cableado | ✅ Unitario: 2 archivos, 12 tests; integracion: 2 archivos, 9 tests; rollback: 1 archivo, 1 test | ✅ Se revalidaron reporte inexistente y reporte invisible de otro ayuntamiento, sin escritura, revision ni bitacora | ✅ Check dirigido de Biome sin hallazgos; typecheck y capas sin violaciones |
+
+### Work Unit Evidence — revalidacion
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado | `pnpm vitest run --project unit src/modules/intervenciones/application/registrarIntervencion.test.ts src/modules/intervenciones/application/corregirIntervencion.test.ts` → paso; 2 archivos, 12 tests. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/intervenciones/registro.integration.test.ts src/modules/intervenciones/correccion.integration.test.ts` → paso; 2 archivos, 9 tests contra Postgres real. La regresion de rollback tambien paso: `correccion.rollback.integration.test.ts`, 1 test. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas y capas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos. `pnpm layers` → paso; 682 modulos y 3045 dependencias, sin violaciones. |
+| Lint dirigido | `rtk lint check` sobre los archivos de la unidad → paso; sin issues. |
+| Quality gate | `pnpm check` → falla con el unico error preexistente de formato en `opencode.json`; mantiene 50 advertencias preexistentes y no reporta errores en los archivos de esta unidad. No se modifico `opencode.json`. |
+| Rollback boundary | Retirar unicamente la validacion tenant-scoped de `reporteId`, su puerto/adaptador, las pruebas de unidad e integracion y sus helpers de prueba; conservar U1a, revisiones append-only, correccion, estados y sus evidencias previas. |
+
+### Resultado de la revalidacion
+
+- El estado de fuente conserva la lectura del reporte dentro del `tx` de
+  `withTenant`, con `NoEncontradoError` para filas inexistentes o invisibles.
+- La evidencia actual confirma que registro y correccion no escriben
+  intervencion, revision ni bitacora antes de validar el vinculo.
+- La verificacion queda verde salvo el baseline conocido de `pnpm check` en
+  `opencode.json`; no se hizo ninguna edicion de ese archivo ni de los paths
+  excluidos.
+
+## U1b: ficha, correccion y navegacion (actual)
+
+- Work unit: `U1b-state-detail-navigation`.
+- Alcance: ficha server-rendered por id, correccion append-only mediante Server
+  Action y formulario nativo, controles de estado para administracion y entrada
+  del modulo en la navegacion. No se agrega listado ni alta en la ruta raiz;
+  quedan fuera de esta hoja.
+- El token nativo lo conserva el orquestador; este ejecutor no lo adquiere ni
+  lo asienta. Se conserva `feature-branch-chain`.
+- La unidad agrega 523 lineas cambiadas de codigo, pruebas y la documentacion
+  de su superficie, frente al maximo local de 240. No se eliminan aserciones,
+  comentarios ni pruebas para perseguir el numero; requiere recomendacion de
+  `size:exception` antes de asentarse como una sola rebanada.
+
+### TDD Cycle Evidence — ficha, correccion y navegacion
+
+| Tarea | Tests | Capa | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 1.2b.3b.2 | `app/(panel)/intervenciones.test.tsx`, `ui/FormularioDeCorreccion.test.tsx`, `ui/actions/corregirIntervencionAction.test.ts` | Unit | Casos de uso, aislamiento y acciones de estado ya verificados en las rebanadas anteriores | ✅ Cada superficie nueva fallo primero por modulo o ruta ausente | ✅ 3 archivos, 10 tests | ✅ Correccion, rollback, aislamiento, suite completa, typecheck, capas y reglas en verde | ✅ Formato Biome aplicado y comentario de navegacion corregido sin cambiar comportamiento |
+
+### Work Unit Evidence — ficha, correccion y navegacion
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado | `pnpm vitest run --project unit 'src/app/(panel)/intervenciones.test.tsx' 'src/modules/intervenciones/ui/FormularioDeCorreccion.test.tsx' 'src/modules/intervenciones/ui/actions/corregirIntervencionAction.test.ts'` → paso; 3 archivos, 10 tests. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/intervenciones/correccion.integration.test.ts src/modules/intervenciones/correccion.rollback.integration.test.ts src/modules/intervenciones/intervenciones.isolation.test.ts` → paso; 3 archivos, 8 tests contra Postgres real. |
+| Regresion de modulo | Con las mismas variables, `pnpm test -- intervenciones` → paso; 268 archivos, 1302 tests, 249.88 s. |
+| Harness autenticado/UI | `pnpm test:e2e` construyo y arranco la aplicacion; 8 de 11 tests pasaron. 3 pruebas preexistentes fallaron por `The destination stream closed early` y agotaron timeout en `bajaDeLugar.spec.ts`, `calles.spec.ts` y `respaldoPorHost.spec.ts`; los fixtures no siembran intervenciones, por lo que no existe un escenario E2E especifico de esta ficha. |
+| Quality gates | `pnpm typecheck`, `pnpm reglas` (9 reglas, 2 metricas, 694 archivos), `pnpm layers` (688 modulos, 3076 dependencias) y lint dirigido → paso. `pnpm check` falla solo por el formato preexistente de `opencode.json` y conserva 50 advertencias; no reporta errores en los archivos de esta unidad. |
+| Rollback boundary | Retirar `src/app/(panel)/intervenciones.test.tsx`, `src/app/(panel)/intervenciones/[id]/page.tsx`, la entrada de `NavegacionDeModulos.tsx`, `src/modules/intervenciones/ui/{FormularioDeCorreccion.tsx,FormularioDeCorreccion.test.tsx}`, `ui/actions/{corregirIntervencionAction.ts,corregirIntervencionAction.test.ts}`, la exportacion en `src/modules/intervenciones/index.ts`, la fila/nota correspondiente de `AGENTS.md` y esta seccion; conservar aplicacion, infraestructura, migraciones y pruebas previas. |
+
+### Resultado de ficha, correccion y navegacion
+
+- La ficha resuelve el contexto en servidor, consulta por `withTenant` y trata
+  una fila invisible o inexistente como `notFound()`, sin distinguir tenants.
+  Presenta por separado la fecha de ocurrencia y los momentos de captura y
+  actualizacion; solo `ADMIN_MUNICIPAL` ve estado y correccion.
+- La correccion valida con Zod en la primera frontera, conserva el contexto de
+  servidor, usa el formulario nativo y redirige errores con mensajes seguros.
+  La descripcion es el unico campo de texto libre visible; el estado queda en
+  su accion de administracion separada.
+- La navegacion marca `/intervenciones` como activa y conserva la costura de
+  rutas para la ficha. `tasks.md` marca `1.2b.3b.2` completa; `1.2b.3b` y
+  `1.2b` permanecen abiertas.
+- La funcionalidad esta verde en focused/integration, pero el exceso medido de
+  283 lineas sobre el maximo y los fallos E2E preexistentes deben quedar a la
+  vista del orquestador antes de la verificacion independiente.
+
+## Remediacion vinculada: brechas de evidencia de U1b-state-detail-navigation
+
+- Work unit: `U1b-state-detail-navigation-evidence-remediation`.
+- Token nativo recibido del orquestador: `sha256:27277fcafaf52bad5c829732123f0f19d101ebc8542abb2dc1be4eab04a66243`.
+- Revision de evidencia fallida que se remedia: `sha256:73900353b95999bcf336d1000692997f880eec2e19fb2a7957ade3daf8d7d640`.
+- El ejecutor no adquirio, asento, reinicio ni reseteo otro intento.
+- Limite de esta remediacion: 180 lineas cambiadas; el maintainer autorizo
+  `size:exception` para esta unidad. Se conserva `feature-branch-chain`.
+- Alcance cerrado: cobertura directa de errores de la Server Action, contrato
+  oculto de `lugarId`, tipografia de fechas con `CLASES_DE_DATO` y un journey
+  de intervencion agregado a infraestructura E2E existente y rastreada.
+- `tasks.md` conserva `[x] 1.2b.3b.2`; esta remediacion corrige evidencia de la
+  misma tarea y no abre una tarea funcional nueva.
+
+### TDD Cycle Evidence — remediacion de evidencia
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| Mapeos de `corregirIntervencionAction` | `ui/actions/corregirIntervencionAction.test.ts` | Unit | ✅ 3 archivos, 10 tests | ✅ Tests escritos antes; el primer resultado de estos regresos fue verde porque la implementacion ya tenia los mapeos | ✅ 3 archivos, 13 tests finales | ✅ `NoAutorizadoError`, `ValidacionError` y error desconocido con log seguro | ✅ Biome y test enfocado en verde |
+| Contrato oculto de `lugarId` | `ui/FormularioDeCorreccion.test.tsx` | Unit | ✅ 3 archivos, 10 tests | ✅ Aserciones escritas antes; la implementacion ya transportaba el campo | ✅ 3 archivos, 13 tests finales | ✅ Lugar inicial y lugar alterno, con referencias nulas y existentes | ✅ Biome y test enfocado en verde |
+| Fechas de la ficha | `app/(panel)/intervenciones.test.tsx` | Unit | ✅ 3 archivos, 10 tests | ✅ La nueva asercion fallo: 1 test rojo por clases de dato ausentes | ✅ 3 archivos, 13 tests finales | ✅ Ocurrencia, captura y actualizacion usan la convencion compartida | ✅ Extraccion de `dato` y Biome, sin cambio de comportamiento de datos |
+| Journey de ficha y correccion | `e2e/calles.spec.ts` + `e2e/calles.fixture.ts` | E2E | ✅ Infraestructura E2E rastreada existente | ✅ El test primero dejo `Scenario.intervencionId` ausente y `pnpm typecheck` fallo | ✅ Journey enfocado: 1 test pasado | ✅ Render server-side y correccion nativa con resultado visible | ✅ Se retiro `networkidle`, que colgaba por el stream del harness, y se uso un locator de salida visible |
+
+### Test Summary — remediacion
+
+- **Tests enfocados finales**: 3 archivos, 13 tests unitarios.
+- **Tests PostgreSQL finales**: 3 archivos, 8 tests de integracion.
+- **Journey E2E nuevo**: 1 test enfocado pasado.
+- **Approval tests**: los tests enfocados previos funcionaron como safety net;
+  no se refactorizo logica de negocio.
+- **Funciones puras nuevas**: ninguna.
+
+### Work Unit Evidence — remediacion
+
+| Evidencia | Resultado |
+|---|---|
+| Test unitario enfocado | `pnpm vitest run --project unit 'src/app/(panel)/intervenciones.test.tsx' 'src/modules/intervenciones/ui/FormularioDeCorreccion.test.tsx' 'src/modules/intervenciones/ui/actions/corregirIntervencionAction.test.ts'` → paso; 3 archivos, 13 tests. |
+| Test PostgreSQL enfocado | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/intervenciones/correccion.integration.test.ts src/modules/intervenciones/correccion.rollback.integration.test.ts src/modules/intervenciones/intervenciones.isolation.test.ts` → paso; 3 archivos, 8 tests. |
+| Runtime harness E2E | `pnpm test:e2e --grep "intervenciones conserva la ficha"` → paso; 1 journey, 12.4 s. El servidor tambien registro el warning conocido `The destination stream closed early`; no impidio este journey enfocado. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos. |
+| Capas | `pnpm layers` → paso; 688 modulos y 3077 dependencias, sin violaciones. |
+| Lint dirigido | Biome sobre los seis paths UI autorizados y `e2e/calles.{fixture,spec}.ts` → paso; sin issues. |
+| Diff | `git diff --check` → paso. |
+| Quality gate | `pnpm check` → falla solo por el formato preexistente de `opencode.json`; conserva 50 warnings preexistentes y no reporta errores en los paths de esta remediacion. |
+| Runtime adicional conocido | La corrida E2E completa previa queda en 8/11: `bajaDeLugar.spec.ts`, `calles.spec.ts` y `respaldoPorHost.spec.ts` agotaron timeout con `The destination stream closed early`; no se atribuye ese fallo al journey nuevo. |
+| Rollback boundary | Retirar unicamente las nuevas aserciones de `src/app/(panel)/intervenciones.test.tsx`, `src/modules/intervenciones/ui/FormularioDeCorreccion.test.tsx` y `ui/actions/corregirIntervencionAction.test.ts`; revertir `dato`/`CLASES_DE_DATO` en la ficha, el test y fixture de `e2e/calles.spec.ts`/`e2e/calles.fixture.ts`, y esta seccion. Conservar la funcionalidad U1b previa. |
+
+### Resultado de la remediacion
+
+- La Server Action afirma directamente los mapeos de autorizacion,
+  validacion y error desconocido: todos vuelven con mensaje seguro de
+  operador y el detalle inesperado queda fuera de la redireccion.
+- El formulario afirma que `lugarId` viaja en el POST nativo tanto para el
+  lugar inicial como para otro lugar valido.
+- La ficha usa `CLASES_DE_DATO` en fecha de ocurrencia, captura y actualizacion.
+- El journey E2E existente siembra una intervencion, abre su ficha autenticada
+  y confirma la correccion nativa por el valor visible de la ficha. La
+  advertencia de stream permanece documentada, pero el caso enfocado paso.
+
+## Cierre acumulado: U1b y U1
+
+- Verificacion: todos los leaf units bajo `1.2b.3` están `[x]` y tienen evidencia aprobada; la remediacion de `1.2b.3b.2` queda respaldada por `sha256:3930a4b2d1979eecdf08d423e250b3219ecb876b67747183eb3acf11dedaf150`.
+- Evidencia de la remediacion: 3 archivos/13 tests unitarios, 3 archivos/8 tests PostgreSQL y 1 journey E2E enfocado pasaron.
+- Verificacion documental: relectura estructural de ambos artefactos y `git diff --check` → paso; test enfocado: N/A — no hay código ejecutable; runtime harness: N/A — no se modificó comportamiento ejecutable.
+- Se cierran los agregados `1.2b.3`, `1.2b.3b`, `1.2b` y `1.2`; `1.3 U2` se documenta en la seccion siguiente y las fases posteriores permanecen pendientes.
+- Rollback boundary: revertir únicamente los cuatro checkboxes y los textos parent actualizados en `tasks.md` y este ledger, incluida esta sección; no revertir fuentes, tests, configuración ni E2E.
+
+## U2: permisos de escritura (evidencia inicial)
+
+- Work unit: `U2-permisos-escritura`.
+- El token nativo lo conserva el orquestador; este ejecutor no adquiere ni
+  asienta otro intento.
+- Alcance: confirmar que registrar usa `puedeEscribir`, mientras cambiar el
+  estado y corregir exigen `puedeAdministrarIntervenciones`.
+- La implementacion de produccion ya cumplia el contrato al iniciar esta
+  unidad: `registrarIntervencion` usa `puedeEscribir` y las dos operaciones
+  administrativas usan la regla nueva. Se agrego una regresion explicita;
+  no hubo cambio de produccion.
+- La unidad agrego 13 lineas propias al test, dentro del limite de 180. El
+  resto del diff de ese archivo pertenece a la validacion de reportes de U1b.
+
+### TDD Cycle Evidence — U2
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 1.3 | `registrarIntervencion.test.ts`, `roles.test.ts`, `cambiarEstadoDeIntervencion.test.ts`, `corregirIntervencion.test.ts` | Unit | ✅ 4 archivos, 42 tests | ✅ La prueba de separacion se escribio antes de la verificacion; el primer resultado fue verde porque la implementacion ya estaba presente | ✅ 4 archivos, 43 tests | ✅ OPERADOR registra pero no administra; CONSULTA no registra; estado y correccion niegan roles no administradores | ➖ No hubo codigo de produccion que refactorizar |
+
+### Work Unit Evidence — U2
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado | `pnpm vitest run --project unit src/modules/intervenciones/application/registrarIntervencion.test.ts` → paso; 1 archivo, 7 tests. |
+| Triangulacion | `pnpm vitest run --project unit src/shared/auth/roles.test.ts src/modules/intervenciones/application/registrarIntervencion.test.ts src/modules/intervenciones/application/cambiarEstadoDeIntervencion.test.ts src/modules/intervenciones/application/corregirIntervencion.test.ts` → paso; 4 archivos, 43 tests. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/intervenciones/registro.integration.test.ts` → paso; 1 archivo, 4 tests contra Postgres real. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas y capas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos. `pnpm layers` → paso; 688 modulos y 3078 dependencias, sin violaciones. |
+| Diff | `git diff --check` → paso. |
+| Rollback boundary | Retirar el import y la prueba agregada en `src/modules/intervenciones/application/registrarIntervencion.test.ts`, revertir el checkbox 1.3 y esta seccion; no hay produccion que revertir. |
+
+### Resultado de U2
+
+- Un `OPERADOR` con permiso de escritura puede registrar una intervencion sin
+  recibir permiso de administracion.
+- `cambiarEstadoDeIntervencion` y `corregirIntervencion` conservan la guarda
+  exclusiva de `ADMIN_MUNICIPAL`; los recursos invisibles mantienen el camino
+  de `NoEncontradoError` ya probado bajo `withTenant`.
+- `tasks.md` marca `1.3` completa. Las fases 2 a 4 y la verificacion completa
+  siguen pendientes.
+
+## Remediacion U2: evidencia real de permisos
+
+- Work unit: `U2-permisos-evidence-remediation`.
+- Token nativo recibido del orquestador: `sha256:3d3d3abc0b16aa09fe21226a5331f6b046163d0f79fe4be3bfdd8eb82c50e5fb`.
+- Revision de evidencia fallida que se remedia: `sha256:31c356da9f8520773cc92654919d126d0d52380e856bebf6a4ca12843c19dbcd`.
+- Alcance cerrado: una asercion directa contra Postgres real para el registro de
+  un `OPERADOR` por `puedeEscribir`, sin ampliar UI ni afirmar comportamiento
+  de aplicacion que no este cubierto aqui.
+- No se cambio produccion: `registrarIntervencion` ya usa `puedeEscribir` y
+  `cambiarEstadoDeIntervencion`/`corregirIntervencion` conservan la guarda de
+  `puedeAdministrarIntervenciones`.
+
+### TDD Cycle Evidence — remediacion U2
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 1.3 | `registro.integration.test.ts`, `registrarIntervencion.test.ts` | Integration + unit | ✅ 268 archivos, 1306 tests | ✅ Aserciones escritas primero; la implementacion existente ya satisfacia el contrato y la primera corrida fue verde | ✅ Postgres: 1 archivo, 4 tests; unit: 1 archivo, 7 tests | ✅ Alta real con `OPERADOR` y caminos de ubicacion/reporte rechazados; `CONSULTA` sigue rechazado en unit | ➖ No hubo codigo de produccion que refactorizar |
+
+### Test Summary — remediacion U2
+
+- Tests nuevos: 2 aserciones en una prueba de integracion existente; no se
+  agrego una suite mock-backed para sustituir la prueba real.
+- Tests PostgreSQL: 1 archivo, 4 tests; pruebas unitarias de registro: 1
+  archivo, 7 tests.
+- Funciones puras nuevas: ninguna. Approval tests de refactor: ninguno.
+
+### Work Unit Evidence — remediacion U2
+
+| Evidencia | Resultado |
+|---|---|
+| Test PostgreSQL enfocado | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm test -- src/modules/intervenciones/registro.integration.test.ts` → paso; 268 archivos, 1306 tests. |
+| Test de aplicacion | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm test -- src/modules/intervenciones/application/registrarIntervencion.test.ts` → paso; 268 archivos, 1306 tests. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas y capas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos. `pnpm layers` → paso; 688 modulos y 3079 dependencias, sin violaciones. |
+| Diff | `git diff --check` → paso. |
+| Runtime harness | La prueba de integracion enfocada ejecuta el caso de uso, `withTenant`, repositorio SQL, RLS y bitacora contra Postgres real; paso. |
+| Rollback boundary | Retirar los imports, aserciones y nombre de prueba agregados en `src/modules/intervenciones/registro.integration.test.ts`, y esta seccion; no revertir produccion ni las guardas administrativas. |
+
+### Resultado de la remediacion U2
+
+- La prueba reconsulta la fila persistida por el rol `xula_app` dentro de
+  `withTenant`, comprueba el `id`, el estado `PLANIFICADA` y el operador que la
+  registro, y verifica que `puedeEscribir` es verdadero mientras la regla
+  administrativa es falsa.
+- `tasks.md` y este ledger marcan `1.3` completa con alcance de autorizacion y
+  evidencia real; las fases 2 a 4 siguen pendientes.
+
+## L0: reparacion del linaje de 0014 (actual)
+
+- Work unit: `L0-drizzle-lineage-repair`. El token nativo lo conserva el
+  orquestador; este ejecutor no lo adquiere ni lo asienta.
+- Alcance: promover solo `drizzle/meta/0014_snapshot.json`, generado en una
+  copia aislada fuera del worktree. `drizzle/0014_revisiones_intervenciones.sql`
+  y `drizzle/meta/_journal.json` permanecen byte a byte: sus hashes preflight y
+  post-promocion son identicos (SQL `b63764e7...`, journal `36cfa424...`).
+- Copia retenida como evidencia:
+  La ubicacion local de la copia aislada se omite de este artefacto.
+- Nota operativa: pnpm 11.22 intenta `pnpm install` al ejecutar scripts y se
+  niega porque `node_modules` es un symlink fuera del root de la copia; se
+  ejecuto con `pnpm_config_verify_deps_before_run=false`. No afecta al repo.
+
+### Work Unit Evidence — L0
+
+| Evidencia | Resultado |
+|---|---|
+| `pnpm db:local` en la copia (journal truncado a 0013) | paso; `drizzle.__drizzle_migrations` con 14 filas, ultimo `when` 1789049065173 (0013); `revisiones_de_intervenciones` ausente. |
+| `pnpm db:generate` en la copia (primer run) | paso; genero `drizzle/0014_sour_hellion.sql` y `drizzle/meta/0014_snapshot.json`; el SQL generado es estructuralmente equivalente al autoral (RLS/politica salen del esquema TS; FORCE RLS y GRANT son adiciones manuales que Drizzle no genera). |
+| Validacion estructural del snapshot | paso; `prevId` = `69ab52ee-8e3d-41e9-9739-ee38503bcf84` (id de `0013_snapshot.json`), `version` 7, `dialect` postgresql; tabla `revisiones_de_intervenciones` con 6 columnas, RLS habilitado, politica tenant `revisiones_de_intervenciones_tenant` (PERMISSIVE/ALL/xula_app, USING y WITH CHECK por `app.tenant`), 2 indices y 3 FKs (`ayuntamientos`, `intervenciones(id, ayuntamiento_id)`, `usuarios(id, ayuntamiento_id)`). |
+| `pnpm db:generate` en la copia (segundo run, journal real restaurado) | paso; `No schema changes, nothing to migrate`. El snapshot describe por completo el esquema TypeScript. |
+| `pnpm db:local` en la copia (journal real) + suite enfocada | paso; cadena 0→14 aplicada (15 filas, tabla presente); `pnpm vitest run --project integration src/modules/intervenciones/intervenciones.isolation.test.ts` → 1 archivo, 2 tests. |
+| Promocion | `git status --porcelain -- drizzle/` → solo `?? drizzle/meta/0014_snapshot.json`; `git diff --check` → limpio; hashes de SQL y journal sin cambio. Hash del snapshot promovido: `6dc3eb5913c988d502abcba78c5e2c3c00fcfc534ad886542842d07000169079`. |
+| `pnpm db:local` en el repo real | paso; 15 filas en `__drizzle_migrations` (0→14) y `revisiones_de_intervenciones` presente; `xula_test` queda migrada hasta 0014. |
+| Suite enfocada en el repo real | paso; `pnpm vitest run --project integration src/modules/intervenciones/intervenciones.isolation.test.ts` → 1 archivo, 2 tests. |
+| Runtime harness | N/A: L0 es metadata generada; no introduce comportamiento ejecutable. Su validacion es la regeneracion sin cambios y la migracion real. |
+| Rollback boundary | Borrar unicamente `drizzle/meta/0014_snapshot.json`; SQL y journal permanecen intactos. |
+
+### Resultado L0
+
+- Discrepancia de nombre documentada, no corregida: el SQL autoral nombra la FK
+  de `ayuntamiento_id` `revisiones_intervenciones_ayuntamiento_fk`, mientras el
+  esquema TS no la nombra y Drizzle la registra en el snapshot como
+  `revisiones_de_intervenciones_ayuntamiento_id_ayuntamientos_id_fk`. El SQL
+  esta congelado por L0 y la generacion futura diferencia contra el snapshot,
+  no contra la base.
+- `tasks.md` marca `2.1 L0` completa. Las fases 2 a 4 siguen pendientes.
+
+## U3a: eventos de calles, RLS y lecturas (actual)
+
+- Work unit: `U3a-eventos-de-calles`. El token nativo lo conserva el
+  orquestador; este ejecutor no lo adquiere ni lo asienta.
+- Alcance: tabla `eventos_de_calles` (migracion 0015, RLS/FORCE, GRANT
+  SELECT+INSERT, FK compuesto), escritura del evento en las cuatro
+  mutaciones estructurales dentro de su misma transaccion, y los puertos de
+  lectura `callesParaMapa` y `callePorId`. Sin publicacion, sin `pg_notify`,
+  sin LISTEN/SSE, sin permiso nuevo y sin escritor generico: las cuatro
+  operaciones del repositorio son una por naturaleza y solo las alcanzan las
+  mutaciones guardadas.
+- `esquema.ts` paso de 198 a 120 lineas: `lugares`, `calles` y la tabla
+  nueva viven en `esquemaDeCalles.ts`, reexportadas por `esquema.ts` porque
+  el glob de `drizzle.config.ts` solo alcanza ese archivo. La regeneracion
+  posterior reporto `No schema changes`.
+
+### TDD Cycle Evidence — U3a
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 2.2/2.3 | `eventosDeCalles.isolation.test.ts`, `callesParaMapa.{test,integration}.test.ts`, `callePorId.{test,integration}.test.ts` y las cuatro pruebas de mutacion | Unit + integration | ✅ Suites previas de `territorio` en verde | ✅ Unit: 6 archivos fallaron (2 por modulo ausente y 4 por la escritura de evento ausente); integracion: 3 archivos, 5 pruebas fallaron | ✅ Unit: 43 archivos, 231 pruebas; integracion enfocada: 3 archivos, 11 pruebas; modulo integro: 24 archivos, 83 pruebas | ✅ RLS, FK compuesto, append-only, rollback, punto nulo, baja logica, cruce de tenants, `ALTA` excluida y desempate por rango e id | ✅ `esquema.ts` partido en `esquemaDeCalles.ts` + `esquema.ts` reexportador; proyeccion de calle compartida en `lecturaDeCalle.ts` |
+
+### Work Unit Evidence — U3a
+
+| Evidencia | Resultado |
+|---|---|
+| Migracion | `pnpm db:local` → paso; `xula_test` recreada y migrada 0→15 (`0015_eventos_de_calles.sql`). `relrowsecurity=true`, `relforcerowsecurity=true`; grants de `xula_app`: `INSERT`, `SELECT`; FK compuesto `eventos_de_calles_calle_tenant_fk (calle_id, ayuntamiento_id) → calles(id, ayuntamiento_id)`. |
+| Test enfocado de aislamiento | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/territorio/eventosDeCalles.isolation.test.ts` → paso; 1 archivo, 5 pruebas. |
+| Test enfocado unitario | `pnpm vitest run --project unit src/modules/territorio` → paso; 43 archivos, 231 pruebas. |
+| Integracion del modulo | Con los tres roles locales, `pnpm vitest run --project integration src/modules/territorio` → paso; 24 archivos, 83 pruebas. |
+| Runtime harness | Postgres real: la mutacion `renombrarCalle` con actor no UUID hace fallar la bitacora despues del INSERT del evento; la transaccion revierte calle y evento (0 filas). La conexion `appSinTenant` lee 0 filas. |
+| Regeneracion | `MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" pnpm exec drizzle-kit generate --name=eventos_de_calles` → `No schema changes, nothing to migrate`; el snapshot 0015 describe el esquema completo. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos (solo rastreados). Los 13 archivos nuevos sin rastrear se revisaron ejecutando el motor de reglas directo sobre ellos: 0 hallazgos reales (el unico reporte, `modulo-cuatro-capas`, es un falso positivo del corpus parcial: sin los archivos de `ui/` el conjunto de capas parece incompleto). |
+| Capas | `pnpm layers` → paso; 700 modulos, 3152 dependencias, sin violaciones. |
+| Diff | `git diff --check` → limpio. |
+| Rollback boundary | Retirar `drizzle/0015_eventos_de_calles.sql`, `drizzle/meta/0015_snapshot.json`, la entrada 0015 del journal, `domain/eventoDeCalle.ts`, `application/{puertosDeLecturaDeCalles,callesParaMapa,callePorId}.ts`, `infrastructure/{esquemaDeCalles,lecturaDeCalle,lectorDeCallesDeMapaSql}.ts`, las cinco pruebas nuevas y las aserciones de evento de las cuatro pruebas de mutacion; revertir `esquema.ts` al estado previo (con `lugares`/`calles` adentro) y los cuatro casos de uso, sus puertos y el cableado. Conservar U1 y U2. |
+
+### Resultado U3a
+
+- Cada mutacion estructural escribe su evento con la misma `tx` del cambio
+  de calle y antes de la bitacora: un fallo posterior revierte ambos.
+  `ocurridoEn` lo asigna Postgres (`now()`), nunca el cliente.
+- `callesParaMapa` devuelve todas las calles del tenant, incluidas las de
+  `bajaEn` y las sin punto, sin leer domicilios, descripciones ni datos
+  personales. `callePorId` devuelve estado y solo las naturalezas
+  `RENOMBRE`, `REPARENTEO` y `UBICACION`, ordenadas por `ocurridoEn` DESC,
+  rango fijo y `id` ASC; una calle de otro municipio es ausencia.
+- Ninguna de las dos lecturas exige `puedeAdministrarTerritorio`; el tenant
+  sale del contexto del servidor y RLS cierra el resto.
+- `tasks.md` marca `2.2` y `2.3` completas. U3b (publicacion) y las fases 3
+  y 4 siguen pendientes.
+
+## U3b: publicacion de cambios de calle (actual)
+
+- Work unit: `U3b-publicacion-calles`. El token nativo lo conserva el
+  orquestador; este ejecutor no lo adquiere ni lo asienta.
+- Alcance: `pg_notify` transaccional con payload Zod exacto y
+  `canalDeTenant` puro en `src/shared/notificaciones/`, mas el cableado de
+  las cuatro mutaciones dentro de su mismo `withTenant`. Sin LISTEN/SSE/hub,
+  sin ruta ni isla (U7), sin excepcion de tenancy y sin tocar `AGENTS.md`.
+- Codigo y pruebas: 396 lineas, dentro del presupuesto local de 400. Este
+  ledger es documentacion y va aparte.
+
+### TDD Cycle Evidence — U3b
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 2.4/2.5 | `canales.test.ts`, `notificar.test.ts`, `notificar.integration.test.ts`, `notificacionDeCalles.integration.test.ts` y las cuatro pruebas de mutacion | Unit + integration | ✅ U3a: 43 archivos/231 pruebas unitarias y 24/83 de integracion | ✅ Unit compartido: 2 archivos sin modulo; unit territorio: 4 pruebas rojas por publicacion ausente; integracion: `./canales` ausente | ✅ Unit: 2/8 y 43/231; integracion compartida: 1/1; integracion territorio: 25/86 | ✅ Payload exacto, faltante/extra/id invalido, canal por tenant, commit/rollback, cruce Ticul→Motul y las cuatro mutaciones | ✅ `canalDeTenant` puro y separado; publicacion solo por `tx`; `publicarEn` compacta la asercion de alta |
+
+### Work Unit Evidence — U3b
+
+| Evidencia | Resultado |
+|---|---|
+| Test unitario compartido | `pnpm vitest run --project unit src/shared/notificaciones` → paso; 2 archivos, 8 pruebas. |
+| Test unitario del modulo | `pnpm vitest run --project unit src/modules/territorio` → paso; 43 archivos, 231 pruebas. |
+| LISTEN real compartido | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/shared/notificaciones` → paso; 1 archivo, 1 prueba: entrega unica con payload exacto al confirmar. |
+| LISTEN real de mutaciones | Con las mismas tres variables, `pnpm vitest run --project integration src/modules/territorio` → paso; 25 archivos, 86 pruebas: el renombre confirma y notifica su identidad, la mutacion revertida calla y Ticul notifica solo a Ticul. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos. Los 7 archivos nuevos sin rastrear se revisaron con el motor directo: 0 hallazgos. |
+| Capas | `pnpm layers` → paso; 707 modulos, 3187 dependencias, sin violaciones. |
+| Diff | `git diff --check` → paso. |
+| Rollback boundary | Retirar `src/shared/notificaciones/`, las llamadas e imports en las cuatro mutaciones, las aserciones de publicacion de las cuatro pruebas unitarias, `notificacionDeCalles.integration.test.ts`, los checkboxes 2.4/2.5 y esta seccion. Conservar U3a. |
+
+### Resultado U3b
+
+- `canalDeTenant` es puro y recibe el id marcado; `publicarActualizacion`
+  valida con Zod estricto y ejecuta `pg_notify` en el `tx` del llamador, con
+  el canal derivado del `ayuntamientoId` del servidor.
+- Las cuatro mutaciones publican despues de insertar su evento y antes de la
+  bitacora: cambio, evento y notificacion confirman o revierten juntos.
+- Postgres entrega una sola notificacion al COMMIT con
+  `{ tipo: "calle", id, cambio: "estructura" }`; una transaccion revertida no
+  entrega nada y el canal de un municipio no recibe lo de otro.
+- `tasks.md` marca `2.4` y `2.5` completas. U4a sigue pendiente.
+
+## U4a: lectura de reportes para el mapa (actual)
+
+- Work unit: `U4a-lectura-reportes-mapa`. El token nativo lo conserva el
+  orquestador (`sha256:f39be114...`); este ejecutor no lo adquiere ni lo
+  asienta.
+- Alcance: lectura operativa solo con sesion que devuelve los reportes del
+  tenant del contexto con exactamente `id`, `folio`, `tipo`, `estado`,
+  `calleId` y `lugarId`. Sin `descripcion` ni `referencia`; las filas con
+  `calleId` nulo entran. Sin publicacion, sin `pg_notify`, sin LISTEN/SSE,
+  sin migracion y sin dependencia nueva. U4b queda bloqueada por D1/D2.
+- Desvio 1: los tipos del puerto viven en
+  `application/puertosDeLecturaDeReportes.ts` y no en `puertos.ts` porque
+  `puertos.ts` esta en 196/200 lineas y `metrica-archivo-200` no admite
+  crecerlo; es el mismo corte de `territorio` con
+  `puertosDeLecturaDeCalles.ts`.
+- Desvio 2: el adaptador `lectorDeReportesDeMapaSql` se agrega a
+  `infrastructure/listadoDeReportesSql.ts` (como pedia `tasks.md`) y se
+  exporta por `infrastructure/index.ts`; se cablea directo en
+  `composicion.ts` -sin pasar por `repositorioDeReportesSql`-, mismo
+  mecanismo que `callesParaMapa` con `lectorDeCallesDeMapaSql`. El caso de
+  uso y el tipo tambien se exportan por los barriles para que U6 los
+  consuma.
+- Codigo y pruebas: 385 lineas (343 de archivos nuevos + 42 netas en
+  archivos rastreados), dentro del presupuesto local de 450. Este ledger es
+  documentacion y va aparte.
+
+### TDD Cycle Evidence — U4a
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 2.6/2.7 | `application/listarReportesParaMapa.test.ts`, `listarReportesParaMapa.integration.test.ts` | Unit + integration | ✅ Suites previas de `reportes`: 29 archivos/124 tests unitarios y 13/37 de integracion | ✅ Unit: 1 suite fallo por modulo ausente; integracion enfocada: 1 suite fallo por modulo ausente | ✅ Unit: 30 archivos, 128 tests; integracion enfocada: 1 archivo, 4 tests | ✅ Fila nula, fila con calle, cruce Motul→Ticul, ausencia de `descripcion`/`referencia` y rol `CONSULTA` sin guarda | ✅ Biome aplicado; el puerto se separo por la metrica de 200 lineas |
+
+### Work Unit Evidence — U4a
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado unitario | `pnpm vitest run --project unit src/modules/reportes` → paso; 30 archivos, 128 pruebas. |
+| Test enfocado de integracion | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/reportes/listarReportesParaMapa.integration.test.ts` → paso; 1 archivo, 4 pruebas. |
+| Runtime harness | Con los tres roles locales, `pnpm vitest run --project integration src/modules/reportes` → paso; 14 archivos, 41 pruebas contra Postgres real: RLS acota el tenant, la fila sin calle aparece y las columnas protegidas no salen. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos. Los 4 archivos nuevos sin rastrear se revisaron con el motor directo: 0 metricas y el unico reporte es el falso positivo ya documentado de `modulo-cuatro-capas` con corpus parcial. |
+| Capas | `pnpm layers` → paso; 711 modulos, 3211 dependencias, sin violaciones. |
+| Diff | `git diff --check` → paso. |
+| Lint dirigido | Biome sobre los nueve paths de la unidad → sin issues (formato aplicado a un test). |
+| Rollback boundary | Retirar `application/{puertosDeLecturaDeReportes,listarReportesParaMapa}.ts`, las dos pruebas, `lectorDeReportesDeMapaSql` de `infrastructure/listadoDeReportesSql.ts`, su export en `infrastructure/index.ts`, el cableado en `composicion.ts`, las exportaciones de `application/index.ts` y `index.ts`, los checkboxes 2.6/2.7 y esta seccion. Conservar U3a/U3b y el resto del modulo. |
+
+### Resultado U4a
+
+- `listarReportesParaMapa` recibe solo el contexto, resuelve el tenant con
+  `withTenant` y no aplica guarda de rol: un `CONSULTA` lee el mapa. RLS
+  acota el resultado al ayuntamiento del contexto.
+- El adaptador selecciona columnas explicitas: `descripcion` y `referencia`
+  no existen del lado del consumidor ni viajan por la consulta; una fila con
+  `calleId` nulo aparece sin filtro ni descarte.
+- La prueba unitaria afirma el contrato de tipo con `@ts-expect-error`
+  (mismo mecanismo que `editarLugar.test.ts`): si alguien agrega
+  `descripcion` o `referencia` a `ReporteParaMapa`, `tsc --noEmit` falla.
+- Sin `pg_notify`, LISTEN/SSE, migracion, snapshot ni dependencia nueva;
+  U4b-publicacion sigue bloqueada por D1/D2.
+- `tasks.md` marca `2.6` y `2.7` completas. U5/U6 y las fases 3 y 4 siguen
+  pendientes.
+
+## U5: historial de calle (actual)
+
+- Work unit: `U5-historial-de-calle`. El token nativo lo conserva el
+  orquestador; este ejecutor no lo adquiere ni lo asienta.
+- Alcance: proyeccion de solo lectura que compone reportes, intervenciones y
+  eventos estructurales de una calle bajo el tenant del contexto. Incluye
+  orden descendente por ocurrencia, desempate por naturaleza e id, estado
+  vacio explicito y ausencia de una calle ajena. No agrega escritura,
+  migracion, UI funcional, ruta, polling, SSE ni dependencia nueva.
+- Las lecturas de reportes e intervenciones son puertos propios de sus
+  modulos, y el adaptador de historial solo consume sus superficies publicas.
+  La prueba de integracion siembra hechos mediante casos de uso publicos para
+  conservar la regla de capas; no importa esquemas internos de otro modulo.
+- Codigo autoral de los doce archivos de `historial-de-calle`: 449 lineas,
+  dentro del limite nativo de 450 y sin `size:exception`.
+
+### TDD Cycle Evidence — U5
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 3.1 | `application/leerHistorialDeCalle.test.ts` | Unit | ✅ Pruebas de `territorio`, `reportes` e `intervenciones` permanecieron como regresion | ✅ La suite fue escrita antes del modulo y fallo al no resolver `domain` | ✅ 1 archivo, 3 pruebas | ✅ Naturalezas, empate estable por rango/id, tenant del contexto, vacio y calle invisible | ✅ Tipos de fuente separados; la ordenacion quedo en dominio puro |
+| 3.2 | `historialDeCalle.integration.test.ts` | Integration | ✅ U3a/U4a y registro de intervenciones en verde | ✅ El arnes se escribio antes del cableado y no podia resolver la superficie U5 | ✅ 1 archivo, 3 pruebas | ✅ Postgres real, RLS Motul/Ticul, cinco naturalezas, movimientos/auditoria fuera de la proyeccion y estado vacio | ✅ Adaptadores de lectura consolidados; el arnes usa solo superficies publicas para respetar capas |
+
+### Work Unit Evidence — U5
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado unitario | `pnpm vitest run --project unit src/modules/historial-de-calle/application/leerHistorialDeCalle.test.ts` → paso; 1 archivo, 3 pruebas. |
+| Runtime harness | `DATABASE_URL="$TEST_APP_DATABASE_URL" MIGRATION_DATABASE_URL="$TEST_MIGRATOR_DATABASE_URL" SUPER_ADMIN_DATABASE_URL="$TEST_SUPER_ADMIN_DATABASE_URL" pnpm vitest run --project integration src/modules/historial-de-calle/historialDeCalle.integration.test.ts` → paso; 1 archivo, 3 pruebas contra Postgres real. |
+| Regresiones enfocadas | Con las mismas tres variables, unit de U5/U3a/U4a/intervenciones → paso; 4 archivos, 18 pruebas. Integracion de los mismos cuatro lectores → paso; 4 archivos, 14 pruebas. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Reglas | `pnpm reglas` → paso; 9 reglas y 2 metricas sobre 694 archivos rastreados. El escaneo directo de los doce archivos nuevos de U5 → 0 hallazgos. |
+| Capas | `pnpm layers` → paso; 723 modulos, 3244 dependencias, sin violaciones. |
+| Lint dirigido | Biome sobre U5 y los adaptadores modificados → sin issues. |
+| Diff | `git diff --check` → paso para los archivos rastreados; los archivos nuevos fueron validados por Biome y el escaneo directo de reglas porque no estan en el indice. |
+| Rollback boundary | Retirar `src/modules/historial-de-calle/`; quitar `ReporteParaHistorial`, `LectorDeReportesDeHistorial`, `listarPorCalle` y su cableado publico en `reportes`; quitar `IntervencionParaHistorial`, `listarPorCalle` y su cableado publico en `intervenciones`. Conservar la lectura transaccional de `territorio` que pertenece a U3a y todo U3a/U3b/U4a. |
+
+### Resultado U5
+
+- `leerHistorialDeCalle` fija el tenant con `withTenant`, devuelve `null` si
+  RLS hace invisible la calle y no consulta las otras fuentes en ese caso.
+- El dominio solo proyecta `id`, naturaleza y momento de ocurrencia; no
+  transporta filas de `bitacora` ni de `movimientos_de_reportes`, actores ni
+  ids de auditoria. Una calle sin hechos devuelve `VACIO` con `entradas: []`.
+- `tasks.md` marca `3.1` y `3.2` completas. U6 y las fases 4 siguen
+  pendientes; no se inicia otra unidad.
+
+## Estado posterior a la normalizacion
+
+- Verificacion actual: Node `26.7.0`; `pnpm vitest run --project unit` paso con
+  183 archivos y 1006 tests.
+- Quality gate actual: `pnpm check` paso; reporto 48 warnings y ningun error.
+- Commits de la unidad de Intervenciones: `cacecc6` agrega la ficha,
+  navegacion y journey E2E; `3f3b307` completa la transaccion simulada de
+  `altaDeCalle`; `3c03c0e` agrega evidencia de permisos.
+- El mock de `altaDeCalle` entrega `tx.execute`, que era el contrato requerido
+  por la publicacion de actualizaciones.
