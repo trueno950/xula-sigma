@@ -10,6 +10,7 @@ import type {
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
+const executeMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/tenancy/withTenant", () => ({
   withTenant: withTenantMock,
@@ -73,8 +74,10 @@ describe("altaDeCalle", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    executeMock.mockResolvedValue([]);
     withTenantMock.mockImplementation(
-      (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
+      (_id: unknown, trabajo: (tx: unknown) => unknown) =>
+        trabajo({ execute: executeMock }),
     );
     vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(
       cabeceraGuardada,
