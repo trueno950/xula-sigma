@@ -10,6 +10,7 @@ import {
   crearListarReportes,
   crearListarReportesParaMapa,
   crearRegistrarReporte,
+  crearReporteExisteEnTransaccion,
   crearReportePorId,
 } from "./application";
 import {
@@ -22,17 +23,6 @@ import {
 } from "./infrastructure";
 import { movimientosDeReportes, reportes } from "./infrastructure/esquema";
 
-/**
- * Raiz de composicion del modulo: une la fabrica de cada caso de uso con
- * los adaptadores reales. Vive fuera de las cuatro capas y es el unico
- * archivo del modulo que ninguna regla de `.dependency-cruiser.cjs` vigila
- * (design.md seccion 1, precedente `constancias/composicion.ts`) — la
- * contencion es que no tenga nada que vigilar: solo cableado, cero
- * condicionales, cero `await`.
- *
- * No importa `./ui` ni `./index`: cualquiera de los dos cierra un ciclo
- * (`sin-ciclos`).
- */
 export const registrarReporte = crearRegistrarReporte({
   repositorio: repositorioDeReportesSql,
   contador: contadorDeFoliosSql,
@@ -41,6 +31,9 @@ export const registrarReporte = crearRegistrarReporte({
   crearLecturaDeReportantes: crearLectorDeReportantesPorPadron,
 });
 export const reportePorId = crearReportePorId(repositorioDeReportesSql);
+export const reporteExisteEnTransaccion = crearReporteExisteEnTransaccion(
+  repositorioDeReportesSql,
+);
 export const listarReportes = crearListarReportes(repositorioDeReportesSql);
 export const listarReportesParaMapa = crearListarReportesParaMapa(
   lectorDeReportesDeMapaSql,

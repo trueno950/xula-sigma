@@ -16,8 +16,13 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearRegistrarIntervencion } from "./application/registrarIntervencion";
-import { repositorioDeIntervencionesSql } from "./infrastructure";
+import {
+  crearLectorDeReportesPorReportes,
+  repositorioDeIntervencionesSql,
+} from "./infrastructure";
+import { intervenciones } from "./infrastructure/esquema";
 import { crearLectorDeUbicacionesPorTerritorio } from "./infrastructure/lectorDeUbicacionesPorTerritorio";
+import { registrarReporteDePrueba } from "./reporteVinculadoDePrueba";
 
 let gente: GentePorMunicipio;
 
@@ -27,7 +32,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await owner`TRUNCATE revisiones_de_intervenciones, intervenciones`;
+  await owner`TRUNCATE revisiones_de_intervenciones, intervenciones, reportes, movimientos_de_reportes, folios_de_reportes`;
 });
 
 afterAll(async () => {
@@ -39,6 +44,7 @@ afterAll(async () => {
 const registrar = crearRegistrarIntervencion({
   repositorio: repositorioDeIntervencionesSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
+  crearLecturaDeReportes: crearLectorDeReportesPorReportes,
 });
 const lugarDe = async (nombre: string) => {
   const { id } = await altaDeLugar(
@@ -47,6 +53,14 @@ const lugarDe = async (nombre: string) => {
   );
   return id;
 };
+
+const trazasDeRegistro = () =>
+  withTenant(motul, (tx) =>
+    tx
+      .select()
+      .from(bitacora)
+      .where(eq(bitacora.accion, "REGISTRAR_INTERVENCION")),
+  );
 
 describe("registro real de intervenciones", () => {
   it("persiste fecha de ocurrencia, captura del servidor y bitacora por id", async () => {
@@ -103,5 +117,65 @@ describe("registro real de intervenciones", () => {
         contextoDe(gente, "motul", "OPERADOR"),
       ),
     ).rejects.toBeInstanceOf(NoEncontradoError);
+  });
+
+  it("rechaza el reporte de otro municipio sin escribir intervencion ni bitacora", async () => {
+    const lugarMotul = await lugarDe("Comisaria Registro Reporte Ajeno");
+    const { id: lugarTicul } = await altaDeLugar(
+      { tipo: "comisaria", nombre: "Comisaria Reporte Ticul", padreId: null },
+      contextoDe(gente, "ticul", "ADMIN_MUNICIPAL"),
+    );
+    const reporteId = await registrarReporteDePrueba(
+      lugarTicul,
+      contextoDe(gente, "ticul", "OPERADOR"),
+    );
+    const trazasAntes = await trazasDeRegistro();
+
+    await expect(
+      registrar(
+        {
+          tipo: "OBRA",
+          fechaDeOcurrencia: "2026-01-15",
+          lugarId: lugarMotul,
+          calleId: null,
+          reporteId,
+          descripcion: "Rehabilitacion del parque municipal",
+        },
+        contextoDe(gente, "motul", "OPERADOR"),
+      ),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+
+    const filas = await withTenant(motul, (tx) =>
+      tx.select().from(intervenciones),
+    );
+    const trazas = await trazasDeRegistro();
+    expect(filas).toHaveLength(0);
+    expect(trazas).toHaveLength(trazasAntes.length);
+  });
+
+  it("rechaza un reporte inexistente sin escribir intervencion ni bitacora", async () => {
+    const lugarId = await lugarDe("Comisaria Registro Reporte Inexistente");
+    const trazasAntes = await trazasDeRegistro();
+
+    await expect(
+      registrar(
+        {
+          tipo: "OBRA",
+          fechaDeOcurrencia: "2026-01-15",
+          lugarId,
+          calleId: null,
+          reporteId: "55555555-5555-4555-8555-555555555555",
+          descripcion: "Rehabilitacion del parque municipal",
+        },
+        contextoDe(gente, "motul", "OPERADOR"),
+      ),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+
+    const filas = await withTenant(motul, (tx) =>
+      tx.select().from(intervenciones),
+    );
+    const trazas = await trazasDeRegistro();
+    expect(filas).toHaveLength(0);
+    expect(trazas).toHaveLength(trazasAntes.length);
   });
 });

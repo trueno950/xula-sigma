@@ -40,6 +40,7 @@ describe("registrarIntervencion", () => {
     guardar: vi.fn(),
   };
   const lectura: LecturaDeUbicaciones = { de: vi.fn() };
+  const lecturaDeReportes = { porId: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -47,12 +48,14 @@ describe("registrarIntervencion", () => {
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
     );
     vi.mocked(lectura.de).mockResolvedValue({ texto: "Centro" });
+    vi.mocked(lecturaDeReportes.porId).mockResolvedValue(true);
   });
 
   const registrar = () =>
     crearRegistrarIntervencion({
       repositorio,
       crearLecturaDeUbicaciones: () => lectura,
+      crearLecturaDeReportes: () => lecturaDeReportes,
     });
 
   it("rechaza CONSULTA antes de consultar ubicacion o abrir transaccion", async () => {
@@ -71,6 +74,33 @@ describe("registrarIntervencion", () => {
       registrar()(entrada, contextoCon("OPERADOR")),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
+    expect(repositorio.guardar).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("guarda un reporte vinculado visible", async () => {
+    const reporteId = "66666666-6666-4666-8666-666666666666";
+
+    await registrar()({ ...entrada, reporteId }, contextoCon("OPERADOR"));
+
+    expect(lecturaDeReportes.porId).toHaveBeenCalledWith({}, reporteId);
+    expect(repositorio.guardar).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ reporteId }),
+    );
+  });
+
+  it.each([
+    ["un reporte de otro municipio", "44444444-4444-4444-8444-444444444444"],
+    ["un reporte inexistente", "55555555-5555-4555-8555-555555555555"],
+  ])("rechaza %s antes de guardar o auditar", async (_caso, reporteId) => {
+    vi.mocked(lecturaDeReportes.porId).mockResolvedValue(false);
+
+    await expect(
+      registrar()({ ...entrada, reporteId }, contextoCon("OPERADOR")),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+
+    expect(lecturaDeReportes.porId).toHaveBeenCalledWith({}, reporteId);
     expect(repositorio.guardar).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
@@ -107,27 +137,22 @@ describe("intervencionPorId", () => {
     );
   });
 
-  it("lee dentro del tenant y conserva el null de un recurso no visible", async () => {
-    const fila: IntervencionGuardada = {
-      id: "33333333-3333-4333-8333-333333333333" as IntervencionGuardada["id"],
-      tipo: "BACHE",
-      estado: "PLANIFICADA",
-      fechaDeOcurrencia: "2026-01-15",
-      lugarId: entrada.lugarId,
-      calleId: null,
-      reporteId: null,
-      descripcion: "Bache junto a la plaza",
-      registradoPorUsuarioId: "usuario-1",
-      capturadoEn: new Date("2026-03-01T12:00:00Z"),
-      actualizadoEn: new Date("2026-03-01T12:00:00Z"),
-    };
-    const buscarPorId = vi.fn().mockResolvedValue(fila);
+  it("conserva null cuando RLS no hace visible el recurso", async () => {
+    const id =
+      "33333333-3333-4333-8333-333333333333" as IntervencionGuardada["id"];
+    const contexto = contextoCon("CONSULTA");
+    const buscarPorId = vi.fn().mockResolvedValue(null);
     withTenantMock.mockImplementation(
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
     );
 
     const leer = crearIntervencionPorId({ buscarPorId });
-    await expect(leer(fila.id, contextoCon("CONSULTA"))).resolves.toEqual(fila);
+    await expect(leer(id, contexto)).resolves.toBeNull();
     expect(withTenantMock).toHaveBeenCalledOnce();
+    expect(withTenantMock).toHaveBeenCalledWith(
+      contexto.ayuntamientoId,
+      expect.any(Function),
+    );
+    expect(buscarPorId).toHaveBeenCalledWith({}, id);
   });
 });

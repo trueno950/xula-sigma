@@ -34,6 +34,7 @@ export {
   listarReportesParaMapa,
   porcionesDeReportes,
   registrarReporte,
+  reporteExisteEnTransaccion,
   reportePorId,
 } from "./composicion";
 export * from "./domain";

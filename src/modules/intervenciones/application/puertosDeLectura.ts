@@ -7,3 +7,7 @@ export type LecturaDeUbicaciones = {
     calleId: string | null,
   ): Promise<{ texto: string } | null>;
 };
+
+export type LecturaDeReportes = {
+  porId(tx: TransaccionTenant, reporteId: string): Promise<boolean>;
+};

@@ -12,15 +12,15 @@
 # razonamiento que expone este modelo, arriba de `high`.
 PROVIDER="opencode:deepseek/deepseek-v4-flash"
 
-# Y sigue siendo DeepSeek aunque en local se revise con otro modelo. No es
+# Y sigue siendo DeepSeek en CI aunque en local se revise con otro modelo. No es
 # preferencia: en `opencode auth`, `deepseek` esta como `api` y `openai`
 # como `oauth`. La API key entra a un runner como secreto y se rota; el
 # token OAuth de una suscripcion esta atado a la maquina y a la cuenta, y
 # llevarlo a GitHub seria publicar la credencial personal.
 #
-# De ahi el reparto: `pnpm revision:local` revisa con la suscripcion
-# mientras se trabaja, CI revisa con la API key. Lo fija `GGA_PROVIDER`,
-# que gana sobre esta linea sin tocarla.
+# De ahi el reparto: los scripts `revision:local*` revisan con la suscripcion
+# de Luna mientras se trabaja, CI revisa con la API key. Lo fija
+# `GGA_PROVIDER`, que gana sobre esta linea sin tocarla.
 
 # Que se revisa.
 # Los .sql entran a proposito: una migracion que olvida FORCE ROW LEVEL
@@ -55,8 +55,8 @@ TIMEOUT="1800"
 # Rama base para --pr-mode. Explicita en vez de autodeteccion.
 PR_BASE_BRANCH="main"
 
-# OPENCODE_VARIANT queda sin fijar a proposito: local corre rapido.
-# CI lo sube con la variable de entorno GGA_OPENCODE_VARIANT=high.
+# Local usa `GGA_OPENCODE_VARIANT=max` para no cambiar de perfil entre
+# revisiones. CI conserva `GGA_OPENCODE_VARIANT=high` en su script.
 
 # Agente de revision, definido en .opencode/agents/gga-reviewer.md
 # Sin esto, opencode usa su agente primario por defecto, cuyo prompt de

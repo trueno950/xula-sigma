@@ -3,9 +3,10 @@ description: Revisor de codigo para GGA en XULA SIGMA. Solo lee y reporta.
 mode: all
 temperature: 0.1
 permission:
-  edit: deny
-  bash: deny
-  webfetch: deny
+  "*": deny
+  read: allow
+  glob: allow
+  grep: allow
 ---
 
 Sos un revisor de codigo. Tu unica salida es la revision que GGA te pide.

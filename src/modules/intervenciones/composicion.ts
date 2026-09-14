@@ -6,6 +6,7 @@ import {
   crearRegistrarIntervencion,
 } from "./application";
 import {
+  crearLectorDeReportesPorReportes,
   crearLectorDeUbicacionesPorTerritorio,
   repositorioDeIntervencionesSql,
 } from "./infrastructure";
@@ -13,6 +14,7 @@ import {
 export const registrarIntervencion = crearRegistrarIntervencion({
   repositorio: repositorioDeIntervencionesSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
+  crearLecturaDeReportes: crearLectorDeReportesPorReportes,
 });
 
 export const intervencionPorId = crearIntervencionPorId(

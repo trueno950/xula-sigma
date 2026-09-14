@@ -1,5 +1,8 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import {
+  type TransaccionTenant,
+  withTenant,
+} from "@/shared/tenancy/withTenant";
 import type { ReporteId } from "../domain";
 import type { ReporteGuardado, RepositorioDeReportes } from "./puertos";
 
@@ -20,5 +23,16 @@ export function crearReportePorId(
     return withTenant(contexto.ayuntamientoId, (tx) =>
       repositorio.buscarPorId(tx, id),
     );
+  };
+}
+
+export function crearReporteExisteEnTransaccion(
+  repositorio: Pick<RepositorioDeReportes, "buscarPorId">,
+) {
+  return async function reporteExisteEnTransaccion(
+    tx: TransaccionTenant,
+    id: ReporteId,
+  ): Promise<boolean> {
+    return (await repositorio.buscarPorId(tx, id)) !== null;
   };
 }
