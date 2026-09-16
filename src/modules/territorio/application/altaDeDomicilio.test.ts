@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import { comoCalleId, comoLugarId, TransversalRepetidaError } from "../domain";
+import {
+  comoCalleId,
+  comoLugarId,
+  type LugarId,
+  TransversalRepetidaError,
+  ZonaIncoherenteError,
+} from "../domain";
 import type {
   CalleGuardada,
   LugarGuardado,
@@ -31,7 +37,9 @@ const contextoCon = (
   origen: "web",
 });
 
-const lugarId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const asentamientoId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const otroAsentamientoId = comoLugarId("55555555-5555-4555-8555-555555555555");
+const lugarId = comoLugarId("66666666-6666-4666-8666-666666666666");
 const calleId = comoCalleId("22222222-2222-4222-8222-222222222222");
 const entreCalleAId = comoCalleId("33333333-3333-4333-8333-333333333333");
 const entreCalleBId = comoCalleId("44444444-4444-4444-8444-444444444444");
@@ -40,6 +48,14 @@ const lugarGuardado: LugarGuardado = {
   id: lugarId,
   tipo: "colonia",
   nombre: "Colonia de prueba",
+  padreId: asentamientoId,
+  bajaEn: null,
+};
+
+const asentamientoGuardado: LugarGuardado = {
+  id: asentamientoId,
+  tipo: "cabecera",
+  nombre: "Motul",
   padreId: null,
   bajaEn: null,
 };
@@ -47,7 +63,7 @@ const lugarGuardado: LugarGuardado = {
 const calleGuardada: CalleGuardada = {
   id: calleId,
   nombre: "Calle 21",
-  lugarId,
+  lugarId: asentamientoId,
   punto: null,
   bajaEn: null,
 };
@@ -88,8 +104,9 @@ describe("altaDeDomicilio", () => {
     withTenantMock.mockImplementation(
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
     );
-    vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(
-      lugarGuardado,
+    vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
+      async (_tx, id) =>
+        id === lugarId ? lugarGuardado : asentamientoGuardado,
     );
     vi.mocked(repositorioDeCalles.buscarPorId).mockResolvedValue(calleGuardada);
     vi.mocked(repositorioDeCalles.bloquearPorId).mockResolvedValue(
@@ -148,6 +165,225 @@ describe("altaDeDomicilio", () => {
 
     await expect(
       altaDeDomicilio(datosValidos, contextoCon("OPERADOR")),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+
+    expect(repositorio.crear).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("rechaza una calle de otro asentamiento del mismo tenant como zona incoherente", async () => {
+    vi.mocked(repositorioDeCalles.bloquearPorId).mockResolvedValue({
+      ...calleGuardada,
+      lugarId: otroAsentamientoId,
+    });
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await expect(
+      altaDeDomicilio(datosValidos, contextoCon("OPERADOR")),
+    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+
+    expect(repositorio.crear).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("sin nivel declarado, el domicilio cae en el asentamiento de la calle", async () => {
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await altaDeDomicilio(
+      {
+        calleId,
+        numero: "21",
+        entreCalleAId: null,
+        entreCalleBId: null,
+        referencia: null,
+      },
+      contextoCon("OPERADOR"),
+    );
+
+    expect(repositorio.crear).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ lugarId: asentamientoId }),
+    );
+  });
+
+  it("rechaza una transversal de otro asentamiento aunque la calle principal coincida", async () => {
+    vi.mocked(repositorioDeCalles.bloquearPorId).mockImplementation(
+      async (_tx, id) =>
+        id === entreCalleAId
+          ? { ...calleGuardada, id, lugarId: otroAsentamientoId }
+          : { ...calleGuardada, id },
+    );
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await expect(
+      altaDeDomicilio(
+        { ...datosValidos, entreCalleAId },
+        contextoCon("OPERADOR"),
+      ),
+    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+
+    expect(repositorio.crear).not.toHaveBeenCalled();
+  });
+
+  const siguientes = (
+    manzanaPadreId: LugarId,
+  ): ReadonlyMap<LugarId, LugarGuardado> => {
+    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    const sectorId = comoLugarId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+
+    return new Map<LugarId, LugarGuardado>([
+      [
+        manzanaId,
+        {
+          id: manzanaId,
+          tipo: "manzana",
+          nombre: "San Pedro",
+          padreId: manzanaPadreId,
+          bajaEn: null,
+        },
+      ],
+      [
+        sectorId,
+        {
+          id: sectorId,
+          tipo: "sector",
+          nombre: "2",
+          padreId: lugarId,
+          bajaEn: null,
+        },
+      ],
+      [lugarId, lugarGuardado],
+      [asentamientoId, asentamientoGuardado],
+    ]);
+  };
+
+  it("acepta una zona declarada que es el lugar mas profundo o un ancestro", async () => {
+    const porId = siguientes(
+      comoLugarId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+    );
+    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    const sectorId = comoLugarId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+    vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
+      async (_tx, id) => porId.get(id) ?? null,
+    );
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await altaDeDomicilio(
+      {
+        ...datosValidos,
+        lugarId: manzanaId,
+        nivelesDeclarados: [lugarId, sectorId, manzanaId],
+      },
+      contextoCon("OPERADOR"),
+    );
+
+    expect(repositorio.crear).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ lugarId: manzanaId }),
+    );
+  });
+
+  it("acepta una manzana colgada directo de la colonia, sin sector", async () => {
+    const porId = siguientes(lugarId);
+    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
+      async (_tx, id) => porId.get(id) ?? null,
+    );
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await altaDeDomicilio(
+      {
+        ...datosValidos,
+        lugarId: manzanaId,
+        nivelesDeclarados: [lugarId, manzanaId],
+      },
+      contextoCon("OPERADOR"),
+    );
+
+    expect(repositorio.crear).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ lugarId: manzanaId }),
+    );
+  });
+
+  it("rechaza un nivel declarado que no pertenece a la cadena del lugar", async () => {
+    const porId = siguientes(lugarId);
+    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
+      async (_tx, id) => porId.get(id) ?? null,
+    );
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await expect(
+      altaDeDomicilio(
+        {
+          ...datosValidos,
+          lugarId: manzanaId,
+          nivelesDeclarados: [lugarId, otroAsentamientoId],
+        },
+        contextoCon("OPERADOR"),
+      ),
+    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+
+    expect(repositorio.crear).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("rechaza en vez de colgarse cuando la cadena de padres tiene un ciclo", async () => {
+    const cicloA = comoLugarId("77777777-7777-4777-8777-777777777777");
+    const cicloB = comoLugarId("88888888-8888-4888-8888-888888888888");
+    const enCicloA: LugarGuardado = {
+      id: cicloA,
+      tipo: "colonia",
+      nombre: "Ciclo A",
+      padreId: cicloB,
+      bajaEn: null,
+    };
+    const enCicloB: LugarGuardado = {
+      id: cicloB,
+      tipo: "sector",
+      nombre: "Ciclo B",
+      padreId: cicloA,
+      bajaEn: null,
+    };
+    vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
+      async (_tx, id) => (id === cicloA ? enCicloA : enCicloB),
+    );
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await expect(
+      altaDeDomicilio(
+        { ...datosValidos, lugarId: cicloA },
+        contextoCon("OPERADOR"),
+      ),
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(repositorio.crear).not.toHaveBeenCalled();
@@ -228,6 +464,16 @@ describe("altaDeDomicilio", () => {
         entidad: "domicilios",
         entidadId: id,
       }),
+    );
+    expect(repositorioDeLugares.buscarPorId).toHaveBeenNthCalledWith(
+      1,
+      expect.anything(),
+      lugarId,
+    );
+    expect(repositorioDeLugares.buscarPorId).toHaveBeenNthCalledWith(
+      2,
+      expect.anything(),
+      asentamientoId,
     );
   });
 

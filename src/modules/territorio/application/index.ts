@@ -9,6 +9,7 @@ export * from "./direccionVigenteDePersona";
 export * from "./editarLugar";
 export * from "./historialDeResidencias";
 export * from "./listarCalles";
+export * from "./listarCallesDelMunicipio";
 export * from "./listarDomicilios";
 export * from "./listarLugares";
 export * from "./listarRaices";

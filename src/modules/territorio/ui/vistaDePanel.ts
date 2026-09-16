@@ -54,6 +54,7 @@ export const pestanasDePanel = ({
     cuenta: cuentas.lugares,
     href: `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=lugares`,
     activa: vista === "lugares",
+    etiquetaAccesible: `Lugares: ${cuentas.lugares}`,
   },
   {
     clave: "calles",
@@ -61,6 +62,7 @@ export const pestanasDePanel = ({
     cuenta: cuentas.calles,
     href: `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=calles`,
     activa: vista === "calles",
+    etiquetaAccesible: `Calles (catalogo del asentamiento): ${cuentas.calles}`,
   },
   {
     clave: "domicilios",
@@ -68,6 +70,7 @@ export const pestanasDePanel = ({
     cuenta: cuentas.domicilios,
     href: `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=domicilios`,
     activa: vista === "domicilios",
+    etiquetaAccesible: `Domicilios (de este lugar): ${cuentas.domicilios}`,
   },
   ...(abreLaEdicion
     ? [

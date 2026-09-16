@@ -8,7 +8,7 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { darDeBajaCalle } from "../../composicion";
 import { CalleConDomiciliosError, comoCalleId } from "../../domain";
-import { irAlArbol, volverAlArbol } from "./volverAlArbol";
+import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const esquemaDeEntrada = z.object({
   calleId: z.string().trim().uuid(),
@@ -29,8 +29,9 @@ export async function darDeBajaCalleAction(formData: FormData): Promise<void> {
   const analisis = esquemaDeEntrada.safeParse({
     calleId: formData.get("calleId"),
   });
+  const navegacion = navegacionDe(formData);
   if (!analisis.success) {
-    volverAlArbol(undefined, undefined, MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -40,7 +41,7 @@ export async function darDeBajaCalleAction(formData: FormData): Promise<void> {
   try {
     await darDeBajaCalle(comoCalleId(analisis.data.calleId), contexto);
   } catch (error) {
-    volverAlArbol(undefined, undefined, mensajeDeError(error));
+    volverAlArbol(navegacion, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");

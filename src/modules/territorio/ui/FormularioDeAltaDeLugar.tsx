@@ -54,6 +54,8 @@ export function FormularioDeAltaDeLugar({
     <form action={altaDeLugarAction} className="flex flex-col gap-4">
       {raiz ? <input type="hidden" name="raiz" value={raiz} /> : null}
       {nodo ? <input type="hidden" name="nodo" value={nodo} /> : null}
+      <input type="hidden" name="vista" value="lugares" />
+      <input type="hidden" name="accion" value="lugar" />
       {padreId ? <input type="hidden" name="padreId" value={padreId} /> : null}
 
       <CampoDeLista

@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import { comoCalleId, comoLugarId, type PuntoGeografico } from "../domain";
+import {
+  CatalogoDeCallesSoloEnAsentamientosError,
+  comoCalleId,
+  comoLugarId,
+  type PuntoGeografico,
+} from "../domain";
 import type {
   CalleGuardada,
   RepositorioDeCalles,
@@ -79,7 +84,7 @@ describe("reparentear calles", () => {
     );
     vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue({
       id: destinoId,
-      tipo: "sector",
+      tipo: "cabecera",
       nombre: "Sector nuevo",
       padreId: null,
       bajaEn: null,
@@ -122,6 +127,30 @@ describe("reparentear calles", () => {
     expect(registrarMock).not.toHaveBeenCalled();
     expect(publicarMock).not.toHaveBeenCalled();
   });
+
+  for (const tipo of ["colonia", "sector", "manzana"] as const) {
+    it(`rechaza mover una calle bajo ${tipo} antes de actualizar`, async () => {
+      const repositorio = repositorioDeCalles();
+      vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
+      vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue({
+        id: destinoId,
+        tipo,
+        nombre: `Lugar ${tipo}`,
+        padreId: null,
+        bajaEn: null,
+      });
+
+      await expect(
+        crearReparentearCalle(repositorio, repositorioDeLugares)(
+          calleId,
+          destinoId,
+          contextoCon("ADMIN_MUNICIPAL"),
+        ),
+      ).rejects.toBeInstanceOf(CatalogoDeCallesSoloEnAsentamientosError);
+
+      expect(repositorio.actualizar).not.toHaveBeenCalled();
+    });
+  }
 
   it("reparentear escribe solo la calle y registra la accion", async () => {
     const repositorio = repositorioDeCalles();

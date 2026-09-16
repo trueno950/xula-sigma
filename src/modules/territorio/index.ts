@@ -16,6 +16,7 @@ export {
   comoCalleId,
   comoLugarId,
   type LugarId,
+  puedeTenerCatalogoDeCalles,
 } from "./domain";
 export type * from "./types";
 export * from "./ui";

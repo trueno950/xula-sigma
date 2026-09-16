@@ -12,7 +12,7 @@ import {
   estaEnYucatan,
   PuntoFueraDeYucatanError,
 } from "../../domain";
-import { volverAlArbol } from "./volverAlArbol";
+import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const MENSAJE_FORMULARIO_INVALIDO = "Coordenada invalida.";
 const MENSAJE_PUNTO_FUERA_DE_YUCATAN = "El punto debe estar dentro de Yucatan.";
@@ -76,8 +76,9 @@ export async function ubicarCalleAction(formData: FormData): Promise<void> {
     latitud: formData.get("latitud")?.toString() ?? "",
     longitud: formData.get("longitud")?.toString() ?? "",
   });
+  const navegacion = navegacionDe(formData);
   if (!analisis.success) {
-    volverAlArbol(undefined, undefined, mensajeDeValidacion(analisis.error));
+    volverAlArbol(navegacion, mensajeDeValidacion(analisis.error));
     return;
   }
 
@@ -91,7 +92,7 @@ export async function ubicarCalleAction(formData: FormData): Promise<void> {
       contexto,
     );
   } catch (error) {
-    volverAlArbol(undefined, undefined, mensajeDeError(error));
+    volverAlArbol(navegacion, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");

@@ -31,6 +31,8 @@ export function FormularioDeBajaDeLugar({ raiz, nodo, padre, nombre }: Props) {
     <form action={darDeBajaLugarAction} className="flex flex-col gap-4">
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="vista" value="editar" />
+      <input type="hidden" name="accion" value="baja" />
       <input type="hidden" name="id" value={nodo} />
       {padre ? <input type="hidden" name="padre" value={padre} /> : null}
 

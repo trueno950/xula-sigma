@@ -8,11 +8,12 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { reparentearCalle } from "../../composicion";
 import {
+  CatalogoDeCallesSoloEnAsentamientosError,
   comoCalleId,
   comoLugarId,
   NombreDeCalleDuplicadoError,
 } from "../../domain";
-import { irAlArbol, volverAlArbol } from "./volverAlArbol";
+import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const esquemaDeEntrada = z.object({
   calleId: z.string().trim().uuid(),
@@ -24,6 +25,9 @@ const MENSAJE_GENERICO = "No se pudo mover la calle. Intente de nuevo.";
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
   if (error instanceof NoEncontradoError) return error.message;
+  if (error instanceof CatalogoDeCallesSoloEnAsentamientosError) {
+    return error.message;
+  }
   if (error instanceof NombreDeCalleDuplicadoError) return error.message;
 
   console.error(
@@ -40,8 +44,9 @@ export async function reparentearCalleAction(
     calleId: formData.get("calleId"),
     nuevoLugarId: formData.get("nuevoLugarId"),
   });
+  const navegacion = navegacionDe(formData);
   if (!analisis.success) {
-    volverAlArbol(undefined, undefined, MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -55,7 +60,7 @@ export async function reparentearCalleAction(
       contexto,
     );
   } catch (error) {
-    volverAlArbol(undefined, undefined, mensajeDeError(error));
+    volverAlArbol(navegacion, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");

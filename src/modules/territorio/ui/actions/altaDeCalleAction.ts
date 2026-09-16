@@ -7,7 +7,11 @@ import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeCalle } from "../../composicion";
-import { comoLugarId, NombreDeCalleDuplicadoError } from "../../domain";
+import {
+  CatalogoDeCallesSoloEnAsentamientosError,
+  comoLugarId,
+  NombreDeCalleDuplicadoError,
+} from "../../domain";
 import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
@@ -24,6 +28,9 @@ const mensajeDeError = (error: unknown): string => {
   // lugarId de otro tenant o inexistente: RLS ya lo esconde antes del FK
   // compuesto (altaDeCalle.ts).
   if (error instanceof NoEncontradoError) return error.message;
+  if (error instanceof CatalogoDeCallesSoloEnAsentamientosError) {
+    return error.message;
+  }
   if (error instanceof NombreDeCalleDuplicadoError) return error.message;
 
   console.error("[territorio] alta de calle fallo", datosSegurosDeError(error));
@@ -37,10 +44,10 @@ export async function altaDeCalleAction(formData: FormData): Promise<void> {
     lugarId: formData.get("lugarId"),
   });
 
-  const { raiz, nodo } = navegacionDe(formData);
+  const navegacion = navegacionDe(formData);
 
   if (!analisis.success) {
-    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -57,7 +64,7 @@ export async function altaDeCalleAction(formData: FormData): Promise<void> {
       contexto,
     );
   } catch (error) {
-    volverAlArbol(raiz, nodo, mensajeDeError(error));
+    volverAlArbol(navegacion, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");

@@ -80,4 +80,17 @@ describe("pestanasDePanel", () => {
       `/territorio?raiz=${idA}&nodo=${idB}&vista=domicilios`,
     );
   });
+
+  it("nombra el alcance de cada cuenta para el lector de pantalla", () => {
+    const pestanas = pestanasDePanel({ ...base, abreLaEdicion: false });
+    const porClave = new Map(
+      pestanas.map((pestana) => [pestana.clave, pestana.etiquetaAccesible]),
+    );
+
+    expect(porClave.get("lugares")).toBe("Lugares: 3");
+    expect(porClave.get("calles")).toBe(
+      "Calles (catalogo del asentamiento): 1",
+    );
+    expect(porClave.get("domicilios")).toBe("Domicilios (de este lugar): 0");
+  });
 });

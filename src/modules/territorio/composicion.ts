@@ -12,6 +12,7 @@ import {
   crearEditarLugar,
   crearHistorialDeResidencias,
   crearListarCalles,
+  crearListarCallesDelMunicipio,
   crearListarDomicilios,
   crearListarLugares,
   crearListarRaices,
@@ -64,6 +65,10 @@ export const altaDeCalle = crearAltaDeCalle(
 export const renombrarCalle = crearRenombrarCalle(repositorioDeCallesSql);
 export const ubicarCalle = crearUbicarCalle(repositorioDeCallesSql);
 export const listarCalles = crearListarCalles(repositorioDeCallesSql);
+export const listarCallesDelMunicipio = crearListarCallesDelMunicipio(
+  lectorDeCallesDeMapaSql,
+  repositorioDeLugaresSql,
+);
 export const callesParaMapa = crearCallesParaMapa(lectorDeCallesDeMapaSql);
 export const callePorId = crearCallePorId(lectorDeCallesDeMapaSql);
 export const callePorIdEnTransaccion = crearCallePorIdEnTransaccion(

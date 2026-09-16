@@ -42,6 +42,9 @@ export const puedeContener = (padre: TipoDeLugar, hijo: TipoDeLugar): boolean =>
  */
 export const puedeSerRaiz = (tipo: TipoDeLugar): boolean => RANGO[tipo] === 0;
 
+export const puedeTenerCatalogoDeCalles = (tipo: TipoDeLugar): boolean =>
+  tipo === "cabecera" || tipo === "comisaria";
+
 /**
  * Los tipos que ese padre acepta adentro, en el orden del catalogo.
  *

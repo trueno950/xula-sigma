@@ -53,10 +53,10 @@ export async function altaDeLugarAction(formData: FormData): Promise<void> {
     padreId: formData.get("padreId") ?? "",
   });
 
-  const { raiz, nodo } = navegacionDe(formData);
+  const navegacion = navegacionDe(formData);
 
   if (!analisis.success) {
-    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -76,7 +76,7 @@ export async function altaDeLugarAction(formData: FormData): Promise<void> {
       contexto,
     );
   } catch (error) {
-    volverAlArbol(raiz, nodo, mensajeDeError(error));
+    volverAlArbol(navegacion, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");

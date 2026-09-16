@@ -5,7 +5,13 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { type CalleId, comoCalleId, type LugarId } from "../domain";
+import {
+  type CalleId,
+  CatalogoDeCallesSoloEnAsentamientosError,
+  comoCalleId,
+  type LugarId,
+  puedeTenerCatalogoDeCalles,
+} from "../domain";
 import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
 
 export type NuevaCalle = {
@@ -14,7 +20,7 @@ export type NuevaCalle = {
 };
 
 /**
- * Alta de una calle en el catalogo de un lugar. `puedeAdministrarTerritorio`
+ * Alta de una calle en el catalogo de un asentamiento. `puedeAdministrarTerritorio`
  * (tasks.md 4.2): el catalogo de calles es estructura territorial, no
  * trabajo de mostrador.
  *
@@ -43,6 +49,9 @@ export function crearAltaDeCalle(
     await withTenant(contexto.ayuntamientoId, async (tx) => {
       const lugar = await repositorioDeLugares.buscarPorId(tx, datos.lugarId);
       if (!lugar) throw new NoEncontradoError();
+      if (!puedeTenerCatalogoDeCalles(lugar.tipo)) {
+        throw new CatalogoDeCallesSoloEnAsentamientosError();
+      }
 
       await repositorio.crear(tx, {
         id,

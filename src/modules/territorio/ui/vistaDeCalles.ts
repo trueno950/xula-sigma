@@ -1,16 +1,29 @@
+import type { ColumnaDeTabla } from "@/shared/ui";
 import type { CalleGuardada, LugarGuardado } from "../application/puertos";
-import type { LugarId, PuntoGeografico } from "../domain";
+import {
+  type LugarId,
+  type PuntoGeografico,
+  puedeTenerCatalogoDeCalles,
+} from "../domain";
+
+export const COLUMNAS_DE_CALLES: readonly ColumnaDeTabla[] = [
+  { clave: "calle", etiqueta: "Calle" },
+  { clave: "ubicacion", etiqueta: "Ubicacion" },
+];
 
 export const formatoDePunto = (punto: PuntoGeografico | null): string =>
   punto
     ? `${punto.latitud.toFixed(6)}, ${punto.longitud.toFixed(6)}`
-    : "Sin punto";
+    : "sin punto";
 
 export const destinosDeMovimiento = (
   lugarActualId: LugarId,
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[],
 ): readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[] =>
-  lugares.filter((lugar) => lugar.id !== lugarActualId);
+  lugares.filter(
+    (lugar) =>
+      lugar.id !== lugarActualId && puedeTenerCatalogoDeCalles(lugar.tipo),
+  );
 
 export type CalleParaPanel = Pick<
   CalleGuardada,

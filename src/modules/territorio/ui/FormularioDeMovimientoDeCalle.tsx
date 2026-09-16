@@ -5,15 +5,27 @@ import { opcionesDeLugares } from "./opciones";
 import { type CalleParaPanel, destinosDeMovimiento } from "./vistaDeCalles";
 
 type Props = {
+  raiz: string;
+  nodo: string;
   calle: CalleParaPanel;
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
 };
 
-export function FormularioDeMovimientoDeCalle({ calle, lugares }: Props) {
+export function FormularioDeMovimientoDeCalle({
+  raiz,
+  nodo,
+  calle,
+  lugares,
+}: Props) {
   const destinos = destinosDeMovimiento(calle.lugarId, lugares);
 
   return (
     <form action={reparentearCalleAction} className="flex flex-col gap-4">
+      <input type="hidden" name="raiz" value={raiz} />
+      <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="vista" value="calles" />
+      <input type="hidden" name="accion" value="reparentearCalle" />
+      <input type="hidden" name="calle" value={calle.id} />
       <input type="hidden" name="calleId" value={calle.id} />
       <CampoDeLista
         id="calle-nuevo-lugar-id"

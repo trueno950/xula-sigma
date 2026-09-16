@@ -23,6 +23,21 @@ describe("rutaDelArbol", () => {
     );
   });
 
+  it("preserves the active territory context on an error redirect", () => {
+    const contexto = {
+      raiz: "r1",
+      nodo: "n1",
+      vista: "calles",
+      accion: "renombrarCalle",
+      calle: "c1",
+      error: "No se pudo guardar",
+    };
+
+    expect(rutaDelArbol(contexto)).toBe(
+      "/territorio?raiz=r1&nodo=n1&vista=calles&accion=renombrarCalle&calle=c1&error=No+se+pudo+guardar",
+    );
+  });
+
   /**
    * El mensaje viaja en la query y lo escribe el servidor, pero pasa por
    * `URLSearchParams`: sin escapar, un `&` adentro del texto partia el
@@ -48,11 +63,28 @@ describe("navegacionDe", () => {
   const RAIZ = "11111111-1111-4111-8111-111111111111";
   const NODO = "22222222-2222-4222-8222-222222222222";
   const PADRE = "33333333-3333-4333-8333-333333333333";
+  const CALLE = "44444444-4444-4444-8444-444444444444";
 
-  it("lee los tres campos de navegacion", () => {
+  it("reads the complete active territory context", () => {
     expect(
-      navegacionDe(conCampos({ raiz: RAIZ, nodo: NODO, padre: PADRE })),
-    ).toEqual({ raiz: RAIZ, nodo: NODO, padre: PADRE });
+      navegacionDe(
+        conCampos({
+          raiz: RAIZ,
+          nodo: NODO,
+          vista: "calles",
+          accion: "renombrarCalle",
+          calle: CALLE,
+          padre: PADRE,
+        }),
+      ),
+    ).toEqual({
+      raiz: RAIZ,
+      nodo: NODO,
+      vista: "calles",
+      accion: "renombrarCalle",
+      calle: CALLE,
+      padre: PADRE,
+    });
   });
 
   it("un campo vacio vale lo mismo que uno ausente", () => {

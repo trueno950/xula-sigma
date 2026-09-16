@@ -12,15 +12,22 @@ import {
   TransversalRepetidaError,
   transversalesValidas,
 } from "../domain";
-import type {
-  CalleGuardada,
-  RepositorioDeCalles,
-  RepositorioDeLugares,
-} from "./puertos";
+import { cadenaHastaAsentamiento } from "./asentamientoDeLugar";
+import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
 import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
+import {
+  bloquearCalles,
+  exigirCallesActivas,
+  exigirCallesDelAsentamiento,
+  exigirNivelesDeclarados,
+  idsDeCalles,
+} from "./verificacionDeDomicilio";
 
 export type NuevoDomicilio = {
-  lugarId: LugarId;
+  /** El nivel mas profundo conocido; sin el, el asentamiento de la calle. */
+  lugarId?: LugarId | undefined;
+  /** Los niveles de zona que el operador declaro. */
+  nivelesDeclarados?: readonly LugarId[] | undefined;
   calleId: CalleId;
   numero: string | null;
   entreCalleAId: CalleId | null;
@@ -38,36 +45,6 @@ export type NuevoDomicilio = {
  * comparten transversales; el lock tambien cierra la carrera con la baja de
  * una calle.
  */
-
-const idsDeCalles = (datos: NuevoDomicilio): CalleId[] =>
-  [datos.calleId, datos.entreCalleAId, datos.entreCalleBId]
-    .filter((id): id is CalleId => id !== null)
-    .filter((id, indice, ids) => ids.indexOf(id) === indice)
-    .sort();
-
-const bloquearCalles = async (
-  repositorio: RepositorioDeCalles,
-  tx: Parameters<RepositorioDeCalles["bloquearPorId"]>[0],
-  ids: readonly CalleId[],
-): Promise<readonly CalleGuardada[]> => {
-  const bloqueadas: CalleGuardada[] = [];
-
-  for (const id of ids) {
-    const calle = await repositorio.bloquearPorId(tx, id);
-    if (!calle) throw new NoEncontradoError();
-    bloqueadas.push(calle);
-  }
-
-  return bloqueadas;
-};
-
-const exigirCallesActivas = (
-  callesBloqueadas: readonly CalleGuardada[],
-): void => {
-  if (callesBloqueadas.some(({ bajaEn }) => bajaEn !== null)) {
-    throw new NoEncontradoError();
-  }
-};
 
 type DependenciasDeAlta = {
   repositorio: RepositorioDeDomicilios;
@@ -115,19 +92,41 @@ const verificarLugarYCalles = async (
   dependencias: DependenciasDeAlta,
   tx: Parameters<RepositorioDeCalles["bloquearPorId"]>[0],
   datos: NuevoDomicilio,
-): Promise<void> => {
-  const lugar = await dependencias.repositorioDeLugares.buscarPorId(
-    tx,
-    datos.lugarId,
-  );
-  if (!lugar) throw new NoEncontradoError();
-
+): Promise<LugarId> => {
   const callesBloqueadas = await bloquearCalles(
     dependencias.repositorioDeCalles,
     tx,
-    idsDeCalles(datos),
+    idsDeCalles(datos.calleId, datos.entreCalleAId, datos.entreCalleBId),
   );
   exigirCallesActivas(callesBloqueadas);
+
+  // Sin nivel declarado el asentamiento sale de la calle: las calles
+  // cuelgan de un asentamiento, y es la unica parte de la zona que el
+  // operador ya eligio.
+  const callePrincipal = callesBloqueadas.find(
+    (calle) => calle.id === datos.calleId,
+  );
+  const lugarId = datos.lugarId ?? callePrincipal?.lugarId;
+  if (!lugarId) throw new NoEncontradoError();
+
+  const lugar = await dependencias.repositorioDeLugares.buscarPorId(
+    tx,
+    lugarId,
+  );
+  if (!lugar) throw new NoEncontradoError();
+
+  const cadena = await cadenaHastaAsentamiento(
+    dependencias.repositorioDeLugares,
+    tx,
+    lugar,
+  );
+  const asentamiento = cadena[cadena.length - 1];
+  if (!asentamiento) throw new NoEncontradoError();
+
+  exigirNivelesDeclarados(datos.nivelesDeclarados ?? [], cadena);
+  exigirCallesDelAsentamiento(callesBloqueadas, asentamiento.id);
+
+  return lugarId;
 };
 
 const guardarDomicilio = async (
@@ -135,12 +134,12 @@ const guardarDomicilio = async (
   alta: AltaPreparada,
 ): Promise<void> => {
   await withTenant(alta.contexto.ayuntamientoId, async (tx) => {
-    await verificarLugarYCalles(dependencias, tx, alta.datos);
+    const lugarId = await verificarLugarYCalles(dependencias, tx, alta.datos);
 
     await dependencias.repositorio.crear(tx, {
       id: alta.id,
       ayuntamientoId: alta.contexto.ayuntamientoId,
-      lugarId: alta.datos.lugarId,
+      lugarId,
       calleId: alta.datos.calleId,
       numero: alta.numero,
       entreCalleAId: alta.datos.entreCalleAId,

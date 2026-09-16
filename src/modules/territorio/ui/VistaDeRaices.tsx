@@ -1,7 +1,7 @@
 import { Warning } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import {
+  AvisoDePermiso,
   CLASES_DE_DATO,
   CLASES_DE_ETIQUETA,
   EnlaceDeAccion,
@@ -28,8 +28,6 @@ type Props = {
   puedeEscribir: boolean;
   /** `?accion=lugar`: el alta esta abierta. */
   altaAbierta: boolean;
-  /** El mismo boton que la cabecera, para el vacio inicial. */
-  accionDeAlta: ReactNode;
 };
 
 const CLASE_FILA =
@@ -57,7 +55,6 @@ export function VistaDeRaices({
   lugares,
   puedeEscribir,
   altaAbierta,
-  accionDeAlta,
 }: Props) {
   const estado = estadoDeLista({ total: raices.length });
   const hijosDe = (padreId: LugarId) =>
@@ -65,6 +62,13 @@ export function VistaDeRaices({
 
   return (
     <div className="flex flex-col gap-4">
+      {!puedeEscribir ? (
+        <AvisoDePermiso
+          capacidad="agregar asentamientos al territorio"
+          requisito="un rol con permisos de escritura"
+        />
+      ) : null}
+
       {estado.clase === "con-filas" ? (
         <ul aria-label="Asentamientos del municipio" className="flex flex-col">
           {raices.map((raiz) => {
@@ -79,6 +83,7 @@ export function VistaDeRaices({
                 <Link
                   href={`/territorio?raiz=${raiz.id}`}
                   className={CLASE_FILA}
+                  aria-label={`${raiz.nombre}, ${raiz.tipo}`}
                 >
                   <span className="text-[15px] font-medium text-caliza-tinta">
                     {raiz.nombre}
@@ -109,6 +114,7 @@ export function VistaDeRaices({
                         <Link
                           href={`/territorio?raiz=${raiz.id}&nodo=${hijo.id}`}
                           className={CLASE_FILA}
+                          aria-label={`${hijo.nombre}, ${hijo.tipo}`}
                         >
                           <span className="text-[15px] text-caliza-tinta">
                             {hijo.nombre}
@@ -135,12 +141,11 @@ export function VistaDeRaices({
           estado={estado}
           mensajeInicial="El municipio todavia no tiene asentamientos. Empiece por la cabecera o una comisaria."
           hrefSinFiltro="/territorio"
-          {...(puedeEscribir ? { accion: accionDeAlta } : {})}
         />
       )}
 
       {puedeEscribir && altaAbierta ? (
-        <Panel titulo="Agregar un asentamiento">
+        <Panel titulo="Agregar asentamiento">
           <FormularioDeAltaDeLugar />
           <EnlaceDeAccion href="/territorio" variante="fantasma">
             Cancelar

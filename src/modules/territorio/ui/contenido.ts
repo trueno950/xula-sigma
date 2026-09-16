@@ -5,7 +5,12 @@ import type {
 } from "../application/puertos";
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
 import type { CalleId, LugarId } from "../domain";
-import type { AccionDeNodo, NodoSeleccionado, TabDeLugar } from "./PanelDeNodo";
+import type {
+  AccionDeNodo,
+  CuentasDeLugar,
+  NodoSeleccionado,
+  TabDeLugar,
+} from "./PanelDeNodo";
 import type { PermisosDeTerritorio } from "./permisos";
 
 /**
@@ -68,4 +73,38 @@ export const domiciliosDirectosDe = (
   );
 
   return domicilios.filter((domicilio) => ids.has(domicilio.id));
+};
+
+/**
+ * Lo que cada pestana va a mostrar, contado una vez para escribirlo en la
+ * pestana misma. Se cuenta aca —y no adentro de cada pestana— porque las
+ * cuatro tienen que verse a la vez en la cabecera, y una pestana solo sabe
+ * de lo suyo.
+ *
+ * Las calles se cuentan siempre: la pestana lista el catalogo que el lugar
+ * puede usar, aunque el catalogo sea de su asentamiento.
+ */
+export const cuentasDeLugar = ({
+  nodos,
+  domicilios,
+  calles,
+  nodo,
+}: {
+  nodos: readonly NodoDeSubarbol[];
+  domicilios: readonly DomicilioParaListado[];
+  calles: readonly Pick<CalleGuardada, "id">[];
+  nodo: NodoSeleccionado;
+}): CuentasDeLugar => {
+  const idsDeDomicilios = new Set(
+    nodos
+      .filter((n) => n.clase === "domicilio" && n.lugarId === nodo.id)
+      .map((n) => n.id),
+  );
+
+  return {
+    lugares: nodos.filter((n) => n.clase === "lugar" && n.padreId === nodo.id)
+      .length,
+    calles: calles.length,
+    domicilios: domicilios.filter((d) => idsDeDomicilios.has(d.id)).length,
+  };
 };
