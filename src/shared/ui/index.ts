@@ -1,4 +1,5 @@
 export { Aviso } from "./Aviso";
+export { AvisoDePermiso } from "./AvisoDePermiso";
 export { Boton, EnlaceDeAccion } from "./Boton";
 export { Campo } from "./Campo";
 export { CampoDeLista, type OpcionDeLista } from "./CampoDeLista";
