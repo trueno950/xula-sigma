@@ -45,3 +45,12 @@ playwright-report/
 
 # macOS
 .DS_Store
+
+# Ajustes personales de Claude Code, no del repositorio: el sufijo `local`
+# es justamente esa convencion. `settings.json` SI se commitea.
+.claude/settings.local.json
+
+# Estado de maquina del agente por defecto de gentle-ai ("state":
+# "managed"). Mismo criterio que `.codegraph/`: describe esta copia, no el
+# proyecto.
+.gentle-ai-default-agent.json
