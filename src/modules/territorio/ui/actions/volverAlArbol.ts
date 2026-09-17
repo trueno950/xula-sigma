@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { ACCIONES_DE_NODO } from "../acciones";
 
 /**
  * El destino de las acciones de territorio: el arbol, con el contexto visible
@@ -15,6 +16,7 @@ export const rutaDelArbol = ({
   vista,
   accion,
   calle,
+  domicilio,
   error,
 }: {
   raiz?: string | undefined;
@@ -22,6 +24,7 @@ export const rutaDelArbol = ({
   vista?: string | undefined;
   accion?: string | undefined;
   calle?: string | undefined;
+  domicilio?: string | undefined;
   error?: string | undefined;
 }): string => {
   const parametros = new URLSearchParams();
@@ -30,6 +33,7 @@ export const rutaDelArbol = ({
   if (vista) parametros.set("vista", vista);
   if (accion) parametros.set("accion", accion);
   if (calle) parametros.set("calle", calle);
+  if (domicilio) parametros.set("domicilio", domicilio);
   if (error) parametros.set("error", error);
 
   const consulta = parametros.toString();
@@ -100,22 +104,9 @@ const esquemaDeNavegacion = z.object({
     .enum(["lugares", "calles", "domicilios", "editar"])
     .optional()
     .catch(undefined),
-  accion: z
-    .enum([
-      "lugar",
-      "calle",
-      "ubicarCalle",
-      "reparentearCalle",
-      "bajaCalle",
-      "renombrarCalle",
-      "domicilio",
-      "renombrar",
-      "baja",
-      "reparentear",
-    ])
-    .optional()
-    .catch(undefined),
+  accion: z.enum(ACCIONES_DE_NODO).optional().catch(undefined),
   calle: z.string().uuid().optional().catch(undefined),
+  domicilio: z.string().uuid().optional().catch(undefined),
 });
 
 export const navegacionDe = (formData: FormData) =>
@@ -126,4 +117,7 @@ export const navegacionDe = (formData: FormData) =>
     vista: formData.get("vista")?.toString() || undefined,
     accion: formData.get("accion")?.toString() || undefined,
     calle: formData.get("calle")?.toString() || undefined,
+    // El formulario lo manda como `domicilioId` y la URL lo nombra
+    // `domicilio`: `parametros.ts` lee ese nombre al volver.
+    domicilio: formData.get("domicilioId")?.toString() || undefined,
   });

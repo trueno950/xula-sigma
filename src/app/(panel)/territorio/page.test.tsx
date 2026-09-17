@@ -22,7 +22,10 @@ vi.mock("@/shared/auth", () => ({
   contextoActual: mocks.contextoActual,
 }));
 
-vi.mock("@/modules/territorio", () => ({
+vi.mock("@/modules/territorio", async () => ({
+  ...(await vi.importActual<typeof import("@/modules/territorio/ui/acciones")>(
+    "@/modules/territorio/ui/acciones",
+  )),
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
   FormularioDeDomicilio,

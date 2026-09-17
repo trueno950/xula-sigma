@@ -1,3 +1,4 @@
+export { ACCIONES_DE_NODO } from "./acciones";
 export { ContenidoDeLugar } from "./ContenidoDeLugar";
 export { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 export { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";

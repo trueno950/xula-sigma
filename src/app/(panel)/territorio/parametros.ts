@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  ACCIONES_DE_NODO,
   type AccionDeNodo,
   type CalleId,
   comoCalleId,
@@ -48,23 +49,7 @@ const esquemaDeParametros = z.object({
     .enum(["lugares", "calles", "domicilios", "editar"])
     .optional()
     .catch(undefined),
-  accion: z
-    .enum([
-      "lugar",
-      "calle",
-      "ubicarCalle",
-      "reparentearCalle",
-      "bajaCalle",
-      "renombrarCalle",
-      "domicilio",
-      "corregirDomicilio",
-      "bajaDomicilio",
-      "renombrar",
-      "baja",
-      "reparentear",
-    ])
-    .optional()
-    .catch(undefined),
+  accion: z.enum(ACCIONES_DE_NODO).optional().catch(undefined),
   error: z.string().optional().catch(undefined),
 });
 
