@@ -25,6 +25,8 @@ export function FormularioDeEdicionDeLugar({
     <form action={editarLugarAction} className="flex flex-col gap-4">
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="vista" value="editar" />
+      <input type="hidden" name="accion" value="renombrar" />
       <input type="hidden" name="id" value={nodo} />
 
       <Campo

@@ -16,17 +16,7 @@ export type NodoSeleccionado = {
 /** Un paso de la migaja: la raiz, un ancestro, o el nodo mismo. */
 export type PasoDeMigaja = { id: LugarId; nombre: string };
 
-export type AccionDeNodo =
-  | "lugar"
-  | "calle"
-  | "ubicarCalle"
-  | "reparentearCalle"
-  | "bajaCalle"
-  | "renombrarCalle"
-  | "domicilio"
-  | "renombrar"
-  | "baja"
-  | "reparentear";
+export type { AccionDeNodo } from "./acciones";
 
 /** La pestana que categoriza el contenido: una sola se ve a la vez. */
 export type TabDeLugar = "lugares" | "calles" | "domicilios" | "editar";

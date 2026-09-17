@@ -34,10 +34,10 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
     id: formData.get("id"),
   });
 
-  const { raiz, nodo, padre } = navegacionDe(formData);
+  const navegacion = navegacionDe(formData);
 
   if (!analisis.success) {
-    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -48,7 +48,7 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
   try {
     await darDeBajaLugar(comoLugarId(analisis.data.id), contexto);
   } catch (error) {
-    volverAlArbol(raiz, nodo, mensajeDeError(error));
+    volverAlArbol(navegacion, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");
@@ -56,5 +56,8 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
   // El nodo abierto es justo el que se dio de baja, asi que la URL actual
   // ya no resuelve: se sube al padre. Dando de baja la raiz misma no queda
   // arbol que abrir y el destino es el listado.
-  irAlArbol(nodo === raiz ? undefined : raiz, padre);
+  irAlArbol(
+    navegacion.nodo === navegacion.raiz ? undefined : navegacion.raiz,
+    navegacion.padre,
+  );
 }

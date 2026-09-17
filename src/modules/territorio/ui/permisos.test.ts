@@ -30,6 +30,8 @@ const ADMINISTRAR: readonly AccionDeNodo[] = [
 const ESCRIBIR: readonly AccionDeNodo[] = [
   "lugar",
   "domicilio",
+  "corregirDomicilio",
+  "bajaDomicilio",
   "renombrar",
   "baja",
 ];

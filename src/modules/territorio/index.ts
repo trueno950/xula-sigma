@@ -14,8 +14,11 @@ export * from "./composicion";
 export {
   type CalleId,
   comoCalleId,
+  comoDomicilioId,
   comoLugarId,
+  type DomicilioId,
   type LugarId,
+  puedeTenerCatalogoDeCalles,
 } from "./domain";
 export type * from "./types";
 export * from "./ui";

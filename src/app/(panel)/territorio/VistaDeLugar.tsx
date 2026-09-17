@@ -2,7 +2,7 @@ import {
   type AccionDeNodo,
   type CalleId,
   ContenidoDeLugar,
-  type CuentasDeLugar,
+  type DomicilioId,
   type NodoSeleccionado,
   PanelDeNodo,
   type PasoDeMigaja,
@@ -13,7 +13,11 @@ import type {
   LugarGuardado,
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
-import type { DomicilioParaListado } from "@/modules/territorio/application/puertosDeDomicilios";
+import type {
+  DomicilioGuardado,
+  DomicilioParaListado,
+} from "@/modules/territorio/application/puertosDeDomicilios";
+import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
 import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 
 type Props = {
@@ -26,6 +30,8 @@ type Props = {
   vista: TabDeLugar;
   accion: AccionDeNodo | undefined;
   calleId: CalleId | undefined;
+  domicilioId: DomicilioId | undefined;
+  domicilio: DomicilioGuardado | undefined;
   permisos: PermisosDeTerritorio;
 };
 
@@ -56,37 +62,6 @@ const migajaDe = (
 };
 
 /**
- * Lo que cada pestana va a mostrar, contado una vez para escribirlo en la
- * pestana misma. Se cuenta aca —y no adentro de cada pestana— porque las
- * cuatro tienen que verse a la vez en la cabecera, y una pestana solo sabe
- * de lo suyo.
- */
-const cuentasDe = ({
-  nodos,
-  domicilios,
-  calles,
-  nodo,
-}: {
-  nodos: readonly NodoDeSubarbol[];
-  domicilios: readonly DomicilioParaListado[];
-  calles: readonly Pick<CalleGuardada, "id">[];
-  nodo: NodoSeleccionado;
-}): CuentasDeLugar => {
-  const idsDeDomicilios = new Set(
-    nodos
-      .filter((n) => n.clase === "domicilio" && n.lugarId === nodo.id)
-      .map((n) => n.id),
-  );
-
-  return {
-    lugares: nodos.filter((n) => n.clase === "lugar" && n.padreId === nodo.id)
-      .length,
-    calles: calles.length,
-    domicilios: domicilios.filter((d) => idsDeDomicilios.has(d.id)).length,
-  };
-};
-
-/**
  * La vista con `?raiz=` fijada: el panel del lugar (migaja + pestanas) y
  * el contenido de la pestana activa, una categoria a la vez. Navegar es
  * entrar: cada hijo fija `?nodo=`; la migaja sube de nivel. Vive aparte
@@ -102,6 +77,8 @@ export function VistaDeLugar({
   vista,
   accion,
   calleId,
+  domicilioId,
+  domicilio,
   permisos,
 }: Props) {
   return (
@@ -111,7 +88,7 @@ export function VistaDeLugar({
         nodo={nodo}
         migaja={migajaDe(raiz, nodos, nodo)}
         vista={vista}
-        cuentas={cuentasDe({ nodos, domicilios, calles, nodo })}
+        cuentas={cuentasDeLugar({ nodos, domicilios, calles, nodo })}
         abreLaEdicion={permisos.abreLaEdicion}
       />
 
@@ -123,6 +100,8 @@ export function VistaDeLugar({
         lugares={lugares}
         domicilios={domicilios}
         calleId={calleId}
+        domicilioId={domicilioId}
+        domicilio={domicilio}
         vista={vista}
         accion={accion}
         permisos={permisos}

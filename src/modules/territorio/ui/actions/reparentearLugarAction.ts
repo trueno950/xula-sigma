@@ -44,10 +44,10 @@ export async function reparentearLugarAction(
     nuevoPadreId: formData.get("nuevoPadreId") ?? "",
   });
 
-  const { raiz, nodo } = navegacionDe(formData);
+  const navegacion = navegacionDe(formData);
 
   if (!analisis.success) {
-    volverAlArbol(raiz, nodo, MENSAJE_FORMULARIO_INVALIDO);
+    volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
@@ -64,7 +64,7 @@ export async function reparentearLugarAction(
       contexto,
     );
   } catch (error) {
-    volverAlArbol(raiz, nodo, mensajeDeError(error));
+    volverAlArbol(navegacion, mensajeDeError(error));
   }
 
   revalidatePath("/territorio");

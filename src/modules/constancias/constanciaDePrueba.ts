@@ -51,8 +51,11 @@ export const titularConResidenciaVigente = async (
     },
     contexto,
   );
+  // La calle cuelga del asentamiento, no de la colonia: el catalogo de
+  // calles es del asentamiento, y el domicilio la referencia desde su nivel
+  // mas profundo conocido (`altaDeDomicilio` lo exige).
   const { id: calleId } = await altaDeCalle(
-    { nombre: `Calle de ${nombres}`, lugarId },
+    { nombre: `Calle de ${nombres}`, lugarId: asentamientoId },
     contexto,
   );
   const { id: domicilioId } = await altaDeDomicilio(

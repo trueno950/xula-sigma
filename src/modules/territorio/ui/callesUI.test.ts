@@ -4,7 +4,7 @@ import { destinosDeMovimiento, formatoDePunto } from "./vistaDeCalles";
 
 describe("presentacion del catalogo de calles", () => {
   it("muestra el estado explicito de una calle sin punto", () => {
-    expect(formatoDePunto(null)).toBe("Sin punto");
+    expect(formatoDePunto(null)).toBe("sin punto");
     expect(formatoDePunto({ latitud: 20.937, longitud: -89.6237 })).toBe(
       "20.937000, -89.623700",
     );
@@ -17,8 +17,13 @@ describe("presentacion del catalogo de calles", () => {
     expect(
       destinosDeMovimiento(actual, [
         { id: actual, nombre: "Centro", tipo: "cabecera" },
-        { id: destino, nombre: "San Juan", tipo: "colonia" },
+        { id: destino, nombre: "San Juan", tipo: "comisaria" },
+        {
+          id: comoLugarId("33333333-3333-4333-8333-333333333333"),
+          nombre: "Sector 1",
+          tipo: "sector",
+        },
       ]),
-    ).toEqual([{ id: destino, nombre: "San Juan", tipo: "colonia" }]);
+    ).toEqual([{ id: destino, nombre: "San Juan", tipo: "comisaria" }]);
   });
 });

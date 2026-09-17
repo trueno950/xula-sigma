@@ -10,7 +10,7 @@ import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAltaDeDomicilio } from "./application/altaDeDomicilio";
 import { crearDireccionVigenteDePersona } from "./application/direccionVigenteDePersona";
 import { crearReparentearLugar } from "./application/reparentearLugar";
-import type { DomicilioId } from "./domain";
+import type { CalleId, DomicilioId, LugarId } from "./domain";
 import { residencias } from "./infrastructure/esquema";
 import { lectorDeDireccionesSql } from "./infrastructure/lectorDeDireccionesSql";
 import { crearLectorDePersonasPorPadron } from "./infrastructure/lectorDePersonasPorPadron";
@@ -44,6 +44,23 @@ const altaDeDomicilio = crearAltaDeDomicilio(
 
 const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
 
+const altaConNumero = (
+  lugarId: LugarId,
+  calleId: CalleId,
+  numero: string | null,
+) =>
+  altaDeDomicilio(
+    {
+      lugarId,
+      calleId,
+      numero,
+      entreCalleAId: null,
+      entreCalleBId: null,
+      referencia: null,
+    },
+    contextoDe(),
+  );
+
 const personaDePrueba = (nombres: string) =>
   altaDePersona(
     { nombres, primerApellido: "Pech", segundoApellido: null, curp: null },
@@ -66,30 +83,11 @@ describe("direccionVigenteDePersona: resolucion por fusion (spec residencias)", 
   it("resuelve la residencia mas reciente entre las dos identidades fusionadas, sin ejecutar su propia consulta contra residencias", async () => {
     const { id: personaA } = await personaDePrueba("Alicia");
     const { id: personaB } = await personaDePrueba("Betania");
-    const colonia = await crearLugar("colonia", "Colonia Fusion");
-    const calle = await crearCalle(colonia, "Calle de la fusion");
-    const { id: domicilioViejo } = await altaDeDomicilio(
-      {
-        lugarId: colonia,
-        calleId: calle,
-        numero: "1",
-        entreCalleAId: null,
-        entreCalleBId: null,
-        referencia: null,
-      },
-      contextoDe(),
-    );
-    const { id: domicilioNuevo } = await altaDeDomicilio(
-      {
-        lugarId: colonia,
-        calleId: calle,
-        numero: "2",
-        entreCalleAId: null,
-        entreCalleBId: null,
-        referencia: null,
-      },
-      contextoDe(),
-    );
+    const comisaria = await crearLugar("comisaria", "Comisaria Fusion");
+    const colonia = await crearLugar("colonia", "Colonia Fusion", comisaria);
+    const calle = await crearCalle(comisaria, "Calle de la fusion");
+    const { id: domicilioViejo } = await altaConNumero(colonia, calle, "1");
+    const { id: domicilioNuevo } = await altaConNumero(colonia, calle, "2");
     await abrirResidencia(personaA, domicilioViejo, "2020-01-01");
     await abrirResidencia(personaB, domicilioNuevo, "2021-01-01");
 
@@ -107,9 +105,9 @@ describe("direccionVigenteDePersona: composicion del texto (spec domicilios)", (
     const colonia = await crearLugar("colonia", "Colonia Completa", comisaria);
     const sector = await crearLugar("sector", "Sector Completo", colonia);
     const manzana = await crearLugar("manzana", "Manzana Completa", sector);
-    const calle = await crearCalle(manzana, "Calle Principal");
-    const entreA = await crearCalle(manzana, "Entre Calle A");
-    const entreB = await crearCalle(manzana, "Entre Calle B");
+    const calle = await crearCalle(comisaria, "Calle Principal");
+    const entreA = await crearCalle(comisaria, "Entre Calle A");
+    const entreB = await crearCalle(comisaria, "Entre Calle B");
     const { id: domicilioId } = await altaDeDomicilio(
       {
         lugarId: manzana,
@@ -137,19 +135,14 @@ describe("direccionVigenteDePersona: composicion del texto (spec domicilios)", (
   });
 
   it("con niveles ausentes, el texto omite lo ausente sin fallar", async () => {
-    const colonia = await crearLugar("colonia", "Colonia Sin Manzana");
-    const calle = await crearCalle(colonia, "Calle Suelta");
-    const { id: domicilioId } = await altaDeDomicilio(
-      {
-        lugarId: colonia,
-        calleId: calle,
-        numero: null,
-        entreCalleAId: null,
-        entreCalleBId: null,
-        referencia: null,
-      },
-      contextoDe(),
+    const comisaria = await crearLugar("comisaria", "Comisaria Sin Manzana");
+    const colonia = await crearLugar(
+      "colonia",
+      "Colonia Sin Manzana",
+      comisaria,
     );
+    const calle = await crearCalle(comisaria, "Calle Suelta");
+    const { id: domicilioId } = await altaConNumero(colonia, calle, null);
     const { id: personaId } = await personaDePrueba("Daniela");
     await abrirResidencia(personaId, domicilioId, "2022-01-01");
 
@@ -168,18 +161,8 @@ describe("direccionVigenteDePersona: composicion del texto (spec domicilios)", (
       "Colonia Movil",
       comisariaOrigen,
     );
-    const calle = await crearCalle(colonia, "Calle Movil");
-    const { id: domicilioId } = await altaDeDomicilio(
-      {
-        lugarId: colonia,
-        calleId: calle,
-        numero: "50",
-        entreCalleAId: null,
-        entreCalleBId: null,
-        referencia: null,
-      },
-      contextoDe(),
-    );
+    const calle = await crearCalle(comisariaOrigen, "Calle Movil");
+    const { id: domicilioId } = await altaConNumero(colonia, calle, "50");
     const { id: personaId } = await personaDePrueba("Elisa");
     await abrirResidencia(personaId, domicilioId, "2022-01-01");
 

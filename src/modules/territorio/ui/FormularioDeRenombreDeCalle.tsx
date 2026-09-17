@@ -14,6 +14,9 @@ export function FormularioDeRenombreDeCalle({ raiz, nodo, calle }: Props) {
     <form action={renombrarCalleAction} className="flex flex-col gap-4">
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="vista" value="calles" />
+      <input type="hidden" name="accion" value="renombrarCalle" />
+      <input type="hidden" name="calle" value={calle.id} />
       <input type="hidden" name="id" value={calle.id} />
 
       <p className="text-[15px] text-caliza-tinta">{calle.nombre}</p>

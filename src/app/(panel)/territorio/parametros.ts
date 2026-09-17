@@ -1,9 +1,12 @@
 import { z } from "zod";
 import {
+  ACCIONES_DE_NODO,
   type AccionDeNodo,
   type CalleId,
   comoCalleId,
+  comoDomicilioId,
   comoLugarId,
+  type DomicilioId,
   type LugarId,
   type NodoSeleccionado,
   type TabDeLugar,
@@ -21,6 +24,7 @@ import type { NodoDeSubarbol } from "@/modules/territorio/application/puertos";
  */
 export type ParametrosDeTerritorio = {
   calleId: CalleId | undefined;
+  domicilioId: DomicilioId | undefined;
   raizId: LugarId | undefined;
   nodoId: LugarId | undefined;
   accion: AccionDeNodo | undefined;
@@ -38,27 +42,14 @@ export type ParametrosDeTerritorio = {
  */
 const esquemaDeParametros = z.object({
   calle: z.string().uuid().optional().catch(undefined),
+  domicilio: z.string().uuid().optional().catch(undefined),
   raiz: z.string().uuid().optional().catch(undefined),
   nodo: z.string().uuid().optional().catch(undefined),
   vista: z
     .enum(["lugares", "calles", "domicilios", "editar"])
     .optional()
     .catch(undefined),
-  accion: z
-    .enum([
-      "lugar",
-      "calle",
-      "ubicarCalle",
-      "reparentearCalle",
-      "bajaCalle",
-      "renombrarCalle",
-      "domicilio",
-      "renombrar",
-      "baja",
-      "reparentear",
-    ])
-    .optional()
-    .catch(undefined),
+  accion: z.enum(ACCIONES_DE_NODO).optional().catch(undefined),
   error: z.string().optional().catch(undefined),
 });
 
@@ -71,6 +62,8 @@ const pestanaDeAccion: Record<AccionDeNodo, TabDeLugar> = {
   bajaCalle: "calles",
   renombrarCalle: "calles",
   domicilio: "domicilios",
+  corregirDomicilio: "domicilios",
+  bajaDomicilio: "domicilios",
   renombrar: "editar",
   reparentear: "editar",
   baja: "editar",
@@ -85,6 +78,7 @@ export const leerParametros = (
 
   return {
     calleId: datos.calle ? comoCalleId(datos.calle) : undefined,
+    domicilioId: datos.domicilio ? comoDomicilioId(datos.domicilio) : undefined,
     raizId: datos.raiz ? comoLugarId(datos.raiz) : undefined,
     nodoId: datos.nodo ? comoLugarId(datos.nodo) : undefined,
     accion,

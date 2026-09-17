@@ -30,7 +30,8 @@ const contexto: ContextoActual = {
   origen: "web",
 };
 
-const lugarId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const asentamientoId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const lugarId = comoLugarId("66666666-6666-4666-8666-666666666666");
 const calleId = comoCalleId("22222222-2222-4222-8222-222222222222");
 const entreCalleAId = comoCalleId("33333333-3333-4333-8333-333333333333");
 
@@ -38,6 +39,14 @@ const lugarGuardado: LugarGuardado = {
   id: lugarId,
   tipo: "colonia",
   nombre: "Colonia de prueba",
+  padreId: asentamientoId,
+  bajaEn: null,
+};
+
+const asentamientoGuardado: LugarGuardado = {
+  id: asentamientoId,
+  tipo: "cabecera",
+  nombre: "Motul",
   padreId: null,
   bajaEn: null,
 };
@@ -45,7 +54,7 @@ const lugarGuardado: LugarGuardado = {
 const calleGuardada: CalleGuardada = {
   id: calleId,
   nombre: "Calle 21",
-  lugarId,
+  lugarId: asentamientoId,
   punto: null,
   bajaEn: null,
 };
@@ -53,6 +62,8 @@ const calleGuardada: CalleGuardada = {
 const repositorio: RepositorioDeDomicilios = {
   crear: vi.fn(),
   buscarPorId: vi.fn(),
+  bloquearPorId: vi.fn(),
+  actualizar: vi.fn(),
   porLugarYSubarbol: vi.fn(),
   porCalle: vi.fn(),
   listar: vi.fn(),
@@ -97,8 +108,9 @@ describe("altaDeDomicilio: calles inactivas", () => {
     withTenantMock.mockImplementation(
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
     );
-    vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(
-      lugarGuardado,
+    vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
+      async (_tx, id) =>
+        id === lugarId ? lugarGuardado : asentamientoGuardado,
     );
     vi.mocked(repositorioDeCalles.bloquearPorId).mockImplementation(
       async (_tx, id) =>

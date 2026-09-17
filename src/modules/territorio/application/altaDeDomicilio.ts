@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
@@ -12,15 +12,15 @@ import {
   TransversalRepetidaError,
   transversalesValidas,
 } from "../domain";
-import type {
-  CalleGuardada,
-  RepositorioDeCalles,
-  RepositorioDeLugares,
-} from "./puertos";
+import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
 import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
+import { verificarZonaYCalles } from "./verificacionDeDomicilio";
 
 export type NuevoDomicilio = {
-  lugarId: LugarId;
+  /** El nivel mas profundo conocido; sin el, el asentamiento de la calle. */
+  lugarId?: LugarId | undefined;
+  /** Los niveles de zona que el operador declaro. */
+  nivelesDeclarados?: readonly LugarId[] | undefined;
   calleId: CalleId;
   numero: string | null;
   entreCalleAId: CalleId | null;
@@ -38,36 +38,6 @@ export type NuevoDomicilio = {
  * comparten transversales; el lock tambien cierra la carrera con la baja de
  * una calle.
  */
-
-const idsDeCalles = (datos: NuevoDomicilio): CalleId[] =>
-  [datos.calleId, datos.entreCalleAId, datos.entreCalleBId]
-    .filter((id): id is CalleId => id !== null)
-    .filter((id, indice, ids) => ids.indexOf(id) === indice)
-    .sort();
-
-const bloquearCalles = async (
-  repositorio: RepositorioDeCalles,
-  tx: Parameters<RepositorioDeCalles["bloquearPorId"]>[0],
-  ids: readonly CalleId[],
-): Promise<readonly CalleGuardada[]> => {
-  const bloqueadas: CalleGuardada[] = [];
-
-  for (const id of ids) {
-    const calle = await repositorio.bloquearPorId(tx, id);
-    if (!calle) throw new NoEncontradoError();
-    bloqueadas.push(calle);
-  }
-
-  return bloqueadas;
-};
-
-const exigirCallesActivas = (
-  callesBloqueadas: readonly CalleGuardada[],
-): void => {
-  if (callesBloqueadas.some(({ bajaEn }) => bajaEn !== null)) {
-    throw new NoEncontradoError();
-  }
-};
 
 type DependenciasDeAlta = {
   repositorio: RepositorioDeDomicilios;
@@ -111,36 +81,17 @@ const prepararAlta = (
   contexto,
 });
 
-const verificarLugarYCalles = async (
-  dependencias: DependenciasDeAlta,
-  tx: Parameters<RepositorioDeCalles["bloquearPorId"]>[0],
-  datos: NuevoDomicilio,
-): Promise<void> => {
-  const lugar = await dependencias.repositorioDeLugares.buscarPorId(
-    tx,
-    datos.lugarId,
-  );
-  if (!lugar) throw new NoEncontradoError();
-
-  const callesBloqueadas = await bloquearCalles(
-    dependencias.repositorioDeCalles,
-    tx,
-    idsDeCalles(datos),
-  );
-  exigirCallesActivas(callesBloqueadas);
-};
-
 const guardarDomicilio = async (
   dependencias: DependenciasDeAlta,
   alta: AltaPreparada,
 ): Promise<void> => {
   await withTenant(alta.contexto.ayuntamientoId, async (tx) => {
-    await verificarLugarYCalles(dependencias, tx, alta.datos);
+    const lugarId = await verificarZonaYCalles(dependencias, tx, alta.datos);
 
     await dependencias.repositorio.crear(tx, {
       id: alta.id,
       ayuntamientoId: alta.contexto.ayuntamientoId,
-      lugarId: alta.datos.lugarId,
+      lugarId,
       calleId: alta.datos.calleId,
       numero: alta.numero,
       entreCalleAId: alta.datos.entreCalleAId,

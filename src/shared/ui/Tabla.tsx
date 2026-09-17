@@ -132,6 +132,8 @@ type PropsDeFila = {
    * clic que no pasaba nada.
    */
   href?: string;
+  /** El nombre completo de la fila: las celdas van pegadas sin esto. */
+  etiquetaAccesible?: string;
   children: ReactNode;
 };
 
@@ -144,12 +146,17 @@ const DISPOSICION_DE_FILA =
  * entera: un enlace del ancho del texto deja la mitad de la fila muerta al
  * clic. Sin `href` no hay hover ni foco, porque no hay nada que hacer.
  */
-export function FilaDeTabla({ href, children }: PropsDeFila) {
+export function FilaDeTabla({
+  href,
+  etiquetaAccesible,
+  children,
+}: PropsDeFila) {
   return (
     <li className="border-b border-caliza-divisor">
       {href ? (
         <Link
           href={href}
+          aria-label={etiquetaAccesible}
           className={`${DISPOSICION_DE_FILA} transition-colors hover:bg-caliza-superficie focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca`}
         >
           {children}

@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { ACCIONES_DE_NODO } from "../acciones";
 
 /**
- * El destino de las acciones de territorio: el arbol, con la raiz y el
- * nodo que correspondan y, si la hubo, la falla.
+ * El destino de las acciones de territorio: el arbol, con el contexto visible
+ * que correspondan y, si la hubo, la falla.
  *
  * Pura y exportada para poder probar el destino sin `redirect`, que es de
  * Next y no nuestro. Sin ningun parametro devuelve `/territorio` pelado:
@@ -12,15 +13,27 @@ import { z } from "zod";
 export const rutaDelArbol = ({
   raiz,
   nodo,
+  vista,
+  accion,
+  calle,
+  domicilio,
   error,
 }: {
   raiz?: string | undefined;
   nodo?: string | undefined;
+  vista?: string | undefined;
+  accion?: string | undefined;
+  calle?: string | undefined;
+  domicilio?: string | undefined;
   error?: string | undefined;
 }): string => {
   const parametros = new URLSearchParams();
   if (raiz) parametros.set("raiz", raiz);
   if (nodo) parametros.set("nodo", nodo);
+  if (vista) parametros.set("vista", vista);
+  if (accion) parametros.set("accion", accion);
+  if (calle) parametros.set("calle", calle);
+  if (domicilio) parametros.set("domicilio", domicilio);
   if (error) parametros.set("error", error);
 
   const consulta = parametros.toString();
@@ -30,7 +43,7 @@ export const rutaDelArbol = ({
 
 /**
  * El destino de error comun de las acciones de territorio: volver al arbol
- * con la raiz y el nodo seleccionado y el mensaje.
+ * con el contexto seleccionado y el mensaje.
  *
  * El exito de la mayoria de las acciones NO redirige: revalidan y el
  * re-render de la pagina muestra el cambio al instante. La baja y el
@@ -39,10 +52,9 @@ export const rutaDelArbol = ({
  * `irAlArbol`.
  */
 export const volverAlArbol = (
-  raiz: string | undefined,
-  nodo: string | undefined,
+  navegacion: ReturnType<typeof navegacionDe>,
   error: string,
-): never => redirect(rutaDelArbol({ raiz, nodo, error }));
+): never => redirect(rutaDelArbol({ ...navegacion, error }));
 
 /**
  * El destino de exito de la baja y el reparenteo, las dos acciones que no
@@ -63,9 +75,9 @@ export const irAlArbol = (
 ): never => redirect(rutaDelArbol({ raiz, nodo }));
 
 /**
- * La raiz, el nodo y el padre abiertos, para poder volver al arbol donde
- * estaba quien envio el formulario. Los tres se leen aca y en ningun otro
- * lado: es el unico sitio donde vive esta decision.
+ * El contexto abierto del arbol, para poder volver donde estaba quien envio
+ * el formulario. Se lee aca y en ningun otro lado: es el unico sitio donde
+ * vive esta decision.
  *
  * Se leen aparte del `safeParse` y **despues**, no antes: son navegacion,
  * no datos del caso de uso, y la regla de Server Actions de `AGENTS.md`
@@ -73,7 +85,8 @@ export const irAlArbol = (
  *
  * Se validan aca, con su propio esquema, y no en el del caso de uso: son
  * navegacion, no datos, y el orden que pide la regla de Server Actions es
- * que la validacion del caso de uso vaya primero.
+ * que la validacion del caso de uso vaya primero. No incluye identidad de
+ * tenant: esa siempre sale del contexto del servidor.
  *
  * Estuvieron sin validar mientras ningun camino de exito redirigia: el
  * destino siempre era `/territorio`, `URLSearchParams` escapaba el valor y
@@ -87,6 +100,13 @@ const esquemaDeNavegacion = z.object({
   raiz: z.string().uuid().optional().catch(undefined),
   nodo: z.string().uuid().optional().catch(undefined),
   padre: z.string().uuid().optional().catch(undefined),
+  vista: z
+    .enum(["lugares", "calles", "domicilios", "editar"])
+    .optional()
+    .catch(undefined),
+  accion: z.enum(ACCIONES_DE_NODO).optional().catch(undefined),
+  calle: z.string().uuid().optional().catch(undefined),
+  domicilio: z.string().uuid().optional().catch(undefined),
 });
 
 export const navegacionDe = (formData: FormData) =>
@@ -94,4 +114,10 @@ export const navegacionDe = (formData: FormData) =>
     raiz: formData.get("raiz")?.toString() || undefined,
     nodo: formData.get("nodo")?.toString() || undefined,
     padre: formData.get("padre")?.toString() || undefined,
+    vista: formData.get("vista")?.toString() || undefined,
+    accion: formData.get("accion")?.toString() || undefined,
+    calle: formData.get("calle")?.toString() || undefined,
+    // El formulario lo manda como `domicilioId` y la URL lo nombra
+    // `domicilio`: `parametros.ts` lee ese nombre al volver.
+    domicilio: formData.get("domicilioId")?.toString() || undefined,
   });

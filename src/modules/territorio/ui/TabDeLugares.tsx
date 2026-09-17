@@ -1,5 +1,6 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import {
+  AvisoDePermiso,
   CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,
@@ -35,6 +36,13 @@ export function TabDeLugares({
 
   return (
     <div className="flex flex-col gap-4">
+      {!puedeActuar && admiteLugares ? (
+        <AvisoDePermiso
+          capacidad="agregar lugares al territorio"
+          requisito="un rol con permisos de escritura"
+        />
+      ) : null}
+
       {puedeActuar && admiteLugares && !abierta ? (
         <BarraDeAcciones>
           <EnlaceDeAccion
@@ -61,6 +69,7 @@ export function TabDeLugares({
             <FilaDeTabla
               key={hijo.id}
               href={`/territorio?raiz=${raizId}&nodo=${hijo.id}`}
+              etiquetaAccesible={`${hijo.nombre}, ${hijo.tipo}`}
             >
               <CeldaPrincipal>{hijo.nombre}</CeldaPrincipal>
               <CeldaDeDato>{hijo.tipo}</CeldaDeDato>
@@ -71,7 +80,7 @@ export function TabDeLugares({
         <p className="py-6 text-[15px] text-caliza-apagada">
           {admiteLugares
             ? `${lugar.nombre} no tiene lugares adentro todavia.`
-            : `Una ${lugar.tipo} es el ultimo nivel: no lleva lugares adentro, solo calles y domicilios.`}
+            : `Una ${lugar.tipo} es el ultimo nivel: no lleva lugares adentro, solo domicilios.`}
         </p>
       )}
 

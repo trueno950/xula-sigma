@@ -22,6 +22,9 @@ vi.mock("@/modules/intervenciones", () => ({
 const { default: PaginaDeIntervencion } = await import(
   "./intervenciones/[id]/page"
 );
+const { default: PaginaDeIntervenciones } = await import(
+  "./intervenciones/page"
+);
 const { NavegacionDeModulos } = await import("./NavegacionDeModulos");
 
 const ID = "33333333-3333-4333-8333-333333333333";
@@ -101,5 +104,17 @@ describe("navegacion de intervenciones", () => {
     expect(html).toContain('href="/intervenciones"');
     expect(html).toContain("Intervenciones");
     expect(html).toContain('aria-current="page"');
+  });
+});
+
+describe("raiz de intervenciones", () => {
+  it("informa que la bandeja no esta disponible sin resolver el contexto", async () => {
+    const html = renderToStaticMarkup(await PaginaDeIntervenciones());
+
+    expect(html).toContain(">Intervenciones</h1>");
+    expect(html).toContain(
+      "La bandeja de intervenciones todavia no esta disponible.",
+    );
+    expect(contextoActualMock).not.toHaveBeenCalled();
   });
 });

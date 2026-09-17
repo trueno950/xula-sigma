@@ -67,6 +67,8 @@ export function FormularioDeReparenteo({
     <form action={reparentearLugarAction} className="flex flex-col gap-4">
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="vista" value="editar" />
+      <input type="hidden" name="accion" value="reparentear" />
       <input type="hidden" name="lugarId" value={nodo} />
 
       {/*

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { comoDomicilioId } from "../domain";
+import { comoCalleId, comoDomicilioId } from "../domain";
 import type {
   DomicilioParaListado,
   RepositorioDeDomicilios,
@@ -25,6 +25,8 @@ describe("listarDomicilios", () => {
   const repositorio: RepositorioDeDomicilios = {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
+    actualizar: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
     listar: vi.fn(),
@@ -42,6 +44,7 @@ describe("listarDomicilios", () => {
       {
         id: comoDomicilioId("22222222-2222-4222-8222-222222222222"),
         calle: "Calle 21",
+        calleId: comoCalleId("33333333-3333-4333-8333-333333333333"),
         numero: "45",
         lugar: "Comisaria Motul",
       },

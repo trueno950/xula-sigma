@@ -43,7 +43,10 @@ vi.mock("@/modules/constancias", () => ({
   FormularioDeEmision: () => null,
 }));
 
-vi.mock("@/modules/territorio", () => ({
+vi.mock("@/modules/territorio", async () => ({
+  ...(await vi.importActual<typeof import("@/modules/territorio/ui/acciones")>(
+    "@/modules/territorio/ui/acciones",
+  )),
   comoLugarId: (id: string) => id,
   FormularioDeMudanza: () => null,
   HistorialDeResidencias: () => null,

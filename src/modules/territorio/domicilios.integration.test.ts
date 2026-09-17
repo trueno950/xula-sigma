@@ -8,7 +8,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAltaDeDomicilio } from "./application/altaDeDomicilio";
-import { comoCalleId, comoLugarId } from "./domain";
+import { type CalleId, comoCalleId, comoLugarId, type LugarId } from "./domain";
 import { calles, lugares } from "./infrastructure/esquema";
 import { repositorioDeCallesSql } from "./infrastructure/repositorioDeCallesSql";
 import { repositorioDeDomiciliosSql } from "./infrastructure/repositorioDeDomiciliosSql";
@@ -36,22 +36,30 @@ const altaDeDomicilio = crearAltaDeDomicilio(
   repositorioDeCallesSql,
 );
 
+const altaEn = (lugarId: LugarId, calleId: CalleId) =>
+  altaDeDomicilio(
+    {
+      lugarId,
+      calleId,
+      numero: "10",
+      entreCalleAId: null,
+      entreCalleBId: null,
+      referencia: null,
+    },
+    contextoDe(),
+  );
+
 describe("altaDeDomicilio", () => {
   it("un domicilio sin manzana conocida, colgado directo de una colonia, se crea correctamente", async () => {
-    const colonia = await crearLugar("colonia", "Colonia sin manzanas");
-    const calle = await crearCalle(colonia, "Calle 21");
-
-    const { id } = await altaDeDomicilio(
-      {
-        lugarId: colonia,
-        calleId: calle,
-        numero: "10",
-        entreCalleAId: null,
-        entreCalleBId: null,
-        referencia: null,
-      },
-      contextoDe(),
+    const comisaria = await crearLugar("comisaria", "Comisaria sin manzanas");
+    const colonia = await crearLugar(
+      "colonia",
+      "Colonia sin manzanas",
+      comisaria,
     );
+    const calle = await crearCalle(comisaria, "Calle 21");
+
+    const { id } = await altaEn(colonia, calle);
 
     const domicilios = await withTenant(contextoDe().ayuntamientoId, (tx) =>
       repositorioDeDomiciliosSql.porLugarYSubarbol(tx, colonia),
@@ -77,17 +85,7 @@ describe("altaDeDomicilio", () => {
     );
 
     await expect(
-      altaDeDomicilio(
-        {
-          lugarId: comoLugarId(lugarDeTicul!.id),
-          calleId: calle,
-          numero: "10",
-          entreCalleAId: null,
-          entreCalleBId: null,
-          referencia: null,
-        },
-        contextoDe(),
-      ),
+      altaEn(comoLugarId(lugarDeTicul!.id), calle),
     ).rejects.toBeInstanceOf(NoEncontradoError);
   });
 
@@ -114,20 +112,18 @@ describe("altaDeDomicilio", () => {
         })
         .returning({ id: calles.id }),
     );
-    const lugar = await crearLugar("colonia", "Colonia para calleId ajeno");
+    const comisaria = await crearLugar(
+      "comisaria",
+      "Comisaria para calleId ajeno",
+    );
+    const lugar = await crearLugar(
+      "colonia",
+      "Colonia para calleId ajeno",
+      comisaria,
+    );
 
     await expect(
-      altaDeDomicilio(
-        {
-          lugarId: lugar,
-          calleId: comoCalleId(calleDeTicul!.id),
-          numero: "10",
-          entreCalleAId: null,
-          entreCalleBId: null,
-          referencia: null,
-        },
-        contextoDe(),
-      ),
+      altaEn(lugar, comoCalleId(calleDeTicul!.id)),
     ).rejects.toBeInstanceOf(NoEncontradoError);
   });
 });

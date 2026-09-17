@@ -4,7 +4,12 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import type { CalleId, LugarId } from "../domain";
+import {
+  type CalleId,
+  CatalogoDeCallesSoloEnAsentamientosError,
+  type LugarId,
+  puedeTenerCatalogoDeCalles,
+} from "../domain";
 import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
 
 export function crearReparentearCalle(
@@ -28,6 +33,9 @@ export function crearReparentearCalle(
 
       const destino = await repositorioDeLugares.buscarPorId(tx, nuevoLugarId);
       if (!destino) throw new NoEncontradoError();
+      if (!puedeTenerCatalogoDeCalles(destino.tipo)) {
+        throw new CatalogoDeCallesSoloEnAsentamientosError();
+      }
 
       const actualizada = await repositorio.actualizar(tx, {
         id,

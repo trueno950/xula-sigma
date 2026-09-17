@@ -13,6 +13,8 @@ export function FormularioDeAltaDeCalle({ raiz, nodo }: Props) {
     <form action={altaDeCalleAction} className="flex flex-col gap-4">
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="vista" value="calles" />
+      <input type="hidden" name="accion" value="calle" />
       <input type="hidden" name="lugarId" value={nodo} />
 
       <Campo

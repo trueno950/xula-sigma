@@ -11,6 +11,7 @@ import { puedeAdministrarIntervenciones } from "@/shared/auth/roles";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
   Aviso,
+  AvisoDePermiso,
   CLASES_DE_DATO,
   CLASES_DE_ETIQUETA,
   Migaja,
@@ -85,6 +86,13 @@ export default async function PaginaDeDetalleDeIntervencion({
       }
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
+
+      {!puedeAdministrar ? (
+        <AvisoDePermiso
+          capacidad="administrar intervenciones"
+          requisito="el rol de administrador municipal"
+        />
+      ) : null}
 
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
         <Dato etiqueta="Tipo" valor={intervencion.tipo} />

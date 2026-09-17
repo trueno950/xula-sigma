@@ -36,6 +36,9 @@ export const domicilios = pgTable(
     entreCalleAId: uuid().$type<CalleId>(),
     entreCalleBId: uuid().$type<CalleId>(),
     referencia: text(),
+    // Baja logica, mismo criterio que `lugares`/`calles`: una direccion
+    // corregida o mal capturada deja de leerse, no se borra.
+    bajaEn: timestamp({ withTimezone: true }),
     creadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
     actualizadoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },

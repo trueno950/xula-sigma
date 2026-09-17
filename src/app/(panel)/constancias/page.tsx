@@ -8,6 +8,7 @@ import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarDocumentos } from "@/shared/auth/roles";
 import {
   Aviso,
+  AvisoDePermiso,
   EnlaceDeAccion,
   estadoDeLista,
   PaginaDePanel,
@@ -67,10 +68,18 @@ export default async function PaginaDeConstancias({ searchParams }: Props) {
       Bloque de firma
     </EnlaceDeAccion>
   ) : undefined;
+  const puedeAdministrar = puedeAdministrarDocumentos(contexto.usuario.rol);
 
   return (
     <PaginaDePanel titulo="Constancias" accion={configuracion}>
       {error ? <Aviso tono="error">{error}</Aviso> : null}
+
+      {!puedeAdministrar ? (
+        <AvisoDePermiso
+          capacidad="gestionar el bloque de firma de las constancias"
+          requisito="el rol de administrador municipal"
+        />
+      ) : null}
 
       <ListadoDeConstancias
         constancias={constancias}

@@ -2,11 +2,20 @@ import { Boton } from "@/shared/ui";
 import { darDeBajaCalleAction } from "./actions/darDeBajaCalleAction";
 import type { CalleParaPanel } from "./vistaDeCalles";
 
-type Props = { calle: CalleParaPanel };
+type Props = {
+  raiz: string;
+  nodo: string;
+  calle: CalleParaPanel;
+};
 
-export function FormularioDeBajaDeCalle({ calle }: Props) {
+export function FormularioDeBajaDeCalle({ raiz, nodo, calle }: Props) {
   return (
     <form action={darDeBajaCalleAction} className="flex flex-col gap-4">
+      <input type="hidden" name="raiz" value={raiz} />
+      <input type="hidden" name="nodo" value={nodo} />
+      <input type="hidden" name="vista" value="calles" />
+      <input type="hidden" name="accion" value="bajaCalle" />
+      <input type="hidden" name="calle" value={calle.id} />
       <input type="hidden" name="calleId" value={calle.id} />
       <p className="text-[15px] text-caliza-tinta">
         La calle deja de aparecer en el catalogo. Se rechaza si tiene

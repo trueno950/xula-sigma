@@ -49,6 +49,10 @@ describe("PanelDeCalle", () => {
 
     expect(html).not.toContain('data-formulario="renombrar"');
     expect(html).not.toContain("Cancelar");
+    expect(html).toContain(
+      "Su rol no permite administrar la estructura territorial.",
+    );
+    expect(html).not.toContain("<a");
   });
 
   it("abre el formulario pedido cuando el rol tiene permiso", () => {

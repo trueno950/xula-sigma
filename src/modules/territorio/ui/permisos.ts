@@ -20,6 +20,8 @@ import type { AccionDeNodo } from "./PanelDeNodo";
 const EXIGE: Record<AccionDeNodo, (rol: Rol) => boolean> = {
   lugar: puedeEscribir,
   domicilio: puedeEscribir,
+  corregirDomicilio: puedeEscribir,
+  bajaDomicilio: puedeEscribir,
   renombrar: puedeEscribir,
   baja: puedeEscribir,
   calle: puedeAdministrarTerritorio,

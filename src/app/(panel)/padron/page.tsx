@@ -9,7 +9,12 @@ import {
 } from "@/modules/padron";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { EnlaceDeAccion, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import {
+  AvisoDePermiso,
+  EnlaceDeAccion,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -85,9 +90,16 @@ export default async function PaginaDePadron({ searchParams }: Props) {
       Nueva persona
     </EnlaceDeAccion>
   ) : undefined;
+  const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
     <PaginaDePanel titulo="Padron de personas" accion={alta}>
+      {!puedeActuar ? (
+        <AvisoDePermiso
+          capacidad="dar de alta personas en el padron"
+          requisito="un rol con permisos de escritura"
+        />
+      ) : null}
       <BuscadorDePersonas {...(q ? { cadena: q } : {})} />
       <ListadoDePersonas
         personas={personas}

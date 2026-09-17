@@ -53,6 +53,33 @@ export class JerarquiaInvalidaError extends Error {
   }
 }
 
+export class CatalogoDeCallesSoloEnAsentamientosError extends Error {
+  readonly codigo = "CATALOGO_DE_CALLES_SOLO_EN_ASENTAMIENTOS";
+
+  constructor(
+    mensaje = "Las calles solo se pueden administrar en una cabecera o una comisaria.",
+  ) {
+    super(mensaje);
+    this.name = "CatalogoDeCallesSoloEnAsentamientosError";
+  }
+}
+
+/**
+ * `altaDeDomicilio` rechaza si un nivel declarado en la cascada no es el
+ * lugar guardado ni uno de sus ancestros: los niveles elegidos tienen que
+ * salir de la misma cadena de contencion que el lugar mas profundo.
+ */
+export class ZonaIncoherenteError extends Error {
+  readonly codigo = "ZONA_INCOHERENTE";
+
+  constructor(
+    mensaje = "La zona elegida no coincide con el lugar donde se guardara el domicilio.",
+  ) {
+    super(mensaje);
+    this.name = "ZonaIncoherenteError";
+  }
+}
+
 /**
  * `altaDeCalle` y `renombrarCalle` rechazan si el nombre choca contra
  * `calles_tenant_lugar_nombre_idx` (design.md seccion 9): dos calles
@@ -93,6 +120,22 @@ export class PuntoFueraDeYucatanError extends Error {
   constructor(mensaje = "El punto debe estar dentro de Yucatan.") {
     super(mensaje);
     this.name = "PuntoFueraDeYucatanError";
+  }
+}
+
+/**
+ * `darDeBajaDomicilio` rechaza si el domicilio tiene una residencia vigente
+ * (`residencias.hastaEn IS NULL`): la direccion de una persona no se da de
+ * baja por debajo de ella.
+ */
+export class DomicilioConResidentesError extends Error {
+  readonly codigo = "DOMICILIO_CON_RESIDENTES";
+
+  constructor(
+    mensaje = "El domicilio tiene residentes vigentes y no se puede dar de baja.",
+  ) {
+    super(mensaje);
+    this.name = "DomicilioConResidentesError";
   }
 }
 

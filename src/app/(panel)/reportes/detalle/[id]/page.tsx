@@ -11,6 +11,7 @@ import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarReportes } from "@/shared/auth/roles";
 import {
   Aviso,
+  AvisoDePermiso,
   CLASES_DE_ETIQUETA,
   Migaja,
   PaginaDePanel,
@@ -75,6 +76,7 @@ export default async function PaginaDeDetalleDeReporte({
   const error = analisisDeParametros.success
     ? analisisDeParametros.data.error
     : undefined;
+  const puedeAdministrar = puedeAdministrarReportes(contexto.usuario.rol);
 
   return (
     <PaginaDePanel
@@ -92,6 +94,13 @@ export default async function PaginaDeDetalleDeReporte({
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
+      {!puedeAdministrar ? (
+        <AvisoDePermiso
+          capacidad="cambiar el estado y asignar el area de un reporte"
+          requisito="el rol de administrador municipal"
+        />
+      ) : null}
+
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
         <Dato etiqueta="Tipo" valor={reporte.tipo} />
         <Dato etiqueta="Estado" valor={reporte.estado} />
@@ -105,7 +114,7 @@ export default async function PaginaDeDetalleDeReporte({
         ) : null}
       </dl>
 
-      {puedeAdministrarReportes(contexto.usuario.rol) ? (
+      {puedeAdministrar ? (
         <Panel titulo="Transiciones">
           <AccionesDeReporte
             reporteId={reporte.id}

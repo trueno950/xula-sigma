@@ -92,6 +92,7 @@ export function TabDeEdicion({
                 accion: item.clave,
               })}
               aria-current={accion === item.clave ? "true" : undefined}
+              aria-label={`${item.etiqueta}. ${item.descripcion}`}
               className="flex min-h-11 items-center gap-3 px-3 py-2.5 transition-colors hover:bg-caliza-superficie focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca"
             >
               <item.Icono

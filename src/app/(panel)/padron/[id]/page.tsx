@@ -12,6 +12,7 @@ import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
 import {
   Aviso,
+  AvisoDePermiso,
   CLASES_DE_DATO,
   EnlaceDeAccion,
   Migaja,
@@ -89,6 +90,7 @@ export default async function PaginaDeDetalleDePersona({
       Emitir constancia
     </EnlaceDeAccion>
   ) : undefined;
+  const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
     <PaginaDePanel
@@ -109,6 +111,13 @@ export default async function PaginaDeDetalleDePersona({
 
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
+      {!puedeActuar ? (
+        <AvisoDePermiso
+          capacidad="registrar cambios en el padron ni emitir constancias"
+          requisito="un rol con permisos de escritura"
+        />
+      ) : null}
+
       <section className="flex flex-col gap-3">
         <h2 className="text-[15px] font-semibold text-caliza-tinta">
           Historial de residencias
@@ -116,7 +125,7 @@ export default async function PaginaDeDetalleDePersona({
         <HistorialDeResidencias historial={historial} />
       </section>
 
-      {puedeEscribir(contexto.usuario.rol) ? (
+      {puedeActuar ? (
         <section className="flex flex-col gap-3 border-t border-caliza-divisor pt-6">
           <h2 className="text-[15px] font-semibold text-caliza-tinta">
             Registrar mudanza

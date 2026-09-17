@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   puedeContener,
   puedeSerRaiz,
+  puedeTenerCatalogoDeCalles,
   TIPOS_DE_LUGAR,
   tiposContenidosPor,
 } from "./tipoDeLugar";
@@ -62,6 +63,16 @@ describe("puedeSerRaiz", () => {
 
       expect(puedeSerRaiz(tipo)).toBe(nadieLoContiene);
     }
+  });
+});
+
+describe("puedeTenerCatalogoDeCalles", () => {
+  it("solo permite catalogos en cabecera y comisaria", () => {
+    expect(puedeTenerCatalogoDeCalles("cabecera")).toBe(true);
+    expect(puedeTenerCatalogoDeCalles("comisaria")).toBe(true);
+    expect(puedeTenerCatalogoDeCalles("colonia")).toBe(false);
+    expect(puedeTenerCatalogoDeCalles("sector")).toBe(false);
+    expect(puedeTenerCatalogoDeCalles("manzana")).toBe(false);
   });
 });
 

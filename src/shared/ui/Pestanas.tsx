@@ -12,6 +12,12 @@ export type Pestana = {
    * algo, y en un lugar con cuatro pestanas eso son cuatro viajes.
    */
   cuenta?: number;
+  /**
+   * El nombre completo que anuncia el lector de pantalla. La etiqueta
+   * visible y la cuenta son dos nodos pegados -"Calles3"-; aca van
+   * separados y con el alcance de la cuenta escrito.
+   */
+  etiquetaAccesible?: string;
 };
 
 /**
@@ -39,6 +45,7 @@ export function Pestanas({
           key={pestana.clave}
           href={pestana.href}
           aria-current={pestana.activa ? "page" : undefined}
+          aria-label={pestana.etiquetaAccesible}
           className={`-mb-px flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-[15px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca ${
             pestana.activa
               ? "border-marca font-medium text-caliza-tinta"

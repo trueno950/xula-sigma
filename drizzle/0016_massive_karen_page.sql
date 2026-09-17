@@ -1,0 +1,1 @@
+ALTER TABLE "domicilios" ADD COLUMN "baja_en" timestamp with time zone;

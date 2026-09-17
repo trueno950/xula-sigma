@@ -117,6 +117,19 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
 }) => {
   await acceder(page);
 
+  const respuestaDeIntervenciones = await page.goto(
+    urlDe("motul", "/intervenciones"),
+  );
+  expect(respuestaDeIntervenciones?.status()).toBe(200);
+  await expect(
+    page.getByRole("heading", { name: "Intervenciones", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("La bandeja de intervenciones todavia no esta disponible.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+
   await page.goto(
     urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
   );

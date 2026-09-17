@@ -1,5 +1,6 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import {
+  AvisoDePermiso,
   CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,
@@ -8,14 +9,18 @@ import {
   Tabla,
 } from "@/shared/ui";
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
+import { puedeTenerCatalogoDeCalles } from "../domain";
 import {
   domiciliosDirectosDe,
   type PropsDeContenido,
   rutaDe,
 } from "./contenido";
 import { FormularioDeDomicilio } from "./FormularioDeDomicilio";
+import { opcionesDeCalles } from "./opciones";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import { PanelDeDomicilio } from "./PanelDeDomicilio";
 import { puedeAbrir } from "./permisos";
+import { lugaresDeNodos, zonaDelFormulario } from "./vistaDeDomicilios";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "domicilio", etiqueta: "Domicilio", ancho: "minmax(0,2fr)" },
@@ -37,7 +42,9 @@ export function TabDeDomicilios({
   lugar,
   nodos,
   calles,
+  lugares,
   domicilios,
+  domicilio,
   accion,
   permisos,
 }: PropsDeContenido) {
@@ -45,9 +52,38 @@ export function TabDeDomicilios({
   const colgados = domiciliosDirectosDe(nodos, domicilios, lugar.id);
   const abierta = accion === "domicilio";
   const sinCalles = calles.length === 0;
+  const poseeCatalogo = puedeTenerCatalogoDeCalles(lugar.tipo);
+  const lugarDeCallesId = poseeCatalogo ? lugar.id : raizId;
+  const textoSinCalles = poseeCatalogo
+    ? `Antes de cargar un domicilio hace falta al menos una calle en ${lugar.nombre}.`
+    : "Antes de cargar un domicilio hace falta al menos una calle en el asentamiento que lo contiene.";
+  const hrefAdministrarCalles =
+    !poseeCatalogo && puedeAbrir("calle", permisos)
+      ? rutaDe({
+          raizId: raizId,
+          nodoId: raizId,
+          vista: "calles",
+          accion: "calle",
+        })
+      : undefined;
+  const nombreDelAsentamiento = lugares.find((l) => l.id === raizId)?.nombre;
+  const zona = zonaDelFormulario(
+    lugaresDeNodos(nodos),
+    nombreDelAsentamiento
+      ? { id: raizId, nombre: nombreDelAsentamiento }
+      : undefined,
+    { id: lugar.id, tipo: lugar.tipo },
+  );
 
   return (
     <div className="flex flex-col gap-4">
+      {!puedeActuar ? (
+        <AvisoDePermiso
+          capacidad="registrar domicilios"
+          requisito="un rol con permisos de escritura"
+        />
+      ) : null}
+
       {puedeActuar && !abierta && !sinCalles ? (
         <BarraDeAcciones>
           <EnlaceDeAccion
@@ -67,10 +103,19 @@ export function TabDeDomicilios({
 
       {colgados.length > 0 ? (
         <Tabla etiqueta={`Domicilios de ${lugar.nombre}`} columnas={COLUMNAS}>
-          {colgados.map((domicilio) => (
-            <FilaDeTabla key={domicilio.id}>
-              <CeldaPrincipal>{direccionDe(domicilio)}</CeldaPrincipal>
-              <CeldaDeDato>{domicilio.lugar}</CeldaDeDato>
+          {colgados.map((fila) => (
+            <FilaDeTabla
+              key={fila.id}
+              href={rutaDe({
+                raizId: raizId,
+                nodoId: lugar.id,
+                vista: "domicilios",
+                domicilioId: fila.id,
+              })}
+              etiquetaAccesible={`${direccionDe(fila)}, ${fila.lugar}`}
+            >
+              <CeldaPrincipal>{direccionDe(fila)}</CeldaPrincipal>
+              <CeldaDeDato>{fila.lugar}</CeldaDeDato>
             </FilaDeTabla>
           ))}
         </Tabla>
@@ -88,12 +133,11 @@ export function TabDeDomicilios({
       */}
       {puedeActuar && sinCalles ? (
         <p className="text-[15px] text-caliza-apagada">
-          Antes de cargar un domicilio hace falta al menos una calle en{" "}
-          {lugar.nombre}.{" "}
+          {textoSinCalles}{" "}
           <a
             href={rutaDe({
               raizId: raizId,
-              nodoId: lugar.id,
+              nodoId: lugarDeCallesId,
               vista: "calles",
               accion: "calle",
             })}
@@ -117,9 +161,25 @@ export function TabDeDomicilios({
           <FormularioDeDomicilio
             raiz={raizId}
             nodo={lugar.id}
-            calles={calles}
+            calles={opcionesDeCalles(calles)}
+            zona={zona}
+            hrefAdministrarCalles={hrefAdministrarCalles}
           />
         </PanelDeAccion>
+      ) : null}
+
+      {domicilio ? (
+        <PanelDeDomicilio
+          raizId={raizId}
+          nodoId={lugar.id}
+          domicilio={domicilio}
+          calles={calles}
+          lugares={lugares}
+          nodos={nodos}
+          domicilios={domicilios}
+          accion={accion}
+          permisos={permisos}
+        />
       ) : null}
     </div>
   );

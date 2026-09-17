@@ -8,6 +8,7 @@ import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
 import {
   Aviso,
+  AvisoDePermiso,
   EnlaceDeAccion,
   estadoDeLista,
   PaginaDePanel,
@@ -60,10 +61,18 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
       Registrar reporte
     </EnlaceDeAccion>
   ) : undefined;
+  const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
     <PaginaDePanel titulo="Reportes ciudadanos" accion={alta}>
       {error ? <Aviso tono="error">{error}</Aviso> : null}
+
+      {!puedeActuar ? (
+        <AvisoDePermiso
+          capacidad="registrar reportes ciudadanos"
+          requisito="un rol con permisos de escritura"
+        />
+      ) : null}
 
       <ListadoDeReportes
         reportes={reportes}

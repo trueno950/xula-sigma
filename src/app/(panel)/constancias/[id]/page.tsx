@@ -20,6 +20,7 @@ import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
   ANILLO_DE_FOCO,
   Aviso,
+  AvisoDePermiso,
   CLASES_DE_ETIQUETA,
   Migaja,
   PaginaDePanel,
@@ -137,6 +138,8 @@ export default async function PaginaDeDetalleDeConstancia({
     ? analisisDeParametros.data.error
     : undefined;
   const cancelada = constancia.canceladaEn !== null;
+  const puedeReimprimir = puedeEscribir(contexto.usuario.rol);
+  const puedeCancelar = puedeAdministrarDocumentos(contexto.usuario.rol);
 
   return (
     <PaginaDePanel
@@ -154,13 +157,23 @@ export default async function PaginaDeDetalleDeConstancia({
       }
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
-
       {cancelada ? (
         <Aviso tono="error">
           {`Documento cancelado: ${constancia.motivoCancelacion}`}
         </Aviso>
       ) : null}
-
+      {!cancelada && !puedeReimprimir ? (
+        <AvisoDePermiso
+          capacidad="reimprimir esta constancia"
+          requisito="un rol con permisos de escritura"
+        />
+      ) : null}
+      {!cancelada && !puedeCancelar ? (
+        <AvisoDePermiso
+          capacidad="cancelar esta constancia"
+          requisito="el rol de administrador municipal"
+        />
+      ) : null}
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
         <Dato etiqueta="Titular" valor={datos.titular.nombreCompleto} />
         <Dato etiqueta="Direccion" valor={datos.direccion.texto} />
@@ -171,14 +184,13 @@ export default async function PaginaDeDetalleDeConstancia({
           dato
         />
       </dl>
-
-      {!cancelada && puedeEscribir(contexto.usuario.rol) ? (
+      {!cancelada && puedeReimprimir ? (
         <AccionColegable titulo="Reimprimir constancia" Icono={ArrowsClockwise}>
           <BotonDeReimpresion constanciaId={constancia.id} />
         </AccionColegable>
       ) : null}
 
-      {!cancelada && puedeAdministrarDocumentos(contexto.usuario.rol) ? (
+      {!cancelada && puedeCancelar ? (
         <AccionColegable titulo="Cancelar constancia" Icono={Prohibit}>
           <BotonDeCancelacion constanciaId={constancia.id} />
         </AccionColegable>
