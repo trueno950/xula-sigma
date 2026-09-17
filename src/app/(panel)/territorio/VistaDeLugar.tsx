@@ -2,6 +2,7 @@ import {
   type AccionDeNodo,
   type CalleId,
   ContenidoDeLugar,
+  type DomicilioId,
   type NodoSeleccionado,
   PanelDeNodo,
   type PasoDeMigaja,
@@ -12,7 +13,10 @@ import type {
   LugarGuardado,
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
-import type { DomicilioParaListado } from "@/modules/territorio/application/puertosDeDomicilios";
+import type {
+  DomicilioGuardado,
+  DomicilioParaListado,
+} from "@/modules/territorio/application/puertosDeDomicilios";
 import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
 import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 
@@ -26,6 +30,8 @@ type Props = {
   vista: TabDeLugar;
   accion: AccionDeNodo | undefined;
   calleId: CalleId | undefined;
+  domicilioId: DomicilioId | undefined;
+  domicilio: DomicilioGuardado | undefined;
   permisos: PermisosDeTerritorio;
 };
 
@@ -71,6 +77,8 @@ export function VistaDeLugar({
   vista,
   accion,
   calleId,
+  domicilioId,
+  domicilio,
   permisos,
 }: Props) {
   return (
@@ -92,6 +100,8 @@ export function VistaDeLugar({
         lugares={lugares}
         domicilios={domicilios}
         calleId={calleId}
+        domicilioId={domicilioId}
+        domicilio={domicilio}
         vista={vista}
         accion={accion}
         permisos={permisos}

@@ -18,6 +18,7 @@ import {
 import { FormularioDeDomicilio } from "./FormularioDeDomicilio";
 import { opcionesDeCalles } from "./opciones";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import { PanelDeDomicilio } from "./PanelDeDomicilio";
 import { puedeAbrir } from "./permisos";
 import { lugaresDeNodos, zonaDelFormulario } from "./vistaDeDomicilios";
 
@@ -43,6 +44,7 @@ export function TabDeDomicilios({
   calles,
   lugares,
   domicilios,
+  domicilio,
   accion,
   permisos,
 }: PropsDeContenido) {
@@ -101,10 +103,19 @@ export function TabDeDomicilios({
 
       {colgados.length > 0 ? (
         <Tabla etiqueta={`Domicilios de ${lugar.nombre}`} columnas={COLUMNAS}>
-          {colgados.map((domicilio) => (
-            <FilaDeTabla key={domicilio.id}>
-              <CeldaPrincipal>{direccionDe(domicilio)}</CeldaPrincipal>
-              <CeldaDeDato>{domicilio.lugar}</CeldaDeDato>
+          {colgados.map((fila) => (
+            <FilaDeTabla
+              key={fila.id}
+              href={rutaDe({
+                raizId: raizId,
+                nodoId: lugar.id,
+                vista: "domicilios",
+                domicilioId: fila.id,
+              })}
+              etiquetaAccesible={`${direccionDe(fila)}, ${fila.lugar}`}
+            >
+              <CeldaPrincipal>{direccionDe(fila)}</CeldaPrincipal>
+              <CeldaDeDato>{fila.lugar}</CeldaDeDato>
             </FilaDeTabla>
           ))}
         </Tabla>
@@ -155,6 +166,20 @@ export function TabDeDomicilios({
             hrefAdministrarCalles={hrefAdministrarCalles}
           />
         </PanelDeAccion>
+      ) : null}
+
+      {domicilio ? (
+        <PanelDeDomicilio
+          raizId={raizId}
+          nodoId={lugar.id}
+          domicilio={domicilio}
+          calles={calles}
+          lugares={lugares}
+          nodos={nodos}
+          domicilios={domicilios}
+          accion={accion}
+          permisos={permisos}
+        />
       ) : null}
     </div>
   );

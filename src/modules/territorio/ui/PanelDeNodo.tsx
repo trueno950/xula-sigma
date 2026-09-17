@@ -24,6 +24,8 @@ export type AccionDeNodo =
   | "bajaCalle"
   | "renombrarCalle"
   | "domicilio"
+  | "corregirDomicilio"
+  | "bajaDomicilio"
   | "renombrar"
   | "baja"
   | "reparentear";

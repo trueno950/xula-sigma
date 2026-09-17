@@ -1,12 +1,14 @@
-import { MapPin, Plus } from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
 import {
+  type DomicilioId,
+  domicilioPorId,
   listarCalles,
   listarCallesDelMunicipio,
   listarDomicilios,
   listarLugares,
   listarRaices,
   lugarPorId,
+  type NodoSeleccionado,
   subarbol,
   VistaDeRaices,
 } from "@/modules/territorio";
@@ -18,12 +20,8 @@ import {
 import { contextoActual } from "@/shared/auth";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
-import {
-  Aviso,
-  EnlaceDeAccion,
-  PaginaDePanel,
-  PantallaDeMensaje,
-} from "@/shared/ui";
+import { Aviso, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import { accionesDeRaiz } from "./AccionesDeRaiz";
 import { leerParametros, nodoResuelto } from "./parametros";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 import { VistaDeLugar } from "./VistaDeLugar";
@@ -35,36 +33,21 @@ type Props = {
 type Parametros = ReturnType<typeof leerParametros>;
 
 /**
- * Las acciones de la entrada: registrar un domicilio es la tarea de todos
- * los dias y va primaria; el alta de un asentamiento pasa a secundaria
- * -un municipio suma uno por ano-. La que ya esta abierta no repite su
- * enlace, para no dejar dos primarias en pantalla.
+ * La direccion que la URL nombra, si es de este nodo: una de otro nodo, de
+ * otro municipio o ya dada de baja cae en el 404 de la regla 8, mismo
+ * criterio que `?calle=`.
  */
-const accionesDeRaiz = ({
-  puedeCrearLugar,
-  accion,
-}: {
-  puedeCrearLugar: boolean;
-  accion: string | undefined;
-}) => {
-  if (!puedeCrearLugar) return undefined;
+const domicilioDelNodo = async (
+  contexto: ContextoActual,
+  domicilioId: DomicilioId | undefined,
+  nodo: NodoSeleccionado | null,
+) => {
+  if (!domicilioId) return null;
 
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      {accion === "domicilio" ? null : (
-        <EnlaceDeAccion href="/territorio?accion=domicilio" variante="primaria">
-          <MapPin size={18} weight="bold" aria-hidden="true" />
-          Registrar domicilio
-        </EnlaceDeAccion>
-      )}
-      {accion === "lugar" ? null : (
-        <EnlaceDeAccion href="/territorio?accion=lugar" variante="secundaria">
-          <Plus size={18} weight="bold" aria-hidden="true" />
-          Agregar asentamiento
-        </EnlaceDeAccion>
-      )}
-    </div>
-  );
+  const domicilio = await domicilioPorId(domicilioId, contexto);
+  if (!domicilio || domicilio.lugarId !== nodo?.id) notFound();
+
+  return domicilio;
 };
 
 /**
@@ -75,7 +58,7 @@ const accionesDeRaiz = ({
  */
 const cargarTerritorio = async (
   contexto: ContextoActual,
-  { raizId, nodoId, calleId, accion }: Parametros,
+  { raizId, nodoId, calleId, domicilioId, accion }: Parametros,
 ) => {
   const raices = await listarRaices(contexto);
   const raiz = raizId ? await lugarPorId(raizId, contexto) : null;
@@ -95,6 +78,8 @@ const cargarTerritorio = async (
 
   const calles = raiz && nodo ? await listarCalles(raiz.id, contexto) : [];
   if (calleId && !calles.some((calle) => calle.id === calleId)) notFound();
+
+  const domicilio = await domicilioDelNodo(contexto, domicilioId, nodo);
 
   // El municipio entero, con raiz abierta o sin ella: alimenta el arbol de
   // la entrada y el destino del reparenteo, que mueve un lugar a cualquier
@@ -117,6 +102,7 @@ const cargarTerritorio = async (
     domicilios,
     nodo,
     calles,
+    domicilio,
     lugares,
     puedeCrearLugar,
     registroAbierto,
@@ -145,6 +131,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
     domicilios,
     nodo,
     calles,
+    domicilio,
     lugares,
     raices,
     puedeCrearLugar,
@@ -152,7 +139,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
     callesDelMunicipio,
   } = await cargarTerritorio(contexto, parametros);
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
-  const { accion, calleId, error, vista } = parametros;
+  const { accion, calleId, domicilioId, error, vista } = parametros;
 
   return (
     <PaginaDePanel
@@ -188,6 +175,8 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
           vista={vista}
           accion={accion}
           calleId={calleId}
+          domicilioId={domicilioId}
+          domicilio={domicilio ?? undefined}
           permisos={permisos}
         />
       ) : null}

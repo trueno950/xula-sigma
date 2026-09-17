@@ -50,6 +50,8 @@ const base: PropsDeContenido = {
   lugares: [{ id: cabeceraId, nombre: "Tepakan", tipo: "cabecera" }],
   domicilios: [],
   calleId: undefined,
+  domicilio: undefined,
+  domicilioId: undefined,
   accion: "domicilio",
   permisos: permisosDeTerritorio("ADMIN_MUNICIPAL"),
 };

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
@@ -12,16 +12,9 @@ import {
   TransversalRepetidaError,
   transversalesValidas,
 } from "../domain";
-import { cadenaHastaAsentamiento } from "./asentamientoDeLugar";
 import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
 import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
-import {
-  bloquearCalles,
-  exigirCallesActivas,
-  exigirCallesDelAsentamiento,
-  exigirNivelesDeclarados,
-  idsDeCalles,
-} from "./verificacionDeDomicilio";
+import { verificarZonaYCalles } from "./verificacionDeDomicilio";
 
 export type NuevoDomicilio = {
   /** El nivel mas profundo conocido; sin el, el asentamiento de la calle. */
@@ -88,53 +81,12 @@ const prepararAlta = (
   contexto,
 });
 
-const verificarLugarYCalles = async (
-  dependencias: DependenciasDeAlta,
-  tx: Parameters<RepositorioDeCalles["bloquearPorId"]>[0],
-  datos: NuevoDomicilio,
-): Promise<LugarId> => {
-  const callesBloqueadas = await bloquearCalles(
-    dependencias.repositorioDeCalles,
-    tx,
-    idsDeCalles(datos.calleId, datos.entreCalleAId, datos.entreCalleBId),
-  );
-  exigirCallesActivas(callesBloqueadas);
-
-  // Sin nivel declarado el asentamiento sale de la calle: las calles
-  // cuelgan de un asentamiento, y es la unica parte de la zona que el
-  // operador ya eligio.
-  const callePrincipal = callesBloqueadas.find(
-    (calle) => calle.id === datos.calleId,
-  );
-  const lugarId = datos.lugarId ?? callePrincipal?.lugarId;
-  if (!lugarId) throw new NoEncontradoError();
-
-  const lugar = await dependencias.repositorioDeLugares.buscarPorId(
-    tx,
-    lugarId,
-  );
-  if (!lugar) throw new NoEncontradoError();
-
-  const cadena = await cadenaHastaAsentamiento(
-    dependencias.repositorioDeLugares,
-    tx,
-    lugar,
-  );
-  const asentamiento = cadena[cadena.length - 1];
-  if (!asentamiento) throw new NoEncontradoError();
-
-  exigirNivelesDeclarados(datos.nivelesDeclarados ?? [], cadena);
-  exigirCallesDelAsentamiento(callesBloqueadas, asentamiento.id);
-
-  return lugarId;
-};
-
 const guardarDomicilio = async (
   dependencias: DependenciasDeAlta,
   alta: AltaPreparada,
 ): Promise<void> => {
   await withTenant(alta.contexto.ayuntamientoId, async (tx) => {
-    const lugarId = await verificarLugarYCalles(dependencias, tx, alta.datos);
+    const lugarId = await verificarZonaYCalles(dependencias, tx, alta.datos);
 
     await dependencias.repositorio.crear(tx, {
       id: alta.id,

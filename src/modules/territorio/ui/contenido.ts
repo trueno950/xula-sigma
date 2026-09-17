@@ -3,8 +3,11 @@ import type {
   LugarGuardado,
   NodoDeSubarbol,
 } from "../application/puertos";
-import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
-import type { CalleId, LugarId } from "../domain";
+import type {
+  DomicilioGuardado,
+  DomicilioParaListado,
+} from "../application/puertosDeDomicilios";
+import type { CalleId, DomicilioId, LugarId } from "../domain";
 import type {
   AccionDeNodo,
   CuentasDeLugar,
@@ -30,6 +33,9 @@ export type PropsDeContenido = {
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   domicilios: readonly DomicilioParaListado[];
   calleId: CalleId | undefined;
+  /** El domicilio seleccionado, si `?domicilio=` esta puesto y es del nodo. */
+  domicilio: DomicilioGuardado | undefined;
+  domicilioId: DomicilioId | undefined;
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
 };
@@ -41,16 +47,20 @@ export const rutaDe = ({
   vista,
   accion,
   calleId,
+  domicilioId,
 }: {
   raizId: LugarId;
   nodoId: LugarId;
   vista: TabDeLugar;
   accion?: AccionDeNodo;
   calleId?: CalleId;
+  domicilioId?: DomicilioId;
 }) =>
   `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=${vista}${
     accion ? `&accion=${accion}` : ""
-  }${calleId ? `&calle=${calleId}` : ""}`;
+  }${calleId ? `&calle=${calleId}` : ""}${
+    domicilioId ? `&domicilio=${domicilioId}` : ""
+  }`;
 
 export const hijosDirectosDe = (
   nodos: readonly NodoDeSubarbol[],

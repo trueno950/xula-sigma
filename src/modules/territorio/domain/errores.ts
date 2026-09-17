@@ -123,6 +123,22 @@ export class PuntoFueraDeYucatanError extends Error {
   }
 }
 
+/**
+ * `darDeBajaDomicilio` rechaza si el domicilio tiene una residencia vigente
+ * (`residencias.hastaEn IS NULL`): la direccion de una persona no se da de
+ * baja por debajo de ella.
+ */
+export class DomicilioConResidentesError extends Error {
+  readonly codigo = "DOMICILIO_CON_RESIDENTES";
+
+  constructor(
+    mensaje = "El domicilio tiene residentes vigentes y no se puede dar de baja.",
+  ) {
+    super(mensaje);
+    this.name = "DomicilioConResidentesError";
+  }
+}
+
 export class CalleConDomiciliosError extends Error {
   readonly codigo = "CALLE_CON_DOMICILIOS";
 

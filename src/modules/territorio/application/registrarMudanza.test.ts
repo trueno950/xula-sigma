@@ -64,6 +64,8 @@ describe("registrarMudanza", () => {
   const repositorioDeDomicilios: RepositorioDeDomicilios = {
     crear: vi.fn(),
     buscarPorId: vi.fn(),
+    bloquearPorId: vi.fn(),
+    actualizar: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
     listar: vi.fn(),

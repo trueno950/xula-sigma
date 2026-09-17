@@ -22,6 +22,8 @@ const base: PropsDeContenido = {
   lugares: [],
   domicilios: [],
   calleId: undefined,
+  domicilio: undefined,
+  domicilioId: undefined,
   accion: undefined,
   permisos: permisosDeTerritorio("ADMIN_MUNICIPAL"),
 };

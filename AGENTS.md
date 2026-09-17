@@ -267,6 +267,8 @@ que devuelva, y devolverlo sería código muerto.
 | `reparentearCalleAction` | `territorio` | Server Component, `<form action={...}>` |
 | `darDeBajaCalleAction` | `territorio` | Server Component, `<form action={...}>` |
 | `altaDeDomicilioAction` | `territorio` | Server Component, `<form action={...}>` |
+| `corregirDomicilioAction` | `territorio` | Server Component, `<form action={...}>` |
+| `darDeBajaDomicilioAction` | `territorio` | Server Component, `<form action={...}>` |
 | `registrarMudanzaAction` | `territorio` | Server Component, `<form action={...}>` |
 | `configurarDocumentosAction` | `constancias` | Server Component, `<form action={...}>` |
 | `emitirConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
@@ -329,6 +331,15 @@ Notas que no caben en la tabla, una por fila que las necesita:
 - `corregirIntervencionAction` (`intervenciones`, rebanada 1): mismo motivo
   que `cambiarEstadoAction`; redacta `NoAutorizadoError`, `NoEncontradoError`,
   `ValidacionError` y el fallo de resolucion del tenant, sin exponer detalles.
+- `corregirDomicilioAction`/`darDeBajaDomicilioAction` (`territorio`, Fase 2
+  de direcciones editables): mismo motivo exacto que `renombrarCalleAction`,
+  cada uno su `<form>` nativo. `corregirDomicilioAction` redacta
+  `NoAutorizadoError`, `NoEncontradoError`, `TransversalRepetidaError` y
+  `ZonaIncoherenteError` -la zona o la calle elegidas no pertenecen al
+  asentamiento de la direccion-; `darDeBajaDomicilioAction` redacta
+  `NoAutorizadoError`, `NoEncontradoError` y `DomicilioConResidentesError`
+  -hay una residencia vigente y la direccion no se da de baja por debajo de
+  ella-.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un

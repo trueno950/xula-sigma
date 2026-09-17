@@ -21,6 +21,22 @@ export type DomicilioGuardado = {
   entreCalleAId: CalleId | null;
   entreCalleBId: CalleId | null;
   referencia: string | null;
+  bajaEn: Date | null;
+};
+
+/**
+ * Entrada de `actualizar`: las columnas mutables de una direccion, incluida
+ * `bajaEn` — la correccion la reenvia tal como estaba y la baja la escribe.
+ */
+export type DatosDeActualizacionDeDomicilio = {
+  id: DomicilioId;
+  lugarId: LugarId;
+  calleId: CalleId;
+  numero: string | null;
+  entreCalleAId: CalleId | null;
+  entreCalleBId: CalleId | null;
+  referencia: string | null;
+  bajaEn: Date | null;
 };
 
 /**
@@ -32,6 +48,8 @@ export type DomicilioGuardado = {
 export type DomicilioParaListado = {
   id: DomicilioId;
   calle: string;
+  /** La calle por id: dos calles del mismo nombre no son la misma calle. */
+  calleId: CalleId;
   numero: string | null;
   lugar: string;
 };
@@ -51,11 +69,22 @@ export type RepositorioDeDomicilios = {
    * en `altaDeDomicilio` (hallazgo de GGA en la revision de PR 30): sin
    * este chequeo, un `domicilioId` de otro tenant o inexistente cae en el
    * `23503` crudo de `residencias_domicilio_tenant_fk` en vez de un
-   * `NoEncontradoError` limpio.
+   * `NoEncontradoError` limpio. Un domicilio dado de baja tampoco aparece:
+   * no es una direccion asignable.
    */
   buscarPorId(
     tx: TransaccionTenant,
     id: DomicilioId,
+  ): Promise<DomicilioGuardado | null>;
+  /** Igual que `buscarPorId`, pero con `SELECT ... FOR UPDATE` para escrituras serializadas. */
+  bloquearPorId(
+    tx: TransaccionTenant,
+    id: DomicilioId,
+  ): Promise<DomicilioGuardado | null>;
+  /** `null` si el `UPDATE` afecto cero filas; el porque esta en `darDeBajaCalle` (`puertos.ts`). */
+  actualizar(
+    tx: TransaccionTenant,
+    datos: DatosDeActualizacionDeDomicilio,
   ): Promise<DomicilioGuardado | null>;
   porLugarYSubarbol(
     tx: TransaccionTenant,

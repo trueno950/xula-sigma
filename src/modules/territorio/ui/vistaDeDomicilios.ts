@@ -34,6 +34,10 @@ export const lugaresDeNodos = (
     )
     .map(({ id, tipo, nombre, padreId }) => ({ id, tipo, nombre, padreId }));
 
+/** "Calle 20 #5" o "Calle 20 S/N". */
+export const direccionDe = (calle: string, numero: string | null) =>
+  `${calle} ${numero ?? "S/N"}`;
+
 /** `San Pedro — Tepakan › Pablo › 2`; sin camino queda solo el nombre. */
 export const etiquetaDeCamino = (
   nombre: string,
@@ -150,6 +154,17 @@ export type ZonaDelFormulario = {
   resumen: string;
 };
 
+export const zonaConInicial = (
+  lugares: readonly LugarConPadre[],
+  asentamiento: Asentamiento | undefined,
+  inicial: LugarId | "",
+): ZonaDelFormulario => ({
+  opciones: opcionesDeZona(lugares, asentamiento),
+  marcador: asentamiento ? `Sin zona: ${asentamiento.nombre}` : "Sin zona",
+  inicial,
+  resumen: resumenDeGuardado(lugares, asentamiento, inicial),
+});
+
 export const zonaDelFormulario = (
   lugares: readonly LugarConPadre[],
   asentamiento: Asentamiento | undefined,
@@ -160,10 +175,5 @@ export const zonaDelFormulario = (
       ? lugarActual.id
       : "";
 
-  return {
-    opciones: opcionesDeZona(lugares, asentamiento),
-    marcador: asentamiento ? `Sin zona: ${asentamiento.nombre}` : "Sin zona",
-    inicial,
-    resumen: resumenDeGuardado(lugares, asentamiento, inicial),
-  };
+  return zonaConInicial(lugares, asentamiento, inicial);
 };
