@@ -33,7 +33,6 @@ const base: PropsDeContenido = {
     },
   ],
   lugares: [],
-  domicilios: [],
   calleId: undefined,
   domicilio: undefined,
   domicilioId: undefined,

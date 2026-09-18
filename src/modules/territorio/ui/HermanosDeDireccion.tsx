@@ -1,12 +1,16 @@
-import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
-import type { LugarId } from "../domain";
+import type { DomicilioId, LugarId } from "../domain";
 import { rutaDe } from "./contenido";
 import { direccionDe } from "./vistaDeDomicilios";
 
 type Props = {
   raizId: LugarId;
   nodoId: LugarId;
-  hermanos: readonly DomicilioParaListado[];
+  /** Lo minimo para dibujar y enlazar: el nodo del subarbol lo tiene. */
+  hermanos: readonly {
+    id: DomicilioId;
+    calle: string;
+    numero: string | null;
+  }[];
 };
 
 /** Las otras direcciones vivas con la misma calle y numero, cada una a su panel. */

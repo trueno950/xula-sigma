@@ -65,7 +65,7 @@ const crearDomicilioDePrueba = async () => {
 };
 
 describe("baja y correccion de domicilios", () => {
-  it("la baja logica esconde la fila de las cuatro lecturas", async () => {
+  it("la baja logica esconde la fila de las cinco lecturas", async () => {
     const { comisaria, calle, id } = await crearDomicilioDePrueba();
 
     await darDeBajaDomicilio(id, contextoDe());
@@ -82,11 +82,19 @@ describe("baja y correccion de domicilios", () => {
     const listado = await enTenant((tx) =>
       repositorioDeDomiciliosSql.listar(tx),
     );
+    // La quinta: el subarbol dejo de ser solo un arbol de ids cuando la
+    // pestana Domicilios empezo a leer la direccion del nodo (A1b). Antes
+    // sus filas se cruzaban contra `listar`, que ya filtraba la baja, asi
+    // que la ausencia de este filtro no se veia desde ninguna pantalla.
+    const nodos = await enTenant((tx) =>
+      repositorioDeLugaresSql.subarbol(tx, comisaria),
+    );
 
     expect(porId).toBeNull();
     expect(porLugar.map((d) => d.id)).not.toContain(id);
     expect(porCalle.map((d) => d.id)).not.toContain(id);
     expect(listado.map((d) => d.id)).not.toContain(id);
+    expect(nodos.map((nodo) => nodo.id)).not.toContain(id);
   });
 
   it("rechaza la baja cuando hay una residencia vigente", async () => {

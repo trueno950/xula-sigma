@@ -21,5 +21,6 @@ export {
   type PasoDeMigaja,
   type TabDeLugar,
 } from "./PanelDeNodo";
+export { RegistroDeDomicilios } from "./RegistroDeDomicilios";
 export { SelectorDePunto } from "./SelectorDePunto";
 export { VistaDeRaices } from "./VistaDeRaices";

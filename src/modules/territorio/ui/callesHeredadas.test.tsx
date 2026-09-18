@@ -20,7 +20,6 @@ const base: PropsDeContenido = {
   nodos: [],
   calles: [calle],
   lugares: [],
-  domicilios: [],
   calleId: undefined,
   domicilio: undefined,
   domicilioId: undefined,

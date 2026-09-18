@@ -13,17 +13,13 @@ import type {
   LugarGuardado,
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
-import type {
-  DomicilioGuardado,
-  DomicilioParaListado,
-} from "@/modules/territorio/application/puertosDeDomicilios";
+import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
 import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
 import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 
 type Props = {
   raiz: Pick<LugarGuardado, "id" | "tipo" | "nombre">;
   nodos: readonly NodoDeSubarbol[];
-  domicilios: readonly DomicilioParaListado[];
   nodo: NodoSeleccionado;
   calles: readonly Pick<CalleGuardada, "id" | "nombre" | "lugarId" | "punto">[];
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
@@ -70,7 +66,6 @@ const migajaDe = (
 export function VistaDeLugar({
   raiz,
   nodos,
-  domicilios,
   nodo,
   calles,
   lugares,
@@ -88,7 +83,7 @@ export function VistaDeLugar({
         nodo={nodo}
         migaja={migajaDe(raiz, nodos, nodo)}
         vista={vista}
-        cuentas={cuentasDeLugar({ nodos, domicilios, calles, nodo })}
+        cuentas={cuentasDeLugar({ nodos, calles, nodo })}
         abreLaEdicion={permisos.abreLaEdicion}
       />
 
@@ -98,7 +93,6 @@ export function VistaDeLugar({
         nodos={nodos}
         calles={calles}
         lugares={lugares}
-        domicilios={domicilios}
         calleId={calleId}
         domicilioId={domicilioId}
         domicilio={domicilio}

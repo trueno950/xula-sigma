@@ -4,7 +4,6 @@ import {
   domicilioPorId,
   listarCalles,
   listarCallesDelMunicipio,
-  listarDomicilios,
   listarLugares,
   listarRaices,
   lugarPorId,
@@ -69,7 +68,6 @@ const cargarTerritorio = async (
   if (raizId && !raiz) notFound();
 
   const nodos = raiz ? await subarbol(raiz.id, contexto) : [];
-  const domicilios = await listarDomicilios(contexto);
   const nodo = nodoResuelto({ raiz, nodos, nodoId });
 
   // Con raiz propia pero `?nodo=` que no cuelga de ella -ajeno, o dado de
@@ -99,7 +97,6 @@ const cargarTerritorio = async (
     raices,
     raiz,
     nodos,
-    domicilios,
     nodo,
     calles,
     domicilio,
@@ -128,7 +125,6 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
   const {
     raiz,
     nodos,
-    domicilios,
     nodo,
     calles,
     domicilio,
@@ -168,7 +164,6 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
         <VistaDeLugar
           raiz={raiz}
           nodos={nodos}
-          domicilios={domicilios}
           nodo={nodo}
           calles={calles}
           lugares={lugares}
