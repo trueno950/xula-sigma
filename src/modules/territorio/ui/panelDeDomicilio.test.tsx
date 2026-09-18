@@ -13,6 +13,7 @@ const calleId = comoCalleId("33333333-3333-4333-8333-333333333333");
 const otraCalleId = comoCalleId("44444444-4444-4444-8444-444444444444");
 const domicilioId = comoDomicilioId("55555555-5555-4555-8555-555555555555");
 const hermanaId = comoDomicilioId("66666666-6666-4666-8666-666666666666");
+const vecinaId = comoDomicilioId("77777777-7777-4777-8777-777777777777");
 
 const domicilio: DomicilioGuardado = {
   id: domicilioId,
@@ -25,6 +26,30 @@ const domicilio: DomicilioGuardado = {
   bajaEn: null,
 };
 
+const enLaMismaDireccion: NodoDeSubarbol = {
+  clase: "domicilio",
+  id: hermanaId,
+  lugarId: coloniaId,
+  calleId,
+  calle: "Calle 21",
+  numero: "21",
+};
+
+/**
+ * Mismo nombre de calle y mismo numero, otra calle. Dos calles del mismo
+ * nombre conviven en un lugar cuando una quedo de baja:
+ * `calles_tenant_lugar_nombre_idx` es un unico parcial sobre
+ * `baja_en IS NULL`. La identidad la da el id, no el nombre.
+ */
+const enElMismoNumeroDeOtraCalle: NodoDeSubarbol = {
+  clase: "domicilio",
+  id: vecinaId,
+  lugarId: coloniaId,
+  calleId: otraCalleId,
+  calle: "Calle 21",
+  numero: "21",
+};
+
 const nodos: readonly NodoDeSubarbol[] = [
   {
     clase: "lugar",
@@ -33,8 +58,16 @@ const nodos: readonly NodoDeSubarbol[] = [
     nombre: "Centro",
     padreId: cabeceraId,
   },
-  { clase: "domicilio", id: domicilioId, lugarId: coloniaId },
-  { clase: "domicilio", id: hermanaId, lugarId: coloniaId },
+  {
+    clase: "domicilio",
+    id: domicilioId,
+    lugarId: coloniaId,
+    calleId,
+    calle: "Calle 21",
+    numero: "21",
+  },
+  enLaMismaDireccion,
+  enElMismoNumeroDeOtraCalle,
 ];
 
 const base: PropsDeContenido = {
@@ -43,32 +76,9 @@ const base: PropsDeContenido = {
   nodos,
   calles: [
     { id: calleId, nombre: "Calle 21", lugarId: cabeceraId, punto: null },
-    { id: otraCalleId, nombre: "Calle 22", lugarId: cabeceraId, punto: null },
+    { id: otraCalleId, nombre: "Calle 21", lugarId: cabeceraId, punto: null },
   ],
   lugares: [{ id: cabeceraId, nombre: "Tepakan", tipo: "cabecera" }],
-  domicilios: [
-    {
-      id: domicilioId,
-      calle: "Calle 21",
-      calleId,
-      numero: "21",
-      lugar: "Centro",
-    },
-    {
-      id: hermanaId,
-      calle: "Calle 21",
-      calleId,
-      numero: "22",
-      lugar: "Centro",
-    },
-    {
-      id: comoDomicilioId("77777777-7777-4777-8777-777777777777"),
-      calle: "Calle 21",
-      calleId,
-      numero: "21",
-      lugar: "Centro",
-    },
-  ],
   calleId: undefined,
   domicilio: undefined,
   domicilioId: undefined,
@@ -84,6 +94,13 @@ describe("domicilios: fila y panel", () => {
     const html = render();
 
     expect(html).toContain(`domicilio=${domicilioId}`);
+  });
+
+  it("la fila se arma con la calle y el numero del nodo del subarbol", () => {
+    const html = render();
+
+    expect(html).toContain("Calle 21 21");
+    expect(html).toContain("Centro");
   });
 
   it("el panel muestra los datos y las dos acciones", () => {
@@ -116,25 +133,32 @@ describe("domicilios: fila y panel", () => {
     expect(html).not.toContain("Dar de baja");
   });
 
-  it("nombra los domicilios hermanos solo cuando hay otros", () => {
-    const conHermana = render({ domicilio, domicilioId });
+  /**
+   * Los hermanos salen del subarbol que la pantalla ya trae, no del listado
+   * plano del municipio (A1b-GREEN-03). Todo domicilio de una calle cuelga
+   * del subarbol del asentamiento de esa calle
+   * (`verificacionDeDomicilio.ts`, `exigirCallesDelAsentamiento`).
+   */
+  it("nombra los domicilios hermanos que estan en el subarbol", () => {
+    expect(render({ domicilio, domicilioId })).toContain(
+      "Hay 1 domicilio mas en esta direccion",
+    );
+  });
 
-    expect(conHermana).toContain("Hay 1 domicilio mas en esta direccion");
+  it("no llama hermano al mismo numero de otra calle con el mismo nombre", () => {
+    const html = render({ domicilio, domicilioId });
+    const hermanos = html.slice(html.indexOf("en esta direccion"));
 
-    const sinHermana = render({
+    expect(hermanos).not.toContain(`domicilio=${vecinaId}`);
+  });
+
+  it("sin otro domicilio en la misma direccion no dice nada", () => {
+    const html = render({
       domicilio,
       domicilioId,
-      domicilios: [
-        {
-          id: domicilioId,
-          calle: "Calle 21",
-          calleId,
-          numero: "21",
-          lugar: "Centro",
-        },
-      ],
+      nodos: nodos.filter((nodo) => nodo.id !== hermanaId),
     });
 
-    expect(sinHermana).not.toContain("domicilio mas en esta direccion");
+    expect(html).not.toContain("domicilio mas en esta direccion");
   });
 });

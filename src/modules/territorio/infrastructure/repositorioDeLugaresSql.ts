@@ -4,7 +4,12 @@ import type {
   NodoDeSubarbol,
   RepositorioDeLugares,
 } from "../application/puertos";
-import { comoDomicilioId, comoLugarId, type TipoDeLugar } from "../domain";
+import {
+  comoCalleId,
+  comoDomicilioId,
+  comoLugarId,
+  type TipoDeLugar,
+} from "../domain";
 import { domicilios, lugares } from "./esquema";
 
 const columnasDeLectura = {
@@ -34,6 +39,9 @@ type FilaDeSubarbol = {
   nombre: string | null;
   padreId: string | null;
   lugarId: string | null;
+  calleId: string | null;
+  calle: string | null;
+  numero: string | null;
 };
 
 const aNodoDeSubarbol = (fila: FilaDeSubarbol): NodoDeSubarbol =>
@@ -49,6 +57,9 @@ const aNodoDeSubarbol = (fila: FilaDeSubarbol): NodoDeSubarbol =>
         clase: "domicilio",
         id: comoDomicilioId(fila.id),
         lugarId: comoLugarId(fila.lugarId as string),
+        calleId: comoCalleId(fila.calleId as string),
+        calle: fila.calle as string,
+        numero: fila.numero,
       };
 
 /**
@@ -127,15 +138,19 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
          WHERE d.profundidad < 8 AND l.baja_en IS NULL
       )
       SELECT 'lugar' AS clase, l.id, l.tipo, l.nombre,
-             l.padre_id AS "padreId", NULL::uuid AS "lugarId"
+             l.padre_id AS "padreId", NULL::uuid AS "lugarId",
+             NULL::uuid AS "calleId", NULL::text AS calle, NULL::text AS numero
         FROM lugares l
         JOIN descendientes d ON d.id = l.id
        WHERE l.id <> ${raizId} AND l.baja_en IS NULL
       UNION ALL
       SELECT 'domicilio' AS clase, dom.id, NULL, NULL,
-             NULL, dom.lugar_id AS "lugarId"
+             NULL, dom.lugar_id AS "lugarId",
+             dom.calle_id AS "calleId", cal.nombre AS calle, dom.numero
         FROM domicilios dom
         JOIN descendientes d ON d.id = dom.lugar_id
+        JOIN calles cal ON cal.id = dom.calle_id
+       WHERE dom.baja_en IS NULL
     `);
 
     return filas.map(aNodoDeSubarbol);

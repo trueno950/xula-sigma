@@ -8,10 +8,10 @@ import {
   FilaDeTabla,
   Tabla,
 } from "@/shared/ui";
-import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
 import { puedeTenerCatalogoDeCalles } from "../domain";
 import {
   domiciliosDirectosDe,
+  type NodoDomicilio,
   type PropsDeContenido,
   rutaDe,
 } from "./contenido";
@@ -20,16 +20,19 @@ import { opcionesDeCalles } from "./opciones";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
 import { PanelDeDomicilio } from "./PanelDeDomicilio";
 import { puedeAbrir } from "./permisos";
-import { lugaresDeNodos, zonaDelFormulario } from "./vistaDeDomicilios";
+import {
+  direccionDe,
+  lugaresDeNodos,
+  zonaDelFormulario,
+} from "./vistaDeDomicilios";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "domicilio", etiqueta: "Domicilio", ancho: "minmax(0,2fr)" },
   { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,1fr)" },
 ];
 
-/** "Calle 20 #5" o "Calle 20 S/N": el numero va en tipografia Dato. */
-const direccionDe = (domicilio: DomicilioParaListado) =>
-  `${domicilio.calle} ${domicilio.numero ?? "S/N"}`;
+const etiquetaDe = (domicilio: NodoDomicilio) =>
+  direccionDe(domicilio.calle, domicilio.numero);
 
 /**
  * Pestana Domicilios: los domicilios colgados del lugar, y el alta de uno.
@@ -43,13 +46,12 @@ export function TabDeDomicilios({
   nodos,
   calles,
   lugares,
-  domicilios,
   domicilio,
   accion,
   permisos,
 }: PropsDeContenido) {
   const puedeActuar = puedeAbrir("domicilio", permisos);
-  const colgados = domiciliosDirectosDe(nodos, domicilios, lugar.id);
+  const colgados = domiciliosDirectosDe(nodos, lugar.id);
   const abierta = accion === "domicilio";
   const sinCalles = calles.length === 0;
   const poseeCatalogo = puedeTenerCatalogoDeCalles(lugar.tipo);
@@ -112,10 +114,10 @@ export function TabDeDomicilios({
                 vista: "domicilios",
                 domicilioId: fila.id,
               })}
-              etiquetaAccesible={`${direccionDe(fila)}, ${fila.lugar}`}
+              etiquetaAccesible={`${etiquetaDe(fila)}, ${lugar.nombre}`}
             >
-              <CeldaPrincipal>{direccionDe(fila)}</CeldaPrincipal>
-              <CeldaDeDato>{fila.lugar}</CeldaDeDato>
+              <CeldaPrincipal>{etiquetaDe(fila)}</CeldaPrincipal>
+              <CeldaDeDato>{lugar.nombre}</CeldaDeDato>
             </FilaDeTabla>
           ))}
         </Tabla>
@@ -176,7 +178,6 @@ export function TabDeDomicilios({
           calles={calles}
           lugares={lugares}
           nodos={nodos}
-          domicilios={domicilios}
           accion={accion}
           permisos={permisos}
         />

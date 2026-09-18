@@ -1,12 +1,7 @@
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
-import type {
-  CalleId,
-  DomicilioId,
-  LugarId,
-  PuntoGeografico,
-  TipoDeLugar,
-} from "../domain";
+import type { CalleId, LugarId, PuntoGeografico, TipoDeLugar } from "../domain";
+import type { NodoDeSubarbol } from "./nodoDeSubarbol";
 
 export type DatosDeAltaDeLugar = {
   id: LugarId;
@@ -51,23 +46,8 @@ export type DatosDeEdicionDeLugar = {
   nombre: string;
 };
 
-/**
- * Una fila del subarbol de `raizId`: un lugar descendiente (cualquier
- * profundidad, `raizId` mismo excluido) o un domicilio colgado de `raizId`
- * o de cualquiera de sus descendientes (design.md seccion 12, "SUBARBOL").
- * Union discriminada y no dos arreglos separados porque el consumidor —el
- * arbol de la UI (tasks.md 3.20)— recorre ambas clases en el mismo orden
- * de aparicion para anidar domicilios bajo el nodo que los contiene.
- */
-export type NodoDeSubarbol =
-  | {
-      clase: "lugar";
-      id: LugarId;
-      tipo: TipoDeLugar;
-      nombre: string;
-      padreId: LugarId | null;
-    }
-  | { clase: "domicilio"; id: DomicilioId; lugarId: LugarId };
+/** El nodo del arbol vive en `nodoDeSubarbol.ts`; aca se reexporta. */
+export type { NodoDeSubarbol } from "./nodoDeSubarbol";
 
 /**
  * Lo que los casos de uso de lugares necesitan de `infrastructure`, sin

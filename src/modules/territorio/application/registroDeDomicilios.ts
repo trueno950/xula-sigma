@@ -4,6 +4,23 @@ import type {
   RepositorioDeDomicilios,
 } from "./puertosDeDomicilios";
 
+/**
+ * Tamano de pagina fijo de `design.md`, seccion "Paginacion": bajarlo no
+ * ahorra en la red rural -sigue siendo una sola respuesta HTML-, y subirlo
+ * pierde el punto de paginar. Propia y no heredada de configuracion, mismo
+ * criterio que `TAMANO_DE_PAGINA` en `reportes/application/listarReportes.ts`
+ * y en `padron`.
+ */
+export const TAMANO_DE_PAGINA = 50;
+
+/**
+ * El tope de `?limite=`, que es un parametro de URL y por lo tanto entrada
+ * del cliente: sin cota, `?limite=9999999` pide el municipio entero en una
+ * respuesta. Vive aca y no en el esquema de la ruta porque "Ver mas" tiene
+ * que conocerlo para no ofrecer un link que el esquema va a rechazar.
+ */
+export const LIMITE_MAXIMO = TAMANO_DE_PAGINA * 40;
+
 export type SolicitudDeRegistroDeDomicilios = {
   readonly tx: Parameters<RepositorioDeDomicilios["registro"]>[0];
   readonly filtros: FiltrosDeRegistro;

@@ -4,12 +4,9 @@ import type {
   LugarGuardado,
   NodoDeSubarbol,
 } from "../application/puertos";
-import type {
-  DomicilioGuardado,
-  DomicilioParaListado,
-} from "../application/puertosDeDomicilios";
+import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import type { LugarId } from "../domain";
-import { rutaDe } from "./contenido";
+import { hermanosDeDireccion, rutaDe } from "./contenido";
 import { DatosDeDomicilio } from "./DatosDeDomicilio";
 import { FormularioDeBajaDeDomicilio } from "./FormularioDeBajaDeDomicilio";
 import { FormularioDeCorreccionDeDomicilio } from "./FormularioDeCorreccionDeDomicilio";
@@ -30,7 +27,6 @@ type Props = {
   calles: readonly Pick<CalleGuardada, "id" | "nombre" | "lugarId" | "punto">[];
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   nodos: readonly NodoDeSubarbol[];
-  domicilios: readonly DomicilioParaListado[];
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
 };
@@ -47,7 +43,6 @@ export function PanelDeDomicilio({
   calles,
   lugares,
   nodos,
-  domicilios,
   accion,
   permisos,
 }: Props) {
@@ -55,15 +50,7 @@ export function PanelDeDomicilio({
   const calle =
     calles.find((posible) => posible.id === domicilio.calleId)?.nombre ??
     "Calle desconocida";
-  const hermanos =
-    domicilio.numero === null
-      ? []
-      : domicilios.filter(
-          (otro) =>
-            otro.id !== domicilio.id &&
-            otro.calleId === domicilio.calleId &&
-            otro.numero === domicilio.numero,
-        );
+  const hermanos = hermanosDeDireccion(nodos, domicilio);
   const accionAbierta =
     esAccionDeDomicilio(accion) && puedeAbrir(accion, permisos)
       ? accion
