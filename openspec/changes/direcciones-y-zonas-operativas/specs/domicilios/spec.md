@@ -112,6 +112,14 @@ municipio, con busqueda por calle, numero y nombre de asentamiento, y
 con paginacion. El sistema MUST NOT cargar la totalidad de los
 domicilios del municipio en una sola respuesta.
 
+La paginacion es la de "Ver mas" que ya usan `padron`, `constancias` y
+`reportes`: el limite crece y no hay `OFFSET` ni indice de pagina
+(`reportes/application/puertos.ts:152`, `design.md` "Paginacion"). El
+sistema MUST pedir `limite + 1` filas para saber si hay una pagina
+siguiente, y MUST NOT contar el total con `COUNT(*)`. El orden MUST ser
+determinista: sin el, una fila salta entre dos lecturas de distinto
+limite y queda repetida o perdida.
+
 #### Scenario: buscar por calle devuelve solo coincidencias
 
 - GIVEN un municipio con domicilios en varias calles
@@ -125,12 +133,12 @@ domicilios del municipio en una sola respuesta.
 - THEN la respuesta trae como maximo el tamano de pagina configurado,
   nunca la totalidad de domicilios del municipio
 
-#### Scenario: dos paginas consecutivas no se solapan ni dejan huecos
+#### Scenario: ampliar el limite no repite ni pierde filas
 
-- GIVEN un listado con un tamano de pagina fijo
-- WHEN se piden dos paginas consecutivas con el mismo filtro
-- THEN ninguna fila aparece en ambas paginas y ninguna fila del rango
-  queda fuera de las dos
+- GIVEN un listado leido con un limite dado
+- WHEN se vuelve a pedir con un limite mayor y el mismo filtro
+- THEN el resultado mas grande empieza por el mas chico, en el mismo
+  orden, sin repetir ninguna fila ni saltearse ninguna del rango
 
 ### Requirement: Migracion de domicilios preserva el lugarId anterior en bitacora (Rebanada B3)
 

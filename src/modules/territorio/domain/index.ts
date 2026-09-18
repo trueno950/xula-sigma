@@ -3,6 +3,7 @@ export * from "./direccion";
 export * from "./errores";
 export * from "./eventoDeCalle";
 export * from "./identificadores";
+export * from "./paginacion";
 export * from "./punto";
 export * from "./residencia";
 export * from "./tipoDeLugar";

@@ -5,6 +5,7 @@ import type {
 } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
 import { calles, domicilios, lugares } from "./esquema";
+import { registroDeDomiciliosSql } from "./registroDeDomiciliosSql";
 
 const columnasDeLectura = {
   id: domicilios.id,
@@ -127,6 +128,8 @@ export const repositorioDeDomiciliosSql: RepositorioDeDomicilios = {
 
     return filas.map(aDomicilioGuardado);
   },
+
+  registro: registroDeDomiciliosSql.registro,
 
   /**
    * Listado plano del municipio, con los nombres resueltos para la etiqueta
