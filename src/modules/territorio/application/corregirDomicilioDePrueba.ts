@@ -86,6 +86,7 @@ export const repositoriosFalsos = () => {
     actualizar: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
+    registro: vi.fn(),
     listar: vi.fn(),
   };
   const repositorioDeLugares: RepositorioDeLugares = {

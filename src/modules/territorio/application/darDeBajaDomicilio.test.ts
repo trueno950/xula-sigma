@@ -54,6 +54,7 @@ describe("darDeBajaDomicilio", () => {
     actualizar: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
+    registro: vi.fn(),
     listar: vi.fn(),
   };
   const repositorioDeResidencias: RepositorioDeResidencias = {

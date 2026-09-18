@@ -23,6 +23,7 @@ export type * from "./puertosDeDomicilios";
 export type * from "./puertosDeLecturaDeCalles";
 export type * from "./puertosDeResidencias";
 export * from "./registrarMudanza";
+export * from "./registroDeDomicilios";
 export * from "./renombrarCalle";
 export * from "./reparentearCalle";
 export * from "./reparentearLugar";

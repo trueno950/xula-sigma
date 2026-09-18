@@ -54,6 +54,26 @@ export type DomicilioParaListado = {
   lugar: string;
 };
 
+export type FiltrosDeRegistro = {
+  readonly raizId?: LugarId;
+  readonly calle?: string;
+  readonly numero?: string;
+};
+
+export type OpcionesDeRegistro = {
+  readonly limite: number;
+  readonly filtros: FiltrosDeRegistro;
+};
+
+export type DomicilioDelRegistro = {
+  id: DomicilioId;
+  calle: string;
+  calleId: CalleId;
+  numero: string | null;
+  lugar: string;
+  lugarId: LugarId;
+};
+
 /**
  * `porLugarYSubarbol` reusa el mismo `WITH RECURSIVE` que
  * `RepositorioDeLugares.subarbol` (tasks.md 3.12), pero devuelve el detalle
@@ -94,6 +114,10 @@ export type RepositorioDeDomicilios = {
     tx: TransaccionTenant,
     calleId: CalleId,
   ): Promise<readonly DomicilioGuardado[]>;
-  /** Todos los domicilios del tenant, con nombres resueltos, ordenados por lugar, calle y numero. */
+  registro(
+    tx: TransaccionTenant,
+    opciones: OpcionesDeRegistro,
+  ): Promise<readonly DomicilioDelRegistro[]>;
+  /** Solo para el select de `FormularioDeMudanza`; no es el registro plano paginado. */
   listar(tx: TransaccionTenant): Promise<readonly DomicilioParaListado[]>;
 };

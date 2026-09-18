@@ -1,22 +1,20 @@
 import type { PorcionExportable } from "@/shared/exportacion/exportar";
+
+export * from "./composicionDeDomicilios";
+
 import {
   crearAltaDeCalle,
-  crearAltaDeDomicilio,
   crearAltaDeLugar,
   crearCallePorId,
   crearCallePorIdEnTransaccion,
   crearCallesParaMapa,
-  crearCorregirDomicilio,
   crearDarDeBajaCalle,
-  crearDarDeBajaDomicilio,
   crearDarDeBajaLugar,
   crearDireccionVigenteDePersona,
-  crearDomicilioPorId,
   crearEditarLugar,
   crearHistorialDeResidencias,
   crearListarCalles,
   crearListarCallesDelMunicipio,
-  crearListarDomicilios,
   crearListarLugares,
   crearListarRaices,
   crearLugarPorId,
@@ -77,26 +75,8 @@ export const callePorId = crearCallePorId(lectorDeCallesDeMapaSql);
 export const callePorIdEnTransaccion = crearCallePorIdEnTransaccion(
   lectorDeCallesDeMapaSql,
 );
-export const listarDomicilios = crearListarDomicilios(
-  repositorioDeDomiciliosSql,
-);
-export const domicilioPorId = crearDomicilioPorId(repositorioDeDomiciliosSql);
-export const corregirDomicilio = crearCorregirDomicilio(
-  repositorioDeDomiciliosSql,
-  repositorioDeLugaresSql,
-  repositorioDeCallesSql,
-);
-export const darDeBajaDomicilio = crearDarDeBajaDomicilio(
-  repositorioDeDomiciliosSql,
-  repositorioDeResidenciasSql,
-);
 export const listarLugares = crearListarLugares(repositorioDeLugaresSql);
 export const listarRaices = crearListarRaices(repositorioDeLugaresSql);
-export const altaDeDomicilio = crearAltaDeDomicilio(
-  repositorioDeDomiciliosSql,
-  repositorioDeLugaresSql,
-  repositorioDeCallesSql,
-);
 export const registrarMudanza = crearRegistrarMudanza(
   repositorioDeResidenciasSql,
   repositorioDeDomiciliosSql,

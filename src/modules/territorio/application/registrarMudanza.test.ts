@@ -68,6 +68,7 @@ describe("registrarMudanza", () => {
     actualizar: vi.fn(),
     porLugarYSubarbol: vi.fn(),
     porCalle: vi.fn(),
+    registro: vi.fn(),
     listar: vi.fn(),
   };
 

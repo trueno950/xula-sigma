@@ -98,11 +98,29 @@ export const crearDomicilio = (lugarId: LugarId, nombreCalle: string) =>
   });
 
 /** Cuelga un domicilio de una `calleId` ya existente -precedente `crearDomicilio`, sin crear la calle-. */
-export const crearDomicilioEnCalle = (lugarId: LugarId, calleId: CalleId) =>
+export const crearDomicilioEnCalle = (
+  lugarId: LugarId,
+  calleId: CalleId,
+  numero?: string,
+) =>
   withTenant(motul, async (tx) => {
     const [domicilio] = await tx
       .insert(domicilios)
-      .values({ ayuntamientoId: motul, lugarId, calleId })
+      .values({ ayuntamientoId: motul, lugarId, calleId, numero })
+      .returning({ id: domicilios.id });
+    return comoDomicilioId(exigirFila(domicilio).id);
+  });
+
+/** Como `crearDomicilioEnCalle` pero para cualquier municipio, y sin `numero`: ningun test de aislamiento filtra por numero. */
+export const crearDomicilioEnCalleEn = (
+  ayuntamientoId: AyuntamientoId,
+  lugarId: LugarId,
+  calleId: CalleId,
+) =>
+  withTenant(ayuntamientoId, async (tx) => {
+    const [domicilio] = await tx
+      .insert(domicilios)
+      .values({ ayuntamientoId, lugarId, calleId })
       .returning({ id: domicilios.id });
     return comoDomicilioId(exigirFila(domicilio).id);
   });
