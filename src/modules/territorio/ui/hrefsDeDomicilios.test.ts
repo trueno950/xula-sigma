@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { TAMANO_DE_PAGINA } from "../application/registroDeDomicilios";
+import {
+  LIMITE_MAXIMO,
+  TAMANO_DE_PAGINA,
+} from "../application/registroDeDomicilios";
 import { comoLugarId } from "../domain";
 import {
   construirHrefDeDomicilios,
@@ -61,5 +64,17 @@ describe("hrefDeVerMasDeDomicilios", () => {
         limite: TAMANO_DE_PAGINA * 2,
       }),
     ).toBe(`/territorio/domicilios?q=Calle+21&limite=${TAMANO_DE_PAGINA * 3}`);
+  });
+
+  /**
+   * En el tope, "Ver mas" pedia una pagina mas y el `.max()` del esquema la
+   * tiraba con `.catch(undefined)`: el limite volvia al default y la
+   * pantalla se reiniciaba a la primera pagina sin decir nada. Un tope que
+   * reinicia es peor que un tope que se queda quieto.
+   */
+  it("en el tope no pasa del tope, en vez de reiniciar al default", () => {
+    const href = hrefDeVerMasDeDomicilios({ limite: LIMITE_MAXIMO });
+
+    expect(href).toContain(`limite=${LIMITE_MAXIMO}`);
   });
 });

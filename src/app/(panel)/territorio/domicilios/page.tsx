@@ -38,14 +38,26 @@ type Props = {
  * `estadoDeLista.ts`. El asentamiento entra por su nombre y no por su id:
  * `EstadoVacio` lo escribe tal cual en "Sin resultados para X", y un uuid
  * ahi no le dice nada a la operadora.
+ *
+ * Pero si el id no esta en el catalogo -una colonia, uno de otro municipio,
+ * uno inexistente- el filtro se aplico igual y la lista vino vacia por eso.
+ * Cae a "el asentamiento elegido" y no a `undefined`: rendirse aca devuelve
+ * el vacio inicial, que es el mensaje que manda a dar de alta algo que
+ * quiza ya existe en otra rama.
  */
 const filtroVisible = (
   filtros: FiltrosDeRegistro,
   raices: readonly LugarGuardado[],
-): string | undefined =>
-  filtros.calle ??
-  filtros.numero ??
-  raices.find((raiz) => raiz.id === filtros.raizId)?.nombre;
+): string | undefined => {
+  if (filtros.calle) return filtros.calle;
+  if (filtros.numero) return filtros.numero;
+  if (!filtros.raizId) return undefined;
+
+  return (
+    raices.find((raiz) => raiz.id === filtros.raizId)?.nombre ??
+    "el asentamiento elegido"
+  );
+};
 
 export default async function PaginaDeDomicilios({ searchParams }: Props) {
   const contexto = await contextoActual();

@@ -103,6 +103,7 @@ anteriores.
 | Suite completa | `pnpm test` — 307 archivos, 1524 tests en verde; `pnpm check` sin hallazgos |
 | Presupuesto | 1,387 lineas cambiadas contra el limite de 400, ~778 de ellas tests: pide `size:exception` de mantenedor |
 | Invariante verificado | `hermanos` acotado al subarbol se sostiene en `verificacionDeDomicilio.ts` (`exigirCallesDelAsentamiento`) mas `listarRaices` = `padreId IS NULL`: el asentamiento de una calle es la raiz abierta o un descendiente suyo, nunca un ancestro. Fijado por `subarbolDeDomicilios.integration.test.ts` |
+| Revision nativa | `review-00f7319e493f3149`, lente `review-reliability`, aprobada y quemada. Dos WARNING corregidos con test en RED primero: "Ver mas" pasaba `LIMITE_MAXIMO` y el `.max()` del esquema lo descartaba con `.catch(undefined)`, reiniciando a la primera pagina en silencio; y `filtroVisible` se rendia cuando `?raiz=` no estaba en `listarRaices` -una colonia, otro municipio, un id inexistente-, devolviendo el vacio inicial por otra puerta |
 | Frontera de rollback | Revertir ruta, pantalla, filtros, hrefs, el tipo del nodo, el SQL del subarbol y sus tests; no hay migracion ni Server Action |
 
 ## Fase 3: A2 — conteos inclusivos y calles propias

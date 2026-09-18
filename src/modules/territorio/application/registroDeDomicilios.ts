@@ -13,6 +13,14 @@ import type {
  */
 export const TAMANO_DE_PAGINA = 50;
 
+/**
+ * El tope de `?limite=`, que es un parametro de URL y por lo tanto entrada
+ * del cliente: sin cota, `?limite=9999999` pide el municipio entero en una
+ * respuesta. Vive aca y no en el esquema de la ruta porque "Ver mas" tiene
+ * que conocerlo para no ofrecer un link que el esquema va a rechazar.
+ */
+export const LIMITE_MAXIMO = TAMANO_DE_PAGINA * 40;
+
 export type SolicitudDeRegistroDeDomicilios = {
   readonly tx: Parameters<RepositorioDeDomicilios["registro"]>[0];
   readonly filtros: FiltrosDeRegistro;

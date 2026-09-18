@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   comoLugarId,
   type FiltrosDeRegistro,
-  TAMANO_DE_PAGINA,
+  LIMITE_MAXIMO,
 } from "@/modules/territorio";
 
 /**
@@ -34,7 +34,7 @@ const esquemaDeParametros = z.object({
     .number()
     .int()
     .positive()
-    .max(TAMANO_DE_PAGINA * 40)
+    .max(LIMITE_MAXIMO)
     .optional()
     .catch(undefined),
 });

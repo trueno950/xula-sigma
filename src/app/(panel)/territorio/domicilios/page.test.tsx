@@ -62,6 +62,26 @@ beforeEach(() => {
 
 describe("PaginaDeDomicilios", () => {
   /**
+   * `?raiz=` con un uuid que no es raiz del municipio -una colonia, uno de
+   * otro municipio, uno inexistente-: el filtro se aplico igual y el
+   * registro vuelve vacio, asi que el vacio tiene que seguir siendo por
+   * filtro. Buscar el nombre en `listarRaices` y rendirse si no esta
+   * reintroduce el vacio inicial por otra puerta.
+   */
+  it("una raiz que no esta en el catalogo sigue siendo vacio por filtro", async () => {
+    mocks.registroDeDomicilios.mockResolvedValue({
+      domicilios: [],
+      hayMas: false,
+    });
+
+    const html = await render({
+      raiz: "99999999-9999-4999-8999-999999999999",
+    });
+
+    expect(html).not.toContain("Todavia no hay domicilios registrados");
+  });
+
+  /**
    * El vacio por filtro de `estadoDeLista.ts`, que documenta el caso que lo
    * origino: confundirlo con el vacio inicial manda a dar de alta algo que
    * ya existe. Filtrar por asentamiento es filtrar, aunque el filtro no sea

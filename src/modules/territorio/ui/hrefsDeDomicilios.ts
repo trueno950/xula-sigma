@@ -1,5 +1,8 @@
 import type { FiltrosDeRegistro } from "../application/puertosDeDomicilios";
-import { TAMANO_DE_PAGINA } from "../application/registroDeDomicilios";
+import {
+  LIMITE_MAXIMO,
+  TAMANO_DE_PAGINA,
+} from "../application/registroDeDomicilios";
 
 type ParametrosDeListado = {
   readonly filtros?: FiltrosDeRegistro | undefined;
@@ -33,7 +36,9 @@ export function construirHrefDeDomicilios(
 
 /**
  * El link "Ver mas": mismos filtros, `limite` actual mas un tamano de
- * pagina. Nunca resta ni reinicia.
+ * pagina. Nunca resta ni reinicia -y se queda en `LIMITE_MAXIMO` en vez de
+ * pasarlo, porque el esquema de la ruta descarta lo que lo excede y la
+ * pantalla volveria a la primera pagina sin avisar.
  */
 export function hrefDeVerMasDeDomicilios(
   parametros: ParametrosDeListado,
@@ -42,6 +47,6 @@ export function hrefDeVerMasDeDomicilios(
 
   return construirHrefDeDomicilios({
     ...parametros,
-    limite: limiteActual + TAMANO_DE_PAGINA,
+    limite: Math.min(limiteActual + TAMANO_DE_PAGINA, LIMITE_MAXIMO),
   });
 }
