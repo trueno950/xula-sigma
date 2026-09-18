@@ -65,25 +65,50 @@ const nodos: readonly NodoDeSubarbol[] = [
 
 const colonia = { id: coloniaId, tipo: "colonia", nombre: "Centro" } as const;
 
+const calleDeLaColonia = { id: calleId, lugarId: coloniaId } as const;
+const calleDeLaManzana = { id: otraCalleId, lugarId: manzanaId } as const;
+
 describe("cuentasDeLugar", () => {
-  it("cuenta las calles del asentamiento en un nivel inferior", () => {
+  /** Antes contaba solo las directas: una colonia con todo en las manzanas
+   *  reportaba cero, que es el modo de falla que esta rebanada corrige. */
+  it("cuenta los domicilios de todo el subarbol, no solo los directos", () => {
+    const cuentas = cuentasDeLugar({ nodos, calles: [], nodo: colonia });
+
+    expect(cuentas.domicilios).toBe(3);
+  });
+
+  it("una colonia con todas sus direcciones en las manzanas las cuenta", () => {
+    const soloLaManzana = nodos.filter(
+      (nodo) => nodo.clase !== "domicilio" || nodo.lugarId === manzanaId,
+    );
+
     const cuentas = cuentasDeLugar({
-      nodos: [],
-      calles: [{ id: comoCalleId("22222222-2222-4222-8222-222222222222") }],
+      nodos: soloLaManzana,
+      calles: [],
+      nodo: colonia,
+    });
+
+    expect(cuentas.domicilios).toBe(1);
+  });
+
+  it("un nodo sin catalogo propio cuenta cero calles", () => {
+    const cuentas = cuentasDeLugar({
+      nodos,
+      calles: [calleDeLaColonia],
+      nodo: { id: manzanaId, tipo: "manzana", nombre: "Manzana 3" },
+    });
+
+    expect(cuentas.calles).toBe(0);
+  });
+
+  it("un nodo con catalogo propio cuenta solo sus calles", () => {
+    const cuentas = cuentasDeLugar({
+      nodos,
+      calles: [calleDeLaColonia, calleDeLaManzana],
       nodo: colonia,
     });
 
     expect(cuentas.calles).toBe(1);
-  });
-
-  /**
-   * El conteo sale del subarbol que la pagina ya trae: `page.tsx` dejo de
-   * cargar el listado plano del municipio (A1b-GREEN-03).
-   */
-  it("cuenta solo los domicilios colgados de ese nodo, no los del subarbol", () => {
-    const cuentas = cuentasDeLugar({ nodos, calles: [], nodo: colonia });
-
-    expect(cuentas.domicilios).toBe(2);
   });
 
   it("cuenta los lugares hijos directos", () => {
@@ -99,6 +124,9 @@ describe("domiciliosDirectosDe", () => {
       enColonia,
       hermano,
     ]);
+    expect(domiciliosDirectosDe(nodos, coloniaId)).not.toContainEqual(
+      enManzana,
+    );
   });
 
   it("trae la calle y el numero de cada nodo, sin el listado del municipio", () => {

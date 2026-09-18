@@ -88,9 +88,14 @@ describe("pestanasDePanel", () => {
     );
 
     expect(porClave.get("lugares")).toBe("Lugares: 3");
-    expect(porClave.get("calles")).toBe(
-      "Calles (catalogo del asentamiento): 1",
+    // Las dos etiquetas cambiaron con A2: la de calles decia "catalogo del
+    // asentamiento" cuando el numero era el catalogo entero y todos los
+    // nodos mostraban el mismo; la de domicilios decia "de este lugar"
+    // cuando solo contaba lo colgado directo. Un `aria-label` que sobrevive
+    // al cambio del numero que describe le miente a quien no ve la pantalla.
+    expect(porClave.get("calles")).toBe("Calles (de este lugar): 1");
+    expect(porClave.get("domicilios")).toBe(
+      "Domicilios (de este lugar y lo que contiene): 0",
     );
-    expect(porClave.get("domicilios")).toBe("Domicilios (de este lugar): 0");
   });
 });
