@@ -3,14 +3,61 @@ import { puedeAdministrarTerritorio } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
+import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
+  CalleConDomiciliosError,
   type CalleId,
   CatalogoDeCallesSoloEnAsentamientosError,
   type LugarId,
   puedeTenerCatalogoDeCalles,
 } from "../domain";
-import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
+import type {
+  CalleGuardada,
+  RepositorioDeCalles,
+  RepositorioDeLugares,
+} from "./puertos";
+
+type DatosDeDestino = {
+  repositorio: RepositorioDeCalles;
+  repositorioDeLugares: RepositorioDeLugares;
+  tx: TransaccionTenant;
+  existente: CalleGuardada;
+  nuevoLugarId: LugarId;
+};
+
+/**
+ * Valida el destino y, si de verdad cambia de asentamiento, que la calle no
+ * tenga domicilios colgados -esos domicilios se quedarian con el lugarId
+ * viejo, apuntando a una calle que ya vive en otro lugar.
+ */
+async function exigirDestinoValido({
+  repositorio,
+  repositorioDeLugares,
+  tx,
+  existente,
+  nuevoLugarId,
+}: DatosDeDestino) {
+  const destino = await repositorioDeLugares.buscarPorId(tx, nuevoLugarId);
+  if (!destino) throw new NoEncontradoError();
+  if (!puedeTenerCatalogoDeCalles(destino.tipo)) {
+    throw new CatalogoDeCallesSoloEnAsentamientosError();
+  }
+
+  if (destino.id !== existente.lugarId) {
+    const domicilios = await repositorio.contarDomiciliosQueLaUsan(
+      tx,
+      existente.id,
+    );
+    if (domicilios > 0) {
+      throw new CalleConDomiciliosError(
+        "La calle tiene domicilios y no se puede mover a otro asentamiento.",
+      );
+    }
+  }
+
+  return destino;
+}
 
 export function crearReparentearCalle(
   repositorio: RepositorioDeCalles,
@@ -31,11 +78,13 @@ export function crearReparentearCalle(
         throw new NoEncontradoError();
       }
 
-      const destino = await repositorioDeLugares.buscarPorId(tx, nuevoLugarId);
-      if (!destino) throw new NoEncontradoError();
-      if (!puedeTenerCatalogoDeCalles(destino.tipo)) {
-        throw new CatalogoDeCallesSoloEnAsentamientosError();
-      }
+      const destino = await exigirDestinoValido({
+        repositorio,
+        repositorioDeLugares,
+        tx,
+        existente,
+        nuevoLugarId,
+      });
 
       const actualizada = await repositorio.actualizar(tx, {
         id,
