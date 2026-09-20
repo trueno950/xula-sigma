@@ -27,6 +27,7 @@ describe("listarCalles", () => {
     bloquearPorId: vi.fn(),
     actualizar: vi.fn(),
     contarDomiciliosQueLaUsan: vi.fn(),
+    contarZonasQueLaUsan: vi.fn().mockResolvedValue(0),
     listarPorLugar: vi.fn(),
     registrarEventoDeAlta: vi.fn(),
     registrarEventoDeRenombre: vi.fn(),

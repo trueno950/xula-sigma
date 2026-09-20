@@ -2,6 +2,7 @@ import { and, count, eq, isNull, or } from "drizzle-orm";
 import type { RepositorioDeCalles } from "../application/puertos";
 import { NombreDeCalleDuplicadoError } from "../domain";
 import { calles, domicilios, eventosDeCalles } from "./esquema";
+import { callesDeZonas } from "./esquemaDeCallesDeZonas";
 import {
   aCalleGuardada,
   columnasDeLecturaDeCalle as columnasDeLectura,
@@ -107,6 +108,15 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
           eq(domicilios.entreCalleBId, calleId),
         ),
       );
+
+    return Number(fila?.total ?? 0);
+  },
+
+  async contarZonasQueLaUsan(tx, calleId) {
+    const [fila] = await tx
+      .select({ total: count() })
+      .from(callesDeZonas)
+      .where(eq(callesDeZonas.calleId, calleId));
 
     return Number(fila?.total ?? 0);
   },

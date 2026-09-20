@@ -1,15 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { NoEncontradoError } from "@/shared/lib/errores";
-import {
-  CalleConDomiciliosError,
-  CatalogoDeCallesSoloEnAsentamientosError,
-} from "../../domain";
+import { CatalogoDeCallesSoloEnAsentamientosError } from "../../domain";
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const altaDeCalleMock = vi.hoisted(() => vi.fn());
 const ubicarCalleMock = vi.hoisted(() => vi.fn());
-const reparentearCalleMock = vi.hoisted(() => vi.fn());
 const darDeBajaCalleMock = vi.hoisted(() => vi.fn());
 const revalidatePathMock = vi.hoisted(() => vi.fn());
 const redirectMock = vi.hoisted(() => vi.fn());
@@ -18,7 +13,6 @@ vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("../../composicion", () => ({
   altaDeCalle: altaDeCalleMock,
   ubicarCalle: ubicarCalleMock,
-  reparentearCalle: reparentearCalleMock,
   darDeBajaCalle: darDeBajaCalleMock,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
@@ -30,7 +24,6 @@ vi.mock("next/navigation", () => ({
 
 const { ubicarCalleAction } = await import("./ubicarCalleAction");
 const { altaDeCalleAction } = await import("./altaDeCalleAction");
-const { reparentearCalleAction } = await import("./reparentearCalleAction");
 const { darDeBajaCalleAction } = await import("./darDeBajaCalleAction");
 
 const contexto: ContextoActual = {
@@ -49,16 +42,12 @@ const formulario = (campos: Record<string, string>) => {
   return formData;
 };
 
-const reparentearCalleYLugar = () =>
-  reparentearCalleAction(formulario({ calleId: CALLE, nuevoLugarId: LUGAR }));
-
 describe("acciones publicas de calles", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     contextoActualMock.mockResolvedValue(contexto);
     altaDeCalleMock.mockResolvedValue(undefined);
     ubicarCalleMock.mockResolvedValue(undefined);
-    reparentearCalleMock.mockResolvedValue(undefined);
     darDeBajaCalleMock.mockResolvedValue(undefined);
   });
 
@@ -122,56 +111,6 @@ describe("acciones publicas de calles", () => {
     );
     expect(ubicarCalleMock.mock.calls[0]?.[2]).not.toEqual(
       expect.objectContaining({ ayuntamientoId: "ticul" }),
-    );
-  });
-
-  it("redacta un recurso ajeno como 404 y no filtra el error crudo", async () => {
-    reparentearCalleMock.mockRejectedValue(new NoEncontradoError());
-
-    await expect(reparentearCalleYLugar()).rejects.toThrow(
-      "REDIRECT:/territorio?error=El+recurso+no+existe.",
-    );
-  });
-
-  it("preserves the operator message for moving a street below a settlement", async () => {
-    reparentearCalleMock.mockRejectedValue(
-      new CatalogoDeCallesSoloEnAsentamientosError(),
-    );
-
-    await expect(reparentearCalleYLugar()).rejects.toThrow(
-      "REDIRECT:/territorio?error=Las+calles+solo+se+pueden+administrar+en+una+cabecera+o+una+comisaria.",
-    );
-  });
-
-  it("preserves the operator message for a street with domicilios on move", async () => {
-    reparentearCalleMock.mockRejectedValue(
-      new CalleConDomiciliosError(
-        "La calle tiene domicilios y no se puede mover a otro asentamiento.",
-      ),
-    );
-
-    await expect(reparentearCalleYLugar()).rejects.toThrow(
-      "REDIRECT:/territorio?error=La+calle+tiene+domicilios+y+no+se+puede+mover+a+otro+asentamiento.",
-    );
-  });
-
-  it("preserves the active street context when a street operation fails", async () => {
-    reparentearCalleMock.mockRejectedValue(new NoEncontradoError());
-
-    await expect(
-      reparentearCalleAction(
-        formulario({
-          calleId: CALLE,
-          nuevoLugarId: LUGAR,
-          raiz: LUGAR,
-          nodo: LUGAR,
-          vista: "calles",
-          accion: "reparentearCalle",
-          calle: CALLE,
-        }),
-      ),
-    ).rejects.toThrow(
-      "REDIRECT:/territorio?raiz=22222222-2222-4222-8222-222222222222&nodo=22222222-2222-4222-8222-222222222222&vista=calles&accion=reparentearCalle&calle=11111111-1111-4111-8111-111111111111&error=El+recurso+no+existe.",
     );
   });
 

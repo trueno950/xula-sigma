@@ -149,3 +149,14 @@ export class CalleConDomiciliosError extends Error {
     this.name = "CalleConDomiciliosError";
   }
 }
+
+export class CalleEnZonaError extends Error {
+  readonly codigo = "CALLE_EN_ZONA";
+
+  constructor(
+    mensaje = "La calle pertenece a una zona y no se puede cambiar de asentamiento.",
+  ) {
+    super(mensaje);
+    this.name = "CalleEnZonaError";
+  }
+}

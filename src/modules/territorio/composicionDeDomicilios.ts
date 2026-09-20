@@ -9,7 +9,9 @@ import {
   crearRegistroDeDomicilios,
   type FiltrosDeRegistro,
 } from "./application";
+import { crearDomiciliosDeZona } from "./application/crearDomiciliosDeZona";
 import {
+  repositorioDeCallesDeZonasSql,
   repositorioDeCallesSql,
   repositorioDeDomiciliosSql,
   repositorioDeLugaresSql,
@@ -25,6 +27,10 @@ import {
 
 export const listarDomicilios = crearListarDomicilios(
   repositorioDeDomiciliosSql,
+);
+
+export const domiciliosDeZona = crearDomiciliosDeZona(
+  repositorioDeCallesDeZonasSql,
 );
 
 const registroEnTransaccion = crearRegistroDeDomicilios(
