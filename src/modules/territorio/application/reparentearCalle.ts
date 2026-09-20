@@ -7,6 +7,7 @@ import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
   CalleConDomiciliosError,
+  CalleEnZonaError,
   type CalleId,
   CatalogoDeCallesSoloEnAsentamientosError,
   type LugarId,
@@ -54,6 +55,9 @@ async function exigirDestinoValido({
         "La calle tiene domicilios y no se puede mover a otro asentamiento.",
       );
     }
+
+    const zonas = await repositorio.contarZonasQueLaUsan(tx, existente.id);
+    if (zonas > 0) throw new CalleEnZonaError();
   }
 
   return destino;

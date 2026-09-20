@@ -146,6 +146,10 @@ export type RepositorioDeCalles = {
     tx: TransaccionTenant,
     calleId: CalleId,
   ): Promise<number>;
+  contarZonasQueLaUsan(
+    tx: TransaccionTenant,
+    calleId: CalleId,
+  ): Promise<number>;
   /** Calles activas (`bajaEn IS NULL`) de un lugar, para el catalogo y `SelectorDeCalle`. */
   listarPorLugar(
     tx: TransaccionTenant,
