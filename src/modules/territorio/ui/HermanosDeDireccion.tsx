@@ -4,17 +4,22 @@ import { direccionDe } from "./vistaDeDomicilios";
 
 type Props = {
   raizId: LugarId;
-  nodoId: LugarId;
   /** Lo minimo para dibujar y enlazar: el nodo del subarbol lo tiene. */
   hermanos: readonly {
     id: DomicilioId;
+    lugarId: LugarId;
     calle: string;
     numero: string | null;
   }[];
 };
 
-/** Las otras direcciones vivas con la misma calle y numero, cada una a su panel. */
-export function HermanosDeDireccion({ raizId, nodoId, hermanos }: Props) {
+/**
+ * Las otras direcciones vivas con la misma calle y numero, cada una a su
+ * propio panel: un hermano puede colgar de otro lugar del subarbol -otra
+ * colonia, otra manzana- y enlazarlo con el nodo abierto lo manda a un
+ * domicilio que ese panel no reconoce como suyo.
+ */
+export function HermanosDeDireccion({ raizId, hermanos }: Props) {
   if (hermanos.length === 0) return null;
 
   return (
@@ -30,7 +35,7 @@ export function HermanosDeDireccion({ raizId, nodoId, hermanos }: Props) {
             <a
               href={rutaDe({
                 raizId,
-                nodoId,
+                nodoId: hermano.lugarId,
                 vista: "domicilios",
                 domicilioId: hermano.id,
               })}

@@ -117,11 +117,7 @@ export function PanelDeDomicilio({
         </details>
       ) : null}
 
-      <HermanosDeDireccion
-        raizId={raizId}
-        nodoId={nodoId}
-        hermanos={hermanos}
-      />
+      <HermanosDeDireccion raizId={raizId} hermanos={hermanos} />
 
       {accionAbierta === "corregirDomicilio" ? (
         <FormularioDeCorreccionDeDomicilio
