@@ -9,6 +9,7 @@ import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { reparentearCalle } from "../../composicion";
 import {
   CalleConDomiciliosError,
+  CalleEnZonaError,
   CatalogoDeCallesSoloEnAsentamientosError,
   comoCalleId,
   comoLugarId,
@@ -31,6 +32,7 @@ const mensajeDeError = (error: unknown): string => {
   }
   if (error instanceof NombreDeCalleDuplicadoError) return error.message;
   if (error instanceof CalleConDomiciliosError) return error.message;
+  if (error instanceof CalleEnZonaError) return error.message;
 
   console.error(
     "[territorio] reparenteo de calle fallo",
