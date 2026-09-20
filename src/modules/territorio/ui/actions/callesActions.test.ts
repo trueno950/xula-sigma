@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoEncontradoError } from "@/shared/lib/errores";
-import { CatalogoDeCallesSoloEnAsentamientosError } from "../../domain";
+import {
+  CalleConDomiciliosError,
+  CatalogoDeCallesSoloEnAsentamientosError,
+} from "../../domain";
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const altaDeCalleMock = vi.hoisted(() => vi.fn());
@@ -45,6 +48,9 @@ const formulario = (campos: Record<string, string>) => {
     formData.set(clave, valor);
   return formData;
 };
+
+const reparentearCalleYLugar = () =>
+  reparentearCalleAction(formulario({ calleId: CALLE, nuevoLugarId: LUGAR }));
 
 describe("acciones publicas de calles", () => {
   beforeEach(() => {
@@ -122,11 +128,9 @@ describe("acciones publicas de calles", () => {
   it("redacta un recurso ajeno como 404 y no filtra el error crudo", async () => {
     reparentearCalleMock.mockRejectedValue(new NoEncontradoError());
 
-    await expect(
-      reparentearCalleAction(
-        formulario({ calleId: CALLE, nuevoLugarId: LUGAR }),
-      ),
-    ).rejects.toThrow("REDIRECT:/territorio?error=El+recurso+no+existe.");
+    await expect(reparentearCalleYLugar()).rejects.toThrow(
+      "REDIRECT:/territorio?error=El+recurso+no+existe.",
+    );
   });
 
   it("preserves the operator message for moving a street below a settlement", async () => {
@@ -134,12 +138,20 @@ describe("acciones publicas de calles", () => {
       new CatalogoDeCallesSoloEnAsentamientosError(),
     );
 
-    await expect(
-      reparentearCalleAction(
-        formulario({ calleId: CALLE, nuevoLugarId: LUGAR }),
-      ),
-    ).rejects.toThrow(
+    await expect(reparentearCalleYLugar()).rejects.toThrow(
       "REDIRECT:/territorio?error=Las+calles+solo+se+pueden+administrar+en+una+cabecera+o+una+comisaria.",
+    );
+  });
+
+  it("preserves the operator message for a street with domicilios on move", async () => {
+    reparentearCalleMock.mockRejectedValue(
+      new CalleConDomiciliosError(
+        "La calle tiene domicilios y no se puede mover a otro asentamiento.",
+      ),
+    );
+
+    await expect(reparentearCalleYLugar()).rejects.toThrow(
+      "REDIRECT:/territorio?error=La+calle+tiene+domicilios+y+no+se+puede+mover+a+otro+asentamiento.",
     );
   });
 

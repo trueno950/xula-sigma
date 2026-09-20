@@ -5,6 +5,7 @@ import type {
 } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import type { CalleId, DomicilioId, LugarId } from "../domain";
+import { descendientesDe } from "./conteo";
 import type {
   AccionDeNodo,
   CuentasDeLugar,
@@ -115,8 +116,16 @@ export const hermanosDeDireccion = (
  * cuatro tienen que verse a la vez en la cabecera, y una pestana solo sabe
  * de lo suyo.
  *
- * Las calles se cuentan siempre: la pestana lista el catalogo que el lugar
- * puede usar, aunque el catalogo sea de su asentamiento.
+ * Domicilios: coexiste con `domiciliosDirectosDe`, que contesta otra
+ * pregunta -que filas lista la pestana- y por eso `TabDeDomicilios` la
+ * sigue usando en vez de esta.
+ *
+ * Calles: solo las que el nodo tiene por suyas (`lugarId === nodo.id`). La
+ * pestana sigue listando el catalogo heredado del asentamiento -de solo
+ * lectura, para que un domicilio se cree contra una calle suya-, pero el
+ * numero de la pestana dice "calles de este nodo", no "catalogo que puede
+ * usar" (`TabDeCalles.tsx` explica ese listado). Antes contaba el catalogo
+ * entero y todos los nodos mostraban el mismo numero.
  */
 export const cuentasDeLugar = ({
   nodos,
@@ -124,11 +133,23 @@ export const cuentasDeLugar = ({
   nodo,
 }: {
   nodos: readonly NodoDeSubarbol[];
-  calles: readonly Pick<CalleGuardada, "id">[];
+  calles: readonly Pick<CalleGuardada, "id" | "lugarId">[];
   nodo: NodoSeleccionado;
-}): CuentasDeLugar => ({
-  lugares: nodos.filter((n) => n.clase === "lugar" && n.padreId === nodo.id)
-    .length,
-  calles: calles.length,
-  domicilios: domiciliosDirectosDe(nodos, nodo.id).length,
-});
+}): CuentasDeLugar => {
+  const lugares = nodos.filter(
+    (n): n is Extract<NodoDeSubarbol, { clase: "lugar" }> =>
+      n.clase === "lugar",
+  );
+  const bajo = new Set<string>([
+    nodo.id,
+    ...descendientesDe([nodo.id], lugares),
+  ]);
+
+  return {
+    lugares: lugares.filter((n) => n.padreId === nodo.id).length,
+    calles: calles.filter((calle) => calle.lugarId === nodo.id).length,
+    domicilios: nodos.filter(
+      (n): n is NodoDomicilio => n.clase === "domicilio" && bajo.has(n.lugarId),
+    ).length,
+  };
+};

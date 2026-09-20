@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { masAdentroDe } from "./conteo";
+import { descendientesDe, masAdentroDe } from "./conteo";
+
+const arbol = [
+  { id: "raiz", padreId: null },
+  { id: "hijo", padreId: "raiz" },
+  { id: "nieto", padreId: "hijo" },
+  { id: "bisnieto", padreId: "nieto" },
+];
 
 describe("masAdentroDe", () => {
-  const arbol = [
-    { id: "raiz", padreId: null },
-    { id: "hijo", padreId: "raiz" },
-    { id: "nieto", padreId: "hijo" },
-    { id: "bisnieto", padreId: "nieto" },
-  ];
-
   it("cuenta todos los niveles, no solo el primero", () => {
     expect(masAdentroDe(["hijo"], arbol)).toBe(2);
   });
@@ -28,5 +28,28 @@ describe("masAdentroDe", () => {
     ];
 
     expect(masAdentroDe(["a"], enCiclo)).toBe(1);
+  });
+});
+
+describe("descendientesDe", () => {
+  it("devuelve todos los niveles, no solo el primero", () => {
+    expect(descendientesDe(["hijo"], arbol)).toEqual(["nieto", "bisnieto"]);
+  });
+
+  it("no incluye los ids de partida entre los descendientes", () => {
+    expect(descendientesDe(["hijo"], arbol)).not.toContain("hijo");
+  });
+
+  it("no repite un id alcanzado ni uno que ya venia dado", () => {
+    expect(descendientesDe(["hijo", "nieto"], arbol)).toEqual(["bisnieto"]);
+  });
+
+  it("un ciclo en `padreId` no cuelga el recorrido", () => {
+    const enCiclo = [
+      { id: "a", padreId: "b" },
+      { id: "b", padreId: "a" },
+    ];
+
+    expect(descendientesDe(["a"], enCiclo)).toEqual(["b"]);
   });
 });

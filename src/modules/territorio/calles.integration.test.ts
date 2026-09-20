@@ -11,6 +11,7 @@ import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearDarDeBajaCalle } from "./application/darDeBajaCalle";
 import { crearReparentearCalle } from "./application/reparentearCalle";
 import {
+  CalleConDomiciliosError,
   type CalleId,
   comoCalleId,
   type DomicilioId,
@@ -148,23 +149,21 @@ describe("persistencia de coordenadas y estado de calles", () => {
     });
   });
 
-  it("reparentear una calle conserva intactos sus domicilios", async () => {
+  /** Antes movia la calle y dejaba domicilio.lugarId apuntando al origen. */
+  it("rechaza mover una calle a otro asentamiento si tiene domicilios colgados", async () => {
     const lugarOrigen = await crearLugar("comisaria", "Origen con domicilio");
     const lugarDestino = await crearLugar("comisaria", "Destino con domicilio");
     const calleId = await crearCalle(lugarOrigen, "Calle con domicilio");
     const domicilioId = await crearDomicilioEnCalle(lugarOrigen, calleId);
 
-    const domicilioAntes = await leerDomicilio(domicilioId);
-    if (!domicilioAntes)
-      throw new Error("El domicilio de prueba no fue creado.");
-
-    await reparentearCalle(calleId, lugarDestino, contextoDe());
+    await expect(
+      reparentearCalle(calleId, lugarDestino, contextoDe()),
+    ).rejects.toBeInstanceOf(CalleConDomiciliosError);
 
     const calleDespues = await leerCalle(calleId);
     const domicilioDespues = await leerDomicilio(domicilioId);
 
-    expect(calleDespues?.lugarId).toBe(lugarDestino);
-    expect(domicilioDespues).toEqual(domicilioAntes);
+    expect(calleDespues?.lugarId).toBe(lugarOrigen);
     expect(domicilioDespues?.lugarId).toBe(lugarOrigen);
   });
 

@@ -41,8 +41,19 @@ async function escribirMudanza(
     contexto,
   } = datos;
 
-  const domicilio = await repositorioDeDomicilios.buscarPorId(tx, domicilioId);
-  if (!domicilio) throw new NoEncontradoError();
+  /**
+   * `bloquearPorId`, no `buscarPorId`: una baja concurrente toma el mismo
+   * lock antes de decidir si hay residentes. Sin compartir el lock, la
+   * mudanza podia leer "activo" antes de que la baja terminara y escribir
+   * la residencia igual despues, aunque la baja ya hubiera ganado la
+   * carrera -`residencias_domicilio_tenant_fk` hace esperar el INSERT,
+   * pero la decision ya estaba tomada con datos viejos.
+   */
+  const domicilio = await repositorioDeDomicilios.bloquearPorId(
+    tx,
+    domicilioId,
+  );
+  if (!domicilio || domicilio.bajaEn !== null) throw new NoEncontradoError();
 
   const trazar = (accion: string, entidadId: ResidenciaId) =>
     registrar(tx, {
