@@ -16,6 +16,7 @@ type Identificador<N extends string> = string & { readonly [marca]: N };
 
 export type LugarId = Identificador<"LugarId">;
 export type CalleId = Identificador<"CalleId">;
+export type ZonaId = Identificador<"ZonaId">;
 export type DomicilioId = Identificador<"DomicilioId">;
 export type ResidenciaId = Identificador<"ResidenciaId">;
 
@@ -33,5 +34,6 @@ const fabricaDeConstructor =
 
 export const comoLugarId = fabricaDeConstructor("LugarId");
 export const comoCalleId = fabricaDeConstructor("CalleId");
+export const comoZonaId = fabricaDeConstructor("ZonaId");
 export const comoDomicilioId = fabricaDeConstructor("DomicilioId");
 export const comoResidenciaId = fabricaDeConstructor("ResidenciaId");

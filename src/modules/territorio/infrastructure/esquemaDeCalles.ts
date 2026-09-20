@@ -84,6 +84,7 @@ export const calles = pgTable(
   (t) => [
     index("calles_tenant_idx").on(t.ayuntamientoId),
     unique("calles_id_tenant_key").on(t.id, t.ayuntamientoId),
+    unique("calles_id_lugar_tenant_key").on(t.id, t.lugarId, t.ayuntamientoId),
     foreignKey({
       columns: [t.lugarId, t.ayuntamientoId],
       foreignColumns: [lugares.id, lugares.ayuntamientoId],

@@ -21,6 +21,8 @@ import { calles, lugares } from "./esquemaDeCalles";
  * que las tablas partidas en hermanos se reexportan aca.
  */
 export { calles, eventosDeCalles, lugares } from "./esquemaDeCalles";
+export { callesDeZonas } from "./esquemaDeCallesDeZonas";
+export { zonas } from "./esquemaDeZonas";
 
 export const domicilios = pgTable(
   "domicilios",
