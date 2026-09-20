@@ -269,6 +269,17 @@ aplicar este cambio.
 - Coordinacion: B1 espera que mapa-operativo-territorial cierre U3 o asiente
   migracion de eventos_de_calles, para no crear linajes hermanos en
   drizzle/meta/_journal.json.
+- Decision diferida a B3u (revision local del PR #65, `pnpm revision:local:pr`,
+  verificada antes de descartarla): `repositorioDeCallesDeZonasSql.domiciliosDeZona`
+  no filtra `zonas.bajaEn IS NULL` -una zona dada de baja seguiria devolviendo
+  sus domicilios. No se agrega el filtro en B1 porque hoy no hay ningun caller
+  real (B3u es quien construye la pantalla que llama a `domiciliosDeZona`, y
+  ahi se decide si el 404 de "zona dada de baja" va antes de llegar a esta
+  funcion o si ademas hace falta el filtro aca). `contarZonasQueLaUsan` -que
+  bloquea `reparentearCalle`- tampoco filtra `zonas.bajaEn`, pero eso SI se
+  reviso y se dejo a proposito: `contarDomiciliosQueLaUsan`, el metodo hermano
+  que ya existia y que este imita, tampoco filtra `domicilios.bajaEn`. Cambiar
+  uno sin el otro habria sido la inconsistencia real.
 
 ## Cierre y verificacion transversal
 
