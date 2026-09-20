@@ -47,12 +47,10 @@ const residenciaAbiertaId = comoResidenciaId(
   "55555555-5555-4555-8555-555555555555",
 );
 
-/**
- * `registrarMudanza` solo necesita saber que el domicilio existe -no lee
- * ninguno de sus campos-, asi que el resto de `DomicilioGuardado` no
- * importa para este test.
- */
-const domicilioGuardado = { id: domicilioId } as DomicilioGuardado;
+const domicilioGuardado = {
+  id: domicilioId,
+  bajaEn: null,
+} as DomicilioGuardado;
 
 describe("registrarMudanza", () => {
   const repositorio: RepositorioDeResidencias = {
@@ -86,7 +84,7 @@ describe("registrarMudanza", () => {
         return trabajo({});
       },
     );
-    vi.mocked(repositorioDeDomicilios.buscarPorId).mockResolvedValue(
+    vi.mocked(repositorioDeDomicilios.bloquearPorId).mockResolvedValue(
       domicilioGuardado,
     );
     lecturaDePersonas = {
@@ -129,7 +127,22 @@ describe("registrarMudanza", () => {
   });
 
   it("un domicilioId de otro tenant o inexistente rechaza como NoEncontradoError sin abrir ni cerrar", async () => {
-    vi.mocked(repositorioDeDomicilios.buscarPorId).mockResolvedValue(null);
+    vi.mocked(repositorioDeDomicilios.bloquearPorId).mockResolvedValue(null);
+
+    await expect(
+      registrarMudanza()(personaId, domicilioId, contextoCon("OPERADOR")),
+    ).rejects.toBeInstanceOf(NoEncontradoError);
+
+    expect(repositorio.abrir).not.toHaveBeenCalled();
+    expect(repositorio.cerrarAbierta).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("un domicilio dado de baja rechaza como NoEncontradoError sin abrir ni cerrar", async () => {
+    vi.mocked(repositorioDeDomicilios.bloquearPorId).mockResolvedValue({
+      ...domicilioGuardado,
+      bajaEn: new Date("2020-01-01"),
+    });
 
     await expect(
       registrarMudanza()(personaId, domicilioId, contextoCon("OPERADOR")),

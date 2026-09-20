@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { altaDePersona } from "@/modules/padron";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import {
+  enTransaccionParalela,
   limpiar,
   motivoDeFalla,
   motul,
@@ -139,5 +140,50 @@ describe("registrarMudanza", () => {
 
     const filas = await residenciasDe(personaId);
     expect(filas).toHaveLength(1);
+  });
+
+  /**
+   * `residencias_domicilio_tenant_fk` ya hace esperar el INSERT de la
+   * mudanza mientras la baja tiene el domicilio bloqueado -eso no es lo que
+   * este test prueba-. Lo que prueba es que, una vez liberado el lock, la
+   * mudanza no siga adelante con una decision tomada antes del bloqueo: si
+   * lee el domicilio sin `FOR UPDATE`, ya decidio "esta activo" con datos
+   * viejos y inserta la residencia igual, aunque la baja haya ganado la
+   * carrera.
+   */
+  it("una mudanza no crea una residencia si el domicilio se da de baja mientras espera", async () => {
+    const { id: personaId } = await personaDePrueba("Carrera");
+    const domicilioId = await domicilioDePrueba("Calle Carrera");
+
+    let empezarBaja: () => void = () => {};
+    const puedeEmpezarBaja = new Promise<void>((resolve) => {
+      empezarBaja = resolve;
+    });
+
+    // Misma conexion real y propia que el test de folios: el pool de
+    // `withTenant` tiene una sola conexion en integracion (design.md
+    // seccion 6), y dos llamadas por ese pool nunca se cruzan de verdad.
+    const bajaParalela = enTransaccionParalela(motul, async (tx) => {
+      await tx`SELECT id FROM domicilios WHERE id = ${domicilioId} FOR UPDATE`;
+      await puedeEmpezarBaja;
+      await tx`UPDATE domicilios SET baja_en = now() WHERE id = ${domicilioId}`;
+    });
+
+    // Le da tiempo a la paralela de tomar el lock antes de la mudanza real.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const mudanza = registrarMudanza(personaId, domicilioId, contextoDe());
+
+    // Le da tiempo a la mudanza de leer el domicilio y quedar esperando en
+    // el INSERT -o en su propio lock, si ya esta arreglado- antes de que la
+    // baja gane la carrera.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    empezarBaja();
+    await bajaParalela;
+
+    await expect(mudanza).rejects.toBeInstanceOf(NoEncontradoError);
+
+    const filas = await residenciasDe(personaId);
+    expect(filas).toHaveLength(0);
   });
 });
