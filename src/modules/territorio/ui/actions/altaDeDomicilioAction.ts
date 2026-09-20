@@ -20,7 +20,7 @@ import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const esquemaDeEntrada = z.object({
   calleId: z.string().trim().uuid(),
-  zonaId: z.union([z.literal(""), z.string().trim().uuid()]),
+  lugarId: z.union([z.literal(""), z.string().trim().uuid()]),
   numero: z.string().trim().optional(),
   entreCalleAId: z.union([z.literal(""), z.string().trim().uuid()]),
   entreCalleBId: z.union([z.literal(""), z.string().trim().uuid()]),
@@ -30,8 +30,8 @@ const MENSAJE_FORMULARIO_INVALIDO = "La calle es obligatoria.";
 const MENSAJE_GENERICO = "No se pudo completar el alta. Intente de nuevo.";
 
 /** Sin zona no se declara nada: el caso de uso la deriva de la calle. */
-const zonaDeclarada = (datos: { zonaId: string }): readonly LugarId[] =>
-  datos.zonaId ? [comoLugarId(datos.zonaId)] : [];
+const zonaDeclarada = (datos: { lugarId: string }): readonly LugarId[] =>
+  datos.lugarId ? [comoLugarId(datos.lugarId)] : [];
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -52,7 +52,7 @@ const mensajeDeError = (error: unknown): string => {
 export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
   const analisis = esquemaDeEntrada.safeParse({
     calleId: formData.get("calleId"),
-    zonaId: formData.get("zonaId") ?? "",
+    lugarId: formData.get("lugarId") ?? "",
     numero: formData.get("numero") ?? undefined,
     entreCalleAId: formData.get("entreCalleAId") ?? "",
     entreCalleBId: formData.get("entreCalleBId") ?? "",

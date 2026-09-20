@@ -117,7 +117,7 @@ const resumenDeGuardado = (
 };
 
 /** Las opciones de zona: los niveles del alcance, con su camino completo. */
-export const opcionesDeZona = (
+export const opcionesDeNivel = (
   lugares: readonly LugarConPadre[],
   asentamiento?: Asentamiento | undefined,
 ): readonly OpcionDeLista[] =>
@@ -144,7 +144,7 @@ export const opcionesDeCallesDelMunicipio = (
     etiqueta: etiquetaDeCamino(calle.nombre, [calle.asentamiento]),
   }));
 
-export type ZonaDelFormulario = {
+export type NivelDelFormulario = {
   opciones: readonly OpcionDeLista[];
   /** El primer `<option>`: el asentamiento, o "Sin zona" cuando no se conoce. */
   marcador: string;
@@ -158,8 +158,8 @@ export const zonaConInicial = (
   lugares: readonly LugarConPadre[],
   asentamiento: Asentamiento | undefined,
   inicial: LugarId | "",
-): ZonaDelFormulario => ({
-  opciones: opcionesDeZona(lugares, asentamiento),
+): NivelDelFormulario => ({
+  opciones: opcionesDeNivel(lugares, asentamiento),
   marcador: asentamiento ? `Sin zona: ${asentamiento.nombre}` : "Sin zona",
   inicial,
   resumen: resumenDeGuardado(lugares, asentamiento, inicial),
@@ -169,7 +169,7 @@ export const zonaDelFormulario = (
   lugares: readonly LugarConPadre[],
   asentamiento: Asentamiento | undefined,
   lugarActual: { id: LugarId; tipo: TipoDeLugar } | undefined,
-): ZonaDelFormulario => {
+): NivelDelFormulario => {
   const inicial =
     lugarActual && !puedeTenerCatalogoDeCalles(lugarActual.tipo)
       ? lugarActual.id

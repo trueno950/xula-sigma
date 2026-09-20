@@ -13,7 +13,6 @@ vi.mock("./PanelDeCalle", () => ({
 }));
 
 const { TabDeCalles } = await import("./TabDeCalles");
-const { TabDeDomicilios } = await import("./TabDeDomicilios");
 
 const raizId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const nodoId = comoLugarId("22222222-2222-4222-8222-222222222222");
@@ -137,26 +136,5 @@ describe("Territorio streets empty state", () => {
     expect(html).toContain("Calle del asentamiento");
     expect(html).not.toContain("Administrar el catalogo");
     expect(html).not.toContain("<a");
-  });
-
-  it("uses the settlement street catalog when capturing a lower-level domicile", () => {
-    const html = renderToStaticMarkup(
-      <TabDeDomicilios
-        {...base}
-        lugar={{ ...base.lugar, tipo: "colonia" }}
-        calles={[
-          {
-            id: comoCalleId("33333333-3333-4333-8333-333333333333"),
-            nombre: "Calle del asentamiento",
-            lugarId: raizId,
-            punto: null,
-          },
-        ]}
-        accion="domicilio"
-        permisos={permisosDeTerritorio("OPERADOR")}
-      />,
-    );
-
-    expect(html).toContain("Calle del asentamiento");
   });
 });

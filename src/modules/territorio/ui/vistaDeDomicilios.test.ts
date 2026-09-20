@@ -5,7 +5,7 @@ import {
   etiquetaDeCamino,
   type LugarConPadre,
   opcionesDeCallesDelMunicipio,
-  opcionesDeZona,
+  opcionesDeNivel,
   zonaDelFormulario,
 } from "./vistaDeDomicilios";
 
@@ -47,9 +47,9 @@ describe("caminoDeLugar", () => {
   });
 });
 
-describe("opcionesDeZona", () => {
+describe("opcionesDeNivel", () => {
   it("lista solo niveles de zona, ordenados por camino", () => {
-    expect(opcionesDeZona(lugares).map(({ etiqueta }) => etiqueta)).toEqual([
+    expect(opcionesDeNivel(lugares).map(({ etiqueta }) => etiqueta)).toEqual([
       "Pablo — Tepakan",
       "2 — Tepakan › Pablo",
       "San Pedro — Tepakan › Pablo › 2",
@@ -60,7 +60,7 @@ describe("opcionesDeZona", () => {
     const sinAsentamiento = lugares.filter((lugar) => lugar.id !== tepakanId);
 
     expect(
-      opcionesDeZona(sinAsentamiento, tepakan).map(({ etiqueta }) => etiqueta),
+      opcionesDeNivel(sinAsentamiento, tepakan).map(({ etiqueta }) => etiqueta),
     ).toEqual([
       "Pablo — Tepakan",
       "2 — Tepakan › Pablo",

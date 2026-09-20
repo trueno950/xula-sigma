@@ -2,9 +2,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { NodoDeSubarbol } from "../application/puertos";
 import { comoCalleId, comoLugarId } from "../domain";
-import type { PropsDeContenido } from "./contenido";
-import { permisosDeTerritorio } from "./permisos";
-import { TabDeDomicilios } from "./TabDeDomicilios";
+import { FormularioDeDomicilio } from "./FormularioDeDomicilio";
+import { opcionesDeCalles } from "./opciones";
+import { lugaresDeNodos, zonaDelFormulario } from "./vistaDeDomicilios";
 
 const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const coloniaId = comoLugarId("22222222-2222-4222-8222-222222222222");
@@ -35,58 +35,70 @@ const nodos: readonly NodoDeSubarbol[] = [
   },
 ];
 
-const base: PropsDeContenido = {
-  raizId: cabeceraId,
-  lugar: { id: cabeceraId, tipo: "cabecera", nombre: "Tepakan" },
-  nodos,
-  calles: [
-    {
-      id: comoCalleId("55555555-5555-4555-8555-555555555555"),
-      nombre: "Calle 21",
-      lugarId: cabeceraId,
-      punto: null,
-    },
-  ],
-  lugares: [{ id: cabeceraId, nombre: "Tepakan", tipo: "cabecera" }],
-  calleId: undefined,
-  domicilio: undefined,
-  domicilioId: undefined,
-  accion: "domicilio",
-  permisos: permisosDeTerritorio("ADMIN_MUNICIPAL"),
-};
+const calles = [
+  {
+    id: comoCalleId("55555555-5555-4555-8555-555555555555"),
+    nombre: "Calle 21",
+    lugarId: cabeceraId,
+    punto: null,
+  },
+];
 
-const renderDomicilios = (lugar: PropsDeContenido["lugar"]) =>
-  renderToStaticMarkup(<TabDeDomicilios {...base} lugar={lugar} />);
+const renderFormulario = (lugar: {
+  id: typeof cabeceraId;
+  tipo: "cabecera" | "manzana";
+  nombre: string;
+}) =>
+  renderToStaticMarkup(
+    <FormularioDeDomicilio
+      calles={opcionesDeCalles(calles)}
+      zona={zonaDelFormulario(
+        lugaresDeNodos(nodos),
+        { id: cabeceraId, nombre: "Tepakan" },
+        lugar,
+      )}
+    />,
+  );
 
 describe("FormularioDeDomicilio: orden de campos y zona", () => {
   it("pone Calle antes de la zona y la zona dentro de un details", () => {
-    const html = renderDomicilios(base.lugar);
+    const html = renderFormulario({
+      id: cabeceraId,
+      tipo: "cabecera",
+      nombre: "Tepakan",
+    });
 
     expect(html.indexOf('name="calleId"')).toBeLessThan(
-      html.indexOf('name="zonaId"'),
+      html.indexOf('name="lugarId"'),
     );
 
     const detalles = html.slice(
       html.indexOf("<details"),
       html.indexOf("</details>"),
     );
-    expect(detalles).toContain('name="zonaId"');
+    expect(detalles).toContain('name="lugarId"');
     expect(detalles).toContain(
       "Sin elegir zona, se guarda en el asentamiento de la calle.",
     );
     expect(html).not.toContain("Se guardara en:");
-    expect(html).toContain("Zona (opcional)");
+    expect(html).toContain("Colonia (opcional)");
+    expect(html).not.toContain('name="raiz"');
+    expect(html).not.toContain('name="nodo"');
   });
 
   it("en el asentamiento abre sin zona y lista el catalogo de calles", () => {
-    const html = renderDomicilios(base.lugar);
+    const html = renderFormulario({
+      id: cabeceraId,
+      tipo: "cabecera",
+      nombre: "Tepakan",
+    });
 
     expect(html).toContain("Sin zona: Tepakan");
     expect(html).toContain("Calle 21");
   });
 
   it("en una manzana prefija el nodo y el resumen nombra la cadena", () => {
-    const html = renderDomicilios({
+    const html = renderFormulario({
       id: manzanaId,
       tipo: "manzana",
       nombre: "San Pedro",

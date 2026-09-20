@@ -1,14 +1,14 @@
 import { Boton, Campo, CampoDeLista, type OpcionDeLista } from "@/shared/ui";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import { corregirDomicilioAction } from "./actions/corregirDomicilioAction";
-import type { ZonaDelFormulario } from "./vistaDeDomicilios";
+import type { NivelDelFormulario } from "./vistaDeDomicilios";
 
 type Props = {
   raiz: string;
   nodo: string;
   domicilio: DomicilioGuardado;
   calles: readonly OpcionDeLista[];
-  zona: ZonaDelFormulario;
+  zona: NivelDelFormulario;
 };
 
 /** Server Component, `<form action={...}>` nativo: mismos campos y orden que el alta, prefijados. */

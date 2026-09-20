@@ -59,7 +59,7 @@ describe("altaDeDomicilioAction: zona opcional", () => {
       formulario({
         ...navegacion,
         calleId: CALLE,
-        zonaId: MANZANA,
+        lugarId: MANZANA,
       }),
     );
 
@@ -78,7 +78,7 @@ describe("altaDeDomicilioAction: zona opcional", () => {
       formulario({
         ...navegacion,
         calleId: CALLE,
-        zonaId: "",
+        lugarId: "",
       }),
     );
 
@@ -98,7 +98,7 @@ describe("altaDeDomicilioAction: zona opcional", () => {
         formulario({
           ...navegacion,
           calleId: CALLE,
-          zonaId: MANZANA,
+          lugarId: MANZANA,
         }),
       ),
     ).rejects.toThrow(/error=La\+zona\+elegida\+no\+coincide/);
