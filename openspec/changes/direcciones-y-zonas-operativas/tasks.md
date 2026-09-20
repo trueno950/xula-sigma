@@ -122,7 +122,7 @@ anteriores.
 
 | Evidencia de unidad | Resultado |
 |---|---|
-| Test enfocado | `pnpm vitest run --project unit src/modules/territorio/ui/conteo.test.ts src/modules/territorio/ui/contenido.test.ts` — en verde |
+| Test enfocado | `pnpm vitest run --project unit src/modules/territorio/ui/conteo.test.ts src/modules/territorio/ui/contenido.test.ts src/modules/territorio/ui/cuentasDeLugar.test.ts` — en verde |
 | Suite completa | `pnpm test` — 307 archivos, 1532 tests en verde con Postgres; `pnpm check` sin hallazgos |
 | Presupuesto | ~190 lineas cambiadas contra el limite de 400: sin excepcion |
 | Revision nativa | `review-19668e85448cf618`, lente `review-reliability`, aprobada y quemada. Un SUGGESTION atendido: faltaba el caso de ciclo sobre `cuentasDeLugar` misma -`descendientesDe` lo tenia, pero la primitiva probada y la composicion probada no son lo mismo-. Se verifico que el test tiene dientes corriendo la caminata sin la guarda de visitados: pasa las 1000 vueltas sin terminar. El segundo SUGGESTION no pide cambio: observa que la tabla de evidencia afirma el resultado de `pnpm test` dentro del mismo diff que se revisa, o sea que no es artefacto inspeccionable desde la revision |
