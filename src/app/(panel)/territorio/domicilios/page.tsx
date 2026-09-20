@@ -8,6 +8,7 @@ import type { LugarGuardado } from "@/modules/territorio/application/puertos";
 import type { FiltrosDeRegistro } from "@/modules/territorio/application/puertosDeDomicilios";
 import { opcionesDeLugares } from "@/modules/territorio/ui/opciones";
 import { contextoActual } from "@/shared/auth";
+import { puedeEscribir } from "@/shared/auth/roles";
 import {
   estadoDeLista,
   Migaja,
@@ -98,6 +99,7 @@ export default async function PaginaDeDomicilios({ searchParams }: Props) {
         filtros={filtros}
         limite={limite}
         raices={opcionesDeLugares(raices)}
+        puedeCrear={puedeEscribir(contexto.usuario.rol)}
       />
     </PaginaDePanel>
   );

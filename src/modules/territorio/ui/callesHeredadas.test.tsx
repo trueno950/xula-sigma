@@ -52,28 +52,11 @@ describe("TabDeLugares en el ultimo nivel", () => {
   });
 });
 
-describe("TabDeDomicilios: donde se administran las calles", () => {
-  it("abre el formulario con el enlace al catalogo del asentamiento en un nivel inferior", () => {
+describe("TabDeDomicilios: alta desacoplada del nodo", () => {
+  it("no ancla un alta de domicilio al nodo", () => {
     const html = renderDomicilios("colonia");
 
-    expect(html).toContain("Administrar sus calles");
-    expect(html).toContain(
-      `href="/territorio?raiz=${raizId}&amp;nodo=${raizId}&amp;vista=calles&amp;accion=calle"`,
-    );
-  });
-
-  it("no ofrece el enlace cuando el lugar administra su propio catalogo", () => {
-    expect(renderDomicilios("cabecera")).not.toContain(
-      "Administrar sus calles",
-    );
-  });
-
-  it("no ofrece el enlace a un rol que no administra la estructura territorial", () => {
-    const html = renderDomicilios("colonia", {
-      permisos: permisosDeTerritorio("OPERADOR"),
-    });
-
-    expect(html).toContain("Calle 21");
-    expect(html).not.toContain("Administrar sus calles");
+    expect(html).not.toContain("Agregar domicilio");
+    expect(html).not.toContain("<form");
   });
 });

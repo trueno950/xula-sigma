@@ -99,7 +99,7 @@ const resumenDeGuardado = (
   zonaId: LugarId | "",
 ): string => {
   if (!zonaId) {
-    return "Sin elegir zona, se guarda en el asentamiento de la calle.";
+    return "Sin elegir colonia, se guarda en el asentamiento de la calle.";
   }
 
   const cadena = cadenaDeZona(lugares, zonaId, asentamiento);
@@ -113,11 +113,11 @@ const resumenDeGuardado = (
     "su asentamiento";
   const guardado = [...niveles.map(nombreDeNivel), cima].join(" · ");
 
-  return `Sin cambiar la zona, se guarda en ${guardado}.`;
+  return `Sin cambiar la colonia, se guarda en ${guardado}.`;
 };
 
 /** Las opciones de zona: los niveles del alcance, con su camino completo. */
-export const opcionesDeZona = (
+export const opcionesDeNivel = (
   lugares: readonly LugarConPadre[],
   asentamiento?: Asentamiento | undefined,
 ): readonly OpcionDeLista[] =>
@@ -144,9 +144,9 @@ export const opcionesDeCallesDelMunicipio = (
     etiqueta: etiquetaDeCamino(calle.nombre, [calle.asentamiento]),
   }));
 
-export type ZonaDelFormulario = {
+export type NivelDelFormulario = {
   opciones: readonly OpcionDeLista[];
-  /** El primer `<option>`: el asentamiento, o "Sin zona" cuando no se conoce. */
+  /** El primer `<option>`: el asentamiento, o "Sin colonia" cuando no se conoce. */
   marcador: string;
   /** El nivel con el que abre el select: el nodo actual, o vacio. */
   inicial: LugarId | "";
@@ -158,9 +158,11 @@ export const zonaConInicial = (
   lugares: readonly LugarConPadre[],
   asentamiento: Asentamiento | undefined,
   inicial: LugarId | "",
-): ZonaDelFormulario => ({
-  opciones: opcionesDeZona(lugares, asentamiento),
-  marcador: asentamiento ? `Sin zona: ${asentamiento.nombre}` : "Sin zona",
+): NivelDelFormulario => ({
+  opciones: opcionesDeNivel(lugares, asentamiento),
+  marcador: asentamiento
+    ? `Sin colonia: ${asentamiento.nombre}`
+    : "Sin colonia",
   inicial,
   resumen: resumenDeGuardado(lugares, asentamiento, inicial),
 });
@@ -169,7 +171,7 @@ export const zonaDelFormulario = (
   lugares: readonly LugarConPadre[],
   asentamiento: Asentamiento | undefined,
   lugarActual: { id: LugarId; tipo: TipoDeLugar } | undefined,
-): ZonaDelFormulario => {
+): NivelDelFormulario => {
   const inicial =
     lugarActual && !puedeTenerCatalogoDeCalles(lugarActual.tipo)
       ? lugarActual.id

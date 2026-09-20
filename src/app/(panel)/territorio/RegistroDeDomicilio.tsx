@@ -1,11 +1,11 @@
 import { FormularioDeDomicilio } from "@/modules/territorio/ui";
 import { PanelDeAccion } from "@/modules/territorio/ui/PanelDeAccion";
-import type { ZonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
+import type { NivelDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { OpcionDeLista } from "@/shared/ui";
 
 type Props = {
   calles: readonly OpcionDeLista[];
-  zona: ZonaDelFormulario;
+  zona: NivelDelFormulario;
 };
 
 /**

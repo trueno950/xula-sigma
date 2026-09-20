@@ -98,14 +98,14 @@ describe("Territorio root entry", () => {
     expect(mocks.listarCallesDelMunicipio).toHaveBeenCalled();
     expect(html).toContain("Calle 20 — Tepakan");
     expect(html.indexOf('name="calleId"')).toBeLessThan(
-      html.indexOf('name="zonaId"'),
+      html.indexOf('name="lugarId"'),
     );
 
     const detalles = html.slice(
       html.indexOf("<details"),
       html.indexOf("</details>"),
     );
-    expect(detalles).toContain('name="zonaId"');
+    expect(detalles).toContain('name="lugarId"');
     expect(html).not.toContain('href="/territorio?accion=domicilio"');
   });
 

@@ -1,16 +1,11 @@
 import { Boton, Campo, CampoDeLista, type OpcionDeLista } from "@/shared/ui";
 import { altaDeDomicilioAction } from "./actions/altaDeDomicilioAction";
-import type { ZonaDelFormulario } from "./vistaDeDomicilios";
+import type { NivelDelFormulario } from "./vistaDeDomicilios";
 
 type Props = {
-  /** Contexto del arbol: ausente en la entrada de la raiz. */
-  raiz?: string | undefined;
-  nodo?: string | undefined;
   /** Ya rotuladas por el borde: en el asentamiento, solo el nombre. */
   calles: readonly OpcionDeLista[];
-  zona: ZonaDelFormulario;
-  /** Presente solo cuando el catalogo de calles es de otro lugar. */
-  hrefAdministrarCalles?: string | undefined;
+  zona: NivelDelFormulario;
 };
 
 /**
@@ -21,17 +16,9 @@ type Props = {
  * `<details>` nativo es el unico despliegue del sistema que no necesita
  * JavaScript.
  */
-export function FormularioDeDomicilio({
-  raiz,
-  nodo,
-  calles,
-  zona,
-  hrefAdministrarCalles,
-}: Props) {
+export function FormularioDeDomicilio({ calles, zona }: Props) {
   return (
     <form action={altaDeDomicilioAction} className="flex flex-col gap-4">
-      {raiz ? <input type="hidden" name="raiz" value={raiz} /> : null}
-      {nodo ? <input type="hidden" name="nodo" value={nodo} /> : null}
       <input type="hidden" name="vista" value="domicilios" />
       <input type="hidden" name="accion" value="domicilio" />
 
@@ -42,19 +29,6 @@ export function FormularioDeDomicilio({
         marcador="Seleccione una calle"
         opciones={calles}
       />
-
-      {hrefAdministrarCalles ? (
-        <p className="text-[15px] text-caliza-apagada">
-          Las calles pertenecen al asentamiento.{" "}
-          <a
-            href={hrefAdministrarCalles}
-            className="text-marca underline underline-offset-2"
-          >
-            Administrar sus calles
-          </a>
-          .
-        </p>
-      ) : null}
 
       <Campo
         id="domicilio-numero"
@@ -91,13 +65,13 @@ export function FormularioDeDomicilio({
 
       <details>
         <summary className="cursor-pointer text-[15px] font-medium text-caliza-tinta">
-          Zona (opcional)
+          Colonia (opcional)
         </summary>
         <div className="flex flex-col gap-4 pt-4">
           <CampoDeLista
-            id="domicilio-zona-id"
-            name="zonaId"
-            etiqueta="Zona"
+            id="domicilio-lugar-id"
+            name="lugarId"
+            etiqueta="Colonia"
             marcador={zona.marcador}
             opcional
             opciones={zona.opciones}
