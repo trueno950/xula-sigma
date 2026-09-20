@@ -1,21 +1,21 @@
-type ConPadre = { readonly id: string; readonly padreId?: string | null };
+type ConPadre<Id extends string> = {
+  readonly id: Id;
+  readonly padreId?: Id | null;
+};
 
 /**
- * Los ids que cuelgan de los dados, a cualquier profundidad y una sola vez
- * cada uno. No incluye los ids de partida.
- *
  * Se baja por niveles y no con recursion porque el arbol llega ya plano en
  * memoria; y se lleva un conjunto de visitados porque una fila con
  * `padreId` colgado en ciclo -que el `CHECK` de raiz todavia no impide-
  * colgaria el render en vez de devolver un conjunto raro.
  */
-export const descendientesDe = (
-  ids: readonly string[],
-  lugares: readonly ConPadre[],
-): readonly string[] => {
-  const vistos = new Set<string>(ids);
-  let frontera: readonly string[] = ids;
-  const descendientes: string[] = [];
+export const descendientesDe = <Id extends string>(
+  ids: readonly Id[],
+  lugares: readonly ConPadre<Id>[],
+): readonly Id[] => {
+  const vistos = new Set<Id>(ids);
+  let frontera: readonly Id[] = ids;
+  const descendientes: Id[] = [];
 
   while (frontera.length > 0) {
     const siguiente = lugares
@@ -39,7 +39,7 @@ export const descendientesDe = (
  * comisaria, seccion y manzana declaraba menos lugares de los que esconde.
  * La etiqueta dice "mas adentro", no "un nivel mas adentro".
  */
-export const masAdentroDe = (
-  ids: readonly string[],
-  lugares: readonly ConPadre[],
+export const masAdentroDe = <Id extends string>(
+  ids: readonly Id[],
+  lugares: readonly ConPadre<Id>[],
 ): number => descendientesDe(ids, lugares).length;

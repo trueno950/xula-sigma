@@ -116,10 +116,9 @@ export const hermanosDeDireccion = (
  * cuatro tienen que verse a la vez en la cabecera, y una pestana solo sabe
  * de lo suyo.
  *
- * Domicilios: todo el subarbol del nodo, no solo lo que cuelga directo.
- * `domiciliosDirectosDe` contesta otra pregunta -que filas lista la
- * pestana- y por eso la sigue usando `TabDeDomicilios`; una colonia con sus
- * direcciones en las manzanas cuenta todas.
+ * Domicilios: coexiste con `domiciliosDirectosDe`, que contesta otra
+ * pregunta -que filas lista la pestana- y por eso `TabDeDomicilios` la
+ * sigue usando en vez de esta.
  *
  * Calles: solo las que el nodo tiene por suyas (`lugarId === nodo.id`). La
  * pestana sigue listando el catalogo heredado del asentamiento -de solo

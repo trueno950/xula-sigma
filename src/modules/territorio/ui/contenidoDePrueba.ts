@@ -1,7 +1,6 @@
 /**
  * El arbol de prueba que comparten los dos archivos de tests de
- * `contenido.ts`: una colonia con una manzana adentro, tres domicilios
- * repartidos entre las dos, y una calle de cada lugar.
+ * `contenido.ts`.
  *
  * Vive aparte porque el archivo unico paso las 200 lineas de `AGENTS.md` al
  * sumarle el caso de ciclo, y el corte cae por tema -contar contra
