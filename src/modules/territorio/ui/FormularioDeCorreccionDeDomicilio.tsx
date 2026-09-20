@@ -75,13 +75,13 @@ export function FormularioDeCorreccionDeDomicilio({
 
       <details>
         <summary className="cursor-pointer text-[15px] font-medium text-caliza-tinta">
-          Zona (opcional)
+          Colonia (opcional)
         </summary>
         <div className="flex flex-col gap-4 pt-4">
           <CampoDeLista
             id="correccion-zona-id"
             name="zonaId"
-            etiqueta="Zona"
+            etiqueta="Colonia"
             marcador={zona.marcador}
             opcional
             opciones={zona.opciones}

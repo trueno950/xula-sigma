@@ -99,7 +99,7 @@ const resumenDeGuardado = (
   zonaId: LugarId | "",
 ): string => {
   if (!zonaId) {
-    return "Sin elegir zona, se guarda en el asentamiento de la calle.";
+    return "Sin elegir colonia, se guarda en el asentamiento de la calle.";
   }
 
   const cadena = cadenaDeZona(lugares, zonaId, asentamiento);
@@ -113,7 +113,7 @@ const resumenDeGuardado = (
     "su asentamiento";
   const guardado = [...niveles.map(nombreDeNivel), cima].join(" · ");
 
-  return `Sin cambiar la zona, se guarda en ${guardado}.`;
+  return `Sin cambiar la colonia, se guarda en ${guardado}.`;
 };
 
 /** Las opciones de zona: los niveles del alcance, con su camino completo. */
@@ -146,7 +146,7 @@ export const opcionesDeCallesDelMunicipio = (
 
 export type NivelDelFormulario = {
   opciones: readonly OpcionDeLista[];
-  /** El primer `<option>`: el asentamiento, o "Sin zona" cuando no se conoce. */
+  /** El primer `<option>`: el asentamiento, o "Sin colonia" cuando no se conoce. */
   marcador: string;
   /** El nivel con el que abre el select: el nodo actual, o vacio. */
   inicial: LugarId | "";
@@ -160,7 +160,9 @@ export const zonaConInicial = (
   inicial: LugarId | "",
 ): NivelDelFormulario => ({
   opciones: opcionesDeNivel(lugares, asentamiento),
-  marcador: asentamiento ? `Sin zona: ${asentamiento.nombre}` : "Sin zona",
+  marcador: asentamiento
+    ? `Sin colonia: ${asentamiento.nombre}`
+    : "Sin colonia",
   inicial,
   resumen: resumenDeGuardado(lugares, asentamiento, inicial),
 });

@@ -78,7 +78,7 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
     );
     expect(detalles).toContain('name="lugarId"');
     expect(detalles).toContain(
-      "Sin elegir zona, se guarda en el asentamiento de la calle.",
+      "Sin elegir colonia, se guarda en el asentamiento de la calle.",
     );
     expect(html).not.toContain("Se guardara en:");
     expect(html).toContain("Colonia (opcional)");
@@ -93,7 +93,7 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
       nombre: "Tepakan",
     });
 
-    expect(html).toContain("Sin zona: Tepakan");
+    expect(html).toContain("Sin colonia: Tepakan");
     expect(html).toContain("Calle 21");
   });
 
@@ -105,7 +105,7 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
     });
 
     expect(html).toContain(
-      "Sin cambiar la zona, se guarda en Manzana San Pedro · Sector 2 · Colonia Pablo · Tepakan.",
+      "Sin cambiar la colonia, se guarda en Manzana San Pedro · Sector 2 · Colonia Pablo · Tepakan.",
     );
     expect(html).not.toContain("Se guardara en:");
     expect(html).toContain(`value="${manzanaId}" selected=""`);

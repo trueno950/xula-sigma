@@ -98,10 +98,10 @@ describe("zonaDelFormulario", () => {
       tipo: "comisaria",
     });
 
-    expect(zona.marcador).toBe("Sin zona: Tepakan");
+    expect(zona.marcador).toBe("Sin colonia: Tepakan");
     expect(zona.inicial).toBe("");
     expect(zona.resumen).toBe(
-      "Sin elegir zona, se guarda en el asentamiento de la calle.",
+      "Sin elegir colonia, se guarda en el asentamiento de la calle.",
     );
   });
 
@@ -113,17 +113,17 @@ describe("zonaDelFormulario", () => {
 
     expect(zona.inicial).toBe(manzanaId);
     expect(zona.resumen).toBe(
-      "Sin cambiar la zona, se guarda en Manzana San Pedro · Sector 2 · Colonia Pablo · Tepakan.",
+      "Sin cambiar la colonia, se guarda en Manzana San Pedro · Sector 2 · Colonia Pablo · Tepakan.",
     );
   });
 
   it("en la raiz no hay prefill ni asentamiento: el mismo default", () => {
     const zona = zonaDelFormulario(lugares, undefined, undefined);
 
-    expect(zona.marcador).toBe("Sin zona");
+    expect(zona.marcador).toBe("Sin colonia");
     expect(zona.inicial).toBe("");
     expect(zona.resumen).toBe(
-      "Sin elegir zona, se guarda en el asentamiento de la calle.",
+      "Sin elegir colonia, se guarda en el asentamiento de la calle.",
     );
   });
 });
