@@ -54,6 +54,19 @@ describe("porcionesDeTerritorio", () => {
     );
   });
 
+  it("domicilios exporta bajaEn, igual que lugares y calles", async () => {
+    const porcionDeDomicilios = porcionesDeTerritorio.find(
+      (porcion) => porcion.nombre === "domicilios",
+    );
+    const { tx, select } = txDePrueba();
+
+    await porcionDeDomicilios?.leer(tx);
+
+    expect(select).toHaveBeenCalledWith(
+      expect.objectContaining({ bajaEn: expect.anything() }),
+    );
+  });
+
   it("ninguna porcion incluye ayuntamientoId: es redundante para quien pide la exportacion", async () => {
     for (const porcion of porcionesDeTerritorio) {
       const { tx, select } = txDePrueba();

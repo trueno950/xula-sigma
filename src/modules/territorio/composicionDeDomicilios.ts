@@ -18,8 +18,8 @@ import {
 
 /**
  * La mitad de `composicion.ts` que arma las direcciones. Se separo cuando el
- * registro plano de la rebanada A1 empujo el archivo unico a 213 lineas, dos
- * por encima de la metrica de 200 de `AGENTS.md`. `composicion.ts` la
+ * registro plano de la rebanada A1 empujo el archivo unico a 213 lineas,
+ * trece por encima de la metrica de 200 de `AGENTS.md`. `composicion.ts` la
  * reexporta, asi que nadie cambia de import por el corte.
  */
 

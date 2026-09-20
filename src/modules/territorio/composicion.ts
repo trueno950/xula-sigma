@@ -156,6 +156,7 @@ export const porcionesDeTerritorio: readonly PorcionExportable[] = [
           entreCalleAId: domicilios.entreCalleAId,
           entreCalleBId: domicilios.entreCalleBId,
           referencia: domicilios.referencia,
+          bajaEn: domicilios.bajaEn,
           creadoEn: domicilios.creadoEn,
           actualizadoEn: domicilios.actualizadoEn,
         })
