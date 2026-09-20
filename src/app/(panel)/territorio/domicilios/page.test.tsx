@@ -153,4 +153,21 @@ describe("PaginaDeDomicilios", () => {
     expect(mocks.registroDeDomicilios).not.toHaveBeenCalled();
     expect(html).toContain("No se pudo determinar su sesion.");
   });
+
+  it("ofrece agregar un domicilio con un rol de escritura", async () => {
+    const html = await render();
+
+    expect(html).toContain('href="/territorio?accion=domicilio"');
+  });
+
+  it("no ofrece agregar con CONSULTA", async () => {
+    mocks.contextoActual.mockResolvedValue({
+      ...contexto,
+      usuario: { ...contexto.usuario, rol: "CONSULTA" },
+    });
+
+    const html = await render();
+
+    expect(html).not.toContain('href="/territorio?accion=domicilio"');
+  });
 });

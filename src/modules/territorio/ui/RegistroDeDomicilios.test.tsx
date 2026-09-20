@@ -33,6 +33,7 @@ const base = {
   estadoDeLista: { clase: "con-filas" } as EstadoDeLista,
   filtros: {} as FiltrosDeRegistro,
   raices,
+  puedeCrear: true,
 };
 
 const render = (
@@ -133,5 +134,18 @@ describe("RegistroDeDomicilios", () => {
     expect(html).toContain('value="Calle 21"');
     expect(html).toContain('value="5"');
     expect(html).toContain(`value="${cabeceraId}" selected=""`);
+  });
+
+  it("ofrece agregar un domicilio al registro plano cuando puedeCrear", () => {
+    const html = render({ puedeCrear: true });
+
+    expect(html).toContain('href="/territorio?accion=domicilio"');
+    expect(html).toContain("Agregar domicilio");
+  });
+
+  it("no ofrece agregar sin permiso de escritura", () => {
+    const html = render({ puedeCrear: false });
+
+    expect(html).not.toContain("Agregar domicilio");
   });
 });

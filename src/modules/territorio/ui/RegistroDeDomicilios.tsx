@@ -1,7 +1,9 @@
+import { Plus } from "@phosphor-icons/react/ssr";
 import {
   CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,
+  EnlaceDeAccion,
   type EstadoDeLista,
   EstadoVacio,
   FilaDeTabla,
@@ -14,6 +16,7 @@ import type {
 } from "../application/puertosDeDomicilios";
 import { FiltrosDeDomicilios } from "./FiltrosDeDomicilios";
 import { hrefDeVerMasDeDomicilios } from "./hrefsDeDomicilios";
+import { BarraDeAcciones } from "./PanelDeAccion";
 import { direccionDe } from "./vistaDeDomicilios";
 
 type Props = {
@@ -24,6 +27,7 @@ type Props = {
   /** El vigente, no el proximo: `hrefDeVerMasDeDomicilios` le suma la pagina. */
   limite?: number | undefined;
   raices: readonly OpcionDeLista[];
+  puedeCrear: boolean;
 };
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
@@ -47,9 +51,22 @@ export function RegistroDeDomicilios({
   filtros,
   limite,
   raices,
+  puedeCrear,
 }: Props) {
   return (
     <div className="flex flex-col gap-4">
+      {puedeCrear ? (
+        <BarraDeAcciones>
+          <EnlaceDeAccion
+            href="/territorio?accion=domicilio"
+            variante="primaria"
+          >
+            <Plus size={18} weight="bold" aria-hidden="true" />
+            Agregar domicilio
+          </EnlaceDeAccion>
+        </BarraDeAcciones>
+      ) : null}
+
       <FiltrosDeDomicilios filtros={filtros} raices={raices} />
 
       {estado.clase !== "con-filas" ? (
