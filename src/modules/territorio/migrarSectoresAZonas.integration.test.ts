@@ -1,9 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { bitacora } from "@/shared/tenancy/esquema";
 import {
   appSinTenant,
   limpiar,
@@ -12,34 +11,24 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import type { DomicilioId, LugarId } from "./domain";
 import { domicilios } from "./infrastructure/esquema";
-import { crearCalle, crearDomicilioEnCalle, crearLugar } from "./lugarDePrueba";
+import {
+  type EscenarioDeMigracion,
+  leerDomiciliosMigrados,
+  leerZonasYBajas,
+  sembrarEscenarioDeMigracion,
+} from "./migracionDeZonasDePrueba";
 
 const rutaDelScript = resolve(
   process.cwd(),
   "scripts/migrar-sectores-a-zonas.sql",
 );
 
-let coloniaId: LugarId;
-let sectorId: LugarId;
-let manzanaId: LugarId;
-let domicilioDelSectorId: DomicilioId;
-let domicilioDeLaManzanaId: DomicilioId;
+let escenario: EscenarioDeMigracion;
 
 beforeAll(async () => {
   await sembrar();
-  const asentamientoId = await crearLugar("cabecera", "Cabecera migracion");
-  coloniaId = await crearLugar("colonia", "Colonia migracion", asentamientoId);
-  sectorId = await crearLugar("sector", "Sector migracion", coloniaId);
-  manzanaId = await crearLugar("manzana", "Manzana migracion", sectorId);
-  const calleId = await crearCalle(asentamientoId, "Calle migracion");
-  domicilioDelSectorId = await crearDomicilioEnCalle(sectorId, calleId, "10");
-  domicilioDeLaManzanaId = await crearDomicilioEnCalle(
-    manzanaId,
-    calleId,
-    "11",
-  );
+  escenario = await sembrarEscenarioDeMigracion();
 });
 
 afterAll(async () => {
@@ -50,6 +39,7 @@ afterAll(async () => {
 
 describe("migracion de sectores a zonas", () => {
   it("un UPDATE sin tenant queda bloqueado por RLS con cero filas y sin error", async () => {
+    const { coloniaId, manzanaId, domicilioDeLaManzanaId } = escenario;
     const filas = await appSinTenant`
       UPDATE domicilios
       SET lugar_id = ${coloniaId}
@@ -69,6 +59,17 @@ describe("migracion de sectores a zonas", () => {
   });
 
   it("mueve todos los domicilios contados y preserva cada lugar anterior", async () => {
+    const {
+      coloniaId,
+      asentamientoId,
+      sectorId,
+      manzanaId,
+      callePrincipalId,
+      calleDeOtroAsentamientoId,
+      domicilioDelSectorId,
+      domicilioDeLaManzanaId,
+      domicilioConCalleAjenaId,
+    } = escenario;
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) throw new Error("Falta DATABASE_URL.");
 
@@ -79,7 +80,7 @@ describe("migracion de sectores a zonas", () => {
     const guionDelScript = readFileSync(rutaDelScript, "utf8");
     const urlInterna = databaseUrl.replace(":55432", ":5432");
 
-    execFileSync(
+    const salida = execFileSync(
       "docker",
       [
         "exec",
@@ -96,34 +97,15 @@ describe("migracion de sectores a zonas", () => {
         encoding: "utf8",
         stdio: ["pipe", "pipe", "pipe"],
       },
-    );
+    ).toString();
 
-    const resultado = await withTenant(motul, async (tx) => {
-      const domiciliosMigrados = await tx
-        .select({ id: domicilios.id, lugarId: domicilios.lugarId })
-        .from(domicilios)
-        .where(
-          and(
-            eq(domicilios.ayuntamientoId, motul),
-            eq(domicilios.lugarId, coloniaId),
-          ),
-        );
-      const entradas = await tx
-        .select({ entidadId: bitacora.entidadId, origen: bitacora.origen })
-        .from(bitacora)
-        .where(
-          and(
-            eq(bitacora.accion, "MIGRACION_DOMICILIO"),
-            eq(bitacora.entidad, "domicilios"),
-          ),
-        );
-      return { domiciliosMigrados, entradas };
-    });
+    const resultado = await leerDomiciliosMigrados(motul, coloniaId);
 
     expect(resultado.domiciliosMigrados).toEqual(
       expect.arrayContaining([
         { id: domicilioDelSectorId, lugarId: coloniaId },
         { id: domicilioDeLaManzanaId, lugarId: coloniaId },
+        { id: domicilioConCalleAjenaId, lugarId: coloniaId },
       ]),
     );
     expect(resultado.entradas).toEqual(
@@ -135,6 +117,70 @@ describe("migracion de sectores a zonas", () => {
         {
           entidadId: domicilioDeLaManzanaId,
           origen: `script:migrar-sectores-a-zonas:${manzanaId}`,
+        },
+        {
+          entidadId: domicilioConCalleAjenaId,
+          origen: `script:migrar-sectores-a-zonas:${sectorId}`,
+        },
+      ]),
+    );
+
+    const resultadoDeZonas = await leerZonasYBajas({
+      ayuntamientoId: motul,
+      asentamientoId,
+      sectorId,
+      manzanaId,
+      nombreDelSector: "Sector migracion",
+      nombreDeLaZonaVacia: "Sector vacio",
+    });
+
+    expect(resultadoDeZonas.zonasMigradas).toHaveLength(2);
+    expect(resultadoDeZonas.zonasMigradas).toEqual(
+      expect.arrayContaining([
+        {
+          lugarId: asentamientoId,
+          nombre: "Sector migracion",
+          id: expect.any(String),
+        },
+        {
+          lugarId: asentamientoId,
+          nombre: "Sector vacio",
+          id: expect.any(String),
+        },
+      ]),
+    );
+
+    const zonaDelSector = resultadoDeZonas.zonasMigradas.find(
+      ({ nombre }) => nombre === "Sector migracion",
+    );
+    if (!zonaDelSector) throw new Error("Falta la zona del sector migrado.");
+
+    expect(resultadoDeZonas.membresias).toEqual([
+      { zonaId: zonaDelSector.id, calleId: callePrincipalId },
+    ]);
+    expect(resultadoDeZonas.membresiasDeZonaVacia).toHaveLength(0);
+    expect(resultadoDeZonas.membresias).not.toEqual(
+      expect.arrayContaining([
+        { zonaId: zonaDelSector.id, calleId: calleDeOtroAsentamientoId },
+      ]),
+    );
+    expect(salida).toContain("calles_rechazadas");
+    expect(salida).toContain(calleDeOtroAsentamientoId);
+
+    expect(resultadoDeZonas.lugaresRestantes).toHaveLength(0);
+    expect(resultadoDeZonas.bajas).toEqual(
+      expect.arrayContaining([
+        {
+          accion: "BAJA_LUGAR",
+          entidad: "lugares",
+          entidadId: sectorId,
+          origen: `script:migrar-sectores-a-zonas:${coloniaId}`,
+        },
+        {
+          accion: "BAJA_LUGAR",
+          entidad: "lugares",
+          entidadId: manzanaId,
+          origen: `script:migrar-sectores-a-zonas:${sectorId}`,
         },
       ]),
     );

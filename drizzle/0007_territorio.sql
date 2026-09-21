@@ -95,6 +95,12 @@ ALTER TABLE "residencias" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
 -- cierre de una residencia es hastaEn. Borrar la fila dejaria huerfanos
 -- los ids que otro modulo o el resto de este ya guardo
 -- (drizzle/0004_padron.sql:42, mismo argumento).
+--
+-- Excepcion unica: drizzle/0018_grant_baja_fisica_lugares.sql agrega DELETE
+-- a "lugares" para scripts/migrar-sectores-a-zonas.sql (B3d), que borra
+-- fisicamente sector/manzana porque el CHECK de tipos de B2 valida todas
+-- las filas y no solo las activas -un baja_en no alcanza. La via normal de
+-- la aplicacion sigue siendo logica.
 GRANT SELECT, INSERT, UPDATE ON "lugares" TO "xula_app";--> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE ON "calles" TO "xula_app";--> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE ON "domicilios" TO "xula_app";--> statement-breakpoint

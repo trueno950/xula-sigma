@@ -127,6 +127,13 @@
       "when": 1789918089562,
       "tag": "0017_reflective_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789942800000,
+      "tag": "0018_grant_baja_fisica_lugares",
+      "breakpoints": true
     }
   ]
 }
