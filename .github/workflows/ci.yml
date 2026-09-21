@@ -166,6 +166,19 @@ jobs:
           brew install gentleman-programming/tap/gga
           npm install -g opencode-ai
 
+      # `opencode.json` referencia el prompt de cada agente `sdd-*` con
+      # `{file:../../../.config/opencode/prompts/sdd/<agente>.md}` -tres
+      # niveles arriba del repo, que en este checkout y en el de cualquier
+      # maquina resuelve a `$HOME/.config/opencode/...`-. Esos archivos no
+      # viven en el repo: los sincroniza `gentle-ai install`, que en una
+      # maquina de desarrollo ya corrio. Sin este paso, `gga run` fallaba
+      # con "bad file reference" antes de mandar una sola linea a revision.
+      - name: Instalar Gentle AI y sincronizar prompts de SDD
+        if: env.DEEPSEEK_API_KEY != ''
+        run: |
+          brew install gentleman-programming/tap/gentle-ai
+          gentle-ai install --agent opencode --component sdd --scope global
+
       - name: Revisar el PR
         if: env.DEEPSEEK_API_KEY != ''
         env:
