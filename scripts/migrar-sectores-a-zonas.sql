@@ -12,7 +12,7 @@
 -- aplicable no ve ninguna fila -ni siquiera xula_migrator, dueno del
 -- schema. xula_app necesita GRANT DELETE en lugares ademas del
 -- SELECT/INSERT/UPDATE que ya tenia (drizzle/0007_territorio.sql),
--- agregado en drizzle/0018_grant_baja_lugares.sql: la baja logica sigue
+-- agregado en drizzle/0018_grant_baja_fisica_lugares.sql: la baja logica sigue
 -- siendo la via normal de la aplicacion, este script es la unica salida
 -- que borra fisicamente, y sigue acotado por la misma politica de tenant.
 --
@@ -35,7 +35,8 @@ CREATE TEMP TABLE sectores_a_migrar (
   sector_id        uuid PRIMARY KEY,
   ayuntamiento_id  uuid NOT NULL,
   nombre           text NOT NULL,
-  asentamiento_id  uuid
+  asentamiento_id  uuid,
+  baja_en          timestamptz
 ) ON COMMIT PRESERVE ROWS;
 
 CREATE TEMP TABLE domicilios_movidos (
@@ -56,6 +57,7 @@ CREATE TEMP TABLE lugares_borrados (
   tipo             text NOT NULL,
   nombre           text NOT NULL,
   padre_id         uuid,
+  baja_en          timestamptz,
   PRIMARY KEY (ayuntamiento_id, lugar_id)
 ) ON COMMIT PRESERVE ROWS;
 
@@ -66,6 +68,7 @@ CREATE TEMP TABLE zonas_creadas (
   zona_id          uuid NOT NULL,
   lugar_id         uuid NOT NULL,
   nombre           text NOT NULL,
+  baja_en          timestamptz,
   PRIMARY KEY (ayuntamiento_id, sector_id)
 ) ON COMMIT PRESERVE ROWS;
 
@@ -120,7 +123,8 @@ BEGIN
       sector_id,
       ayuntamiento_id,
       nombre,
-      asentamiento_id
+      asentamiento_id,
+      baja_en
     )
     WITH RECURSIVE cadena_de_sectores AS (
       SELECT
@@ -162,7 +166,8 @@ BEGIN
       l.id,
       l.ayuntamiento_id,
       l.nombre,
-      a.asentamiento_id
+      a.asentamiento_id,
+      l.baja_en
     FROM lugares l
     LEFT JOIN asentamientos a ON a.sector_id = l.id
     WHERE l.tipo = 'sector';
@@ -321,8 +326,8 @@ BEGIN
     FROM sectores_a_migrar
     WHERE asentamiento_id IS NOT NULL;
 
-    INSERT INTO zonas (ayuntamiento_id, lugar_id, nombre)
-    SELECT ayuntamiento_id, asentamiento_id, nombre
+    INSERT INTO zonas (ayuntamiento_id, lugar_id, nombre, baja_en)
+    SELECT ayuntamiento_id, asentamiento_id, nombre, baja_en
     FROM sectores_a_migrar
     WHERE asentamiento_id IS NOT NULL;
 
@@ -341,7 +346,8 @@ BEGIN
       sector_id,
       zona_id,
       lugar_id,
-      nombre
+      nombre,
+      baja_en
     )
     SELECT
       municipio.subdominio,
@@ -349,13 +355,14 @@ BEGIN
       s.sector_id,
       z.id,
       z.lugar_id,
-      z.nombre
+      z.nombre,
+      z.baja_en
     FROM sectores_a_migrar s
     JOIN zonas z
       ON z.ayuntamiento_id = s.ayuntamiento_id
      AND z.lugar_id = s.asentamiento_id
      AND z.nombre = s.nombre
-     AND z.baja_en IS NULL
+     AND z.baja_en IS NOT DISTINCT FROM s.baja_en
     WHERE s.asentamiento_id IS NOT NULL;
 
     GET DIAGNOSTICS zonas_mapeadas = ROW_COUNT;
@@ -366,6 +373,26 @@ BEGIN
         'La transaccion se revierte entera.',
         municipio.subdominio, zonas_insertadas, zonas_mapeadas;
     END IF;
+
+    INSERT INTO lugares_borrados (
+      subdominio,
+      ayuntamiento_id,
+      lugar_id,
+      tipo,
+      nombre,
+      padre_id,
+      baja_en
+    )
+    SELECT
+      municipio.subdominio,
+      l.ayuntamiento_id,
+      l.id,
+      l.tipo,
+      l.nombre,
+      l.padre_id,
+      l.baja_en
+    FROM lugares l
+    WHERE l.tipo IN ('sector', 'manzana');
 
     -- La FK recibe el lugar_id real de la calle. Los domicilios con una
     -- calle de otro asentamiento se listan, nunca se fuerzan al destino.
@@ -415,7 +442,88 @@ BEGIN
       ON calle.id = c.calle_id
      AND calle.ayuntamiento_id = c.ayuntamiento_id
     WHERE c.sector_id IS NOT NULL
-      AND calle.lugar_id <> z.lugar_id;
+      AND calle.lugar_id <> z.lugar_id
+    ON CONFLICT DO NOTHING;
+
+    -- Una calle cuyo propio lugar va a borrarse nunca puede pertenecer a la
+    -- zona (que cuelga del asentamiento). Se reporta antes del DELETE; la FK
+    -- sigue siendo la reja que aborta si la operadora no la cura.
+    WITH RECURSIVE sectores_de_lugares_borrados AS (
+      SELECT
+        b.ayuntamiento_id,
+        b.lugar_id,
+        b.padre_id,
+        b.tipo,
+        b.lugar_id AS origen_id,
+        ARRAY[b.lugar_id]::uuid[] AS camino
+      FROM lugares_borrados b
+      WHERE b.ayuntamiento_id = municipio.id
+
+      UNION ALL
+
+      SELECT
+        r.ayuntamiento_id,
+        padre.id,
+        padre.padre_id,
+        padre.tipo,
+        r.origen_id,
+        array_append(r.camino, padre.id)
+      FROM sectores_de_lugares_borrados r
+      JOIN lugares padre
+        ON padre.id = r.padre_id
+       AND padre.ayuntamiento_id = r.ayuntamiento_id
+      WHERE r.tipo <> 'sector'
+        AND NOT padre.id = ANY(r.camino)
+    )
+    INSERT INTO calles_rechazadas (
+      subdominio,
+      ayuntamiento_id,
+      sector_id,
+      zona_id,
+      calle_id,
+      lugar_esperado_id,
+      lugar_real_id
+    )
+    SELECT DISTINCT
+      municipio.subdominio,
+      calle.ayuntamiento_id,
+      s.sector_id,
+      z.zona_id,
+      calle.id,
+      z.lugar_id,
+      calle.lugar_id
+    FROM calles calle
+    JOIN sectores_de_lugares_borrados r
+      ON r.ayuntamiento_id = calle.ayuntamiento_id
+     AND r.origen_id = calle.lugar_id
+     AND r.tipo = 'sector'
+    JOIN sectores_a_migrar s
+      ON s.ayuntamiento_id = r.ayuntamiento_id
+     AND s.sector_id = r.lugar_id
+    JOIN zonas_creadas z
+      ON z.ayuntamiento_id = s.ayuntamiento_id
+     AND z.sector_id = s.sector_id
+    ON CONFLICT DO NOTHING;
+
+    -- La salida final no existe si la reja FK aborta el DO. Este NOTICE se
+    -- emite antes del DELETE para que la captura operativa conserve tambien
+    -- los rechazos que justamente provocan ese aborto.
+    RAISE NOTICE '__B3D_CALLES_RECHAZADAS_JSON__:%',
+      COALESCE((
+        SELECT json_agg(
+          json_build_object(
+            'subdominio', subdominio,
+            'sector_id', sector_id,
+            'zona_id', zona_id,
+            'calle_id', calle_id,
+            'lugar_esperado_id', lugar_esperado_id,
+            'lugar_real_id', lugar_real_id
+          )
+          ORDER BY sector_id, calle_id
+        )
+        FROM calles_rechazadas
+        WHERE ayuntamiento_id = municipio.id
+      ), '[]'::json);
 
     SELECT count(*)
     INTO calles_validas_contadas
@@ -438,24 +546,6 @@ BEGIN
         'La transaccion se revierte entera: revisar si RLS freno el INSERT.',
         municipio.subdominio, calles_validas_contadas, calles_insertadas;
     END IF;
-
-    INSERT INTO lugares_borrados (
-      subdominio,
-      ayuntamiento_id,
-      lugar_id,
-      tipo,
-      nombre,
-      padre_id
-    )
-    SELECT
-      municipio.subdominio,
-      l.ayuntamiento_id,
-      l.id,
-      l.tipo,
-      l.nombre,
-      l.padre_id
-    FROM lugares l
-    WHERE l.tipo IN ('sector', 'manzana');
 
     SELECT count(*)
     INTO lugares_contados
@@ -542,12 +632,12 @@ FROM domicilios_movidos
 ORDER BY subdominio, domicilio_id;
 
 -- Filas de lugares borradas: guardar este resultado para reconstruirlas.
-SELECT subdominio, lugar_id, tipo, nombre, padre_id
+SELECT subdominio, lugar_id, tipo, nombre, padre_id, baja_en
 FROM lugares_borrados
 ORDER BY subdominio, tipo, nombre, lugar_id;
 
 -- Zonas creadas y su sector de origen.
-SELECT subdominio, sector_id, zona_id, lugar_id, nombre
+SELECT subdominio, sector_id, zona_id, lugar_id, nombre, baja_en
 FROM zonas_creadas
 ORDER BY subdominio, nombre, zona_id;
 

@@ -82,14 +82,13 @@ columnas exactas:
 
 1. domicilios movidos: `subdominio`, `domicilio_id`, `lugar_anterior_id`,
    `lugar_destino_id`, `sector_id`, `calle_id`;
-2. lugares borrados: `subdominio`, `lugar_id`, `tipo`, `nombre`, `padre_id`;
-3. zonas creadas: `subdominio`, `sector_id`, `zona_id`, `lugar_id`, `nombre`;
+2. lugares borrados: `subdominio`, `lugar_id`, `tipo`, `nombre`, `padre_id`, `baja_en`;
+3. zonas creadas: `subdominio`, `sector_id`, `zona_id`, `lugar_id`, `nombre`, `baja_en`;
 4. calles rechazadas: primero el conteo `salida`, `cantidad` y después el
    detalle `salida`, `subdominio`, `sector_id`, `zona_id`, `calle_id`,
    `lugar_esperado_id`, `lugar_real_id`.
 
-Una calle rechazada no se fuerza a una zona de otro asentamiento. Debe
-registrarse para curación municipal antes de cualquier operación posterior.
+Una calle rechazada no se fuerza a una zona de otro asentamiento. El detalle incluye tanto calles derivadas de domicilios como una calle cuyo propio `lugar_id` es un sector o manzana que se borrará; esta última conserva el `23503` del `DELETE` como reja hasta que se cure. Antes de cada `DELETE`, el script escribe la misma lista como `NOTICE __B3D_CALLES_RECHAZADAS_JSON__:<json>` para que `2>&1` la conserve incluso cuando esa reja aborta el bloque. Debe registrarse para curación municipal antes de cualquier operación posterior.
 
 ## Comprobación posterior
 
@@ -140,7 +139,7 @@ tratarse como fallo, aunque el proceso haya terminado con código cero.
   `script:migrar-sectores-a-zonas:<lugar_id_anterior>`; el `UPDATE` usa
   `split_part(origen, ':', 3)::uuid`. Los lugares eliminados se reconstruyen
   exclusivamente desde la salida guardada (`lugar_id`, `tipo`, `nombre`,
-  `padre_id`), en orden padre-hijo. La bitácora `BAJA_LUGAR` no basta para
+  `padre_id`, `baja_en`), en orden padre-hijo; `baja_en` se repone tal cual para no reactivar un lugar que ya estaba dado de baja. La bitácora `BAJA_LUGAR` no basta para
   reconstruirlos: solo conserva el `padre_id` perdido.
 - La reversión debe ejecutarse mediante un procedimiento revisado y probado,
   con conteos antes y después. No borrar zonas ni pertenencias a mano y no

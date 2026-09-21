@@ -354,6 +354,59 @@ aplicar este cambio.
   que ya existia y que este imita, tampoco filtra `domicilios.bajaEn`. Cambiar
   uno sin el otro habria sido la inconsistencia real.
 
+## Revision local previa al PR (B3d completo)
+
+Antes de abrir el PR #6, `pnpm revision:local:pr` (gga, gpt-5.6-luna/max,
+sin cache, diff completo contra `main`) sobre las ~1500 lineas acumuladas
+de B3d. Encontro 5 hallazgos reales, ninguno ruido:
+
+1. Typo: el header del script citaba `drizzle/0018_grant_baja_lugares.sql`,
+   el archivo real es `..._grant_baja_fisica_lugares.sql`. Corregido a mano.
+2. `zonas.bajaEn` no heredaba `lugares.bajaEn` del sector origen: un sector
+   ya dado de baja resucitaba como zona activa. Igual en el rollback.
+3. Una calle cuyo propio `lugar_id` es directamente un sector/manzana -sin
+   ningun domicilio que la referencie- no aparecia en `calles_rechazadas`
+   y el `DELETE` abortaba sin reporte. `calles.lugar_id` no tiene CHECK en
+   Postgres que lo impida, solo `altaDeCalle`/`reparentearCalle` en la app.
+4. El test solo sembraba Motul: nada probaba que la migracion no tocara
+   otro municipio.
+5. Varias funciones/cuerpos de test superaban las 30 lineas -metrica que
+   `pnpm reglas` deja a proposito al revisor de IA (AGENTS.md).
+
+Corregido con `codex` (`gpt-5.6-luna`/`max`, `codex:codex-rescue`):
+`zonas.bajaEn`/`lugares_borrados.baja_en` propagados end-to-end (script,
+rollback, runbook); nueva deteccion de calles huerfanas de sector/manzana
+va a `calles_rechazadas` con dedupe (`ON CONFLICT DO NOTHING`) y se emite
+por `RAISE NOTICE` **antes** del `DELETE` -un `NOTICE` sobrevive al abort
+de la transaccion, a diferencia del `SELECT` final, asi que la operadora
+ve el reporte aunque la reja FK frene todo; test con Motul+Ticul
+independientes probando aislamiento; helpers partidos por tema
+(`migracionDeZonasAsercionesDePrueba.ts`, `...LecturasDePrueba.ts`,
+`...RollbackEstadoDePrueba.ts`, `...RollbackLecturasDePrueba.ts`,
+`...RollbackReversionDePrueba.ts`).
+
+**El escritor delegado corrio sin Docker** (su sandbox no lo tenia
+disponible): typecheck y biome pasaron, pero la integracion nunca corrio
+de verdad. Esta sesion la corrio por primera vez y encontro 3 tests
+rotos -todos bugs mecanicos del lado del test, no del script SQL:
+
+- `expect(salida).toContain("23503")`: psql en verbosity default nunca
+  imprime el codigo SQLSTATE. Cambiado a buscar el texto real del mensaje
+  (`violates foreign key constraint "calles_lugar_tenant_fk"`). Esa
+  asercion fallida abortaba el test ANTES de su limpieza
+  (`quitarBloqueoDirecto()`), lo que arrastraba en cascada los dos tests
+  siguientes -causa raiz unica, tres fallos.
+- `toEqual(arrayContaining([...]))` con objetos de forma parcial: `toEqual`
+  exige igualdad exacta por elemento, no hace partial-match -se corrigio
+  para comparar la forma completa (`tipo`/`nombre`/`padreId`/`bajaEn`).
+- `bajaEn` comparado como string contra el `Date` que devuelve Drizzle al
+  leer la columna. Normalizado con `new Date(bajaEn)`.
+
+Verificado por esta sesion, no por el escritor: `pnpm test` (315
+archivos, 1561 tests), `pnpm check`/`pnpm typecheck`/`pnpm reglas` (0
+hallazgos propios), leida completa la logica SQL de los tres hallazgos
+1-3 linea por linea contra el script real antes de aceptar.
+
 ## Cierre y verificacion transversal
 
 Despues de B3u, correr sin compresion pnpm test, pnpm db:local && pnpm

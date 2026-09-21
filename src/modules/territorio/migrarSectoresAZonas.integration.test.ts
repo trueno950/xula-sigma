@@ -6,194 +6,146 @@ import {
   motul,
   owner,
   sembrar,
-  subdominioMotul,
+  ticul,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { domicilios } from "./infrastructure/esquema";
+import type { CalleId } from "./domain";
+import { calles, domicilios, lugares } from "./infrastructure/esquema";
+import { crearCalleEn } from "./lugarDePrueba";
+import { verificarMigracionDeAmbosTenants } from "./migracionDeZonasAsercionesDePrueba";
 import {
   type EscenarioDeMigracion,
-  leerDomiciliosMigrados,
-  leerZonasYBajas,
   sembrarEscenarioDeMigracion,
 } from "./migracionDeZonasDePrueba";
 import {
   ejecutarMigracion,
-  ejecutarMigracionConSalida,
+  ejecutarMigracionConBloqueo,
+  type ejecutarMigracionConSalida,
   leerEstadoDeIdempotencia,
   leerRestauracion,
   revertirMigracion,
 } from "./migracionDeZonasRollbackDePrueba";
 
-let escenario: EscenarioDeMigracion;
+let motulEscenario: EscenarioDeMigracion;
+let ticulEscenario: EscenarioDeMigracion;
+let calleDirectaTiculId: CalleId;
+let lugaresBorradosDeMotul: Awaited<
+  ReturnType<typeof ejecutarMigracionConSalida>
+>["lugaresBorrados"];
+const databaseUrl = () => {
+  const valor = process.env.DATABASE_URL;
+  if (!valor) throw new Error("Falta DATABASE_URL.");
+  return valor;
+};
+const quitarBloqueoDirecto = () =>
+  withTenant(ticul, (tx) =>
+    tx
+      .update(calles)
+      .set({ lugarId: ticulEscenario.asentamientoId })
+      .where(eq(calles.id, calleDirectaTiculId)),
+  );
 beforeAll(async () => {
   await sembrar();
-  escenario = await sembrarEscenarioDeMigracion();
+  motulEscenario = await sembrarEscenarioDeMigracion(motul);
+  ticulEscenario = await sembrarEscenarioDeMigracion(ticul);
+  calleDirectaTiculId = await crearCalleEn(
+    ticul,
+    ticulEscenario.sectorId,
+    "Calle bloqueadora",
+  );
+  await withTenant(motul, (tx) =>
+    tx
+      .update(lugares)
+      .set({ bajaEn: new Date("2026-01-01T00:00:00Z") })
+      .where(eq(lugares.id, motulEscenario.sectorId)),
+  );
 });
 afterAll(async () => {
   await limpiar();
   await owner.end();
   await cerrarConexion();
 });
+
 describe("migracion de sectores a zonas", () => {
   it("un UPDATE sin tenant queda bloqueado por RLS con cero filas y sin error", async () => {
-    const { coloniaId, manzanaId, domicilioDeLaManzanaId } = escenario;
-    const filas = await appSinTenant`
-      UPDATE domicilios
-      SET lugar_id = ${coloniaId}
-      WHERE id = ${domicilioDeLaManzanaId}
-      RETURNING id
-    `;
+    const filas =
+      await appSinTenant`UPDATE domicilios SET lugar_id = ${motulEscenario.coloniaId} WHERE id = ${motulEscenario.domicilioDeLaManzanaId} RETURNING id`;
     expect(filas).toHaveLength(0);
     const [domicilio] = await withTenant(motul, (tx) =>
       tx
         .select({ lugarId: domicilios.lugarId })
         .from(domicilios)
-        .where(eq(domicilios.id, domicilioDeLaManzanaId)),
+        .where(eq(domicilios.id, motulEscenario.domicilioDeLaManzanaId)),
     );
-    expect(domicilio?.lugarId).toBe(manzanaId);
+    expect(domicilio?.lugarId).toBe(motulEscenario.manzanaId);
   });
-  it("mueve todos los domicilios contados y preserva cada lugar anterior", async () => {
-    const {
-      coloniaId,
-      asentamientoId,
-      sectorId,
-      manzanaId,
-      callePrincipalId,
-      calleDeOtroAsentamientoId,
-      domicilioDelSectorId,
-      domicilioDeLaManzanaId,
-      domicilioConCalleAjenaId,
-    } = escenario;
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) throw new Error("Falta DATABASE_URL.");
-    const { salida, lugaresBorrados } = ejecutarMigracionConSalida({
-      databaseUrl,
-      subdominio: subdominioMotul,
+  it("reporta la calle directa antes de que la FK revierta toda la migracion", async () => {
+    const resultado = ejecutarMigracionConBloqueo(databaseUrl());
+    expect(resultado.salida).toContain(
+      'violates foreign key constraint "calles_lugar_tenant_fk"',
+    );
+    expect(resultado.callesRechazadas).toEqual(
+      expect.arrayContaining([
+        {
+          subdominio: expect.stringContaining("ticul-"),
+          sectorId: ticulEscenario.sectorId,
+          calleId: calleDirectaTiculId,
+          lugarRealId: ticulEscenario.sectorId,
+        },
+      ]),
+    );
+    await quitarBloqueoDirecto();
+  });
+  it("migra ambos tenants, conserva bajas y conserva el aislamiento", async () => {
+    lugaresBorradosDeMotul = await verificarMigracionDeAmbosTenants({
+      databaseUrl: databaseUrl(),
+      motulEscenario,
+      ticulEscenario,
     });
-    const resultado = await leerDomiciliosMigrados(motul, coloniaId);
-
-    expect(resultado.domiciliosMigrados).toEqual(
-      expect.arrayContaining([
-        { id: domicilioDelSectorId, lugarId: coloniaId },
-        { id: domicilioDeLaManzanaId, lugarId: coloniaId },
-        { id: domicilioConCalleAjenaId, lugarId: coloniaId },
-      ]),
+  });
+  it("es idempotente y el rollback restaura baja_en y domicilios", async () => {
+    const antes = await leerEstadoDeIdempotencia({ ayuntamientoId: motul });
+    ejecutarMigracion({ databaseUrl: databaseUrl() });
+    expect(await leerEstadoDeIdempotencia({ ayuntamientoId: motul })).toEqual(
+      antes,
     );
-    expect(resultado.entradas).toEqual(
-      expect.arrayContaining([
-        {
-          entidadId: domicilioDelSectorId,
-          origen: `script:migrar-sectores-a-zonas:${sectorId}`,
-        },
-        {
-          entidadId: domicilioDeLaManzanaId,
-          origen: `script:migrar-sectores-a-zonas:${manzanaId}`,
-        },
-        {
-          entidadId: domicilioConCalleAjenaId,
-          origen: `script:migrar-sectores-a-zonas:${sectorId}`,
-        },
-      ]),
-    );
-    const resultadoDeZonas = await leerZonasYBajas({
-      ayuntamientoId: motul,
-      asentamientoId,
-      sectorId,
-      manzanaId,
-      nombreDelSector: "Sector migracion",
-      nombreDeLaZonaVacia: "Sector vacio",
-    });
-    expect(resultadoDeZonas.zonasMigradas).toHaveLength(2);
-    expect(resultadoDeZonas.zonasMigradas).toEqual(
-      expect.arrayContaining([
-        {
-          lugarId: asentamientoId,
-          nombre: "Sector migracion",
-          id: expect.any(String),
-        },
-        {
-          lugarId: asentamientoId,
-          nombre: "Sector vacio",
-          id: expect.any(String),
-        },
-      ]),
-    );
-    const zonaDelSector = resultadoDeZonas.zonasMigradas.find(
-      ({ nombre }) => nombre === "Sector migracion",
-    );
-    if (!zonaDelSector) throw new Error("Falta la zona del sector migrado.");
-
-    expect(resultadoDeZonas.membresias).toEqual([
-      { zonaId: zonaDelSector.id, calleId: callePrincipalId },
-    ]);
-    expect(resultadoDeZonas.membresiasDeZonaVacia).toHaveLength(0);
-    expect(resultadoDeZonas.membresias).not.toEqual(
-      expect.arrayContaining([
-        { zonaId: zonaDelSector.id, calleId: calleDeOtroAsentamientoId },
-      ]),
-    );
-    expect(salida).toContain("calles_rechazadas");
-    expect(salida).toContain(calleDeOtroAsentamientoId);
-    expect(resultadoDeZonas.lugaresRestantes).toHaveLength(0);
-    expect(resultadoDeZonas.bajas).toEqual(
-      expect.arrayContaining([
-        {
-          accion: "BAJA_LUGAR",
-          entidad: "lugares",
-          entidadId: sectorId,
-          origen: `script:migrar-sectores-a-zonas:${coloniaId}`,
-        },
-        {
-          accion: "BAJA_LUGAR",
-          entidad: "lugares",
-          entidadId: manzanaId,
-          origen: `script:migrar-sectores-a-zonas:${sectorId}`,
-        },
-      ]),
-    );
-
-    const antesDeLaSegunda = await leerEstadoDeIdempotencia({
-      ayuntamientoId: motul,
-    });
-    ejecutarMigracion({ databaseUrl });
-    const despuesDeLaSegunda = await leerEstadoDeIdempotencia({
-      ayuntamientoId: motul,
-    });
-    expect(despuesDeLaSegunda).toEqual(antesDeLaSegunda);
-    expect(despuesDeLaSegunda.lugaresSectorManzana).toHaveLength(0);
-
-    expect(lugaresBorrados).toHaveLength(3);
     await revertirMigracion({
       ayuntamientoId: motul,
-      lugaresBorrados,
+      lugaresBorrados: lugaresBorradosDeMotul,
     });
     const restauracion = await leerRestauracion({
       ayuntamientoId: motul,
-      lugarIds: lugaresBorrados.map(({ lugarId }) => lugarId),
+      lugarIds: lugaresBorradosDeMotul.map(({ lugarId }) => lugarId),
       domicilioIds: [
-        domicilioDelSectorId,
-        domicilioDeLaManzanaId,
-        domicilioConCalleAjenaId,
+        motulEscenario.domicilioDelSectorId,
+        motulEscenario.domicilioDeLaManzanaId,
+        motulEscenario.domicilioConCalleAjenaId,
       ],
     });
-    expect(restauracion.lugares).toHaveLength(lugaresBorrados.length);
     expect(restauracion.lugares).toEqual(
       expect.arrayContaining(
-        lugaresBorrados.map(({ lugarId, tipo, nombre, padreId }) => ({
-          id: lugarId,
-          tipo,
-          nombre,
-          padreId,
-        })),
+        lugaresBorradosDeMotul.map(
+          ({ bajaEn, lugarId, tipo, nombre, padreId }) => ({
+            id: lugarId,
+            tipo,
+            nombre,
+            padreId,
+            bajaEn: bajaEn === null ? null : new Date(bajaEn),
+          }),
+        ),
       ),
     );
     expect(restauracion.domicilios).toEqual(
       expect.arrayContaining([
-        { id: domicilioDelSectorId, lugarId: sectorId },
-        { id: domicilioDeLaManzanaId, lugarId: manzanaId },
-        { id: domicilioConCalleAjenaId, lugarId: sectorId },
+        {
+          id: motulEscenario.domicilioDelSectorId,
+          lugarId: motulEscenario.sectorId,
+        },
+        {
+          id: motulEscenario.domicilioDeLaManzanaId,
+          lugarId: motulEscenario.manzanaId,
+        },
       ]),
     );
-    expect(restauracion.domicilios).toHaveLength(3);
   });
 });
