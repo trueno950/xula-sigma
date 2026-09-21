@@ -9,25 +9,44 @@ const MARCADOR_FIN = "__B3D_LUGARES_BORRADOS_JSON_FIN__";
 
 export type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
 
-const ejecutarPsql = (opciones: { databaseUrl: string; entrada: string }) =>
-  execFileSync(
-    "docker",
-    [
-      "exec",
-      "-i",
-      "xula-pg",
-      "psql",
-      opciones.databaseUrl.replace(":55432", ":5432"),
-      "-X",
-      "-v",
-      "ON_ERROR_STOP=1",
-    ],
-    {
-      input: opciones.entrada,
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    },
-  ).toString();
+let psqlNativoDisponible: boolean | null = null;
+const hayPsqlNativo = () => {
+  if (psqlNativoDisponible === null) {
+    try {
+      execFileSync("psql", ["--version"], {
+        stdio: ["ignore", "ignore", "ignore"],
+      });
+      psqlNativoDisponible = true;
+    } catch {
+      psqlNativoDisponible = false;
+    }
+  }
+  return psqlNativoDisponible;
+};
+const comandoPsql = (databaseUrl: string): [string, string[]] =>
+  hayPsqlNativo()
+    ? ["psql", [databaseUrl, "-X", "-v", "ON_ERROR_STOP=1"]]
+    : [
+        "docker",
+        [
+          "exec",
+          "-i",
+          "xula-pg",
+          "psql",
+          databaseUrl.replace(":55432", ":5432"),
+          "-X",
+          "-v",
+          "ON_ERROR_STOP=1",
+        ],
+      ];
+const ejecutarPsql = (opciones: { databaseUrl: string; entrada: string }) => {
+  const [cmd, args] = comandoPsql(opciones.databaseUrl);
+  return execFileSync(cmd, args, {
+    input: opciones.entrada,
+    encoding: "utf8",
+    stdio: ["pipe", "pipe", "pipe"],
+  }).toString();
+};
 const salidaDeError = (error: unknown) => {
   if (!(error instanceof Error)) throw error;
   const salida = error as Error & { stdout?: string; stderr?: string };
