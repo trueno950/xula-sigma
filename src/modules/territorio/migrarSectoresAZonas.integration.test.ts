@@ -1,6 +1,3 @@
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -9,6 +6,7 @@ import {
   motul,
   owner,
   sembrar,
+  subdominioMotul,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { domicilios } from "./infrastructure/esquema";
@@ -18,25 +16,24 @@ import {
   leerZonasYBajas,
   sembrarEscenarioDeMigracion,
 } from "./migracionDeZonasDePrueba";
-
-const rutaDelScript = resolve(
-  process.cwd(),
-  "scripts/migrar-sectores-a-zonas.sql",
-);
+import {
+  ejecutarMigracion,
+  ejecutarMigracionConSalida,
+  leerEstadoDeIdempotencia,
+  leerRestauracion,
+  revertirMigracion,
+} from "./migracionDeZonasRollbackDePrueba";
 
 let escenario: EscenarioDeMigracion;
-
 beforeAll(async () => {
   await sembrar();
   escenario = await sembrarEscenarioDeMigracion();
 });
-
 afterAll(async () => {
   await limpiar();
   await owner.end();
   await cerrarConexion();
 });
-
 describe("migracion de sectores a zonas", () => {
   it("un UPDATE sin tenant queda bloqueado por RLS con cero filas y sin error", async () => {
     const { coloniaId, manzanaId, domicilioDeLaManzanaId } = escenario;
@@ -46,9 +43,7 @@ describe("migracion de sectores a zonas", () => {
       WHERE id = ${domicilioDeLaManzanaId}
       RETURNING id
     `;
-
     expect(filas).toHaveLength(0);
-
     const [domicilio] = await withTenant(motul, (tx) =>
       tx
         .select({ lugarId: domicilios.lugarId })
@@ -57,7 +52,6 @@ describe("migracion de sectores a zonas", () => {
     );
     expect(domicilio?.lugarId).toBe(manzanaId);
   });
-
   it("mueve todos los domicilios contados y preserva cada lugar anterior", async () => {
     const {
       coloniaId,
@@ -72,33 +66,10 @@ describe("migracion de sectores a zonas", () => {
     } = escenario;
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) throw new Error("Falta DATABASE_URL.");
-
-    // No hay psql en el host: Postgres corre en el contenedor "xula-pg"
-    // (scripts/db-local.sh), asi que el script viaja por stdin a
-    // `docker exec` en vez de resolverse como ruta dentro del contenedor.
-    // El puerto interno es el 5432 nativo, no el 55432 publicado al host.
-    const guionDelScript = readFileSync(rutaDelScript, "utf8");
-    const urlInterna = databaseUrl.replace(":55432", ":5432");
-
-    const salida = execFileSync(
-      "docker",
-      [
-        "exec",
-        "-i",
-        "xula-pg",
-        "psql",
-        urlInterna,
-        "-X",
-        "-v",
-        "ON_ERROR_STOP=1",
-      ],
-      {
-        input: guionDelScript,
-        encoding: "utf8",
-        stdio: ["pipe", "pipe", "pipe"],
-      },
-    ).toString();
-
+    const { salida, lugaresBorrados } = ejecutarMigracionConSalida({
+      databaseUrl,
+      subdominio: subdominioMotul,
+    });
     const resultado = await leerDomiciliosMigrados(motul, coloniaId);
 
     expect(resultado.domiciliosMigrados).toEqual(
@@ -124,7 +95,6 @@ describe("migracion de sectores a zonas", () => {
         },
       ]),
     );
-
     const resultadoDeZonas = await leerZonasYBajas({
       ayuntamientoId: motul,
       asentamientoId,
@@ -133,7 +103,6 @@ describe("migracion de sectores a zonas", () => {
       nombreDelSector: "Sector migracion",
       nombreDeLaZonaVacia: "Sector vacio",
     });
-
     expect(resultadoDeZonas.zonasMigradas).toHaveLength(2);
     expect(resultadoDeZonas.zonasMigradas).toEqual(
       expect.arrayContaining([
@@ -149,7 +118,6 @@ describe("migracion de sectores a zonas", () => {
         },
       ]),
     );
-
     const zonaDelSector = resultadoDeZonas.zonasMigradas.find(
       ({ nombre }) => nombre === "Sector migracion",
     );
@@ -166,7 +134,6 @@ describe("migracion de sectores a zonas", () => {
     );
     expect(salida).toContain("calles_rechazadas");
     expect(salida).toContain(calleDeOtroAsentamientoId);
-
     expect(resultadoDeZonas.lugaresRestantes).toHaveLength(0);
     expect(resultadoDeZonas.bajas).toEqual(
       expect.arrayContaining([
@@ -184,5 +151,49 @@ describe("migracion de sectores a zonas", () => {
         },
       ]),
     );
+
+    const antesDeLaSegunda = await leerEstadoDeIdempotencia({
+      ayuntamientoId: motul,
+    });
+    ejecutarMigracion({ databaseUrl });
+    const despuesDeLaSegunda = await leerEstadoDeIdempotencia({
+      ayuntamientoId: motul,
+    });
+    expect(despuesDeLaSegunda).toEqual(antesDeLaSegunda);
+    expect(despuesDeLaSegunda.lugaresSectorManzana).toHaveLength(0);
+
+    expect(lugaresBorrados).toHaveLength(3);
+    await revertirMigracion({
+      ayuntamientoId: motul,
+      lugaresBorrados,
+    });
+    const restauracion = await leerRestauracion({
+      ayuntamientoId: motul,
+      lugarIds: lugaresBorrados.map(({ lugarId }) => lugarId),
+      domicilioIds: [
+        domicilioDelSectorId,
+        domicilioDeLaManzanaId,
+        domicilioConCalleAjenaId,
+      ],
+    });
+    expect(restauracion.lugares).toHaveLength(lugaresBorrados.length);
+    expect(restauracion.lugares).toEqual(
+      expect.arrayContaining(
+        lugaresBorrados.map(({ lugarId, tipo, nombre, padreId }) => ({
+          id: lugarId,
+          tipo,
+          nombre,
+          padreId,
+        })),
+      ),
+    );
+    expect(restauracion.domicilios).toEqual(
+      expect.arrayContaining([
+        { id: domicilioDelSectorId, lugarId: sectorId },
+        { id: domicilioDeLaManzanaId, lugarId: manzanaId },
+        { id: domicilioConCalleAjenaId, lugarId: sectorId },
+      ]),
+    );
+    expect(restauracion.domicilios).toHaveLength(3);
   });
 });
