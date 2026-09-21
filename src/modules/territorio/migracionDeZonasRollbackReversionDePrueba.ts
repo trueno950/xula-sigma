@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import { lugares } from "./infrastructure/esquema";
-import type { LugarBorradoDeSalida } from "./migracionDeZonasRollbackDePrueba";
+import type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
 
 const ordenarPadresPrimero = (filas: LugarBorradoDeSalida[]) => {
   const pendientes = [...filas];

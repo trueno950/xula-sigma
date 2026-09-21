@@ -2,17 +2,13 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import type { CalleId, LugarId } from "./domain";
 import { comoCalleId, comoLugarId } from "./domain";
+import type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
 
 const MARCADOR_INICIO = "__B3D_LUGARES_BORRADOS_JSON_INICIO__";
 const MARCADOR_FIN = "__B3D_LUGARES_BORRADOS_JSON_FIN__";
-export type LugarBorradoDeSalida = {
-  subdominio: string;
-  lugarId: LugarId;
-  tipo: "sector" | "manzana";
-  nombre: string;
-  padreId: LugarId | null;
-  bajaEn: string | null;
-};
+
+export type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
+
 const ejecutarPsql = (opciones: { databaseUrl: string; entrada: string }) =>
   execFileSync(
     "docker",
