@@ -416,7 +416,7 @@ antes de una ronda 3 y verifico cada uno antes de corregir:
 
 | # | Hallazgo | Veredicto |
 |---|---|---|
-| 1 | `GRANT DELETE` a `xula_app` amplia el rol de la aplicacion | **No es nuevo**: es la misma decision ya tomada y autorizada por el usuario en B3d-GREEN-03 (ver esa evidencia), el revisor la repite sin el contexto de esa conversacion. No se toco; queda para que el usuario confirme si quiere reabrirla |
+| 1 | `GRANT DELETE` a `xula_app` amplia el rol de la aplicacion | **No es nuevo**: es la misma decision ya tomada y autorizada por el usuario en B3d-GREEN-03 (ver esa evidencia), el revisor la repite sin el contexto de esa conversacion. No se toco entonces; **cerrado en la revision oficial de CI** (ver esa seccion abajo): documentado como excepcion en `AGENTS.md` |
 | 2 | Calle bajo una `manzana` directa (sin domicilio) no se detecta | **Falso positivo**, verificado empiricamente: se agrego el escenario exacto al test (`calleDirectaEnManzanaTiculId`) y `sectores_de_lugares_borrados` ya la detecta -el CTE propaga `origen_id` correctamente al trepar de manzana a sector |
 | 3 | Falta test para el caso de manzana directa | Cerrado por el mismo agregado del punto 2 |
 | 4 | Las aserciones de Motul/Ticul solo cubren un domicilio y omiten bitacora/`BAJA_LUGAR` | **Real**: el split de archivos perdio la asercion exacta de `origen` que si tenia B3d-GREEN-03/RED-04. Restaurada en `migracionDeZonasAsercionesDePrueba.ts` -`verificarDomicilioMigrado`, `verificarBajasDeLugares` |
@@ -452,6 +452,47 @@ ronda 2 dejo:
 
 Verificado: `pnpm test` (315/1561), `pnpm check`/`pnpm typecheck`/
 `pnpm reglas` sin hallazgos propios.
+
+### Revision oficial de CI (PR #66)
+
+Con las 3 rondas locales cerradas se abrio el PR #66. El job "Revision de
+IA" (`gga run --pr-mode` via OpenCode, mismo mecanismo que
+`pnpm revision:local:pr` pero corriendo en el runner) fallaba antes de
+revisar una sola linea, por dos causas ajenas al codigo de este cambio:
+
+- El test de migracion asumia `docker exec -i xula-pg psql` a fuerzas
+  -unico camino disponible en esta maquina de desarrollo, que no tiene
+  `psql` nativo-. En CI, Postgres corre como *service container* nativo y
+  no existe ningun contenedor `xula-pg`. Corregido para detectar `psql`
+  nativo primero y caer a Docker solo si no esta disponible
+  (`migracionDeZonasRollbackDePrueba.ts`).
+- `Homebrew/actions/setup-homebrew@master` ya no resuelve -esa rama se
+  renombro a `main` upstream-, y una vez arreglado eso, `opencode.json`
+  referenciaba prompts de agentes `sdd-*` que solo existen si
+  `gentle-ai install` corrio antes en la maquina -nunca corria en CI-.
+  Ninguno de los dos es un cambio de esta rama: son bytes identicos a
+  `main`, rotos para cualquier PR. Corregidos en `.github/workflows/ci.yml`
+  (pin de version + paso nuevo que instala `gentle-ai` y sincroniza los
+  prompts de SDD antes de revisar).
+
+Con el reporter corriendo completo, encontro hallazgos reales en 3 rondas
+sucesivas, todos verificados contra el codigo antes de corregir:
+
+| # | Hallazgo | Correccion |
+|---|---|---|
+| 1 | `reportes`/`intervenciones` colgando de un sector/manzana abortan el `DELETE` con un error crudo de FK, sin reporte de curacion | Mismo mecanismo que `calles_rechazadas`: precheck + `NOTICE __B3D_REGISTROS_DEPENDIENTES_JSON__` antes del `DELETE`. Test propio (`migrarSectoresAZonasRegistrosDependientes.integration.test.ts`) |
+| 2 | Nombres de sector duplicados en el mismo asentamiento chocan contra `zonas_tenant_lugar_nombre_idx` con un error crudo de Postgres | Mismo mecanismo: precheck + `NOTICE __B3D_ZONAS_DUPLICADAS_JSON__` antes del `INSERT`. Test propio (`migrarSectoresAZonasNombresDuplicados.integration.test.ts`) |
+| 3 | Una sola transaccion para todos los municipios (no se puede `COMMIT` dentro de un `DO`) | **No es un bug**: mismo patron que el precedente `baja-calles-fuera-de-asentamiento.sql`, no se toco. Runbook corregido donde afirmaba lo contrario ("la transaccion del municipio se revierte") |
+| 4 | El precheck de duplicados no filtraba por `baja_en`, pero el indice real es parcial (`WHERE baja_en IS NULL`) | **Real**: reportaba colisiones que el indice no iba a rechazar (un sector de baja con el mismo nombre que uno activo). Filtro agregado; runbook precisado |
+| 5 | Una `manzana` puede colgar directo de una `colonia`/`cabecera` sin sector intermedio (`puedeContener` es por rango); esas calles nunca entraban a `calles_rechazadas` | **Real**: el CTE recursivo solo captura cuando la cadena llega a `tipo = 'sector'`. Se reportan ahora como `registros_dependientes` (`entidad: "calles"`). Test propio (`migrarSectoresAZonasCalleSinSector.integration.test.ts`) |
+| 6 | Falta `drizzle/meta/0018_snapshot.json`: el journal tiene la entrada pero no su snapshot | **Real**: regenerado con el procedimiento de `openspec/changes/mapa-operativo-territorial/design.md` (journal truncado a 0017, base scratch, `pnpm db:generate` confirma "No schema changes" porque el GRANT no toca el esquema de Drizzle, snapshot = copia de 0017 con `id`/`prevId` nuevos). Journal real restaurado, verificado sin diff |
+| 7 | Dos funciones de test superaban 30 lineas (el `it` de idempotencia, el `beforeAll` de registros dependientes) | **Real**: partidas (`verificarRestauracion`; `sembrarArbolConDependientes`/`sembrarReporteYIntervencion`) |
+| 8 | `GRANT DELETE` a `xula_app` sigue marcado como pendiente en este mismo archivo (ronda 2, hallazgo 1) | **Cerrado con el usuario**: documentado como excepcion sancionada en `AGENTS.md` ("La unica excepcion: ampliacion de privilegio para un script operativo"), mismo formato que `abreviaturas` y las excepciones de Server Actions |
+
+Verificado en cada ronda: `pnpm test` (317-318 archivos, 1564 tests),
+`pnpm check`/`pnpm typecheck`/`pnpm reglas` sin hallazgos propios, los 4
+checks restantes de CI (lint/tipos/capas, tests unitarios, integracion y
+aislamiento, links de documentacion) en verde.
 
 ## Cierre y verificacion transversal
 
