@@ -95,21 +95,30 @@ columnas exactas:
 
 Una calle rechazada no se fuerza a una zona de otro asentamiento. El detalle incluye tanto calles derivadas de domicilios como una calle cuyo propio `lugar_id` es un sector o manzana que se borrará; esta última sigue frenando el `DELETE` con una violación de llave foránea (`calles_lugar_tenant_fk`) hasta que se cure -`psql` en verbosity por defecto no imprime el codigo SQLSTATE `23503`, solo el mensaje con el nombre de la restricción, asi que buscar ese nombre en el log y no el numero. Antes de cada `DELETE`, el script escribe la misma lista como `NOTICE __B3D_CALLES_RECHAZADAS_JSON__:<json>` para que `2>&1` la conserve incluso cuando esa reja aborta el bloque. Debe registrarse para curación municipal antes de cualquier operación posterior.
 
-Dos sectores del mismo asentamiento con el mismo nombre chocan contra
-`zonas_tenant_lugar_nombre_idx` antes de que la migración llegue siquiera a
-borrar nada: el script reporta la colisión como `NOTICE
+Dos sectores **activos** del mismo asentamiento con el mismo nombre chocan
+contra `zonas_tenant_lugar_nombre_idx` -es un índice parcial, `WHERE
+baja_en IS NULL`- antes de que la migración llegue siquiera a borrar nada:
+el script reporta la colisión como `NOTICE
 __B3D_ZONAS_DUPLICADAS_JSON__:<json>` y aborta con un `duplicate key value`
 sobre esa restricción. Se cura renombrando uno de los sectores en curación
-municipal antes de reintentar.
+municipal antes de reintentar. Un sector de baja con el mismo nombre que
+uno activo, o dos de baja entre sí, no entran a este reporte porque el
+índice no los alcanza.
 
 Un `reporte` o una `intervención` vigente que cuelga directo de un sector o
 una manzana bloquea el `DELETE` por `reportes_lugar_tenant_fk` o
 `intervenciones_lugar_tenant_fk` -sin reparenteo automático, la manzana se
 borra antes que el sector y esa es la FK que aparece primero si ambas
-tienen registros colgando-. El script reporta esos registros como `NOTICE
-__B3D_REGISTROS_DEPENDIENTES_JSON__:<json>` antes de intentar el `DELETE`.
-Se cura reasignando el `lugar_id` de cada fila listada al asentamiento
-destino antes de reintentar; el script no lo hace por la operadora.
+tienen registros colgando-. Ahí mismo entra una `calle` cuyo propio
+`lugar_id` es un sector o manzana a borrar **sin sector en su cadena**: una
+manzana puede colgar directo de una colonia o cabecera -`puedeContener` es
+por rango, no exige un sector intermedio-, y esa calle no tiene zona
+destino posible, así que `calles_rechazadas` (arriba) no la alcanza; entra
+acá como `entidad: "calles"`. El script reporta todos estos registros como
+`NOTICE __B3D_REGISTROS_DEPENDIENTES_JSON__:<json>` antes de intentar el
+`DELETE`. Se cura reasignando el `lugar_id` de cada fila listada al
+asentamiento o sector destino antes de reintentar; el script no lo hace
+por la operadora.
 
 ## Comprobación posterior
 

@@ -351,6 +351,12 @@ BEGIN
     FROM sectores_a_migrar
     WHERE asentamiento_id IS NOT NULL;
 
+    -- zonas_tenant_lugar_nombre_idx es parcial (WHERE baja_en IS NULL,
+    -- drizzle/0017_reflective_tarantula.sql): dos sectores del mismo
+    -- nombre solo chocan ahi si los dos siguen activos. Un sector activo
+    -- y uno de baja, o dos de baja con baja_en distinto, no colisionan -el
+    -- JOIN de mas abajo que arma zonas_creadas ya desambigua por baja_en-.
+    -- El filtro evita reportar una colision que no va a ocurrir.
     INSERT INTO zonas_duplicadas (
       subdominio, ayuntamiento_id, asentamiento_id, nombre, sector_ids
     )
@@ -359,6 +365,7 @@ BEGIN
       array_agg(sector_id ORDER BY sector_id)
     FROM sectores_a_migrar
     WHERE asentamiento_id IS NOT NULL
+      AND baja_en IS NULL
     GROUP BY ayuntamiento_id, asentamiento_id, nombre
     HAVING count(*) > 1;
 
@@ -650,6 +657,30 @@ BEGIN
       ON b.ayuntamiento_id = i.ayuntamiento_id
      AND b.lugar_id = i.lugar_id
     WHERE b.ayuntamiento_id = municipio.id
+    ON CONFLICT DO NOTHING;
+
+    -- `puedeContener` es por rango (tipoDeLugar.ts): una manzana puede
+    -- colgar directo de una colonia o cabecera, sin sector intermedio. El
+    -- CTE recursivo de calles_rechazadas solo captura una calle cuando su
+    -- cadena llega a un sector -la unica unidad con zona propia-, asi que
+    -- una calle bajo una manzana asi nunca entra ahi. No tiene zona
+    -- destino posible: se reporta como dependiente, igual que un reporte o
+    -- intervencion colgando de un sector.
+    INSERT INTO registros_dependientes (
+      subdominio, ayuntamiento_id, entidad, entidad_id, lugar_id
+    )
+    SELECT DISTINCT
+      municipio.subdominio, calle.ayuntamiento_id, 'calles', calle.id, calle.lugar_id
+    FROM calles calle
+    JOIN lugares_borrados b
+      ON b.ayuntamiento_id = calle.ayuntamiento_id
+     AND b.lugar_id = calle.lugar_id
+    WHERE b.ayuntamiento_id = municipio.id
+      AND NOT EXISTS (
+        SELECT 1 FROM calles_rechazadas cr
+        WHERE cr.ayuntamiento_id = calle.ayuntamiento_id
+          AND cr.calle_id = calle.id
+      )
     ON CONFLICT DO NOTHING;
 
     RAISE NOTICE '__B3D_REGISTROS_DEPENDIENTES_JSON__:%',
