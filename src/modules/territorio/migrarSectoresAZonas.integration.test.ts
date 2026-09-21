@@ -79,6 +79,40 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
+const verificarRestauracion = (
+  restauracion: Awaited<ReturnType<typeof leerRestauracion>>,
+) => {
+  expect(restauracion.lugares).toEqual(
+    expect.arrayContaining(
+      lugaresBorradosDeMotul.map(
+        ({ bajaEn, lugarId, tipo, nombre, padreId }) => ({
+          id: lugarId,
+          tipo,
+          nombre,
+          padreId,
+          bajaEn: bajaEn === null ? null : new Date(bajaEn),
+        }),
+      ),
+    ),
+  );
+  expect(restauracion.domicilios).toEqual(
+    expect.arrayContaining([
+      {
+        id: motulEscenario.domicilioDelSectorId,
+        lugarId: motulEscenario.sectorId,
+      },
+      {
+        id: motulEscenario.domicilioDeLaManzanaId,
+        lugarId: motulEscenario.manzanaId,
+      },
+      {
+        id: motulEscenario.domicilioConCalleAjenaId,
+        lugarId: motulEscenario.sectorId,
+      },
+    ]),
+  );
+};
+
 describe("migracion de sectores a zonas", () => {
   it("un UPDATE sin tenant queda bloqueado por RLS con cero filas y sin error", async () => {
     const filas =
@@ -142,34 +176,6 @@ describe("migracion de sectores a zonas", () => {
         motulEscenario.domicilioConCalleAjenaId,
       ],
     });
-    expect(restauracion.lugares).toEqual(
-      expect.arrayContaining(
-        lugaresBorradosDeMotul.map(
-          ({ bajaEn, lugarId, tipo, nombre, padreId }) => ({
-            id: lugarId,
-            tipo,
-            nombre,
-            padreId,
-            bajaEn: bajaEn === null ? null : new Date(bajaEn),
-          }),
-        ),
-      ),
-    );
-    expect(restauracion.domicilios).toEqual(
-      expect.arrayContaining([
-        {
-          id: motulEscenario.domicilioDelSectorId,
-          lugarId: motulEscenario.sectorId,
-        },
-        {
-          id: motulEscenario.domicilioDeLaManzanaId,
-          lugarId: motulEscenario.manzanaId,
-        },
-        {
-          id: motulEscenario.domicilioConCalleAjenaId,
-          lugarId: motulEscenario.sectorId,
-        },
-      ]),
-    );
+    verificarRestauracion(restauracion);
   });
 });

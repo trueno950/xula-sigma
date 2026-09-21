@@ -31,52 +31,70 @@ const databaseUrl = () => {
 let sectorConReporteId: LugarId;
 let manzanaConIntervencionId: LugarId;
 
-beforeAll(async () => {
-  await sembrar();
-  const gente = await sembrarGente();
+const sembrarArbolConDependientes = async () => {
   const asentamientoId = await crearLugarEn(
     motul,
     "comisaria",
     "Asentamiento con registros dependientes",
   );
-  sectorConReporteId = await crearLugarHijoEn({
+  const sectorId = await crearLugarHijoEn({
     ayuntamientoId: motul,
     tipo: "sector",
     nombre: "Sector con reporte",
     padreId: asentamientoId,
   });
-  manzanaConIntervencionId = await crearLugarHijoEn({
+  const manzanaId = await crearLugarHijoEn({
     ayuntamientoId: motul,
     tipo: "manzana",
     nombre: "Manzana con intervencion",
-    padreId: sectorConReporteId,
+    padreId: sectorId,
   });
+  return { sectorId, manzanaId };
+};
 
-  const usuarioId = gente.motul.OPERADOR;
-  await withTenant(motul, (tx) =>
-    tx.execute(sql`
-      INSERT INTO reportes (
-        ayuntamiento_id, folio, anio, consecutivo, tipo, estado,
-        lugar_id, descripcion, registrado_por_usuario_id
-      ) VALUES (
-        ${motul}, 'B3D-TEST-0001', 2026, 1, 'BACHE', 'RECIBIDO',
-        ${sectorConReporteId}, 'Reporte de prueba colgando de un sector',
-        ${usuarioId}
-      )
-    `),
-  );
-  await withTenant(motul, (tx) =>
-    tx.execute(sql`
-      INSERT INTO intervenciones (
-        ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id,
-        descripcion, registrado_por_usuario_id
-      ) VALUES (
-        ${motul}, 'OBRA', 'PLANIFICADA', '2026-01-15',
-        ${manzanaConIntervencionId},
-        'Intervencion de prueba colgando de una manzana', ${usuarioId}
-      )
-    `),
-  );
+const sembrarReporteYIntervencion = (opciones: {
+  usuarioId: string;
+  sectorId: LugarId;
+  manzanaId: LugarId;
+}) =>
+  Promise.all([
+    withTenant(motul, (tx) =>
+      tx.execute(sql`
+        INSERT INTO reportes (
+          ayuntamiento_id, folio, anio, consecutivo, tipo, estado,
+          lugar_id, descripcion, registrado_por_usuario_id
+        ) VALUES (
+          ${motul}, 'B3D-TEST-0001', 2026, 1, 'BACHE', 'RECIBIDO',
+          ${opciones.sectorId}, 'Reporte de prueba colgando de un sector',
+          ${opciones.usuarioId}
+        )
+      `),
+    ),
+    withTenant(motul, (tx) =>
+      tx.execute(sql`
+        INSERT INTO intervenciones (
+          ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id,
+          descripcion, registrado_por_usuario_id
+        ) VALUES (
+          ${motul}, 'OBRA', 'PLANIFICADA', '2026-01-15',
+          ${opciones.manzanaId},
+          'Intervencion de prueba colgando de una manzana', ${opciones.usuarioId}
+        )
+      `),
+    ),
+  ]);
+
+beforeAll(async () => {
+  await sembrar();
+  const gente = await sembrarGente();
+  const { sectorId, manzanaId } = await sembrarArbolConDependientes();
+  sectorConReporteId = sectorId;
+  manzanaConIntervencionId = manzanaId;
+  await sembrarReporteYIntervencion({
+    usuarioId: gente.motul.OPERADOR,
+    sectorId,
+    manzanaId,
+  });
 });
 
 afterAll(async () => {
