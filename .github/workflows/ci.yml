@@ -158,7 +158,7 @@ jobs:
       # bajar un archivo. Esta es la accion oficial de Homebrew.
       - name: Instalar Homebrew
         if: env.DEEPSEEK_API_KEY != ''
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@2026.09.21.1
 
       - name: Instalar GGA y opencode
         if: env.DEEPSEEK_API_KEY != ''
