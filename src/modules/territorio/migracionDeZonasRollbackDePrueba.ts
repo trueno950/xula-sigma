@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import type { CalleId, LugarId } from "./domain";
-import { comoCalleId, comoLugarId } from "./domain";
+import { comoLugarId } from "./domain";
+import { esRegistro } from "./migracionDeZonasReportesDePrueba";
 import type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
 
 const MARCADOR_INICIO = "__B3D_LUGARES_BORRADOS_JSON_INICIO__";
@@ -75,8 +75,6 @@ export const ejecutarMigracion = ({ databaseUrl }: { databaseUrl: string }) =>
     databaseUrl,
     entrada: readFileSync("scripts/migrar-sectores-a-zonas.sql", "utf8"),
   });
-const esRegistro = (valor: unknown): valor is Record<string, unknown> =>
-  typeof valor === "object" && valor !== null && !Array.isArray(valor);
 const parsearLugar = (valor: unknown): LugarBorradoDeSalida => {
   if (
     !esRegistro(valor) ||
@@ -112,47 +110,17 @@ const parsearSalida = (salida: string): LugarBorradoDeSalida[] => {
   if (!Array.isArray(datos)) throw new Error("La salida JSON no es una lista.");
   return datos.map(parsearLugar);
 };
-export type CalleRechazadaDeSalida = {
-  subdominio: string;
-  sectorId: LugarId;
-  calleId: CalleId;
-  lugarRealId: LugarId;
-};
-const parsearCallesRechazadas = (salida: string) => {
-  const marcador = "__B3D_CALLES_RECHAZADAS_JSON__:";
-  const inicio = salida.lastIndexOf(marcador);
-  if (inicio < 0) throw new Error("Falta el reporte de calles rechazadas.");
-  const fin = salida.indexOf("\n", inicio);
-  const json = salida
-    .slice(inicio + marcador.length, fin < 0 ? undefined : fin)
-    .trim();
-  const datos: unknown = JSON.parse(json);
-  if (!Array.isArray(datos))
-    throw new Error("El reporte de calles no es una lista.");
-  return datos.map((fila): CalleRechazadaDeSalida => {
-    if (
-      !esRegistro(fila) ||
-      typeof fila.subdominio !== "string" ||
-      typeof fila.sector_id !== "string" ||
-      typeof fila.calle_id !== "string" ||
-      typeof fila.lugar_real_id !== "string"
-    )
-      throw new Error("Calle rechazada invalida.");
-    return {
-      subdominio: fila.subdominio,
-      sectorId: comoLugarId(fila.sector_id),
-      calleId: comoCalleId(fila.calle_id),
-      lugarRealId: comoLugarId(fila.lugar_real_id),
-    };
-  });
-};
-export const ejecutarMigracionConBloqueo = (databaseUrl: string) => {
-  const salida = ejecutarPsqlFallida({
+
+export type { CalleRechazadaDeSalida } from "./migracionDeZonasReportesDePrueba";
+// No calcula el reporte de rechazos aca: no todo bloqueo llega a emitir el
+// NOTICE de calles (un choque anterior, como un nombre de sector
+// duplicado, aborta antes). Cada test parsea con la funcion que le toca.
+export const ejecutarMigracionConBloqueo = (databaseUrl: string) => ({
+  salida: ejecutarPsqlFallida({
     databaseUrl,
     entrada: readFileSync("scripts/migrar-sectores-a-zonas.sql", "utf8"),
-  });
-  return { salida, callesRechazadas: parsearCallesRechazadas(salida) };
-};
+  }),
+});
 export const ejecutarMigracionConSalida = (opciones: {
   databaseUrl: string;
   subdominio: string;

@@ -91,6 +91,31 @@ CREATE TEMP TABLE calles_rechazadas (
   PRIMARY KEY (ayuntamiento_id, zona_id, calle_id)
 ) ON COMMIT PRESERVE ROWS;
 
+-- Dos sectores del mismo asentamiento con el mismo nombre chocan contra
+-- zonas_tenant_lugar_nombre_idx. Se reporta antes del INSERT para que la
+-- operadora sepa que curar; el indice sigue siendo la reja que aborta.
+CREATE TEMP TABLE zonas_duplicadas (
+  subdominio       text NOT NULL,
+  ayuntamiento_id  uuid NOT NULL,
+  asentamiento_id  uuid NOT NULL,
+  nombre           text NOT NULL,
+  sector_ids       uuid[] NOT NULL,
+  PRIMARY KEY (ayuntamiento_id, asentamiento_id, nombre)
+) ON COMMIT PRESERVE ROWS;
+
+-- Un reporte o intervencion vigente que cuelga de un sector o manzana
+-- bloquea el DELETE por reportes_lugar_tenant_fk o
+-- intervenciones_lugar_tenant_fk (NO ACTION, sin reparenteo automatico).
+-- Se reporta antes del DELETE por la misma razon que calles_rechazadas.
+CREATE TEMP TABLE registros_dependientes (
+  subdominio       text NOT NULL,
+  ayuntamiento_id  uuid NOT NULL,
+  entidad          text NOT NULL,
+  entidad_id       uuid NOT NULL,
+  lugar_id         uuid NOT NULL,
+  PRIMARY KEY (entidad, entidad_id)
+) ON COMMIT PRESERVE ROWS;
+
 DO $$
 DECLARE
   municipio                         record;
@@ -325,6 +350,32 @@ BEGIN
     INTO sectores_con_asentamiento
     FROM sectores_a_migrar
     WHERE asentamiento_id IS NOT NULL;
+
+    INSERT INTO zonas_duplicadas (
+      subdominio, ayuntamiento_id, asentamiento_id, nombre, sector_ids
+    )
+    SELECT
+      municipio.subdominio, ayuntamiento_id, asentamiento_id, nombre,
+      array_agg(sector_id ORDER BY sector_id)
+    FROM sectores_a_migrar
+    WHERE asentamiento_id IS NOT NULL
+    GROUP BY ayuntamiento_id, asentamiento_id, nombre
+    HAVING count(*) > 1;
+
+    RAISE NOTICE '__B3D_ZONAS_DUPLICADAS_JSON__:%',
+      COALESCE((
+        SELECT json_agg(
+          json_build_object(
+            'subdominio', subdominio,
+            'asentamiento_id', asentamiento_id,
+            'nombre', nombre,
+            'sector_ids', sector_ids
+          )
+          ORDER BY nombre
+        )
+        FROM zonas_duplicadas
+        WHERE ayuntamiento_id = municipio.id
+      ), '[]'::json);
 
     INSERT INTO zonas (ayuntamiento_id, lugar_id, nombre, baja_en)
     SELECT ayuntamiento_id, asentamiento_id, nombre, baja_en
@@ -579,6 +630,43 @@ BEGIN
         municipio.subdominio, lugares_contados, lugares_anotados;
     END IF;
 
+    INSERT INTO registros_dependientes (
+      subdominio, ayuntamiento_id, entidad, entidad_id, lugar_id
+    )
+    SELECT municipio.subdominio, r.ayuntamiento_id, 'reportes', r.id, r.lugar_id
+    FROM reportes r
+    JOIN lugares_borrados b
+      ON b.ayuntamiento_id = r.ayuntamiento_id
+     AND b.lugar_id = r.lugar_id
+    WHERE b.ayuntamiento_id = municipio.id
+    ON CONFLICT DO NOTHING;
+
+    INSERT INTO registros_dependientes (
+      subdominio, ayuntamiento_id, entidad, entidad_id, lugar_id
+    )
+    SELECT municipio.subdominio, i.ayuntamiento_id, 'intervenciones', i.id, i.lugar_id
+    FROM intervenciones i
+    JOIN lugares_borrados b
+      ON b.ayuntamiento_id = i.ayuntamiento_id
+     AND b.lugar_id = i.lugar_id
+    WHERE b.ayuntamiento_id = municipio.id
+    ON CONFLICT DO NOTHING;
+
+    RAISE NOTICE '__B3D_REGISTROS_DEPENDIENTES_JSON__:%',
+      COALESCE((
+        SELECT json_agg(
+          json_build_object(
+            'subdominio', subdominio,
+            'entidad', entidad,
+            'entidad_id', entidad_id,
+            'lugar_id', lugar_id
+          )
+          ORDER BY entidad, entidad_id
+        )
+        FROM registros_dependientes
+        WHERE ayuntamiento_id = municipio.id
+      ), '[]'::json);
+
     SELECT count(*)
     INTO manzanas_contadas
     FROM lugares_borrados
@@ -654,3 +742,27 @@ SELECT 'calles_rechazadas' AS salida,
        lugar_real_id
 FROM calles_rechazadas
 ORDER BY subdominio, sector_id, calle_id;
+
+-- Nombres de sector duplicados dentro del mismo asentamiento.
+SELECT 'zonas_duplicadas' AS salida, count(*) AS cantidad
+FROM zonas_duplicadas;
+
+SELECT 'zonas_duplicadas' AS salida,
+       subdominio,
+       asentamiento_id,
+       nombre,
+       sector_ids
+FROM zonas_duplicadas
+ORDER BY subdominio, nombre;
+
+-- Reportes e intervenciones que cuelgan de un sector o manzana a borrar.
+SELECT 'registros_dependientes' AS salida, count(*) AS cantidad
+FROM registros_dependientes;
+
+SELECT 'registros_dependientes' AS salida,
+       subdominio,
+       entidad,
+       entidad_id,
+       lugar_id
+FROM registros_dependientes
+ORDER BY subdominio, entidad, entidad_id;

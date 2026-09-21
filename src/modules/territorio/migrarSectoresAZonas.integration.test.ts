@@ -17,6 +17,7 @@ import {
   type EscenarioDeMigracion,
   sembrarEscenarioDeMigracion,
 } from "./migracionDeZonasDePrueba";
+import { parsearCallesRechazadas } from "./migracionDeZonasReportesDePrueba";
 import {
   ejecutarMigracion,
   ejecutarMigracionConBloqueo,
@@ -96,7 +97,7 @@ describe("migracion de sectores a zonas", () => {
     expect(resultado.salida).toContain(
       'violates foreign key constraint "calles_lugar_tenant_fk"',
     );
-    expect(resultado.callesRechazadas).toEqual(
+    expect(parsearCallesRechazadas(resultado.salida)).toEqual(
       expect.arrayContaining([
         {
           subdominio: expect.stringContaining("ticul-"),
