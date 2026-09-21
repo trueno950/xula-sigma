@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import type { LugarId } from "./domain";
-import { comoLugarId } from "./domain";
+import type { CalleId, LugarId } from "./domain";
+import { comoCalleId, comoLugarId } from "./domain";
 
 const MARCADOR_INICIO = "__B3D_LUGARES_BORRADOS_JSON_INICIO__";
 const MARCADOR_FIN = "__B3D_LUGARES_BORRADOS_JSON_FIN__";
@@ -100,7 +100,7 @@ const parsearSalida = (salida: string): LugarBorradoDeSalida[] => {
 export type CalleRechazadaDeSalida = {
   subdominio: string;
   sectorId: LugarId;
-  calleId: string;
+  calleId: CalleId;
   lugarRealId: LugarId;
 };
 const parsearCallesRechazadas = (salida: string) => {
@@ -126,7 +126,7 @@ const parsearCallesRechazadas = (salida: string) => {
     return {
       subdominio: fila.subdominio,
       sectorId: comoLugarId(fila.sector_id),
-      calleId: fila.calle_id,
+      calleId: comoCalleId(fila.calle_id),
       lugarRealId: comoLugarId(fila.lugar_real_id),
     };
   });

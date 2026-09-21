@@ -29,6 +29,7 @@ import {
 let motulEscenario: EscenarioDeMigracion;
 let ticulEscenario: EscenarioDeMigracion;
 let calleDirectaTiculId: CalleId;
+let calleDirectaEnManzanaTiculId: CalleId;
 let lugaresBorradosDeMotul: Awaited<
   ReturnType<typeof ejecutarMigracionConSalida>
 >["lugaresBorrados"];
@@ -38,12 +39,16 @@ const databaseUrl = () => {
   return valor;
 };
 const quitarBloqueoDirecto = () =>
-  withTenant(ticul, (tx) =>
-    tx
+  withTenant(ticul, async (tx) => {
+    await tx
       .update(calles)
       .set({ lugarId: ticulEscenario.asentamientoId })
-      .where(eq(calles.id, calleDirectaTiculId)),
-  );
+      .where(eq(calles.id, calleDirectaTiculId));
+    await tx
+      .update(calles)
+      .set({ lugarId: ticulEscenario.asentamientoId })
+      .where(eq(calles.id, calleDirectaEnManzanaTiculId));
+  });
 beforeAll(async () => {
   await sembrar();
   motulEscenario = await sembrarEscenarioDeMigracion(motul);
@@ -52,6 +57,11 @@ beforeAll(async () => {
     ticul,
     ticulEscenario.sectorId,
     "Calle bloqueadora",
+  );
+  calleDirectaEnManzanaTiculId = await crearCalleEn(
+    ticul,
+    ticulEscenario.manzanaId,
+    "Calle bloqueadora en manzana",
   );
   await withTenant(motul, (tx) =>
     tx
@@ -86,6 +96,12 @@ describe("migracion de sectores a zonas", () => {
     );
     expect(resultado.callesRechazadas).toEqual(
       expect.arrayContaining([
+        {
+          subdominio: expect.stringContaining("ticul-"),
+          sectorId: ticulEscenario.sectorId,
+          calleId: calleDirectaEnManzanaTiculId,
+          lugarRealId: ticulEscenario.manzanaId,
+        },
         {
           subdominio: expect.stringContaining("ticul-"),
           sectorId: ticulEscenario.sectorId,

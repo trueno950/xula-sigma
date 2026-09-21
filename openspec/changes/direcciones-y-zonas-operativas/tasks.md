@@ -407,6 +407,29 @@ archivos, 1561 tests), `pnpm check`/`pnpm typecheck`/`pnpm reglas` (0
 hallazgos propios), leida completa la logica SQL de los tres hallazgos
 1-3 linea por linea contra el script real antes de aceptar.
 
+### Ronda 2 de revision local
+
+Segunda corrida de `pnpm revision:local:pr` sobre el fix anterior: trajo
+8 hallazgos nuevos. Por la disciplina del proyecto -"si la segunda trae
+un hallazgo nuevo, se para y lo decide una persona"- esta sesion freno
+antes de una ronda 3 y verifico cada uno antes de corregir:
+
+| # | Hallazgo | Veredicto |
+|---|---|---|
+| 1 | `GRANT DELETE` a `xula_app` amplia el rol de la aplicacion | **No es nuevo**: es la misma decision ya tomada y autorizada por el usuario en B3d-GREEN-03 (ver esa evidencia), el revisor la repite sin el contexto de esa conversacion. No se toco; queda para que el usuario confirme si quiere reabrirla |
+| 2 | Calle bajo una `manzana` directa (sin domicilio) no se detecta | **Falso positivo**, verificado empiricamente: se agrego el escenario exacto al test (`calleDirectaEnManzanaTiculId`) y `sectores_de_lugares_borrados` ya la detecta -el CTE propaga `origen_id` correctamente al trepar de manzana a sector |
+| 3 | Falta test para el caso de manzana directa | Cerrado por el mismo agregado del punto 2 |
+| 4 | Las aserciones de Motul/Ticul solo cubren un domicilio y omiten bitacora/`BAJA_LUGAR` | **Real**: el split de archivos perdio la asercion exacta de `origen` que si tenia B3d-GREEN-03/RED-04. Restaurada en `migracionDeZonasAsercionesDePrueba.ts` -`verificarDomicilioMigrado`, `verificarBajasDeLugares` |
+| 5 | `CalleRechazadaDeSalida.calleId` sin marca de tipo | **Real**: era `string` suelto. Corregido a `CalleId` via `comoCalleId` |
+| 6 | `sembrarDomicilios`/`leerZonasYBajas` superan 30 lineas | **Real**: partidas por tema (`sembrarDomiciliosPropios`/`sembrarDomicilioConCalleAjena`; `leerLugaresBorrados` extraida) |
+| 7 | El runbook afirma que la salida capturada conserva el codigo `23503` | **Real**: `psql` en verbosity default no lo imprime, solo el mensaje con el nombre de la restriccion. Corregido para decir eso y nombrar `calles_lugar_tenant_fk` como lo que hay que buscar |
+| 8 | Mismo razonamiento del `GRANT` repetido en `0007` y `0018` | **Real**: `0007` ahora solo apunta a `0018`, que queda como unica copia de la razon completa |
+
+Corregido con Claude directo (sin delegar: mecanico, ya entendido).
+Verificado de nuevo: `pnpm test` (315/1561), `pnpm check`/`pnpm typecheck`/
+`pnpm reglas` (0 hallazgos propios; el unico error de `pnpm check` es
+`.pi/gentle-ai/sdd-preflight.json`, ajeno a este cambio).
+
 ## Cierre y verificacion transversal
 
 Despues de B3u, correr sin compresion pnpm test, pnpm db:local && pnpm

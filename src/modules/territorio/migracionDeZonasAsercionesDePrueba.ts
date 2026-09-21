@@ -30,6 +30,28 @@ const zonaNombrada = <T extends { nombre: string }>(
   if (!zona) throw new Error(`Falta ${nombre}.`);
   return zona;
 };
+const origenDeMigracion = (lugarAnteriorId: string) =>
+  `script:migrar-sectores-a-zonas:${lugarAnteriorId}`;
+type DomiciliosLeidos = {
+  domiciliosMigrados: { id: string; lugarId: string }[];
+  entradas: { entidadId: string | null; origen: string | null }[];
+};
+const verificarDomicilioMigrado = (opciones: {
+  domicilios: DomiciliosLeidos;
+  domicilioId: string;
+  coloniaId: string;
+  lugarAnteriorId: string;
+}) => {
+  const { domicilios, domicilioId, coloniaId, lugarAnteriorId } = opciones;
+  expect(domicilios.domiciliosMigrados).toEqual(
+    expect.arrayContaining([{ id: domicilioId, lugarId: coloniaId }]),
+  );
+  expect(domicilios.entradas).toEqual(
+    expect.arrayContaining([
+      { entidadId: domicilioId, origen: origenDeMigracion(lugarAnteriorId) },
+    ]),
+  );
+};
 const verificarDomicilios = async (
   motulEscenario: EscenarioDeMigracion,
   ticulEscenario: EscenarioDeMigracion,
@@ -42,19 +64,47 @@ const verificarDomicilios = async (
     ticul,
     ticulEscenario.coloniaId,
   );
-  expect(motulDomicilios.domiciliosMigrados).toEqual(
+  verificarDomicilioMigrado({
+    domicilios: motulDomicilios,
+    domicilioId: motulEscenario.domicilioDelSectorId,
+    coloniaId: motulEscenario.coloniaId,
+    lugarAnteriorId: motulEscenario.sectorId,
+  });
+  verificarDomicilioMigrado({
+    domicilios: motulDomicilios,
+    domicilioId: motulEscenario.domicilioDeLaManzanaId,
+    coloniaId: motulEscenario.coloniaId,
+    lugarAnteriorId: motulEscenario.manzanaId,
+  });
+  verificarDomicilioMigrado({
+    domicilios: ticulDomicilios,
+    domicilioId: ticulEscenario.domicilioDelSectorId,
+    coloniaId: ticulEscenario.coloniaId,
+    lugarAnteriorId: ticulEscenario.sectorId,
+  });
+};
+const verificarBajasDeLugares = (
+  bajas: {
+    accion: string;
+    entidad: string;
+    entidadId: string | null;
+    origen: string | null;
+  }[],
+  escenario: EscenarioDeMigracion,
+) => {
+  expect(bajas).toEqual(
     expect.arrayContaining([
       {
-        id: motulEscenario.domicilioDelSectorId,
-        lugarId: motulEscenario.coloniaId,
+        accion: "BAJA_LUGAR",
+        entidad: "lugares",
+        entidadId: escenario.sectorId,
+        origen: origenDeMigracion(escenario.coloniaId),
       },
-    ]),
-  );
-  expect(ticulDomicilios.domiciliosMigrados).toEqual(
-    expect.arrayContaining([
       {
-        id: ticulEscenario.domicilioDelSectorId,
-        lugarId: ticulEscenario.coloniaId,
+        accion: "BAJA_LUGAR",
+        entidad: "lugares",
+        entidadId: escenario.manzanaId,
+        origen: origenDeMigracion(escenario.sectorId),
       },
     ]),
   );
@@ -82,6 +132,8 @@ const verificarZonas = async (
   ]);
   expect(zonasMotul.lugaresRestantes).toHaveLength(0);
   expect(zonasTicul.lugaresRestantes).toHaveLength(0);
+  verificarBajasDeLugares(zonasMotul.bajas, motulEscenario);
+  verificarBajasDeLugares(zonasTicul.bajas, ticulEscenario);
 };
 export const verificarMigracionDeAmbosTenants = async (opcionesDePrueba: {
   databaseUrl: string;

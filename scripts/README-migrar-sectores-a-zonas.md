@@ -88,7 +88,7 @@ columnas exactas:
    detalle `salida`, `subdominio`, `sector_id`, `zona_id`, `calle_id`,
    `lugar_esperado_id`, `lugar_real_id`.
 
-Una calle rechazada no se fuerza a una zona de otro asentamiento. El detalle incluye tanto calles derivadas de domicilios como una calle cuyo propio `lugar_id` es un sector o manzana que se borrará; esta última conserva el `23503` del `DELETE` como reja hasta que se cure. Antes de cada `DELETE`, el script escribe la misma lista como `NOTICE __B3D_CALLES_RECHAZADAS_JSON__:<json>` para que `2>&1` la conserve incluso cuando esa reja aborta el bloque. Debe registrarse para curación municipal antes de cualquier operación posterior.
+Una calle rechazada no se fuerza a una zona de otro asentamiento. El detalle incluye tanto calles derivadas de domicilios como una calle cuyo propio `lugar_id` es un sector o manzana que se borrará; esta última sigue frenando el `DELETE` con una violación de llave foránea (`calles_lugar_tenant_fk`) hasta que se cure -`psql` en verbosity por defecto no imprime el codigo SQLSTATE `23503`, solo el mensaje con el nombre de la restricción, asi que buscar ese nombre en el log y no el numero. Antes de cada `DELETE`, el script escribe la misma lista como `NOTICE __B3D_CALLES_RECHAZADAS_JSON__:<json>` para que `2>&1` la conserve incluso cuando esa reja aborta el bloque. Debe registrarse para curación municipal antes de cualquier operación posterior.
 
 ## Comprobación posterior
 

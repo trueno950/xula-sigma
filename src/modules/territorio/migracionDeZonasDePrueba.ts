@@ -53,7 +53,7 @@ const sembrarArbol = async (
   });
   return { asentamientoId, coloniaId, sectorId, manzanaId, sectorVacioId };
 };
-const sembrarDomicilios = async (
+const sembrarDomiciliosPropios = async (
   ayuntamientoId: AyuntamientoId,
   arbol: ArbolDeMigracion,
 ) => {
@@ -72,6 +72,12 @@ const sembrarDomicilios = async (
     arbol.manzanaId,
     callePrincipalId,
   );
+  return { callePrincipalId, domicilioDelSectorId, domicilioDeLaManzanaId };
+};
+const sembrarDomicilioConCalleAjena = async (
+  ayuntamientoId: AyuntamientoId,
+  sectorId: LugarId,
+) => {
   const asentamientoAjenoId = await crearLugarEn(
     ayuntamientoId,
     "comisaria",
@@ -84,17 +90,18 @@ const sembrarDomicilios = async (
   );
   const domicilioConCalleAjenaId = await crearDomicilioEnCalleEn(
     ayuntamientoId,
-    arbol.sectorId,
+    sectorId,
     calleDeOtroAsentamientoId,
   );
-  return {
-    callePrincipalId,
-    calleDeOtroAsentamientoId,
-    domicilioDelSectorId,
-    domicilioDeLaManzanaId,
-    domicilioConCalleAjenaId,
-  };
+  return { calleDeOtroAsentamientoId, domicilioConCalleAjenaId };
 };
+const sembrarDomicilios = async (
+  ayuntamientoId: AyuntamientoId,
+  arbol: ArbolDeMigracion,
+) => ({
+  ...(await sembrarDomiciliosPropios(ayuntamientoId, arbol)),
+  ...(await sembrarDomicilioConCalleAjena(ayuntamientoId, arbol.sectorId)),
+});
 /** Cabecera -> colonia -> sector/manzana, con una zona vacia y calle ajena. */
 export const sembrarEscenarioDeMigracion = async (ayuntamientoId = motul) => {
   const arbol = await sembrarArbol(ayuntamientoId);

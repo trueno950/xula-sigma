@@ -25,6 +25,29 @@ const membresiasDe = (
         )
     : [];
 
+const leerLugaresBorrados = (
+  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  sectorId: LugarId,
+  manzanaId: LugarId,
+) =>
+  Promise.all([
+    tx
+      .select({ id: lugares.id })
+      .from(lugares)
+      .where(or(eq(lugares.id, sectorId), eq(lugares.id, manzanaId))),
+    tx
+      .select({
+        accion: bitacora.accion,
+        entidad: bitacora.entidad,
+        entidadId: bitacora.entidadId,
+        origen: bitacora.origen,
+      })
+      .from(bitacora)
+      .where(
+        and(eq(bitacora.accion, "BAJA_LUGAR"), eq(bitacora.entidad, "lugares")),
+      ),
+  ]);
+
 export const leerZonasYBajas = (opciones: {
   ayuntamientoId: AyuntamientoId;
   asentamientoId: LugarId;
@@ -55,6 +78,11 @@ export const leerZonasYBajas = (opciones: {
     const zonaVacia = zonasMigradas.find(
       ({ nombre }) => nombre === opciones.nombreDeLaZonaVacia,
     );
+    const [lugaresRestantes, bajas] = await leerLugaresBorrados(
+      tx,
+      opciones.sectorId,
+      opciones.manzanaId,
+    );
     return {
       zonasMigradas,
       membresias: await membresiasDe(
@@ -67,28 +95,7 @@ export const leerZonasYBajas = (opciones: {
         opciones.ayuntamientoId,
         zonaVacia?.id,
       ),
-      lugaresRestantes: await tx
-        .select({ id: lugares.id })
-        .from(lugares)
-        .where(
-          or(
-            eq(lugares.id, opciones.sectorId),
-            eq(lugares.id, opciones.manzanaId),
-          ),
-        ),
-      bajas: await tx
-        .select({
-          accion: bitacora.accion,
-          entidad: bitacora.entidad,
-          entidadId: bitacora.entidadId,
-          origen: bitacora.origen,
-        })
-        .from(bitacora)
-        .where(
-          and(
-            eq(bitacora.accion, "BAJA_LUGAR"),
-            eq(bitacora.entidad, "lugares"),
-          ),
-        ),
+      lugaresRestantes,
+      bajas,
     };
   });
