@@ -38,6 +38,7 @@ const databaseUrl = () => {
   if (!valor) throw new Error("Falta DATABASE_URL.");
   return valor;
 };
+const bajaEnDelSectorMotul = new Date("2026-01-01T00:00:00Z");
 const quitarBloqueoDirecto = () =>
   withTenant(ticul, async (tx) => {
     await tx
@@ -66,13 +67,14 @@ beforeAll(async () => {
   await withTenant(motul, (tx) =>
     tx
       .update(lugares)
-      .set({ bajaEn: new Date("2026-01-01T00:00:00Z") })
+      .set({ bajaEn: bajaEnDelSectorMotul })
       .where(eq(lugares.id, motulEscenario.sectorId)),
   );
 });
 afterAll(async () => {
   await limpiar();
   await owner.end();
+  await appSinTenant.end();
   await cerrarConexion();
 });
 
@@ -117,6 +119,7 @@ describe("migracion de sectores a zonas", () => {
       databaseUrl: databaseUrl(),
       motulEscenario,
       ticulEscenario,
+      bajaEnDelSectorMotul,
     });
   });
   it("es idempotente y el rollback restaura baja_en y domicilios", async () => {
@@ -160,6 +163,10 @@ describe("migracion de sectores a zonas", () => {
         {
           id: motulEscenario.domicilioDeLaManzanaId,
           lugarId: motulEscenario.manzanaId,
+        },
+        {
+          id: motulEscenario.domicilioConCalleAjenaId,
+          lugarId: motulEscenario.sectorId,
         },
       ]),
     );

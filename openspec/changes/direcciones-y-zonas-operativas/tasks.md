@@ -430,6 +430,29 @@ Verificado de nuevo: `pnpm test` (315/1561), `pnpm check`/`pnpm typecheck`/
 `pnpm reglas` (0 hallazgos propios; el unico error de `pnpm check` es
 `.pi/gentle-ai/sdd-preflight.json`, ajeno a este cambio).
 
+### Ronda 3 de revision local
+
+A pedido del usuario ("una vez mas"), tercera corrida de
+`pnpm revision:local:pr`. Las primeras dos intentonas se mataron solas por
+memoria de la maquina -~7 procesos `codegraph serve` duplicados y ajenos
+a este cambio, acumulados de otras sesiones- sin llegar a revisar nada; a
+la tercera corrio completa y trajo 7 hallazgos, todos reales -esta vez no
+sobre el script sino sobre la propia rigurosidad de los tests que la
+ronda 2 dejo:
+
+| # | Hallazgo | Correccion |
+|---|---|---|
+| 1 | `appSinTenant` nunca cierra su conexion en `afterAll` | Agregado `await appSinTenant.end()`, mismo patron que otros `*.isolation.test.ts` del repo |
+| 2 | Nada prueba que el sector vacio produzca zona ni que `membresiasDeZonaVacia` este vacio | Agregado `zonaNombrada(..., "Sector vacio")` -tira si falta- mas el `toHaveLength(0)` para ambos tenants |
+| 3 | Solo 2 de 3 domicilios de Motul y 1 de 3 de Ticul verificados | Extraido `domiciliosDelEscenario`/`verificarDomiciliosDeUnTenant`: los 3 domicilios de cada tenant (sector, manzana, calle ajena) pasan por la misma asercion completa (movimiento + bitacora) |
+| 4 | El rollback pide restaurar `domicilioConCalleAjenaId` pero no lo verifica | Agregada su aserticion de restauracion faltante |
+| 5 | `bajaEn` de la zona verificado solo con `expect.any(Date)`, no el valor exacto | La fecha exacta (`bajaEnDelSectorMotul`) ahora viaja desde el test hasta la aserticion |
+| 6 | Tipos de dominio (`DomicilioId`/`LugarId`) ensanchados a `string` en varios lados | Corregido donde el dato sale tipado de Drizzle (`domiciliosMigrados`); donde sale de `bitacora.entidadId` -columna generica sin marca, compartida entre entidades- se dejo `string \| null` a proposito, es el tipo real de esa columna |
+| 7 | `leerZonasYBajas` seguia arriba de 30 lineas tras el split de la ronda 2 | Extraida `leerZonasDelAsentamiento` |
+
+Verificado: `pnpm test` (315/1561), `pnpm check`/`pnpm typecheck`/
+`pnpm reglas` sin hallazgos propios.
+
 ## Cierre y verificacion transversal
 
 Despues de B3u, correr sin compresion pnpm test, pnpm db:local && pnpm
