@@ -285,7 +285,24 @@ Nota de ejecucion: GREEN corrio con `codex` (`gpt-5.6-luna`/`max`, plugin `codex
 Nota de ejecucion: corrio con `codex` (`gpt-5.6-luna`/`max`). Esta sesion (Claude) leyo el helper completo antes de aceptar: confirmo que el truco de `\pset unaligned` + JSON no modifica el script en ejecucion -corre en el mismo stream de stdin, despues de las SELECT propias del script, contra la misma temp table que sigue viva en la sesion- y que el orden topologico de reinsercion de lugares es correcto para el FK auto-referencial de `lugares.padre_id`.
 
 Hallazgo adicional, corregido en la misma unidad: `pnpm reglas` marco el `*DePrueba.ts` nuevo por el antipatron 12 (filesystem del contenedor) -`comunes.ts:esTest` solo excluia `*.test.ts`, no `*DePrueba.ts`, que ya esta sancionado como andamiaje de test para la regla 2 en `tenancia.ts`. Se arreglo la regla (TDD: test RED en `codigo.test.ts` primero, luego `esTest` reconoce tambien `DePrueba.ts$`), no el archivo -la reja estaba incompleta, no el codigo.
-- [ ] B3d-GREEN-05 (B3d). Requisito: Migracion de domicilios preserva el lugarId anterior en bitacora (Rebanada B3). Escribir runbook scripts/README-migrar-sectores-a-zonas.md con precondicion de ventana operativa, rol/comandos, captura obligatoria de salida, comprobacion de conteos, procedimiento de rollback y prohibicion de credenciales embebidas. Test enfocado: pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts (requiere Postgres); runbook por lectura estructural, sin runtime adicional. Rollback: retirar runbook y conservar script para revisión explícita.
+- [x] B3d-GREEN-05 (B3d). Requisito: Migracion de domicilios preserva el lugarId anterior en bitacora (Rebanada B3). Escribir runbook scripts/README-migrar-sectores-a-zonas.md con precondicion de ventana operativa, rol/comandos, captura obligatoria de salida, comprobacion de conteos, procedimiento de rollback y prohibicion de credenciales embebidas. Test enfocado: pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts (requiere Postgres); runbook por lectura estructural, sin runtime adicional. Rollback: retirar runbook y conservar script para revisión explícita.
+
+### Evidencia de unidad: B3d-GREEN-05
+
+Origen atipico: el runbook aparecio ya escrito en el disco (`scripts/README-migrar-sectores-a-zonas.md`, sin tracking en git, sin commit ni pedido explicito en esta sesion que lo explique) antes de delegar esta tarea. En vez de confiar en el, se delego su **verificacion** contra el script real y `design.md` seccion 6 -no su escritura- a `codex:codex-rescue` (`gpt-5.6-luna`/`max`). Ese job quedo colgado ~1h30 sin actividad -laptop suspendida por tapa cerrada, conexion cortada- despues de ya haber aplicado sus correcciones; esta sesion tomo el archivo en el estado en que quedo, lo verifico linea por linea contra el script y cerro la tarea sin seguir esperando el proceso.
+
+| Punto verificado | Resultado |
+|---|---|
+| Rol `xula_app`, nunca `xula_migrator`/superusuario | Correcto, y nombra explicitamente `drizzle/0018_grant_baja_fisica_lugares.sql` como precondicion bloqueante |
+| Comandos de produccion vs. del test | Correcto: usa `psql "$DATABASE_URL" -f ...` generico, no el `docker exec` que solo aplica al Postgres local del test |
+| Columnas exactas de los 4 grupos de salida | Verificadas contra `scripts/migrar-sectores-a-zonas.sql:527-556` -domicilios movidos, lugares borrados, zonas creadas, calles rechazadas (conteo + detalle)- coinciden exactas |
+| Comprobacion de conteos post-ejecucion | Fija `app.tenant` por municipio antes de contar sector/manzana restantes -no una consulta sin tenant, que bajo RLS daria 0 filas sin significar nada |
+| Rollback | `split_part(origen, ':', 3)::uuid` citado igual que `migracionDeZonasRollbackDePrueba.ts`; aclara que `BAJA_LUGAR` solo guarda `padre_id`, no `tipo`/`nombre` -esos vienen de la salida guardada |
+| Sin credenciales embebidas | `DATABASE_URL` solo por variable de entorno, prohibicion explicita en texto |
+| Zonas/calles_de_zonas fuera del rollback | Declarado explicito: "no forman parte del camino de reversion automatizado" |
+| `pnpm check` / test enfocado | 0 errores propios (56 warnings preexistentes); 2/2 tests en verde, sin tocar script ni tests |
+
+Frontera de rollback: retirar unicamente el runbook; el script y su comportamiento no cambiaron.
 - [ ] B3d-REFACTOR-06 (B3d). Requisito: Migracion de domicilios preserva el lugarId anterior en bitacora (Rebanada B3). Ejecutar corrida controlada solo después de la precondicion, guardar salida, revisar pnpm reglas y confirmar segunda corrida idempotente; no alterar TypeScript ni CHECK. Test enfocado: pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts; sin rtk. Rollback: usar procedimiento del runbook, no DELETE manual.
 
 ## Fase 7: B2 — corte de tipos y contratos (size:exception)
