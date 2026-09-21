@@ -71,10 +71,12 @@ psql "$DATABASE_URL" \
 Con `pipefail`, un error de `psql` hace fallar el comando aunque `tee` haya
 podido escribir el archivo.
 
-El script fija `app.tenant` con `set_config(..., true)` dentro de la
-transacción de cada municipio. También cuenta cada `INSERT`, `UPDATE` y
-`DELETE`; cualquier diferencia provoca una excepción y revierte la
-transacción completa del bloque `DO`. No reintentar a ciegas: conservar la
+El script fija `app.tenant` con `set_config(..., true)` por municipio,
+pero todo el bloque `DO` -todos los municipios de la corrida- es **una
+sola transacción**: no se puede hacer `COMMIT` dentro de un `DO`. También
+cuenta cada `INSERT`, `UPDATE` y `DELETE`; cualquier diferencia provoca una
+excepción y revierte esa transacción completa, incluidos los municipios ya
+procesados antes del que falló. No reintentar a ciegas: conservar la
 salida y diagnosticar el primer error.
 
 La salida contiene seis grupos que deben conservarse juntos, con estas
@@ -157,9 +159,10 @@ tratarse como fallo, aunque el proceso haya terminado con código cero.
 
 ## Fallos y reversión
 
-- Si el script falla antes de terminar el bloque `DO`, la transacción del
-  municipio se revierte. No ejecutar `DELETE`, `UPDATE` ni `INSERT` manuales
-  para “completar” la operación.
+- Si el script falla antes de terminar el bloque `DO`, se revierte **toda**
+  la transacción -todos los municipios de la corrida, no solo el que
+  falló-. No ejecutar `DELETE`, `UPDATE` ni `INSERT` manuales para
+  “completar” la operación.
 - Si falla la captura, el control de conteos o la comprobación posterior,
   detener las escrituras y escalar al responsable de la ventana. Conservar el
   log original, la copia de seguridad y el commit ejecutado.
