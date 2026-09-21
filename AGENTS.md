@@ -190,6 +190,37 @@ archivo de reglas, y esta revisión no la vio. Una excepción que vive fuera
 de las reglas es indistinguible de un olvido, que es exactamente el modo de
 falla que este documento existe para evitar.
 
+### La única excepción: ampliación de privilegio para un script operativo
+
+Una migración puede ampliarle al rol de aplicación un verbo que otra
+migración le había negado a propósito **solo** si esa ampliación es la
+condición necesaria para un script de `scripts/*.sql` que ya cumple su
+propia gobernanza (rol de menor privilegio, las políticas como único
+límite, conteo de filas afectadas). Hoy hay una:
+
+- `drizzle/0018_grant_baja_fisica_lugares.sql`: `GRANT DELETE` sobre
+  `lugares` a `xula_app`, que `drizzle/0007_territorio.sql` le había
+  negado a propósito ("ninguna con DELETE: la baja de lugares es
+  lógica"). El `DELETE` físico lo necesita
+  `scripts/migrar-sectores-a-zonas.sql`, y ese script corre como
+  `xula_app` porque `politicaTenant()` (`shared/tenancy/esquema.ts`)
+  escribe cada política `to: "xula_app"` exclusivamente: ni siquiera
+  `xula_migrator`, dueño del esquema, ve una fila bajo `FORCE ROW LEVEL
+  SECURITY` sin esa política. **Entró el 2026-09-21 por este mismo
+  mecanismo.**
+
+  Lo que sigue acotando el verbo es la política de tenant,
+  `lugares_tenant` (`FOR ALL`): `xula_app` puede borrar físicamente un
+  `lugares` de su propio municipio, nunca de otro. La baja lógica sigue
+  siendo la única vía que usa hoy la aplicación —ningún caso de uso
+  invoca un `DELETE`—, pero esa garantía ya no vive en el privilegio:
+  vive en que el código no lo use. Es riesgo residual aceptado, no
+  ausente, y el `GRANT` es permanente: no se revierte al terminar la
+  operación puntual que lo motivó.
+
+**Una segunda no entra sin agregarse a esta lista**, misma razón que la
+excepción anterior.
+
 ---
 
 ## Revisión de tests

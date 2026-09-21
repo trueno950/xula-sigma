@@ -41,6 +41,23 @@ describe("assets-filesystem", () => {
       ]),
     ).toEqual([]);
   });
+
+  /**
+   * Mismo andamiaje que `tenancia.ts` reconoce para la regla 2 -un
+   * `*DePrueba.ts` abre su propia conexion y lee fixtures del repositorio,
+   * no guarda el escudo de un municipio- pero antipatron 12 solo excluia
+   * `*.test.ts` y dejaba este archivo marcado.
+   */
+  it("no marca un DePrueba.ts que lee un fixture", () => {
+    expect(
+      hallazgosDe(id, [
+        archivo(
+          "src/modules/territorio/migracionDeZonasRollbackDePrueba.ts",
+          'import { readFileSync } from "node:fs";\n',
+        ),
+      ]),
+    ).toEqual([]);
+  });
 });
 
 describe("identificador-ascii", () => {

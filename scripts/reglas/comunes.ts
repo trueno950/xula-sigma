@@ -1,7 +1,10 @@
 export const lineaDe = (contenido: string, indice: number): number =>
   contenido.slice(0, indice).split("\n").length;
 
-export const esTest = (ruta: string): boolean => /\.test\.tsx?$/.test(ruta);
+// Mismo patron que `esAndamiajeDePrueba` de tenancia.ts: un `*DePrueba.ts`
+// abre su propia conexion y lee fixtures, igual que un `*.test.ts`.
+export const esTest = (ruta: string): boolean =>
+  /\.test\.tsx?$|DePrueba\.ts$/.test(ruta);
 
 export const esCodigoDeAplicacion = (ruta: string): boolean =>
   ruta.startsWith("src/") && !esTest(ruta);

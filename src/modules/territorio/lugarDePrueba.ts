@@ -124,3 +124,18 @@ export const crearDomicilioEnCalleEn = (
       .returning({ id: domicilios.id });
     return comoDomicilioId(exigirFila(domicilio).id);
   });
+
+/** Inserta un lugar bajo otro para escenarios de integracion multi-tenant. */
+export const crearLugarHijoEn = (opciones: {
+  ayuntamientoId: AyuntamientoId;
+  tipo: (typeof lugares.$inferInsert)["tipo"];
+  nombre: string;
+  padreId: LugarId;
+}) =>
+  withTenant(opciones.ayuntamientoId, async (tx) => {
+    const [fila] = await tx
+      .insert(lugares)
+      .values(opciones)
+      .returning({ id: lugares.id });
+    return comoLugarId(exigirFila(fila).id);
+  });
