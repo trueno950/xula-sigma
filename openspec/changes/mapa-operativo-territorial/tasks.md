@@ -70,8 +70,8 @@ se afirma staging ni producción.
 ### Fase 3: Proyección y mapa
 - [x] 3.1 U5 RED: tipos, empate, 404 y vacío.
 - [x] 3.2 U5 GREEN: `src/modules/historial-de-calle/`; solo lectura, tres naturalezas.
-- [ ] 3.3 U6 RED: cobertura, filtros, conteos y tenant.
-- [ ] 3.4 U6 GREEN: `src/modules/mapa-operativo/`; snapshot, enlaces, sin GIS.
+- [x] 3.3 U6 RED: cobertura, filtros, conteos y tenant.
+- [x] 3.4 U6 GREEN: `src/modules/mapa-operativo/`; snapshot, enlaces, sin GIS.
 
 ### Fase 4: Vivo y navegación
 - [ ] 4.1 U7 RED: 401/canal/heartbeat/resync/tenant/no polling; D1/D2.

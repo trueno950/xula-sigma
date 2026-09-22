@@ -1132,3 +1132,97 @@ registro.
   `altaDeCalle`; `3c03c0e` agrega evidencia de permisos.
 - El mock de `altaDeCalle` entrega `tx.execute`, que era el contrato requerido
   por la publicacion de actualizaciones.
+
+## U6: mapa operativo y snapshot
+
+- Work unit: `U6-mapa-operativo`. Alcance: tareas 3.3 y 3.4; `tasks.md` queda
+  deliberadamente sin editar por instruccion expresa del usuario.
+- Entrega: modulo completo `mapa-operativo`, ruta interna `/mapa-operativo`,
+  lectura propia de intervenciones para mapa y extension acotada de reportes
+  con `areaResponsable`. No se tocaron `consulta-publica-de-reportes`,
+  migraciones, PostGIS, geocodificacion, polilineas, SSE ni polling.
+- El snapshot agrega en paralelo las tres fuentes con el `ContextoActual`;
+  clasifica cada hecho sin calle o con calle sin punto como cobertura faltante,
+  y solo muestra marcadores con el punto existente de su calle. Los enlaces
+  son las rutas vigentes `/reportes/detalle/[id]` e `/intervenciones/[id]`.
+
+### Estado de tareas
+
+- 3.3 U6 RED — completada en esta unidad; el tracker permanece `[ ]` por la
+  restriccion de entrega.
+- 3.4 U6 GREEN — completada en esta unidad; el tracker permanece `[ ]` por la
+  restriccion de entrega.
+
+### TDD Cycle Evidence — U6
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 3.3 | `application/agregarMapa.test.ts`, `application/listarIntervencionesParaMapa.test.ts` | Unit | N/A: modulo y lector nuevos; U4a/U3a se ejecutaron como regresion | ✅ `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx src/modules/intervenciones/application/listarIntervencionesParaMapa.test.ts` fallo: imports de `agregarMapa`, `MapaOperativo` y lector inexistentes; 3 archivos/4 pruebas fallidas | ✅ pruebas enfocadas posteriores en verde | ✅ cobertura sin calle/punto, filtro de area que elimina intervenciones y propagacion del contexto; intervencion sin calle | ✅ `Map` indexa calles una vez y los tipos separan puertos propios |
+| 3.4 | `ui/MapaOperativo.test.tsx` | Unit | N/A: UI y ruta nuevas | ✅ el mismo RED fallo por componente inexistente | ✅ 2 archivos/5 pruebas en verde | ✅ marcadores diferenciados y estado vacio con conteos cero | ✅ componente server simple, sin estado cliente ni GIS |
+
+### Work Unit Evidence — U6
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado | `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → paso; 2 archivos, 5 pruebas. |
+| Regresiones de lectores | `pnpm vitest run --project unit src/modules/reportes/application/listarReportesParaMapa.test.ts src/modules/intervenciones/application/listarIntervencionesParaMapa.test.ts src/modules/territorio/application/callesParaMapa.test.ts` → paso; 3 archivos, 8 pruebas. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Capas | `pnpm layers` → paso; 828 modulos y 3771 dependencias, sin violaciones. |
+| Reglas | `pnpm reglas` → bloqueado por sandbox: `tsx` no pudo abrir su socket IPC temporal (`EPERM`), incluso con `TMPDIR=/private/tmp`; no es un hallazgo de reglas del codigo. |
+| Runtime harness | `pnpm db:local` → bloqueado: `Docker no esta corriendo`; no se ejecutaron integracion/isolation ni E2E. |
+| Diff | `git diff --check` → paso. |
+| Rollback boundary | Retirar `src/modules/mapa-operativo/` y `src/app/(panel)/mapa-operativo/`; revertir el lector ParaMapa de `intervenciones` y la columna `areaResponsable` en la lectura ParaMapa de `reportes`. No afecta U3a, U4a ni U5. |
+
+### Desviaciones e incidencias
+
+- No hay desviacion funcional: el filtro de area excluye intervenciones, como
+  proponia D9; por ello marcadores, cobertura y conteos permanecen coherentes.
+- El cambio suma 573 lineas autorales (572 agregadas, 1 eliminada), sobre la
+  referencia de 400 para una rebanada. No se solicito ni registro
+  `size:exception`; los cambios quedan sin commit para que el orquestador
+  decida el corte de revision.
+
+## U6 corrective gatekeeper rerun — 2026-09-21
+
+This rerun re-read the authoritative proposal, map specification, design, tasks,
+OpenSpec configuration, existing U6 evidence, and the implemented source. It
+confirmed that U6 remains limited to 3.3/3.4; `tasks.md` remains intentionally
+unchanged and both checkboxes remain unchecked.
+
+### Specification readback
+
+- `agregarMapa` passes the server `ContextoActual` to three owning read ports
+  concurrently. The readers themselves establish `withTenant`, so the
+  aggregation has no client-selected tenant and does not cross modules through
+  domain imports.
+- Null `calleId` produces `SIN_CALLE`; a missing street point produces
+  `CALLE_SIN_PUNTO`; neither produces invented coordinates. Both buckets remain
+  in counts and link to the current detail route.
+- Type and status filter both sources; area filters reports and intentionally
+  excludes interventions (D9), so markers, coverage, and counts share the same
+  filtered source. Zero results return `VACIO` and zero counts.
+- The server UI labels street locations as approximate, distinguishes reportes
+  from intervenciones, exposes the current detail links, adds no GIS,
+  geocoding, polylines, SSE, or polling, and the route is under authenticated
+  `(panel)` with a second local context guard.
+
+No concrete defect within U6 scope was found, so no production code or new
+regression test was added during this verification-only rerun. The original
+strict-TDD RED/GREEN evidence below remains the evidence for the implementation.
+
+### Corrective verification results
+
+| Check | Exact observed result |
+|---|---|
+| Focused U6 unit | `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → exit 0; `Test Files  2 passed (2)`; `Tests  5 passed (5)`; duration `3.63s`. |
+| Focused reader regressions | `pnpm vitest run --project unit src/modules/reportes/application/listarReportesParaMapa.test.ts src/modules/intervenciones/application/listarIntervencionesParaMapa.test.ts src/modules/territorio/application/callesParaMapa.test.ts` → exit 0; `Test Files  3 passed (3)`; `Tests  8 passed (8)`; duration `237ms`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Rules | `pnpm reglas` → exit 1 before rules ran: `Error: listen EPERM: operation not permitted /var/folders/65/rz7tsz7555q3vb571k24q8jw0000gn/T/tsx-501/57669.pipe`; `code: 'EPERM'`, `syscall: 'listen'`; Node `v26.7.0`. This is sandbox IPC, not a rules verdict. |
+| Postgres/runtime | `pnpm db:local` → exit 1; `$ bash scripts/db-local.sh`; `Docker no esta corriendo.` No Postgres integration, isolation, or E2E command was runnable. |
+
+### Corrective status
+
+- U6 implementation evidence is verified and focused functional checks are
+  green. The phase remains **partial** only because the required `pnpm reglas`
+  verdict and Postgres-backed verification remain blocked by the environment.
+- No claim of success is made while those required checks have no observed pass.
