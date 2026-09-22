@@ -43,7 +43,7 @@ describe("agregarMapa", () => {
       {
         id: comoReporteId("55555555-5555-4555-8555-555555555555"),
         folio: "REP-1",
-        tipo: "BACHE",
+        tipo: "BASURA",
         estado: "RECIBIDO",
         areaResponsable: "OBRAS_PUBLICAS",
         calleId: calleConPunto.id,
@@ -114,5 +114,45 @@ describe("agregarMapa", () => {
     expect(fuentes.callesParaMapa).toHaveBeenCalledWith(contexto);
     expect(fuentes.reportesParaMapa).toHaveBeenCalledWith(contexto);
     expect(fuentes.intervencionesParaMapa).toHaveBeenCalledWith(contexto);
+  });
+
+  it("filtra reportes por tipo sin ocultar intervenciones de otro vocabulario", async () => {
+    const { crearAgregarMapa } = await import("./agregarMapa");
+
+    const mapa = await crearAgregarMapa(fuentes)(contexto, {
+      tipo: "BASURA",
+    });
+
+    expect(mapa.marcadores).toEqual([
+      expect.objectContaining({ recurso: "REPORTE", etiqueta: "REP-1" }),
+    ]);
+    expect(mapa.cobertura).toEqual([
+      expect.objectContaining({ recurso: "INTERVENCION" }),
+    ]);
+    expect(mapa.conteos).toEqual({ reportes: 1, intervenciones: 1, total: 2 });
+  });
+
+  it("filtra intervenciones por estado propio sin ocultar reportes", async () => {
+    const { crearAgregarMapa } = await import("./agregarMapa");
+
+    const mapa = await crearAgregarMapa(fuentes)(contexto, {
+      estado: "EN_EJECUCION",
+    });
+
+    expect(mapa.conteos).toEqual({ reportes: 2, intervenciones: 1, total: 3 });
+    expect(
+      mapa.cobertura.some((entrada) => entrada.recurso === "INTERVENCION"),
+    ).toBe(true);
+  });
+
+  it("un estado del vocabulario de reportes no vacia las intervenciones", async () => {
+    const { crearAgregarMapa } = await import("./agregarMapa");
+
+    const mapa = await crearAgregarMapa(fuentes)(contexto, {
+      estado: "RECIBIDO",
+    });
+
+    expect(mapa.conteos.reportes).toBe(1);
+    expect(mapa.conteos.intervenciones).toBe(1);
   });
 });

@@ -1,3 +1,8 @@
+import {
+  ESTADOS_DE_INTERVENCION,
+  TIPOS_DE_INTERVENCION,
+} from "@/modules/intervenciones";
+import { ESTADOS_DE_REPORTE, TIPOS_DE_INCIDENCIA } from "@/modules/reportes";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import type {
   CoberturaFaltante,
@@ -9,6 +14,18 @@ import type { FiltrosDeMapa, FuentesDeMapa } from "./puertos";
 
 const coincide = (valor: string, filtro: string | undefined) =>
   !filtro || valor === filtro;
+/**
+ * `tipo` y `estado` son un solo filtro sobre dos vocabularios cerrados y
+ * disjuntos (reportes vs. intervenciones). Si el valor elegido no
+ * pertenece al vocabulario de este recurso, el filtro no le aplica -no lo
+ * excluye-: evita que elegir p.ej. un estado de intervencion vacie los
+ * reportes en silencio.
+ */
+const coincideSiAplica = (
+  valor: string,
+  filtro: string | undefined,
+  vocabulario: readonly string[],
+) => !filtro || !vocabulario.includes(filtro) || valor === filtro;
 const hrefDe = (recurso: RecursoDeMapa, id: string) =>
   recurso === "REPORTE" ? `/reportes/detalle/${id}` : `/intervenciones/${id}`;
 
@@ -27,8 +44,12 @@ export function crearAgregarMapa(fuentes: FuentesDeMapa) {
       ...reportes
         .filter(
           (reporte) =>
-            coincide(reporte.tipo, filtros.tipo) &&
-            coincide(reporte.estado, filtros.estado) &&
+            coincideSiAplica(reporte.tipo, filtros.tipo, TIPOS_DE_INCIDENCIA) &&
+            coincideSiAplica(
+              reporte.estado,
+              filtros.estado,
+              ESTADOS_DE_REPORTE,
+            ) &&
             coincide(reporte.areaResponsable ?? "", filtros.area),
         )
         .map((reporte) => ({
@@ -40,8 +61,16 @@ export function crearAgregarMapa(fuentes: FuentesDeMapa) {
         .filter(
           (intervencion) =>
             !filtros.area &&
-            coincide(intervencion.tipo, filtros.tipo) &&
-            coincide(intervencion.estado, filtros.estado),
+            coincideSiAplica(
+              intervencion.tipo,
+              filtros.tipo,
+              TIPOS_DE_INTERVENCION,
+            ) &&
+            coincideSiAplica(
+              intervencion.estado,
+              filtros.estado,
+              ESTADOS_DE_INTERVENCION,
+            ),
         )
         .map((intervencion) => ({
           ...intervencion,
