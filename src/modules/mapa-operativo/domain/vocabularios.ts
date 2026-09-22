@@ -46,3 +46,13 @@ export const ESTADOS_DE_INTERVENCION_PARA_FILTRO = [
   "FINALIZADA",
   "CANCELADA",
 ] as const;
+
+/** Copia local del catalogo de areas de reportes; solo area de reportes. */
+export const AREAS_PARA_FILTRO = [
+  "OBRAS_PUBLICAS",
+  "ALUMBRADO_PUBLICO",
+  "AGUA_POTABLE_Y_DRENAJE",
+  "LIMPIA_Y_RECOLECCION",
+  "PARQUES_Y_JARDINES",
+  "SERVICIOS_GENERALES",
+] as const;

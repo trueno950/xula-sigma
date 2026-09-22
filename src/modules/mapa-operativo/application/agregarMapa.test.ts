@@ -84,11 +84,13 @@ describe("agregarMapa", () => {
         recurso: "REPORTE",
         razon: "SIN_CALLE",
         href: "/reportes/detalle/66666666-6666-4666-8666-666666666666",
+        calle: null,
       }),
       expect.objectContaining({
         recurso: "INTERVENCION",
         razon: "CALLE_SIN_PUNTO",
         href: "/intervenciones/77777777-7777-4777-8777-777777777777",
+        calle: calleSinPunto.nombre,
       }),
     ]);
     expect(mapa.conteos).toEqual({ reportes: 2, intervenciones: 1, total: 3 });

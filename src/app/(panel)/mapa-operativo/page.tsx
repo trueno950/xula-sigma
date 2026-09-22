@@ -20,7 +20,7 @@ export default async function PaginaDeMapaOperativo({ searchParams }: Props) {
         <Migaja pasos={[{ etiqueta: "Mapa operativo" }]} etiqueta="Ruta" />
       }
     >
-      <MapaOperativo mapa={mapa} />
+      <MapaOperativo mapa={mapa} filtros={filtros} />
     </PaginaDePanel>
   );
 }
