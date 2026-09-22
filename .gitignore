@@ -54,3 +54,7 @@ playwright-report/
 # "managed"). Mismo criterio que `.codegraph/`: describe esta copia, no el
 # proyecto.
 .gentle-ai-default-agent.json
+
+# Preflight local de gentle-ai SDD. Mismo criterio que `.codegraph/`:
+# describe esta copia, no el proyecto.
+.pi/
