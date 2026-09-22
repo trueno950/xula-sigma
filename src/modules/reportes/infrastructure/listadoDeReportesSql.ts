@@ -117,6 +117,7 @@ export const lectorDeReportesDeMapaSql: LectorDeReportesDeMapa &
         folio: reportes.folio,
         tipo: reportes.tipo,
         estado: reportes.estado,
+        areaResponsable: reportes.areaResponsable,
         calleId: reportes.calleId,
         lugarId: reportes.lugarId,
       })

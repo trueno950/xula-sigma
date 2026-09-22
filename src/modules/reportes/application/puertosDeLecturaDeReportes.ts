@@ -1,5 +1,10 @@
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
-import type { EstadoDeReporte, ReporteId, TipoDeIncidencia } from "../domain";
+import type {
+  AreaResponsable,
+  EstadoDeReporte,
+  ReporteId,
+  TipoDeIncidencia,
+} from "../domain";
 
 /**
  * Lo que el mapa operativo necesita de un reporte: identidad, clasificacion,
@@ -12,6 +17,7 @@ export type ReporteParaMapa = {
   folio: string;
   tipo: TipoDeIncidencia;
   estado: EstadoDeReporte;
+  areaResponsable: AreaResponsable | null;
   calleId: string | null;
   lugarId: string;
 };
