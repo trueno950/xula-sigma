@@ -29,6 +29,7 @@ const reporteSinCalle: ReporteParaMapa = {
   folio: "REP-2026-000001",
   tipo: "BACHE",
   estado: "RECIBIDO",
+  areaResponsable: null,
   calleId: null,
   lugarId: "22222222-2222-4222-8222-222222222222",
 };
@@ -78,12 +79,13 @@ describe("listarReportesParaMapa", () => {
     ).resolves.toHaveLength(2);
   });
 
-  it("cada fila trae exactamente los seis campos contratados", async () => {
+  it("cada fila trae exactamente los siete campos contratados", async () => {
     const filas = await crearListarReportesParaMapa(lector)(
       contextoCon("CONSULTA"),
     );
 
     expect(Object.keys(filas[0] ?? {}).sort()).toEqual([
+      "areaResponsable",
       "calleId",
       "estado",
       "folio",
