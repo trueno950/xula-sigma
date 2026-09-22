@@ -1135,8 +1135,9 @@ registro.
 
 ## U6: mapa operativo y snapshot
 
-- Work unit: `U6-mapa-operativo`. Alcance: tareas 3.3 y 3.4; `tasks.md` queda
-  deliberadamente sin editar por instruccion expresa del usuario.
+- Work unit: `U6-mapa-operativo`. Alcance: tareas 3.3 y 3.4; el agente de
+  aplicacion dejo `tasks.md` sin editar por instruccion expresa del usuario,
+  y la sesion orquestadora marco ambas casillas despues, al cerrar la unidad.
 - Entrega: modulo completo `mapa-operativo`, ruta interna `/mapa-operativo`,
   lectura propia de intervenciones para mapa y extension acotada de reportes
   con `areaResponsable`. No se tocaron `consulta-publica-de-reportes`,
@@ -1148,10 +1149,8 @@ registro.
 
 ### Estado de tareas
 
-- 3.3 U6 RED — completada en esta unidad; el tracker permanece `[ ]` por la
-  restriccion de entrega.
-- 3.4 U6 GREEN — completada en esta unidad; el tracker permanece `[ ]` por la
-  restriccion de entrega.
+- 3.3 U6 RED — completada en esta unidad; el tracker quedo en `[x]`.
+- 3.4 U6 GREEN — completada en esta unidad; el tracker quedo en `[x]`.
 
 ### TDD Cycle Evidence — U6
 
