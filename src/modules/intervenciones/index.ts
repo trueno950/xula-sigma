@@ -8,6 +8,7 @@ export {
   corregirIntervencion,
   intervencionPorId,
   listarIntervencionesDeCalleEnTransaccion,
+  listarIntervencionesParaMapa,
   registrarIntervencion,
 } from "./composicion";
 export * from "./domain";

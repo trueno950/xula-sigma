@@ -3,11 +3,13 @@ import {
   crearCambiarEstadoDeIntervencion,
   crearCorregirIntervencion,
   crearIntervencionPorId,
+  crearListarIntervencionesParaMapa,
   crearRegistrarIntervencion,
 } from "./application";
 import {
   crearLectorDeReportesPorReportes,
   crearLectorDeUbicacionesPorTerritorio,
+  lectorDeIntervencionesDeMapaSql,
   repositorioDeIntervencionesSql,
 } from "./infrastructure";
 
@@ -19,6 +21,9 @@ export const registrarIntervencion = crearRegistrarIntervencion({
 
 export const intervencionPorId = crearIntervencionPorId(
   repositorioDeIntervencionesSql,
+);
+export const listarIntervencionesParaMapa = crearListarIntervencionesParaMapa(
+  lectorDeIntervencionesDeMapaSql,
 );
 export const listarIntervencionesDeCalleEnTransaccion = (
   tx: TransaccionTenant,
