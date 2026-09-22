@@ -155,4 +155,20 @@ describe("agregarMapa", () => {
     expect(mapa.conteos.reportes).toBe(1);
     expect(mapa.conteos.intervenciones).toBe(1);
   });
+
+  it("un tipo compartido entre vocabularios filtra ambos recursos a la vez", async () => {
+    vi.mocked(fuentes.intervencionesParaMapa).mockResolvedValueOnce([
+      {
+        id: comoIntervencionId("88888888-8888-4888-8888-888888888888"),
+        tipo: "FUGA",
+        estado: "PLANIFICADA",
+        calleId: calleConPunto.id,
+      },
+    ]);
+    const { crearAgregarMapa } = await import("./agregarMapa");
+
+    const mapa = await crearAgregarMapa(fuentes)(contexto, { tipo: "FUGA" });
+
+    expect(mapa.conteos).toEqual({ reportes: 1, intervenciones: 1, total: 2 });
+  });
 });

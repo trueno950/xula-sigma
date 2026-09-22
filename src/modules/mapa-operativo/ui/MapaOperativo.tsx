@@ -4,6 +4,8 @@ import type { MapaOperativoAgregado } from "../domain";
 type Props = { mapa: MapaOperativoAgregado };
 const etiquetaDe = (recurso: "REPORTE" | "INTERVENCION") =>
   recurso === "REPORTE" ? "Reporte ciudadano" : "Intervencion municipal";
+const conteoDe = (n: number, singular: string, plural: string) =>
+  `${n} ${n === 1 ? singular : plural}`;
 
 export function MapaOperativo({ mapa }: Props) {
   return (
@@ -12,8 +14,12 @@ export function MapaOperativo({ mapa }: Props) {
         Ubicacion aproximada de la calle
       </p>
       <p className="text-[15px] text-caliza-apagada">
-        {mapa.conteos.reportes} reportes · {mapa.conteos.intervenciones}{" "}
-        intervenciones
+        {conteoDe(mapa.conteos.reportes, "reporte", "reportes")} ·{" "}
+        {conteoDe(
+          mapa.conteos.intervenciones,
+          "intervencion",
+          "intervenciones",
+        )}
       </p>
       {mapa.estado === "VACIO" ? (
         <p>No hay hechos para los filtros seleccionados.</p>

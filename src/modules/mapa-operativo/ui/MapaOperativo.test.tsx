@@ -31,6 +31,8 @@ describe("MapaOperativo", () => {
     );
 
     expect(html).toContain("Ubicacion aproximada de la calle");
+    expect(html).toMatch(/1 reporte(?!s)/);
+    expect(html).toMatch(/1 intervencion(?!es)/);
     expect(html).toContain("Reporte ciudadano");
     expect(html).toContain("Intervencion municipal");
     expect(html).toContain('href="/reportes/detalle/reporte-1"');

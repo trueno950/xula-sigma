@@ -1,25 +1,36 @@
-import {
-  ESTADOS_DE_INTERVENCION,
-  TIPOS_DE_INTERVENCION,
-} from "@/modules/intervenciones";
-import { ESTADOS_DE_REPORTE, TIPOS_DE_INCIDENCIA } from "@/modules/reportes";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import type {
-  CoberturaFaltante,
-  MapaOperativoAgregado,
-  MarcadorDeMapa,
-  RecursoDeMapa,
+import {
+  type CoberturaFaltante,
+  ESTADOS_DE_INTERVENCION_PARA_FILTRO,
+  ESTADOS_DE_REPORTE_PARA_FILTRO,
+  type MapaOperativoAgregado,
+  type MarcadorDeMapa,
+  type PuntoDeMapa,
+  type RecursoDeMapa,
+  TIPOS_DE_INTERVENCION_PARA_FILTRO,
+  TIPOS_DE_REPORTE_PARA_FILTRO,
 } from "../domain";
-import type { FiltrosDeMapa, FuentesDeMapa } from "./puertos";
+import type {
+  CalleParaMapaOperativo,
+  FiltrosDeMapa,
+  FuentesDeMapa,
+  IntervencionParaMapaOperativo,
+  ReporteParaMapaOperativo,
+} from "./puertos";
+
+type Hecho = {
+  id: string;
+  calleId: string | null;
+  recurso: RecursoDeMapa;
+  etiqueta: string;
+};
 
 const coincide = (valor: string, filtro: string | undefined) =>
   !filtro || valor === filtro;
 /**
- * `tipo` y `estado` son un solo filtro sobre dos vocabularios cerrados y
- * disjuntos (reportes vs. intervenciones). Si el valor elegido no
- * pertenece al vocabulario de este recurso, el filtro no le aplica -no lo
- * excluye-: evita que elegir p.ej. un estado de intervencion vacie los
- * reportes en silencio.
+ * Si el valor de filtro no pertenece al vocabulario de este recurso, el
+ * filtro no le aplica -no lo excluye-: evita que elegir p.ej. un estado de
+ * intervencion vacie los reportes en silencio.
  */
 const coincideSiAplica = (
   valor: string,
@@ -28,6 +39,89 @@ const coincideSiAplica = (
 ) => !filtro || !vocabulario.includes(filtro) || valor === filtro;
 const hrefDe = (recurso: RecursoDeMapa, id: string) =>
   recurso === "REPORTE" ? `/reportes/detalle/${id}` : `/intervenciones/${id}`;
+
+function filtrarReportes(
+  reportes: readonly ReporteParaMapaOperativo[],
+  filtros: FiltrosDeMapa,
+): readonly Hecho[] {
+  return reportes
+    .filter(
+      (r) =>
+        coincideSiAplica(r.tipo, filtros.tipo, TIPOS_DE_REPORTE_PARA_FILTRO) &&
+        coincideSiAplica(
+          r.estado,
+          filtros.estado,
+          ESTADOS_DE_REPORTE_PARA_FILTRO,
+        ) &&
+        coincide(r.areaResponsable ?? "", filtros.area),
+    )
+    .map((r) => ({
+      id: r.id,
+      calleId: r.calleId,
+      recurso: "REPORTE" as const,
+      etiqueta: r.folio,
+    }));
+}
+
+function filtrarIntervenciones(
+  intervenciones: readonly IntervencionParaMapaOperativo[],
+  filtros: FiltrosDeMapa,
+): readonly Hecho[] {
+  return intervenciones
+    .filter(
+      (i) =>
+        !filtros.area &&
+        coincideSiAplica(
+          i.tipo,
+          filtros.tipo,
+          TIPOS_DE_INTERVENCION_PARA_FILTRO,
+        ) &&
+        coincideSiAplica(
+          i.estado,
+          filtros.estado,
+          ESTADOS_DE_INTERVENCION_PARA_FILTRO,
+        ),
+    )
+    .map((i) => ({
+      id: i.id,
+      calleId: i.calleId,
+      recurso: "INTERVENCION" as const,
+      etiqueta: i.tipo,
+    }));
+}
+
+function clasificar(
+  hechos: readonly Hecho[],
+  puntos: ReadonlyMap<string, CalleParaMapaOperativo>,
+): { marcadores: MarcadorDeMapa[]; cobertura: CoberturaFaltante[] } {
+  const marcadores: MarcadorDeMapa[] = [];
+  const cobertura: CoberturaFaltante[] = [];
+  for (const hecho of hechos) {
+    const calle = hecho.calleId ? puntos.get(hecho.calleId) : undefined;
+    const base = {
+      id: hecho.id,
+      recurso: hecho.recurso,
+      etiqueta: hecho.etiqueta,
+      href: hrefDe(hecho.recurso, hecho.id),
+    };
+    const punto: PuntoDeMapa | null | undefined = calle?.punto;
+    if (punto) {
+      marcadores.push({ ...base, punto });
+    } else {
+      cobertura.push({
+        ...base,
+        razon: hecho.calleId ? "CALLE_SIN_PUNTO" : "SIN_CALLE",
+      });
+    }
+  }
+  return { marcadores, cobertura };
+}
+
+const contar = (hechos: readonly Hecho[]) => ({
+  reportes: hechos.filter((h) => h.recurso === "REPORTE").length,
+  intervenciones: hechos.filter((h) => h.recurso === "INTERVENCION").length,
+  total: hechos.length,
+});
 
 export function crearAgregarMapa(fuentes: FuentesDeMapa) {
   return async function agregarMapa(
@@ -41,72 +135,11 @@ export function crearAgregarMapa(fuentes: FuentesDeMapa) {
     ]);
     const puntos = new Map(calles.map((calle) => [calle.id, calle]));
     const hechos = [
-      ...reportes
-        .filter(
-          (reporte) =>
-            coincideSiAplica(reporte.tipo, filtros.tipo, TIPOS_DE_INCIDENCIA) &&
-            coincideSiAplica(
-              reporte.estado,
-              filtros.estado,
-              ESTADOS_DE_REPORTE,
-            ) &&
-            coincide(reporte.areaResponsable ?? "", filtros.area),
-        )
-        .map((reporte) => ({
-          ...reporte,
-          recurso: "REPORTE" as const,
-          etiqueta: reporte.folio,
-        })),
-      ...intervenciones
-        .filter(
-          (intervencion) =>
-            !filtros.area &&
-            coincideSiAplica(
-              intervencion.tipo,
-              filtros.tipo,
-              TIPOS_DE_INTERVENCION,
-            ) &&
-            coincideSiAplica(
-              intervencion.estado,
-              filtros.estado,
-              ESTADOS_DE_INTERVENCION,
-            ),
-        )
-        .map((intervencion) => ({
-          ...intervencion,
-          recurso: "INTERVENCION" as const,
-          etiqueta: intervencion.tipo,
-        })),
+      ...filtrarReportes(reportes, filtros),
+      ...filtrarIntervenciones(intervenciones, filtros),
     ];
-    const marcadores: MarcadorDeMapa[] = [];
-    const cobertura: CoberturaFaltante[] = [];
-    for (const hecho of hechos) {
-      const calle = hecho.calleId ? puntos.get(hecho.calleId) : undefined;
-      const href = hrefDe(hecho.recurso, hecho.id);
-      if (calle?.punto) {
-        marcadores.push({
-          id: hecho.id,
-          recurso: hecho.recurso,
-          etiqueta: hecho.etiqueta,
-          href,
-          punto: calle.punto,
-        });
-      } else {
-        cobertura.push({
-          id: hecho.id,
-          recurso: hecho.recurso,
-          etiqueta: hecho.etiqueta,
-          href,
-          razon: hecho.calleId ? "CALLE_SIN_PUNTO" : "SIN_CALLE",
-        });
-      }
-    }
-    const conteos = {
-      reportes: hechos.filter((hecho) => hecho.recurso === "REPORTE").length,
-      intervenciones: hechos.filter((hecho) => hecho.recurso === "INTERVENCION")
-        .length,
-      total: hechos.length,
-    };
+    const { marcadores, cobertura } = clasificar(hechos, puntos);
+    const conteos = contar(hechos);
     return {
       estado: conteos.total === 0 ? "VACIO" : "CON_DATOS",
       marcadores,
