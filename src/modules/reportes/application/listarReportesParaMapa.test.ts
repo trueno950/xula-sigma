@@ -109,6 +109,7 @@ const _conDescripcion: ReporteParaMapa = {
   folio: "REP-2026-000003",
   tipo: "BACHE",
   estado: "RECIBIDO",
+  areaResponsable: null,
   calleId: null,
   lugarId: "22222222-2222-4222-8222-222222222222",
   // @ts-expect-error descripcion no existe en ReporteParaMapa
