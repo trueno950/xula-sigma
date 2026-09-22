@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { altaDeLugar } from "@/modules/territorio";
+import { altaDeCalle, altaDeLugar } from "@/modules/territorio";
 import {
   contextoDe,
   type GentePorMunicipio,
@@ -19,10 +19,10 @@ import { lectorDeIntervencionesDeMapaSql } from "./infrastructure/lectorDeInterv
 import { intervencionDe } from "./intervencionDePrueba";
 
 /**
- * Contra Postgres real: que la lectura del mapa acote por el tenant del
- * contexto y que `descripcion` y `reporteId` no salgan por este camino. Un
- * puerto mockeado no demuestra ninguna de las dos: la primera la garantiza
- * RLS y la segunda, la lista explicita de columnas del adaptador.
+ * Contra Postgres real, mismo motivo que
+ * `reportes/listarReportesParaMapa.integration.test.ts`: un puerto mockeado
+ * no prueba ni el aislamiento por tenant (lo da RLS) ni que la lista
+ * explicita de columnas del adaptador no arrastre `descripcion`/`reporteId`.
  */
 
 let gente: GentePorMunicipio;
@@ -48,6 +48,17 @@ const lugarDe = async (municipio: Municipio, nombre: string) => {
   const { id } = await altaDeLugar(
     { tipo: "comisaria", nombre, padreId: null },
     contextoDe(gente, municipio, "ADMIN_MUNICIPAL"),
+  );
+  return id;
+};
+
+const calleDe = async (
+  lugarId: Awaited<ReturnType<typeof lugarDe>>,
+  nombre: string,
+) => {
+  const { id } = await altaDeCalle(
+    { nombre, lugarId },
+    contextoDe(gente, "motul", "ADMIN_MUNICIPAL"),
   );
   return id;
 };
@@ -92,6 +103,23 @@ describe("listarIntervencionesParaMapa, contra Postgres real", () => {
     const fila = filas.find((f) => f.id === id);
 
     expect(fila).toMatchObject({ calleId: null, lugarId });
+  });
+
+  it("resuelve el calleId de una fila con calle", async () => {
+    const lugarId = await lugarDe("motul", "Comisaria Mapa Calle Int");
+    const calleId = await calleDe(lugarId, "Calle de la Intervencion");
+    const id = await insertarIntervencion({
+      municipio: "motul",
+      lugarId,
+      calleId,
+    });
+
+    const filas = await listarIntervencionesParaMapa(
+      contextoDe(gente, "motul", "OPERADOR"),
+    );
+    const fila = filas.find((f) => f.id === id);
+
+    expect(fila).toMatchObject({ calleId, lugarId });
   });
 
   it("no cruza municipios: un contexto de Motul no ve intervenciones de Ticul", async () => {
