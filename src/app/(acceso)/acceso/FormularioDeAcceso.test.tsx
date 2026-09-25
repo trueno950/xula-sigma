@@ -1,5 +1,6 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { ANILLO_DE_FOCO } from "@/shared/ui/estilos";
 import { FormularioDeAcceso } from "./FormularioDeAcceso";
 
 /**
@@ -22,15 +23,12 @@ describe("FormularioDeAcceso antes de hidratar", () => {
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*\sdisabled=""/);
   });
 
-  it("da a cada campo un anillo de foco de 2px, como el panel", () => {
+  it("da a cada campo el anillo de foco compartido, como el panel", () => {
     const campos = html.match(/<input[^>]*>/g) ?? [];
 
     expect(campos).toHaveLength(2);
     for (const campo of campos) {
-      expect(campo).toContain("focus-visible:outline-2");
-      expect(campo).toContain("focus-visible:outline-marca");
-      // `outline-none` deja `--tw-outline-style` en none y anula el anillo.
-      expect(campo).not.toContain("outline-none");
+      expect(campo).toContain(ANILLO_DE_FOCO);
     }
   });
 

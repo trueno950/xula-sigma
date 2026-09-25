@@ -22,9 +22,14 @@ import { CheckCircle, Warning } from "@phosphor-icons/react/ssr";
  *
  * `focus-visible` y no `focus`: el anillo es para quien navega con teclado.
  * Al hacer clic con el mouse, el navegador no lo pinta.
+ *
+ * Sin `outline-none`: en Tailwind 4 escribe `--tw-outline-style: none` en el
+ * mismo elemento, y `focus-visible:outline-2` lee esa variable, asi que el
+ * anillo salia con `outline-style: none`. Medido en Chromium contra el CSS
+ * compilado. El estilo va explicito en `focus-visible:outline-solid`.
  */
 export const ANILLO_DE_FOCO =
-  "outline-none focus-visible:outline focus-visible:outline-2 " +
+  "focus-visible:outline-solid focus-visible:outline-2 " +
   "focus-visible:outline-offset-2 focus-visible:outline-marca";
 
 export const VARIANTES_DE_BOTON = [

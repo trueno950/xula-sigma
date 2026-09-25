@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ANILLO_DE_FOCO,
   clasesDeBoton,
   clasesDeCampo,
   descripcionDeCampo,
@@ -15,6 +16,20 @@ import {
  * existe porque la alternativa —copiar la cadena a mano en cada archivo—
  * ya produjo tres variantes distintas del mismo campo en el repositorio.
  */
+describe("ANILLO_DE_FOCO", () => {
+  it("no fija el estilo del contorno en `none` ni lo oculta", () => {
+    // En Tailwind 4, `outline-none` escribe `--tw-outline-style: none` en el
+    // propio elemento y `focus-visible:outline-2` lee esa variable: el
+    // anillo queda en `outline-style: none` aunque ancho y color esten
+    // puestos. Medido en Chromium contra el CSS compilado.
+    expect(ANILLO_DE_FOCO).not.toMatch(/(^|\s)outline-(none|hidden)(\s|$)/);
+  });
+
+  it("declara el estilo solido del anillo al enfocar", () => {
+    expect(ANILLO_DE_FOCO).toContain("focus-visible:outline-solid");
+  });
+});
+
 describe("clasesDeBoton", () => {
   it("mide 44px de alto en toda variante", () => {
     // DESIGN.md, Buttons: "Alto fijo 44px". Es el blanco tactil minimo y
