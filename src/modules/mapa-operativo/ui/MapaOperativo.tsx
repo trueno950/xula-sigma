@@ -6,7 +6,7 @@ import { MapaVisual } from "./MapaVisual";
 
 type Props = { mapa: MapaOperativoAgregado; filtros: FiltrosDeMapa };
 const etiquetaDe = (recurso: "REPORTE" | "INTERVENCION") =>
-  recurso === "REPORTE" ? "Reporte ciudadano" : "Intervencion municipal";
+  recurso === "REPORTE" ? "Reporte ciudadano" : "Intervención municipal";
 const conteoDe = (n: number, singular: string, plural: string) =>
   `${n} ${n === 1 ? singular : plural}`;
 const razonDe = (
@@ -19,7 +19,7 @@ export function MapaOperativo({ mapa, filtros }: Props) {
     <section aria-label="Mapa operativo" className="flex flex-col gap-4">
       <FormularioDeFiltrosDeMapa {...filtros} />
       <p className="text-[15px] text-caliza-apagada">
-        Ubicacion aproximada de la calle
+        Ubicación aproximada de la calle
       </p>
       <p className="text-[15px] text-caliza-apagada">
         {conteoDe(mapa.conteos.reportes, "reporte", "reportes")} ·{" "}

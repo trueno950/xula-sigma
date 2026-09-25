@@ -1,5 +1,44 @@
 import { describe, expect, it } from "vitest";
+import {
+  ESTADOS_DE_INTERVENCION,
+  TIPOS_DE_INTERVENCION,
+} from "@/modules/intervenciones";
+import {
+  AREAS_PARA_FILTRO,
+  ESTADOS_DE_INTERVENCION_PARA_FILTRO,
+  ESTADOS_DE_REPORTE_PARA_FILTRO,
+  TIPOS_DE_INTERVENCION_PARA_FILTRO,
+  TIPOS_DE_REPORTE_PARA_FILTRO,
+} from "@/modules/mapa-operativo";
+import {
+  AREAS_RESPONSABLES,
+  ESTADOS_DE_REPORTE,
+  TIPOS_DE_INCIDENCIA,
+} from "@/modules/reportes";
 import { leerParametrosDeMapa } from "./parametros";
+
+describe("vocabularios de filtro del mapa", () => {
+  it.each([
+    ["tipos de reporte", TIPOS_DE_REPORTE_PARA_FILTRO, TIPOS_DE_INCIDENCIA],
+    ["estados de reporte", ESTADOS_DE_REPORTE_PARA_FILTRO, ESTADOS_DE_REPORTE],
+    ["areas", AREAS_PARA_FILTRO, AREAS_RESPONSABLES],
+    [
+      "tipos de intervencion",
+      TIPOS_DE_INTERVENCION_PARA_FILTRO,
+      TIPOS_DE_INTERVENCION,
+    ],
+    [
+      "estados de intervencion",
+      ESTADOS_DE_INTERVENCION_PARA_FILTRO,
+      ESTADOS_DE_INTERVENCION,
+    ],
+  ])(
+    "la copia local de %s coincide con el catalogo de su modulo",
+    (_, copia, original) => {
+      expect([...copia].sort()).toEqual([...original].sort());
+    },
+  );
+});
 
 describe("leerParametrosDeMapa", () => {
   it("un tipo del vocabulario de reportes se conserva", () => {

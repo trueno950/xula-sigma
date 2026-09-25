@@ -55,7 +55,7 @@ export function FormularioDeFiltrosDeMapa({ tipo, estado, area }: Props) {
       <CampoDeLista
         id="filtro-area"
         name="area"
-        etiqueta="Area"
+        etiqueta="Área"
         marcador="Todas"
         opcional
         defaultValue={area ?? ""}

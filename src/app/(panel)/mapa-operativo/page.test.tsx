@@ -5,7 +5,8 @@ const contextoActualMock = vi.hoisted(() => vi.fn());
 const agregarMapaMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
-vi.mock("@/modules/mapa-operativo", () => ({
+vi.mock("@/modules/mapa-operativo", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/mapa-operativo")>()),
   agregarMapa: agregarMapaMock,
   MapaOperativo: () => <div>snapshot del mapa</div>,
 }));
