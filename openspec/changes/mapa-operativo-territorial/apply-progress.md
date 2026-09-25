@@ -1638,3 +1638,254 @@ Env exported in the same call; nothing ran through `rtk`.
 - R3-003: the fixed 300 ms sleeps in the integration tests prove the absence of
   duplicates by waiting; a sentinel payload published last would be
   deterministic.
+
+## U8: map navigation and live snapshot composition
+
+- Work unit: `U8-map-navigation`. Mode: Strict TDD. Delivery: `single-pr`,
+  `size:exception` approved. Nothing was staged or committed.
+- Scope: expose the authenticated map in panel navigation, compose the existing
+  server snapshot with the existing live-status client leaf, and add the required
+  Playwright journey. No SSE transport, tenant query, or map aggregation was
+  changed.
+
+### TDD Cycle Evidence — U8
+
+| Task | RED | GREEN | REFACTOR |
+|---|---|---|---|
+| 4.3 U8 RED | `pnpm vitest run --project unit 'src/app/(panel)/mapa-operativo/page.test.tsx'` → exit 1; 2 of 3 tests failed because the page omitted the live leaf and panel navigation omitted `/mapa-operativo`. | N/A: RED task only. | N/A. |
+| 4.4 U8 GREEN | The same RED test was written before production edits. | `pnpm vitest run --project unit 'src/app/(panel)/mapa-operativo/page.test.tsx' src/shared/ui/EstadoEnVivo.test.tsx src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → exit 0; `Test Files 3 passed (3)`, `Tests 11 passed (11)`. `pnpm typecheck` → exit 0. | Styled the existing client leaf with established `caliza` tokens; the page remains server-rendered and serializes no duplicate snapshot state. |
+
+### Work Unit Evidence — U8
+
+| Evidence | Result |
+|---|---|
+| Focused unit tests | The U8 GREEN command above passed. It proves no map query occurs without a resolved session, the map receives the server session context and parsed filters, the live leaf is composed, and authenticated navigation exposes and activates the route. |
+| Runtime harness | `e2e/mapa-operativo.spec.ts` was added but not run by instruction. It covers Motul login, navigation, marker/coverage data, report detail/history, heartbeat/live then disconnect UI, manual refresh, and exclusion of Motul data from Ticul. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Rollback boundary | Revert `NavegacionDeModulos.tsx`, `mapa-operativo/page.tsx`, `EstadoEnVivo.tsx`, the U8 unit/E2E tests, and the fixture coordinate used only to make the seeded marker observable. U6 aggregation and U7 SSE remain intact. |
+
+### Status
+
+- Task 4.3 is checked after observed RED evidence.
+- Task 4.4 remains unchecked because the required Playwright journey has no
+  observed terminal pass. The next permitted check is
+  `pnpm test:e2e --grep "mapa operativo"` in an environment with the E2E
+  database and browser runtime available.
+
+### U8 follow-up: manual refresh target size
+
+`DESIGN.md` requires a fixed 44px height for every button. The manual refresh
+button used `h-10` (40px), so this narrow correction changes only that class to
+`h-11`.
+
+| Step | Exact observed result |
+|---|---|
+| RED | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx` → exit 1; `1 failed, 4 passed`; the new assertion expected `h-11` and the rendered button contained `h-10`. |
+| GREEN | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx` → exit 0; `Test Files 1 passed (1)`, `Tests 5 passed (5)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+
+Task 4.4 remains unchecked: this styling correction does not replace the
+required, still-unrun Playwright journey.
+
+### U8 follow-up: metric-bound E2E helpers
+
+The E2E fixture's street insertion helper now takes a data object, leaving two
+parameters instead of four. The map journey now delegates its setup, snapshot,
+detail/disconnect, and Ticul-isolation steps to coherent helpers; each new
+function stays within the 30-line logic limit and the journey title and behavior
+are unchanged.
+
+| Check | Exact observed result |
+|---|---|
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| E2E | Not run by instruction. |
+
+Task 4.4 remains unchecked because the required Playwright journey still has no
+observed terminal pass.
+
+### U8 correction: historial de calle y viaje E2E
+
+La decisión anterior de limitar U8 a la navegación y a la composición del
+snapshot fue incorrecta: dejó sin una superficie alcanzable la proyección ya
+implementada de `historial-de-calle`. Se corrigió con la ruta independiente
+`/territorio/calles/[id]/historial`, no con un parámetro dentro de
+`/territorio`: la línea de tiempo es una lectura por calle, no una pestaña del
+árbol territorial, y esa URL conserva un identificador único que el mapa puede
+enlazar directamente. La ruta anidada mantiene el lenguaje territorial y la
+migaja vuelve a `/territorio`; el lector bajo RLS convierte una calle ajena o
+inexistente en 404.
+
+- La línea de tiempo muestra exclusivamente sus cinco naturalezas tipadas
+  (`REPORTE`, `INTERVENCION`, `RENOMBRE`, `REPARENTEO`, `UBICACION`) en el orden
+  que entrega el dominio; no reordena ni presenta auditoría cruda.
+- Los marcadores de calle con punto conservan su enlace al detalle vigente y
+  agregan el enlace a ese historial. La cobertura sin punto conserva su detalle
+  actual.
+- El viaje Playwright ahora entra primero a `/padron`, navega por el panel,
+  verifica el SSE real autenticado y su `resync`, y fuerza la desconexión con
+  `page.route("**/eventos", route => route.abort())`; no sustituye
+  `EventSource` en el navegador. También cubre el 404 de Ticul para el id de
+  calle de Motul. No se ejecutó por instrucción.
+
+### Evidencia TDD y verificaciones — corrección U8
+
+| Paso | Resultado observado |
+|---|---|
+| RED de UI/ruta | `pnpm vitest run --project unit src/modules/historial-de-calle/ui/HistorialDeCalle.test.tsx 'src/app/(panel)/territorio/calles/[id]/historial/page.test.tsx'` → exit 1; faltaban ambos módulos. |
+| GREEN de UI/ruta | Mismo comando → exit 0; `Test Files 2 passed (2)`, `Tests 4 passed (4)`. |
+| RED de enlace del mapa | `pnpm vitest run --project unit src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → exit 1; faltaba `href="/territorio/calles/calle-3/historial"`. |
+| GREEN enfocado | `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx src/modules/historial-de-calle/ui/HistorialDeCalle.test.tsx 'src/app/(panel)/territorio/calles/[id]/historial/page.test.tsx'` → exit 0; `Test Files 4 passed (4)`, `Tests 15 passed (15)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Biome escritura | `pnpm exec biome check --write` sobre los 17 archivos fuente/test/E2E tocados → `Checked 17 files in 68ms. Fixed 10 files.` |
+| Biome comprobación | `pnpm exec biome check` sobre los mismos 17 archivos → `Checked 17 files in 14ms. No fixes applied.` |
+| E2E | No ejecutado por instrucción. |
+
+Task 4.4 permanece sin marcar: el archivo del viaje fue corregido, pero no hay
+un pase terminal observado de Playwright.
+
+### U8 correction: errores operacionales y secuencia SSE real
+
+La primera corrección de la ruta convertía cualquier rechazo de
+`leerHistorialDeCalle` en 404; era incorrecto porque ocultaba fallas de
+infraestructura. Ahora el `try` cubre exclusivamente `comoCalleId`: un id de
+ruta inválido responde 404, mientras un rechazo operacional se propaga. Un
+resultado `null` —incluida una calle ajena escondida por RLS— sigue dando 404.
+
+El viaje E2E también se corrigió: abre el mapa primero sin interceptar SSE y
+observa `Actualización en vivo` con el `EventSource` real. Después instala
+`page.route("**/eventos", route => route.abort())`, recarga el mapa y solo
+entonces espera `Actualización desconectada`. Así la desconexión se prueba en
+el mapa sin impedir la comprobación previa de conexión real. Las verificaciones
+HTTP sin sesión, stream autenticado, tipo SSE y primer marco `resync` siguen
+presentes. El E2E no se ejecutó por instrucción.
+
+| Paso | Resultado observado |
+|---|---|
+| RED operacional | `pnpm vitest run --project unit 'src/app/(panel)/territorio/calles/[id]/historial/page.test.tsx'` → exit 1; el rechazo `base no disponible` se convertía en `NEXT_NOT_FOUND`. |
+| GREEN operacional | Mismo comando → exit 0; `Test Files 1 passed (1)`, `Tests 3 passed (3)`. |
+| Biome escritura | `pnpm exec biome check --write` sobre `page.tsx`, `page.test.tsx` y `e2e/mapa-operativo.spec.ts` → `Checked 3 files in 64ms. Fixed 1 file.` |
+| Biome comprobación | Mismos tres archivos → `Checked 3 files in 8ms. No fixes applied.` |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| E2E | No ejecutado por instrucción. |
+
+Task 4.4 permanece sin marcar: la corrección del viaje no sustituye un pase
+terminal observado de Playwright.
+
+### U8 correction: civil date in the street timeline and e2e fixture collision (Claude apply)
+
+Mode: Strict TDD. Delivery: single-pr with `size:exception`. Nothing staged or committed.
+
+**Problem A - civil date rendered as previous day with an invented hour.**
+`fecha_de_ocurrencia` (civil `YYYY-MM-DD`) became UTC midnight and the UI
+formatted it with `fechaYHoraEnMerida` (UTC-6), so 2026-09-22 showed as
+"21 sep 2026, 6:00 p.m.". Fix: `EntradaDeHistorial` now carries
+`precision: "DIA" | "MOMENTO"` (interventions `DIA`; reports and the three
+structural natures `MOMENTO`, assigned in `componerHistorialDeCalle`). `ocurridoEn`
+is untouched, so ordering and its tests are unchanged. `HistorialDeCalle.tsx`
+renders `DIA` with the new `fechaCivilDeMedianocheUtc` (shared/lib/fecha.ts,
+`timeZone: "UTC"` on purpose, commented) and `dateTime="YYYY-MM-DD"`; `MOMENTO`
+keeps `fechaYHoraEnMerida`. Ports, use case and adapters needed no change
+(the domain builder assigns precision).
+
+| Evidence | Result |
+|---|---|
+| Safety net | `pnpm vitest run --project unit src/modules/historial-de-calle src/shared/lib/fecha.test.ts` -> 3 files, 13 tests passed. |
+| RED | Same command after writing tests: 3 files failed, 8 tests failed for the right reasons (`fechaCivilDeMedianocheUtc is not a function`; `precision` undefined x5; UI rendered `21 sep 2026, 6:00 p.m.` with `dateTime="2026-09-22T00:00:00.000Z"`). The MOMENTO UI test (report at 2026-09-22T02:30Z shows 21 sep, 8:30 p.m.) already passed: it is the triangulation companion proving MOMENTO keeps Merida. |
+| GREEN | Same command -> 4 files, 23 tests passed. |
+| Mutation | UI `esDia` forced to `false` and domain intervention `precision` forced to `"MOMENTO"`: 2 tests failed (domain "la intervencion es de precision DIA", UI "una intervencion del 22 de septiembre ..."). Both files restored byte-for-byte; rerun 23/23 passed. |
+| New tests | `domain/historial.test.ts` (new, 6), `ui/HistorialDeCalle.test.tsx` (+2 and precision on fixtures, assertions untouched), `shared/lib/fecha.test.ts` (+2). e2e mapa spec also asserts `15 ene 2026` (seeded intervention) in the real journey. |
+
+**Problem B - e2e fixture collision.**
+Why the suite was re-runnable before: `e2e/preparar.ts` (Playwright
+`globalSetup`) runs `TRUNCATE bitacora, ayuntamientos CASCADE` and re-inserts
+both tenants on every `pnpm test:e2e`, so the single `cabecera` never survives
+between runs; within one run only `calles.spec.ts` seeded a cabecera
+(`bajaDeLugar.spec.ts` creates non-cabecera places via the UI). Not soft-delete,
+not luck: it held because exactly one caller existed. `mapa-operativo.spec.ts`
+became the second caller in the same run and hit `lugares_una_cabecera`
+(partial unique index on `(ayuntamiento_id) WHERE tipo = 'cabecera'`).
+
+RED (before): full `pnpm test:e2e` -> 12 passed, 1 failed:
+`mapa-operativo.spec.ts` in 0 ms, `PostgresError: duplicate key value violates
+unique constraint "lugares_una_cabecera"`.
+
+Fix (`e2e/calles.fixture.ts`, new `e2e/escenarioSql.ts` for the SQL helpers to
+stay under 200 lines):
+- `prepararEscenario({ tipoDeRaiz = "cabecera" })`: default keeps `calles.spec.ts`
+  exactly as before; the mapa spec passes `"comisaria"`. Chosen over reusing a
+  live cabecera because that would alter `calles.spec.ts` (its origin lugar
+  is asserted by id and mutated by its own flow).
+- No module-level state: marker per call (`Date.now()` + 3 random bytes), so
+  names and folio are unique per call; `consecutivo` is
+  `MAX(consecutivo)+1` for the year inside the seeding transaction (serial
+  callers; workers is 1). `Scenario` now exposes `folio`.
+- `liberarVentanaDeRitmo()` (same `TRUNCATE intentos_acceso` as
+  `bajaDeLugar.spec.ts`) and a patient login loop in the mapa spec: the second
+  failure once the cabecera was solved was `Demasiados intentos` (DB window
+  plus Better Auth's in-memory limiter, which no database reset clears).
+- The mapa spec now matches its own folio (`Reporte ciudadano: <folio>`) and
+  its own street's history link (`href$=/calles/<id>/historial`), because two
+  scenarios now coexist in Motul (strict-mode ambiguity otherwise).
+
+Same-process check: three sequential `prepararEscenario({ tipoDeRaiz: "comisaria" })`
+calls through `tsx` produced three distinct folios (no collision).
+
+**Gates after the last edit (all native, none through rtk):**
+| Command | Result |
+|---|---|
+| `pnpm typecheck` | exit 0 |
+| `pnpm reglas` (with `git add -N .` / `git reset -q`) | `9 reglas y 2 metricas sobre 880 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | 338 files, 1687 tests passed; Stmts 97.63%, Branch 92.83%, Funcs 98.87%, Lines 98.74% (floors 80/75 met) |
+| `pnpm check` | exit 0 (biome reports 56 pre-existing warnings in other files, none in touched files; depcruise 0 violations; reglas clean) |
+| `pnpm test:e2e` run 1 | 13 passed (55.2s) |
+| `pnpm test:e2e` run 2 (same DB, immediately after) | 13 passed (56.8s) |
+
+`next-env.d.ts` restored with `git checkout -- next-env.d.ts` after builds.
+Task 4.4/4.5 checkboxes left to the orchestrator.
+
+### U8 orchestrator closure and final verification (tasks 4.4 and 4.5)
+
+Codex hit its usage limit mid-rework, so the remaining fixes were finished by
+a Claude writer and everything below was rerun natively by the orchestrator on
+the final tree (Postgres up, the three database URLs exported, nothing through
+`rtk`).
+
+Defects found while verifying the first U8 delivery, all fixed before commit:
+
+- **Missing street timeline.** The first delivery skipped it, reading the
+  report's own "Historial" as the timeline. `specs/historial-de-calle` requires
+  a per-street timeline with five distinguished natures, and forbids raw
+  movement rows as entries. `historial-de-calle/ui/index.ts` was `export {}`.
+- **HTTP 200 for a foreign street.** Under `territorio/` the page inherits
+  `territorio/loading.tsx`, so it streams and the status is committed before
+  `notFound()` runs. The page moved to `/calles/[id]/historial`; the E2E now
+  requires a real 404 for another tenant's street.
+- **Civil date shown as the previous day.** An intervention dated 2026-09-22
+  rendered as "21 sep 2026, 6:00 p.m." because a civil date carried as UTC
+  midnight went through the Mérida formatter. Entries now carry
+  `precision: "DIA" | "MOMENTO"`.
+- **E2E fixture collision.** Two specs seeding the same tenant hit
+  `lugares_una_cabecera`; `prepararEscenario` takes `tipoDeRaiz` and has no
+  module-level state.
+- **Vacuous E2E assertions.** The journey looked for a street name that markers
+  never show, and its Ticul step searched for text that could never appear.
+  Both now target the report marker link, and the foreign street asserts the
+  HTTP status, the not-found message and the absence of the timeline.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm check` | exit 0; Biome 56 warnings (unchanged), dependency-cruiser no violations (858 modules), `reglas` `9 reglas y 2 metricas sobre 872 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 338 passed (338)`, `Tests 1687 passed (1687)`; `All files` 97.63% statements, 92.83% branches, 98.87% functions, 98.74% lines. Includes the integration and isolation suites against real Postgres. |
+| `pnpm test:e2e` | exit 0; `13 passed (54.1s)`, and 13 passed again on a second consecutive run on the same database. |
+
+Open observations, not blockers:
+
+- The server logs `The destination stream closed early` when the E2E aborts the
+  SSE stream on purpose; it is the expected noise of a client disconnect.
+- Two entries of the same street's map markers carry the same link text
+  "Ver historial de calle"; the surrounding marker gives the context.
+- The timeline shows only the nature and the date of each entry, with no link
+  to the report or intervention; that is a product decision the spec does not
+  make.
+- Tooling: `rtk` swallows flags such as `--write`; format with
+  `./node_modules/.bin/biome format --write`.
