@@ -18,7 +18,7 @@ toca datos, marcá el hallazgo.
 
 1. `any` está prohibido. Se usa `unknown` + type guard.
 2. **En `src/`**, todo acceso a base de datos pasa por `withTenant`. Hay
-   **tres** excepciones sancionadas, las tres en `shared/tenancy`, y
+   **cuatro** excepciones sancionadas, las cuatro en `shared/tenancy`, y
    ninguna más:
 
    - `resolverAyuntamientoPorSubdominio`: resuelve el tenant antes de que
@@ -45,6 +45,18 @@ toca datos, marcá el hallazgo.
      negarse: con `SUPERUSER` o `BYPASSRLS`, el proceso no sirve un
      request. Ver `rolDeAplicacion.ts` y ADR 0001 §2.
 
+   - `suscribirActualizaciones` (`notificacionesDeTenant.ts`): mantiene el
+     LISTEN compartido de actualizaciones en vivo. **Entró el 2026-09-24 por
+     este mismo mecanismo**, que es el que la regla exige antes de abrir una
+     salida nueva.
+
+     No tiene tenant que fijar porque LISTEN no lee filas ni ejecuta una
+     consulta de negocio: recibe un canal que la ruta ya derivó del contexto
+     autenticado del servidor. Su única salida entrega el payload de ese
+     canal a sus consumidores; la conexión es privada del módulo, perezosa y
+     de máximo una. Postgres y `canalDeTenant`, no la petición, ponen el
+     límite entre municipios. Ver `notificacionesDeTenant.ts` y diseño D4.
+
    **Ningún comentario de `src/shared/tenancy` cuenta ni enumera estas
    salidas.** Cada función explica la suya en su archivo; la lista es esta y
    solo esta. La regla existe porque esa lista llegó a estar copiada en seis
@@ -54,10 +66,10 @@ toca datos, marcá el hallazgo.
    última" es hallazgo **aunque el número esté bien hoy** — lo que no se
    escribe es el número, no el número equivocado.
 
-   Las tres comparten forma: conexión privada del módulo, una sola salida, y
+   Las cuatro comparten forma: conexión privada del módulo, una sola salida, y
    el límite lo pone Postgres y no la función. Cualquier otro acceso sin
    tenant desde `src/` es hallazgo, incluido uno nuevo que invoque este
-   precedente —que ya se usó tres veces y no se usa una cuarta sin
+   precedente —que ya se usó cuatro veces y no se usa una quinta sin
    actualizar esta regla.
 
    **`scripts/*.sql` es otra categoría y siempre lo fue.** Son actos de

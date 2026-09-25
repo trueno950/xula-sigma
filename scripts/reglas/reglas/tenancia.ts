@@ -9,24 +9,25 @@ import {
 import type { Regla } from "../tipos";
 
 /**
- * Las salidas de produccion que abren conexion propia. Son las dos que
- * alojan las tres excepciones de la regla 2 de AGENTS.md, y nada mas.
+ * Las salidas de produccion que abren conexion propia. Son los tres que
+ * alojan las cuatro excepciones de la regla 2 de AGENTS.md, y nada mas.
  *
- * La lista es de DOS archivos y no de cinco a proposito. La version anterior
+ * La lista es de TRES archivos y no de cinco a proposito. La version anterior
  * incluia el andamiaje de prueba, y eso convertia esta constante en una
  * segunda enumeracion de "quien puede tocar la base" que ya divergia de la
- * canonica: la regla 2 dice tres excepciones, el checker permitia cinco. La
+ * canonica: la regla 2 dice cuatro excepciones, el checker permitia cinco. La
  * regla 2 existe justamente porque esa lista llego a estar copiada en seis
  * lugares. Copiarla aca con otro contenido era repetir el defecto adentro
  * del verificador que deberia impedirlo.
  *
- * Abrir una salida de produccion nueva obliga a tocar estas dos lineas, que
- * es lo que la regla pide al decir que no se usa una cuarta sin
+ * Abrir una salida de produccion nueva obliga a tocar estas tres lineas, que
+ * es lo que la regla pide al decir que no se usa una quinta sin
  * actualizarla.
  */
 const SALIDAS_CON_DRIVER = new Set([
   "src/shared/tenancy/withTenant.ts",
   "src/shared/tenancy/provision.ts",
+  "src/shared/tenancy/notificacionesDeTenant.ts",
 ]);
 
 /**
@@ -72,7 +73,7 @@ export const driverFueraDeTenancy: Regla = {
         hallazgos.push({
           ruta: archivo.ruta,
           linea: lineaDe(archivo.contenido, encontrado.index),
-          mensaje: `Importa \`${encontrado[1]}\` directo. El acceso a la base va por \`shared/tenancy\`, y las salidas de produccion con driver son las dos de \`tenancia.ts\`.`,
+          mensaje: `Importa \`${encontrado[1]}\` directo. El acceso a la base va por \`shared/tenancy\`, y las salidas de produccion con driver son los tres de \`tenancia.ts\`.`,
         });
       }
     }
