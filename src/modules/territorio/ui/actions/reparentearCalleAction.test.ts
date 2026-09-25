@@ -63,7 +63,7 @@ describe("reparentearCalleAction", () => {
     [
       "moving a street below a settlement",
       new CatalogoDeCallesSoloEnAsentamientosError(),
-      "Las+calles+solo+se+pueden+administrar+en+una+cabecera+o+una+comisaria.",
+      "Las+calles+solo+se+pueden+administrar+en+una+cabecera+o+una+comisar%C3%ADa.",
     ],
     [
       "a street with domicilios on move",

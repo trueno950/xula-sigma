@@ -72,7 +72,7 @@ export function RegistroDeDomicilios({
       {estado.clase !== "con-filas" ? (
         <EstadoVacio
           estado={estado}
-          mensajeInicial="Todavia no hay domicilios registrados."
+          mensajeInicial="Todavía no hay domicilios registrados."
           hrefSinFiltro="/territorio/domicilios"
         />
       ) : (

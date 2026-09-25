@@ -85,7 +85,7 @@ export function PanelDeNodo({
       aria-labelledby="panel-nodo-nombre"
       className="flex flex-col gap-3"
     >
-      <Migaja pasos={pasos} etiqueta="Ubicacion" />
+      <Migaja pasos={pasos} etiqueta="Ubicación" />
       <div className="flex flex-wrap items-baseline gap-2">
         <h2
           id="panel-nodo-nombre"

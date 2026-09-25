@@ -69,7 +69,7 @@ export function FormularioDeAltaDeLugar({
           ? {}
           : {
               ayuda:
-                "Cabecera es el pueblo; comisaria, cada asentamiento rural. Lo de adentro se agrega entrando al lugar.",
+                "Cabecera es el pueblo; comisaría, cada asentamiento rural. Lo de adentro se agrega entrando al lugar.",
             })}
       />
 

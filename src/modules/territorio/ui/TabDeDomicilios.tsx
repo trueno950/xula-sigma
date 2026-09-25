@@ -79,7 +79,7 @@ export function TabDeDomicilios({
         </Tabla>
       ) : (
         <p className="py-6 text-[15px] text-caliza-apagada">
-          {lugar.nombre} no tiene domicilios todavia.
+          {lugar.nombre} no tiene domicilios todavía.
         </p>
       )}
 

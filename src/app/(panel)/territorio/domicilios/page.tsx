@@ -67,7 +67,7 @@ export default async function PaginaDeDomicilios({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { filtros, limite } = leerParametros(await searchParams);

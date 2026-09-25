@@ -52,7 +52,7 @@ async function ubicarYReparentear(
   await page.getByRole("link", { name: "Ubicar en el mapa" }).click();
   await expect(page.getByLabel("Latitud")).toBeVisible();
   await expect(page.getByLabel("Longitud")).toBeVisible();
-  await page.getByRole("button", { name: "Guardar ubicacion" }).click();
+  await page.getByRole("button", { name: "Guardar ubicación" }).click();
   await page.waitForLoadState("networkidle");
   await page.getByRole("link", { name: "Mover a otro lugar" }).click();
   await page.getByLabel("Nuevo lugar").selectOption({

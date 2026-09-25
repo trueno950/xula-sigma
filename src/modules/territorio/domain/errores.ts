@@ -32,7 +32,7 @@ export class RaizInvalidaError extends Error {
   readonly codigo = "RAIZ_INVALIDA";
 
   constructor(
-    mensaje = "Solo una cabecera o una comisaria puede estar sin lugar padre.",
+    mensaje = "Solo una cabecera o una comisaría puede estar sin lugar padre.",
   ) {
     super(mensaje);
     this.name = "RaizInvalidaError";
@@ -74,7 +74,7 @@ export class CatalogoDeCallesSoloEnAsentamientosError extends Error {
   readonly codigo = "CATALOGO_DE_CALLES_SOLO_EN_ASENTAMIENTOS";
 
   constructor(
-    mensaje = "Las calles solo se pueden administrar en una cabecera o una comisaria.",
+    mensaje = "Las calles solo se pueden administrar en una cabecera o una comisaría.",
   ) {
     super(mensaje);
     this.name = "CatalogoDeCallesSoloEnAsentamientosError";
@@ -90,7 +90,7 @@ export class ZonaIncoherenteError extends Error {
   readonly codigo = "ZONA_INCOHERENTE";
 
   constructor(
-    mensaje = "La zona elegida no coincide con el lugar donde se guardara el domicilio.",
+    mensaje = "La zona elegida no coincide con el lugar donde se guardará el domicilio.",
   ) {
     super(mensaje);
     this.name = "ZonaIncoherenteError";
@@ -124,7 +124,7 @@ export class TransversalRepetidaError extends Error {
   readonly codigo = "TRANSVERSAL_REPETIDA";
 
   constructor(
-    mensaje = "Las calles del domicilio deben ser distintas entre si.",
+    mensaje = "Las calles del domicilio deben ser distintas entre sí.",
   ) {
     super(mensaje);
     this.name = "TransversalRepetidaError";
@@ -134,7 +134,7 @@ export class TransversalRepetidaError extends Error {
 export class PuntoFueraDeYucatanError extends Error {
   readonly codigo = "PUNTO_FUERA_DE_YUCATAN";
 
-  constructor(mensaje = "El punto debe estar dentro de Yucatan.") {
+  constructor(mensaje = "El punto debe estar dentro de Yucatán.") {
     super(mensaje);
     this.name = "PuntoFueraDeYucatanError";
   }

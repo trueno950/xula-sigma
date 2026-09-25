@@ -17,7 +17,7 @@ const esquemaDeEntrada = z.object({
   nombre: z.string().trim().min(1),
 });
 const MENSAJE_FORMULARIO_INVALIDO = "El nombre es obligatorio.";
-const MENSAJE_GENERICO = "No se pudo completar la edicion. Intente de nuevo.";
+const MENSAJE_GENERICO = "No se pudo completar la edición. Intente de nuevo.";
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;

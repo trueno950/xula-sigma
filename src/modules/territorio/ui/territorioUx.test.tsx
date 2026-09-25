@@ -87,7 +87,7 @@ describe("Territorio streets empty state", () => {
       const html = renderTab({ accion: undefined, tipo });
 
       expect(html).toContain("Agregar calle");
-      expect(html).not.toContain("Administrar el catalogo");
+      expect(html).not.toContain("Administrar el catálogo");
     });
   }
 
@@ -98,8 +98,8 @@ describe("Territorio streets empty state", () => {
       expect(html).not.toContain("Agregar calle");
       expect(html).not.toContain("Agregar una calle");
       expect(html).toContain("de su asentamiento");
-      expect(html).toContain("Todavia no hay calles");
-      expect(html).toContain("Administrar el catalogo");
+      expect(html).toContain("Todavía no hay calles");
+      expect(html).toContain("Administrar el catálogo");
     });
   }
 
@@ -134,7 +134,7 @@ describe("Territorio streets empty state", () => {
     });
 
     expect(html).toContain("Calle del asentamiento");
-    expect(html).not.toContain("Administrar el catalogo");
+    expect(html).not.toContain("Administrar el catálogo");
     expect(html).not.toContain("<a");
   });
 });

@@ -71,7 +71,7 @@ describe("selector de punto", () => {
     expect(html).toContain('style="visibility:hidden"');
     expect(html).toContain('role="application"');
     expect(html).toContain(
-      'aria-label="Mapa para elegir la ubicacion de la calle"',
+      'aria-label="Mapa para elegir la ubicación de la calle"',
     );
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('name="latitud"');

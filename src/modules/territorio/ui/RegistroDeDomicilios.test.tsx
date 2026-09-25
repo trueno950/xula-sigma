@@ -62,7 +62,7 @@ describe("RegistroDeDomicilios", () => {
       estadoDeLista: { clase: "vacio-inicial" },
     });
 
-    expect(html).toContain("Todavia no hay domicilios registrados.");
+    expect(html).toContain("Todavía no hay domicilios registrados.");
     expect(html).not.toContain("Ver mas");
   });
 

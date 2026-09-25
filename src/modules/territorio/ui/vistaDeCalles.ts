@@ -8,7 +8,7 @@ import {
 
 export const COLUMNAS_DE_CALLES: readonly ColumnaDeTabla[] = [
   { clave: "calle", etiqueta: "Calle" },
-  { clave: "ubicacion", etiqueta: "Ubicacion" },
+  { clave: "ubicacion", etiqueta: "Ubicación" },
 ];
 
 export const formatoDePunto = (punto: PuntoGeografico | null): string =>

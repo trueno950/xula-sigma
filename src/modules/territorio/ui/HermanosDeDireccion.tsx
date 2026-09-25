@@ -26,8 +26,8 @@ export function HermanosDeDireccion({ raizId, hermanos }: Props) {
     <div className="flex flex-col gap-1">
       <p className="text-[15px] text-caliza-apagada">
         {`Hay ${hermanos.length} ${
-          hermanos.length === 1 ? "domicilio mas" : "domicilios mas"
-        } en esta direccion.`}
+          hermanos.length === 1 ? "domicilio más" : "domicilios más"
+        } en esta dirección.`}
       </p>
       <ul className="flex flex-col gap-1">
         {hermanos.map((hermano) => (

@@ -78,7 +78,7 @@ describe("PaginaDeDomicilios", () => {
       raiz: "99999999-9999-4999-8999-999999999999",
     });
 
-    expect(html).not.toContain("Todavia no hay domicilios registrados");
+    expect(html).not.toContain("Todavía no hay domicilios registrados");
   });
 
   /**
@@ -97,7 +97,7 @@ describe("PaginaDeDomicilios", () => {
 
     expect(html).toContain("Sin resultados para");
     expect(html).toContain("Tepakan");
-    expect(html).not.toContain("Todavia no hay domicilios registrados");
+    expect(html).not.toContain("Todavía no hay domicilios registrados");
   });
 
   it("compone el registro con la migaja de vuelta a /territorio", async () => {
@@ -151,7 +151,7 @@ describe("PaginaDeDomicilios", () => {
     const html = await render();
 
     expect(mocks.registroDeDomicilios).not.toHaveBeenCalled();
-    expect(html).toContain("No se pudo determinar su sesion.");
+    expect(html).toContain("No se pudo determinar su sesión.");
   });
 
   it("ofrece agregar un domicilio con un rol de escritura", async () => {

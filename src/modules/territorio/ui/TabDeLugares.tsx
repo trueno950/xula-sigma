@@ -83,8 +83,8 @@ export function TabDeLugares({
       ) : (
         <p className="py-6 text-[15px] text-caliza-apagada">
           {admiteLugares
-            ? `${lugar.nombre} no tiene lugares adentro todavia.`
-            : `Una ${tipoDeLugarEnFrase(lugar.tipo)} es el ultimo nivel: no lleva lugares adentro, solo domicilios.`}
+            ? `${lugar.nombre} no tiene lugares adentro todavía.`
+            : `Una ${tipoDeLugarEnFrase(lugar.tipo)} es el último nivel: no lleva lugares adentro, solo domicilios.`}
         </p>
       )}
 

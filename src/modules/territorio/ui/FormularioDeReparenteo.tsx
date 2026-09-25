@@ -58,8 +58,8 @@ export function FormularioDeReparenteo({
     return (
       <p className="text-[15px] text-caliza-apagada">
         {puedeSerRaiz(tipoDelLugar)
-          ? `Una ${tipoDeLugarEnFrase(tipoDelLugar)} es un asentamiento del municipio: no cuelga de ningun otro lugar.`
-          : `Todavia no hay ningun lugar en el municipio que pueda contener este lugar.`}
+          ? `Una ${tipoDeLugarEnFrase(tipoDelLugar)} es un asentamiento del municipio: no cuelga de ningún otro lugar.`
+          : `Todavía no hay ningún lugar en el municipio que pueda contener este lugar.`}
       </p>
     );
   }
@@ -83,7 +83,7 @@ export function FormularioDeReparenteo({
           <input type="hidden" name="nuevoPadreId" value="" />
           <p className="text-[15px] text-caliza-tinta">
             Esta {tipoDeLugarEnFrase(tipoDelLugar)} cuelga de otro lugar, y no
-            deberia: es un asentamiento del municipio. Soltarla la deja en el
+            debería: es un asentamiento del municipio. Soltarla la deja en el
             primer nivel con todo lo que tiene adentro.
           </p>
         </>
@@ -94,7 +94,7 @@ export function FormularioDeReparenteo({
           id="lugar-padre-nuevo-id"
           name="nuevoPadreId"
           etiqueta="Nuevo lugar padre"
-          marcador={"Elija donde va este lugar"}
+          marcador="Elija dónde va este lugar"
           opciones={[
             ...(oferta.muestraDesanclar
               ? [
@@ -106,7 +106,7 @@ export function FormularioDeReparenteo({
               : []),
             ...opcionesDeLugares(destinos),
           ]}
-          ayuda="Todo lo que cuelga de este lugar se mueve con el."
+          ayuda="Todo lo que cuelga de este lugar se mueve con él."
         />
       ) : null}
 

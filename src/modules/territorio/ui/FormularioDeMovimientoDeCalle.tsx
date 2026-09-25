@@ -31,9 +31,9 @@ export function FormularioDeMovimientoDeCalle({
         id="calle-nuevo-lugar-id"
         name="nuevoLugarId"
         etiqueta="Nuevo lugar"
-        marcador="Seleccione donde va la calle"
+        marcador="Seleccione dónde va la calle"
         opciones={opcionesDeLugares(destinos)}
-        ayuda="Los domicilios conservan su propio lugar y la ubicacion no cambia."
+        ayuda="Los domicilios conservan su propio lugar y la ubicación no cambia."
       />
       <Boton type="submit" variante="primaria">
         Mover calle

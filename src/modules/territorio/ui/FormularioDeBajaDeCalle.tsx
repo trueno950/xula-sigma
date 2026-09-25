@@ -18,7 +18,7 @@ export function FormularioDeBajaDeCalle({ raiz, nodo, calle }: Props) {
       <input type="hidden" name="calle" value={calle.id} />
       <input type="hidden" name="calleId" value={calle.id} />
       <p className="text-[15px] text-caliza-tinta">
-        La calle deja de aparecer en el catalogo. Se rechaza si tiene
+        La calle deja de aparecer en el catálogo. Se rechaza si tiene
         domicilios, pero los reportes existentes no bloquean la baja.
       </p>
       <Boton type="submit" variante="peligro">

@@ -116,7 +116,7 @@ export function VistaDeRaices({
                   {puedeSerRaiz(raiz.tipo) ? null : (
                     <span className="flex items-center gap-1 text-[13px] font-medium text-senial-aviso">
                       <Warning size={14} weight="fill" aria-hidden="true" />
-                      Deberia colgar de un asentamiento
+                      Debería colgar de un asentamiento
                     </span>
                   )}
                 </Link>
@@ -144,7 +144,7 @@ export function VistaDeRaices({
 
                 {masAdentro > 0 ? (
                   <p className={`${CLASES_DE_ETIQUETA} px-3 pb-1 pl-9`}>
-                    {masAdentro} lugar{masAdentro === 1 ? "" : "es"} mas
+                    {masAdentro} lugar{masAdentro === 1 ? "" : "es"} más
                     adentro.
                   </p>
                 ) : null}
@@ -155,7 +155,7 @@ export function VistaDeRaices({
       ) : altaAbierta ? null : (
         <EstadoVacio
           estado={estado}
-          mensajeInicial="El municipio todavia no tiene asentamientos. Empiece por la cabecera o una comisaria."
+          mensajeInicial="El municipio todavía no tiene asentamientos. Empiece por la cabecera o una comisaría."
           hrefSinFiltro="/territorio"
         />
       )}
