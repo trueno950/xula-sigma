@@ -1262,3 +1262,53 @@ required check has an observed pass.
 
 Task 4.5 stays open: this run covers U1–U6 only and must be repeated once U7
 and U8 land.
+
+## U4b: publication from reportes and intervenciones use cases (tasks 2.8 and 2.9)
+
+- Work unit: `U4b-publicacion`. Scope: widen `publicarActualizacion` to a
+  discriminated union and publish from the six use cases approved in D1/D2
+  (2026-09-24). No LISTEN, SSE, hub, route or UI (U7/U8 untouched).
+- Mode: Strict TDD. Delivery: `single-pr`, `size:exception` approved by the user
+  on 2026-09-24 for the branch's single PR. Nothing was staged or committed.
+- Payloads (all `z.strictObject`, uuid id, closed vocabulary, no tenant, names,
+  coordinates or free text): `{tipo:"reporte", id, cambio:"alta"|"estado"|"area"}`
+  and `{tipo:"intervencion", id, cambio:"alta"|"estado"|"correccion"}`. The calle
+  payload is unchanged.
+- Each use case publishes as the LAST statement of its `withTenant` callback,
+  after its writes and its audit row. A failure earlier in the transaction
+  therefore never reaches the publish call, and Postgres delivers `pg_notify`
+  only at COMMIT (D3).
+
+### TDD Cycle Evidence — U4b
+
+| Task | Test files | Layer | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 2.8 / 2.9 payload union | `src/shared/notificaciones/notificar.test.ts`, `notificar.integration.test.ts` | Unit + integration | `pnpm vitest run --project unit src/shared/notificaciones src/modules/reportes/application src/modules/intervenciones/application` → 18 files, 86 tests passing before any change | `notificar.test.ts`: 25 failed, 7 passed (schemas not exported); `notificar.integration.test.ts`: 2 failed, 1 passed (`publicarActualizacion` rejected the reporte/intervencion payloads) | `pnpm vitest run --project unit src/shared/notificaciones` → 2 files, 34 tests; integration → 3 tests after the widening | Every cambio accepted per tipo; extra keys (tenant, free text, coordinates, name), unknown cambio, cross-vocabulary cambio and non-uuid id rejected; calle payload still valid through the union | Types `PayloadDeReporte/Intervencion/Actualizacion` derived with `z.infer`; single `esquemaDePayload` parse in the transport |
+| 2.8 / 2.9 reportes (alta, estado, area) | `application/publicacionDeReportes.test.ts`, `publicacionDeReportes.transiciones.test.ts`, `src/modules/reportes/notificacionDeReportes.integration.test.ts` | Unit + integration | same safety net as above | Unit: 3 failed, 7 passed (publish never called; the negative cases passed trivially until GREEN). Integration: 4 failed, 2 passed (`No llego la notificacion esperada.`; the two rollback cases passed trivially) | Unit: 2 files, 10 tests; integration: 6 tests | Publish order after write, movement and audit; no publish on audit failure, unauthorized role, invalid transition, closed report, lost race and invisible row; real LISTEN: confirmed delivery, rollback delivers nothing, Ticul channel silent | Mutation check: moving the `asignarArea` publish before the write made 2 tests fail; restored. `validarTransicion`/`validarMotivo` moved to `validacionDeCambioDeEstado.ts` because `cambiarEstadoDeReporte.ts` was at 196 lines |
+| 2.8 / 2.9 intervenciones (alta, estado, correccion) | `application/publicacionDeIntervenciones.test.ts`, `publicacionDeIntervenciones.cambios.test.ts`, `src/modules/intervenciones/notificacionDeIntervenciones.integration.test.ts` | Unit + integration | same safety net as above | Unit: 3 failed, 7 passed. Integration: 4 failed, 2 passed (`No llego la notificacion esperada.`; the two rollback cases passed trivially) | Unit: 2 files, 10 tests; integration: 6 tests | Same matrix as reportes (alta/estado/correccion, audit failure, roles, invalid transition, closed, lost race, invisible row, rollback with invalid actor, tenant isolation) | Existing use case tests in `intervenciones` mock the transport; those in `reportes` give the mocked tx an `execute` so the real transport validates each payload |
+
+### Work Unit Evidence — U4b
+
+| Evidence | Result |
+|---|---|
+| Focused unit | `pnpm vitest run --project unit src/shared/notificaciones src/modules/reportes src/modules/intervenciones` → 46 files, 238 tests passed. |
+| Runtime harness | With the three test database URLs exported (port 55432), `pnpm vitest run --project integration src/shared/notificaciones src/modules/reportes/notificacionDeReportes.integration.test.ts src/modules/intervenciones/notificacionDeIntervenciones.integration.test.ts` → 3 files, 15 tests passed against real Postgres LISTEN. |
+| `pnpm typecheck` | exit 0. |
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 857 archivos: sin hallazgos.` |
+| `pnpm check` | exit 0; Biome 56 warnings (same count as before this unit), `tsc` clean, dependency-cruiser `no dependency violations found` (844 modules, 3854 dependencies), `reglas` no findings. |
+| `pnpm test` | exit 0; `Test Files 329 passed (329)`, `Tests 1645 passed (1645)`. |
+| `git diff --check` | clean. |
+| Rollback boundary | Revert the union in `src/shared/notificaciones/notificar.ts`, the publish call and import in the six use cases, `validacionDeCambioDeEstado.ts` (restore its two functions into `cambiarEstadoDeReporte.ts`), the mock/`tx` lines in the six existing unit tests and the new publication and notification test files. U3b calle publishing is unaffected. |
+
+### Results and notes
+
+- Authored size: about 300 lines changed in tracked files plus about 980 lines
+  in new files, almost all tests. This exceeds the 400 heuristic and falls under
+  the approved `size:exception`; no test or comment was removed to fit.
+- New test files were split (`.test.ts` plus `.transiciones.test.ts` / `.cambios.test.ts`)
+  because a single file exceeded the 200-line metric; new files may not enter the
+  `DEUDA_DE_ARCHIVO` list.
+- `registrarReporte.test.ts` is exactly 200 lines and `notificar.test.ts` is 200.
+- Tasks 2.8 and 2.9 are checked in `tasks.md`. U7 and U8 (LISTEN, SSE, hub,
+  route; tasks 4.1 onward) remain pending; the LISTEN exception in rule 2 of `AGENTS.md`
+  still enters with U7.

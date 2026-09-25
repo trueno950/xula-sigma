@@ -7,7 +7,7 @@
 | Código autoral | 700–950 líneas; presupuesto fijo 400; riesgo High |
 | Excepción generada | Solo `drizzle/meta/0014_snapshot.json`, 3,350–3,500 líneas; excepción estrecha; ninguna unidad manuscrita tiene excepción |
 | Cadena | L0 → U3a → U3b → U4a → U5 → U6 → U7 → U8 |
-| Estrategia | `ask-on-risk`; `feature-branch-chain` confirmada |
+| Estrategia | `ask-on-risk`; `feature-branch-chain` confirmada. **Reemplazada el 2026-09-24:** `single-pr` con `size:exception` aprobada por el usuario para el PR único de la rama (regla del proyecto: un PR, un merge, sin ramas apiladas). Alcanza también a las unidades manuscritas. |
 
 Decision needed before apply: Yes
 Chained PRs recommended: Yes
@@ -74,7 +74,9 @@ se afirma staging ni producción.
 - [x] 2.4 U3b RED: tests de payload, canal y rollback en `src/shared/notificaciones/`.
 - [x] 2.5 U3b GREEN: crear `src/shared/notificaciones/{canales.ts,notificar.ts}`; publicar solo `{ tipo: "calle", id, cambio: "estructura" }`, sin LISTEN/SSE.
 - [x] 2.6 U4a RED: tests de lectura en `src/modules/reportes/` para nulos, tenant y campos protegidos.
-- [x] 2.7 U4a GREEN: modificar `src/modules/reportes/application/{puertos.ts,listarReportesParaMapa.ts}` y `src/modules/reportes/infrastructure/{listadoDeReportesSql.ts,index.ts}`; sin NOTIFY. U4b queda separada y bloqueada por D1/D2.
+- [x] 2.7 U4a GREEN: modificar `src/modules/reportes/application/{puertos.ts,listarReportesParaMapa.ts}` y `src/modules/reportes/infrastructure/{listadoDeReportesSql.ts,index.ts}`; sin NOTIFY. U4b queda separada; D1/D2 aprobadas el 2026-09-24.
+- [x] 2.8 U4b RED: tests de payload en `src/shared/notificaciones/` (unión `reporte`/`intervencion`/`calle` con `strictObject`: rechaza claves extra y `cambio` fuera del vocabulario; `PayloadDeCalle` sigue válido) y tests de cada caso de uso: publica dentro de la transacción y una transacción revertida no notifica.
+- [x] 2.9 U4b GREEN: ensanchar `publicarActualizacion` a la unión y publicar desde `registrarReporte`, `cambiarEstadoDeReporte`, `asignarAreaDeReporte`, `registrarIntervencion`, `cambiarEstadoDeIntervencion` y `corregirIntervencion` (D1/D2); sin LISTEN/SSE.
 
 ### Fase 3: Proyección y mapa
 - [x] 3.1 U5 RED: tipos, empate, 404 y vacío.
