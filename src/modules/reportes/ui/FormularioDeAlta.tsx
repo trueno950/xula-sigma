@@ -39,7 +39,7 @@ export function FormularioDeAlta({ lugares, calles, tipos, error }: Props) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="reporte-descripcion" className={CLASES_DE_ETIQUETA}>
-          Descripcion
+          Descripción
         </label>
         <textarea
           id="reporte-descripcion"
@@ -51,7 +51,7 @@ export function FormularioDeAlta({ lugares, calles, tipos, error }: Props) {
           className={`w-full rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 py-2 text-[15px] text-caliza-tinta ${ANILLO_DE_FOCO}`}
         />
         <p className={CLASES_DE_ETIQUETA}>
-          No anote nombres, telefonos ni datos de vecinos. Describa la
+          No anote nombres, teléfonos ni datos de vecinos. Describa la
           incidencia: que es, no quien la reporta.
         </p>
       </div>
@@ -61,7 +61,7 @@ export function FormularioDeAlta({ lugares, calles, tipos, error }: Props) {
         name="referencia"
         etiqueta="Referencia"
         maxLength={200}
-        ayuda="Una sena para encontrar el punto: frente a la tienda, junto a la cancha. No anote nombres ni domicilios de vecinos."
+        ayuda="Una seña para encontrar el punto: frente a la tienda, junto a la cancha. No anote nombres ni domicilios de vecinos."
       />
 
       <Boton type="submit" variante="primaria">

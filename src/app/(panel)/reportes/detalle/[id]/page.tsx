@@ -65,7 +65,7 @@ export default async function PaginaDeDetalleDeReporte({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { id } = await params;
@@ -103,7 +103,7 @@ export default async function PaginaDeDetalleDeReporte({
 
       {!puedeAdministrar ? (
         <AvisoDePermiso
-          capacidad="cambiar el estado y asignar el area de un reporte"
+          capacidad="cambiar el estado y asignar el área de un reporte"
           requisito="el rol de administrador municipal"
         />
       ) : null}
@@ -118,14 +118,14 @@ export default async function PaginaDeDetalleDeReporte({
           valor={ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
         />
         <Dato
-          etiqueta="Area"
+          etiqueta="Área"
           valor={
             reporte.areaResponsable
               ? ETIQUETA_DE_AREA[reporte.areaResponsable]
               : SIN_AREA
           }
         />
-        <Dato etiqueta="Descripcion" valor={reporte.descripcion} />
+        <Dato etiqueta="Descripción" valor={reporte.descripcion} />
         {reporte.referencia ? (
           <Dato etiqueta="Referencia" valor={reporte.referencia} />
         ) : null}

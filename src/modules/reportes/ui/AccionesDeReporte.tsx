@@ -18,7 +18,7 @@ type Props = {
 
 const ETIQUETAS: Record<EstadoDeReporte, string> = {
   RECIBIDO: "Marcar recibido",
-  EN_ATENCION: "Marcar en atencion",
+  EN_ATENCION: "Marcar en atención",
   RESUELTO: "Marcar resuelto",
   RECHAZADO: "Rechazar",
 };
@@ -110,12 +110,12 @@ export function AccionesDeReporte({ reporteId, estadoActual }: Props) {
         <CampoDeLista
           id={`area-${reporteId}`}
           name="areaResponsable"
-          etiqueta="Area responsable"
-          marcador="Seleccione un area"
+          etiqueta="Área responsable"
+          marcador="Seleccione un área"
           opciones={opcionesEtiquetadas(AREAS_RESPONSABLES, ETIQUETA_DE_AREA)}
         />
         <Boton type="submit" variante="secundaria">
-          Asignar area
+          Asignar área
         </Boton>
       </form>
     </div>

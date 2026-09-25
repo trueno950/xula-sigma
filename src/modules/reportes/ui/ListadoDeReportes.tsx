@@ -34,7 +34,7 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "folio", etiqueta: "Folio", ancho: "minmax(0,2fr)" },
   { clave: "tipo", etiqueta: "Tipo", ancho: "minmax(0,1fr)" },
   { clave: "estado", etiqueta: "Estado", ancho: "minmax(0,1fr)" },
-  { clave: "area", etiqueta: "Area", ancho: "minmax(0,1fr)" },
+  { clave: "area", etiqueta: "Área", ancho: "minmax(0,1fr)" },
   { clave: "registrado", etiqueta: "Registrado", ancho: "minmax(0,1fr)" },
 ];
 
@@ -64,7 +64,7 @@ export function ListadoDeReportes({
       {estado.clase !== "con-filas" ? (
         <EstadoVacio
           estado={estado}
-          mensajeInicial="Todavia no hay reportes registrados."
+          mensajeInicial="Todavía no hay reportes registrados."
           hrefSinFiltro="/reportes"
         />
       ) : (

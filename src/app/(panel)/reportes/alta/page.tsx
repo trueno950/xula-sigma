@@ -42,7 +42,7 @@ export default async function PaginaDeAltaDeReporte({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   if (!puedeEscribir(contexto.usuario.rol)) {

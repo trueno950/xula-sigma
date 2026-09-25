@@ -76,7 +76,7 @@ function VistaDeResultado({
 
       {resultado.resultado === "SIN_REGISTRO" ? (
         <p className="text-[15px] text-senial-error">
-          No hay ningun reporte registrado con este folio.
+          No hay ningún reporte registrado con este folio.
         </p>
       ) : (
         <dl className="flex flex-col gap-3">
@@ -106,7 +106,7 @@ function VistaDeResultado({
           </div>
           <div>
             <dt className="text-[13px] font-medium text-caliza-apagada">
-              Ultimo movimiento
+              Último movimiento
             </dt>
             <dd className="text-[15px] text-caliza-tinta">
               {fechaYHoraEnMerida(new Date(resultado.actualizadoEn))}

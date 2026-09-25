@@ -13,7 +13,7 @@ type Props = {
 /** Que paso en un movimiento, en una linea: el estado, o el area asignada. */
 const descripcionDe = (movimiento: MovimientoGuardado): string => {
   if (movimiento.areaAsignada)
-    return `Area asignada: ${ETIQUETA_DE_AREA[movimiento.areaAsignada]}`;
+    return `Área asignada: ${ETIQUETA_DE_AREA[movimiento.areaAsignada]}`;
   if (movimiento.estadoAnterior === null) return "Reporte recibido";
   const motivo = movimiento.motivo
     ? ` (${ETIQUETA_DE_MOTIVO_DE_RECHAZO[movimiento.motivo]})`

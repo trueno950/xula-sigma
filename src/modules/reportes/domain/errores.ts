@@ -8,7 +8,7 @@
 export class TransicionInvalidaError extends Error {
   readonly codigo = "TRANSICION_INVALIDA";
 
-  constructor(mensaje = "La transicion de estado no es valida.") {
+  constructor(mensaje = "La transición de estado no es válida.") {
     super(mensaje);
     this.name = "TransicionInvalidaError";
   }
@@ -18,7 +18,7 @@ export class TransicionInvalidaError extends Error {
 export class ReporteCerradoError extends Error {
   readonly codigo = "REPORTE_CERRADO";
 
-  constructor(mensaje = "El reporte ya esta en un estado terminal.") {
+  constructor(mensaje = "El reporte ya está en un estado terminal.") {
     super(mensaje);
     this.name = "ReporteCerradoError";
   }
@@ -28,7 +28,7 @@ export class ReporteCerradoError extends Error {
 export class UbicacionInvalidaError extends Error {
   readonly codigo = "UBICACION_INVALIDA";
 
-  constructor(mensaje = "La ubicacion del reporte no es valida.") {
+  constructor(mensaje = "La ubicación del reporte no es válida.") {
     super(mensaje);
     this.name = "UbicacionInvalidaError";
   }
@@ -43,7 +43,7 @@ export class DuplicadoSinOriginalError extends Error {
   readonly codigo = "DUPLICADO_SIN_ORIGINAL";
 
   constructor(
-    mensaje = "Rechazar por DUPLICADO exige el vinculo al original.",
+    mensaje = "Rechazar por DUPLICADO exige el vínculo al original.",
   ) {
     super(mensaje);
     this.name = "DuplicadoSinOriginalError";
@@ -57,7 +57,7 @@ export class DuplicadoSinOriginalError extends Error {
 export class DuplicadoDeSiMismoError extends Error {
   readonly codigo = "DUPLICADO_DE_SI_MISMO";
 
-  constructor(mensaje = "Un reporte no puede ser duplicado de si mismo.") {
+  constructor(mensaje = "Un reporte no puede ser duplicado de sí mismo.") {
     super(mensaje);
     this.name = "DuplicadoDeSiMismoError";
   }
@@ -67,7 +67,7 @@ export class DuplicadoDeSiMismoError extends Error {
 export class ReportanteDadoDeBajaError extends Error {
   readonly codigo = "REPORTANTE_DADO_DE_BAJA";
 
-  constructor(mensaje = "El reportante esta dado de baja.") {
+  constructor(mensaje = "El reportante está dado de baja.") {
     super(mensaje);
     this.name = "ReportanteDadoDeBajaError";
   }
