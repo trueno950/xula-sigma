@@ -1,26 +1,20 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeAdministrarReportes } from "@/shared/auth/roles";
-import {
-  NoAutorizadoError,
-  NoEncontradoError,
-  ValidacionError,
-} from "@/shared/lib/errores";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
   DuplicadoSinOriginalError,
   type EstadoDeReporte,
-  esTerminal,
   type MotivoDeRechazo,
-  ReporteCerradoError,
   type ReporteId,
-  TransicionInvalidaError,
-  transicionValida,
   vincularDuplicado,
 } from "../domain";
-import type { ReporteGuardado, RepositorioDeReportes } from "./puertos";
+import type { RepositorioDeReportes } from "./puertos";
 import type { RegistroDeMovimientos } from "./puertosDeMovimientos";
+import { validarMotivo, validarTransicion } from "./validacionDeCambioDeEstado";
 
 /** Lo que eligio el operador; NO es lo que se guarda (design.md seccion 8). */
 export type EntradaDeCambioDeEstado = {
@@ -29,37 +23,6 @@ export type EntradaDeCambioDeEstado = {
   motivoDeRechazo: MotivoDeRechazo | null;
   duplicadoDe: string | null;
 };
-
-/** `esTerminal`/`transicionValida` de design.md seccion 12, paso 2b. */
-function validarTransicion(
-  actual: Pick<ReporteGuardado, "estado">,
-  estadoNuevo: EstadoDeReporte,
-): void {
-  if (esTerminal(actual.estado)) throw new ReporteCerradoError();
-  if (!transicionValida(actual.estado, estadoNuevo)) {
-    throw new TransicionInvalidaError();
-  }
-}
-
-/** El par de reglas de design.md seccion 12, paso 2c: un solo motivo posible. */
-function validarMotivo(
-  estadoNuevo: EstadoDeReporte,
-  motivoDeRechazo: MotivoDeRechazo | null,
-): void {
-  const exigeMotivo = estadoNuevo === "RECHAZADO";
-  if (exigeMotivo === (motivoDeRechazo !== null)) return;
-
-  throw new ValidacionError(
-    {
-      motivoDeRechazo: exigeMotivo
-        ? "Rechazar exige un motivo."
-        : "Solo aplica al rechazar.",
-    },
-    exigeMotivo
-      ? "Rechazar un reporte exige un motivo."
-      : "El motivo de rechazo solo aplica al rechazar.",
-  );
-}
 
 /**
  * Resuelve el original antes de guardar (design.md seccion 8 y 12, paso
@@ -190,6 +153,12 @@ export function crearCambiarEstadoDeReporte({
         datos,
         estadoAnterior: actual.estado,
         duplicadoDeReporteId: original,
+      });
+
+      await publicarActualizacion(tx, contexto.ayuntamientoId, {
+        tipo: "reporte",
+        id: datos.id,
+        cambio: "estado",
       });
     });
   };

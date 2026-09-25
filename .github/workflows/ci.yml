@@ -181,6 +181,8 @@ jobs:
 
       - name: Revisar el PR
         if: env.DEEPSEEK_API_KEY != ''
+        # `max` agotaba el presupuesto de razonamiento de deepseek-v4-pro sobre
+        # un diff grande y no llegaba a escribir `STATUS:` (STRICT_MODE falla).
         env:
-          GGA_OPENCODE_VARIANT: max
+          GGA_OPENCODE_VARIANT: low
         run: gga run --pr-mode --diff-only

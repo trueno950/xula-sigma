@@ -1,4 +1,14 @@
+import { randomBytes } from "node:crypto";
 import postgres, { type TransactionSql } from "postgres";
+import {
+  crearCalles,
+  crearLugares,
+  filaAusente,
+  type IdRow,
+  insertarDomicilio,
+  insertarReporte,
+  nombresDe,
+} from "./escenarioSql";
 import { CORREO, MUNICIPIOS } from "./municipios";
 
 export type Scenario = {
@@ -11,143 +21,53 @@ export type Scenario = {
   duplicada: string;
   domicilio: string;
   reporte: string;
+  folio: string;
   intervencionId: string;
 };
 
-type IdRow = { id: string };
+/**
+ * `cabecera` solo admite una fila viva por municipio
+ * (`lugares_una_cabecera`), asi que solo un escenario por base puede raizar
+ * ahi: el de `calles.spec.ts`, que es el valor por defecto. Cualquier otro
+ * spec que siembre Motul en la misma base pide `comisaria`.
+ */
+export type OpcionesDeEscenario = { tipoDeRaiz?: "cabecera" | "comisaria" };
 
-const marca = Date.now();
-const consecutivo = 100000 + (marca % 100000);
-const nombres = {
-  origen: `Calles origen ${marca}`,
-  destino: `Calles destino ${marca}`,
-  vacio: `Calles vacio ${marca}`,
-  libre: `Calle libre ${marca}`,
-  movible: `Calle movible ${marca}`,
-  domicilio: `Calle con domicilio ${marca}`,
-  reporte: `Calle con reporte ${marca}`,
-};
+// Una marca por llamada: nombres y folio son unicos por municipio, y dos
+// specs que siembran en la misma corrida no pueden repetirlos.
+const marcaNueva = () => `${Date.now()}-${randomBytes(3).toString("hex")}`;
 
-const filaAusente = (nombre: string): never => {
-  throw new Error(`Falta fila de ${nombre} en el escenario E2E.`);
-};
-
-const insertarLugar = (tx: TransactionSql, tipo: string, nombre: string) =>
-  tx<IdRow[]>`
-    INSERT INTO lugares (ayuntamiento_id, tipo, nombre)
-    VALUES (${MUNICIPIOS.motul.id}, ${tipo}, ${nombre})
-    RETURNING id
-  `;
-
-const insertarCalle = (tx: TransactionSql, nombre: string, lugarId: string) =>
-  tx<IdRow[]>`
-    INSERT INTO calles (ayuntamiento_id, nombre, lugar_id)
-    VALUES (${MUNICIPIOS.motul.id}, ${nombre}, ${lugarId})
-    RETURNING id
-  `;
-
-type LugaresDelEscenario = {
-  origen: IdRow;
-  destino: IdRow;
-  vacio: IdRow;
-};
-
-const crearLugares = async (
+const sembrarEscenario = async (
   tx: TransactionSql,
-): Promise<LugaresDelEscenario> => {
-  const [origen = { id: filaAusente("origen") }] = await insertarLugar(
-    tx,
-    "cabecera",
-    nombres.origen,
-  );
-  const [destino = { id: filaAusente("destino") }] = await insertarLugar(
-    tx,
-    "comisaria",
-    nombres.destino,
-  );
-  const [vacio = { id: filaAusente("vacio") }] = await insertarLugar(
-    tx,
-    "comisaria",
-    nombres.vacio,
-  );
-
-  return { origen, destino, vacio };
-};
-
-type CallesDelEscenario = {
-  movible: IdRow;
-  domicilio: IdRow;
-  reporte: IdRow;
-};
-
-const crearCalles = async (
-  tx: TransactionSql,
-  lugares: LugaresDelEscenario,
-): Promise<CallesDelEscenario> => {
-  const [movible = { id: filaAusente("movible") }] = await insertarCalle(
-    tx,
-    nombres.movible,
-    lugares.origen.id,
-  );
-  await insertarCalle(tx, nombres.libre, lugares.origen.id);
-  await insertarCalle(tx, nombres.libre, lugares.destino.id);
-  const [domicilio = { id: filaAusente("domicilio") }] = await insertarCalle(
-    tx,
-    nombres.domicilio,
-    lugares.origen.id,
-  );
-  const [reporte = { id: filaAusente("reporte") }] = await insertarCalle(
-    tx,
-    nombres.reporte,
-    lugares.origen.id,
-  );
-
-  return { movible, domicilio, reporte };
-};
-
-type DatosDeReporte = {
-  tx: TransactionSql;
-  lugarId: string;
-  calleId: string;
-  usuarioId: string;
-};
-
-const insertarDomicilio = (
-  tx: TransactionSql,
-  lugarId: string,
-  calleId: string,
-) =>
-  tx`
-    INSERT INTO domicilios (ayuntamiento_id, lugar_id, calle_id)
-    VALUES (${MUNICIPIOS.motul.id}, ${lugarId}, ${calleId})
-  `;
-
-const insertarReporte = ({ tx, lugarId, calleId, usuarioId }: DatosDeReporte) =>
-  tx`
-    INSERT INTO reportes (ayuntamiento_id, folio, anio, consecutivo, tipo, estado, lugar_id, calle_id, descripcion, registrado_por_usuario_id)
-    VALUES (${MUNICIPIOS.motul.id}, ${`REP-E2E-${marca}`}, 2026, ${consecutivo}, 'BACHE', 'RECIBIDO', ${lugarId}, ${calleId}, 'Reporte de prueba', ${usuarioId})
-  `;
-
-const sembrarEscenario = async (tx: TransactionSql): Promise<Scenario> => {
+  tipoDeRaiz: string,
+): Promise<Scenario> => {
+  const marca = marcaNueva();
+  const nombres = nombresDe(marca);
+  const folio = `REP-E2E-${marca}`;
   await tx`SELECT set_config('app.tenant', ${MUNICIPIOS.motul.id}, true)`;
   const [usuario = { id: filaAusente("usuario") }] = await tx<IdRow[]>`
     SELECT id FROM usuarios WHERE email = ${CORREO} LIMIT 1
   `;
-  const lugares = await crearLugares(tx);
-  const calles = await crearCalles(tx, lugares);
+  const lugares = await crearLugares(tx, nombres, tipoDeRaiz);
+  const calles = await crearCalles(tx, lugares, nombres);
   await insertarDomicilio(tx, lugares.origen.id, calles.domicilio.id);
   await insertarReporte({
     tx,
     lugarId: lugares.origen.id,
     calleId: calles.reporte.id,
     usuarioId: usuario.id,
+    folio,
   });
   const [intervencion = { id: filaAusente("intervencion") }] = await tx<
     IdRow[]
   >`
     INSERT INTO intervenciones (ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id, calle_id, descripcion, registrado_por_usuario_id)
-    VALUES (${MUNICIPIOS.motul.id}, 'OBRA', 'PLANIFICADA', '2026-01-15', ${lugares.origen.id}, ${calles.domicilio.id}, 'Rehabilitacion del parque municipal', ${usuario.id})
+    VALUES (${MUNICIPIOS.motul.id}, 'OBRA', 'PLANIFICADA', '2026-01-15', ${lugares.origen.id}, ${calles.reporte.id}, 'Rehabilitacion del parque municipal', ${usuario.id})
     RETURNING id
+  `;
+  await tx`
+    INSERT INTO intervenciones (ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id, calle_id, descripcion, registrado_por_usuario_id)
+    VALUES (${MUNICIPIOS.motul.id}, 'MANTENIMIENTO', 'PLANIFICADA', '2026-01-14', ${lugares.origen.id}, ${calles.domicilio.id}, 'Cobertura sin punto', ${usuario.id})
   `;
 
   return {
@@ -160,17 +80,20 @@ const sembrarEscenario = async (tx: TransactionSql): Promise<Scenario> => {
     duplicada: nombres.libre,
     domicilio: nombres.domicilio,
     reporte: nombres.reporte,
+    folio,
     intervencionId: intervencion.id,
   };
 };
 
-export async function prepararEscenario(): Promise<Scenario> {
+export async function prepararEscenario({
+  tipoDeRaiz = "cabecera",
+}: OpcionesDeEscenario = {}): Promise<Scenario> {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("Falta DATABASE_URL para el E2E.");
 
   const app = postgres(url, { max: 1 });
   try {
-    return await app.begin(sembrarEscenario);
+    return await app.begin((tx) => sembrarEscenario(tx, tipoDeRaiz));
   } finally {
     await app.end();
   }
@@ -195,5 +118,24 @@ export async function leerAuditoria(escenario: Scenario): Promise<string[]> {
     });
   } finally {
     await app.end();
+  }
+}
+
+/**
+ * Vacia la ventana del limitador de ritmo de acceso. Los specs anteriores de
+ * la corrida ya gastaron intentos del mismo correo, y un spec que entra dos
+ * veces mas se topa con "Demasiados intentos" por el orden alfabetico de los
+ * archivos, no por lo que prueba. Es el mismo `TRUNCATE` de
+ * `bajaDeLugar.spec.ts`.
+ */
+export async function liberarVentanaDeRitmo(): Promise<void> {
+  const url = process.env.MIGRATION_DATABASE_URL;
+  if (!url) throw new Error("Falta MIGRATION_DATABASE_URL para el E2E.");
+
+  const owner = postgres(url, { max: 1 });
+  try {
+    await owner`TRUNCATE intentos_acceso`;
+  } finally {
+    await owner.end();
   }
 }

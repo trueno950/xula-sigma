@@ -6,6 +6,7 @@ import {
   NoEncontradoError,
   ValidacionError,
 } from "@/shared/lib/errores";
+import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
@@ -70,6 +71,12 @@ export function crearCambiarEstadoDeIntervencion({
         accion: "CAMBIAR_ESTADO_INTERVENCION",
         entidad: "intervenciones",
         entidadId: entrada.id,
+      });
+
+      await publicarActualizacion(tx, contexto.ayuntamientoId, {
+        tipo: "intervencion",
+        id: entrada.id,
+        cambio: "estado",
       });
     });
   };

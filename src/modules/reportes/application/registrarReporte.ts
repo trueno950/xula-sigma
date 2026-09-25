@@ -3,6 +3,7 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { anioEnMerida } from "@/shared/lib/fecha";
+import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
@@ -44,8 +45,8 @@ export type EntradaDeRegistroDeReporte = {
  * contador necesita: todo lo que puede rechazar el alta ocurre antes del
  * lock, asi que ningun rechazo llega a tocar el contador. El unico paso que
  * entra a `withTenant` es el 4, y adentro van contador, `Folio.crear`,
- * `guardar`, la fila del alta en `movimientos` y la traza, en una sola
- * transaccion.
+ * `guardar`, la fila del alta en `movimientos`, la traza y la publicacion,
+ * en una sola transaccion.
  */
 export function crearRegistrarReporte({
   repositorio,
@@ -132,6 +133,12 @@ export function crearRegistrarReporte({
         accion: "REGISTRAR_REPORTE",
         entidad: "reportes",
         entidadId: id,
+      });
+
+      await publicarActualizacion(tx, contexto.ayuntamientoId, {
+        tipo: "reporte",
+        id,
+        cambio: "alta",
       });
 
       return id;

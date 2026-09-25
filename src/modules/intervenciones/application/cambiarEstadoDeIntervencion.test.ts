@@ -21,6 +21,9 @@ const registrarMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/tenancy/withTenant", () => ({ withTenant: withTenantMock }));
 vi.mock("@/shared/tenancy/bitacora", () => ({ registrar: registrarMock }));
+vi.mock("@/shared/notificaciones/notificar", () => ({
+  publicarActualizacion: vi.fn(),
+}));
 
 const { crearCambiarEstadoDeIntervencion } = await import(
   "./cambiarEstadoDeIntervencion"

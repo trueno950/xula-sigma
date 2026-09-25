@@ -1132,3 +1132,760 @@ registro.
   `altaDeCalle`; `3c03c0e` agrega evidencia de permisos.
 - El mock de `altaDeCalle` entrega `tx.execute`, que era el contrato requerido
   por la publicacion de actualizaciones.
+
+## U6: mapa operativo y snapshot
+
+- Work unit: `U6-mapa-operativo`. Alcance: tareas 3.3 y 3.4; el agente de
+  aplicacion dejo `tasks.md` sin editar por instruccion expresa del usuario,
+  y la sesion orquestadora marco ambas casillas despues, al cerrar la unidad.
+- Entrega: modulo completo `mapa-operativo`, ruta interna `/mapa-operativo`,
+  lectura propia de intervenciones para mapa y extension acotada de reportes
+  con `areaResponsable`. No se tocaron `consulta-publica-de-reportes`,
+  migraciones, PostGIS, geocodificacion, polilineas, SSE ni polling.
+- El snapshot agrega en paralelo las tres fuentes con el `ContextoActual`;
+  clasifica cada hecho sin calle o con calle sin punto como cobertura faltante,
+  y solo muestra marcadores con el punto existente de su calle. Los enlaces
+  son las rutas vigentes `/reportes/detalle/[id]` e `/intervenciones/[id]`.
+
+### Estado de tareas
+
+- 3.3 U6 RED — completada en esta unidad; el tracker quedo en `[x]`.
+- 3.4 U6 GREEN — completada en esta unidad; el tracker quedo en `[x]`.
+
+### TDD Cycle Evidence — U6
+
+| Tarea | Tests | Capa | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 3.3 | `application/agregarMapa.test.ts`, `application/listarIntervencionesParaMapa.test.ts` | Unit | N/A: modulo y lector nuevos; U4a/U3a se ejecutaron como regresion | ✅ `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx src/modules/intervenciones/application/listarIntervencionesParaMapa.test.ts` fallo: imports de `agregarMapa`, `MapaOperativo` y lector inexistentes; 3 archivos/4 pruebas fallidas | ✅ pruebas enfocadas posteriores en verde | ✅ cobertura sin calle/punto, filtro de area que elimina intervenciones y propagacion del contexto; intervencion sin calle | ✅ `Map` indexa calles una vez y los tipos separan puertos propios |
+| 3.4 | `ui/MapaOperativo.test.tsx` | Unit | N/A: UI y ruta nuevas | ✅ el mismo RED fallo por componente inexistente | ✅ 2 archivos/5 pruebas en verde | ✅ marcadores diferenciados y estado vacio con conteos cero | ✅ componente server simple, sin estado cliente ni GIS |
+
+### Work Unit Evidence — U6
+
+| Evidencia | Resultado |
+|---|---|
+| Test enfocado | `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → paso; 2 archivos, 5 pruebas. |
+| Regresiones de lectores | `pnpm vitest run --project unit src/modules/reportes/application/listarReportesParaMapa.test.ts src/modules/intervenciones/application/listarIntervencionesParaMapa.test.ts src/modules/territorio/application/callesParaMapa.test.ts` → paso; 3 archivos, 8 pruebas. |
+| Typecheck | `pnpm typecheck` → paso. |
+| Capas | `pnpm layers` → paso; 828 modulos y 3771 dependencias, sin violaciones. |
+| Reglas | `pnpm reglas` → bloqueado por sandbox: `tsx` no pudo abrir su socket IPC temporal (`EPERM`), incluso con `TMPDIR=/private/tmp`; no es un hallazgo de reglas del codigo. |
+| Runtime harness | `pnpm db:local` → bloqueado: `Docker no esta corriendo`; no se ejecutaron integracion/isolation ni E2E. |
+| Diff | `git diff --check` → paso. |
+| Rollback boundary | Retirar `src/modules/mapa-operativo/` y `src/app/(panel)/mapa-operativo/`; revertir el lector ParaMapa de `intervenciones` y la columna `areaResponsable` en la lectura ParaMapa de `reportes`. No afecta U3a, U4a ni U5. |
+
+### Desviaciones e incidencias
+
+- No hay desviacion funcional: el filtro de area excluye intervenciones, como
+  proponia D9; por ello marcadores, cobertura y conteos permanecen coherentes.
+- El cambio suma 573 lineas autorales (572 agregadas, 1 eliminada), sobre la
+  referencia de 400 para una rebanada. No se solicito ni registro
+  `size:exception`; los cambios quedan sin commit para que el orquestador
+  decida el corte de revision.
+
+## U6 corrective gatekeeper rerun — 2026-09-21
+
+This rerun re-read the authoritative proposal, map specification, design, tasks,
+OpenSpec configuration, existing U6 evidence, and the implemented source. It
+confirmed that U6 remains limited to 3.3/3.4; `tasks.md` remains intentionally
+unchanged and both checkboxes remain unchecked.
+
+### Specification readback
+
+- `agregarMapa` passes the server `ContextoActual` to three owning read ports
+  concurrently. The readers themselves establish `withTenant`, so the
+  aggregation has no client-selected tenant and does not cross modules through
+  domain imports.
+- Null `calleId` produces `SIN_CALLE`; a missing street point produces
+  `CALLE_SIN_PUNTO`; neither produces invented coordinates. Both buckets remain
+  in counts and link to the current detail route.
+- Type and status filter both sources; area filters reports and intentionally
+  excludes interventions (D9), so markers, coverage, and counts share the same
+  filtered source. Zero results return `VACIO` and zero counts.
+- The server UI labels street locations as approximate, distinguishes reportes
+  from intervenciones, exposes the current detail links, adds no GIS,
+  geocoding, polylines, SSE, or polling, and the route is under authenticated
+  `(panel)` with a second local context guard.
+
+No concrete defect within U6 scope was found, so no production code or new
+regression test was added during this verification-only rerun. The original
+strict-TDD RED/GREEN evidence below remains the evidence for the implementation.
+
+### Corrective verification results
+
+| Check | Exact observed result |
+|---|---|
+| Focused U6 unit | `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → exit 0; `Test Files  2 passed (2)`; `Tests  5 passed (5)`; duration `3.63s`. |
+| Focused reader regressions | `pnpm vitest run --project unit src/modules/reportes/application/listarReportesParaMapa.test.ts src/modules/intervenciones/application/listarIntervencionesParaMapa.test.ts src/modules/territorio/application/callesParaMapa.test.ts` → exit 0; `Test Files  3 passed (3)`; `Tests  8 passed (8)`; duration `237ms`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Rules | `pnpm reglas` → exit 1 before rules ran: `Error: listen EPERM: operation not permitted /var/folders/65/rz7tsz7555q3vb571k24q8jw0000gn/T/tsx-501/57669.pipe`; `code: 'EPERM'`, `syscall: 'listen'`; Node `v26.7.0`. This is sandbox IPC, not a rules verdict. |
+| Postgres/runtime | `pnpm db:local` → exit 1; `$ bash scripts/db-local.sh`; `Docker no esta corriendo.` No Postgres integration, isolation, or E2E command was runnable. |
+
+### Corrective status
+
+- U6 implementation evidence is verified and focused functional checks are
+  green. The phase remains **partial** only because the required `pnpm reglas`
+  verdict and Postgres-backed verification remain blocked by the environment.
+- No claim of success is made while those required checks have no observed pass.
+
+## U6: verification rerun with Postgres (supersedes "Corrective status")
+
+Docker was available; `pnpm db:local` provisioned roles and migrated
+`xula_test`. All commands ran natively (no `rtk`) with `DATABASE_URL`,
+`MIGRATION_DATABASE_URL` and `SUPER_ADMIN_DATABASE_URL` exported (port 55432).
+No production code or test changed during this rerun.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 857 archivos: sin hallazgos.` |
+| `pnpm typecheck` | exit 0; `$ tsc --noEmit`. |
+| `pnpm test:integration` | exit 0; `Test Files  110 passed (110)`; `Tests  382 passed (382)`. |
+| `pnpm test` | exit 0; `Test Files  323 passed (323)`; `Tests  1585 passed (1585)`. |
+| `pnpm vitest run --coverage` | exit 0; floors held; `All files` 97.78% statements, 93.1% branches, 98.82% functions, 98.8% lines. |
+| `pnpm check` | exit 0; Biome 56 warnings and no errors, `tsc` clean, dependency-cruiser `no dependency violations found` (837 modules), `reglas` no findings. |
+| `pnpm test:e2e` | exit 0; `12 passed (49.0s)`. |
+
+Notes:
+
+- A first `pnpm test` without the database variables failed 110 files with
+  `Falta DATABASE_URL`; that was the environment, not code. With the variables
+  exported the same command passed.
+- No Playwright spec covers the operational map; the 12 specs are `acceso`,
+  `hostAjeno`, `respaldoPorHost`, `calles` and `bajaDeLugar`. The map E2E journey
+  belongs to task 4.3 (U8).
+- `pnpm build` (run by Playwright) rewrote `next-env.d.ts`; it was restored
+  with `git checkout` and is not part of any change.
+
+### U6 status
+
+U6 (tasks 3.3 and 3.4) is **verified**: the blockers listed under "Corrective
+status" (sandbox `EPERM` on `pnpm reglas`, no Docker) no longer apply and every
+required check has an observed pass.
+
+Task 4.5 stays open: this run covers U1–U6 only and must be repeated once U7
+and U8 land.
+
+## U4b: publication from reportes and intervenciones use cases (tasks 2.8 and 2.9)
+
+- Work unit: `U4b-publicacion`. Scope: widen `publicarActualizacion` to a
+  discriminated union and publish from the six use cases approved in D1/D2
+  (2026-09-24). No LISTEN, SSE, hub, route or UI (U7/U8 untouched).
+- Mode: Strict TDD. Delivery: `single-pr`, `size:exception` approved by the user
+  on 2026-09-24 for the branch's single PR. Nothing was staged or committed.
+- Payloads (all `z.strictObject`, uuid id, closed vocabulary, no tenant, names,
+  coordinates or free text): `{tipo:"reporte", id, cambio:"alta"|"estado"|"area"}`
+  and `{tipo:"intervencion", id, cambio:"alta"|"estado"|"correccion"}`. The calle
+  payload is unchanged.
+- Each use case publishes as the LAST statement of its `withTenant` callback,
+  after its writes and its audit row. A failure earlier in the transaction
+  therefore never reaches the publish call, and Postgres delivers `pg_notify`
+  only at COMMIT (D3).
+
+### TDD Cycle Evidence — U4b
+
+| Task | Test files | Layer | Safety net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 2.8 / 2.9 payload union | `src/shared/notificaciones/notificar.test.ts`, `notificar.integration.test.ts` | Unit + integration | `pnpm vitest run --project unit src/shared/notificaciones src/modules/reportes/application src/modules/intervenciones/application` → 18 files, 86 tests passing before any change | `notificar.test.ts`: 25 failed, 7 passed (schemas not exported); `notificar.integration.test.ts`: 2 failed, 1 passed (`publicarActualizacion` rejected the reporte/intervencion payloads) | `pnpm vitest run --project unit src/shared/notificaciones` → 2 files, 34 tests; integration → 3 tests after the widening | Every cambio accepted per tipo; extra keys (tenant, free text, coordinates, name), unknown cambio, cross-vocabulary cambio and non-uuid id rejected; calle payload still valid through the union | Types `PayloadDeReporte/Intervencion/Actualizacion` derived with `z.infer`; single `esquemaDePayload` parse in the transport |
+| 2.8 / 2.9 reportes (alta, estado, area) | `application/publicacionDeReportes.test.ts`, `publicacionDeReportes.transiciones.test.ts`, `src/modules/reportes/notificacionDeReportes.integration.test.ts` | Unit + integration | same safety net as above | Unit: 3 failed, 7 passed (publish never called; the negative cases passed trivially until GREEN). Integration: 4 failed, 2 passed (`No llego la notificacion esperada.`; the two rollback cases passed trivially) | Unit: 2 files, 10 tests; integration: 6 tests | Publish order after write, movement and audit; no publish on audit failure, unauthorized role, invalid transition, closed report, lost race and invisible row; real LISTEN: confirmed delivery, rollback delivers nothing, Ticul channel silent | Mutation check: moving the `asignarArea` publish before the write made 2 tests fail; restored. `validarTransicion`/`validarMotivo` moved to `validacionDeCambioDeEstado.ts` because `cambiarEstadoDeReporte.ts` was at 196 lines |
+| 2.8 / 2.9 intervenciones (alta, estado, correccion) | `application/publicacionDeIntervenciones.test.ts`, `publicacionDeIntervenciones.cambios.test.ts`, `src/modules/intervenciones/notificacionDeIntervenciones.integration.test.ts` | Unit + integration | same safety net as above | Unit: 3 failed, 7 passed. Integration: 4 failed, 2 passed (`No llego la notificacion esperada.`; the two rollback cases passed trivially) | Unit: 2 files, 10 tests; integration: 6 tests | Same matrix as reportes (alta/estado/correccion, audit failure, roles, invalid transition, closed, lost race, invisible row, rollback with invalid actor, tenant isolation) | Existing use case tests in `intervenciones` mock the transport; those in `reportes` give the mocked tx an `execute` so the real transport validates each payload |
+
+### Work Unit Evidence — U4b
+
+| Evidence | Result |
+|---|---|
+| Focused unit | `pnpm vitest run --project unit src/shared/notificaciones src/modules/reportes src/modules/intervenciones` → 46 files, 238 tests passed. |
+| Runtime harness | With the three test database URLs exported (port 55432), `pnpm vitest run --project integration src/shared/notificaciones src/modules/reportes/notificacionDeReportes.integration.test.ts src/modules/intervenciones/notificacionDeIntervenciones.integration.test.ts` → 3 files, 15 tests passed against real Postgres LISTEN. |
+| `pnpm typecheck` | exit 0. |
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 857 archivos: sin hallazgos.` |
+| `pnpm check` | exit 0; Biome 56 warnings (same count as before this unit), `tsc` clean, dependency-cruiser `no dependency violations found` (844 modules, 3854 dependencies), `reglas` no findings. |
+| `pnpm test` | exit 0; `Test Files 329 passed (329)`, `Tests 1645 passed (1645)`. |
+| `git diff --check` | clean. |
+| Rollback boundary | Revert the union in `src/shared/notificaciones/notificar.ts`, the publish call and import in the six use cases, `validacionDeCambioDeEstado.ts` (restore its two functions into `cambiarEstadoDeReporte.ts`), the mock/`tx` lines in the six existing unit tests and the new publication and notification test files. U3b calle publishing is unaffected. |
+
+### Results and notes
+
+- Authored size: about 300 lines changed in tracked files plus about 980 lines
+  in new files, almost all tests. This exceeds the 400 heuristic and falls under
+  the approved `size:exception`; no test or comment was removed to fit.
+- New test files were split (`.test.ts` plus `.transiciones.test.ts` / `.cambios.test.ts`)
+  because a single file exceeded the 200-line metric; new files may not enter the
+  `DEUDA_DE_ARCHIVO` list.
+- `registrarReporte.test.ts` is exactly 200 lines and `notificar.test.ts` is 200.
+- Tasks 2.8 and 2.9 are checked in `tasks.md`. U7 and U8 (LISTEN, SSE, hub,
+  route; tasks 4.1 onward) remain pending; the LISTEN exception in rule 2 of `AGENTS.md`
+  still enters with U7.
+
+## U7: LISTEN hub, SSE route and live-status island (tasks 4.1/4.2)
+
+- Work unit: `U7`. Scope is limited to the private lazy `LISTEN` hub, `/eventos`
+  SSE route, and `EstadoEnVivo`; no map-page or navigation wiring (U8 remains
+  untouched).
+- Mode: Strict TDD. Delivery: `single-pr`, `size:exception` approved for the
+  branch. Nothing was staged or committed.
+- Decision: heartbeat is emitted every 15 seconds and the island marks the
+  connection stale after 45 seconds without one. `EventSource` reconnects;
+  both an `open` event and an update invoke `router.refresh()`. The timeout is
+  a liveness watchdog, not polling: it issues no request. The initial
+  snapshot and every re-sync remain server-rendered under RLS.
+
+### TDD Cycle Evidence — U7
+
+| Task | Test files | Layer | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|
+| 4.1 / 4.2 SSE and island | `src/app/(panel)/eventos/route.test.ts`, `src/shared/ui/EstadoEnVivo.test.tsx` | Unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 1; both suites failed because `./EstadoEnVivo` and `./route` did not exist. | Same exact command → exit 0; `Test Files 2 passed (2)`, `Tests 4 passed (4)`. | The route covers no session, server-context tenant subscription, initial resync and payload forwarding; the island covers reconnect and update refresh. | Extracted `useEventosEnVivo` to keep the component within the function-size rule; focused unit command remained green. |
+| 4.1 / 4.2 tenant listener | `src/shared/tenancy/notificacionesDeTenant.integration.test.ts` | Integration / real Postgres | New test written before the hub. | Blocked by the execution sandbox, not a test assertion: with all three required database URLs, `pnpm vitest run --project integration src/shared/tenancy/notificacionesDeTenant.integration.test.ts` reached `connect EPERM ::1:55432` and `connect EPERM 127.0.0.1:55432`; Vitest reported `1 skipped` and a failed suite. | The test subscribes Motul and Ticul and publishes a committed Motul payload, asserting only Motul receives it. | N/A while the real database socket is unavailable. |
+
+### Work Unit Evidence — U7
+
+| Evidence | Result |
+|---|---|
+| Focused unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `2 passed`, `4 passed`. |
+| Rule checker unit | `pnpm vitest run --project unit scripts/reglas/reglas/tenancia.test.ts` → exit 0; `1 passed`, `7 passed`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Runtime harness | Blocked by sandbox `EPERM` on the local Postgres socket as described above. |
+| `pnpm reglas` | Blocked before rules execute: `listen EPERM` on the tsx IPC pipe under `/var/folders/.../tsx-501/*.pipe`. |
+| `pnpm test` | Began with all required database URLs; the observed integration failures were the same `connect EPERM` socket failures (including `src/shared/notificaciones/notificar.integration.test.ts`). No terminal full-suite verdict was obtained in this execution environment. |
+| `pnpm vitest run --coverage` | Began with all required database URLs and V8 coverage enabled; its integration phase hit the same `connect EPERM` condition, so no coverage-floor verdict was obtained. |
+| `pnpm check` | Not run to completion because it includes the blocked `pnpm reglas` IPC step. |
+| Rollback boundary | Remove `src/shared/tenancy/notificacionesDeTenant.ts`, `src/app/(panel)/eventos/`, `src/shared/ui/EstadoEnVivo.tsx` and their tests; revert the fourth-exit entry in `AGENTS.md` and `scripts/reglas/reglas/tenancia.*`. U3b/U4b publishers remain unaffected. |
+
+### Status
+
+Implementation and focused unit/type checks are green. Tasks 4.1 and 4.2
+remain unchecked until the real Postgres isolation test and the required final
+gates have observed terminal passes outside the restricted sandbox.
+
+### U7 corrective self-audit
+
+A corrective audit found and fixed three boundary defects before finalizing the
+work unit:
+
+- Concurrent subscribers to a previously unopened channel could return before
+  the first `LISTEN` completed. `aperturas` now shares and awaits one opening
+  promise for every consumer; an opening failure rejects all waiting
+  subscribers instead of returning a dead subscription.
+- Hub shutdown previously cleared stored `unlisten` callbacks without calling
+  them. It now waits for pending openings, invokes every channel unlisten, and
+  ends the one private connection in `finally`.
+- The SSE route emitted `resync`, but the island refreshed only on `open`.
+  The island now handles the named `resync` event explicitly. Route cancellation
+  is asserted to close its hub subscription.
+
+| Check | Exact observed result |
+|---|---|
+| Correction RED | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx src/shared/tenancy/notificacionesDeTenant.test.ts` → exit 1; expected 3 refreshes got 2, and expected hub `unlisten` got 0. |
+| Corrected unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx src/shared/tenancy/notificacionesDeTenant.test.ts 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `Test Files 3 passed (3)`, `Tests 5 passed (5)`. |
+| Prescribed focused unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `Test Files 2 passed (2)`, `Tests 4 passed (4)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Real integration | With all three required database URLs exported, `pnpm vitest run --project integration src/shared/tenancy/notificacionesDeTenant.integration.test.ts` → exit 1; sandbox `connect EPERM` for `::1:55432` and `127.0.0.1:55432`; `1 skipped`. |
+
+Tasks 4.1 and 4.2 remain unchecked: the required real-Postgres test still has
+no observed terminal pass.
+
+### U7 race-condition corrective pass
+
+A second independent review found two races and an incomplete heartbeat proof.
+Both fixes stay inside U7:
+
+- `cuerpoDeEventos` now closes a subscription that resolves after stream
+  cancellation and returns before installing its heartbeat timer.
+- The hub serializes per-channel unlisten/open transitions with `cierres`:
+  a subscriber arriving while the final unlisten is pending waits for it and
+  then reopens the channel, rather than being erased by the old close.
+- The focused SSE route test uses fake timers and reads the actual 15-second
+  heartbeat frame.
+
+| Check | Exact observed result |
+|---|---|
+| Correction RED | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.test.ts 'src/app/(panel)/eventos/route.test.ts'` → exit 1; the hub expected two `listen` calls but got one, and a late subscription expected `cerrar` once but got zero. |
+| Corrected unit | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.test.ts 'src/app/(panel)/eventos/route.test.ts' src/shared/ui/EstadoEnVivo.test.tsx` → exit 0; `Test Files 3 passed (3)`, `Tests 7 passed (7)`. |
+| Prescribed focused unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `Test Files 2 passed (2)`, `Tests 5 passed (5)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+
+Tasks 4.1 and 4.2 remain unchecked because the real-Postgres integration test
+is still blocked by sandbox socket `EPERM` and has no observed terminal pass.
+
+### U7 final post-edit gate results
+
+The independent post-edit gate ran after the race-condition fixes. These results
+append to, rather than replace, the earlier focused evidence. Tasks 4.1 and 4.2
+remain unchecked because the Postgres-backed proof and final gates have no
+terminal green verdict in this environment.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm typecheck` | exit 0; `$ tsc --noEmit`. |
+| `pnpm reglas` | exit 1 before rules execute: tsx IPC `listen EPERM` on its temporary pipe. |
+| `pnpm test` | exit 1; `113` files failed, `220` passed; `22` tests failed, `1256` passed, `375` skipped. Failures were database socket `EPERM` and resulting timeouts. |
+| `pnpm vitest run --coverage` | exit 1 with the same database `EPERM`/timeout condition; no valid coverage-floor verdict was produced. |
+| `pnpm check` | exit 1 after lint, typecheck, and dependency-cruiser completed; `pnpm reglas` then hit the tsx IPC `listen EPERM` blocker. |
+| Focused U7 units after race fix | exit 0; `4` files passed, `14` tests passed. |
+| Focused U7 integration | exit 1; database socket `EPERM` prevented the real LISTEN/isolation scenario. |
+
+### U7 orchestrator verification and test hardening (supersedes the sandbox-blocked gate above)
+
+The blocked gates above ran inside the writer's restricted sandbox. They were
+rerun natively by the orchestrator with Postgres up and
+`DATABASE_URL`/`MIGRATION_DATABASE_URL`/`SUPER_ADMIN_DATABASE_URL` exported
+(port 55432); nothing ran through `rtk`.
+
+The island test in the writer's version proved only the pre-connect label and
+the three refresh calls. `renderToStaticMarkup` never observes state, so the
+connected label, the error path, the 45 s heartbeat threshold and the unmount
+cleanup had no test, and `not.toContain("setInterval")` on the HTML could not
+fail. `EstadoEnVivo.test.tsx` was rewritten to observe `setConectado` and use
+fake timers (5 tests). Each mutation below was applied to `EstadoEnVivo.tsx`
+and killed by exactly one test; the component was restored byte for byte.
+
+| Mutation | Test that failed |
+|---|---|
+| threshold `45_000` → `90_000` | 45 s without heartbeat, and a heartbeat resets the count |
+| remove `eventos.close()` | unmount closes the source and cancels the count |
+| remove `onerror` | live on open/heartbeat, disconnected on error |
+| remove the `heartbeat` listener | 45 s without heartbeat, and a heartbeat resets the count |
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 864 archivos: sin hallazgos.` |
+| `pnpm typecheck` | exit 0. |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 333 passed (333)`, `Tests 1657 passed (1657)` on the final state (after the island test rewrite); `All files` 97.54% statements, 92.66% branches, 98.85% functions, 98.72% lines. Includes the real-Postgres LISTEN isolation test. |
+| `pnpm check` | exit 0; Biome 56 warnings (unchanged), dependency-cruiser no violations (851 modules), `reglas` no findings. |
+| `EstadoEnVivo.test.tsx` after the rewrite | exit 0; `Tests 5 passed (5)`. |
+
+Review notes, not blockers for U7:
+
+- **DB reconnect gap.** The SSE heartbeat is independent of the LISTEN
+  connection. If the hub's Postgres connection drops and reconnects, events
+  published in the gap are lost while the island keeps showing "live", and
+  nothing forces a resync. The spec's "resync on (re)connect" is met only for
+  the SSE connection. `postgres` exposes an `onlisten` callback per (re)listen
+  that could emit a `resync`.
+- **Double refresh on connect.** `onopen` and the server's initial `resync`
+  event both call `router.refresh()`.
+- **Unstyled island and copy without accents.** `EstadoEnVivo` renders bare
+  elements and its labels ("Actualizacion desconectada") lack accents, which is
+  operator-facing copy. It needs the `DESIGN.md` pass when U8 wires it in.
+- **Proxy buffering.** The response has no `X-Accel-Buffering: no`; verify that
+  the Railway proxy does not buffer `text/event-stream`.
+
+## U7 hardening: reconnect resync
+
+Task `4.2a`. Mode: Strict TDD. Delivery: `single-pr`, `size:exception`
+approved. Nothing was staged or committed. This section supersedes review
+notes 1 (DB reconnect gap), 2 (double refresh) and 4 (proxy buffering) of
+"U7 orchestrator verification and test hardening"; note 3 (unstyled island and
+copy without accents) stays open for U8.
+
+### What `postgres` 3.4.9 actually does (`node_modules/postgres/src/index.js`)
+
+- `listen(name, fn, onlisten)` (line 147) runs on its own second client
+  (`listen.sql`, `max: 1`). `onlisten` fires after the `LISTEN` completes, so it
+  fires on the initial listen too (lines 173 and 181).
+- When that connection closes, its `onclose` (lines 156-160) deletes every
+  channel and calls `listen(name, l.fn, l.onlisten)` again, creating new
+  listener objects. `onlisten` therefore fires again after every re-listen, and
+  only then. Every `onlisten` after the first is a reconnect.
+- Library quirk found while verifying (reproduced against real Postgres before
+  it was fixed): the `unlisten` returned by the first `listen` filters by the
+  old listener object (line 188), so after a reconnect it no longer removes
+  anything and the old `fn`/`onlisten` stay registered. Reopening the channel
+  then delivered every payload twice (three times after two prior reconnects)
+  and every later reconnect signal repeatedly.
+
+### Design
+
+- `suscribirActualizaciones(ayuntamientoId, consumidor, alReconectar?)`: the
+  third parameter is optional, so existing callers and the payload contract are
+  unchanged. `alReconectar` fires for every current subscriber of the affected
+  channel, only on re-listens.
+- Each channel opening carries an `abierto` flag, cleared when the channel is
+  closed, so a stale library listener is silenced and a reopen cannot
+  duplicate payloads or reconnect signals.
+- `/eventos` passes `alReconectar` that enqueues the existing `resync` event
+  (guarded by `activo`) and now sends `X-Accel-Buffering: no`.
+- `EstadoEnVivo`: `onopen` only confirms liveness (heartbeat), without
+  `router.refresh()`; `resync` and `actualizacion` refresh. The server always
+  sends `resync` on open, so connect performs one refresh.
+- `AGENTS.md` rule 2 is unchanged: same private connection, same single exit.
+
+### TDD Cycle Evidence — U7 hardening
+
+| Task | Test files | Layer | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|
+| 4.2a hub reconnect | `notificacionesDeTenant.test.ts` | Unit (fake `listen`) | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.test.ts` → exit 1; `3 failed, 2 passed` (fake `onlisten` never passed by the hub). | Same command → `Tests 5 passed (5)`. | Initial listen silent vs. re-listen signal for two subscribers, other tenant and closed subscriber excluded, payloads still forwarded to subscribers without a callback. | `Escucha` type; `exactOptionalPropertyTypes` fixed with `\| undefined`. |
+| 4.2a stale listener | same | Unit | Same command → `1 failed, 5 passed`: `expected ['{"tipo":"viejo"}'] to deeply equal []`. | Same command → `Tests 6 passed (6)`. | Payload and `onlisten` of the old listener both ignored after reopen. | None needed. |
+| 4.2a reconnect, real Postgres | `notificacionesDeTenant.integration.test.ts` | Integration | `pnpm vitest run --project integration src/shared/tenancy/notificacionesDeTenant.integration.test.ts` → exit 1; `1 failed, 2 passed`: `expected [ …(3) ] to have a length of 1 but got 3` (duplicates after reconnect; the reconnect-signal test passed once the hub change existed). | Same command → `Tests 3 passed (3)`. | Reconnect test: terminate the LISTEN backend, expect one signal, publish, expect the fresh payload. Duplicate test: reconnect, close, reopen, publish, second reconnect. | `esperarSesionListen` helper; typecheck fix for `noUncheckedIndexedAccess`. |
+| 4.2a route | `route.test.ts` | Unit | `pnpm vitest run --project unit 'src/app/(panel)/eventos/route.test.ts'` → exit 1; `2 failed, 4 passed` (`X-Accel-Buffering` null; reconnect test timed out). After the route change the existing 2-argument `toHaveBeenCalledWith` failed once (`1 failed, 5 passed`) and was updated to 3 arguments. | Same command → `Tests 6 passed (6)`. | Reconnect forwarded as exactly `event: resync\ndata: \n\n`; hub calls after stream cancellation enqueue nothing and do not throw. | None needed. |
+| 4.2a island | `EstadoEnVivo.test.tsx` | Unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx` → exit 1; `1 failed, 4 passed`: refresh mock expected not to be called at all, was called 1 time. | Same command → `Tests 5 passed (5)`. | `onopen` alone marks live (asserted before any heartbeat); `actualizacion` and `resync` each refresh once; no `setInterval`. | None needed. |
+
+### Reconnect determinism
+
+The integration test identifies the hub session in `pg_stat_activity`
+(`usename = current_user`, `pid <> pg_backend_pid()`, `query = 'listen "<canal>"'`)
+using the existing `appSinTenant` connection, and terminates it with
+`pg_terminate_backend`; the app role can terminate its own role's sessions.
+It waits (`vi.waitFor`) for the reconnect signal before publishing, and the
+signal fires only after the re-`LISTEN` completed, so the fresh notification is
+not racy. Observed stable: `notificacionesDeTenant.integration.test.ts` passed
+8 and then 10 consecutive runs after the `abierto` guard, and 5 more after the
+last test edit, with no failure.
+
+### Mutation checks (each applied, observed failing, then restored byte for byte)
+
+| Mutation | Tests that failed |
+|---|---|
+| `avisarReconexion` emits nothing | unit: re-listen signal (2 tests); integration: reconnect signal and no-duplicates (2 tests) |
+| reconnect signal also on the initial listen | unit: 3 tests; integration: reconnect test |
+| remove the `abierto` guard | unit: stale listener; integration: no-duplicates |
+| route does not forward `resync` on reconnect | route: reconnect forwarding |
+| route without the `activo` guard on reconnect | route: no enqueue after cancel |
+| remove `X-Accel-Buffering` | route: subscribe/headers test |
+| `onopen` also refreshes | island: no refresh on open |
+| `onopen` no longer marks live | island: live on open |
+
+Restoration verified with `diff` against copies taken before the mutations
+(identical) and the three unit files re-run green (`17 passed`).
+
+### Gates, run after the last edit
+
+Env exported in the same call: `DATABASE_URL`, `MIGRATION_DATABASE_URL`,
+`SUPER_ADMIN_DATABASE_URL` (port 55432). Nothing ran through `rtk`.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm typecheck` | exit 0; `$ tsc --noEmit`. (An earlier run failed with `TS2339` in the new integration test under `noUncheckedIndexedAccess`; fixed and rerun.) |
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 871 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 333 passed (333)`, `Tests 1665 passed (1665)`; `All files` 97.61% statements, 92.73% branches, 98.86% functions, 98.73% lines. |
+| `pnpm check` | exit 0; Biome 56 warnings (unchanged), dependency-cruiser no violations (851 modules), `reglas` no findings. |
+
+### Risk and boundary
+
+- Risk: the library quirk above lives in `postgres` 3.4.9; the `abierto` guard
+  depends on the old listener staying registered rather than being removed,
+  and is safe either way. A leaked `LISTEN` per channel remains until the
+  hub connection ends, bounded by the number of tenants.
+- Rollback boundary: `notificacionesDeTenant.ts`, `eventos/route.ts`,
+  `EstadoEnVivo.tsx` and their three test files; no schema, `AGENTS.md`,
+  `opencode.json` or `next-env.d.ts` change.
+
+## U7 review follow-up: subscriber error isolation
+
+Review finding R3-002 (verified real): `reenviar` and `avisarReconexion` looped
+over a channel's subscribers with no error isolation. One throwing callback
+skipped the rest of that tenant's subscribers, and the exception went back into
+`postgres`, whose re-listen swallows it with an empty `.catch`
+(`node_modules/postgres/src/index.js:159`, 3.4.9), so the remaining subscribers
+stayed stale without any trace. Mode: Strict TDD. Nothing was staged or
+committed.
+
+Fix (`notificacionesDeTenant.ts`): both loops go through `entregarATodos`,
+which calls every subscriber inside a `try`/`catch`, collects the failures and,
+only after all subscribers were called, reports each one. The `abierto` and
+`esPrimerListen` behaviour is untouched.
+
+Reporting choice: `console.error("[eventos] un suscriptor fallo",
+datosSegurosDeError(error))`, one line per failing subscriber.
+
+- `console.error` is the repo convention (Biome allows only `error`; the auth
+  route, the PDF route and `mapearError` do the same) and Railway collects it.
+- `datosSegurosDeError` (`shared/lib/registroDeError.ts`) is a whitelist that
+  keeps the error name, Postgres identifiers and stack frames and drops the
+  message. A subscriber error message could carry the payload, so it is never
+  logged. The fixed text names neither payload, tenant nor channel.
+- The failure is not rethrown: inside `onlisten` it would be swallowed by
+  `postgres` anyway, and inside `onnotify` it would reach the library's
+  connection handler. Logging after the round is what keeps antipattern 14
+  (no silent swallow) satisfied.
+
+### TDD evidence and mutation checks
+
+New file `notificacionesDeTenant.errores.test.ts` (the existing hub test file
+was at 181 lines and the 200-line file limit would have been exceeded).
+
+| Step | Exact observed result |
+|---|---|
+| RED | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.errores.test.ts` → exit 1; `3 failed`: the callback exception propagated (`expected [Function] to not throw an error but 'Error: payload-con-datos-de-un-vecino' was thrown`). |
+| GREEN | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.errores.test.ts src/shared/tenancy/notificacionesDeTenant.test.ts` → `Test Files 2 passed (2)`, `Tests 9 passed (9)`. |
+
+Tests: payload still reaches the second subscriber; resync still reaches the
+second subscriber; two failing and two healthy subscribers give two log lines,
+each written after both healthy ones were called; the logged arguments never
+contain the error message.
+
+| Mutation (applied, then restored; `diff` identical) | Tests that failed |
+|---|---|
+| `reenviar` back to a plain loop | payload delivery; report after the round (2) |
+| `avisarReconexion` back to a plain loop | reconnect delivery (1) |
+| no `console.error` | all 3 |
+| log `String(fallo)` instead of `datosSegurosDeError` | payload delivery and reconnect delivery (2, message leaked) |
+| log inside the `catch` instead of after the round | report after the round (1) |
+
+### Gates, run after the last edit
+
+Env exported in the same call; nothing ran through `rtk`.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm typecheck` | exit 0. |
+| `pnpm reglas` | exit 0; `871 archivos: sin hallazgos.` It scans `git ls-files`, so the still-untracked new test file was not scanned. Run with a throwaway copy of the index (`GIT_INDEX_FILE`, `git add -N`, real index untouched): exit 0, `872 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 334 passed (334)`, `Tests 1668 passed (1668)`; 97.62% statements, 92.83% branches, 98.87% functions, 98.73% lines. |
+| `pnpm check` | exit 0; Biome warnings unchanged, dependency-cruiser no violations (852 modules), `reglas` no findings. |
+
+### Open follow-ups (advisory review findings, NOT fixed here)
+
+- R3-001: `notificacionesDeTenant.integration.test.ts` finds the hub session
+  only by its last query text in `pg_stat_activity`
+  (`query = 'listen "<canal>"'`), so a parallel worker holding its own hub on
+  the same channel could be matched.
+- R3-003: the fixed 300 ms sleeps in the integration tests prove the absence of
+  duplicates by waiting; a sentinel payload published last would be
+  deterministic.
+
+## U8: map navigation and live snapshot composition
+
+- Work unit: `U8-map-navigation`. Mode: Strict TDD. Delivery: `single-pr`,
+  `size:exception` approved. Nothing was staged or committed.
+- Scope: expose the authenticated map in panel navigation, compose the existing
+  server snapshot with the existing live-status client leaf, and add the required
+  Playwright journey. No SSE transport, tenant query, or map aggregation was
+  changed.
+
+### TDD Cycle Evidence — U8
+
+| Task | RED | GREEN | REFACTOR |
+|---|---|---|---|
+| 4.3 U8 RED | `pnpm vitest run --project unit 'src/app/(panel)/mapa-operativo/page.test.tsx'` → exit 1; 2 of 3 tests failed because the page omitted the live leaf and panel navigation omitted `/mapa-operativo`. | N/A: RED task only. | N/A. |
+| 4.4 U8 GREEN | The same RED test was written before production edits. | `pnpm vitest run --project unit 'src/app/(panel)/mapa-operativo/page.test.tsx' src/shared/ui/EstadoEnVivo.test.tsx src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → exit 0; `Test Files 3 passed (3)`, `Tests 11 passed (11)`. `pnpm typecheck` → exit 0. | Styled the existing client leaf with established `caliza` tokens; the page remains server-rendered and serializes no duplicate snapshot state. |
+
+### Work Unit Evidence — U8
+
+| Evidence | Result |
+|---|---|
+| Focused unit tests | The U8 GREEN command above passed. It proves no map query occurs without a resolved session, the map receives the server session context and parsed filters, the live leaf is composed, and authenticated navigation exposes and activates the route. |
+| Runtime harness | `e2e/mapa-operativo.spec.ts` was added but not run by instruction. It covers Motul login, navigation, marker/coverage data, report detail/history, heartbeat/live then disconnect UI, manual refresh, and exclusion of Motul data from Ticul. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Rollback boundary | Revert `NavegacionDeModulos.tsx`, `mapa-operativo/page.tsx`, `EstadoEnVivo.tsx`, the U8 unit/E2E tests, and the fixture coordinate used only to make the seeded marker observable. U6 aggregation and U7 SSE remain intact. |
+
+### Status
+
+- Task 4.3 is checked after observed RED evidence.
+- Task 4.4 remains unchecked because the required Playwright journey has no
+  observed terminal pass. The next permitted check is
+  `pnpm test:e2e --grep "mapa operativo"` in an environment with the E2E
+  database and browser runtime available.
+
+### U8 follow-up: manual refresh target size
+
+`DESIGN.md` requires a fixed 44px height for every button. The manual refresh
+button used `h-10` (40px), so this narrow correction changes only that class to
+`h-11`.
+
+| Step | Exact observed result |
+|---|---|
+| RED | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx` → exit 1; `1 failed, 4 passed`; the new assertion expected `h-11` and the rendered button contained `h-10`. |
+| GREEN | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx` → exit 0; `Test Files 1 passed (1)`, `Tests 5 passed (5)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+
+Task 4.4 remains unchecked: this styling correction does not replace the
+required, still-unrun Playwright journey.
+
+### U8 follow-up: metric-bound E2E helpers
+
+The E2E fixture's street insertion helper now takes a data object, leaving two
+parameters instead of four. The map journey now delegates its setup, snapshot,
+detail/disconnect, and Ticul-isolation steps to coherent helpers; each new
+function stays within the 30-line logic limit and the journey title and behavior
+are unchanged.
+
+| Check | Exact observed result |
+|---|---|
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| E2E | Not run by instruction. |
+
+Task 4.4 remains unchecked because the required Playwright journey still has no
+observed terminal pass.
+
+### U8 correction: historial de calle y viaje E2E
+
+La decisión anterior de limitar U8 a la navegación y a la composición del
+snapshot fue incorrecta: dejó sin una superficie alcanzable la proyección ya
+implementada de `historial-de-calle`. Se corrigió con la ruta independiente
+`/territorio/calles/[id]/historial`, no con un parámetro dentro de
+`/territorio`: la línea de tiempo es una lectura por calle, no una pestaña del
+árbol territorial, y esa URL conserva un identificador único que el mapa puede
+enlazar directamente. La ruta anidada mantiene el lenguaje territorial y la
+migaja vuelve a `/territorio`; el lector bajo RLS convierte una calle ajena o
+inexistente en 404.
+
+- La línea de tiempo muestra exclusivamente sus cinco naturalezas tipadas
+  (`REPORTE`, `INTERVENCION`, `RENOMBRE`, `REPARENTEO`, `UBICACION`) en el orden
+  que entrega el dominio; no reordena ni presenta auditoría cruda.
+- Los marcadores de calle con punto conservan su enlace al detalle vigente y
+  agregan el enlace a ese historial. La cobertura sin punto conserva su detalle
+  actual.
+- El viaje Playwright ahora entra primero a `/padron`, navega por el panel,
+  verifica el SSE real autenticado y su `resync`, y fuerza la desconexión con
+  `page.route("**/eventos", route => route.abort())`; no sustituye
+  `EventSource` en el navegador. También cubre el 404 de Ticul para el id de
+  calle de Motul. No se ejecutó por instrucción.
+
+### Evidencia TDD y verificaciones — corrección U8
+
+| Paso | Resultado observado |
+|---|---|
+| RED de UI/ruta | `pnpm vitest run --project unit src/modules/historial-de-calle/ui/HistorialDeCalle.test.tsx 'src/app/(panel)/territorio/calles/[id]/historial/page.test.tsx'` → exit 1; faltaban ambos módulos. |
+| GREEN de UI/ruta | Mismo comando → exit 0; `Test Files 2 passed (2)`, `Tests 4 passed (4)`. |
+| RED de enlace del mapa | `pnpm vitest run --project unit src/modules/mapa-operativo/ui/MapaOperativo.test.tsx` → exit 1; faltaba `href="/territorio/calles/calle-3/historial"`. |
+| GREEN enfocado | `pnpm vitest run --project unit src/modules/mapa-operativo/application/agregarMapa.test.ts src/modules/mapa-operativo/ui/MapaOperativo.test.tsx src/modules/historial-de-calle/ui/HistorialDeCalle.test.tsx 'src/app/(panel)/territorio/calles/[id]/historial/page.test.tsx'` → exit 0; `Test Files 4 passed (4)`, `Tests 15 passed (15)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Biome escritura | `pnpm exec biome check --write` sobre los 17 archivos fuente/test/E2E tocados → `Checked 17 files in 68ms. Fixed 10 files.` |
+| Biome comprobación | `pnpm exec biome check` sobre los mismos 17 archivos → `Checked 17 files in 14ms. No fixes applied.` |
+| E2E | No ejecutado por instrucción. |
+
+Task 4.4 permanece sin marcar: el archivo del viaje fue corregido, pero no hay
+un pase terminal observado de Playwright.
+
+### U8 correction: errores operacionales y secuencia SSE real
+
+La primera corrección de la ruta convertía cualquier rechazo de
+`leerHistorialDeCalle` en 404; era incorrecto porque ocultaba fallas de
+infraestructura. Ahora el `try` cubre exclusivamente `comoCalleId`: un id de
+ruta inválido responde 404, mientras un rechazo operacional se propaga. Un
+resultado `null` —incluida una calle ajena escondida por RLS— sigue dando 404.
+
+El viaje E2E también se corrigió: abre el mapa primero sin interceptar SSE y
+observa `Actualización en vivo` con el `EventSource` real. Después instala
+`page.route("**/eventos", route => route.abort())`, recarga el mapa y solo
+entonces espera `Actualización desconectada`. Así la desconexión se prueba en
+el mapa sin impedir la comprobación previa de conexión real. Las verificaciones
+HTTP sin sesión, stream autenticado, tipo SSE y primer marco `resync` siguen
+presentes. El E2E no se ejecutó por instrucción.
+
+| Paso | Resultado observado |
+|---|---|
+| RED operacional | `pnpm vitest run --project unit 'src/app/(panel)/territorio/calles/[id]/historial/page.test.tsx'` → exit 1; el rechazo `base no disponible` se convertía en `NEXT_NOT_FOUND`. |
+| GREEN operacional | Mismo comando → exit 0; `Test Files 1 passed (1)`, `Tests 3 passed (3)`. |
+| Biome escritura | `pnpm exec biome check --write` sobre `page.tsx`, `page.test.tsx` y `e2e/mapa-operativo.spec.ts` → `Checked 3 files in 64ms. Fixed 1 file.` |
+| Biome comprobación | Mismos tres archivos → `Checked 3 files in 8ms. No fixes applied.` |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| E2E | No ejecutado por instrucción. |
+
+Task 4.4 permanece sin marcar: la corrección del viaje no sustituye un pase
+terminal observado de Playwright.
+
+### U8 correction: civil date in the street timeline and e2e fixture collision (Claude apply)
+
+Mode: Strict TDD. Delivery: single-pr with `size:exception`. Nothing staged or committed.
+
+**Problem A - civil date rendered as previous day with an invented hour.**
+`fecha_de_ocurrencia` (civil `YYYY-MM-DD`) became UTC midnight and the UI
+formatted it with `fechaYHoraEnMerida` (UTC-6), so 2026-09-22 showed as
+"21 sep 2026, 6:00 p.m.". Fix: `EntradaDeHistorial` now carries
+`precision: "DIA" | "MOMENTO"` (interventions `DIA`; reports and the three
+structural natures `MOMENTO`, assigned in `componerHistorialDeCalle`). `ocurridoEn`
+is untouched, so ordering and its tests are unchanged. `HistorialDeCalle.tsx`
+renders `DIA` with the new `fechaCivilDeMedianocheUtc` (shared/lib/fecha.ts,
+`timeZone: "UTC"` on purpose, commented) and `dateTime="YYYY-MM-DD"`; `MOMENTO`
+keeps `fechaYHoraEnMerida`. Ports, use case and adapters needed no change
+(the domain builder assigns precision).
+
+| Evidence | Result |
+|---|---|
+| Safety net | `pnpm vitest run --project unit src/modules/historial-de-calle src/shared/lib/fecha.test.ts` -> 3 files, 13 tests passed. |
+| RED | Same command after writing tests: 3 files failed, 8 tests failed for the right reasons (`fechaCivilDeMedianocheUtc is not a function`; `precision` undefined x5; UI rendered `21 sep 2026, 6:00 p.m.` with `dateTime="2026-09-22T00:00:00.000Z"`). The MOMENTO UI test (report at 2026-09-22T02:30Z shows 21 sep, 8:30 p.m.) already passed: it is the triangulation companion proving MOMENTO keeps Merida. |
+| GREEN | Same command -> 4 files, 23 tests passed. |
+| Mutation | UI `esDia` forced to `false` and domain intervention `precision` forced to `"MOMENTO"`: 2 tests failed (domain "la intervencion es de precision DIA", UI "una intervencion del 22 de septiembre ..."). Both files restored byte-for-byte; rerun 23/23 passed. |
+| New tests | `domain/historial.test.ts` (new, 6), `ui/HistorialDeCalle.test.tsx` (+2 and precision on fixtures, assertions untouched), `shared/lib/fecha.test.ts` (+2). e2e mapa spec also asserts `15 ene 2026` (seeded intervention) in the real journey. |
+
+**Problem B - e2e fixture collision.**
+Why the suite was re-runnable before: `e2e/preparar.ts` (Playwright
+`globalSetup`) runs `TRUNCATE bitacora, ayuntamientos CASCADE` and re-inserts
+both tenants on every `pnpm test:e2e`, so the single `cabecera` never survives
+between runs; within one run only `calles.spec.ts` seeded a cabecera
+(`bajaDeLugar.spec.ts` creates non-cabecera places via the UI). Not soft-delete,
+not luck: it held because exactly one caller existed. `mapa-operativo.spec.ts`
+became the second caller in the same run and hit `lugares_una_cabecera`
+(partial unique index on `(ayuntamiento_id) WHERE tipo = 'cabecera'`).
+
+RED (before): full `pnpm test:e2e` -> 12 passed, 1 failed:
+`mapa-operativo.spec.ts` in 0 ms, `PostgresError: duplicate key value violates
+unique constraint "lugares_una_cabecera"`.
+
+Fix (`e2e/calles.fixture.ts`, new `e2e/escenarioSql.ts` for the SQL helpers to
+stay under 200 lines):
+- `prepararEscenario({ tipoDeRaiz = "cabecera" })`: default keeps `calles.spec.ts`
+  exactly as before; the mapa spec passes `"comisaria"`. Chosen over reusing a
+  live cabecera because that would alter `calles.spec.ts` (its origin lugar
+  is asserted by id and mutated by its own flow).
+- No module-level state: marker per call (`Date.now()` + 3 random bytes), so
+  names and folio are unique per call; `consecutivo` is
+  `MAX(consecutivo)+1` for the year inside the seeding transaction (serial
+  callers; workers is 1). `Scenario` now exposes `folio`.
+- `liberarVentanaDeRitmo()` (same `TRUNCATE intentos_acceso` as
+  `bajaDeLugar.spec.ts`) and a patient login loop in the mapa spec: the second
+  failure once the cabecera was solved was `Demasiados intentos` (DB window
+  plus Better Auth's in-memory limiter, which no database reset clears).
+- The mapa spec now matches its own folio (`Reporte ciudadano: <folio>`) and
+  its own street's history link (`href$=/calles/<id>/historial`), because two
+  scenarios now coexist in Motul (strict-mode ambiguity otherwise).
+
+Same-process check: three sequential `prepararEscenario({ tipoDeRaiz: "comisaria" })`
+calls through `tsx` produced three distinct folios (no collision).
+
+**Gates after the last edit (all native, none through rtk):**
+| Command | Result |
+|---|---|
+| `pnpm typecheck` | exit 0 |
+| `pnpm reglas` (with `git add -N .` / `git reset -q`) | `9 reglas y 2 metricas sobre 880 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | 338 files, 1687 tests passed; Stmts 97.63%, Branch 92.83%, Funcs 98.87%, Lines 98.74% (floors 80/75 met) |
+| `pnpm check` | exit 0 (biome reports 56 pre-existing warnings in other files, none in touched files; depcruise 0 violations; reglas clean) |
+| `pnpm test:e2e` run 1 | 13 passed (55.2s) |
+| `pnpm test:e2e` run 2 (same DB, immediately after) | 13 passed (56.8s) |
+
+`next-env.d.ts` restored with `git checkout -- next-env.d.ts` after builds.
+Task 4.4/4.5 checkboxes left to the orchestrator.
+
+### U8 orchestrator closure and final verification (tasks 4.4 and 4.5)
+
+Codex hit its usage limit mid-rework, so the remaining fixes were finished by
+a Claude writer and everything below was rerun natively by the orchestrator on
+the final tree (Postgres up, the three database URLs exported, nothing through
+`rtk`).
+
+Defects found while verifying the first U8 delivery, all fixed before commit:
+
+- **Missing street timeline.** The first delivery skipped it, reading the
+  report's own "Historial" as the timeline. `specs/historial-de-calle` requires
+  a per-street timeline with five distinguished natures, and forbids raw
+  movement rows as entries. `historial-de-calle/ui/index.ts` was `export {}`.
+- **HTTP 200 for a foreign street.** Under `territorio/` the page inherits
+  `territorio/loading.tsx`, so it streams and the status is committed before
+  `notFound()` runs. The page moved to `/calles/[id]/historial`; the E2E now
+  requires a real 404 for another tenant's street.
+- **Civil date shown as the previous day.** An intervention dated 2026-09-22
+  rendered as "21 sep 2026, 6:00 p.m." because a civil date carried as UTC
+  midnight went through the Mérida formatter. Entries now carry
+  `precision: "DIA" | "MOMENTO"`.
+- **E2E fixture collision.** Two specs seeding the same tenant hit
+  `lugares_una_cabecera`; `prepararEscenario` takes `tipoDeRaiz` and has no
+  module-level state.
+- **Vacuous E2E assertions.** The journey looked for a street name that markers
+  never show, and its Ticul step searched for text that could never appear.
+  Both now target the report marker link, and the foreign street asserts the
+  HTTP status, the not-found message and the absence of the timeline.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm check` | exit 0; Biome 56 warnings (unchanged), dependency-cruiser no violations (858 modules), `reglas` `9 reglas y 2 metricas sobre 872 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 338 passed (338)`, `Tests 1687 passed (1687)`; `All files` 97.63% statements, 92.83% branches, 98.87% functions, 98.74% lines. Includes the integration and isolation suites against real Postgres. |
+| `pnpm test:e2e` | exit 0; `13 passed (54.1s)`, and 13 passed again on a second consecutive run on the same database. |
+
+Open observations, not blockers:
+
+- The server logs `The destination stream closed early` when the E2E aborts the
+  SSE stream on purpose; it is the expected noise of a client disconnect.
+- Two entries of the same street's map markers carry the same link text
+  "Ver historial de calle"; the surrounding marker gives the context.
+- The timeline shows only the nature and the date of each entry, with no link
+  to the report or intervention; that is a product decision the spec does not
+  make.
+- Tooling: `rtk` swallows flags such as `--write`; format with
+  `./node_modules/.bin/biome format --write`.

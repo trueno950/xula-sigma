@@ -1,6 +1,7 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeAdministrarReportes } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { AreaResponsable } from "../domain";
@@ -63,6 +64,12 @@ export function crearAsignarAreaDeReporte({
         accion: "ASIGNAR_AREA_REPORTE",
         entidad: "reportes",
         entidadId: datos.id,
+      });
+
+      await publicarActualizacion(tx, contexto.ayuntamientoId, {
+        tipo: "reporte",
+        id: datos.id,
+        cambio: "area",
       });
     });
   };

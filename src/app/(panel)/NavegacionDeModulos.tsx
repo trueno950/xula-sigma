@@ -1,5 +1,6 @@
 import {
   FileText,
+  MapPinLine,
   MapTrifold,
   Palette,
   UsersThree,
@@ -23,6 +24,7 @@ type Modulo = {
 const MODULOS: readonly Modulo[] = [
   { nombre: "Padron", ruta: "/padron", Icono: UsersThree },
   { nombre: "Territorio", ruta: "/territorio", Icono: MapTrifold },
+  { nombre: "Mapa operativo", ruta: "/mapa-operativo", Icono: MapPinLine },
   { nombre: "Reportes", ruta: "/reportes", Icono: Warning },
   { nombre: "Intervenciones", ruta: "/intervenciones", Icono: Wrench },
   { nombre: "Constancias", ruta: "/constancias", Icono: FileText },

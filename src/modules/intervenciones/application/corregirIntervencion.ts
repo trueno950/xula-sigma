@@ -6,6 +6,7 @@ import {
   NoEncontradoError,
   ValidacionError,
 } from "@/shared/lib/errores";
+import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import {
   type TransaccionTenant,
@@ -92,6 +93,12 @@ const corregirIntervencionEnTenant = async (
     accion: "CORREGIR_INTERVENCION",
     entidad: "intervenciones",
     entidadId: solicitud.id,
+  });
+
+  await publicarActualizacion(tx, contexto.ayuntamientoId, {
+    tipo: "intervencion",
+    id: solicitud.id,
+    cambio: "correccion",
   });
 };
 

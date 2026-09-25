@@ -43,15 +43,19 @@ describe("tenancy-driver", () => {
           "src/shared/tenancy/withTenant.ts",
           'import postgres from "postgres";\n',
         ),
+        archivo(
+          "src/shared/tenancy/notificacionesDeTenant.ts",
+          'import postgres from "postgres";\n',
+        ),
       ]),
     ).toEqual([]);
   });
 
   /**
    * El caso que motivo la lista, y que el directorio entero como permiso
-   * dejaba pasar: la regla 2 dice que hay tres excepciones y que no se usa
-   * una cuarta sin actualizar la regla. Un archivo nuevo adentro de
-   * `shared/tenancy` es exactamente esa cuarta.
+   * dejaba pasar: la regla 2 dice que hay cuatro excepciones y que no se usa
+   * una quinta sin actualizar la regla. Un archivo nuevo adentro de
+   * `shared/tenancy` seria exactamente esa quinta.
    */
   /**
    * El andamiaje siembra municipios y arma el escenario de los tests de

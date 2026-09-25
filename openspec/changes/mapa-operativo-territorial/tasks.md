@@ -7,7 +7,7 @@
 | Código autoral | 700–950 líneas; presupuesto fijo 400; riesgo High |
 | Excepción generada | Solo `drizzle/meta/0014_snapshot.json`, 3,350–3,500 líneas; excepción estrecha; ninguna unidad manuscrita tiene excepción |
 | Cadena | L0 → U3a → U3b → U4a → U5 → U6 → U7 → U8 |
-| Estrategia | `ask-on-risk`; `feature-branch-chain` confirmada |
+| Estrategia | `ask-on-risk`; `feature-branch-chain` confirmada. **Reemplazada el 2026-09-24:** `single-pr` con `size:exception` aprobada por el usuario para el PR único de la rama (regla del proyecto: un PR, un merge, sin ramas apiladas). Alcanza también a las unidades manuscritas. |
 
 Decision needed before apply: Yes
 Chained PRs recommended: Yes
@@ -32,11 +32,20 @@ se afirma staging ni producción.
 
 ### Bloqueadores y decisiones explícitas
 
-- **D1:** falta owner para publicar en vivo alta, estado y corrección de
-  `intervenciones`.
-- **D2:** falta aprobar el payload exacto de `reporte` e `intervencion`.
-- Programables: L0, U3a, U3b, U4a, U5 y U6. U4b-publicación, U7-live y U8
-  quedan bloqueadas por D1/D2; no se inventa resolución.
+- **D1 (aprobada 2026-09-24):** publica el caso de uso de cada módulo, dentro
+  de la transacción de `withTenant`, con `shared/notificaciones` solo como
+  transporte. Puntos: `registrarReporte`, `cambiarEstadoDeReporte`,
+  `asignarAreaDeReporte`, `registrarIntervencion`,
+  `cambiarEstadoDeIntervencion` y `corregirIntervencion`.
+- **D2 (aprobada 2026-09-24):** payloads `strictObject` con id y vocabulario
+  cerrado, sin nombres, coordenadas ni texto libre:
+  `{ tipo: "reporte", id, cambio: "alta" | "estado" | "area" }` y
+  `{ tipo: "intervencion", id, cambio: "alta" | "estado" | "correccion" }`.
+  El cliente solo invalida y hace `router.refresh()`. Obliga a ensanchar
+  `publicarActualizacion` (hoy solo `PayloadDeCalle`) a una unión.
+- Con D1/D2 resueltas ya no hay bloqueo por decisión: U4b-publicación, U7 y U8
+  son programables. La excepción 4 de la regla 2 (LISTEN) sigue pendiente y
+  entra con U7 actualizando `AGENTS.md`.
 
 ## Fases TDD
 
@@ -65,17 +74,20 @@ se afirma staging ni producción.
 - [x] 2.4 U3b RED: tests de payload, canal y rollback en `src/shared/notificaciones/`.
 - [x] 2.5 U3b GREEN: crear `src/shared/notificaciones/{canales.ts,notificar.ts}`; publicar solo `{ tipo: "calle", id, cambio: "estructura" }`, sin LISTEN/SSE.
 - [x] 2.6 U4a RED: tests de lectura en `src/modules/reportes/` para nulos, tenant y campos protegidos.
-- [x] 2.7 U4a GREEN: modificar `src/modules/reportes/application/{puertos.ts,listarReportesParaMapa.ts}` y `src/modules/reportes/infrastructure/{listadoDeReportesSql.ts,index.ts}`; sin NOTIFY. U4b queda separada y bloqueada por D1/D2.
+- [x] 2.7 U4a GREEN: modificar `src/modules/reportes/application/{puertos.ts,listarReportesParaMapa.ts}` y `src/modules/reportes/infrastructure/{listadoDeReportesSql.ts,index.ts}`; sin NOTIFY. U4b queda separada; D1/D2 aprobadas el 2026-09-24.
+- [x] 2.8 U4b RED: tests de payload en `src/shared/notificaciones/` (unión `reporte`/`intervencion`/`calle` con `strictObject`: rechaza claves extra y `cambio` fuera del vocabulario; `PayloadDeCalle` sigue válido) y tests de cada caso de uso: publica dentro de la transacción y una transacción revertida no notifica.
+- [x] 2.9 U4b GREEN: ensanchar `publicarActualizacion` a la unión y publicar desde `registrarReporte`, `cambiarEstadoDeReporte`, `asignarAreaDeReporte`, `registrarIntervencion`, `cambiarEstadoDeIntervencion` y `corregirIntervencion` (D1/D2); sin LISTEN/SSE.
 
 ### Fase 3: Proyección y mapa
 - [x] 3.1 U5 RED: tipos, empate, 404 y vacío.
 - [x] 3.2 U5 GREEN: `src/modules/historial-de-calle/`; solo lectura, tres naturalezas.
-- [ ] 3.3 U6 RED: cobertura, filtros, conteos y tenant.
-- [ ] 3.4 U6 GREEN: `src/modules/mapa-operativo/`; snapshot, enlaces, sin GIS.
+- [x] 3.3 U6 RED: cobertura, filtros, conteos y tenant.
+- [x] 3.4 U6 GREEN: `src/modules/mapa-operativo/`; snapshot, enlaces, sin GIS.
 
 ### Fase 4: Vivo y navegación
-- [ ] 4.1 U7 RED: 401/canal/heartbeat/resync/tenant/no polling; D1/D2.
-- [ ] 4.2 U7 GREEN: hub/ruta/isla; refresh manual, no polling.
-- [ ] 4.3 U8 RED: sesión/mapa/historial/push.
-- [ ] 4.4 U8 GREEN: navegación/ruta; live bloqueado por D1/D2.
-- [ ] 4.5 Verificar sin `rtk`: `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, cobertura y `pnpm check`.
+- [x] 4.1 U7 RED: 401/canal/heartbeat/resync/tenant/no polling; D1/D2.
+- [x] 4.2 U7 GREEN: hub/ruta/isla; refresh manual, no polling.
+- [x] 4.2a U7 endurecimiento: resync tras reconexión de LISTEN, un solo refresh al conectar y X-Accel-Buffering
+- [x] 4.3 U8 RED: sesión/mapa/historial/push.
+- [x] 4.4 U8 GREEN: navegación/ruta; D1/D2 aprobadas (2026-09-24). Enlace del panel, isla en vivo en el mapa, página del historial de calle (`/calles/[id]/historial`, 404 real fuera de `territorio/` por su `loading.tsx`) y journey E2E "mapa operativo" en verde (13 de 13 en la suite completa, dos corridas seguidas).
+- [x] 4.5 Verificar sin `rtk`: `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, cobertura y `pnpm check`. Corrida final sobre U1–U8 en `apply-progress.md`: 338 archivos y 1687 tests, cobertura 97.63% sentencias y 92.83% ramas, `pnpm check` exit 0, E2E 13 de 13.

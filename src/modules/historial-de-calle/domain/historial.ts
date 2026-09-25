@@ -26,10 +26,12 @@ export type IntervencionParaHistorial = {
   id: string;
   fechaDeOcurrencia: string;
 };
+export type PrecisionDeEntrada = "DIA" | "MOMENTO";
 export type EntradaDeHistorial = {
   id: string;
   naturaleza: NaturalezaDeHistorial;
   ocurridoEn: Date;
+  precision: PrecisionDeEntrada;
 };
 export type HistorialDeCalle = {
   calleId: CalleId;
@@ -44,6 +46,8 @@ const RANGO_DE_NATURALEZA: Record<NaturalezaDeHistorial, number> = {
   REPARENTEO: 3,
   UBICACION: 4,
 };
+// Solo sirve para ordenar: la fecha civil no trae hora, y `precision: "DIA"`
+// le avisa a la vista que no debe mostrar la medianoche UTC como si lo fuera.
 const fechaDeOcurrenciaComoMomento = (fecha: string) =>
   new Date(`${fecha}T00:00:00.000Z`);
 const compararEntradas = (
@@ -69,13 +73,18 @@ export const componerHistorialDeCalle = (datos: {
       id,
       naturaleza: "REPORTE" as const,
       ocurridoEn: registradoEn,
+      precision: "MOMENTO" as const,
     })),
     ...datos.intervenciones.map(({ id, fechaDeOcurrencia }) => ({
       id,
       naturaleza: "INTERVENCION" as const,
       ocurridoEn: fechaDeOcurrenciaComoMomento(fechaDeOcurrencia),
+      precision: "DIA" as const,
     })),
-    ...datos.eventos,
+    ...datos.eventos.map((evento) => ({
+      ...evento,
+      precision: "MOMENTO" as const,
+    })),
   ].sort(compararEntradas);
   return {
     calleId: datos.calleId,

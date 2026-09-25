@@ -6,11 +6,12 @@
 # merced del default de opencode, que puede cambiar sin avisar. Una revision
 # de codigo tiene que ser reproducible: el modelo se fija aca.
 #
-# `deepseek-v4-flash` y no `-pro`: mismo proveedor -sigue valiendo el
-# reparto de credenciales de abajo-, variante mas barata. `CI` compensa
-# con `GGA_OPENCODE_VARIANT=max` (ci.yml) -el techo de esfuerzo de
-# razonamiento que expone este modelo, arriba de `high`.
-PROVIDER="opencode:deepseek/deepseek-v4-flash"
+# `deepseek-v4-pro`: `deepseek-v4-flash` dejo de existir en el catalogo de
+# opencode 1.18.32 (`opencode models deepseek` lista `deepseek-flash` y
+# `deepseek-v4-pro`) y GGA fallaba con un `UnknownError` que en realidad era
+# `ProviderModelNotFoundError`. Mismo proveedor: sigue valiendo el reparto
+# de credenciales de abajo.
+PROVIDER="opencode:deepseek/deepseek-v4-pro"
 
 # Y sigue siendo DeepSeek en CI aunque en local se revise con otro modelo. No es
 # preferencia: en `opencode auth`, `deepseek` esta como `api` y `openai`
