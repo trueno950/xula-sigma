@@ -7,6 +7,7 @@ export type { EntradaDeRegistroDeIntervencion } from "./application/registrarInt
 export {
   cambiarEstadoDeIntervencion,
   corregirIntervencion,
+  intervencionConReferencias,
   intervencionPorId,
   listarIntervencionesDeCalleEnTransaccion,
   listarIntervencionesParaMapa,

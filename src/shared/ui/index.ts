@@ -11,6 +11,7 @@ export { type EstadoDeLista, estadoDeLista } from "./estadoDeLista";
 export {
   ANILLO_DE_FOCO,
   CLASES_DE_DATO,
+  CLASES_DE_ENLACE,
   CLASES_DE_ETIQUETA,
   clasesDeBoton,
   clasesDeCampo,

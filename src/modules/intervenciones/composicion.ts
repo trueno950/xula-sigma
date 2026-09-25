@@ -2,11 +2,13 @@ import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import {
   crearCambiarEstadoDeIntervencion,
   crearCorregirIntervencion,
+  crearIntervencionConReferencias,
   crearIntervencionPorId,
   crearListarIntervencionesParaMapa,
   crearRegistrarIntervencion,
 } from "./application";
 import {
+  crearLectorDeReferenciasPorModulos,
   crearLectorDeReportesPorReportes,
   crearLectorDeUbicacionesPorTerritorio,
   lectorDeIntervencionesDeMapaSql,
@@ -21,6 +23,10 @@ export const registrarIntervencion = crearRegistrarIntervencion({
 
 export const intervencionPorId = crearIntervencionPorId(
   repositorioDeIntervencionesSql,
+);
+export const intervencionConReferencias = crearIntervencionConReferencias(
+  intervencionPorId,
+  crearLectorDeReferenciasPorModulos(),
 );
 export const listarIntervencionesParaMapa = crearListarIntervencionesParaMapa(
   lectorDeIntervencionesDeMapaSql,
