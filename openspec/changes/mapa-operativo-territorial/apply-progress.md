@@ -1312,3 +1312,156 @@ and U8 land.
 - Tasks 2.8 and 2.9 are checked in `tasks.md`. U7 and U8 (LISTEN, SSE, hub,
   route; tasks 4.1 onward) remain pending; the LISTEN exception in rule 2 of `AGENTS.md`
   still enters with U7.
+
+## U7: LISTEN hub, SSE route and live-status island (tasks 4.1/4.2)
+
+- Work unit: `U7`. Scope is limited to the private lazy `LISTEN` hub, `/eventos`
+  SSE route, and `EstadoEnVivo`; no map-page or navigation wiring (U8 remains
+  untouched).
+- Mode: Strict TDD. Delivery: `single-pr`, `size:exception` approved for the
+  branch. Nothing was staged or committed.
+- Decision: heartbeat is emitted every 15 seconds and the island marks the
+  connection stale after 45 seconds without one. `EventSource` reconnects;
+  both an `open` event and an update invoke `router.refresh()`. The timeout is
+  a liveness watchdog, not polling: it issues no request. The initial
+  snapshot and every re-sync remain server-rendered under RLS.
+
+### TDD Cycle Evidence — U7
+
+| Task | Test files | Layer | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|
+| 4.1 / 4.2 SSE and island | `src/app/(panel)/eventos/route.test.ts`, `src/shared/ui/EstadoEnVivo.test.tsx` | Unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 1; both suites failed because `./EstadoEnVivo` and `./route` did not exist. | Same exact command → exit 0; `Test Files 2 passed (2)`, `Tests 4 passed (4)`. | The route covers no session, server-context tenant subscription, initial resync and payload forwarding; the island covers reconnect and update refresh. | Extracted `useEventosEnVivo` to keep the component within the function-size rule; focused unit command remained green. |
+| 4.1 / 4.2 tenant listener | `src/shared/tenancy/notificacionesDeTenant.integration.test.ts` | Integration / real Postgres | New test written before the hub. | Blocked by the execution sandbox, not a test assertion: with all three required database URLs, `pnpm vitest run --project integration src/shared/tenancy/notificacionesDeTenant.integration.test.ts` reached `connect EPERM ::1:55432` and `connect EPERM 127.0.0.1:55432`; Vitest reported `1 skipped` and a failed suite. | The test subscribes Motul and Ticul and publishes a committed Motul payload, asserting only Motul receives it. | N/A while the real database socket is unavailable. |
+
+### Work Unit Evidence — U7
+
+| Evidence | Result |
+|---|---|
+| Focused unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `2 passed`, `4 passed`. |
+| Rule checker unit | `pnpm vitest run --project unit scripts/reglas/reglas/tenancia.test.ts` → exit 0; `1 passed`, `7 passed`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Runtime harness | Blocked by sandbox `EPERM` on the local Postgres socket as described above. |
+| `pnpm reglas` | Blocked before rules execute: `listen EPERM` on the tsx IPC pipe under `/var/folders/.../tsx-501/*.pipe`. |
+| `pnpm test` | Began with all required database URLs; the observed integration failures were the same `connect EPERM` socket failures (including `src/shared/notificaciones/notificar.integration.test.ts`). No terminal full-suite verdict was obtained in this execution environment. |
+| `pnpm vitest run --coverage` | Began with all required database URLs and V8 coverage enabled; its integration phase hit the same `connect EPERM` condition, so no coverage-floor verdict was obtained. |
+| `pnpm check` | Not run to completion because it includes the blocked `pnpm reglas` IPC step. |
+| Rollback boundary | Remove `src/shared/tenancy/notificacionesDeTenant.ts`, `src/app/(panel)/eventos/`, `src/shared/ui/EstadoEnVivo.tsx` and their tests; revert the fourth-exit entry in `AGENTS.md` and `scripts/reglas/reglas/tenancia.*`. U3b/U4b publishers remain unaffected. |
+
+### Status
+
+Implementation and focused unit/type checks are green. Tasks 4.1 and 4.2
+remain unchecked until the real Postgres isolation test and the required final
+gates have observed terminal passes outside the restricted sandbox.
+
+### U7 corrective self-audit
+
+A corrective audit found and fixed three boundary defects before finalizing the
+work unit:
+
+- Concurrent subscribers to a previously unopened channel could return before
+  the first `LISTEN` completed. `aperturas` now shares and awaits one opening
+  promise for every consumer; an opening failure rejects all waiting
+  subscribers instead of returning a dead subscription.
+- Hub shutdown previously cleared stored `unlisten` callbacks without calling
+  them. It now waits for pending openings, invokes every channel unlisten, and
+  ends the one private connection in `finally`.
+- The SSE route emitted `resync`, but the island refreshed only on `open`.
+  The island now handles the named `resync` event explicitly. Route cancellation
+  is asserted to close its hub subscription.
+
+| Check | Exact observed result |
+|---|---|
+| Correction RED | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx src/shared/tenancy/notificacionesDeTenant.test.ts` → exit 1; expected 3 refreshes got 2, and expected hub `unlisten` got 0. |
+| Corrected unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx src/shared/tenancy/notificacionesDeTenant.test.ts 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `Test Files 3 passed (3)`, `Tests 5 passed (5)`. |
+| Prescribed focused unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `Test Files 2 passed (2)`, `Tests 4 passed (4)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+| Real integration | With all three required database URLs exported, `pnpm vitest run --project integration src/shared/tenancy/notificacionesDeTenant.integration.test.ts` → exit 1; sandbox `connect EPERM` for `::1:55432` and `127.0.0.1:55432`; `1 skipped`. |
+
+Tasks 4.1 and 4.2 remain unchecked: the required real-Postgres test still has
+no observed terminal pass.
+
+### U7 race-condition corrective pass
+
+A second independent review found two races and an incomplete heartbeat proof.
+Both fixes stay inside U7:
+
+- `cuerpoDeEventos` now closes a subscription that resolves after stream
+  cancellation and returns before installing its heartbeat timer.
+- The hub serializes per-channel unlisten/open transitions with `cierres`:
+  a subscriber arriving while the final unlisten is pending waits for it and
+  then reopens the channel, rather than being erased by the old close.
+- The focused SSE route test uses fake timers and reads the actual 15-second
+  heartbeat frame.
+
+| Check | Exact observed result |
+|---|---|
+| Correction RED | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.test.ts 'src/app/(panel)/eventos/route.test.ts'` → exit 1; the hub expected two `listen` calls but got one, and a late subscription expected `cerrar` once but got zero. |
+| Corrected unit | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.test.ts 'src/app/(panel)/eventos/route.test.ts' src/shared/ui/EstadoEnVivo.test.tsx` → exit 0; `Test Files 3 passed (3)`, `Tests 7 passed (7)`. |
+| Prescribed focused unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx 'src/app/(panel)/eventos/route.test.ts'` → exit 0; `Test Files 2 passed (2)`, `Tests 5 passed (5)`. |
+| Typecheck | `pnpm typecheck` → exit 0; `$ tsc --noEmit`. |
+
+Tasks 4.1 and 4.2 remain unchecked because the real-Postgres integration test
+is still blocked by sandbox socket `EPERM` and has no observed terminal pass.
+
+### U7 final post-edit gate results
+
+The independent post-edit gate ran after the race-condition fixes. These results
+append to, rather than replace, the earlier focused evidence. Tasks 4.1 and 4.2
+remain unchecked because the Postgres-backed proof and final gates have no
+terminal green verdict in this environment.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm typecheck` | exit 0; `$ tsc --noEmit`. |
+| `pnpm reglas` | exit 1 before rules execute: tsx IPC `listen EPERM` on its temporary pipe. |
+| `pnpm test` | exit 1; `113` files failed, `220` passed; `22` tests failed, `1256` passed, `375` skipped. Failures were database socket `EPERM` and resulting timeouts. |
+| `pnpm vitest run --coverage` | exit 1 with the same database `EPERM`/timeout condition; no valid coverage-floor verdict was produced. |
+| `pnpm check` | exit 1 after lint, typecheck, and dependency-cruiser completed; `pnpm reglas` then hit the tsx IPC `listen EPERM` blocker. |
+| Focused U7 units after race fix | exit 0; `4` files passed, `14` tests passed. |
+| Focused U7 integration | exit 1; database socket `EPERM` prevented the real LISTEN/isolation scenario. |
+
+### U7 orchestrator verification and test hardening (supersedes the sandbox-blocked gate above)
+
+The blocked gates above ran inside the writer's restricted sandbox. They were
+rerun natively by the orchestrator with Postgres up and
+`DATABASE_URL`/`MIGRATION_DATABASE_URL`/`SUPER_ADMIN_DATABASE_URL` exported
+(port 55432); nothing ran through `rtk`.
+
+The island test in the writer's version proved only the pre-connect label and
+the three refresh calls. `renderToStaticMarkup` never observes state, so the
+connected label, the error path, the 45 s heartbeat threshold and the unmount
+cleanup had no test, and `not.toContain("setInterval")` on the HTML could not
+fail. `EstadoEnVivo.test.tsx` was rewritten to observe `setConectado` and use
+fake timers (5 tests). Each mutation below was applied to `EstadoEnVivo.tsx`
+and killed by exactly one test; the component was restored byte for byte.
+
+| Mutation | Test that failed |
+|---|---|
+| threshold `45_000` → `90_000` | 45 s without heartbeat, and a heartbeat resets the count |
+| remove `eventos.close()` | unmount closes the source and cancels the count |
+| remove `onerror` | live on open/heartbeat, disconnected on error |
+| remove the `heartbeat` listener | 45 s without heartbeat, and a heartbeat resets the count |
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 864 archivos: sin hallazgos.` |
+| `pnpm typecheck` | exit 0. |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 333 passed (333)`, `Tests 1657 passed (1657)` on the final state (after the island test rewrite); `All files` 97.54% statements, 92.66% branches, 98.85% functions, 98.72% lines. Includes the real-Postgres LISTEN isolation test. |
+| `pnpm check` | exit 0; Biome 56 warnings (unchanged), dependency-cruiser no violations (851 modules), `reglas` no findings. |
+| `EstadoEnVivo.test.tsx` after the rewrite | exit 0; `Tests 5 passed (5)`. |
+
+Review notes, not blockers for U7:
+
+- **DB reconnect gap.** The SSE heartbeat is independent of the LISTEN
+  connection. If the hub's Postgres connection drops and reconnects, events
+  published in the gap are lost while the island keeps showing "live", and
+  nothing forces a resync. The spec's "resync on (re)connect" is met only for
+  the SSE connection. `postgres` exposes an `onlisten` callback per (re)listen
+  that could emit a `resync`.
+- **Double refresh on connect.** `onopen` and the server's initial `resync`
+  event both call `router.refresh()`.
+- **Unstyled island and copy without accents.** `EstadoEnVivo` renders bare
+  elements and its labels ("Actualizacion desconectada") lack accents, which is
+  operator-facing copy. It needs the `DESIGN.md` pass when U8 wires it in.
+- **Proxy buffering.** The response has no `X-Accel-Buffering: no`; verify that
+  the Railway proxy does not buffer `text/event-stream`.

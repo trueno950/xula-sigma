@@ -85,8 +85,8 @@ se afirma staging ni producción.
 - [x] 3.4 U6 GREEN: `src/modules/mapa-operativo/`; snapshot, enlaces, sin GIS.
 
 ### Fase 4: Vivo y navegación
-- [ ] 4.1 U7 RED: 401/canal/heartbeat/resync/tenant/no polling; D1/D2.
-- [ ] 4.2 U7 GREEN: hub/ruta/isla; refresh manual, no polling.
+- [x] 4.1 U7 RED: 401/canal/heartbeat/resync/tenant/no polling; D1/D2.
+- [x] 4.2 U7 GREEN: hub/ruta/isla; refresh manual, no polling.
 - [ ] 4.3 U8 RED: sesión/mapa/historial/push.
-- [ ] 4.4 U8 GREEN: navegación/ruta; live bloqueado por D1/D2.
+- [ ] 4.4 U8 GREEN: navegación/ruta; D1/D2 aprobadas (2026-09-24), el vivo ya no está bloqueado.
 - [ ] 4.5 Verificar sin `rtk`: `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, cobertura y `pnpm check`. (Corrida verde sobre U1–U6 en `apply-progress.md`; repetir tras U7/U8.)
