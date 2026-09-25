@@ -83,9 +83,12 @@ export type OpcionesDeListado = {
  * `OpcionesDeListado` mas `umbral`, para que `buscar` siga en 3 parametros
  * (metrica de AGENTS.md): `tx`, `cadenaExpandida`, `opciones`. `umbral` no
  * vive en `OpcionesDeListado` porque `listar` no tiene nocion de similitud.
+ * `palabras` y `curp` se suman a la similitud; ausentes, es solo similitud.
  */
 export type OpcionesDeBusqueda = OpcionesDeListado & {
   readonly umbral: number;
+  readonly palabras?: readonly string[];
+  readonly curp?: string;
 };
 
 /**

@@ -8,6 +8,7 @@ import type {
 } from "../application/puertos";
 import type { PersonaId } from "../domain";
 import { comoPersonaId, normalizarParaBusqueda } from "../domain";
+import { coincideConLaBusqueda } from "./coincidenciasDeBusquedaSql";
 import { personas } from "./esquema";
 import { fusionarSql, revertirFusionSql } from "./fusionDePersonasSql";
 
@@ -179,7 +180,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
           isNull(personas.bajaEn),
           // Redirigida por una fusion: mismo motivo que `listar`, arriba.
           isNull(personas.fusionadaEn),
-          sql`${personas.nombreNormalizado} % ${cadenaExpandida}`,
+          coincideConLaBusqueda(cadenaExpandida, opciones),
         ),
       )
       .orderBy(
