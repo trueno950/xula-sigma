@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { VistaDeRaices } from "@/modules/territorio";
-import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
-import {
-  opcionesDeCallesDelMunicipio,
-  zonaDelFormulario,
-} from "@/modules/territorio/ui/vistaDeDomicilios";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { lugarPorId } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
-import { Aviso, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
-import { accionesDeRaiz } from "./AccionesDeRaiz";
-import { cargarTerritorio } from "./cargaDeTerritorio";
+import { PantallaDeMensaje } from "@/shared/ui";
+import { EsqueletoDeTerritorio } from "./EsqueletoDeTerritorio";
 import { leerParametros } from "./parametros";
-import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
-import { VistaDeLugar } from "./VistaDeLugar";
+import { TerritorioCargado } from "./TerritorioCargado";
 
 export const metadata: Metadata = { title: "Territorio" };
 
@@ -25,6 +20,12 @@ type Props = {
  * actual con sus acciones y lo que tiene adentro, y cada hijo fija
  * `?nodo=` al entrar. Cero `"use client"`: toda la navegacion viaja por
  * la URL, y el formulario de domicilio tambien se sirve desde la entrada.
+ *
+ * La raiz se resuelve aca, antes del Suspense: un `notFound()` que corre
+ * dentro de un limite ya en curso no puede cambiar el estado, que sale 200.
+ * Regla 8: una raiz de otro municipio vuelve `null` por RLS y es un 404
+ * igual que una inexistente. Sin esto caia al listado del municipio propio:
+ * 200, y ademas otra cosa que la pedida.
  */
 export default async function PaginaDeTerritorio({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -34,61 +35,19 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
   }
 
   const parametros = leerParametros(await searchParams);
-  const {
-    raiz,
-    nodos,
-    nodo,
-    calles,
-    domicilio,
-    lugares,
-    hayCabecera,
-    raices,
-    puedeCrearLugar,
-    registroAbierto,
-    callesDelMunicipio,
-  } = await cargarTerritorio(contexto, parametros);
-  const permisos = permisosDeTerritorio(contexto.usuario.rol);
-  const { accion, calleId, domicilioId, error, vista } = parametros;
+  const raiz = parametros.raizId
+    ? await lugarPorId(parametros.raizId, contexto)
+    : null;
+
+  if (parametros.raizId && !raiz) notFound();
 
   return (
-    <PaginaDePanel
-      titulo="Territorio"
-      accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar, accion })}
-    >
-      {error ? <Aviso tono="error">{error}</Aviso> : null}
-
-      {!raiz ? (
-        <>
-          {registroAbierto ? (
-            <RegistroDeDomicilio
-              calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
-              zona={zonaDelFormulario(lugares, undefined, undefined)}
-            />
-          ) : null}
-
-          <VistaDeRaices
-            raices={raices}
-            lugares={lugares}
-            hayCabecera={hayCabecera}
-            puedeEscribir={puedeCrearLugar}
-            altaAbierta={accion === "lugar"}
-          />
-        </>
-      ) : nodo ? (
-        <VistaDeLugar
-          raiz={raiz}
-          nodos={nodos}
-          nodo={nodo}
-          calles={calles}
-          lugares={lugares}
-          vista={vista}
-          accion={accion}
-          calleId={calleId}
-          domicilioId={domicilioId}
-          domicilio={domicilio ?? undefined}
-          permisos={permisos}
-        />
-      ) : null}
-    </PaginaDePanel>
+    <Suspense fallback={<EsqueletoDeTerritorio />}>
+      <TerritorioCargado
+        contexto={contexto}
+        parametros={parametros}
+        raiz={raiz}
+      />
+    </Suspense>
   );
 }
