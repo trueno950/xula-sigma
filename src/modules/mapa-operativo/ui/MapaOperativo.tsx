@@ -25,7 +25,7 @@ export function MapaOperativo({ mapa, filtros }: Props) {
         {conteoDe(mapa.conteos.reportes, "reporte", "reportes")} ·{" "}
         {conteoDe(
           mapa.conteos.intervenciones,
-          "intervencion",
+          "intervención",
           "intervenciones",
         )}
       </p>

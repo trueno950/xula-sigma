@@ -41,7 +41,7 @@ describe("PaginaDeMapaOperativo", () => {
       await PaginaDeMapaOperativo({ searchParams: Promise.resolve({}) }),
     );
 
-    expect(html).toContain("No se pudo determinar su sesion.");
+    expect(html).toContain("No se pudo determinar su sesión.");
     expect(agregarMapaMock).not.toHaveBeenCalled();
   });
 

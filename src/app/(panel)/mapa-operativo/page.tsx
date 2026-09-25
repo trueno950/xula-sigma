@@ -14,7 +14,7 @@ type Props = {
 export default async function PaginaDeMapaOperativo({ searchParams }: Props) {
   const contexto = await contextoActual();
   if (!contexto)
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   const filtros = leerParametrosDeMapa(await searchParams);
   const mapa = await agregarMapa(contexto, filtros);
   return (
