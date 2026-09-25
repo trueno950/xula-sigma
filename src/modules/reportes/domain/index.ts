@@ -27,7 +27,12 @@ export {
   esTerminal,
   transicionValida,
 } from "./estado";
-export { Folio, PREFIJO_DE_REPORTE } from "./folio";
+export {
+  esFolioDeReporte,
+  Folio,
+  normalizarFolio,
+  PREFIJO_DE_REPORTE,
+} from "./folio";
 export {
   comoMovimientoId,
   comoReporteId,

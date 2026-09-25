@@ -43,7 +43,7 @@ const contextoCon = (
 });
 
 const reporteId = comoReporteId("11111111-1111-4111-8111-111111111111");
-const originalId = "22222222-2222-4222-8222-222222222222";
+const FOLIO_DEL_ORIGINAL = "REP-2026-000002";
 
 const guardadoCon = (
   parcial: Partial<ReporteGuardado> = {},
@@ -69,10 +69,10 @@ const guardadoCon = (
 describe("cambiarEstadoDeReporte — rechazos previos al repositorio", () => {
   const repositorio: Pick<
     RepositorioDeReportes,
-    "buscarPorId" | "candidatoAOriginal" | "aplicarTransicion"
+    "buscarPorId" | "candidatoAOriginalPorFolio" | "aplicarTransicion"
   > = {
     buscarPorId: vi.fn(),
-    candidatoAOriginal: vi.fn(),
+    candidatoAOriginalPorFolio: vi.fn(),
     aplicarTransicion: vi.fn(),
   };
   const movimientos = { agregar: vi.fn(), historialDe: vi.fn() };
@@ -91,7 +91,7 @@ describe("cambiarEstadoDeReporte — rechazos previos al repositorio", () => {
     id: reporteId,
     estadoNuevo: "EN_ATENCION" as const,
     motivoDeRechazo: null,
-    duplicadoDe: null,
+    folioDelOriginal: null,
   };
 
   it("rechaza sin puedeAdministrarReportes(rol) antes de abrir withTenant", async () => {
@@ -155,7 +155,7 @@ describe("cambiarEstadoDeReporte — rechazos previos al repositorio", () => {
     ).rejects.toBeInstanceOf(ValidacionError);
   });
 
-  it("motivo DUPLICADO sin duplicadoDe -> DuplicadoSinOriginalError", async () => {
+  it("motivo DUPLICADO sin folioDelOriginal -> DuplicadoSinOriginalError", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(guardadoCon());
 
     await expect(
@@ -170,7 +170,7 @@ describe("cambiarEstadoDeReporte — rechazos previos al repositorio", () => {
     ).rejects.toBeInstanceOf(DuplicadoSinOriginalError);
   });
 
-  it("duplicadoDe presente con otro motivo -> DuplicadoSinOriginalError", async () => {
+  it("folioDelOriginal presente con otro motivo -> DuplicadoSinOriginalError", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(guardadoCon());
 
     await expect(
@@ -179,7 +179,7 @@ describe("cambiarEstadoDeReporte — rechazos previos al repositorio", () => {
           ...entradaBase,
           estadoNuevo: "RECHAZADO",
           motivoDeRechazo: "FUERA_DE_COMPETENCIA",
-          duplicadoDe: originalId,
+          folioDelOriginal: FOLIO_DEL_ORIGINAL,
         },
         contextoCon("ADMIN_MUNICIPAL"),
       ),

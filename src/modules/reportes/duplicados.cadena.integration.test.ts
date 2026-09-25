@@ -16,6 +16,7 @@ import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearCambiarEstadoDeReporte } from "./application/cambiarEstadoDeReporte";
 import { crearRegistrarReporte } from "./application/registrarReporte";
 import { DuplicadoSinOriginalError } from "./domain";
+import { folioDe } from "./folioDePrueba";
 import { contadorDeFoliosSql } from "./infrastructure/contadorDeFoliosSql";
 import { reportes } from "./infrastructure/esquema";
 import { crearLectorDeReportantesPorPadron } from "./infrastructure/lectorDeReportantesPorPadron";
@@ -97,7 +98,7 @@ describe("el vinculo de duplicado resuelve la cadena antes de guardar", () => {
         id: idB,
         estadoNuevo: "RECHAZADO",
         motivoDeRechazo: "DUPLICADO",
-        duplicadoDe: idA,
+        folioDelOriginal: await folioDe(motul, idA),
       },
       admin,
     );
@@ -106,7 +107,7 @@ describe("el vinculo de duplicado resuelve la cadena antes de guardar", () => {
         id: idC,
         estadoNuevo: "RECHAZADO",
         motivoDeRechazo: "DUPLICADO",
-        duplicadoDe: idB,
+        folioDelOriginal: await folioDe(motul, idB),
       },
       admin,
     );
@@ -129,7 +130,7 @@ describe("el vinculo de duplicado resuelve la cadena antes de guardar", () => {
           id,
           estadoNuevo: "RECHAZADO",
           motivoDeRechazo: "DUPLICADO",
-          duplicadoDe: null,
+          folioDelOriginal: null,
         },
         admin,
       ),

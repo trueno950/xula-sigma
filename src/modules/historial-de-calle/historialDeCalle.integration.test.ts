@@ -75,7 +75,7 @@ beforeAll(async () => {
       id: reporteId,
       estadoNuevo: "EN_ATENCION",
       motivoDeRechazo: null,
-      duplicadoDe: null,
+      folioDelOriginal: null,
     },
     contexto,
   );

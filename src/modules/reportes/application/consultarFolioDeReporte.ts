@@ -1,10 +1,9 @@
-import { z } from "zod";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
   type ConsultaDeReporte,
+  esFolioDeReporte,
   type FilaDeConsulta,
-  PREFIJO_DE_REPORTE,
   proyectarConsulta,
 } from "../domain";
 import type { FilaParaConsultaPublica, RepositorioDeReportes } from "./puertos";
@@ -13,14 +12,6 @@ export type EntradaDeConsulta = {
   ayuntamientoId: AyuntamientoId;
   folio: string;
 };
-
-/**
- * Misma forma que `Folio.crear` (`domain/folio.ts`): `padStart(6, "0")` sin
- * recorte, asi que el consecutivo puede tener mas de seis digitos.
- */
-const esquemaDeFolio = z
-  .string()
-  .regex(new RegExp(`^${PREFIJO_DE_REPORTE}-\\d{4}-\\d{6,}$`));
 
 /** El puerto guarda `Date`; la proyeccion pura viaja en ISO (design.md seccion 14). */
 const aFilaDeConsulta = (fila: FilaParaConsultaPublica): FilaDeConsulta => ({
@@ -49,7 +40,7 @@ export function crearConsultarFolioDeReporte(
     ayuntamientoId,
     folio,
   }: EntradaDeConsulta): Promise<ConsultaDeReporte> {
-    if (!esquemaDeFolio.safeParse(folio).success) {
+    if (!esFolioDeReporte(folio)) {
       return Promise.resolve(proyectarConsulta(null, null));
     }
 

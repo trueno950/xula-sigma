@@ -114,7 +114,7 @@ export type ResultadoDeListado = {
  * transaccion de `withTenant` por parametro y no la abre ella misma (mismo
  * criterio que `RepositorioDeConstancias`). El contrato se declara completo
  * aca aunque `cambiarEstadoDeReporte` (Fase 5) y `buscarReportesSimilares`
- * (Fase 7) sean quienes invoquen `candidatoAOriginal`/`aplicarTransicion`/
+ * (Fase 7) sean quienes invoquen `candidatoAOriginalPorFolio`/`aplicarTransicion`/
  * `asignarArea`/`similaresAbiertos`/`contarDuplicadosDe`/
  * `paraConsultaPublica*`; `repositorioDeReportesSql` los completa en esas
  * rebanadas sobre el mismo archivo (tasks.md 4.7).
@@ -128,9 +128,10 @@ export type RepositorioDeReportes = {
     tx: TransaccionTenant,
     id: ReporteId,
   ): Promise<ReporteGuardado | null>;
-  candidatoAOriginal(
+  /** `folio` es el impreso: el unico identificador que el operador ve y teclea. */
+  candidatoAOriginalPorFolio(
     tx: TransaccionTenant,
-    id: string,
+    folio: string,
   ): Promise<CandidatoAOriginal | null>;
   /** `false` cuando afecta cero filas: otra transaccion lo movio en el medio (design.md seccion 12). */
   aplicarTransicion(

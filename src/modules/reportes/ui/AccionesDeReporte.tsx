@@ -1,4 +1,4 @@
-import { Boton, CampoDeLista } from "@/shared/ui";
+import { Boton, Campo, CampoDeLista } from "@/shared/ui";
 import {
   AREAS_RESPONSABLES,
   ESTADOS_DE_REPORTE,
@@ -83,11 +83,14 @@ export function AccionesDeReporte({ reporteId, estadoActual }: Props) {
             marcador="Seleccione un motivo"
             opciones={opcionesDeCatalogo(MOTIVOS_DE_RECHAZO)}
           />
-          <input
-            type="text"
-            name="duplicadoDe"
-            placeholder="Id del reporte original (solo si es DUPLICADO)"
-            className="h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta"
+          <Campo
+            id={`original-${reporteId}`}
+            name="folioDelOriginal"
+            etiqueta="Folio del reporte original"
+            placeholder="REP-2026-000123"
+            ayuda="Solo si el motivo es Duplicado."
+            tipografia="dato"
+            autoComplete="off"
           />
           <Boton type="submit" variante="peligro">
             Rechazar

@@ -15,6 +15,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearCambiarEstadoDeReporte } from "./application/cambiarEstadoDeReporte";
 import { crearRegistrarReporte } from "./application/registrarReporte";
+import { folioDe } from "./folioDePrueba";
 import { contadorDeFoliosSql } from "./infrastructure/contadorDeFoliosSql";
 import { crearLectorDeReportantesPorPadron } from "./infrastructure/lectorDeReportantesPorPadron";
 import { crearLectorDeUbicacionesPorTerritorio } from "./infrastructure/lectorDeUbicacionesPorTerritorio";
@@ -120,7 +121,7 @@ describe("un ciclo metido por SQL crudo degrada, nunca cuelga", () => {
         id: idC,
         estadoNuevo: "RECHAZADO",
         motivoDeRechazo: "DUPLICADO",
-        duplicadoDe: idA,
+        folioDelOriginal: await folioDe(motul, idA),
       },
       admin,
     );

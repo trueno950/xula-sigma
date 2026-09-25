@@ -11,7 +11,7 @@ export { TAMANO_DE_PAGINA } from "./application/listarReportes";
 /**
  * Curado y no `export type * from "./application"`: `puertos.ts` declara
  * su propio `CandidatoAOriginal` -la fila minima que
- * `repositorio.candidatoAOriginal` devuelve, design.md seccion 8- con el
+ * `repositorio.candidatoAOriginalPorFolio` devuelve, design.md seccion 8- con el
  * mismo nombre que el de `domain/duplicado.ts`, y un `export *` ambiguo
  * entre los dos rompe la compilacion.
  */
