@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { cambiarEscudoAction } from "./actions/cambiarEscudo.action";
+import { subirEscudo } from "./subirEscudo";
 
 /**
  * El formulario de escudo. Es la hoja: lo unico `"use client"` de la
@@ -35,13 +36,10 @@ export function FormularioDeEscudo() {
 
     if (!archivo) return;
 
-    const formData = new FormData();
-    formData.set("escudo", archivo);
-
-    const resultado = await cambiarEscudoAction(formData);
+    const resultado = await subirEscudo(archivo, cambiarEscudoAction);
 
     if (!resultado.ok) {
-      setError(resultado.campos?.escudo ?? resultado.mensaje);
+      setError(resultado.mensaje);
       return;
     }
 
