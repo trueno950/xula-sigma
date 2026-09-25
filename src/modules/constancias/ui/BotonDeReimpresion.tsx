@@ -24,13 +24,13 @@ export function BotonDeReimpresion({ constanciaId }: Props) {
       <CampoDeLista
         id="motivo-de-reimpresion"
         name="motivo"
-        etiqueta="Motivo de reimpresion"
+        etiqueta="Motivo de reimpresión"
         marcador="Seleccione un motivo"
         opciones={opcionesEtiquetadas(
           MOTIVOS_DE_REIMPRESION,
           ETIQUETA_DE_MOTIVO_DE_REIMPRESION,
         )}
-        ayuda="Queda registrado con quien la pidio y cuando."
+        ayuda="Queda registrado con quien la pidió y cuando."
       />
       <Boton type="submit">Reimprimir</Boton>
     </form>

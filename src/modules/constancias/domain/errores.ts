@@ -33,7 +33,7 @@ export class DocumentosNoConfiguradosError extends Error {
 export class TitularDadoDeBajaError extends Error {
   readonly codigo = "TITULAR_DADO_DE_BAJA";
 
-  constructor(mensaje = "La persona esta dada de baja.") {
+  constructor(mensaje = "La persona está dada de baja.") {
     super(mensaje);
     this.name = "TitularDadoDeBajaError";
   }
@@ -43,7 +43,7 @@ export class TitularDadoDeBajaError extends Error {
 export class DocumentoCanceladoError extends Error {
   readonly codigo = "DOCUMENTO_CANCELADO";
 
-  constructor(mensaje = "El documento esta cancelado.") {
+  constructor(mensaje = "El documento está cancelado.") {
     super(mensaje);
     this.name = "DocumentoCanceladoError";
   }

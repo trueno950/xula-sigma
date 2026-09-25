@@ -51,7 +51,7 @@ export default async function PaginaDeEmisionDeConstancia({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   if (!puedeEscribir(contexto.usuario.rol)) {
@@ -67,8 +67,8 @@ export default async function PaginaDeEmisionDeConstancia({
   if (!personaId) {
     return (
       <PantallaDeMensaje
-        mensaje="Elija una persona desde el padron para emitir su constancia."
-        accion={<EnlaceDeAccion href="/padron">Ir al padron</EnlaceDeAccion>}
+        mensaje="Elija una persona desde el padrón para emitir su constancia."
+        accion={<EnlaceDeAccion href="/padron">Ir al padrón</EnlaceDeAccion>}
       />
     );
   }
@@ -90,7 +90,7 @@ export default async function PaginaDeEmisionDeConstancia({
   const migaja = (
     <Migaja
       pasos={[
-        { etiqueta: "Padron", href: "/padron" },
+        { etiqueta: "Padrón", href: "/padron" },
         { etiqueta: nombreCompleto, href: `/padron/${personaId}` },
         { etiqueta: "Emitir constancia" },
       ]}
@@ -108,7 +108,7 @@ export default async function PaginaDeEmisionDeConstancia({
         migaja={migaja}
       >
         <Aviso tono="error">
-          El ayuntamiento todavia no configuro el bloque de firma. Sin quien
+          El ayuntamiento todavía no configuró el bloque de firma. Sin quien
           firma y con que cargo, la constancia no se puede emitir.
         </Aviso>
         {puedeAdministrarDocumentos(contexto.usuario.rol) ? (

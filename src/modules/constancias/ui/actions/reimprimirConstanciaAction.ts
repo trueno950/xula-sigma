@@ -25,7 +25,7 @@ const esquemaDeEntrada = z.object({
   motivo: z.enum(MOTIVOS_DE_REIMPRESION),
 });
 
-const MENSAJE_FORMULARIO_INVALIDO = "Motivo de reimpresion invalido.";
+const MENSAJE_FORMULARIO_INVALIDO = "Motivo de reimpresión inválido.";
 const MENSAJE_GENERICO = "No se pudo reimprimir. Intente de nuevo.";
 
 const redirigirConError = (constanciaId: string, mensaje: string): never =>

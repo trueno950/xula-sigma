@@ -85,7 +85,7 @@ function VistaDeResultado({
 
       {resultado.estado === "NO_VALIDO" ? (
         <p className="text-[15px] text-senial-error">
-          Este folio no es un documento valido.
+          Este folio no es un documento válido.
         </p>
       ) : (
         <>
@@ -111,7 +111,7 @@ function VistaDeResultado({
                 </div>
                 <div>
                   <dt className="text-[13px] font-medium text-caliza-apagada">
-                    Direccion
+                    Dirección
                   </dt>
                   <dd className="text-[15px] text-caliza-tinta">
                     {resultado.direccion}

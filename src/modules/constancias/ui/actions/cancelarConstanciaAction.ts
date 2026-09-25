@@ -23,7 +23,7 @@ const esquemaDeEntrada = z.object({
   motivo: z.enum(MOTIVOS_DE_CANCELACION),
 });
 
-const MENSAJE_FORMULARIO_INVALIDO = "Motivo de cancelacion invalido.";
+const MENSAJE_FORMULARIO_INVALIDO = "Motivo de cancelación inválido.";
 const MENSAJE_GENERICO = "No se pudo cancelar. Intente de nuevo.";
 
 const redirigirConError = (constanciaId: string, mensaje: string): never =>

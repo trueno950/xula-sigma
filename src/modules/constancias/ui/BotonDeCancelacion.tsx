@@ -28,7 +28,7 @@ export function BotonDeCancelacion({ constanciaId }: Props) {
       <CampoDeLista
         id="motivo-de-cancelacion"
         name="motivo"
-        etiqueta="Motivo de cancelacion"
+        etiqueta="Motivo de cancelación"
         marcador="Seleccione un motivo"
         opciones={opcionesEtiquetadas(
           MOTIVOS_DE_CANCELACION,

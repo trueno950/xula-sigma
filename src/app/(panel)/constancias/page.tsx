@@ -46,7 +46,7 @@ export default async function PaginaDeConstancias({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { filtros, q, limite, orden, error } = leerParametros(

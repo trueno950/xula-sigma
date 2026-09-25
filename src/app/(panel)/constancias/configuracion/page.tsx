@@ -68,7 +68,7 @@ export default async function PaginaDeConfiguracionDeDocumentos({
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       <p className="text-[15px] text-caliza-apagada">
-        Quien firma las constancias del municipio y con que cargo. Va impreso al
+        Quién firma las constancias del municipio y con qué cargo. Va impreso al
         pie de cada documento; sin esto, no se emite ninguno.
       </p>
 
@@ -91,7 +91,7 @@ export default async function PaginaDeConfiguracionDeDocumentos({
           </div>
         ) : (
           <p className="text-[15px] text-caliza-apagada">
-            Todavia no hay nada guardado. Asi se va a ver al pie de cada
+            Todavía no hay nada guardado. Así se va a ver al pie de cada
             constancia una vez que guarde.
           </p>
         )}

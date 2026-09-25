@@ -36,7 +36,7 @@ describe("ConstanciaDeVecindadV1", () => {
 
     expect(texto).toContain("Constancia de vecindad".toUpperCase());
     expect(texto).not.toContain("CANCELADA");
-    expect(texto).not.toContain("REIMPRESION");
+    expect(texto).not.toContain("REIMPRESIÓN");
   });
 
   it("una constancia cancelada lleva CANCELADA como texto extraible", async () => {
@@ -49,7 +49,7 @@ describe("ConstanciaDeVecindadV1", () => {
   it("una reimpresion vigente conserva su marca propia", async () => {
     const texto = await textoDe({ reimpresion: true });
 
-    expect(texto).toContain("REIMPRESION");
+    expect(texto).toContain("REIMPRESIÓN");
     expect(texto).not.toContain("CANCELADA");
   });
 
@@ -57,6 +57,6 @@ describe("ConstanciaDeVecindadV1", () => {
     const texto = await textoDe({ reimpresion: true, cancelada: true });
 
     expect(texto).toContain("CANCELADA");
-    expect(texto).not.toContain("REIMPRESION");
+    expect(texto).not.toContain("REIMPRESIÓN");
   });
 });
