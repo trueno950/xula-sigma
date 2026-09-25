@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
+import { publicarActualizacion } from "@/shared/notificaciones/notificar";
 import { registrar } from "@/shared/tenancy/bitacora";
 import {
   type TransaccionTenant,
@@ -81,6 +82,12 @@ const registrarIntervencionEnTenant = async (
     accion: "REGISTRAR_INTERVENCION",
     entidad: "intervenciones",
     entidadId: id,
+  });
+
+  await publicarActualizacion(tx, contexto.ayuntamientoId, {
+    tipo: "intervencion",
+    id,
+    cambio: "alta",
   });
   return id;
 };
