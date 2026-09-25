@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { consultarFolioDeReporte } from "@/modules/reportes";
+import {
+  consultarFolioDeReporte,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+} from "@/modules/reportes";
 import { limitarRitmo } from "@/shared/auth/limitarRitmo";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
@@ -80,14 +84,16 @@ function VistaDeResultado({
             <dt className="text-[13px] font-medium text-caliza-apagada">
               Tipo
             </dt>
-            <dd className="text-[15px] text-caliza-tinta">{resultado.tipo}</dd>
+            <dd className="text-[15px] text-caliza-tinta">
+              {ETIQUETA_DE_TIPO_DE_INCIDENCIA[resultado.tipo]}
+            </dd>
           </div>
           <div>
             <dt className="text-[13px] font-medium text-caliza-apagada">
               Estado
             </dt>
             <dd className="text-[15px] text-caliza-tinta">
-              {resultado.estado}
+              {ETIQUETA_DE_ESTADO_DE_REPORTE[resultado.estado]}
             </dd>
           </div>
           <div>

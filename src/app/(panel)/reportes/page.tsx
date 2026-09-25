@@ -85,7 +85,6 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
         q={q}
         orden={orden}
         limite={limite}
-        rol={contexto.usuario.rol}
       />
     </PaginaDePanel>
   );

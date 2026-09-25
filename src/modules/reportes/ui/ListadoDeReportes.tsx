@@ -1,5 +1,3 @@
-import type { Rol } from "@/shared/auth/roles";
-import { puedeAdministrarReportes } from "@/shared/auth/roles";
 import { fechaEnMerida } from "@/shared/lib/fecha";
 import {
   CeldaDeDato,
@@ -11,9 +9,14 @@ import {
   Tabla,
 } from "@/shared/ui";
 import type { FiltrosDeListado, ReporteGuardado } from "../application/puertos";
-import type { OrdenDeReportes } from "../domain";
+import {
+  ETIQUETA_DE_AREA,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  type OrdenDeReportes,
+  SIN_AREA,
+} from "../domain";
 import { resolverOrdenDeColumnas } from "./columnasOrdenables";
-import { ESTADOS_LEGIBLES, textoDeArea } from "./estadosLegibles";
 import { FiltrosDeReportes } from "./FiltrosDeReportes";
 import { hrefDeVerMas } from "./hrefsDeListado";
 
@@ -25,7 +28,6 @@ type Props = {
   q?: string | undefined;
   orden?: OrdenDeReportes | undefined;
   limite?: number | undefined;
-  rol: Rol;
 };
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
@@ -40,11 +42,9 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
  * Listado con busqueda (`?q=`), filtros por `estado`/`tipo` (con su chip),
  * paginacion (`?limite=`) y orden (`?ordenar=&direccion=`) -las cuatro
  * secciones de `design.md` que esta rebanada agrega sobre el listado con
- * solo filtros de la Fase 4. El area solo se lee como "Sin asignar" para
- * quien puede asignarla (`puedeAdministrarReportes`, design.md seccion
- * 12): ocultar esa lectura no es autorizacion -la guarda real vive en
- * `asignarAreaDeReporte`-, solo evita mostrarle a quien no puede actuar
- * una llamada a hacerlo.
+ * solo filtros de la Fase 4. Un reporte sin area dice "Sin asignar" para
+ * todos los roles: antes solo quien puede asignarla lo leia asi y el resto
+ * veia un guion, dos lecturas distintas del mismo dato.
  */
 export function ListadoDeReportes({
   reportes,
@@ -54,9 +54,7 @@ export function ListadoDeReportes({
   q,
   orden,
   limite,
-  rol,
 }: Props) {
-  const puedeAdministrar = puedeAdministrarReportes(rol);
   const columnas = resolverOrdenDeColumnas(COLUMNAS, { orden, filtros, q });
 
   return (
@@ -83,10 +81,16 @@ export function ListadoDeReportes({
               href={`/reportes/detalle/${reporte.id}`}
             >
               <CeldaPrincipal>{reporte.folio}</CeldaPrincipal>
-              <CeldaDeDato>{reporte.tipo}</CeldaDeDato>
-              <CeldaDeDato>{ESTADOS_LEGIBLES[reporte.estado]}</CeldaDeDato>
               <CeldaDeDato>
-                {textoDeArea(reporte.areaResponsable, puedeAdministrar)}
+                {ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
+              </CeldaDeDato>
+              <CeldaDeDato>
+                {ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
+              </CeldaDeDato>
+              <CeldaDeDato>
+                {reporte.areaResponsable
+                  ? ETIQUETA_DE_AREA[reporte.areaResponsable]
+                  : SIN_AREA}
               </CeldaDeDato>
               <CeldaDeDato>{fechaEnMerida(reporte.registradoEn)}</CeldaDeDato>
             </FilaDeTabla>

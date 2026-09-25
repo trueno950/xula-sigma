@@ -1,5 +1,10 @@
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import type { MovimientoGuardado } from "../application/puertosDeMovimientos";
+import {
+  ETIQUETA_DE_AREA,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
+  ETIQUETA_DE_MOTIVO_DE_RECHAZO,
+} from "../domain";
 
 type Props = {
   historial: readonly MovimientoGuardado[];
@@ -8,10 +13,16 @@ type Props = {
 /** Que paso en un movimiento, en una linea: el estado, o el area asignada. */
 const descripcionDe = (movimiento: MovimientoGuardado): string => {
   if (movimiento.areaAsignada)
-    return `Area asignada: ${movimiento.areaAsignada}`;
+    return `Area asignada: ${ETIQUETA_DE_AREA[movimiento.areaAsignada]}`;
   if (movimiento.estadoAnterior === null) return "Reporte recibido";
-  const motivo = movimiento.motivo ? ` (${movimiento.motivo})` : "";
-  return `${movimiento.estadoAnterior} -> ${movimiento.estadoNuevo}${motivo}`;
+  const motivo = movimiento.motivo
+    ? ` (${ETIQUETA_DE_MOTIVO_DE_RECHAZO[movimiento.motivo]})`
+    : "";
+  const anterior = ETIQUETA_DE_ESTADO_DE_REPORTE[movimiento.estadoAnterior];
+  const nuevo = movimiento.estadoNuevo
+    ? ETIQUETA_DE_ESTADO_DE_REPORTE[movimiento.estadoNuevo]
+    : "";
+  return `${anterior} → ${nuevo}${motivo}`;
 };
 
 /**

@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import { z } from "zod";
-import { FormularioDeAlta, TIPOS_DE_INCIDENCIA } from "@/modules/reportes";
+import {
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  FormularioDeAlta,
+  TIPOS_DE_INCIDENCIA,
+} from "@/modules/reportes";
 import { listarCalles, listarLugares } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import {
+  Migaja,
+  opcionesEtiquetadas,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 export const metadata: Metadata = { title: "Nuevo reporte" };
 
@@ -60,10 +69,10 @@ export default async function PaginaDeAltaDeReporte({ searchParams }: Props) {
       lugarId: lugar.id,
     })),
   );
-  const tipos = TIPOS_DE_INCIDENCIA.map((tipo) => ({
-    valor: tipo,
-    etiqueta: tipo,
-  }));
+  const tipos = opcionesEtiquetadas(
+    TIPOS_DE_INCIDENCIA,
+    ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  );
 
   return (
     <PaginaDePanel

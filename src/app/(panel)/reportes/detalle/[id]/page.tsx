@@ -5,8 +5,12 @@ import {
   AccionesDeReporte,
   comoReporteId,
   DetalleDeReporte,
+  ETIQUETA_DE_AREA,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
   historialDeReporte,
   reportePorId,
+  SIN_AREA,
 } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarReportes } from "@/shared/auth/roles";
@@ -105,11 +109,21 @@ export default async function PaginaDeDetalleDeReporte({
       ) : null}
 
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
-        <Dato etiqueta="Tipo" valor={reporte.tipo} />
-        <Dato etiqueta="Estado" valor={reporte.estado} />
+        <Dato
+          etiqueta="Tipo"
+          valor={ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
+        />
+        <Dato
+          etiqueta="Estado"
+          valor={ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
+        />
         <Dato
           etiqueta="Area"
-          valor={reporte.areaResponsable ?? "Sin asignar"}
+          valor={
+            reporte.areaResponsable
+              ? ETIQUETA_DE_AREA[reporte.areaResponsable]
+              : SIN_AREA
+          }
         />
         <Dato etiqueta="Descripcion" valor={reporte.descripcion} />
         {reporte.referencia ? (

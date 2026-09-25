@@ -1,3 +1,4 @@
+import { ETIQUETA_DE_ESTADO_DE_REPORTE } from "../domain";
 import type { ReporteSimilarParaCliente } from "./actions/buscarSimilaresAction";
 
 type Props = {
@@ -34,7 +35,8 @@ export function ReportesSimilares({ resultado, pendiente }: Props) {
         {resultado.map((reporte) => (
           <li key={reporte.id} className="text-[13px] text-caliza-apagada">
             <span className="font-mono">{reporte.folio}</span> —{" "}
-            {reporte.descripcion} ({reporte.estado})
+            {reporte.descripcion} (
+            {ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]})
           </li>
         ))}
       </ul>

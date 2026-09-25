@@ -25,7 +25,8 @@ vi.mock("@/shared/tenancy/contexto", () => ({
   exigirAyuntamiento: exigirAyuntamientoMock,
   superficieActual: superficieActualMock,
 }));
-vi.mock("@/modules/reportes", () => ({
+vi.mock("@/modules/reportes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/reportes")>()),
   consultarFolioDeReporte: consultarFolioDeReporteMock,
 }));
 
@@ -106,5 +107,23 @@ describe("fuga de datos en el HTML de /reportes/[folio]", () => {
     expect(html).not.toContain("Bache enorme junto al mercado");
     expect(html).not.toContain("Calle 20 x 15, Motul");
     expect(html).not.toContain("OBRAS_PUBLICAS");
+  });
+});
+
+describe("etiquetas legibles en /reportes/[folio]", () => {
+  it("el ciudadano lee el tipo y el estado, no sus codigos", async () => {
+    consultarFolioDeReporteMock.mockResolvedValue({
+      resultado: "REGISTRADO",
+      tipo: "ALUMBRADO",
+      estado: "EN_ATENCION",
+      registradoEn: "2026-08-28T10:00:00.000Z",
+      actualizadoEn: "2026-08-28T11:00:00.000Z",
+    });
+
+    const html = await htmlDe("REP-2026-000002");
+
+    expect(html).toContain(">Alumbrado<");
+    expect(html).toContain("En atención");
+    expect(html).not.toContain("EN_ATENCION");
   });
 });

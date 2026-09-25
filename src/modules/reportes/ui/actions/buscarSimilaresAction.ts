@@ -10,7 +10,7 @@ import {
 } from "@/shared/lib/errores";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import { buscarReportesSimilares } from "../../composicion";
-import { TIPOS_DE_INCIDENCIA } from "../../domain";
+import { type EstadoDeReporte, TIPOS_DE_INCIDENCIA } from "../../domain";
 
 const esquemaDeEntrada = z.object({
   lugarId: z.string().trim().uuid(),
@@ -21,7 +21,7 @@ const esquemaDeEntrada = z.object({
 export type ReporteSimilarParaCliente = {
   id: string;
   folio: string;
-  estado: string;
+  estado: EstadoDeReporte;
   descripcion: string;
   registradoEn: string;
 };

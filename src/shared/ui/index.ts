@@ -18,6 +18,7 @@ export {
   type VarianteDeBoton,
 } from "./estilos";
 export { Migaja, type PasoDeMigaja } from "./Migaja";
+export { opcionesEtiquetadas } from "./opcionesDeLista";
 export { PaginaDePanel, PantallaDeMensaje } from "./PaginaDePanel";
 export { Panel } from "./Panel";
 export { type Pestana, Pestanas } from "./Pestanas";

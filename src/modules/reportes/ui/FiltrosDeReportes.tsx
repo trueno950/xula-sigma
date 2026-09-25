@@ -5,12 +5,16 @@ import {
   ChipDeFiltro,
   CLASES_DE_ETIQUETA,
   clasesDeCampo,
+  opcionesEtiquetadas,
 } from "@/shared/ui";
 import type { FiltrosDeListado } from "../application/puertos";
-import { ESTADOS_DE_REPORTE, TIPOS_DE_INCIDENCIA } from "../domain";
-import { ESTADOS_LEGIBLES } from "./estadosLegibles";
+import {
+  ESTADOS_DE_REPORTE,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  TIPOS_DE_INCIDENCIA,
+} from "../domain";
 import { hrefSinFiltro } from "./hrefsDeListado";
-import { opcionesDeCatalogo } from "./opciones";
 
 type Props = FiltrosDeListado & { q?: string | undefined };
 
@@ -62,7 +66,10 @@ export function FiltrosDeReportes({ q, estado, tipo }: Props) {
           marcador="Todos"
           opcional
           defaultValue={estado ?? ""}
-          opciones={opcionesDeCatalogo(ESTADOS_DE_REPORTE)}
+          opciones={opcionesEtiquetadas(
+            ESTADOS_DE_REPORTE,
+            ETIQUETA_DE_ESTADO_DE_REPORTE,
+          )}
         />
         <CampoDeLista
           id="filtro-tipo"
@@ -71,7 +78,10 @@ export function FiltrosDeReportes({ q, estado, tipo }: Props) {
           marcador="Todos"
           opcional
           defaultValue={tipo ?? ""}
-          opciones={opcionesDeCatalogo(TIPOS_DE_INCIDENCIA)}
+          opciones={opcionesEtiquetadas(
+            TIPOS_DE_INCIDENCIA,
+            ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+          )}
         />
         <Boton type="submit" variante="secundaria">
           Buscar
@@ -82,13 +92,13 @@ export function FiltrosDeReportes({ q, estado, tipo }: Props) {
         <div className="flex flex-wrap gap-2">
           {estado ? (
             <ChipDeFiltro
-              etiqueta={`Estado: ${ESTADOS_LEGIBLES[estado]}`}
+              etiqueta={`Estado: ${ETIQUETA_DE_ESTADO_DE_REPORTE[estado]}`}
               hrefQuitar={hrefSinFiltro({ filtros, q }, "estado")}
             />
           ) : null}
           {tipo ? (
             <ChipDeFiltro
-              etiqueta={`Tipo: ${tipo}`}
+              etiqueta={`Tipo: ${ETIQUETA_DE_TIPO_DE_INCIDENCIA[tipo]}`}
               hrefQuitar={hrefSinFiltro({ filtros, q }, "tipo")}
             />
           ) : null}
