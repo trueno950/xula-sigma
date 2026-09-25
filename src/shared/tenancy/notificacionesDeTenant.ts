@@ -3,9 +3,14 @@ import { canalDeTenant } from "../notificaciones/canales";
 import type { AyuntamientoId } from "./ayuntamientoId";
 
 type Consumidor = (payload: string) => void;
+type AvisoDeReconexion = () => void;
 type Suscripcion = { cerrar: () => Promise<void> };
+type Escucha = {
+  consumidor: Consumidor;
+  alReconectar: AvisoDeReconexion | undefined;
+};
 
-const escuchas = new Map<string, Set<Consumidor>>();
+const escuchas = new Map<string, Set<Escucha>>();
 const desuscripciones = new Map<string, () => Promise<void>>();
 const aperturas = new Map<string, Promise<void>>();
 const cierres = new Map<string, Promise<void>>();
@@ -22,14 +27,37 @@ function clienteDeEscucha(): postgres.Sql {
 }
 
 const reenviar = (canal: string, payload: string) => {
-  for (const consumidor of escuchas.get(canal) ?? []) consumidor(payload);
+  for (const { consumidor } of escuchas.get(canal) ?? []) consumidor(payload);
 };
 
+const avisarReconexion = (canal: string) => {
+  for (const { alReconectar } of escuchas.get(canal) ?? []) alReconectar?.();
+};
+
+/**
+ * postgres 3.4.9 re-escucha solo tras una caida (`index.js:157-160`) con
+ * listeners nuevos, y el `unlisten` que devolvio el primer `listen` ya no
+ * los alcanza (`index.js:188`): la escucha vieja sigue registrada. `abierto`
+ * la silencia al cerrar el canal para que una reapertura no duplique
+ * payloads ni avisos.
+ */
 async function abrirCanal(canal: string): Promise<void> {
-  const escucha = await clienteDeEscucha().listen(canal, (payload) =>
-    reenviar(canal, payload),
+  let abierto = true;
+  let esPrimerListen = true;
+  const escucha = await clienteDeEscucha().listen(
+    canal,
+    (payload) => {
+      if (abierto) reenviar(canal, payload);
+    },
+    () => {
+      if (abierto && !esPrimerListen) avisarReconexion(canal);
+      esPrimerListen = false;
+    },
   );
-  desuscripciones.set(canal, () => escucha.unlisten());
+  desuscripciones.set(canal, () => {
+    abierto = false;
+    return escucha.unlisten();
+  });
 }
 
 async function asegurarCanal(canal: string): Promise<void> {
@@ -62,13 +90,15 @@ async function desuscribirCanal(canal: string): Promise<void> {
 export async function suscribirActualizaciones(
   ayuntamientoId: AyuntamientoId,
   consumidor: Consumidor,
+  alReconectar?: AvisoDeReconexion,
 ): Promise<Suscripcion> {
   const canal = canalDeTenant(ayuntamientoId);
+  const escucha: Escucha = { consumidor, alReconectar };
   const existentes = escuchas.get(canal);
 
-  if (existentes) existentes.add(consumidor);
+  if (existentes) existentes.add(escucha);
   else {
-    escuchas.set(canal, new Set([consumidor]));
+    escuchas.set(canal, new Set([escucha]));
     try {
       await asegurarCanal(canal);
     } catch (error) {
@@ -78,26 +108,26 @@ export async function suscribirActualizaciones(
   }
 
   await asegurarCanal(canal);
-  return suscripcionPara(canal, consumidor);
+  return suscripcionPara(canal, escucha);
 }
 
-function suscripcionPara(canal: string, consumidor: Consumidor): Suscripcion {
+function suscripcionPara(canal: string, escucha: Escucha): Suscripcion {
   let cerrada = false;
 
   return {
     cerrar: async () => {
       if (cerrada) return;
       cerrada = true;
-      await cerrarSuscripcion(canal, consumidor);
+      await cerrarSuscripcion(canal, escucha);
     },
   };
 }
 
 async function cerrarSuscripcion(
   canal: string,
-  consumidor: Consumidor,
+  escucha: Escucha,
 ): Promise<void> {
-  escuchas.get(canal)?.delete(consumidor);
+  escuchas.get(canal)?.delete(escucha);
   await cerrarCanal(canal);
 }
 
