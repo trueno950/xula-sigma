@@ -78,4 +78,4 @@ se afirma staging ni producción.
 - [ ] 4.2 U7 GREEN: hub/ruta/isla; refresh manual, no polling.
 - [ ] 4.3 U8 RED: sesión/mapa/historial/push.
 - [ ] 4.4 U8 GREEN: navegación/ruta; live bloqueado por D1/D2.
-- [ ] 4.5 Verificar sin `rtk`: `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, cobertura y `pnpm check`.
+- [ ] 4.5 Verificar sin `rtk`: `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, cobertura y `pnpm check`. (Corrida verde sobre U1–U6 en `apply-progress.md`; repetir tras U7/U8.)

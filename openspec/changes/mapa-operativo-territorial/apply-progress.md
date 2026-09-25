@@ -1225,3 +1225,40 @@ strict-TDD RED/GREEN evidence below remains the evidence for the implementation.
   green. The phase remains **partial** only because the required `pnpm reglas`
   verdict and Postgres-backed verification remain blocked by the environment.
 - No claim of success is made while those required checks have no observed pass.
+
+## U6: verification rerun with Postgres (supersedes "Corrective status")
+
+Docker was available; `pnpm db:local` provisioned roles and migrated
+`xula_test`. All commands ran natively (no `rtk`) with `DATABASE_URL`,
+`MIGRATION_DATABASE_URL` and `SUPER_ADMIN_DATABASE_URL` exported (port 55432).
+No production code or test changed during this rerun.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 857 archivos: sin hallazgos.` |
+| `pnpm typecheck` | exit 0; `$ tsc --noEmit`. |
+| `pnpm test:integration` | exit 0; `Test Files  110 passed (110)`; `Tests  382 passed (382)`. |
+| `pnpm test` | exit 0; `Test Files  323 passed (323)`; `Tests  1585 passed (1585)`. |
+| `pnpm vitest run --coverage` | exit 0; floors held; `All files` 97.78% statements, 93.1% branches, 98.82% functions, 98.8% lines. |
+| `pnpm check` | exit 0; Biome 56 warnings and no errors, `tsc` clean, dependency-cruiser `no dependency violations found` (837 modules), `reglas` no findings. |
+| `pnpm test:e2e` | exit 0; `12 passed (49.0s)`. |
+
+Notes:
+
+- A first `pnpm test` without the database variables failed 110 files with
+  `Falta DATABASE_URL`; that was the environment, not code. With the variables
+  exported the same command passed.
+- No Playwright spec covers the operational map; the 12 specs are `acceso`,
+  `hostAjeno`, `respaldoPorHost`, `calles` and `bajaDeLugar`. The map E2E journey
+  belongs to task 4.3 (U8).
+- `pnpm build` (run by Playwright) rewrote `next-env.d.ts`; it was restored
+  with `git checkout` and is not part of any change.
+
+### U6 status
+
+U6 (tasks 3.3 and 3.4) is **verified**: the blockers listed under "Corrective
+status" (sandbox `EPERM` on `pnpm reglas`, no Docker) no longer apply and every
+required check has an observed pass.
+
+Task 4.5 stays open: this run covers U1–U6 only and must be repeated once U7
+and U8 land.
