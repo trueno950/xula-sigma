@@ -1565,3 +1565,76 @@ Env exported in the same call: `DATABASE_URL`, `MIGRATION_DATABASE_URL`,
 - Rollback boundary: `notificacionesDeTenant.ts`, `eventos/route.ts`,
   `EstadoEnVivo.tsx` and their three test files; no schema, `AGENTS.md`,
   `opencode.json` or `next-env.d.ts` change.
+
+## U7 review follow-up: subscriber error isolation
+
+Review finding R3-002 (verified real): `reenviar` and `avisarReconexion` looped
+over a channel's subscribers with no error isolation. One throwing callback
+skipped the rest of that tenant's subscribers, and the exception went back into
+`postgres`, whose re-listen swallows it with an empty `.catch`
+(`node_modules/postgres/src/index.js:159`, 3.4.9), so the remaining subscribers
+stayed stale without any trace. Mode: Strict TDD. Nothing was staged or
+committed.
+
+Fix (`notificacionesDeTenant.ts`): both loops go through `entregarATodos`,
+which calls every subscriber inside a `try`/`catch`, collects the failures and,
+only after all subscribers were called, reports each one. The `abierto` and
+`esPrimerListen` behaviour is untouched.
+
+Reporting choice: `console.error("[eventos] un suscriptor fallo",
+datosSegurosDeError(error))`, one line per failing subscriber.
+
+- `console.error` is the repo convention (Biome allows only `error`; the auth
+  route, the PDF route and `mapearError` do the same) and Railway collects it.
+- `datosSegurosDeError` (`shared/lib/registroDeError.ts`) is a whitelist that
+  keeps the error name, Postgres identifiers and stack frames and drops the
+  message. A subscriber error message could carry the payload, so it is never
+  logged. The fixed text names neither payload, tenant nor channel.
+- The failure is not rethrown: inside `onlisten` it would be swallowed by
+  `postgres` anyway, and inside `onnotify` it would reach the library's
+  connection handler. Logging after the round is what keeps antipattern 14
+  (no silent swallow) satisfied.
+
+### TDD evidence and mutation checks
+
+New file `notificacionesDeTenant.errores.test.ts` (the existing hub test file
+was at 181 lines and the 200-line file limit would have been exceeded).
+
+| Step | Exact observed result |
+|---|---|
+| RED | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.errores.test.ts` → exit 1; `3 failed`: the callback exception propagated (`expected [Function] to not throw an error but 'Error: payload-con-datos-de-un-vecino' was thrown`). |
+| GREEN | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.errores.test.ts src/shared/tenancy/notificacionesDeTenant.test.ts` → `Test Files 2 passed (2)`, `Tests 9 passed (9)`. |
+
+Tests: payload still reaches the second subscriber; resync still reaches the
+second subscriber; two failing and two healthy subscribers give two log lines,
+each written after both healthy ones were called; the logged arguments never
+contain the error message.
+
+| Mutation (applied, then restored; `diff` identical) | Tests that failed |
+|---|---|
+| `reenviar` back to a plain loop | payload delivery; report after the round (2) |
+| `avisarReconexion` back to a plain loop | reconnect delivery (1) |
+| no `console.error` | all 3 |
+| log `String(fallo)` instead of `datosSegurosDeError` | payload delivery and reconnect delivery (2, message leaked) |
+| log inside the `catch` instead of after the round | report after the round (1) |
+
+### Gates, run after the last edit
+
+Env exported in the same call; nothing ran through `rtk`.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm typecheck` | exit 0. |
+| `pnpm reglas` | exit 0; `871 archivos: sin hallazgos.` It scans `git ls-files`, so the still-untracked new test file was not scanned. Run with a throwaway copy of the index (`GIT_INDEX_FILE`, `git add -N`, real index untouched): exit 0, `872 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 334 passed (334)`, `Tests 1668 passed (1668)`; 97.62% statements, 92.83% branches, 98.87% functions, 98.73% lines. |
+| `pnpm check` | exit 0; Biome warnings unchanged, dependency-cruiser no violations (852 modules), `reglas` no findings. |
+
+### Open follow-ups (advisory review findings, NOT fixed here)
+
+- R3-001: `notificacionesDeTenant.integration.test.ts` finds the hub session
+  only by its last query text in `pg_stat_activity`
+  (`query = 'listen "<canal>"'`), so a parallel worker holding its own hub on
+  the same channel could be matched.
+- R3-003: the fixed 300 ms sleeps in the integration tests prove the absence of
+  duplicates by waiting; a sentinel payload published last would be
+  deterministic.
