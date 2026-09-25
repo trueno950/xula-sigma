@@ -1,5 +1,8 @@
-import { Boton, CampoDeLista } from "@/shared/ui";
-import { MOTIVOS_DE_REIMPRESION } from "../domain";
+import { Boton, CampoDeLista, opcionesEtiquetadas } from "@/shared/ui";
+import {
+  ETIQUETA_DE_MOTIVO_DE_REIMPRESION,
+  MOTIVOS_DE_REIMPRESION,
+} from "../domain";
 import { reimprimirConstanciaAction } from "./actions/reimprimirConstanciaAction";
 
 type Props = {
@@ -23,10 +26,10 @@ export function BotonDeReimpresion({ constanciaId }: Props) {
         name="motivo"
         etiqueta="Motivo de reimpresion"
         marcador="Seleccione un motivo"
-        opciones={MOTIVOS_DE_REIMPRESION.map((motivo) => ({
-          valor: motivo,
-          etiqueta: motivo,
-        }))}
+        opciones={opcionesEtiquetadas(
+          MOTIVOS_DE_REIMPRESION,
+          ETIQUETA_DE_MOTIVO_DE_REIMPRESION,
+        )}
         ayuda="Queda registrado con quien la pidio y cuando."
       />
       <Boton type="submit">Reimprimir</Boton>
