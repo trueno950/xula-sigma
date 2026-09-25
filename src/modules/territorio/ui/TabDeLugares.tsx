@@ -8,7 +8,11 @@ import {
   FilaDeTabla,
   Tabla,
 } from "@/shared/ui";
-import { tiposContenidosPor } from "../domain";
+import {
+  ETIQUETA_DE_TIPO_DE_LUGAR,
+  tipoDeLugarEnFrase,
+  tiposContenidosPor,
+} from "../domain";
 import { hijosDirectosDe, type PropsDeContenido, rutaDe } from "./contenido";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
@@ -69,10 +73,10 @@ export function TabDeLugares({
             <FilaDeTabla
               key={hijo.id}
               href={`/territorio?raiz=${raizId}&nodo=${hijo.id}`}
-              etiquetaAccesible={`${hijo.nombre}, ${hijo.tipo}`}
+              etiquetaAccesible={`${hijo.nombre}, ${tipoDeLugarEnFrase(hijo.tipo)}`}
             >
               <CeldaPrincipal>{hijo.nombre}</CeldaPrincipal>
-              <CeldaDeDato>{hijo.tipo}</CeldaDeDato>
+              <CeldaDeDato>{ETIQUETA_DE_TIPO_DE_LUGAR[hijo.tipo]}</CeldaDeDato>
             </FilaDeTabla>
           ))}
         </Tabla>
@@ -80,7 +84,7 @@ export function TabDeLugares({
         <p className="py-6 text-[15px] text-caliza-apagada">
           {admiteLugares
             ? `${lugar.nombre} no tiene lugares adentro todavia.`
-            : `Una ${lugar.tipo} es el ultimo nivel: no lleva lugares adentro, solo domicilios.`}
+            : `Una ${tipoDeLugarEnFrase(lugar.tipo)} es el ultimo nivel: no lleva lugares adentro, solo domicilios.`}
         </p>
       )}
 

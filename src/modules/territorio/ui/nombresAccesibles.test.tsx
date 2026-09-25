@@ -44,7 +44,9 @@ describe("nombres accesibles de las filas y acciones", () => {
   it("la fila de un lugar separa el nombre del tipo", () => {
     const html = renderToStaticMarkup(<TabDeLugares {...base} />);
 
-    expect(html).toContain('aria-label="Kantirix, comisaria"');
+    expect(html).toContain('aria-label="Kantirix, comisaría"');
+    expect(html).toContain(">Comisaría<");
+    expect(html).not.toContain(">comisaria<");
   });
 
   it("la fila de una calle separa el nombre de la ubicacion", () => {
@@ -79,6 +81,7 @@ describe("nombres accesibles de las filas y acciones", () => {
       />,
     );
 
-    expect(html).toContain('aria-label="Kantirix, comisaria"');
+    expect(html).toContain('aria-label="Kantirix, comisaría"');
+    expect(html).toContain(">Comisaría<");
   });
 });

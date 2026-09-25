@@ -6,6 +6,7 @@ import {
   TIPOS_DE_INCIDENCIA,
 } from "@/modules/reportes";
 import { listarCalles, listarLugares } from "@/modules/territorio";
+import { opcionesDeLugares } from "@/modules/territorio/ui/opciones";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
 import {
@@ -58,10 +59,7 @@ export default async function PaginaDeAltaDeReporte({ searchParams }: Props) {
     lugaresGuardados.map((lugar) => listarCalles(lugar.id, contexto)),
   );
 
-  const lugares = lugaresGuardados.map((lugar) => ({
-    valor: lugar.id,
-    etiqueta: `${lugar.nombre} (${lugar.tipo})`,
-  }));
+  const lugares = opcionesDeLugares(lugaresGuardados);
   const calles = lugaresGuardados.flatMap((lugar, indice) =>
     (callesPorLugar[indice] ?? []).map((calle) => ({
       valor: calle.id,

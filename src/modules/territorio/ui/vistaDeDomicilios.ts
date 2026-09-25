@@ -2,6 +2,7 @@ import type { OpcionDeLista } from "@/shared/ui";
 import type { CalleDelMunicipio } from "../application/listarCallesDelMunicipio";
 import type { NodoDeSubarbol } from "../application/puertos";
 import {
+  ETIQUETA_DE_TIPO_DE_LUGAR,
   type LugarId,
   puedeTenerCatalogoDeCalles,
   type TipoDeLugar,
@@ -86,7 +87,7 @@ export const caminoDeLugar = (
 };
 
 const nombreDeNivel = (eslabon: EslabonDeZona): string =>
-  `${eslabon.tipo.charAt(0).toUpperCase()}${eslabon.tipo.slice(1)} ${eslabon.nombre}`;
+  `${ETIQUETA_DE_TIPO_DE_LUGAR[eslabon.tipo]} ${eslabon.nombre}`;
 
 /**
  * La frase que describe el guardado por defecto, no la seleccion actual:
