@@ -1,5 +1,5 @@
 export class CurpInvalidaError extends Error {
-  constructor(mensaje = "La CURP no tiene un formato valido.") {
+  constructor(mensaje = "La CURP no tiene un formato válido.") {
     super(mensaje);
     this.name = "CurpInvalidaError";
   }

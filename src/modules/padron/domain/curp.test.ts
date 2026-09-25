@@ -14,6 +14,12 @@ describe("normalizarCurp", () => {
     expect(normalizarCurp("vecj880326hdflrr05")).toBe("VECJ880326HDFLRR05");
   });
 
+  it("el mensaje del rechazo se lee con acento", () => {
+    expect(new CurpInvalidaError().message).toBe(
+      "La CURP no tiene un formato válido.",
+    );
+  });
+
   it("rechaza un formato invalido", () => {
     expect(() => normalizarCurp("no-es-una-curp")).toThrow(CurpInvalidaError);
   });

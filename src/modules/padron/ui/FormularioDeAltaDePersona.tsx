@@ -28,7 +28,7 @@ export function FormularioDeAltaDePersona({ error }: Props) {
         id="segundoApellido"
         name="segundoApellido"
         etiqueta="Segundo apellido"
-        ayuda="Dejar vacio si la persona no lo usa."
+        ayuda="Dejar vacío si la persona no lo usa."
       />
 
       <Campo
@@ -36,7 +36,7 @@ export function FormularioDeAltaDePersona({ error }: Props) {
         name="curp"
         etiqueta="CURP"
         maxLength={18}
-        ayuda="18 caracteres. Se puede completar despues."
+        ayuda="18 caracteres. Se puede completar después."
         tipografia="dato"
       />
 

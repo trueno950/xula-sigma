@@ -44,8 +44,8 @@ const nombreDeLista = (persona: PersonaGuardada) =>
  * resueltos.
  *
  * Los dos vacios son distintos y por eso recibe `filtro`. Antes tenia uno
- * solo: `/padron?q=xyz` sin resultados respondia "Todavia no hay personas
- * en el padron", que es la pantalla que manda a dar de alta a alguien que
+ * solo: `/padron?q=xyz` sin resultados respondia "Todavía no hay personas
+ * en el padrón", que es la pantalla que manda a dar de alta a alguien que
  * ya existe con el apellido escrito de otra forma. Es el unico error de
  * esta lista que le cuesta trabajo real a la operadora.
  */
@@ -63,7 +63,7 @@ export function ListadoDePersonas({
     return (
       <EstadoVacio
         estado={estado}
-        mensajeInicial="Todavia no hay personas en el padron."
+        mensajeInicial="Todavía no hay personas en el padrón."
         hrefSinFiltro="/padron"
         {...(accionDeAlta ? { accion: accionDeAlta } : {})}
       />
@@ -74,7 +74,7 @@ export function ListadoDePersonas({
 
   return (
     <Tabla
-      etiqueta="Personas del padron"
+      etiqueta="Personas del padrón"
       columnas={columnas}
       {...(hayMas ? { verMas: hrefDeVerMas({ filtro, limite, orden }) } : {})}
     >

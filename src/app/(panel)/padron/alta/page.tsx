@@ -35,7 +35,7 @@ export default async function PaginaDeAltaDePersona({ searchParams }: Props) {
       <PantallaDeMensaje
         mensaje="Su rol no tiene permiso para dar de alta personas."
         accion={
-          <EnlaceDeAccion href="/padron">Volver al padron</EnlaceDeAccion>
+          <EnlaceDeAccion href="/padron">Volver al padrón</EnlaceDeAccion>
         }
       />
     );
@@ -48,7 +48,7 @@ export default async function PaginaDeAltaDePersona({ searchParams }: Props) {
       migaja={
         <Migaja
           pasos={[
-            { etiqueta: "Padron", href: "/padron" },
+            { etiqueta: "Padrón", href: "/padron" },
             { etiqueta: "Nueva persona" },
           ]}
           etiqueta="Ruta"
