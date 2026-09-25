@@ -10,8 +10,9 @@ const leerHistorialDeCalleMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
-vi.mock("@/modules/historial-de-calle", () => ({
-  comoCalleId: (id: string) => id,
+vi.mock("@/modules/historial-de-calle", async () => ({
+  comoCalleId: (await import("@/modules/historial-de-calle/domain"))
+    .comoCalleId,
   leerHistorialDeCalle: leerHistorialDeCalleMock,
   LineaDeTiempoDeCalle: () => null,
 }));
@@ -43,6 +44,17 @@ describe("PaginaDeHistorialDeCalle", () => {
       "base no disponible",
     );
     expect(notFoundMock).not.toHaveBeenCalled();
+  });
+
+  it("convierte un id mal formado en 404 sin consultar el historial", async () => {
+    contextoActualMock.mockResolvedValue(contexto);
+    const idMalFormado = { params: Promise.resolve({ id: "no-es-un-uuid" }) };
+
+    await expect(PaginaDeHistorialDeCalle(idMalFormado)).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(leerHistorialDeCalleMock).not.toHaveBeenCalled();
+    expect(notFoundMock).toHaveBeenCalled();
   });
 
   it("convierte una calle ajena o inexistente en 404", async () => {

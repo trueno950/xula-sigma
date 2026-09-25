@@ -114,6 +114,13 @@ async function verificarHistorial(page: Page): Promise<void> {
   await expect(page.getByText("15 ene 2026", { exact: true })).toBeVisible();
 }
 
+async function verificarIdMalFormado(page: Page): Promise<void> {
+  const respuesta = await page.goto(
+    urlDe("motul", "/calles/no-es-un-uuid/historial"),
+  );
+  expect(respuesta?.status()).toBe(404);
+}
+
 async function verificarAislamientoDeTicul(page: Page): Promise<void> {
   await acceder(page, "ticul");
   await page.goto(urlDe("ticul", "/mapa-operativo"));
@@ -139,5 +146,6 @@ test("mapa operativo muestra snapshot, desconexión e historial sin filtrar otro
   await interrumpirCanalEnMapa(page);
   await verificarMapaDesconectado(page);
   await verificarHistorial(page);
+  await verificarIdMalFormado(page);
   await verificarAislamientoDeTicul(page);
 });
