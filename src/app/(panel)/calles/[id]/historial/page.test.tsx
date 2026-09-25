@@ -10,9 +10,8 @@ const leerHistorialDeCalleMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
-vi.mock("@/modules/historial-de-calle", async () => ({
-  comoCalleId: (await import("@/modules/historial-de-calle/domain"))
-    .comoCalleId,
+vi.mock("@/modules/historial-de-calle", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/historial-de-calle")>()),
   leerHistorialDeCalle: leerHistorialDeCalleMock,
   LineaDeTiempoDeCalle: () => null,
 }));
