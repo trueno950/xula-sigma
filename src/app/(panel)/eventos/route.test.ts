@@ -50,8 +50,10 @@ describe("GET /eventos", () => {
     expect(suscribirMock).toHaveBeenCalledWith(
       contexto.ayuntamientoId,
       expect.any(Function),
+      expect.any(Function),
     );
     expect(respuesta.headers.get("Content-Type")).toBe("text/event-stream");
+    expect(respuesta.headers.get("X-Accel-Buffering")).toBe("no");
     expect(new TextDecoder().decode(primerChunk?.value)).toContain("resync");
     expect(new TextDecoder().decode(latido?.value)).toContain("heartbeat");
 
@@ -77,6 +79,46 @@ describe("GET /eventos", () => {
       '{"tipo":"calle"}',
     );
     await lector?.cancel();
+  });
+
+  it("reenvia la reconexion del hub como un nuevo evento resync", async () => {
+    let reconectar: (() => void) | undefined;
+    suscribirMock.mockImplementation(
+      async (_tenant, _consumidor, alReconectar) => {
+        reconectar = alReconectar as () => void;
+        return { cerrar: vi.fn() };
+      },
+    );
+
+    const respuesta = await GET();
+    const lector = respuesta.body?.getReader();
+    await lector?.read();
+    reconectar?.();
+    const evento = await lector?.read();
+
+    expect(new TextDecoder().decode(evento?.value)).toBe(
+      "event: resync\ndata: \n\n",
+    );
+    await lector?.cancel();
+  });
+
+  it("no encola nada si el hub avisa despues de cancelar el stream", async () => {
+    let consumir: ((payload: string) => void) | undefined;
+    let reconectar: (() => void) | undefined;
+    suscribirMock.mockImplementation(
+      async (_tenant, consumidor, alReconectar) => {
+        consumir = consumidor as (payload: string) => void;
+        reconectar = alReconectar as () => void;
+        return { cerrar: vi.fn() };
+      },
+    );
+    const respuesta = await GET();
+    const lector = respuesta.body?.getReader();
+    await lector?.read();
+    await lector?.cancel();
+
+    expect(() => consumir?.('{"tipo":"calle"}')).not.toThrow();
+    expect(() => reconectar?.()).not.toThrow();
   });
 
   it("cierra una suscripcion que resuelve despues de cancelar el stream", async () => {

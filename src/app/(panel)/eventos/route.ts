@@ -25,6 +25,9 @@ function cuerpoDeEventos(
         (payload) => {
           if (activo) controlador.enqueue(evento("actualizacion", payload));
         },
+        () => {
+          if (activo) controlador.enqueue(evento("resync"));
+        },
       );
       if (!activo) {
         await suscripcion.cerrar();
@@ -51,6 +54,7 @@ function respuestaDeEventos(
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
       "Content-Type": "text/event-stream",
+      "X-Accel-Buffering": "no",
     },
   });
 }

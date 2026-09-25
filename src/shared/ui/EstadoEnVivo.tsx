@@ -39,10 +39,7 @@ function useEventosEnVivo(
       limite = programarDesconexion(establecerConectado);
     };
 
-    eventos.onopen = () => {
-      confirmarLatido();
-      refrescar();
-    };
+    eventos.onopen = confirmarLatido;
     eventos.onerror = () => establecerConectado(false);
     eventos.addEventListener("heartbeat", confirmarLatido);
     eventos.addEventListener("actualizacion", refrescar);

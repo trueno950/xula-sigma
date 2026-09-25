@@ -76,15 +76,18 @@ describe("EstadoEnVivo", () => {
     expect(html).toContain("Actualizar ahora");
   });
 
-  it("refresca al conectar y ante cada evento, sin sondear", () => {
+  it("no refresca al abrir: refresca con cada actualizacion y cada resync, sin sondear", () => {
     const sondeo = vi.spyOn(globalThis, "setInterval");
     const { fuente } = montar();
 
     fuente.onopen?.();
-    fuente.emitir("actualizacion");
-    fuente.emitir("resync");
+    expect(refrescarMock).not.toHaveBeenCalled();
 
-    expect(refrescarMock).toHaveBeenCalledTimes(3);
+    fuente.emitir("actualizacion");
+    expect(refrescarMock).toHaveBeenCalledTimes(1);
+
+    fuente.emitir("resync");
+    expect(refrescarMock).toHaveBeenCalledTimes(2);
     expect(sondeo).not.toHaveBeenCalled();
   });
 
@@ -92,6 +95,9 @@ describe("EstadoEnVivo", () => {
     const { fuente } = montar();
 
     fuente.onopen?.();
+    expect(conectadoMock).toHaveBeenLastCalledWith(true);
+
+    conectadoMock.mockClear();
     fuente.emitir("heartbeat");
     expect(conectadoMock).toHaveBeenLastCalledWith(true);
 
