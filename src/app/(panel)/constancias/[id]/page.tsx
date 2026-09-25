@@ -53,7 +53,9 @@ const Dato = ({
 /**
  * Muestra el snapshot congelado como texto plano, mas los tres bordes de
  * ciclo de vida del documento (design.md de `constancias-oficios`, secciones
- * 10 y 11): imprimir (`BotonDeImprimir`), reimprimir con motivo
+ * 10 y 11): imprimir (`BotonDeImprimir`, ausente si esta cancelada: el PDF
+ * sigue siendo descargable por su URL pero marcado, no se ofrece como hoja
+ * para entregar), reimprimir con motivo
  * (`BotonDeReimpresion`, gateado por `puedeEscribir`) y cancelar con motivo
  * (`BotonDeCancelacion`, gateado por `puedeAdministrarDocumentos`) -en los
  * dos casos ocultar el boton no es la autorizacion real, que vive en
@@ -108,7 +110,7 @@ export default async function PaginaDeDetalleDeConstancia({
     <PaginaDePanel
       titulo={constancia.folio}
       ancho="detalle"
-      accion={<BotonDeImprimir id={constancia.id} />}
+      accion={cancelada ? undefined : <BotonDeImprimir id={constancia.id} />}
       migaja={
         <Migaja
           pasos={[
