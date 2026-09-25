@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { datosSegurosDeError } from "../lib/registroDeError";
 import { canalDeTenant } from "../notificaciones/canales";
 import type { AyuntamientoId } from "./ayuntamientoId";
 
@@ -26,13 +27,35 @@ function clienteDeEscucha(): postgres.Sql {
   return cliente;
 }
 
-const reenviar = (canal: string, payload: string) => {
-  for (const { consumidor } of escuchas.get(canal) ?? []) consumidor(payload);
-};
+/**
+ * Un suscriptor que lanza no debe dejar sin entrega a los demas del canal, y
+ * la excepcion tampoco puede volver a `postgres`: su re-listen la traga con
+ * un `.catch` vacio (`index.js:159`, 3.4.9). Los fallos se registran al
+ * terminar la ronda, con el texto fijo y `datosSegurosDeError`, que descarta
+ * el mensaje: el de un suscriptor podria traer el payload.
+ */
+function entregarATodos(
+  canal: string,
+  entregar: (escucha: Escucha) => void,
+): void {
+  const fallos: unknown[] = [];
+  for (const escucha of escuchas.get(canal) ?? []) {
+    try {
+      entregar(escucha);
+    } catch (error) {
+      fallos.push(error);
+    }
+  }
+  for (const fallo of fallos) {
+    console.error("[eventos] un suscriptor fallo", datosSegurosDeError(fallo));
+  }
+}
 
-const avisarReconexion = (canal: string) => {
-  for (const { alReconectar } of escuchas.get(canal) ?? []) alReconectar?.();
-};
+const reenviar = (canal: string, payload: string) =>
+  entregarATodos(canal, ({ consumidor }) => consumidor(payload));
+
+const avisarReconexion = (canal: string) =>
+  entregarATodos(canal, ({ alReconectar }) => alReconectar?.());
 
 /**
  * postgres 3.4.9 re-escucha solo tras una caida (`index.js:157-160`) con
