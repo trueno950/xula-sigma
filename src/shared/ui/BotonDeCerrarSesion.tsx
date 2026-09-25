@@ -4,7 +4,7 @@ import { SignOut } from "@phosphor-icons/react/ssr";
 import { useState } from "react";
 import { Aviso } from "./Aviso";
 import { Boton } from "./Boton";
-import { cerrarSesion } from "./cerrarSesion";
+import { cerrarYVolver } from "./cerrarSesion";
 
 /**
  * Cerrar la sesion desde cualquier pantalla con cabecera.
@@ -22,20 +22,15 @@ export function BotonDeCerrarSesion() {
   const [fallo, setFallo] = useState(false);
   const [enCurso, setEnCurso] = useState(false);
 
-  const cerrar = async () => {
-    setFallo(false);
-    setEnCurso(true);
-
-    const resultado = await cerrarSesion(fetch);
-
-    if (resultado === "cerrada") {
-      window.location.assign("/acceso");
-      return;
-    }
-
-    setEnCurso(false);
-    setFallo(true);
-  };
+  const cerrar = () =>
+    cerrarYVolver({
+      enviar: fetch,
+      irA: (ruta) => window.location.assign(ruta),
+      marcar: (estado) => {
+        setEnCurso(estado.enCurso);
+        setFallo(estado.fallo);
+      },
+    });
 
   return (
     <div className="flex items-center gap-2">

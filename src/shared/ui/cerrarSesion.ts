@@ -28,3 +28,40 @@ export async function cerrarSesion(
     throw error;
   }
 }
+
+type EstadoDeCierre = { enCurso: boolean; fallo: boolean };
+
+/**
+ * Lo que hace el clic, sin React: el boton solo conecta estado y navegacion.
+ *
+ * Cualquier error, de red o no, termina en el aviso y con el boton libre: un
+ * `AbortError` o un defecto dentro de `fetch` dejaba el boton bloqueado hasta
+ * recargar y la promesa del clic sin atender. Se registra solo el nombre del
+ * error, no el objeto: es un log sin RLS ni bitacora de acceso.
+ *
+ * En exito el boton **sigue bloqueado**: la pagina se esta yendo y un segundo
+ * clic pediria un cierre de una sesion que ya no existe.
+ */
+export async function cerrarYVolver(dependencias: {
+  enviar: Enviar;
+  irA: (ruta: string) => void;
+  marcar: (estado: EstadoDeCierre) => void;
+}): Promise<void> {
+  const { enviar, irA, marcar } = dependencias;
+  let cerrada = false;
+
+  marcar({ enCurso: true, fallo: false });
+
+  try {
+    cerrada = (await cerrarSesion(enviar)) === "cerrada";
+  } catch (error) {
+    console.error(
+      "[cerrarSesion] fallo inesperado",
+      error instanceof Error ? error.name : "desconocido",
+    );
+  } finally {
+    if (!cerrada) marcar({ enCurso: false, fallo: true });
+  }
+
+  if (cerrada) irA("/acceso");
+}

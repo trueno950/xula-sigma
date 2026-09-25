@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { cerrarSesion } from "./cerrarSesion";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cerrarSesion, cerrarYVolver } from "./cerrarSesion";
 
 describe("cerrarSesion", () => {
   it("pide el cierre a la puerta unica de autenticacion, por POST", async () => {
@@ -40,5 +40,66 @@ describe("cerrarSesion", () => {
     const enviar = vi.fn().mockRejectedValue(new RangeError("otro fallo"));
 
     await expect(cerrarSesion(enviar)).rejects.toThrow("otro fallo");
+  });
+});
+
+describe("cerrarYVolver", () => {
+  const armar = (enviar: Parameters<typeof cerrarYVolver>[0]["enviar"]) => {
+    const irA = vi.fn();
+    const marcar = vi.fn();
+
+    return {
+      irA,
+      marcar,
+      correr: () => cerrarYVolver({ enviar, irA, marcar }),
+    };
+  };
+
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("marca el cierre en curso y, si sale bien, va a /acceso del mismo host", async () => {
+    const { irA, marcar, correr } = armar(
+      vi.fn().mockResolvedValue({ ok: true }),
+    );
+
+    await correr();
+
+    expect(marcar).toHaveBeenNthCalledWith(1, { enCurso: true, fallo: false });
+    expect(marcar).toHaveBeenCalledTimes(1);
+    expect(irA).toHaveBeenCalledExactlyOnceWith("/acceso");
+  });
+
+  it.each([
+    ["el servidor rechaza", () => Promise.resolve({ ok: false })],
+    ["no hay red", () => Promise.reject(new TypeError("Failed to fetch"))],
+    [
+      "la peticion se aborta",
+      () => Promise.reject(new DOMException("aborted", "AbortError")),
+    ],
+  ])(
+    "si %s, avisa del fallo, rehabilita el boton y no navega",
+    async (_, respuesta) => {
+      const { irA, marcar, correr } = armar(vi.fn(respuesta));
+
+      await expect(correr()).resolves.toBeUndefined();
+
+      expect(marcar).toHaveBeenLastCalledWith({ enCurso: false, fallo: true });
+      expect(irA).not.toHaveBeenCalled();
+    },
+  );
+
+  it("registra solo el nombre del error inesperado, no el objeto", async () => {
+    const { correr } = armar(
+      vi.fn().mockRejectedValue(new DOMException("aborted", "AbortError")),
+    );
+
+    await correr();
+
+    expect(console.error).toHaveBeenCalledWith(
+      "[cerrarSesion] fallo inesperado",
+      "AbortError",
+    );
   });
 });
