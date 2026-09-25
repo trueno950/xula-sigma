@@ -79,6 +79,29 @@ const estilos = StyleSheet.create({
     color: "#d9d9d9",
     transform: "rotate(-30deg)",
   },
+  marcaDeCancelada: {
+    position: "absolute",
+    top: "40%",
+    left: "10%",
+    fontFamily: "Helvetica-Bold",
+    fontSize: 84,
+    color: "#8a8a8a",
+    transform: "rotate(-30deg)",
+  },
+  bandaDeCancelada: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 8,
+    backgroundColor: "#1a1a1a",
+  },
+  textoDeBandaDeCancelada: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 11,
+    color: "#ffffff",
+    textAlign: "center",
+  },
 });
 
 export function ConstanciaDeVecindadV1({
@@ -88,11 +111,21 @@ export function ConstanciaDeVecindadV1({
   qrDataUrl,
   urlDeValidacion,
   reimpresion,
+  cancelada,
 }: PropsDePlantilla) {
   return (
     <Document>
       <Page size="LETTER" style={estilos.pagina}>
-        {reimpresion ? (
+        {cancelada ? (
+          <>
+            <View style={estilos.bandaDeCancelada}>
+              <Text style={estilos.textoDeBandaDeCancelada}>
+                CANCELADA - ESTE DOCUMENTO NO TIENE VALIDEZ
+              </Text>
+            </View>
+            <Text style={estilos.marcaDeCancelada}>CANCELADA</Text>
+          </>
+        ) : reimpresion ? (
           <Text style={estilos.marcaDeAgua}>REIMPRESION</Text>
         ) : null}
 

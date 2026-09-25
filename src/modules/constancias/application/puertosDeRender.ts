@@ -29,6 +29,12 @@ export type EntradaDeRender = {
    * inventado no produce una hoja con marca de agua").
    */
   reimpresion: boolean;
+  /**
+   * `true` cuando la constancia esta cancelada. La plantilla la marca y no
+   * la oculta: el PDF sigue descargable para quien necesita el registro, y
+   * `/validar` ya la declara invalida.
+   */
+  cancelada: boolean;
 };
 
 /**

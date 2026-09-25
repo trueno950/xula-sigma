@@ -21,6 +21,7 @@ export type PropsDePlantilla = {
   qrDataUrl: string;
   urlDeValidacion: string;
   reimpresion: boolean;
+  cancelada: boolean;
 };
 
 export type ComponenteDePlantilla = (props: PropsDePlantilla) => ReactElement;

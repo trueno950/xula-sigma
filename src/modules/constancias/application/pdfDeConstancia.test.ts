@@ -189,6 +189,7 @@ describe("pdfDeConstancia", () => {
       municipio: { nombre: "Motul", escudo: ayuntamientoLeido.escudo },
       urlDeValidacion: `https://motul.${DOMINIO_BASE_POR_DEFECTO}/validar/VEC-2026-000001?c=abc123`,
       reimpresion: false,
+      cancelada: false,
     });
   });
 });
