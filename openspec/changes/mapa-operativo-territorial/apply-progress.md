@@ -1465,3 +1465,103 @@ Review notes, not blockers for U7:
   operator-facing copy. It needs the `DESIGN.md` pass when U8 wires it in.
 - **Proxy buffering.** The response has no `X-Accel-Buffering: no`; verify that
   the Railway proxy does not buffer `text/event-stream`.
+
+## U7 hardening: reconnect resync
+
+Task `4.2a`. Mode: Strict TDD. Delivery: `single-pr`, `size:exception`
+approved. Nothing was staged or committed. This section supersedes review
+notes 1 (DB reconnect gap), 2 (double refresh) and 4 (proxy buffering) of
+"U7 orchestrator verification and test hardening"; note 3 (unstyled island and
+copy without accents) stays open for U8.
+
+### What `postgres` 3.4.9 actually does (`node_modules/postgres/src/index.js`)
+
+- `listen(name, fn, onlisten)` (line 147) runs on its own second client
+  (`listen.sql`, `max: 1`). `onlisten` fires after the `LISTEN` completes, so it
+  fires on the initial listen too (lines 173 and 181).
+- When that connection closes, its `onclose` (lines 156-160) deletes every
+  channel and calls `listen(name, l.fn, l.onlisten)` again, creating new
+  listener objects. `onlisten` therefore fires again after every re-listen, and
+  only then. Every `onlisten` after the first is a reconnect.
+- Library quirk found while verifying (reproduced against real Postgres before
+  it was fixed): the `unlisten` returned by the first `listen` filters by the
+  old listener object (line 188), so after a reconnect it no longer removes
+  anything and the old `fn`/`onlisten` stay registered. Reopening the channel
+  then delivered every payload twice (three times after two prior reconnects)
+  and every later reconnect signal repeatedly.
+
+### Design
+
+- `suscribirActualizaciones(ayuntamientoId, consumidor, alReconectar?)`: the
+  third parameter is optional, so existing callers and the payload contract are
+  unchanged. `alReconectar` fires for every current subscriber of the affected
+  channel, only on re-listens.
+- Each channel opening carries an `abierto` flag, cleared when the channel is
+  closed, so a stale library listener is silenced and a reopen cannot
+  duplicate payloads or reconnect signals.
+- `/eventos` passes `alReconectar` that enqueues the existing `resync` event
+  (guarded by `activo`) and now sends `X-Accel-Buffering: no`.
+- `EstadoEnVivo`: `onopen` only confirms liveness (heartbeat), without
+  `router.refresh()`; `resync` and `actualizacion` refresh. The server always
+  sends `resync` on open, so connect performs one refresh.
+- `AGENTS.md` rule 2 is unchanged: same private connection, same single exit.
+
+### TDD Cycle Evidence — U7 hardening
+
+| Task | Test files | Layer | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|
+| 4.2a hub reconnect | `notificacionesDeTenant.test.ts` | Unit (fake `listen`) | `pnpm vitest run --project unit src/shared/tenancy/notificacionesDeTenant.test.ts` → exit 1; `3 failed, 2 passed` (fake `onlisten` never passed by the hub). | Same command → `Tests 5 passed (5)`. | Initial listen silent vs. re-listen signal for two subscribers, other tenant and closed subscriber excluded, payloads still forwarded to subscribers without a callback. | `Escucha` type; `exactOptionalPropertyTypes` fixed with `\| undefined`. |
+| 4.2a stale listener | same | Unit | Same command → `1 failed, 5 passed`: `expected ['{"tipo":"viejo"}'] to deeply equal []`. | Same command → `Tests 6 passed (6)`. | Payload and `onlisten` of the old listener both ignored after reopen. | None needed. |
+| 4.2a reconnect, real Postgres | `notificacionesDeTenant.integration.test.ts` | Integration | `pnpm vitest run --project integration src/shared/tenancy/notificacionesDeTenant.integration.test.ts` → exit 1; `1 failed, 2 passed`: `expected [ …(3) ] to have a length of 1 but got 3` (duplicates after reconnect; the reconnect-signal test passed once the hub change existed). | Same command → `Tests 3 passed (3)`. | Reconnect test: terminate the LISTEN backend, expect one signal, publish, expect the fresh payload. Duplicate test: reconnect, close, reopen, publish, second reconnect. | `esperarSesionListen` helper; typecheck fix for `noUncheckedIndexedAccess`. |
+| 4.2a route | `route.test.ts` | Unit | `pnpm vitest run --project unit 'src/app/(panel)/eventos/route.test.ts'` → exit 1; `2 failed, 4 passed` (`X-Accel-Buffering` null; reconnect test timed out). After the route change the existing 2-argument `toHaveBeenCalledWith` failed once (`1 failed, 5 passed`) and was updated to 3 arguments. | Same command → `Tests 6 passed (6)`. | Reconnect forwarded as exactly `event: resync\ndata: \n\n`; hub calls after stream cancellation enqueue nothing and do not throw. | None needed. |
+| 4.2a island | `EstadoEnVivo.test.tsx` | Unit | `pnpm vitest run --project unit src/shared/ui/EstadoEnVivo.test.tsx` → exit 1; `1 failed, 4 passed`: refresh mock expected not to be called at all, was called 1 time. | Same command → `Tests 5 passed (5)`. | `onopen` alone marks live (asserted before any heartbeat); `actualizacion` and `resync` each refresh once; no `setInterval`. | None needed. |
+
+### Reconnect determinism
+
+The integration test identifies the hub session in `pg_stat_activity`
+(`usename = current_user`, `pid <> pg_backend_pid()`, `query = 'listen "<canal>"'`)
+using the existing `appSinTenant` connection, and terminates it with
+`pg_terminate_backend`; the app role can terminate its own role's sessions.
+It waits (`vi.waitFor`) for the reconnect signal before publishing, and the
+signal fires only after the re-`LISTEN` completed, so the fresh notification is
+not racy. Observed stable: `notificacionesDeTenant.integration.test.ts` passed
+8 and then 10 consecutive runs after the `abierto` guard, and 5 more after the
+last test edit, with no failure.
+
+### Mutation checks (each applied, observed failing, then restored byte for byte)
+
+| Mutation | Tests that failed |
+|---|---|
+| `avisarReconexion` emits nothing | unit: re-listen signal (2 tests); integration: reconnect signal and no-duplicates (2 tests) |
+| reconnect signal also on the initial listen | unit: 3 tests; integration: reconnect test |
+| remove the `abierto` guard | unit: stale listener; integration: no-duplicates |
+| route does not forward `resync` on reconnect | route: reconnect forwarding |
+| route without the `activo` guard on reconnect | route: no enqueue after cancel |
+| remove `X-Accel-Buffering` | route: subscribe/headers test |
+| `onopen` also refreshes | island: no refresh on open |
+| `onopen` no longer marks live | island: live on open |
+
+Restoration verified with `diff` against copies taken before the mutations
+(identical) and the three unit files re-run green (`17 passed`).
+
+### Gates, run after the last edit
+
+Env exported in the same call: `DATABASE_URL`, `MIGRATION_DATABASE_URL`,
+`SUPER_ADMIN_DATABASE_URL` (port 55432). Nothing ran through `rtk`.
+
+| Check | Exact observed result |
+|---|---|
+| `pnpm typecheck` | exit 0; `$ tsc --noEmit`. (An earlier run failed with `TS2339` in the new integration test under `noUncheckedIndexedAccess`; fixed and rerun.) |
+| `pnpm reglas` | exit 0; `9 reglas y 2 metricas sobre 871 archivos: sin hallazgos.` |
+| `pnpm vitest run --coverage` | exit 0; `Test Files 333 passed (333)`, `Tests 1665 passed (1665)`; `All files` 97.61% statements, 92.73% branches, 98.86% functions, 98.73% lines. |
+| `pnpm check` | exit 0; Biome 56 warnings (unchanged), dependency-cruiser no violations (851 modules), `reglas` no findings. |
+
+### Risk and boundary
+
+- Risk: the library quirk above lives in `postgres` 3.4.9; the `abierto` guard
+  depends on the old listener staying registered rather than being removed,
+  and is safe either way. A leaked `LISTEN` per channel remains until the
+  hub connection ends, bounded by the number of tenants.
+- Rollback boundary: `notificacionesDeTenant.ts`, `eventos/route.ts`,
+  `EstadoEnVivo.tsx` and their three test files; no schema, `AGENTS.md`,
+  `opencode.json` or `next-env.d.ts` change.

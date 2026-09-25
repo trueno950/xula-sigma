@@ -87,6 +87,7 @@ se afirma staging ni producción.
 ### Fase 4: Vivo y navegación
 - [x] 4.1 U7 RED: 401/canal/heartbeat/resync/tenant/no polling; D1/D2.
 - [x] 4.2 U7 GREEN: hub/ruta/isla; refresh manual, no polling.
+- [x] 4.2a U7 endurecimiento: resync tras reconexión de LISTEN, un solo refresh al conectar y X-Accel-Buffering
 - [ ] 4.3 U8 RED: sesión/mapa/historial/push.
 - [ ] 4.4 U8 GREEN: navegación/ruta; D1/D2 aprobadas (2026-09-24), el vivo ya no está bloqueado.
 - [ ] 4.5 Verificar sin `rtk`: `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, cobertura y `pnpm check`. (Corrida verde sobre U1–U6 en `apply-progress.md`; repetir tras U7/U8.)
