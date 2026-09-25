@@ -39,6 +39,12 @@ export function MapaOperativo({ mapa, filtros }: Props) {
             <Link href={marcador.href}>
               {etiquetaDe(marcador.recurso)}: {marcador.etiqueta}
             </Link>
+            {marcador.historiaHref ? (
+              <>
+                {" · "}
+                <Link href={marcador.historiaHref}>Ver historial de calle</Link>
+              </>
+            ) : null}
           </li>
         ))}
       </ul>

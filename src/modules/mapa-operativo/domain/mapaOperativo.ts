@@ -31,6 +31,7 @@ export type MarcadorDeMapa =
       etiqueta: string;
       href: string;
       punto: PuntoDeMapa;
+      historiaHref?: string;
     }
   | {
       recurso: "INTERVENCION";
@@ -38,6 +39,7 @@ export type MarcadorDeMapa =
       etiqueta: string;
       href: string;
       punto: PuntoDeMapa;
+      historiaHref?: string;
     };
 
 export type RecursoDeMapa = MarcadorDeMapa["recurso"];

@@ -1,6 +1,7 @@
 import { agregarMapa, MapaOperativo } from "@/modules/mapa-operativo";
 import { contextoActual } from "@/shared/auth";
 import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import { EstadoEnVivo } from "@/shared/ui/EstadoEnVivo";
 import { leerParametrosDeMapa } from "./parametros";
 
 type Props = {
@@ -20,6 +21,7 @@ export default async function PaginaDeMapaOperativo({ searchParams }: Props) {
         <Migaja pasos={[{ etiqueta: "Mapa operativo" }]} etiqueta="Ruta" />
       }
     >
+      <EstadoEnVivo />
       <MapaOperativo mapa={mapa} filtros={filtros} />
     </PaginaDePanel>
   );

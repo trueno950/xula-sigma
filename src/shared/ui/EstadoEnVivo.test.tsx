@@ -72,8 +72,9 @@ describe("EstadoEnVivo", () => {
   it("arranca desconectada y ofrece el refresco manual", () => {
     const html = renderToStaticMarkup(<EstadoEnVivo />);
 
-    expect(html).toContain("Actualizacion desconectada");
+    expect(html).toContain("Actualización desconectada");
     expect(html).toContain("Actualizar ahora");
+    expect(html).toContain("h-11");
   });
 
   it("no refresca al abrir: refresca con cada actualizacion y cada resync, sin sondear", () => {

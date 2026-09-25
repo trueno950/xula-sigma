@@ -18,6 +18,7 @@ import type {
 
 const hrefDe = (recurso: Hecho["recurso"], id: string) =>
   recurso === "REPORTE" ? `/reportes/detalle/${id}` : `/intervenciones/${id}`;
+const historiaHrefDe = (calleId: string) => `/calles/${calleId}/historial`;
 
 function entradaDe(
   hecho: Hecho,
@@ -26,6 +27,7 @@ function entradaDe(
   const href = hrefDe(hecho.recurso, hecho.id);
   if (calle?.punto) {
     const punto = calle.punto;
+    const historiaHref = historiaHrefDe(calle.id);
     return hecho.recurso === "REPORTE"
       ? {
           marcador: {
@@ -34,6 +36,7 @@ function entradaDe(
             etiqueta: hecho.etiqueta,
             href,
             punto,
+            historiaHref,
           },
         }
       : {
@@ -43,6 +46,7 @@ function entradaDe(
             etiqueta: hecho.etiqueta,
             href,
             punto,
+            historiaHref,
           },
         };
   }

@@ -88,3 +88,30 @@ describe("MapaOperativo", () => {
     expect(html).toContain("0 intervenciones");
   });
 });
+
+it("enlaza cada hecho ubicado al historial de su calle sin reemplazar su detalle", () => {
+  const html = renderToStaticMarkup(
+    <MapaOperativo
+      filtros={{}}
+      mapa={{
+        estado: "CON_DATOS",
+        marcadores: [
+          {
+            id: comoIdDeReporteEnMapa("reporte-3"),
+            recurso: "REPORTE",
+            etiqueta: "REP-3",
+            href: "/reportes/detalle/reporte-3",
+            historiaHref: "/calles/calle-3/historial",
+            punto: { latitud: 20.9, longitud: -89.6 },
+          },
+        ],
+        cobertura: [],
+        conteos: { reportes: 1, intervenciones: 0, total: 1 },
+      }}
+    />,
+  );
+
+  expect(html).toContain('href="/reportes/detalle/reporte-3"');
+  expect(html).toContain('href="/calles/calle-3/historial"');
+  expect(html).toContain("Ver historial de calle");
+});
