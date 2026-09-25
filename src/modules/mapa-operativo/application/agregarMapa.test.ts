@@ -118,6 +118,16 @@ describe("agregarMapa", () => {
     expect(fuentes.intervencionesParaMapa).toHaveBeenCalledWith(contexto);
   });
 
+  it("la etiqueta de una intervencion es su tipo legible, no el codigo", async () => {
+    const { crearAgregarMapa } = await import("./agregarMapa");
+
+    const mapa = await crearAgregarMapa(fuentes)(contexto, {});
+
+    expect(mapa.cobertura).toContainEqual(
+      expect.objectContaining({ recurso: "INTERVENCION", etiqueta: "Obra" }),
+    );
+  });
+
   it("filtra reportes por tipo sin ocultar intervenciones de otro vocabulario", async () => {
     const { crearAgregarMapa } = await import("./agregarMapa");
 

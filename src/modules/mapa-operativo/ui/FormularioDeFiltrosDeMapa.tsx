@@ -4,12 +4,13 @@ import {
   AREAS_PARA_FILTRO,
   ESTADOS_DE_INTERVENCION_PARA_FILTRO,
   ESTADOS_DE_REPORTE_PARA_FILTRO,
+  etiquetaDeFiltro,
   TIPOS_DE_INTERVENCION_PARA_FILTRO,
   TIPOS_DE_REPORTE_PARA_FILTRO,
 } from "../domain";
 
 const opcionesDeCatalogo = (valores: readonly string[]) =>
-  valores.map((valor) => ({ valor, etiqueta: valor }));
+  valores.map((valor) => ({ valor, etiqueta: etiquetaDeFiltro(valor) }));
 const combinar = (...listas: readonly (readonly string[])[]) =>
   Array.from(new Set(listas.flat()));
 

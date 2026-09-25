@@ -45,6 +45,28 @@ describe("MapaOperativo", () => {
     expect(html).toContain('name="area"');
   });
 
+  it("los filtros ofrecen etiquetas legibles y conservan el codigo como valor", () => {
+    const html = renderToStaticMarkup(
+      <MapaOperativo
+        filtros={{}}
+        mapa={{
+          estado: "VACIO",
+          marcadores: [],
+          cobertura: [],
+          conteos: { reportes: 0, intervenciones: 0, total: 0 },
+        }}
+      />,
+    );
+
+    expect(html).toContain('<option value="ALUMBRADO">Alumbrado</option>');
+    expect(html).toContain(
+      '<option value="EN_EJECUCION">En ejecución</option>',
+    );
+    expect(html).toContain(
+      '<option value="AGUA_POTABLE_Y_DRENAJE">Agua potable y drenaje</option>',
+    );
+  });
+
   it("declara la calle en la cobertura faltante por calle sin punto", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo

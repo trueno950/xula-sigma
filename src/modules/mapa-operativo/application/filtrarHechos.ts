@@ -3,6 +3,7 @@ import {
   comoIdDeReporteEnMapa,
   ESTADOS_DE_INTERVENCION_PARA_FILTRO,
   ESTADOS_DE_REPORTE_PARA_FILTRO,
+  etiquetaDeFiltro,
   type IdDeIntervencionEnMapa,
   type IdDeReporteEnMapa,
   TIPOS_DE_INTERVENCION_PARA_FILTRO,
@@ -87,6 +88,6 @@ export function filtrarIntervenciones(
       recurso: "INTERVENCION" as const,
       id: comoIdDeIntervencionEnMapa(i.id),
       calleId: i.calleId,
-      etiqueta: i.tipo,
+      etiqueta: etiquetaDeFiltro(i.tipo),
     }));
 }
