@@ -1,6 +1,7 @@
 export { Aviso } from "./Aviso";
 export { AvisoDePermiso } from "./AvisoDePermiso";
 export { Boton, EnlaceDeAccion } from "./Boton";
+export { BotonDeCerrarSesion } from "./BotonDeCerrarSesion";
 export { Campo } from "./Campo";
 export { CampoDeLista, type OpcionDeLista } from "./CampoDeLista";
 export { ChipDeFiltro } from "./ChipDeFiltro";

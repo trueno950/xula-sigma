@@ -9,6 +9,7 @@ import {
   exigirAyuntamiento,
   superficieActual,
 } from "@/shared/tenancy/contexto";
+import { BotonDeCerrarSesion } from "@/shared/ui/BotonDeCerrarSesion";
 import { variablesDeMarca } from "@/shared/ui/marca";
 import { NavegacionDeModulos } from "./NavegacionDeModulos";
 
@@ -97,7 +98,10 @@ export default async function LayoutDePanel({
             </span>
           </span>
         </Link>
-        <span className="text-[13px] text-caliza-apagada">{rol}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] text-caliza-apagada">{rol}</span>
+          <BotonDeCerrarSesion />
+        </div>
       </header>
 
       <div className="md:grid md:grid-cols-[15rem_1fr] md:items-start">
