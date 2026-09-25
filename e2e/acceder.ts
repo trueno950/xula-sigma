@@ -19,7 +19,7 @@ export async function accederAMotul(
     if (page.url() === urlDe("motul")) return;
 
     await page.getByLabel("Correo").fill(correo);
-    await page.getByLabel("Contrasenia").fill(CLAVE);
+    await page.getByLabel("Contraseña").fill(CLAVE);
     await page.getByRole("button", { name: "Entrar" }).click();
 
     try {

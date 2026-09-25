@@ -24,7 +24,7 @@ async function prepararTiles(page: Page): Promise<void> {
 async function acceder(page: Page): Promise<void> {
   await page.goto(urlDe("motul", "/acceso"));
   await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill(CLAVE);
+  await page.getByLabel("Contraseña").fill(CLAVE);
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.waitForURL(urlDe("motul"));
 }

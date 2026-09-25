@@ -45,7 +45,7 @@ async function acceder(page: import("@playwright/test").Page) {
     if (page.url() === urlDe("motul")) return;
 
     await page.getByLabel("Correo").fill(CORREO);
-    await page.getByLabel("Contrasenia").fill(CLAVE);
+    await page.getByLabel("Contraseña").fill(CLAVE);
     await page.getByRole("button", { name: "Entrar" }).click();
 
     try {

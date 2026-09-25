@@ -17,7 +17,7 @@ import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
   title: { default: "XULA SIGMA", template: "%s · XULA SIGMA" },
-  description: "Sistema integral de gestion municipal",
+  description: "Sistema integral de gestión municipal",
 };
 
 export default function LayoutRaiz({ children }: { children: ReactNode }) {

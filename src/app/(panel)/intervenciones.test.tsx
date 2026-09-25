@@ -174,6 +174,7 @@ describe("navegacion de intervenciones", () => {
       <NavegacionDeModulos ruta="/intervenciones" forma="fila" />,
     );
 
+    expect(html).toContain('aria-label="Módulos"');
     expect(html).toContain('href="/intervenciones"');
     expect(html).toContain("Intervenciones");
     expect(html).toContain('aria-current="page"');

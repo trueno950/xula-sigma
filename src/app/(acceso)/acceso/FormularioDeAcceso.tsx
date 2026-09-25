@@ -44,7 +44,7 @@ const useHidratado = () =>
  * caminos de rechazo —inexistente, clave incorrecta, dado de baja, otro
  * municipio— dicen lo mismo.
  */
-const CREDENCIALES_INVALIDAS = "Correo o contrasenia incorrectos.";
+const CREDENCIALES_INVALIDAS = "Correo o contraseña incorrectos.";
 
 export function FormularioDeAcceso() {
   const [fallo, setFallo] = useState<string | null>(null);
@@ -100,9 +100,7 @@ export function FormularioDeAcceso() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-800">
-          Contrasenia
-        </span>
+        <span className="text-sm font-medium text-neutral-800">Contraseña</span>
         <input
           {...register("password")}
           type="password"

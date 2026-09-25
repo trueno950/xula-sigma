@@ -32,6 +32,11 @@ describe("FormularioDeAcceso antes de hidratar", () => {
     }
   });
 
+  it("rotula el campo de la clave con su eñe", () => {
+    expect(html).toContain(">Contraseña<");
+    expect(html).not.toContain("Contrasenia");
+  });
+
   it("no lleva el valor de la contrasenia en el marcado", () => {
     expect(html).not.toMatch(/name="password"[^>]*value=/);
   });

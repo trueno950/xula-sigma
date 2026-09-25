@@ -24,7 +24,7 @@ async function acceder(page: Page, municipio: "motul" | "ticul") {
   for (let intento = 0; intento < 5; intento++) {
     await page.goto(urlDe(municipio, "/acceso"));
     await page.getByLabel("Correo").fill(CORREO);
-    await page.getByLabel("Contrasenia").fill(CLAVE);
+    await page.getByLabel("Contraseña").fill(CLAVE);
     await page.getByRole("button", { name: "Entrar" }).click();
 
     try {
