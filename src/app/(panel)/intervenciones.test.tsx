@@ -187,7 +187,7 @@ describe("raiz de intervenciones", () => {
 
     expect(html).toContain(">Intervenciones</h1>");
     expect(html).toContain(
-      "La bandeja de intervenciones todavia no esta disponible.",
+      "La bandeja de intervenciones todavía no está disponible.",
     );
     expect(contextoActualMock).not.toHaveBeenCalled();
   });

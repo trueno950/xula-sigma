@@ -16,7 +16,7 @@ export function FormularioDeCorreccion({ intervencion }: Props) {
           htmlFor="intervencion-descripcion"
           className={CLASES_DE_ETIQUETA}
         >
-          Descripcion corregida
+          Descripción corregida
         </label>
         <textarea
           id="intervencion-descripcion"
@@ -29,12 +29,12 @@ export function FormularioDeCorreccion({ intervencion }: Props) {
           className={`w-full rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 py-2 text-[15px] text-caliza-tinta ${ANILLO_DE_FOCO}`}
         />
         <p className={CLASES_DE_ETIQUETA}>
-          No anote nombres, telefonos ni datos de vecinos.
+          No anote nombres, teléfonos ni datos de vecinos.
         </p>
       </div>
 
       <Boton type="submit" variante="primaria">
-        Guardar correccion
+        Guardar corrección
       </Boton>
     </form>
   );

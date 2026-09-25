@@ -80,17 +80,17 @@ describe("acciones de administracion de intervenciones", () => {
     [
       "no encontrado",
       new NoEncontradoError("detalle interno de la fila"),
-      "Esa intervencion no existe.",
+      "Esa intervención no existe.",
     ],
     [
       "intervencion cerrada",
       new IntervencionCerradaError(),
-      "La intervencion ya esta en un estado terminal.",
+      "La intervención ya está en un estado terminal.",
     ],
     [
       "transicion invalida",
       new TransicionInvalidaError(),
-      "La transicion de estado no es valida.",
+      "La transición de estado no es válida.",
     ],
     [
       "validacion",

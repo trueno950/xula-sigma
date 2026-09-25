@@ -125,7 +125,7 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
     page.getByRole("heading", { name: "Intervenciones", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("La bandeja de intervenciones todavia no esta disponible.", {
+    page.getByText("La bandeja de intervenciones todavía no está disponible.", {
       exact: true,
     }),
   ).toBeVisible();
@@ -134,14 +134,14 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
     urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
   );
   await expect(
-    page.getByRole("heading", { name: "Intervencion OBRA", exact: true }),
+    page.getByRole("heading", { name: "Intervención OBRA", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Fecha de ocurrencia")).toBeVisible();
 
   await page
-    .getByLabel("Descripcion corregida")
-    .fill("Descripcion corregida en E2E");
-  await page.getByRole("button", { name: "Guardar correccion" }).click();
+    .getByLabel("Descripción corregida")
+    .fill("Descripción corregida en E2E");
+  await page.getByRole("button", { name: "Guardar corrección" }).click();
 
   await expect(page).toHaveURL(
     urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
@@ -149,7 +149,7 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
   await expect(
     page
       .getByRole("definition")
-      .filter({ hasText: "Descripcion corregida en E2E" }),
+      .filter({ hasText: "Descripción corregida en E2E" }),
   ).toBeVisible();
 });
 

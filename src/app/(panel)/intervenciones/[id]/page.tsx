@@ -76,7 +76,7 @@ export default async function PaginaDeDetalleDeIntervencion({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { id } = await params;
@@ -104,7 +104,7 @@ export default async function PaginaDeDetalleDeIntervencion({
 
   return (
     <PaginaDePanel
-      titulo={`Intervencion ${tipo}`}
+      titulo={`Intervención ${tipo}`}
       ancho="detalle"
       migaja={
         <Migaja
@@ -159,7 +159,7 @@ export default async function PaginaDeDetalleDeIntervencion({
           etiqueta="Reporte de origen"
           valor={enlaceAlReporte(intervencion.reporteId, referencias.reporte)}
         />
-        <Dato etiqueta="Descripcion" valor={intervencion.descripcion} />
+        <Dato etiqueta="Descripción" valor={intervencion.descripcion} />
       </dl>
 
       {puedeAdministrar ? (
@@ -167,7 +167,7 @@ export default async function PaginaDeDetalleDeIntervencion({
           <Panel titulo="Cambiar estado">
             <AccionesDeIntervencion intervencion={intervencion} />
           </Panel>
-          <Panel titulo="Corregir intervencion">
+          <Panel titulo="Corregir intervención">
             <FormularioDeCorreccion intervencion={intervencion} />
           </Panel>
         </>

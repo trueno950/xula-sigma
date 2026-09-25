@@ -44,16 +44,16 @@ const construirPayloadDeCorreccion = (
   descripcion,
 });
 
-const MENSAJE_FORMULARIO_INVALIDO = "Datos de la correccion invalidos.";
+const MENSAJE_FORMULARIO_INVALIDO = "Datos de la corrección inválidos.";
 const MENSAJE_GENERICO =
-  "No se pudo corregir la intervencion. Intente de nuevo.";
+  "No se pudo corregir la intervención. Intente de nuevo.";
 
 const redirigirConError = (id: string, mensaje: string): never =>
   redirect(`/intervenciones/${id}?error=${encodeURIComponent(mensaje)}`);
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
-  if (error instanceof NoEncontradoError) return "Esa intervencion no existe.";
+  if (error instanceof NoEncontradoError) return "Esa intervención no existe.";
   if (error instanceof ValidacionError) return error.message;
   if (error instanceof TenantNoResueltoError) {
     return "No se pudo determinar el ayuntamiento del acceso.";
@@ -92,7 +92,7 @@ export async function corregirIntervencionAction(
   ).catch((error) => redirigirConError(entrada.id, mensajeDeError(error)));
 
   if (!intervencion)
-    return redirigirConError(entrada.id, "Esa intervencion no existe.");
+    return redirigirConError(entrada.id, "Esa intervención no existe.");
 
   try {
     await corregirIntervencion(

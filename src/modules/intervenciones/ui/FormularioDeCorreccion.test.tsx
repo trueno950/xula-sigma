@@ -38,6 +38,6 @@ describe("FormularioDeCorreccion", () => {
     expect(html).not.toContain('name="lugarId"');
     expect(html).not.toContain('name="calleId"');
     expect(html).not.toContain('name="reporteId"');
-    expect(html).toContain("Guardar correccion");
+    expect(html).toContain("Guardar corrección");
   });
 });

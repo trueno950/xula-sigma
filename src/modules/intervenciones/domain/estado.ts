@@ -28,7 +28,7 @@ export const esTerminal = (estado: EstadoDeIntervencion): boolean =>
 export class TransicionInvalidaError extends Error {
   readonly codigo = "TRANSICION_INVALIDA";
 
-  constructor(mensaje = "La transicion de estado no es valida.") {
+  constructor(mensaje = "La transición de estado no es válida.") {
     super(mensaje);
     this.name = "TransicionInvalidaError";
   }
@@ -37,7 +37,7 @@ export class TransicionInvalidaError extends Error {
 export class IntervencionCerradaError extends Error {
   readonly codigo = "INTERVENCION_CERRADA";
 
-  constructor(mensaje = "La intervencion ya esta en un estado terminal.") {
+  constructor(mensaje = "La intervención ya está en un estado terminal.") {
     super(mensaje);
     this.name = "IntervencionCerradaError";
   }
