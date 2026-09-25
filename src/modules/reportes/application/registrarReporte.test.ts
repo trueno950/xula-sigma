@@ -21,6 +21,7 @@ import type {
  */
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
+const tx = { execute: vi.fn() };
 
 vi.mock("@/shared/tenancy/withTenant", () => ({
   withTenant: withTenantMock,
@@ -72,7 +73,7 @@ describe("registrarReporte", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     withTenantMock.mockImplementation(
-      (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
+      (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo(tx),
     );
     lecturaDeUbicaciones = { de: vi.fn() };
     lecturaDeReportantes = { porId: vi.fn() };
