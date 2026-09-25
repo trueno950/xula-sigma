@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   AccionesDeIntervencion,
   comoIntervencionId,
+  ETIQUETA_DE_ESTADO_DE_INTERVENCION,
+  ETIQUETA_DE_TIPO_DE_INTERVENCION,
   FormularioDeCorreccion,
   intervencionPorId,
 } from "@/modules/intervenciones";
@@ -74,15 +76,17 @@ export default async function PaginaDeDetalleDeIntervencion({
     : undefined;
   const puedeAdministrar = puedeAdministrarIntervenciones(contexto.usuario.rol);
 
+  const tipo = ETIQUETA_DE_TIPO_DE_INTERVENCION[intervencion.tipo];
+
   return (
     <PaginaDePanel
-      titulo={`Intervencion ${intervencion.tipo}`}
+      titulo={`Intervencion ${tipo}`}
       ancho="detalle"
       migaja={
         <Migaja
           pasos={[
             { etiqueta: "Intervenciones", href: "/intervenciones" },
-            { etiqueta: intervencion.tipo },
+            { etiqueta: tipo },
           ]}
           etiqueta="Ruta"
         />
@@ -98,8 +102,11 @@ export default async function PaginaDeDetalleDeIntervencion({
       ) : null}
 
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
-        <Dato etiqueta="Tipo" valor={intervencion.tipo} />
-        <Dato etiqueta="Estado" valor={intervencion.estado} />
+        <Dato etiqueta="Tipo" valor={tipo} />
+        <Dato
+          etiqueta="Estado"
+          valor={ETIQUETA_DE_ESTADO_DE_INTERVENCION[intervencion.estado]}
+        />
         <Dato
           etiqueta="Fecha de ocurrencia"
           valor={intervencion.fechaDeOcurrencia}

@@ -8,10 +8,10 @@ import {
 import { cambiarEstadoAction } from "./actions/cambiarEstadoAction";
 
 const ETIQUETAS: Record<EstadoDeIntervencion, string> = {
-  PLANIFICADA: "Marcar en ejecucion",
-  EN_EJECUCION: "Marcar finalizada",
-  FINALIZADA: "Finalizada",
-  CANCELADA: "Cancelada",
+  PLANIFICADA: "Marcar planificada",
+  EN_EJECUCION: "Marcar en ejecución",
+  FINALIZADA: "Marcar finalizada",
+  CANCELADA: "Cancelar",
 };
 function BotonDeEstado({
   id,

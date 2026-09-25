@@ -33,6 +33,22 @@ describe("AccionesDeIntervencion", () => {
     expect(html).toContain('name="estadoNuevo" value="CANCELADA"');
   });
 
+  it("cada boton nombra el estado al que lleva, no el de origen", () => {
+    const desdePlanificada = renderToStaticMarkup(
+      <AccionesDeIntervencion intervencion={base} />,
+    );
+    const desdeEnEjecucion = renderToStaticMarkup(
+      <AccionesDeIntervencion
+        intervencion={{ ...base, estado: "EN_EJECUCION" }}
+      />,
+    );
+
+    expect(desdePlanificada).toContain(">Marcar en ejecución<");
+    expect(desdePlanificada).not.toContain(">Marcar finalizada<");
+    expect(desdeEnEjecucion).toContain(">Marcar finalizada<");
+    expect(desdeEnEjecucion).not.toContain(">Marcar en ejecución<");
+  });
+
   it("explica que un estado terminal no puede reabrirse", () => {
     const html = renderToStaticMarkup(
       <AccionesDeIntervencion

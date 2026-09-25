@@ -12,7 +12,8 @@ const intervencionPorIdMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
-vi.mock("@/modules/intervenciones", () => ({
+vi.mock("@/modules/intervenciones", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/intervenciones")>()),
   AccionesDeIntervencion: () => <div>acciones de estado</div>,
   FormularioDeCorreccion: () => <div>formulario de correccion</div>,
   comoIntervencionId: (id: string) => id,
@@ -82,6 +83,21 @@ describe("ficha de intervencion", () => {
     expect(html).toContain(`<dd class="${CLASES_DE_DATO}">2 mar 2026`);
     expect(html).toContain("formulario de correccion");
     expect(html).toContain("acciones de estado");
+  });
+
+  it("muestra tipo y estado con su etiqueta, no con el codigo", async () => {
+    intervencionPorIdMock.mockResolvedValue({
+      ...intervencion,
+      tipo: "REPAVIMENTACION",
+      estado: "EN_EJECUCION",
+    });
+
+    const html = renderToStaticMarkup(await PaginaDeIntervencion(props()));
+
+    expect(html).toContain(">Repavimentación<");
+    expect(html).toContain(">En ejecución<");
+    expect(html).not.toContain("REPAVIMENTACION");
+    expect(html).not.toContain("EN_EJECUCION");
   });
 
   it("no muestra administracion a un operador", async () => {
