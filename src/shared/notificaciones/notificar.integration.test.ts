@@ -22,6 +22,11 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
+const payloadsAmpliados = [
+  { tipo: "reporte", id: randomUUID(), cambio: "estado" },
+  { tipo: "intervencion", id: randomUUID(), cambio: "correccion" },
+] as const;
+
 describe("publicacion transaccional en el canal del tenant", () => {
   it("entrega una sola notificacion con el payload exacto al confirmar", async () => {
     const escucha = await abrirEscucha(motul);
@@ -33,4 +38,20 @@ describe("publicacion transaccional en el canal del tenant", () => {
     await escucha.esperarSilencio();
     await escucha.cerrar();
   });
+
+  it.each(payloadsAmpliados)(
+    "entrega el payload exacto de $tipo al confirmar",
+    async (ampliado) => {
+      const escucha = await abrirEscucha(motul);
+
+      await withTenant(motul, (tx) =>
+        publicarActualizacion(tx, motul, ampliado),
+      );
+
+      const recibido: unknown = JSON.parse(await escucha.esperar());
+      expect(recibido).toEqual(ampliado);
+      await escucha.esperarSilencio();
+      await escucha.cerrar();
+    },
+  );
 });

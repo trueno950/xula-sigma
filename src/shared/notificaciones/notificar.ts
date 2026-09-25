@@ -21,6 +21,36 @@ export const esquemaDePayloadDeCalle = z.strictObject({
 export type PayloadDeCalle = z.infer<typeof esquemaDePayloadDeCalle>;
 
 /**
+ * Los payloads de reporte e intervencion (D2 de
+ * `mapa-operativo-territorial`): identidad y vocabulario cerrado, nada mas.
+ * Nombres, coordenadas, descripciones, texto libre y tenant no viajan; el
+ * consumidor rehidrata bajo RLS y `pg_notify` tiene un tope de 8000 bytes.
+ */
+export const esquemaDePayloadDeReporte = z.strictObject({
+  tipo: z.literal("reporte"),
+  id: z.uuid(),
+  cambio: z.enum(["alta", "estado", "area"]),
+});
+
+export const esquemaDePayloadDeIntervencion = z.strictObject({
+  tipo: z.literal("intervencion"),
+  id: z.uuid(),
+  cambio: z.enum(["alta", "estado", "correccion"]),
+});
+
+export const esquemaDePayload = z.discriminatedUnion("tipo", [
+  esquemaDePayloadDeCalle,
+  esquemaDePayloadDeReporte,
+  esquemaDePayloadDeIntervencion,
+]);
+
+export type PayloadDeReporte = z.infer<typeof esquemaDePayloadDeReporte>;
+export type PayloadDeIntervencion = z.infer<
+  typeof esquemaDePayloadDeIntervencion
+>;
+export type PayloadDeActualizacion = z.infer<typeof esquemaDePayload>;
+
+/**
  * Publica una actualizacion en el canal del tenant **dentro de la
  * transaccion del llamador**.
  *
@@ -33,9 +63,9 @@ export type PayloadDeCalle = z.infer<typeof esquemaDePayloadDeCalle>;
 export async function publicarActualizacion(
   tx: TransaccionTenant,
   ayuntamientoId: AyuntamientoId,
-  payload: PayloadDeCalle,
+  payload: PayloadDeActualizacion,
 ): Promise<void> {
-  const validado = esquemaDePayloadDeCalle.parse(payload);
+  const validado = esquemaDePayload.parse(payload);
   const canal = canalDeTenant(ayuntamientoId);
   const cuerpo = JSON.stringify(validado);
 
