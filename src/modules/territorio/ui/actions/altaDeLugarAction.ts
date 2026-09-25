@@ -8,6 +8,7 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeLugar } from "../../composicion";
 import {
+  CabeceraDuplicadaError,
   comoLugarId,
   JerarquiaInvalidaError,
   RaizInvalidaError,
@@ -40,6 +41,7 @@ const mensajeDeError = (error: unknown): string => {
   // Sin esto caia en el mensaje generico y el operador perdia lo unico que
   // le dice como salir: que la raiz tiene que ser cabecera o comisaria.
   if (error instanceof RaizInvalidaError) return error.message;
+  if (error instanceof CabeceraDuplicadaError) return error.message;
 
   console.error("[territorio] alta de lugar fallo", datosSegurosDeError(error));
 

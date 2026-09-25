@@ -7,35 +7,14 @@ import {
   aCalleGuardada,
   columnasDeLecturaDeCalle as columnasDeLectura,
 } from "./lecturaDeCalle";
+import { violaRestriccionUnica } from "./violacionDeRestriccion";
 
 /**
- * `postgres.js` (el driver, `shared/tenancy/withTenant.ts`) marca la
- * violacion de restriccion unica con SQLSTATE `23505` y expone el nombre de
- * la restriccion en `constraint_name` -mismo campo que ya lista
- * `registroDeError.ts` como seguro para loguear-, pero drizzle envuelve ese
- * error de Postgres: los campos viven en `.cause`, no en el error que
- * llega aca (mismo hallazgo que documenta `registroDeError.ts`). `crear` y
- * `actualizar` la comparten porque el indice se dispara en las dos
- * operaciones; el porque del rechazo esta en `domain/errores.ts`.
+ * `crear` y `actualizar` la comparten porque el indice se dispara en las
+ * dos operaciones; el porque del rechazo esta en `domain/errores.ts`.
  */
-const esChoqueDeNombreDuplicado = (error: unknown): boolean => {
-  let actual: unknown = error;
-  const vistos = new Set<unknown>();
-
-  while (actual && typeof actual === "object" && !vistos.has(actual)) {
-    vistos.add(actual);
-    const campos = actual as Record<string, unknown>;
-    if (
-      campos.code === "23505" &&
-      campos.constraint_name === "calles_tenant_lugar_nombre_idx"
-    ) {
-      return true;
-    }
-    actual = campos.cause;
-  }
-
-  return false;
-};
+const esChoqueDeNombreDuplicado = (error: unknown): boolean =>
+  violaRestriccionUnica(error, "calles_tenant_lugar_nombre_idx");
 
 /**
  * Implementacion real de `RepositorioDeCalles` contra `calles` (precedente

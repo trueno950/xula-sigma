@@ -5,12 +5,14 @@ import type {
   RepositorioDeLugares,
 } from "../application/puertos";
 import {
+  CabeceraDuplicadaError,
   comoCalleId,
   comoDomicilioId,
   comoLugarId,
   type TipoDeLugar,
 } from "../domain";
 import { domicilios, lugares } from "./esquema";
+import { violaRestriccionUnica } from "./violacionDeRestriccion";
 
 const columnasDeLectura = {
   id: lugares.id,
@@ -69,9 +71,16 @@ const aNodoDeSubarbol = (fila: FilaDeSubarbol): NodoDeSubarbol =>
  */
 export const repositorioDeLugaresSql: RepositorioDeLugares = {
   async crear(tx, { id, ayuntamientoId, tipo, nombre, padreId }) {
-    await tx
-      .insert(lugares)
-      .values({ id, ayuntamientoId, tipo, nombre, padreId });
+    try {
+      await tx
+        .insert(lugares)
+        .values({ id, ayuntamientoId, tipo, nombre, padreId });
+    } catch (error) {
+      if (violaRestriccionUnica(error, "lugares_una_cabecera")) {
+        throw new CabeceraDuplicadaError();
+      }
+      throw error;
+    }
   },
 
   /**

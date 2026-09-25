@@ -146,7 +146,9 @@ export function VistaDeRaices({
 
       {puedeEscribir && altaAbierta ? (
         <Panel titulo="Agregar asentamiento">
-          <FormularioDeAltaDeLugar />
+          <FormularioDeAltaDeLugar
+            hayCabecera={lugares.some((lugar) => lugar.tipo === "cabecera")}
+          />
           <EnlaceDeAccion href="/territorio" variante="fantasma">
             Cancelar
           </EnlaceDeAccion>

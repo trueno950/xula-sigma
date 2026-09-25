@@ -1,12 +1,8 @@
 import { Boton, Campo, CampoDeLista } from "@/shared/ui";
-import {
-  puedeSerRaiz,
-  TIPOS_DE_LUGAR,
-  type TipoDeLugar,
-  tiposContenidosPor,
-} from "../domain";
+import type { TipoDeLugar } from "../domain";
 import { altaDeLugarAction } from "./actions/altaDeLugarAction";
 import { opcionesDeTipos } from "./opciones";
+import { tiposParaElAlta } from "./tiposDelAlta";
 
 type Props = {
   /**
@@ -20,6 +16,8 @@ type Props = {
   padreId?: string;
   /** El tipo del padre, para ofrecer solo lo que ese padre puede contener. */
   tipoDelPadre?: TipoDeLugar;
+  /** El municipio ya tiene su cabecera: sin padre, deja de ofrecerse. */
+  hayCabecera?: boolean;
 };
 
 /**
@@ -33,8 +31,9 @@ type Props = {
  * municipio -que el comentario de `tipoDeLugar.ts` ya declaraba imposible
  * sin que nada lo hiciera cumplir-.
  *
- * Sin padre, los tipos son los de rango 0 (`puedeSerRaiz`). Con padre, los
- * que `tiposContenidosPor` deja pasar. El caso de uso vuelve a validar de
+ * Sin padre, los tipos son los de rango 0 (`puedeSerRaiz`), sin la cabecera
+ * si ya existe. Con padre, los que `tiposContenidosPor` deja pasar
+ * (`tiposParaElAlta`). El caso de uso vuelve a validar de
  * todos modos: esconder una opcion no es una regla (`05-seguridad.md`
  * seccion 6, mismo criterio que los botones por rol).
  *
@@ -45,10 +44,12 @@ export function FormularioDeAltaDeLugar({
   nodo,
   padreId,
   tipoDelPadre,
+  hayCabecera = false,
 }: Props) {
-  const tipos = tipoDelPadre
-    ? tiposContenidosPor(tipoDelPadre)
-    : TIPOS_DE_LUGAR.filter(puedeSerRaiz);
+  const tipos = tiposParaElAlta({
+    hayCabecera,
+    ...(tipoDelPadre ? { tipoDelPadre } : {}),
+  });
 
   return (
     <form action={altaDeLugarAction} className="flex flex-col gap-4">

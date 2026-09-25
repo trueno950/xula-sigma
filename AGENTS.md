@@ -339,7 +339,9 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `altaDePersonaAction`, sin una segunda hoja cliente que complique el
   árbol. Redactan con `NoAutorizadoError`/`NoEncontradoError`; la de alta
   también `JerarquiaInvalidaError` -el rechazo de dominio cuando
-  `puedeContener` da falso- y la de baja, `LugarConDependientesError`.
+  `puedeContener` da falso- y `CabeceraDuplicadaError` -una segunda
+  cabecera en el municipio, `lugares_una_cabecera`-, y la de baja,
+  `LugarConDependientesError`.
 - `reparentearLugarAction` (`capa-territorial`, rebanada 3): mismo motivo,
   y también redacta `JerarquiaInvalidaError`.
 - `altaDeCalleAction`/`renombrarCalleAction` (`capa-territorial`, rebanada
