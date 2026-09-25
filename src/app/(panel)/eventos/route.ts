@@ -1,4 +1,5 @@
 import { contextoActual } from "@/shared/auth";
+import { exigirAyuntamiento } from "@/shared/tenancy/contexto";
 import { suscribirActualizaciones } from "@/shared/tenancy/notificacionesDeTenant";
 
 export const runtime = "nodejs";
@@ -60,6 +61,8 @@ function respuestaDeEventos(
 }
 
 export async function GET(): Promise<Response> {
+  await exigirAyuntamiento();
+
   const contexto = await contextoActual();
   if (!contexto) return new Response(null, { status: 401 });
 

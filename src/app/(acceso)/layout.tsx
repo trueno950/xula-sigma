@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { leerMarca } from "@/shared/marca";
 import {
-  ayuntamientoActual,
+  exigirAyuntamiento,
   superficieActual,
 } from "@/shared/tenancy/contexto";
 import { variablesDeMarca } from "@/shared/ui/marca";
@@ -38,7 +38,7 @@ export default async function LayoutDeAcceso({
 
   if (superficie !== "ayuntamiento") notFound();
 
-  const { marca } = await ayuntamientoActual();
+  const { marca } = await exigirAyuntamiento();
 
   return (
     <div

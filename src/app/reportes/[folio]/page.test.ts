@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 const leerCabeceras = vi.hoisted(() => vi.fn());
 const limitarRitmoMock = vi.hoisted(() => vi.fn());
-const ayuntamientoActualMock = vi.hoisted(() => vi.fn());
+const exigirAyuntamientoMock = vi.hoisted(() => vi.fn());
 const superficieActualMock = vi.hoisted(() => vi.fn());
 const consultarFolioDeReporteMock = vi.hoisted(() => vi.fn());
 const notFoundMock = vi.hoisted(() => vi.fn());
@@ -22,7 +22,7 @@ vi.mock("@/shared/auth/limitarRitmo", () => ({
   limitarRitmo: limitarRitmoMock,
 }));
 vi.mock("@/shared/tenancy/contexto", () => ({
-  ayuntamientoActual: ayuntamientoActualMock,
+  exigirAyuntamiento: exigirAyuntamientoMock,
   superficieActual: superficieActualMock,
 }));
 vi.mock("@/modules/reportes", () => ({
@@ -46,7 +46,7 @@ beforeEach(() => {
     get: () => "189.203.10.7",
   });
   superficieActualMock.mockResolvedValue("ayuntamiento");
-  ayuntamientoActualMock.mockResolvedValue({ id: TENANT });
+  exigirAyuntamientoMock.mockResolvedValue({ id: TENANT });
   limitarRitmoMock.mockResolvedValue(undefined);
 });
 

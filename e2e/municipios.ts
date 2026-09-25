@@ -51,3 +51,13 @@ export const urlDe = (municipio: keyof typeof MUNICIPIOS, ruta = "/") =>
 /** El dominio base pelado, sin municipio: la superficie `raiz`. */
 export const urlDeLaRaiz = (ruta = "/") =>
   `http://${DOMINIO_BASE}:${PUERTO}${ruta}`;
+
+/**
+ * Un subdominio con forma valida que ningun municipio tiene. Distinto del
+ * dominio base pelado: aca el proxy si escribe `superficie: ayuntamiento`,
+ * y la ausencia de municipio solo se descubre contra la base.
+ */
+export const SUBDOMINIO_SIN_MUNICIPIO = "otro";
+
+export const urlDeSinMunicipio = (ruta = "/") =>
+  `http://${SUBDOMINIO_SIN_MUNICIPIO}.${DOMINIO_BASE}:${PUERTO}${ruta}`;
