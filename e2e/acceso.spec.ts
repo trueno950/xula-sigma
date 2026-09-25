@@ -97,13 +97,22 @@ test("un rechazo anterior no convive con el error de validacion nuevo", async ({
   await expect(aviso).toHaveCount(0);
 });
 
-test("sin JavaScript el envio no pone la clave en la URL", async ({
+/**
+ * Lo que una peticion de navegacion tendria en la URL si el formulario
+ * enviara por GET: el correo y la clave como parametros.
+ */
+const filtraLaClave = (url: string) =>
+  url.includes(CLAVE) || url.includes(encodeURIComponent(CORREO));
+
+test("sin JavaScript, Enter no envia el formulario de acceso", async ({
   browser,
 }) => {
   /**
-   * La ventana previa a la hidratacion, reproducida apagando el JS: sin
-   * `method="post"` y sin el boton deshabilitado, Enter enviaba por GET
-   * `/acceso?email=...&password=...`.
+   * La ventana previa a la hidratacion, reproducida apagando el JS. El
+   * boton deshabilitado impide el envio implicito por Enter, asi que el
+   * formulario no navega a ningun lado: la asercion es que **no hubo
+   * peticion de navegacion**, no que la URL no tenga la clave (que se
+   * cumple tambien cuando el formulario esta roto y no navega).
    */
   const contexto = await browser.newContext({ javaScriptEnabled: false });
   const page = await contexto.newPage();
@@ -111,10 +120,49 @@ test("sin JavaScript el envio no pone la clave en la URL", async ({
   await page.goto(urlDe("motul", "/acceso"));
   await page.getByLabel("Correo").fill(CORREO);
   await page.getByLabel("Contrasenia").fill(CLAVE);
+
+  const navegacion = page
+    .waitForRequest((peticion) => peticion.isNavigationRequest(), {
+      timeout: 1_000,
+    })
+    .catch(() => null);
   await page.getByLabel("Contrasenia").press("Enter");
 
-  expect(page.url()).not.toContain("password");
-  expect(page.url()).not.toContain(encodeURIComponent(CORREO));
+  expect(await navegacion).toBeNull();
+  expect(page.url()).toBe(urlDe("motul", "/acceso"));
+  await contexto.close();
+});
+
+test("un envio nativo antes de hidratar nunca lleva la clave en la URL", async ({
+  browser,
+}) => {
+  /**
+   * `requestSubmit()` esquiva el boton deshabilitado: es lo que queda si
+   * alguien lo habilita o el navegador envia por otra via. Sin scripts de
+   * la app el formulario no esta enganchado, asi que el envio es el nativo;
+   * sin `method="post"` seria un GET a `/acceso?email=...&password=...`.
+   */
+  const contexto = await browser.newContext();
+  await contexto.route("**/_next/static/**/*.js", (ruta) => ruta.abort());
+  const page = await contexto.newPage();
+  const urls: string[] = [];
+  page.on("request", (peticion) => urls.push(peticion.url()));
+
+  await page.goto(urlDe("motul", "/acceso"));
+  await page.getByLabel("Correo").fill(CORREO);
+  await page.getByLabel("Contrasenia").fill(CLAVE);
+
+  const navegacion = page.waitForRequest(
+    (peticion) => peticion.isNavigationRequest(),
+    { timeout: 5_000 },
+  );
+  await page
+    .locator("form")
+    .evaluate((formulario) => (formulario as HTMLFormElement).requestSubmit());
+  const enviada = await navegacion;
+
+  expect(enviada.method()).toBe("POST");
+  expect(urls.filter(filtraLaClave)).toEqual([]);
   await contexto.close();
 });
 
@@ -122,12 +170,16 @@ test("los campos del acceso muestran un anillo de foco de 2px", async ({
   page,
 }) => {
   await page.goto(urlDe("motul", "/acceso"));
-  await page.keyboard.press("Tab");
 
-  const correo = page.getByLabel("Correo");
-  await expect(correo).toBeFocused();
-  await expect(correo).toHaveCSS("outline-style", "solid");
-  await expect(correo).toHaveCSS("outline-width", "2px");
+  for (const etiqueta of ["Correo", "Contrasenia"]) {
+    const campo = page.getByLabel(etiqueta);
+
+    // `focus()` y no `Tab`: el orden de tabulacion no es lo que se prueba.
+    await campo.focus();
+    await expect(campo).toBeFocused();
+    await expect(campo).toHaveCSS("outline-style", "solid");
+    await expect(campo).toHaveCSS("outline-width", "2px");
+  }
 });
 
 test("la cookie de Motul no abre sesion en Ticul", async ({ page }) => {
