@@ -1,1 +1,1 @@
-export {};
+export { LineaDeTiempoDeCalle } from "./HistorialDeCalle";

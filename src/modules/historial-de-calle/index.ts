@@ -5,3 +5,4 @@ export {
   type EntradaDeHistorial,
   type HistorialDeCalle,
 } from "./domain";
+export { LineaDeTiempoDeCalle } from "./ui";

@@ -47,3 +47,18 @@ const formateadorDeFecha = new Intl.DateTimeFormat("es-MX", {
 
 export const fechaEnMerida = (fecha: Date): string =>
   formateadorDeFecha.format(fecha);
+
+const formateadorDeFechaCivil = new Intl.DateTimeFormat("es-MX", {
+  timeZone: "UTC",
+  dateStyle: "medium",
+});
+
+/**
+ * Formatea una fecha civil (`YYYY-MM-DD`) que el sistema carga como
+ * medianoche UTC de ese dia, como `fecha_de_ocurrencia` de las
+ * intervenciones. Aqui el `timeZone` es `UTC` a proposito y no `Merida`: esa
+ * medianoche ya ES el dia civil, y en Merida (UTC-6) caeria a las 18:00 del
+ * dia anterior. No sirve para un instante real: para eso, `fechaEnMerida`.
+ */
+export const fechaCivilDeMedianocheUtc = (fecha: Date): string =>
+  formateadorDeFechaCivil.format(fecha);

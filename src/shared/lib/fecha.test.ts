@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   anioEnMerida,
+  fechaCivilDeMedianocheUtc,
   fechaEnMerida,
   fechaYHoraEnMerida,
   hoyEnMerida,
@@ -90,6 +91,26 @@ describe("fechaYHoraEnMerida", () => {
 
     expect(fechaYHoraEnMerida(emitida)).toContain("31 dic");
     expect(fechaYHoraEnMerida(emitida)).not.toContain("1 ene");
+  });
+});
+
+describe("fechaCivilDeMedianocheUtc", () => {
+  it("una fecha civil guardada como medianoche UTC se muestra como ese mismo dia, no el anterior", () => {
+    // La medianoche UTC del 22 de septiembre es las 18:00 del 21 en Merida:
+    // formatearla con `fechaEnMerida` mostraria el dia equivocado.
+    const fechaCivil = new Date("2026-09-22T00:00:00.000Z");
+
+    expect(fechaCivilDeMedianocheUtc(fechaCivil)).toContain("22 sep");
+    expect(fechaEnMerida(fechaCivil)).toContain("21 sep");
+  });
+
+  it("no agrega hora alguna", () => {
+    const texto = fechaCivilDeMedianocheUtc(
+      new Date("2026-01-01T00:00:00.000Z"),
+    );
+
+    expect(texto).toContain("1 ene 2026");
+    expect(texto).not.toMatch(/\d:\d\d/);
   });
 });
 
