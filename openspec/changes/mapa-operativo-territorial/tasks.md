@@ -32,11 +32,20 @@ se afirma staging ni producción.
 
 ### Bloqueadores y decisiones explícitas
 
-- **D1:** falta owner para publicar en vivo alta, estado y corrección de
-  `intervenciones`.
-- **D2:** falta aprobar el payload exacto de `reporte` e `intervencion`.
-- Programables: L0, U3a, U3b, U4a, U5 y U6. U4b-publicación, U7-live y U8
-  quedan bloqueadas por D1/D2; no se inventa resolución.
+- **D1 (aprobada 2026-09-24):** publica el caso de uso de cada módulo, dentro
+  de la transacción de `withTenant`, con `shared/notificaciones` solo como
+  transporte. Puntos: `registrarReporte`, `cambiarEstadoDeReporte`,
+  `asignarAreaDeReporte`, `registrarIntervencion`,
+  `cambiarEstadoDeIntervencion` y `corregirIntervencion`.
+- **D2 (aprobada 2026-09-24):** payloads `strictObject` con id y vocabulario
+  cerrado, sin nombres, coordenadas ni texto libre:
+  `{ tipo: "reporte", id, cambio: "alta" | "estado" | "area" }` y
+  `{ tipo: "intervencion", id, cambio: "alta" | "estado" | "correccion" }`.
+  El cliente solo invalida y hace `router.refresh()`. Obliga a ensanchar
+  `publicarActualizacion` (hoy solo `PayloadDeCalle`) a una unión.
+- Con D1/D2 resueltas ya no hay bloqueo por decisión: U4b-publicación, U7 y U8
+  son programables. La excepción 4 de la regla 2 (LISTEN) sigue pendiente y
+  entra con U7 actualizando `AGENTS.md`.
 
 ## Fases TDD
 
