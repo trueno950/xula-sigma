@@ -109,6 +109,54 @@ test("la pagina de marca muestra su ruta y no desborda en movil ni escritorio", 
     .toBeLessThanOrEqual(dimensionesDeEscritorio.anchoVentana);
 });
 
+/**
+ * El modulo activo es el ultimo de la lista (`Marca`) y a 390px arranca
+ * fuera del tramo visible de la hilera: si la fila no se desplaza hasta el,
+ * el operador no ve donde esta parado.
+ */
+test("la fila movil deja a la vista el modulo activo a 390px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await abrirMarca(page);
+
+  const fila = page.getByRole("navigation", { name: "Módulos" });
+  const activo = fila.getByRole("link", { name: "Marca" });
+
+  await expect(activo).toHaveAttribute("aria-current", "page");
+
+  await expect
+    .poll(
+      async () => {
+        const cajaDeLaFila = await fila.boundingBox();
+        const cajaDelActivo = await activo.boundingBox();
+        if (!cajaDeLaFila || !cajaDelActivo) return "sin caja";
+
+        const dentroDeLaFila =
+          cajaDelActivo.x >= cajaDeLaFila.x &&
+          cajaDelActivo.x + cajaDelActivo.width <=
+            cajaDeLaFila.x + cajaDeLaFila.width;
+        const dentroDeLaVentana =
+          cajaDelActivo.x >= 0 && cajaDelActivo.x + cajaDelActivo.width <= 390;
+
+        return dentroDeLaFila && dentroDeLaVentana
+          ? "visible"
+          : `fila=${JSON.stringify(cajaDeLaFila)} activo=${JSON.stringify(cajaDelActivo)}`;
+      },
+      {
+        message:
+          "El modulo activo debe quedar dentro del tramo visible de la hilera",
+        timeout: 10_000,
+      },
+    )
+    .toBe("visible");
+
+  expect(
+    await page.evaluate(() => window.scrollY),
+    "El ajuste del modulo activo no debe desplazar la pagina en vertical",
+  ).toBe(0);
+});
+
 test("un archivo de mas de 1 MiB muestra el mensaje de peso, no falla mudo", async ({
   page,
 }) => {
