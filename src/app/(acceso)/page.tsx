@@ -50,7 +50,7 @@ export default async function PaginaDeInicio() {
           <Link
             key={modulo.ruta}
             href={modulo.ruta}
-            className="flex flex-col gap-0.5 rounded-sm border border-caliza-divisor bg-white p-4 transition-colors hover:border-marca"
+            className="flex flex-col gap-0.5 rounded-sm border border-caliza-divisor bg-caliza-superficie p-4 transition-colors hover:border-marca"
           >
             <strong className="text-[15px] text-caliza-tinta">
               {modulo.nombre}
