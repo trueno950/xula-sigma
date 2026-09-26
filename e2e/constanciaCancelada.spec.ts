@@ -36,6 +36,17 @@ test.beforeAll(async () => {
   constancias = await sembrarConstancias();
 });
 
+test("sembrar constancias reserva consecutivos distintos en paralelo", async () => {
+  const aleatorioOriginal = Math.random;
+  Math.random = () => 0.5;
+
+  try {
+    await Promise.all([sembrarConstancias(), sembrarConstancias()]);
+  } finally {
+    Math.random = aleatorioOriginal;
+  }
+});
+
 const pdfDe = (id: string) => urlDe("motul", `/constancias/${id}/pdf`);
 
 test("el PDF de una constancia cancelada sigue disponible pero marcado", async ({

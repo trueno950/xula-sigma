@@ -65,10 +65,20 @@ export async function sembrarConstancias(): Promise<ConstanciasSembradas> {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("Falta DATABASE_URL para el E2E.");
 
-  const base = 800000 + Math.floor(Math.random() * 100000) * 2;
   const app = postgres(url, { max: 1 });
   try {
     return await app.begin(async (tx) => {
+      await tx`SELECT set_config('app.tenant', ${MUNICIPIOS.motul.id}, true)`;
+      const [reserva] = await tx<{ ultimo_consecutivo: number }[]>`
+        INSERT INTO folios_de_documentos (ayuntamiento_id, tipo, anio, ultimo_consecutivo)
+        VALUES (${MUNICIPIOS.motul.id}, 'VECINDAD', 2026, 2)
+        ON CONFLICT (ayuntamiento_id, tipo, anio)
+        DO UPDATE SET ultimo_consecutivo = folios_de_documentos.ultimo_consecutivo + 2
+        RETURNING ultimo_consecutivo
+      `;
+      if (!reserva) throw new Error("Falta la reserva de consecutivos.");
+      const base = reserva.ultimo_consecutivo - 1;
+
       const [vigenteId, canceladaId] = await sembrarMunicipio(tx, "motul", [
         { consecutivo: base, cancelada: false },
         { consecutivo: base + 1, cancelada: true },
