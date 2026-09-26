@@ -77,4 +77,46 @@ describe("subirEscudo", () => {
       );
     },
   );
+
+  it("registra solo el nombre de un error rechazado", async () => {
+    const error = new Error(
+      "synthetic-file-canary.png synthetic-personal-data-canary",
+    );
+    error.name = "ErrorDeTransporte";
+    const accion = vi.fn(async (_formData: FormData) => {
+      throw error;
+    });
+    const registro = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      await expect(subirEscudo(archivo, accion)).resolves.toEqual({
+        ok: false,
+        mensaje: MENSAJE_DE_SUBIDA_FALLIDA,
+      });
+      expect(registro.mock.calls).toEqual([
+        ["Fallo al subir el escudo", "ErrorDeTransporte"],
+      ]);
+    } finally {
+      registro.mockRestore();
+    }
+  });
+
+  it("registra solo el tipo de un rechazo que no es Error", async () => {
+    const accion = vi.fn(async (_formData: FormData) => {
+      throw { message: "synthetic-personal-data-canary" };
+    });
+    const registro = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      await expect(subirEscudo(archivo, accion)).resolves.toEqual({
+        ok: false,
+        mensaje: MENSAJE_DE_SUBIDA_FALLIDA,
+      });
+      expect(registro.mock.calls).toEqual([
+        ["Fallo al subir el escudo", "object"],
+      ]);
+    } finally {
+      registro.mockRestore();
+    }
+  });
 });
