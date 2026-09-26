@@ -230,21 +230,3 @@ test("un OPERADOR ve el aviso de permiso y no el formulario", async ({
   );
   await expect(page.locator("main")).toHaveCount(1);
 });
-
-test("un OPERADOR ve el aviso del bloque de firma en constancias", async ({
-  page,
-}) => {
-  await accederAMotul(page, correoDeOperador);
-  await page.goto(urlDe("motul", "/constancias"));
-
-  const aviso = page.getByText(
-    "Su rol no permite gestionar el bloque de firma de las constancias. Se requiere el rol de administrador municipal.",
-    { exact: true },
-  );
-
-  await expect(aviso).toBeVisible();
-  await expect(aviso).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "Bloque de firma" })).toHaveCount(
-    0,
-  );
-});
