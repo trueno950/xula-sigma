@@ -40,7 +40,7 @@ async function abrirCalle(
 
 async function verificarLugarVacio(page: Page, lugarId: string): Promise<void> {
   await page.goto(urlDe("motul", territorio(lugarId)));
-  await expect(page.getByText(/no tiene calles todavia/)).toBeVisible();
+  await expect(page.getByText(/no tiene calles todavía/)).toBeVisible();
 }
 
 async function ubicarYReparentear(
@@ -56,7 +56,7 @@ async function ubicarYReparentear(
   await page.waitForLoadState("networkidle");
   await page.getByRole("link", { name: "Mover a otro lugar" }).click();
   await page.getByLabel("Nuevo lugar").selectOption({
-    label: `${escenario.destino} (comisaria)`,
+    label: `${escenario.destino} (comisaría)`,
   });
   await page.getByRole("button", { name: "Mover calle" }).click();
   await page.waitForLoadState("networkidle");
@@ -71,7 +71,7 @@ async function rechazarMovimientoDuplicado(
   await page.getByText("Acciones de calle").click();
   await page.getByRole("link", { name: "Mover a otro lugar" }).click();
   await page.getByLabel("Nuevo lugar").selectOption({
-    label: `${escenario.destino} (comisaria)`,
+    label: `${escenario.destino} (comisaría)`,
   });
   await page.getByRole("button", { name: "Mover calle" }).click();
   await expect(
@@ -134,7 +134,7 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
     urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
   );
   await expect(
-    page.getByRole("heading", { name: "Intervención OBRA", exact: true }),
+    page.getByRole("heading", { name: "Intervención Obra", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Fecha de ocurrencia")).toBeVisible();
 
