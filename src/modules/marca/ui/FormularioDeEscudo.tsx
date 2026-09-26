@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { ANILLO_DE_FOCO } from "@/shared/ui/estilos";
 import { cambiarEscudoAction } from "./actions/cambiarEscudo.action";
 import { subirEscudo } from "./subirEscudo";
 
@@ -60,7 +61,7 @@ export function FormularioDeEscudo() {
           {...register("escudo", { required: "Elija un archivo PNG." })}
           type="file"
           accept="image/png"
-          className="rounded border border-neutral-300 px-3 py-2 outline-none focus:border-marca"
+          className={`rounded border border-neutral-300 px-3 py-2 ${ANILLO_DE_FOCO}`}
         />
         {errors.escudo ? (
           <span className="text-sm text-red-700">{errors.escudo.message}</span>
