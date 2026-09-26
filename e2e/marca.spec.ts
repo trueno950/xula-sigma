@@ -61,7 +61,7 @@ test("un archivo de mas de 1 MiB muestra el mensaje de peso, no falla mudo", asy
   await elegirArchivo(page, 1_200_000);
 
   await expect(page.locator("form").getByRole("alert")).toHaveText(
-    "El archivo pesa mas de 1 MiB.",
+    "El archivo pesa más de 1 MiB.",
   );
   await expect(
     page.getByRole("button", { name: "Guardar escudo" }),
@@ -77,7 +77,7 @@ test("un archivo que cabe en 1 MiB pero no es PNG dice que no es PNG", async ({
   await elegirArchivo(page, UN_MIB);
 
   await expect(page.locator("form").getByRole("alert")).toHaveText(
-    "El archivo no es un PNG valido.",
+    "El archivo no es un PNG válido.",
   );
 });
 
@@ -87,7 +87,7 @@ test("un archivo vacio dice que esta vacio", async ({ page }) => {
   await elegirArchivo(page, 0);
 
   await expect(page.locator("form").getByRole("alert")).toHaveText(
-    "El archivo esta vacio.",
+    "El archivo está vacío.",
   );
 });
 

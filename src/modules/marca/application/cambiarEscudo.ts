@@ -31,11 +31,11 @@ import type { AlmacenDeAssets, RepositorioDeMarca } from "./puertos";
  */
 
 const MENSAJES_DE_RECHAZO: Record<MotivoDeRechazo, string> = {
-  VACIO: "El archivo esta vacio.",
-  DEMASIADO_GRANDE: "El archivo pesa mas de 1 MiB.",
-  NO_ES_PNG: "El archivo no es un PNG valido.",
-  SIN_IHDR: "El archivo no es un PNG valido.",
-  DIMENSIONES: "El escudo debe medir entre 80x80 y 2048x2048 pixeles.",
+  VACIO: "El archivo está vacío.",
+  DEMASIADO_GRANDE: "El archivo pesa más de 1 MiB.",
+  NO_ES_PNG: "El archivo no es un PNG válido.",
+  SIN_IHDR: "El archivo no es un PNG válido.",
+  DIMENSIONES: "El escudo debe medir entre 80x80 y 2048x2048 píxeles.",
 };
 
 const esObjetoPlano = (valor: unknown): valor is Record<string, unknown> =>
