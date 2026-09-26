@@ -1,4 +1,3 @@
-import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -65,7 +64,6 @@ vi.mock("@/modules/territorio", async () => ({
 const { default: PaginaDePersona } = await import("./padron/[id]/page");
 const { default: PaginaDeConstancia } = await import("./constancias/[id]/page");
 const { default: PaginaDeTerritorio } = await import("./territorio/page");
-const { TerritorioCargado } = await import("./territorio/TerritorioCargado");
 const { default: PaginaDeEmision } = await import("./constancias/emitir/page");
 
 const UUID_AJENO = "11111111-1111-4111-8111-111111111111";
@@ -147,14 +145,10 @@ describe("un recurso que no es de este municipio", () => {
       nombre: "Motul",
     });
 
-    const pagina = (await PaginaDeTerritorio({
-      searchParams: Promise.resolve({ raiz: UUID_AJENO, nodo: UUID_OTRO }),
-    })) as ReactElement<{
-      children: ReactElement<Parameters<typeof TerritorioCargado>[0]>;
-    }>;
-
     await expect(
-      TerritorioCargado(pagina.props.children.props),
+      PaginaDeTerritorio({
+        searchParams: Promise.resolve({ raiz: UUID_AJENO, nodo: UUID_OTRO }),
+      }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFoundMock).toHaveBeenCalled();
   });

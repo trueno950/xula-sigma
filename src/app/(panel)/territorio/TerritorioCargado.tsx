@@ -8,7 +8,10 @@ import {
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { Aviso, PaginaDePanel } from "@/shared/ui";
 import { accionesDeRaiz } from "./AccionesDeRaiz";
-import { cargarTerritorio } from "./cargaDeTerritorio";
+import {
+  cargarTerritorio,
+  type SeleccionDeTerritorio,
+} from "./cargaDeTerritorio";
 import type { ParametrosDeTerritorio } from "./parametros";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 import { VistaDeLugar } from "./VistaDeLugar";
@@ -17,23 +20,21 @@ type Props = {
   contexto: ContextoActual;
   parametros: ParametrosDeTerritorio;
   raiz: LugarGuardado | null;
+  seleccion: SeleccionDeTerritorio;
 };
 
 /**
  * La pantalla con los datos ya cargados, dentro del Suspense de `page.tsx`.
- *
- * La guarda de la raiz corre en la pagina, fuera de este limite: un
- * `notFound()` que llega aqui ya no puede cambiar el estado enviado. El
- * esqueleto que se ve mientras tanto es `EsqueletoDeTerritorio`, y no un
- * `loading.tsx`, por el mismo motivo.
+ * La raiz y la seleccion que pueden producir 404 llegan resueltas desde la
+ * pagina; aqui corren las lecturas restantes, que cubre el esqueleto.
  */
 export const TerritorioCargado = async ({
   contexto,
   parametros,
   raiz,
+  seleccion,
 }: Props) => {
   const {
-    raiz: raizCargada,
     nodos,
     nodo,
     calles,
@@ -44,20 +45,18 @@ export const TerritorioCargado = async ({
     puedeCrearLugar,
     registroAbierto,
     callesDelMunicipio,
-  } = await cargarTerritorio(contexto, parametros, raiz);
+  } = await cargarTerritorio({ contexto, parametros, raiz, seleccion });
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, vista } = parametros;
 
   return (
     <PaginaDePanel
       titulo="Territorio"
-      accion={
-        raizCargada ? undefined : accionesDeRaiz({ puedeCrearLugar, accion })
-      }
+      accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar, accion })}
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      {!raizCargada ? (
+      {!raiz ? (
         <>
           {registroAbierto ? (
             <RegistroDeDomicilio
@@ -76,7 +75,7 @@ export const TerritorioCargado = async ({
         </>
       ) : nodo ? (
         <VistaDeLugar
-          raiz={raizCargada}
+          raiz={raiz}
           nodos={nodos}
           nodo={nodo}
           calles={calles}

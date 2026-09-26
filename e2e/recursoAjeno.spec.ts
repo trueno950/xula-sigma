@@ -5,7 +5,12 @@ import { accederAMotul } from "./acceder";
 import { liberarVentanaDeRitmo } from "./calles.fixture";
 import { MUNICIPIOS, urlDe } from "./municipios";
 
-type Recursos = { personaId: string; lugarId: string };
+type Recursos = {
+  personaId: string;
+  lugarId: string;
+  calleId: string;
+  domicilioId: string;
+};
 
 type Sembrado = { propio: Recursos; ajeno: Recursos };
 
@@ -26,10 +31,39 @@ const sembrarEn = async (
     VALUES (${id}, 'comisaria', ${`Comisaria ${marca}`})
     RETURNING id
   `;
-
   if (!persona || !lugar) throw new Error("Falta la siembra de recursos.");
 
-  return { personaId: persona.id, lugarId: lugar.id };
+  return {
+    personaId: persona.id,
+    lugarId: lugar.id,
+    ...(await sembrarCalleYDomicilio(tx, id, lugar.id, marca)),
+  };
+};
+
+const sembrarCalleYDomicilio = async (
+  tx: postgres.TransactionSql,
+  ayuntamientoId: string,
+  lugarId: string,
+  marca: string,
+) => {
+  const [calle] = await tx<{ id: string }[]>`
+    INSERT INTO calles (ayuntamiento_id, nombre, lugar_id)
+    VALUES (${ayuntamientoId}, ${`Calle ${marca}`}, ${lugarId})
+    RETURNING id
+  `;
+  if (!calle) throw new Error("Falta la siembra de recursos.");
+
+  const [domicilio] = await tx<{ id: string }[]>`
+    INSERT INTO domicilios (ayuntamiento_id, lugar_id, calle_id)
+    VALUES (${ayuntamientoId}, ${lugarId}, ${calle.id})
+    RETURNING id
+  `;
+  if (!domicilio) throw new Error("Falta la siembra de recursos.");
+
+  return {
+    calleId: calle.id,
+    domicilioId: domicilio.id,
+  };
 };
 
 async function sembrar(): Promise<Sembrado> {
@@ -92,4 +126,42 @@ test("territorio con una raiz de otro municipio o inexistente da 404", async ({
     await estadoDe(page, `/territorio?raiz=${recursos.propio.lugarId}`),
   ).toBe(200);
   expect(await estadoDe(page, "/territorio")).toBe(200);
+});
+
+test("territorio responde 404 HTTP para nodo, calle y domicilio ajenos", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+
+  const estadosAjenos = [
+    await estadoDe(
+      page,
+      `/territorio?raiz=${recursos.propio.lugarId}&nodo=${recursos.ajeno.lugarId}`,
+    ),
+    await estadoDe(
+      page,
+      `/territorio?raiz=${recursos.propio.lugarId}&nodo=${recursos.propio.lugarId}&calle=${recursos.ajeno.calleId}`,
+    ),
+    await estadoDe(
+      page,
+      `/territorio?raiz=${recursos.propio.lugarId}&nodo=${recursos.propio.lugarId}&domicilio=${recursos.ajeno.domicilioId}`,
+    ),
+  ];
+  const estadosPropios = [
+    await estadoDe(
+      page,
+      `/territorio?raiz=${recursos.propio.lugarId}&nodo=${recursos.propio.lugarId}`,
+    ),
+    await estadoDe(
+      page,
+      `/territorio?raiz=${recursos.propio.lugarId}&nodo=${recursos.propio.lugarId}&calle=${recursos.propio.calleId}`,
+    ),
+    await estadoDe(
+      page,
+      `/territorio?raiz=${recursos.propio.lugarId}&nodo=${recursos.propio.lugarId}&domicilio=${recursos.propio.domicilioId}`,
+    ),
+  ];
+
+  expect(estadosAjenos).toEqual([404, 404, 404]);
+  expect(estadosPropios).toEqual([200, 200, 200]);
 });

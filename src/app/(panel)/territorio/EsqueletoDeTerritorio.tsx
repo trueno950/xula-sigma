@@ -1,15 +1,12 @@
 import { EsqueletoDeFilas } from "@/shared/ui";
 
 /**
- * Lo que se ve mientras `TerritorioCargado` resuelve el arbol.
+ * Lo que se ve mientras `TerritorioCargado` resuelve las lecturas que
+ * quedaron dentro del Suspense. El esqueleto tiene la altura de las filas
+ * que vienen.
  *
- * Territorio es la pantalla que mas consultas hace antes de pintar —raices,
- * lugar, subarbol, domicilios, calles— asi que es donde la pantalla en
- * blanco duraba mas. El esqueleto tiene la altura de las filas que vienen.
- *
- * No es un `loading.tsx`: ese archivo envuelve a la pagina entera, y Next ya
- * envio el estado 200 cuando `notFound()` corre dentro de el. Este vive en
- * el Suspense de `page.tsx`, despues de la guarda de la raiz.
+ * No es un `loading.tsx`: el motivo, y la guarda que por eso corre antes de
+ * este limite, vive en `page.tsx`.
  */
 export function EsqueletoDeTerritorio() {
   return (
