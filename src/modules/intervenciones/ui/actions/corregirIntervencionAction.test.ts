@@ -121,7 +121,7 @@ describe("corregirIntervencionAction", () => {
     [
       "autorizacion",
       new NoAutorizadoError(),
-      "No tiene permiso para esta operacion.",
+      "No tiene permiso para esta operación.",
     ],
     [
       "validacion",

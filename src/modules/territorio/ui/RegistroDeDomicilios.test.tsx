@@ -63,7 +63,7 @@ describe("RegistroDeDomicilios", () => {
     });
 
     expect(html).toContain("Todavía no hay domicilios registrados.");
-    expect(html).not.toContain("Ver mas");
+    expect(html).not.toContain("Ver más");
   });
 
   it("con un filtro puesto sin resultados nombra el filtro que vacio la lista", () => {
@@ -78,11 +78,11 @@ describe("RegistroDeDomicilios", () => {
   });
 
   it("no ofrece Ver mas cuando el registro no trajo una fila de mas", () => {
-    expect(render({ hayMas: false })).not.toContain("Ver mas");
+    expect(render({ hayMas: false })).not.toContain("Ver más");
   });
 
   it("ofrece Ver mas solo cuando hay una pagina siguiente", () => {
-    expect(render({ hayMas: true })).toContain("Ver mas");
+    expect(render({ hayMas: true })).toContain("Ver más");
   });
 
   it("el Ver mas lleva los filtros puestos y un limite mayor, nunca reiniciado", () => {
