@@ -2,8 +2,19 @@ import type { Metadata } from "next";
 import { FormularioDeEscudo } from "@/modules/marca";
 import { contextoActual } from "@/shared/auth";
 import { puedeCambiarMarca } from "@/shared/auth/roles";
+import { Aviso, Migaja, PaginaDePanel } from "@/shared/ui";
 
 export const metadata: Metadata = { title: "Marca" };
+
+const migaja = (
+  <Migaja
+    pasos={[
+      { etiqueta: "Inicio", href: "/" },
+      { etiqueta: "Escudo del ayuntamiento" },
+    ]}
+    etiqueta="Ruta"
+  />
+);
 
 /**
  * Ruta fina: compone el formulario. `(panel)/layout.tsx` ya exige sesion;
@@ -17,20 +28,25 @@ export default async function PaginaDeMarca() {
 
   if (!contexto || !puedeCambiarMarca(contexto.usuario.rol)) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-4 p-6">
-        <p className="text-sm text-neutral-700">
+      <PaginaDePanel
+        titulo="Escudo del ayuntamiento"
+        ancho="formulario"
+        migaja={migaja}
+      >
+        <Aviso tono="aviso">
           Su rol no tiene permiso para cambiar la marca del ayuntamiento.
-        </p>
-      </main>
+        </Aviso>
+      </PaginaDePanel>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-8 p-6">
-      <h1 className="text-xl font-semibold text-neutral-900">
-        Escudo del ayuntamiento
-      </h1>
+    <PaginaDePanel
+      titulo="Escudo del ayuntamiento"
+      ancho="formulario"
+      migaja={migaja}
+    >
       <FormularioDeEscudo />
-    </main>
+    </PaginaDePanel>
   );
 }

@@ -18,7 +18,6 @@ const UN_MIB = 1024 * 1024;
 const correoDeOperador = `operador-${randomUUID()}@example.com`;
 
 test.beforeAll(async () => {
-  await liberarVentanaDeRitmo();
   const motul = comoAyuntamientoId(MUNICIPIOS.motul.id);
 
   try {
@@ -35,6 +34,14 @@ test.beforeAll(async () => {
   }
 });
 
+/**
+ * Este spec entra una vez por test y la ventana de ritmo por correo es de
+ * cinco intentos cada quince minutos: limpiarla una sola vez por archivo
+ * dejaba al ultimo acceso sobre lo que gastaron los anteriores. Misma
+ * forma que `titulos.spec.ts` y `sesion.spec.ts`.
+ */
+test.beforeEach(liberarVentanaDeRitmo);
+
 const elegirArchivo = async (page: Page, bytes: number) => {
   await page
     .getByLabel("Escudo del ayuntamiento", { exact: true })
@@ -50,6 +57,57 @@ const abrirMarca = async (page: Page) => {
   await accederAMotul(page);
   await page.goto(urlDe("motul", "/marca"));
 };
+
+test("la pagina de marca muestra su ruta y no desborda en movil ni escritorio", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await abrirMarca(page);
+
+  const dimensionesMoviles = await page.evaluate(() => ({
+    altoDocumento: document.documentElement.scrollHeight,
+    altoVentana: window.innerHeight,
+  }));
+  expect
+    .soft(
+      dimensionesMoviles.altoDocumento,
+      `Desbordamiento vertical a 390px: ${dimensionesMoviles.altoDocumento}px de documento y ${dimensionesMoviles.altoVentana}px de ventana`,
+    )
+    .toBeLessThanOrEqual(dimensionesMoviles.altoVentana);
+
+  const migaja = page.getByRole("navigation", { name: "Ruta" });
+  expect.soft(await migaja.count(), "La pagina debe mostrar la migaja").toBe(1);
+  expect
+    .soft(
+      await migaja.getByRole("link", { name: "Inicio" }).getAttribute("href"),
+      "Inicio debe enlazar a la raiz del panel",
+    )
+    .toBe("/");
+  expect
+    .soft(
+      await migaja
+        .getByText("Escudo del ayuntamiento", { exact: true })
+        .getAttribute("aria-current"),
+      "El escudo del ayuntamiento debe ser el paso actual",
+    )
+    .toBe("page");
+  expect.soft(await page.locator("main").count()).toBe(1);
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(
+    page.getByRole("heading", { name: "Escudo del ayuntamiento" }),
+  ).toBeVisible();
+  const dimensionesDeEscritorio = await page.evaluate(() => ({
+    anchoDocumento: document.documentElement.scrollWidth,
+    anchoVentana: window.innerWidth,
+  }));
+  expect
+    .soft(
+      dimensionesDeEscritorio.anchoDocumento,
+      "La pagina no debe desbordar horizontalmente en escritorio",
+    )
+    .toBeLessThanOrEqual(dimensionesDeEscritorio.anchoVentana);
+});
 
 test("un archivo de mas de 1 MiB muestra el mensaje de peso, no falla mudo", async ({
   page,
@@ -119,4 +177,8 @@ test("un OPERADOR ve el aviso de permiso y no el formulario", async ({
     page.getByText("Su rol no tiene permiso para cambiar la marca"),
   ).toBeVisible();
   await expect(page.getByLabel("Escudo del ayuntamiento")).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Ruta" })).toContainText(
+    "Inicio",
+  );
+  await expect(page.locator("main")).toHaveCount(1);
 });
