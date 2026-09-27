@@ -4,7 +4,7 @@ import { consultarFolioDeReporte } from "@/modules/reportes";
 import { limitarRitmo } from "@/shared/auth/limitarRitmo";
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
-  ayuntamientoActual,
+  exigirAyuntamiento,
   superficieActual,
 } from "@/shared/tenancy/contexto";
 
@@ -41,7 +41,7 @@ export default async function PaginaDeConsultaDeReporte({ params }: Props) {
   const cabeceras = await headers();
   if ((await superficieActual()) !== "ayuntamiento") notFound();
 
-  const { id: ayuntamientoId } = await ayuntamientoActual();
+  const { id: ayuntamientoId } = await exigirAyuntamiento();
   const { folio } = await params;
 
   // El limitador corre ANTES del caso de uso, con la IP como unica clave

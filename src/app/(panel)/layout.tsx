@@ -6,7 +6,7 @@ import { contextoActual } from "@/shared/auth";
 import { leerMarca } from "@/shared/marca";
 import { CABECERA_RUTA } from "@/shared/tenancy/cabeceras";
 import {
-  ayuntamientoActual,
+  exigirAyuntamiento,
   superficieActual,
 } from "@/shared/tenancy/contexto";
 import { variablesDeMarca } from "@/shared/ui/marca";
@@ -52,11 +52,11 @@ export default async function LayoutDePanel({
 
   if (superficie !== "ayuntamiento") notFound();
 
+  const ayuntamiento = await exigirAyuntamiento();
   const contexto = await contextoActual();
 
   if (!contexto) redirect("/acceso");
 
-  const ayuntamiento = await ayuntamientoActual();
   const marca = leerMarca(ayuntamiento.marca);
   const rol = ETIQUETA_DE_ROL[contexto.usuario.rol] ?? contexto.usuario.rol;
   // La escribe el proxy con la ruta real del request; el cliente no la

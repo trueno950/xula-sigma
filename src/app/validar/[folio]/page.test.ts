@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 const leerCabeceras = vi.hoisted(() => vi.fn());
 const limitarRitmoMock = vi.hoisted(() => vi.fn());
-const ayuntamientoActualMock = vi.hoisted(() => vi.fn());
+const exigirAyuntamientoMock = vi.hoisted(() => vi.fn());
 const validarFolioMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/headers", () => ({ headers: leerCabeceras }));
@@ -20,7 +20,7 @@ vi.mock("@/shared/auth/limitarRitmo", () => ({
   limitarRitmo: limitarRitmoMock,
 }));
 vi.mock("@/shared/tenancy/contexto", () => ({
-  ayuntamientoActual: ayuntamientoActualMock,
+  exigirAyuntamiento: exigirAyuntamientoMock,
   superficieActual: vi.fn().mockResolvedValue("ayuntamiento"),
 }));
 vi.mock("@/modules/constancias", () => ({ validarFolio: validarFolioMock }));
@@ -44,7 +44,7 @@ describe("fuga de datos personales en /validar/[folio]", () => {
       get: (n: string) =>
         n === "x-xula-superficie" ? "ayuntamiento" : "189.203.10.7",
     });
-    ayuntamientoActualMock.mockResolvedValue({ id: TENANT });
+    exigirAyuntamientoMock.mockResolvedValue({ id: TENANT });
     limitarRitmoMock.mockResolvedValue(undefined);
   });
 

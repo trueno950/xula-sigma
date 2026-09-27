@@ -21,6 +21,9 @@ const notFoundMock = vi.hoisted(() =>
 vi.mock("next/headers", () => ({ headers: leerCabeceras }));
 vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
+vi.mock("@/shared/tenancy/contexto", () => ({
+  exigirAyuntamiento: vi.fn().mockResolvedValue({}),
+}));
 vi.mock("@/modules/constancias", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/modules/constancias")>();
   return {

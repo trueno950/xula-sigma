@@ -1,6 +1,7 @@
 import { manejarAuth } from "@/shared/auth";
 import { limitarRitmoDeAcceso } from "@/shared/auth/limitarRitmo";
 import { RitmoExcedidoError } from "@/shared/auth/ritmo";
+import { AyuntamientoInexistenteError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { CABECERA_SUPERFICIE } from "@/shared/tenancy/cabeceras";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
@@ -106,6 +107,12 @@ async function conBorde(trabajo: () => Promise<Response>): Promise<Response> {
      */
     if (error instanceof RitmoExcedidoError) {
       return Response.json({ message: error.message }, { status: 429 });
+    }
+
+    // Mismo 404 que la guarda de superficie de `manejar`: un subdominio sin
+    // municipio no es un fallo del sistema.
+    if (error instanceof AyuntamientoInexistenteError) {
+      return new Response(null, { status: 404 });
     }
 
     console.error("[auth] fallo no manejado", datosSegurosDeError(error));

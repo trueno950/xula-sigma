@@ -6,6 +6,9 @@ const suscribirMock = vi.hoisted(() => vi.fn());
 const cerrarMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
+vi.mock("@/shared/tenancy/contexto", () => ({
+  exigirAyuntamiento: vi.fn().mockResolvedValue({}),
+}));
 vi.mock("@/shared/tenancy/notificacionesDeTenant", () => ({
   suscribirActualizaciones: suscribirMock,
 }));

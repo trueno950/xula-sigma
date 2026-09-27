@@ -18,7 +18,7 @@ import { RitmoExcedidoError } from "@/shared/auth/ritmo";
  */
 const leerCabeceras = vi.hoisted(() => vi.fn());
 const limitarRitmoMock = vi.hoisted(() => vi.fn());
-const ayuntamientoActualMock = vi.hoisted(() => vi.fn());
+const exigirAyuntamientoMock = vi.hoisted(() => vi.fn());
 const validarFolioMock = vi.hoisted(() => vi.fn());
 const notFoundMock = vi.hoisted(() => vi.fn());
 
@@ -28,7 +28,7 @@ vi.mock("@/shared/auth/limitarRitmo", () => ({
   limitarRitmo: limitarRitmoMock,
 }));
 vi.mock("@/shared/tenancy/contexto", () => ({
-  ayuntamientoActual: ayuntamientoActualMock,
+  exigirAyuntamiento: exigirAyuntamientoMock,
   superficieActual: vi.fn().mockResolvedValue("ayuntamiento"),
 }));
 vi.mock("@/modules/constancias", () => ({ validarFolio: validarFolioMock }));
@@ -52,7 +52,7 @@ describe("limitacion de ritmo en /validar/[folio]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     leerCabeceras.mockResolvedValue(cabecerasDe(IP));
-    ayuntamientoActualMock.mockResolvedValue({ id: TENANT });
+    exigirAyuntamientoMock.mockResolvedValue({ id: TENANT });
     limitarRitmoMock.mockResolvedValue(undefined);
     validarFolioMock.mockResolvedValue({ estado: "NO_VALIDO" });
   });

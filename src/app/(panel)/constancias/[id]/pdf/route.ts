@@ -6,6 +6,7 @@ import { contextoActual } from "@/shared/auth";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { CABECERA_SUPERFICIE } from "@/shared/tenancy/cabeceras";
+import { exigirAyuntamiento } from "@/shared/tenancy/contexto";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -55,6 +56,8 @@ export async function GET(request: Request, { params }: Props) {
   if ((await headers()).get(CABECERA_SUPERFICIE) !== "ayuntamiento") {
     return notFound();
   }
+
+  await exigirAyuntamiento();
 
   const contexto = await contextoActual();
   if (!contexto) return new Response(null, { status: 401 });

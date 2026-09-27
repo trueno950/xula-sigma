@@ -49,6 +49,19 @@ export class TenantNoResueltoError extends Error {
   }
 }
 
+/**
+ * El subdominio tiene forma valida pero ningun municipio. Sigue siendo un
+ * `TenantNoResueltoError` —mismo `codigo`, mismo `instanceof`— y solo se
+ * distingue para que el borde del request pueda responder 404 a este caso
+ * sin tragarse la falta de cabecera, que es un error de configuracion.
+ */
+export class AyuntamientoInexistenteError extends TenantNoResueltoError {
+  constructor(subdominio: string) {
+    super(`No hay ningun ayuntamiento con el subdominio "${subdominio}".`);
+    this.name = "AyuntamientoInexistenteError";
+  }
+}
+
 export class ValidacionError extends Error {
   readonly codigo = "VALIDACION";
 

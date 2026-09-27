@@ -13,9 +13,16 @@ vi.mock("./withTenant", () => ({
   resolverAyuntamientoPorSubdominio: resolver,
 }));
 
-vi.mock("next/headers", () => ({ headers: leerCabeceras }));
+const notFoundMock = vi.hoisted(() =>
+  vi.fn((): never => {
+    throw new Error("NEXT_HTTP_ERROR_FALLBACK;404");
+  }),
+);
 
-const { ayuntamientoActual } = await import("./contexto");
+vi.mock("next/headers", () => ({ headers: leerCabeceras }));
+vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
+
+const { ayuntamientoActual, exigirAyuntamiento } = await import("./contexto");
 
 /**
  * El mock responde por nombre de cabecera y no una sola cadena para todas.
@@ -83,5 +90,57 @@ describe("ayuntamientoActual", () => {
     expect(inexistente).toBeInstanceOf(TenantNoResueltoError);
     expect(ausente).toBeInstanceOf(TenantNoResueltoError);
     expect(inexistente.codigo).toBe(ausente.codigo);
+  });
+});
+
+/**
+ * El borde de un request: un subdominio con forma valida que no tiene
+ * municipio es un 404, como el dominio base pelado, y no un 500. La
+ * excepcion de `ayuntamientoActual` no cambia: es la que el resto del
+ * sistema y sus tests esperan.
+ */
+describe("exigirAyuntamiento", () => {
+  beforeEach(() => {
+    resolver.mockReset();
+    leerCabeceras.mockReset();
+    notFoundMock.mockClear();
+  });
+
+  it("devuelve el ayuntamiento cuando el subdominio tiene municipio", async () => {
+    conCabecera("ticul");
+    resolver.mockResolvedValue(ticul);
+
+    await expect(exigirAyuntamiento()).resolves.toMatchObject({
+      subdominio: "ticul",
+    });
+    expect(notFoundMock).not.toHaveBeenCalled();
+  });
+
+  it("responde 404 cuando el subdominio no tiene municipio", async () => {
+    conCabecera("municipio-que-no-existe");
+    resolver.mockResolvedValue(null);
+
+    await expect(exigirAyuntamiento()).rejects.toThrow(
+      "NEXT_HTTP_ERROR_FALLBACK;404",
+    );
+    expect(notFoundMock).toHaveBeenCalledOnce();
+  });
+
+  it("no disfraza de 404 un proxy que no escribio la cabecera", async () => {
+    conCabecera(null);
+
+    await expect(exigirAyuntamiento()).rejects.toBeInstanceOf(
+      TenantNoResueltoError,
+    );
+    expect(notFoundMock).not.toHaveBeenCalled();
+  });
+
+  it("deja intacta la excepcion de ayuntamientoActual", async () => {
+    conCabecera("municipio-que-no-existe");
+    resolver.mockResolvedValue(null);
+
+    await expect(ayuntamientoActual()).rejects.toBeInstanceOf(
+      TenantNoResueltoError,
+    );
   });
 });

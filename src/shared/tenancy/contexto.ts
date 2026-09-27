@@ -1,5 +1,9 @@
 import { headers } from "next/headers";
-import { TenantNoResueltoError } from "@/shared/lib/errores";
+import { notFound } from "next/navigation";
+import {
+  AyuntamientoInexistenteError,
+  TenantNoResueltoError,
+} from "@/shared/lib/errores";
 import { CABECERA_SUBDOMINIO, CABECERA_SUPERFICIE } from "./cabeceras";
 import {
   type AyuntamientoResuelto,
@@ -69,10 +73,26 @@ export async function ayuntamientoActual(): Promise<AyuntamientoResuelto> {
   const ayuntamiento = await resolverAyuntamientoPorSubdominio(subdominio);
 
   if (!ayuntamiento) {
-    throw new TenantNoResueltoError(
-      `No hay ningun ayuntamiento con el subdominio "${subdominio}".`,
-    );
+    throw new AyuntamientoInexistenteError(subdominio);
   }
 
   return ayuntamiento;
+}
+
+/**
+ * `ayuntamientoActual` para el borde de un request: un subdominio que no
+ * tiene municipio responde 404, igual que el dominio base pelado. Un 500
+ * ahi delata que la ruta esperaba un tenant, y no distingue lo que el 404
+ * de la raiz ya no distingue.
+ *
+ * Solo ese caso: la falta de cabecera del proxy sigue lanzando.
+ */
+export async function exigirAyuntamiento(): Promise<AyuntamientoResuelto> {
+  try {
+    return await ayuntamientoActual();
+  } catch (error) {
+    if (error instanceof AyuntamientoInexistenteError) notFound();
+
+    throw error;
+  }
 }
