@@ -70,6 +70,66 @@ test("una clave incorrecta no entra y no dice por que", async ({ page }) => {
   await expect(page).toHaveURL(urlDe("motul", "/acceso"));
 });
 
+test("un rechazo anterior no convive con el error de validacion nuevo", async ({
+  page,
+}) => {
+  // El rechazo se simula en el borde: cada intento real cuenta contra la
+  // ventana de ritmo del correo, y los tests de abajo necesitan la suya.
+  await page.route("**/api/auth/sign-in/email", (ruta) =>
+    ruta.fulfill({ status: 401, json: {} }),
+  );
+  await page.goto(urlDe("motul", "/acceso"));
+  // El boton se habilita al hidratar: antes de eso el envio es el nativo.
+  await expect(page.getByRole("button", { name: "Entrar" })).toBeEnabled();
+  await page.getByLabel("Correo").fill(CORREO);
+  await page.getByLabel("Contrasenia").fill("clave-larga-y-equivocada");
+  await page.getByRole("button", { name: "Entrar" }).click();
+
+  const aviso = page.locator("form").getByRole("alert");
+  await expect(aviso).toHaveText("Correo o contrasenia incorrectos.");
+
+  await page.getByLabel("Contrasenia").fill("corta");
+  await page.getByRole("button", { name: "Entrar" }).click();
+
+  await expect(
+    page.getByText("La contraseña es demasiado corta."),
+  ).toBeVisible();
+  await expect(aviso).toHaveCount(0);
+});
+
+test("sin JavaScript el envio no pone la clave en la URL", async ({
+  browser,
+}) => {
+  /**
+   * La ventana previa a la hidratacion, reproducida apagando el JS: sin
+   * `method="post"` y sin el boton deshabilitado, Enter enviaba por GET
+   * `/acceso?email=...&password=...`.
+   */
+  const contexto = await browser.newContext({ javaScriptEnabled: false });
+  const page = await contexto.newPage();
+
+  await page.goto(urlDe("motul", "/acceso"));
+  await page.getByLabel("Correo").fill(CORREO);
+  await page.getByLabel("Contrasenia").fill(CLAVE);
+  await page.getByLabel("Contrasenia").press("Enter");
+
+  expect(page.url()).not.toContain("password");
+  expect(page.url()).not.toContain(encodeURIComponent(CORREO));
+  await contexto.close();
+});
+
+test("los campos del acceso muestran un anillo de foco de 2px", async ({
+  page,
+}) => {
+  await page.goto(urlDe("motul", "/acceso"));
+  await page.keyboard.press("Tab");
+
+  const correo = page.getByLabel("Correo");
+  await expect(correo).toBeFocused();
+  await expect(correo).toHaveCSS("outline-style", "solid");
+  await expect(correo).toHaveCSS("outline-width", "2px");
+});
+
 test("la cookie de Motul no abre sesion en Ticul", async ({ page }) => {
   /**
    * El test que justifica el archivo. La misma persona, con el mismo correo
