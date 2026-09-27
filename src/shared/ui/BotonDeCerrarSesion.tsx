@@ -1,7 +1,8 @@
 "use client";
 
 import { SignOut } from "@phosphor-icons/react/ssr";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { datosSegurosDeError } from "../lib/registroDeError";
 import { Aviso } from "./Aviso";
 import { Boton } from "./Boton";
 import { cerrarYVolver } from "./cerrarSesion";
@@ -18,22 +19,37 @@ import { cerrarYVolver } from "./cerrarSesion";
  * cookie ya vencida, y una navegacion de cliente puede servir una copia
  * anterior del panel. Va a `/acceso` del mismo host: el municipio no cambia.
  */
+const suscribirseSinCambios = () => () => {};
+const useHidratado = () =>
+  useSyncExternalStore(
+    suscribirseSinCambios,
+    () => true,
+    () => false,
+  );
+
 export function BotonDeCerrarSesion() {
   const [fallo, setFallo] = useState(false);
   const [enCurso, setEnCurso] = useState(false);
+  const hidratado = useHidratado();
 
-  const cerrar = () =>
-    cerrarYVolver({
+  const cerrar = () => {
+    void cerrarYVolver({
       enviar: fetch,
       irA: (ruta) => window.location.assign(ruta),
       marcar: (estado) => {
         setEnCurso(estado.enCurso);
         setFallo(estado.fallo);
       },
+    }).catch((error: unknown) => {
+      console.error(
+        "[cerrarSesion] fallo inesperado",
+        datosSegurosDeError(error),
+      );
     });
+  };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
       {fallo ? (
         <Aviso tono="error">
           No se pudo cerrar la sesión. Intente de nuevo.
@@ -43,7 +59,7 @@ export function BotonDeCerrarSesion() {
         type="button"
         variante="fantasma"
         onClick={cerrar}
-        disabled={enCurso}
+        disabled={!hidratado || enCurso}
       >
         <SignOut size={20} aria-hidden="true" />
         Cerrar sesión

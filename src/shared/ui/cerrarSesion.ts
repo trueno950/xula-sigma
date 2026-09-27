@@ -3,45 +3,50 @@ type Enviar = (
   opciones: RequestInit,
 ) => Promise<Pick<Response, "ok">>;
 
+const TIEMPO_MAXIMO_CIERRE_MS = 15_000;
+
 /**
  * Pide el cierre a la ruta de Better Auth, la misma puerta del acceso: borra
  * la fila de la sesion y responde con la cookie vencida. Ninguna otra puerta
  * cierra sesion, asi que no hay una segunda que acordarse de proteger.
  *
- * Solo el `TypeError` de `fetch` —sin red— cuenta como cierre fallido; un
- * error de otra clase es un defecto y sale.
+ * Los fallos de red y las cancelaciones son recuperables; los demas defectos
+ * se propagan para que los registre el limite del evento.
  */
 export async function cerrarSesion(
   enviar: Enviar,
 ): Promise<"cerrada" | "fallida"> {
+  const controlador = new AbortController();
+  const temporizador = setTimeout(
+    () => controlador.abort(),
+    TIEMPO_MAXIMO_CIERRE_MS,
+  );
+
   try {
     const respuesta = await enviar("/api/auth/sign-out", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: "{}",
+      signal: controlador.signal,
     });
 
     return respuesta.ok ? "cerrada" : "fallida";
   } catch (error) {
-    if (error instanceof TypeError) return "fallida";
+    if (
+      error instanceof TypeError ||
+      (error instanceof Error && error.name === "AbortError")
+    ) {
+      return "fallida";
+    }
 
     throw error;
+  } finally {
+    clearTimeout(temporizador);
   }
 }
 
 type EstadoDeCierre = { enCurso: boolean; fallo: boolean };
 
-/**
- * Lo que hace el clic, sin React: el boton solo conecta estado y navegacion.
- *
- * Cualquier error, de red o no, termina en el aviso y con el boton libre: un
- * `AbortError` o un defecto dentro de `fetch` dejaba el boton bloqueado hasta
- * recargar y la promesa del clic sin atender. Se registra solo el nombre del
- * error, no el objeto: es un log sin RLS ni bitacora de acceso.
- *
- * En exito el boton **sigue bloqueado**: la pagina se esta yendo y un segundo
- * clic pediria un cierre de una sesion que ya no existe.
- */
 export async function cerrarYVolver(dependencias: {
   enviar: Enviar;
   irA: (ruta: string) => void;
@@ -54,11 +59,6 @@ export async function cerrarYVolver(dependencias: {
 
   try {
     cerrada = (await cerrarSesion(enviar)) === "cerrada";
-  } catch (error) {
-    console.error(
-      "[cerrarSesion] fallo inesperado",
-      error instanceof Error ? error.name : "desconocido",
-    );
   } finally {
     if (!cerrada) marcar({ enCurso: false, fallo: true });
   }

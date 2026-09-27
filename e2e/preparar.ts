@@ -35,8 +35,11 @@ export default async function preparar() {
 
     for (const municipio of Object.values(MUNICIPIOS)) {
       await owner`
-        INSERT INTO ayuntamientos (id, subdominio, nombre)
-        VALUES (${municipio.id}, ${municipio.subdominio}, ${municipio.nombre})
+        INSERT INTO ayuntamientos (id, subdominio, nombre, marca)
+        VALUES (
+          ${municipio.id}, ${municipio.subdominio}, ${municipio.nombre},
+          ${JSON.stringify(municipio.marca)}::jsonb
+        )
       `;
 
       await withTenant(comoAyuntamientoId(municipio.id), (tx) =>

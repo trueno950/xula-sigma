@@ -18,12 +18,16 @@ export const MUNICIPIOS = {
   motul: {
     id: "e2e00000-0000-4000-8000-000000000001",
     subdominio: "motul",
-    nombre: "Motul",
+    nombre: "H. Ayuntamiento de Motul de Carrillo Puerto, Yucatán",
+    marca: {
+      escudo: `http://motul.xula.localhost:${process.env.E2E_PUERTO ?? "3000"}/api/salud`,
+    },
   },
   ticul: {
     id: "e2e00000-0000-4000-8000-000000000002",
     subdominio: "ticul",
     nombre: "Ticul",
+    marca: {},
   },
 } as const;
 

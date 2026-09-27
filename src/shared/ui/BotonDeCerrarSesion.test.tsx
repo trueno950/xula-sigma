@@ -10,6 +10,10 @@ describe("BotonDeCerrarSesion", () => {
     expect(html).toContain("Cerrar sesión");
   });
 
+  it("sale inhabilitado en el HTML del servidor hasta hidratarse", () => {
+    expect(html).toMatch(/<button[^>]*disabled=""/);
+  });
+
   it("no anuncia ningun error mientras nadie lo ha usado", () => {
     expect(html).not.toContain('role="alert"');
   });

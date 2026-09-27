@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cerrarSesion, cerrarYVolver } from "./cerrarSesion";
+
+afterEach(() => vi.useRealTimers());
 
 describe("cerrarSesion", () => {
   it("pide el cierre a la puerta unica de autenticacion, por POST", async () => {
@@ -18,10 +20,12 @@ describe("cerrarSesion", () => {
     });
   });
 
-  it("da por cerrada la sesion cuando el servidor responde bien", async () => {
+  it("da por cerrada la sesion y limpia el timeout si el servidor responde", async () => {
+    vi.useFakeTimers();
     const enviar = vi.fn().mockResolvedValue({ ok: true });
 
     expect(await cerrarSesion(enviar)).toBe("cerrada");
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("no da por cerrada la sesion cuando el servidor rechaza", async () => {
@@ -55,10 +59,6 @@ describe("cerrarYVolver", () => {
     };
   };
 
-  beforeEach(() => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-  });
-
   it("marca el cierre en curso y, si sale bien, va a /acceso del mismo host", async () => {
     const { irA, marcar, correr } = armar(
       vi.fn().mockResolvedValue({ ok: true }),
@@ -90,16 +90,41 @@ describe("cerrarYVolver", () => {
     },
   );
 
-  it("registra solo el nombre del error inesperado, no el objeto", async () => {
-    const { correr } = armar(
-      vi.fn().mockRejectedValue(new DOMException("aborted", "AbortError")),
+  it("aborta una peticion sin respuesta y rehabilita el boton para reintentar", async () => {
+    vi.useFakeTimers();
+    const enviar = vi.fn(
+      (_url: string, opciones: RequestInit): Promise<Pick<Response, "ok">> => {
+        return new Promise((_, reject) => {
+          opciones.signal?.addEventListener(
+            "abort",
+            () => reject(new DOMException("aborted", "AbortError")),
+            { once: true },
+          );
+        });
+      },
+    );
+    const { irA, marcar, correr } = armar(enviar);
+    const cierre = correr();
+    const signal = enviar.mock.calls[0]?.[1]?.signal;
+
+    expect(signal).toBeInstanceOf(AbortSignal);
+
+    await vi.advanceTimersByTimeAsync(15_000);
+    await cierre;
+
+    expect(signal?.aborted).toBe(true);
+    expect(marcar).toHaveBeenLastCalledWith({ enCurso: false, fallo: true });
+    expect(irA).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("propaga los defectos inesperados despues de restaurar el boton", async () => {
+    const { marcar, correr } = armar(
+      vi.fn().mockRejectedValue(new RangeError("detalle privado")),
     );
 
-    await correr();
+    await expect(correr()).rejects.toThrow(RangeError);
 
-    expect(console.error).toHaveBeenCalledWith(
-      "[cerrarSesion] fallo inesperado",
-      "AbortError",
-    );
+    expect(marcar).toHaveBeenLastCalledWith({ enCurso: false, fallo: true });
   });
 });
