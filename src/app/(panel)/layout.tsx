@@ -9,6 +9,7 @@ import {
   exigirAyuntamiento,
   superficieActual,
 } from "@/shared/tenancy/contexto";
+import { BotonDeCerrarSesion } from "@/shared/ui/BotonDeCerrarSesion";
 import { variablesDeMarca } from "@/shared/ui/marca";
 import { NavegacionDeModulos } from "./NavegacionDeModulos";
 
@@ -65,10 +66,12 @@ export default async function LayoutDePanel({
 
   return (
     <div className="min-h-dvh bg-caliza-lienzo" style={variablesDeMarca(marca)}>
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-caliza-divisor bg-caliza-lienzo px-4 md:px-6">
+      <header className="flex min-h-16 flex-col items-stretch justify-between gap-3 border-b border-caliza-divisor bg-caliza-lienzo px-3 py-3 md:sticky md:top-0 md:z-10 md:h-16 md:flex-row md:items-center md:gap-4 md:px-6 md:py-0">
         <Link
           href="/padron"
-          className="flex items-center gap-3 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+          aria-label={`${ayuntamiento.nombre}, Xula Sigma`}
+          title={ayuntamiento.nombre}
+          className="flex min-w-0 items-center gap-3 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
         >
           {marca.escudo ? (
             // `next/image` exigiria declarar el host de R2 en
@@ -78,11 +81,11 @@ export default async function LayoutDePanel({
             <img
               src={marca.escudo}
               alt=""
-              className="h-10 w-10 object-contain"
+              className="h-10 w-10 shrink-0 object-contain"
             />
           ) : null}
-          <span className="flex flex-col leading-tight">
-            <span className="text-[15px] font-semibold text-caliza-tinta">
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="break-words text-[15px] font-semibold text-caliza-tinta md:truncate">
               {ayuntamiento.nombre}
             </span>
             {/*
@@ -97,7 +100,10 @@ export default async function LayoutDePanel({
             </span>
           </span>
         </Link>
-        <span className="text-[13px] text-caliza-apagada">{rol}</span>
+        <div className="flex min-w-0 flex-col items-stretch gap-2 md:flex-row md:items-center md:gap-3">
+          <span className="text-[13px] text-caliza-apagada">{rol}</span>
+          <BotonDeCerrarSesion />
+        </div>
       </header>
 
       <div className="md:grid md:grid-cols-[15rem_1fr] md:items-start">
@@ -112,7 +118,7 @@ export default async function LayoutDePanel({
         </aside>
 
         <div className="min-w-0">
-          <div className="sticky top-16 z-10 bg-caliza-lienzo md:hidden">
+          <div className="sticky top-0 z-10 bg-caliza-lienzo md:hidden">
             <NavegacionDeModulos ruta={ruta} forma="fila" />
           </div>
           {children}
