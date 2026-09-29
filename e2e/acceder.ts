@@ -12,6 +12,9 @@ import { CLAVE, CORREO, urlDe } from "./municipios";
 export async function accederAMotul(page: Page): Promise<void> {
   for (let intento = 0; intento < 5; intento++) {
     await page.goto(urlDe("motul", "/acceso"));
+
+    if (page.url() === urlDe("motul")) return;
+
     await page.getByLabel("Correo").fill(CORREO);
     await page.getByLabel("Contrasenia").fill(CLAVE);
     await page.getByRole("button", { name: "Entrar" }).click();

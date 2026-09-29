@@ -32,6 +32,43 @@ test("la pantalla de acceso lleva su propio titulo", async ({ page }) => {
   await expect(page).toHaveTitle("Acceso · XULA SIGMA");
 });
 
+test("el helper reconoce el acceso que termina durante la espera de reintento", async ({
+  page,
+}) => {
+  page.setDefaultTimeout(1_000);
+
+  const endpointDeAcceso = urlDe("motul", "/api/auth/sign-in/email");
+  let solicitudesDeAcceso = 0;
+  let demoraDeAcceso = 0;
+
+  await page.route(endpointDeAcceso, async (ruta) => {
+    if (ruta.request().method() !== "POST") {
+      await ruta.continue();
+      return;
+    }
+
+    solicitudesDeAcceso++;
+    const inicio = Date.now();
+    await new Promise<void>((resolver) => setTimeout(resolver, 7_000));
+    demoraDeAcceso = Date.now() - inicio;
+    await ruta.continue();
+  });
+
+  const respuestaDeAcceso = page.waitForResponse(
+    (respuesta) =>
+      respuesta.url() === endpointDeAcceso &&
+      respuesta.request().method() === "POST",
+    { timeout: 20_000 },
+  );
+
+  await accederAMotul(page);
+
+  expect(solicitudesDeAcceso).toBe(1);
+  expect(demoraDeAcceso).toBeGreaterThan(5_000);
+  expect((await respuestaDeAcceso).status()).toBe(200);
+  expect(page.url()).toBe(urlDe("motul"));
+});
+
 test("cada pantalla del panel lleva su titulo de ruta", async ({ page }) => {
   await page.route("https://*.tile.openstreetmap.org/**", (ruta) =>
     ruta.abort(),
