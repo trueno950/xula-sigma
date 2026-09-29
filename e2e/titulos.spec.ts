@@ -36,10 +36,24 @@ test("el helper reconoce el acceso que termina durante la espera de reintento", 
   page,
 }) => {
   page.setDefaultTimeout(1_000);
+  page.setDefaultNavigationTimeout(15_000);
 
   const endpointDeAcceso = urlDe("motul", "/api/auth/sign-in/email");
+  const urlDeLaPaginaDeAcceso = urlDe("motul", "/acceso");
   let solicitudesDeAcceso = 0;
   let demoraDeAcceso = 0;
+  let navegacionesDeAcceso = 0;
+
+  page.on("request", (solicitud) => {
+    if (
+      solicitud.isNavigationRequest() &&
+      solicitud.frame() === page.mainFrame() &&
+      solicitud.method() === "GET" &&
+      solicitud.url() === urlDeLaPaginaDeAcceso
+    ) {
+      navegacionesDeAcceso++;
+    }
+  });
 
   await page.route(endpointDeAcceso, async (ruta) => {
     if (ruta.request().method() !== "POST") {
@@ -63,6 +77,7 @@ test("el helper reconoce el acceso que termina durante la espera de reintento", 
 
   await accederAMotul(page);
 
+  expect(navegacionesDeAcceso).toBe(1);
   expect(solicitudesDeAcceso).toBe(1);
   expect(demoraDeAcceso).toBeGreaterThan(5_000);
   expect((await respuestaDeAcceso).status()).toBe(200);

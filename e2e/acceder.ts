@@ -27,6 +27,8 @@ export async function accederAMotul(page: Page): Promise<void> {
         throw error;
 
       await page.waitForTimeout(5_000);
+
+      if (page.url() === urlDe("motul")) return;
     }
   }
 
