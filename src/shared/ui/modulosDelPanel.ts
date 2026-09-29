@@ -17,13 +17,8 @@ export type ModuloDelPanel = {
 };
 
 /**
- * Los modulos del panel, en una sola lista: la navegacion lateral y el
- * inicio del municipio salen de aca. Una lista por pantalla ya derivo en un
- * inicio con cuatro modulos cuando el panel ofrecia siete.
- *
- * El orden es el del trabajo de mostrador, no el alfabetico: primero a quien
- * se atiende, despues donde vive, despues el documento que se le entrega.
- * `Marca` va ultima porque se toca una vez.
+ * Una lista por pantalla ya derivo en un inicio con cuatro modulos cuando el
+ * panel ofrecia siete.
  */
 export const MODULOS_DEL_PANEL: readonly ModuloDelPanel[] = [
   {

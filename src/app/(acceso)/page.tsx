@@ -17,9 +17,6 @@ import { MODULOS_DEL_PANEL } from "@/shared/ui/modulosDelPanel";
  * antes de renderizar nada; esconder contenido en el cliente no es
  * autorizacion (`05-seguridad.md` seccion 6).
  *
- * Los modulos salen de la misma lista que la navegacion del panel, con la
- * misma visibilidad: la que hay hoy no depende del rol, y si algun dia
- * depende, sera en ese unico lugar.
  */
 export default async function PaginaDeInicio() {
   const contexto = await contextoActual();
