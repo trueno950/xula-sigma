@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   listarRaices,
   RegistroDeDomicilios,
@@ -16,6 +17,8 @@ import {
   PantallaDeMensaje,
 } from "@/shared/ui";
 import { leerParametros } from "./parametros";
+
+export const metadata: Metadata = { title: "Domicilios" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

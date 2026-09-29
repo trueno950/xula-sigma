@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { contextoActual } from "@/shared/auth";
 import { leerMarca } from "@/shared/marca";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import { FormularioDeAcceso } from "./FormularioDeAcceso";
+
+export const metadata: Metadata = { title: "Acceso" };
 
 /**
  * Pantalla de acceso del municipio. Server Component.

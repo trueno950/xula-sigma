@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { accederAMotul } from "./acceder";
 import { liberarVentanaDeRitmo } from "./calles.fixture";
-import { CLAVE, CORREO, MUNICIPIOS, urlDe } from "./municipios";
+import { MUNICIPIOS, urlDe } from "./municipios";
 
 /**
  * Cerrar sesion desde el panel: que la sesion muera en el servidor, no solo
@@ -19,11 +20,7 @@ test("cerrar sesion la revoca en el servidor y vuelve al acceso", async ({
       body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"/>',
     }),
   );
-  await page.goto(urlDe("motul", "/acceso"));
-  await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill(CLAVE);
-  await page.getByRole("button", { name: "Entrar" }).click();
-  await page.waitForURL(urlDe("motul"));
+  await accederAMotul(page);
 
   await page.goto(urlDe("motul", "/padron"));
   const conSesion = await page.context().cookies();

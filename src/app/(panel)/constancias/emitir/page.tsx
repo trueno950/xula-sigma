@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import {
@@ -15,6 +16,8 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Emitir constancia" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

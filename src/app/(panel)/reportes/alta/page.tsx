@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { z } from "zod";
 import { FormularioDeAlta, TIPOS_DE_INCIDENCIA } from "@/modules/reportes";
 import { listarCalles, listarLugares } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Nuevo reporte" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

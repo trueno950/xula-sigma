@@ -1,4 +1,5 @@
 import { Gear } from "@phosphor-icons/react/ssr";
+import type { Metadata } from "next";
 import {
   buscarConstancias,
   ListadoDeConstancias,
@@ -15,6 +16,8 @@ import {
   PantallaDeMensaje,
 } from "@/shared/ui";
 import { leerParametros } from "./parametros";
+
+export const metadata: Metadata = { title: "Constancias" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

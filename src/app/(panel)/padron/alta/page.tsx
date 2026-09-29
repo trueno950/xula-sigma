@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { FormularioDeAltaDePersona } from "@/modules/padron";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
@@ -7,6 +8,8 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Alta de persona" };
 
 type Props = {
   searchParams: Promise<{ error?: string }>;

@@ -1,4 +1,5 @@
 import { Plus } from "@phosphor-icons/react/ssr";
+import type { Metadata } from "next";
 import {
   buscarReportes,
   ListadoDeReportes,
@@ -15,6 +16,8 @@ import {
   PantallaDeMensaje,
 } from "@/shared/ui";
 import { leerParametros } from "./parametros";
+
+export const metadata: Metadata = { title: "Reportes" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

@@ -1,4 +1,5 @@
 import { Plus } from "@phosphor-icons/react/ssr";
+import type { Metadata } from "next";
 import { z } from "zod";
 import {
   BuscadorDePersonas,
@@ -15,6 +16,8 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Padrón" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

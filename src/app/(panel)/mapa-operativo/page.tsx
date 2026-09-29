@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { agregarMapa, MapaOperativo } from "@/modules/mapa-operativo";
 import { contextoActual } from "@/shared/auth";
 import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
 import { EstadoEnVivo } from "@/shared/ui/EstadoEnVivo";
 import { leerParametrosDeMapa } from "./parametros";
+
+export const metadata: Metadata = { title: "Mapa operativo" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

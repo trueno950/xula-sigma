@@ -16,7 +16,7 @@ import "leaflet/dist/leaflet.css";
  */
 
 export const metadata: Metadata = {
-  title: "XULA SIGMA",
+  title: { default: "XULA SIGMA", template: "%s · XULA SIGMA" },
   description: "Sistema integral de gestion municipal",
 };
 
