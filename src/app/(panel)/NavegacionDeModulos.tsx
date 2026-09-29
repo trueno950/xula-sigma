@@ -1,35 +1,5 @@
-import {
-  FileText,
-  MapPinLine,
-  MapTrifold,
-  Palette,
-  UsersThree,
-  Warning,
-  Wrench,
-} from "@phosphor-icons/react/ssr";
 import Link from "next/link";
-import type { ComponentType } from "react";
-
-type Modulo = {
-  nombre: string;
-  ruta: string;
-  Icono: ComponentType<{ size?: number; weight?: "regular" | "fill" }>;
-};
-
-/**
- * Los modulos del panel. El orden es el del trabajo de mostrador, no el
- * alfabetico: primero a quien se atiende, despues donde vive, despues el
- * documento que se le entrega. `Marca` va ultima porque se toca una vez.
- */
-const MODULOS: readonly Modulo[] = [
-  { nombre: "Padron", ruta: "/padron", Icono: UsersThree },
-  { nombre: "Territorio", ruta: "/territorio", Icono: MapTrifold },
-  { nombre: "Mapa operativo", ruta: "/mapa-operativo", Icono: MapPinLine },
-  { nombre: "Reportes", ruta: "/reportes", Icono: Warning },
-  { nombre: "Intervenciones", ruta: "/intervenciones", Icono: Wrench },
-  { nombre: "Constancias", ruta: "/constancias", Icono: FileText },
-  { nombre: "Marca", ruta: "/marca", Icono: Palette },
-];
+import { MODULOS_DEL_PANEL } from "@/shared/ui/modulosDelPanel";
 
 /**
  * La navegacion entre modulos, en dos formas reales segun el ancho.
@@ -65,7 +35,7 @@ export function NavegacionDeModulos({
           : "flex h-12 items-center gap-1 overflow-x-auto border-b border-caliza-divisor px-2"
       }
     >
-      {MODULOS.map(({ nombre, ruta: destino, Icono }) => {
+      {MODULOS_DEL_PANEL.map(({ nombre, ruta: destino, Icono }) => {
         const activo = ruta.startsWith(destino);
 
         return (

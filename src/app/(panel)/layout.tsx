@@ -10,15 +10,9 @@ import {
   superficieActual,
 } from "@/shared/tenancy/contexto";
 import { BotonDeCerrarSesion } from "@/shared/ui/BotonDeCerrarSesion";
+import { etiquetaDeRol } from "@/shared/ui/etiquetaDeRol";
 import { variablesDeMarca } from "@/shared/ui/marca";
 import { NavegacionDeModulos } from "./NavegacionDeModulos";
-
-const ETIQUETA_DE_ROL: Record<string, string> = {
-  ADMIN_MUNICIPAL: "Administrador",
-  OPERADOR: "Operador",
-  SECRETARIO: "Secretario",
-  CONSULTA: "Consulta",
-};
 
 /**
  * Layout de las pantallas que necesitan sesion.
@@ -59,7 +53,7 @@ export default async function LayoutDePanel({
   if (!contexto) redirect("/acceso");
 
   const marca = leerMarca(ayuntamiento.marca);
-  const rol = ETIQUETA_DE_ROL[contexto.usuario.rol] ?? contexto.usuario.rol;
+  const rol = etiquetaDeRol(contexto.usuario.rol);
   // La escribe el proxy con la ruta real del request; el cliente no la
   // controla (se sobreescribe siempre), igual que las de superficie.
   const ruta = (await headers()).get(CABECERA_RUTA) ?? "";
