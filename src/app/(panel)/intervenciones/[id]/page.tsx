@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import {
@@ -19,6 +20,8 @@ import {
   Panel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Intervención" };
 
 type Props = {
   params: Promise<{ id: string }>;

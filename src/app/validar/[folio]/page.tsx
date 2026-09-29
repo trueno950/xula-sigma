@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { validarFolio } from "@/modules/constancias";
@@ -7,6 +8,8 @@ import {
   exigirAyuntamiento,
   superficieActual,
 } from "@/shared/tenancy/contexto";
+
+export const metadata: Metadata = { title: "Validar constancia" };
 
 type Props = {
   params: Promise<{ folio: string }>;

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { z } from "zod";
 import {
   ConfiguracionDeDocumentos,
@@ -13,6 +14,8 @@ import {
   Panel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Configuración de constancias" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

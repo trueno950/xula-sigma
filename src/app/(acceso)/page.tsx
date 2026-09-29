@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { contextoActual } from "@/shared/auth";
@@ -5,6 +6,8 @@ import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import { BotonDeCerrarSesion } from "@/shared/ui/BotonDeCerrarSesion";
 import { etiquetaDeRol } from "@/shared/ui/etiquetaDeRol";
 import { MODULOS_DEL_PANEL } from "@/shared/ui/modulosDelPanel";
+
+export const metadata: Metadata = { title: "Inicio" };
 
 /**
  * Adonde se llega despues de entrar: el hub de modulos.

@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { PaginaDePanel } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Intervenciones" };
 
 export default function PaginaDeIntervenciones() {
   return (

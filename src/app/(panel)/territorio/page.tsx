@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   type DomicilioId,
@@ -24,6 +25,8 @@ import { accionesDeRaiz } from "./AccionesDeRaiz";
 import { leerParametros, nodoResuelto } from "./parametros";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 import { VistaDeLugar } from "./VistaDeLugar";
+
+export const metadata: Metadata = { title: "Territorio" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

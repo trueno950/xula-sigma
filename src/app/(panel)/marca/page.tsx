@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { FormularioDeEscudo } from "@/modules/marca";
 import { contextoActual } from "@/shared/auth";
 import { puedeCambiarMarca } from "@/shared/auth/roles";
+
+export const metadata: Metadata = { title: "Marca" };
 
 /**
  * Ruta fina: compone el formulario. `(panel)/layout.tsx` ya exige sesion;

@@ -1,4 +1,5 @@
 import { FileText } from "@phosphor-icons/react/ssr";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { comoPersonaId, personaPorId } from "@/modules/padron";
@@ -19,6 +20,8 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Persona" };
 
 type Props = {
   params: Promise<{ id: string }>;

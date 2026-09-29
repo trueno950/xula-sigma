@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   type CalleId,
@@ -7,6 +8,8 @@ import {
 } from "@/modules/historial-de-calle";
 import { contextoActual } from "@/shared/auth";
 import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+
+export const metadata: Metadata = { title: "Historial de calle" };
 
 type Props = { params: Promise<{ id: string }> };
 
