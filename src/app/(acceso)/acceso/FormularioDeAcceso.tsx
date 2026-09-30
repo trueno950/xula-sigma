@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useSyncExternalStore } from "react";
 import { useForm } from "react-hook-form";
+import { ANILLO_DE_FOCO } from "@/shared/ui/estilos";
 import { type CamposDeAcceso, esquemaDeAcceso } from "./esquemaDeAcceso";
 
 /**
@@ -19,16 +20,7 @@ import { type CamposDeAcceso, esquemaDeAcceso } from "./esquemaDeAcceso";
  * municipio. Sin `crossSubDomainCookies`: la de Motul no llega a Ticul.
  */
 
-/**
- * No usa `ANILLO_DE_FOCO`: trae `outline-none`, que en Tailwind 4 fija
- * `--tw-outline-style: none`, y el `focus-visible:outline-2` de la misma
- * cadena lee esa variable, asi que el anillo queda en `none`. Medido en
- * Chromium con `next build`.
- */
-const CLASES_DE_CAMPO =
-  "rounded border border-neutral-300 px-3 py-2 focus:border-marca " +
-  "focus-visible:outline focus-visible:outline-2 " +
-  "focus-visible:outline-offset-2 focus-visible:outline-marca";
+const CLASES_DE_CAMPO = `rounded border border-neutral-300 px-3 py-2 focus:border-marca ${ANILLO_DE_FOCO}`;
 
 /**
  * `false` en el servidor y en el primer render del cliente, `true` una vez
