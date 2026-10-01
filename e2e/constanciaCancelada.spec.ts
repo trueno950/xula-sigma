@@ -33,14 +33,23 @@ test.beforeAll(async () => {
 });
 
 test("sembrar constancias reserva consecutivos distintos en paralelo", async () => {
-  const aleatorioOriginal = Math.random;
-  Math.random = () => 0.5;
+  const [primera, segunda] = await Promise.all([
+    sembrarConstancias(),
+    sembrarConstancias(),
+  ]);
 
-  try {
-    await Promise.all([sembrarConstancias(), sembrarConstancias()]);
-  } finally {
-    Math.random = aleatorioOriginal;
-  }
+  // Si el incremento atomico de folios_de_documentos perdiera la
+  // actualizacion, la segunda siembra reutilizaria los folios de la primera
+  // y chocaria contra `constancias_serie_idx`: el choque falla las dos
+  // siembras. La asercion fija ademas que ningun folio se repitio.
+  const foliosDe = (sembradas: ConstanciasSembradas) => [
+    sembradas.folioVigente,
+    sembradas.folioCancelada,
+  ];
+
+  expect(foliosDe(segunda).some((f) => foliosDe(primera).includes(f))).toBe(
+    false,
+  );
 });
 
 const pdfDe = (id: string) => urlDe("motul", `/constancias/${id}/pdf`);
