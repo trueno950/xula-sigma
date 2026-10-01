@@ -20,7 +20,7 @@ export const TAMANO_DE_PAGINA = 50;
  * del lado del repositorio.
  *
  * Unico lugar que explica esta decision: `listarPersonas.test.ts` y
- * `app/(panel)/padron/page.tsx` apuntan aca en vez de repetirla.
+ * `app/(panel)/padron/(lista)/page.tsx` apuntan aca en vez de repetirla.
  *
  * Pide `limite + 1` al repositorio y lo recorta con `resolverPagina`
  * (`domain/paginacion.ts`): asi la pantalla sabe si pintar "Ver mas" sin un

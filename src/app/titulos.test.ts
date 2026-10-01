@@ -27,7 +27,7 @@ const TITULOS: Record<string, string> = {
   "(panel)/marca/page.tsx": "Marca",
   "(panel)/padron/[id]/page.tsx": "Persona",
   "(panel)/padron/alta/page.tsx": "Alta de persona",
-  "(panel)/padron/page.tsx": "Padrón",
+  "(panel)/padron/(lista)/page.tsx": "Padrón",
   "(panel)/reportes/alta/page.tsx": "Nuevo reporte",
   "(panel)/reportes/detalle/[id]/page.tsx": "Detalle de reporte",
   "(panel)/reportes/page.tsx": "Reportes",

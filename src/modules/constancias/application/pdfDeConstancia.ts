@@ -163,6 +163,7 @@ export function crearPdfDeConstancia(
         municipio: municipioParaRender(ayuntamiento),
         urlDeValidacion,
         reimpresion,
+        cancelada: constancia.canceladaEn !== null,
       });
 
       return { bytes, folio: constancia.folio };

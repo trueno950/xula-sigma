@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FormularioDeDomicilio } from "@/modules/territorio/ui/FormularioDeDomicilio";
@@ -41,6 +42,23 @@ vi.mock("@/modules/territorio", async () => ({
 }));
 
 const { default: PaginaDeTerritorio } = await import("./page");
+const { TerritorioCargado } = await import("./TerritorioCargado");
+
+type CuerpoDeLaPagina = ReactElement<{ children: ReactElement<Props> }>;
+type Props = Parameters<typeof TerritorioCargado>[0];
+
+/**
+ * La pagina deja lo lento dentro de un Suspense y `renderToStaticMarkup` no
+ * espera componentes asincronos: se resuelve el hijo a mano, con las mismas
+ * propiedades que la pagina le dio.
+ */
+const paginaCompleta = async (searchParams: Record<string, string>) => {
+  const pagina = (await PaginaDeTerritorio({
+    searchParams: Promise.resolve(searchParams),
+  })) as CuerpoDeLaPagina;
+
+  return TerritorioCargado(pagina.props.children.props);
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -59,9 +77,7 @@ beforeEach(() => {
 
 describe("Territorio root entry", () => {
   it("ofrece registrar un domicilio como accion primaria y el alta como secundaria", async () => {
-    const html = renderToStaticMarkup(
-      await PaginaDeTerritorio({ searchParams: Promise.resolve({}) }),
-    );
+    const html = renderToStaticMarkup(await paginaCompleta({}));
 
     expect(html.match(/Registrar domicilio/g) ?? []).toHaveLength(1);
     expect(html.match(/Agregar asentamiento/g) ?? []).toHaveLength(1);
@@ -90,9 +106,7 @@ describe("Territorio root entry", () => {
     ]);
 
     const html = renderToStaticMarkup(
-      await PaginaDeTerritorio({
-        searchParams: Promise.resolve({ accion: "domicilio" }),
-      }),
+      await paginaCompleta({ accion: "domicilio" }),
     );
 
     expect(mocks.listarCallesDelMunicipio).toHaveBeenCalled();
@@ -128,13 +142,11 @@ describe("Territorio root entry", () => {
     mocks.lugarPorId.mockResolvedValue(raiz);
     mocks.subarbol.mockResolvedValue([{ clase: "lugar", ...colonia }]);
 
-    await PaginaDeTerritorio({
-      searchParams: Promise.resolve({
-        raiz: raiz.id,
-        nodo: colonia.id,
-        vista: "domicilios",
-        accion: "domicilio",
-      }),
+    await paginaCompleta({
+      raiz: raiz.id,
+      nodo: colonia.id,
+      vista: "domicilios",
+      accion: "domicilio",
     });
 
     expect(mocks.listarCalles).toHaveBeenCalledWith(

@@ -7,7 +7,6 @@ import {
   listarCallesDelMunicipio,
   listarLugares,
   listarRaices,
-  lugarPorId,
   type NodoSeleccionado,
   subarbol,
 } from "@/modules/territorio";
@@ -34,21 +33,16 @@ const domicilioDelNodo = async (
 };
 
 /**
- * La navegacion que la URL pide, con las guardas de la regla 8 en el orden
- * de siempre: la raiz, su subarbol, las calles de la raiz abierta y la
- * direccion nombrada.
+ * Las lecturas que pueden producir 404, y que por eso corren antes del
+ * Suspense de `page.tsx`: un `notFound()` dentro de un limite ya en curso
+ * no puede cambiar el estado, que sale 200. Todas pasan por sus puertos
+ * tenant-scoped; la raiz ya llego resuelta desde la pagina.
  */
-const cargarNavegacion = async (
+export const resolverSeleccionDeTerritorio = async (
   contexto: ContextoActual,
-  { raizId, nodoId, calleId, domicilioId }: ParametrosDeTerritorio,
+  { nodoId, calleId, domicilioId }: ParametrosDeTerritorio,
+  raiz: NodoSeleccionado | null,
 ) => {
-  const raices = await listarRaices(contexto);
-  const raiz = raizId ? await lugarPorId(raizId, contexto) : null;
-
-  // Sin esto una raiz de otro municipio volvia `null` y la pantalla caia al
-  // listado del municipio propio: 200, y ademas otra cosa que la pedida.
-  if (raizId && !raiz) notFound();
-
   const nodos = raiz ? await subarbol(raiz.id, contexto) : [];
   const nodo = nodoResuelto({ raiz, nodos, nodoId });
 
@@ -61,7 +55,47 @@ const cargarNavegacion = async (
 
   const domicilio = await domicilioDelNodo(contexto, domicilioId, nodo);
 
-  return { raices, raiz, nodos, nodo, calles, domicilio };
+  return { nodos, nodo, calles, domicilio };
+};
+
+export type SeleccionDeTerritorio = Awaited<
+  ReturnType<typeof resolverSeleccionDeTerritorio>
+>;
+
+type EntradaDeCarga = {
+  contexto: ContextoActual;
+  parametros: ParametrosDeTerritorio;
+  raiz: NodoSeleccionado | null;
+  seleccion: SeleccionDeTerritorio;
+};
+
+/**
+ * Las lecturas restantes de la pantalla, ya con la seleccion validada.
+ * Corren dentro del Suspense de `page.tsx` y el esqueleto cubre su espera.
+ */
+export const cargarTerritorio = async ({
+  contexto,
+  parametros,
+  raiz,
+  seleccion,
+}: EntradaDeCarga) => {
+  const raices = await listarRaices(contexto);
+
+  // El municipio entero, con raiz abierta o sin ella: alimenta el arbol de
+  // la entrada y el destino del reparenteo, que mueve un lugar a cualquier
+  // rama. Recortarlo al subarbol de la raiz abierta dejaba ese selector con
+  // los lugares que ya estaban debajo del que se mueve, o con ninguno.
+  const lugares = await listarLugares(contexto);
+  const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
+  const paneles = raiz
+    ? { hayCabecera: false, registroAbierto: false, callesDelMunicipio: [] }
+    : await cargarPanelesDeEntrada(
+        contexto,
+        parametros.accion,
+        puedeCrearLugar,
+      );
+
+  return { ...seleccion, raices, lugares, puedeCrearLugar, ...paneles };
 };
 
 /**
@@ -89,32 +123,4 @@ const cargarPanelesDeEntrada = async (
     registroAbierto,
     callesDelMunicipio,
   };
-};
-
-/**
- * Todo lo que la pantalla lee antes de dibujar. Vive fuera del componente
- * para que la complejidad de la pantalla -dos formularios posibles y cuatro
- * estados de URL- no se sume a la de la carga.
- */
-export const cargarTerritorio = async (
-  contexto: ContextoActual,
-  parametros: ParametrosDeTerritorio,
-) => {
-  const navegacion = await cargarNavegacion(contexto, parametros);
-
-  // El municipio entero, con raiz abierta o sin ella: alimenta el arbol de
-  // la entrada y el destino del reparenteo, que mueve un lugar a cualquier
-  // rama. Recortarlo al subarbol de la raiz abierta dejaba ese selector con
-  // los lugares que ya estaban debajo del que se mueve, o con ninguno.
-  const lugares = await listarLugares(contexto);
-  const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
-  const paneles = navegacion.raiz
-    ? { hayCabecera: false, registroAbierto: false, callesDelMunicipio: [] }
-    : await cargarPanelesDeEntrada(
-        contexto,
-        parametros.accion,
-        puedeCrearLugar,
-      );
-
-  return { ...navegacion, lugares, puedeCrearLugar, ...paneles };
 };

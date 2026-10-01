@@ -36,6 +36,7 @@ const entradaBase: EntradaDeRender = {
   municipio: { nombre: "Motul" },
   urlDeValidacion: "https://motul.localhost/validar/VEC-2026-000001?c=abc123",
   reimpresion: false,
+  cancelada: false,
 };
 
 describe("renderizadorReactPdf", () => {
@@ -67,6 +68,15 @@ describe("renderizadorReactPdf", () => {
     await renderizadorReactPdf.aPdf(entradaBase);
 
     expect(toDataURLMock).toHaveBeenCalledWith(entradaBase.urlDeValidacion);
+  });
+
+  it("la marca de cancelacion llega a la plantilla tal como la entrada la trae", async () => {
+    await renderizadorReactPdf.aPdf({ ...entradaBase, cancelada: true });
+
+    const elemento = renderToBufferMock.mock.calls[0]?.[0] as {
+      props: { cancelada: boolean };
+    };
+    expect(elemento.props.cancelada).toBe(true);
   });
 
   it("escudo undefined -> renderiza sin la imagen, no lanza y no descarga nada", async () => {

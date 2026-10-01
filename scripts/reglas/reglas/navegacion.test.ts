@@ -59,6 +59,32 @@ describe("pagina-anidada-sin-migaja", () => {
     ).toEqual([]);
   });
 
+  /**
+   * `(lista)` es un grupo de rutas: no agrega un segmento a la URL, asi que
+   * `padron/(lista)/page.tsx` sigue siendo `/padron`, la raiz de su seccion.
+   */
+  it("no cuenta un grupo de rutas como un nivel mas", () => {
+    expect(
+      hallazgosDe(id, [
+        archivo(
+          "src/app/(panel)/padron/(lista)/page.tsx",
+          'return (\n  <PaginaDePanel titulo="Padron">\n    {children}\n  </PaginaDePanel>\n);\n',
+        ),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("marca un detalle aunque viva dentro de un grupo de rutas", () => {
+    expect(
+      hallazgosDe(id, [
+        archivo(
+          "src/app/(panel)/padron/(lista)/[id]/page.tsx",
+          'return (\n  <PaginaDePanel titulo="Persona">\n    {children}\n  </PaginaDePanel>\n);\n',
+        ),
+      ]),
+    ).toHaveLength(1);
+  });
+
   it("no marca una pantalla que no usa PaginaDePanel", () => {
     expect(
       hallazgosDe(id, [

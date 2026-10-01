@@ -83,6 +83,7 @@ export const renderizadorReactPdf: RenderizadorDeConstancias = {
         qrDataUrl={qrDataUrl}
         urlDeValidacion={entrada.urlDeValidacion}
         reimpresion={entrada.reimpresion}
+        cancelada={entrada.cancelada}
       />,
     );
   },

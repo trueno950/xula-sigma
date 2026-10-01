@@ -9,13 +9,16 @@ import { CLAVE, CORREO, urlDe } from "./municipios";
  * specs anteriores de la corrida ya accedieron con este mismo correo. Es
  * el mismo bucle que `bajaDeLugar.spec.ts` y `mapa-operativo.spec.ts`.
  */
-export async function accederAMotul(page: Page): Promise<void> {
+export async function accederAMotul(
+  page: Page,
+  correo: string = CORREO,
+): Promise<void> {
   for (let intento = 0; intento < 5; intento++) {
     await page.goto(urlDe("motul", "/acceso"));
 
     if (page.url() === urlDe("motul")) return;
 
-    await page.getByLabel("Correo").fill(CORREO);
+    await page.getByLabel("Correo").fill(correo);
     await page.getByLabel("Contrasenia").fill(CLAVE);
     await page.getByRole("button", { name: "Entrar" }).click();
 

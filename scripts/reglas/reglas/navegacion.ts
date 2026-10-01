@@ -10,7 +10,8 @@ import type { Regla } from "../tipos";
  *
  * La raiz de una seccion (`/constancias`, `/padron`) no lleva: no hay padre
  * al que subir, y `segmentos.length < 2` es exactamente esa condicion en la
- * ruta del archivo.
+ * ruta del archivo. Un grupo de rutas, `(lista)`, no es un segmento de la
+ * URL y no cuenta.
  */
 export const paginaAnidadaSinMigaja: Regla = {
   id: "pagina-anidada-sin-migaja",
@@ -25,7 +26,9 @@ export const paginaAnidadaSinMigaja: Regla = {
       );
       if (!encontrado) continue;
 
-      const segmentos = (encontrado[1] as string).split("/");
+      const segmentos = (encontrado[1] as string)
+        .split("/")
+        .filter((segmento) => !/^\(.+\)$/.test(segmento));
       if (segmentos.length < 2) continue;
 
       const codigo = sinComentariosNiCadenas(archivo.contenido);

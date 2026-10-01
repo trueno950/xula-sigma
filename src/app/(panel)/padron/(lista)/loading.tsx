@@ -10,6 +10,10 @@ import { EsqueletoDeFilas } from "@/shared/ui";
  *
  * `loading.tsx` y no un estado en la pagina: el limite de Suspense lo pone
  * el App Router, y el `<h1>` sigue siendo el mismo nodo antes y despues.
+ *
+ * Vive en el grupo `(lista)` para no envolver a `[id]`: un `notFound()` que
+ * corre dentro de este limite ya encontro el estado 200 enviado, y la ficha
+ * de una persona ajena tiene que responder 404.
  */
 export default function CargandoPadron() {
   return (
