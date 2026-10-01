@@ -114,9 +114,16 @@ test("la fila movil deja a la vista el modulo activo a 390px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await abrirMarca(page);
+  await accederAMotul(page);
+  await page.goto(urlDe("motul", "/"));
 
   const fila = page.getByRole("navigation", { name: "Módulos" });
+
+  // Navegación por clic y no goto: lo que se prueba es el ajuste de la
+  // hilera cuando el panel navega en cliente, camino en el que el layout
+  // no se remonta y el efecto depende de la ruta.
+  await fila.getByRole("link", { name: "Marca" }).click();
+
   const activo = fila.getByRole("link", { name: "Marca" });
 
   await expect(activo).toHaveAttribute("aria-current", "page");

@@ -58,5 +58,5 @@ export function NavegacionDeModulos({
     );
   }
 
-  return <FilaDeModulos>{enlaces}</FilaDeModulos>;
+  return <FilaDeModulos ruta={ruta}>{enlaces}</FilaDeModulos>;
 }

@@ -12,14 +12,22 @@ import { type ReactNode, useEffect, useRef } from "react";
  * el SSR y el lector de pantalla no cambian. `block: "nearest"` es para no
  * arrastrar la pagina en vertical al posicionar la hilera.
  */
-export function FilaDeModulos({ children }: { children: ReactNode }) {
+export function FilaDeModulos({
+  children,
+  ruta,
+}: {
+  children: ReactNode;
+  /** La ruta real del request: cambia en cada navegacion del panel. */
+  ruta: string;
+}) {
   const fila = useRef<HTMLElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: la ruta es el disparador intencional: el layout no se remonta al navegar en cliente y sin ella el ajuste solo corria al montar.
   useEffect(() => {
     fila.current
       ?.querySelector('[aria-current="page"]')
       ?.scrollIntoView({ block: "nearest", inline: "center" });
-  }, []);
+  }, [ruta]);
 
   return (
     <nav
