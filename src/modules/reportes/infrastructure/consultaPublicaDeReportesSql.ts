@@ -37,7 +37,7 @@ export const consultaPublicaDeReportesSql: Pick<
 
   async paraConsultaPublicaPorId(tx, id) {
     // El segundo `SELECT` del salto de design.md seccion 14 -mismas cinco
-    // columnas, mismo criterio que `candidatoAOriginal` para el borde entre
+    // columnas, mismo criterio que `comoReporteId` para el borde entre
     // `string` y `ReporteId`.
     const [fila] = await tx
       .select(COLUMNAS_DE_CONSULTA_PUBLICA)

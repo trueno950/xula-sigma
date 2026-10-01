@@ -35,6 +35,7 @@ const contextoCon = (
 
 const reporteId = comoReporteId("11111111-1111-4111-8111-111111111111");
 const originalId = "22222222-2222-4222-8222-222222222222";
+const FOLIO_DEL_ORIGINAL = "REP-2026-000002";
 
 const guardadoCon = (
   parcial: Partial<ReporteGuardado> = {},
@@ -60,10 +61,10 @@ const guardadoCon = (
 describe("cambiarEstadoDeReporte", () => {
   const repositorio: Pick<
     RepositorioDeReportes,
-    "buscarPorId" | "candidatoAOriginal" | "aplicarTransicion"
+    "buscarPorId" | "candidatoAOriginalPorFolio" | "aplicarTransicion"
   > = {
     buscarPorId: vi.fn(),
-    candidatoAOriginal: vi.fn(),
+    candidatoAOriginalPorFolio: vi.fn(),
     aplicarTransicion: vi.fn(),
   };
   const movimientos = { agregar: vi.fn(), historialDe: vi.fn() };
@@ -78,9 +79,9 @@ describe("cambiarEstadoDeReporte", () => {
   const cambiarEstadoDeReporte = () =>
     crearCambiarEstadoDeReporte({ repositorio, movimientos });
 
-  it("candidatoAOriginal se invoca dentro de withTenant, no antes", async () => {
+  it("candidatoAOriginalPorFolio se invoca dentro de withTenant, no antes", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(guardadoCon());
-    vi.mocked(repositorio.candidatoAOriginal).mockResolvedValue({
+    vi.mocked(repositorio.candidatoAOriginalPorFolio).mockResolvedValue({
       id: comoReporteId(originalId),
       duplicadoDeReporteId: null,
     });
@@ -91,22 +92,22 @@ describe("cambiarEstadoDeReporte", () => {
         id: reporteId,
         estadoNuevo: "RECHAZADO",
         motivoDeRechazo: "DUPLICADO",
-        duplicadoDe: originalId,
+        folioDelOriginal: FOLIO_DEL_ORIGINAL,
       },
       contextoCon("ADMIN_MUNICIPAL"),
     );
 
     const ordenTenant = withTenantMock.mock.invocationCallOrder[0];
-    const ordenCandidato = vi.mocked(repositorio.candidatoAOriginal).mock
-      .invocationCallOrder[0];
+    const ordenCandidato = vi.mocked(repositorio.candidatoAOriginalPorFolio)
+      .mock.invocationCallOrder[0];
     expect(ordenTenant).toBeDefined();
     expect(ordenCandidato).toBeDefined();
     expect(ordenTenant as number).toBeLessThan(ordenCandidato as number);
   });
 
-  it("candidatoAOriginal -> null -> NoEncontradoError", async () => {
+  it("candidatoAOriginalPorFolio -> null -> NoEncontradoError", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(guardadoCon());
-    vi.mocked(repositorio.candidatoAOriginal).mockResolvedValue(null);
+    vi.mocked(repositorio.candidatoAOriginalPorFolio).mockResolvedValue(null);
 
     await expect(
       cambiarEstadoDeReporte()(
@@ -114,7 +115,7 @@ describe("cambiarEstadoDeReporte", () => {
           id: reporteId,
           estadoNuevo: "RECHAZADO",
           motivoDeRechazo: "DUPLICADO",
-          duplicadoDe: originalId,
+          folioDelOriginal: FOLIO_DEL_ORIGINAL,
         },
         contextoCon("ADMIN_MUNICIPAL"),
       ),
@@ -124,7 +125,7 @@ describe("cambiarEstadoDeReporte", () => {
   it("vincularDuplicado con original === id -> DuplicadoDeSiMismoError", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(guardadoCon());
     // El candidato resuelve al propio reporte que se esta rechazando.
-    vi.mocked(repositorio.candidatoAOriginal).mockResolvedValue({
+    vi.mocked(repositorio.candidatoAOriginalPorFolio).mockResolvedValue({
       id: reporteId,
       duplicadoDeReporteId: null,
     });
@@ -135,7 +136,7 @@ describe("cambiarEstadoDeReporte", () => {
           id: reporteId,
           estadoNuevo: "RECHAZADO",
           motivoDeRechazo: "DUPLICADO",
-          duplicadoDe: reporteId,
+          folioDelOriginal: FOLIO_DEL_ORIGINAL,
         },
         contextoCon("ADMIN_MUNICIPAL"),
       ),
@@ -152,7 +153,7 @@ describe("cambiarEstadoDeReporte", () => {
           id: reporteId,
           estadoNuevo: "EN_ATENCION",
           motivoDeRechazo: null,
-          duplicadoDe: null,
+          folioDelOriginal: null,
         },
         contextoCon("ADMIN_MUNICIPAL"),
       ),
@@ -170,12 +171,12 @@ describe("cambiarEstadoDeReporte", () => {
         id: reporteId,
         estadoNuevo: "EN_ATENCION",
         motivoDeRechazo: null,
-        duplicadoDe: null,
+        folioDelOriginal: null,
       },
       contextoCon("ADMIN_MUNICIPAL"),
     );
 
-    expect(repositorio.candidatoAOriginal).not.toHaveBeenCalled();
+    expect(repositorio.candidatoAOriginalPorFolio).not.toHaveBeenCalled();
 
     const transicion = vi.mocked(repositorio.aplicarTransicion).mock
       .calls[0]?.[1];

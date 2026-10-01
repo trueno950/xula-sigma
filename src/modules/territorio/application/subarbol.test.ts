@@ -40,6 +40,7 @@ describe("subarbol", () => {
     subarbol: vi.fn(),
     listarRaices: vi.fn(),
     listarLugares: vi.fn(),
+    existeCabecera: vi.fn(),
   };
 
   beforeEach(() => {

@@ -57,7 +57,28 @@ describe("buscarPersonas", () => {
     expect(repositorio.buscar).toHaveBeenCalledExactlyOnceWith(
       expect.anything(),
       "guadalupe kumul",
-      { umbral: UMBRAL_BUSQUEDA, limite: TAMANO_DE_PAGINA + 1 },
+      {
+        umbral: UMBRAL_BUSQUEDA,
+        limite: TAMANO_DE_PAGINA + 1,
+        palabras: ["guadalupe", "kumul"],
+      },
+    );
+  });
+
+  it("propone la CURP escrita por la operadora, sin expandir, junto a las palabras", async () => {
+    const buscarPersonas = crearBuscarPersonas(repositorio, catalogo);
+
+    await buscarPersonas("pocm800101", contexto);
+
+    expect(repositorio.buscar).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      "pocm800101",
+      {
+        umbral: UMBRAL_BUSQUEDA,
+        limite: TAMANO_DE_PAGINA + 1,
+        palabras: ["pocm800101"],
+        curp: "POCM800101",
+      },
     );
   });
 
@@ -97,7 +118,11 @@ describe("buscarPersonas", () => {
     expect(repositorio.buscar).toHaveBeenCalledWith(
       expect.anything(),
       "guadalupe kumul",
-      { umbral: UMBRAL_BUSQUEDA, limite: 3 },
+      {
+        umbral: UMBRAL_BUSQUEDA,
+        limite: 3,
+        palabras: ["guadalupe", "kumul"],
+      },
     );
     expect(resultado).toEqual({ personas: personas.slice(0, 2), hayMas: true });
   });
@@ -115,6 +140,7 @@ describe("buscarPersonas", () => {
       {
         umbral: UMBRAL_BUSQUEDA,
         limite: TAMANO_DE_PAGINA + 1,
+        palabras: ["guadalupe", "kumul"],
         orden: { campo: "persona", direccion: "asc" },
       },
     );

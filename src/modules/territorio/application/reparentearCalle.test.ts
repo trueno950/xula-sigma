@@ -68,8 +68,8 @@ const repositorioDeLugares: RepositorioDeLugares = {
   subarbol: vi.fn(),
   listarRaices: vi.fn(),
   listarLugares: vi.fn(),
+  existeCabecera: vi.fn(),
 };
-
 const lugarPorDefecto = {
   id: destinoId,
   tipo: "cabecera" as const,

@@ -15,6 +15,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearCambiarEstadoDeReporte } from "./application/cambiarEstadoDeReporte";
 import { crearRegistrarReporte } from "./application/registrarReporte";
+import { folioDe } from "./folioDePrueba";
 import { contadorDeFoliosSql } from "./infrastructure/contadorDeFoliosSql";
 import { crearLectorDeReportantesPorPadron } from "./infrastructure/lectorDeReportantesPorPadron";
 import { crearLectorDeUbicacionesPorTerritorio } from "./infrastructure/lectorDeUbicacionesPorTerritorio";
@@ -111,16 +112,17 @@ describe("un ciclo metido por SQL crudo degrada, nunca cuelga", () => {
       `),
     );
 
-    // `candidatoAOriginal(A)` devuelve `{ id: A, duplicadoDeReporteId: B }`
-    // -no null-, asi que `vincularDuplicado` resuelve en UN salto a B, sin
-    // recursion. Es el estado equivocado, visible y acotado que design.md
-    // seccion 8 admite: nunca un bucle.
+    // `candidatoAOriginalPorFolio(tx, folioDeA)` resuelve por el folio -el
+    // numero que la operadora teclea- y devuelve `{ id: A,
+    // duplicadoDeReporteId: B }`, nunca null, asi que `vincularDuplicado`
+    // resuelve en UN salto a B, sin recursion. Es el estado equivocado,
+    // visible y acotado que design.md seccion 8 admite: nunca un bucle.
     await cambiarEstadoDeReporte(
       {
         id: idC,
         estadoNuevo: "RECHAZADO",
         motivoDeRechazo: "DUPLICADO",
-        duplicadoDe: idA,
+        folioDelOriginal: await folioDe(motul, idA),
       },
       admin,
     );

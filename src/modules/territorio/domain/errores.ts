@@ -53,6 +53,23 @@ export class JerarquiaInvalidaError extends Error {
   }
 }
 
+/**
+ * `altaDeLugar` rechaza una segunda cabecera: `lugares_una_cabecera` es un
+ * indice unico parcial por municipio (`ayuntamiento_id` con `tipo =
+ * 'cabecera'`), y `repositorioDeLugaresSql.crear` traduce su violacion
+ * (SQLSTATE `23505`). El indice cuenta tambien la cabecera dada de baja.
+ */
+export class CabeceraDuplicadaError extends Error {
+  readonly codigo = "CABECERA_DUPLICADA";
+
+  constructor(
+    mensaje = "Ya existe una cabecera municipal. Solo puede haber una.",
+  ) {
+    super(mensaje);
+    this.name = "CabeceraDuplicadaError";
+  }
+}
+
 export class CatalogoDeCallesSoloEnAsentamientosError extends Error {
   readonly codigo = "CATALOGO_DE_CALLES_SOLO_EN_ASENTAMIENTOS";
 

@@ -21,12 +21,12 @@ export type EntradaDeCambioDeEstado = {
   id: ReporteId;
   estadoNuevo: EstadoDeReporte;
   motivoDeRechazo: MotivoDeRechazo | null;
-  duplicadoDe: string | null;
+  folioDelOriginal: string | null;
 };
 
 /**
  * Resuelve el original antes de guardar (design.md seccion 8 y 12, paso
- * 2c-2d): `candidatoAOriginal` corre **dentro** de `tx` -si se leyera
+ * 2c-2d): `candidatoAOriginalPorFolio` corre **dentro** de `tx` -si se leyera
  * afuera, otra transaccion podria marcar el candidato duplicado en el medio
  * y este UPDATE guardaria un vinculo a un duplicado-.
  */
@@ -35,21 +35,24 @@ async function resolverOriginal({
   tx,
   reporteId,
   motivoDeRechazo,
-  duplicadoDe,
+  folioDelOriginal,
 }: {
-  repositorio: Pick<RepositorioDeReportes, "candidatoAOriginal">;
+  repositorio: Pick<RepositorioDeReportes, "candidatoAOriginalPorFolio">;
   tx: TransaccionTenant;
   reporteId: ReporteId;
   motivoDeRechazo: MotivoDeRechazo | null;
-  duplicadoDe: string | null;
+  folioDelOriginal: string | null;
 }): Promise<string | null> {
   const exigeVinculo = motivoDeRechazo === "DUPLICADO";
-  if (exigeVinculo !== (duplicadoDe !== null)) {
+  if (exigeVinculo !== (folioDelOriginal !== null)) {
     throw new DuplicadoSinOriginalError();
   }
-  if (!exigeVinculo || duplicadoDe === null) return null;
+  if (!exigeVinculo || folioDelOriginal === null) return null;
 
-  const candidato = await repositorio.candidatoAOriginal(tx, duplicadoDe);
+  const candidato = await repositorio.candidatoAOriginalPorFolio(
+    tx,
+    folioDelOriginal,
+  );
   if (!candidato) throw new NoEncontradoError();
   return vincularDuplicado(reporteId, candidato);
 }
@@ -119,7 +122,7 @@ export function crearCambiarEstadoDeReporte({
 }: {
   repositorio: Pick<
     RepositorioDeReportes,
-    "buscarPorId" | "candidatoAOriginal" | "aplicarTransicion"
+    "buscarPorId" | "candidatoAOriginalPorFolio" | "aplicarTransicion"
   >;
   movimientos: Pick<RegistroDeMovimientos, "agregar">;
 }) {
@@ -142,7 +145,7 @@ export function crearCambiarEstadoDeReporte({
         tx,
         reporteId: datos.id,
         motivoDeRechazo: datos.motivoDeRechazo,
-        duplicadoDe: datos.duplicadoDe,
+        folioDelOriginal: datos.folioDelOriginal,
       });
 
       await confirmarTransicion({

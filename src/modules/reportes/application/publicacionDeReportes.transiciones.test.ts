@@ -78,7 +78,7 @@ beforeEach(() => {
 describe("cambiarEstadoDeReporte publica el estado", () => {
   const repositorio = {
     buscarPorId: vi.fn(),
-    candidatoAOriginal: vi.fn(),
+    candidatoAOriginalPorFolio: vi.fn(),
     aplicarTransicion: vi.fn(),
   };
   const movimientos = { agregar: vi.fn(), historialDe: vi.fn() };
@@ -90,7 +90,7 @@ describe("cambiarEstadoDeReporte publica el estado", () => {
     id: reporteId,
     estadoNuevo: "EN_ATENCION" as const,
     motivoDeRechazo: null,
-    duplicadoDe: null,
+    folioDelOriginal: null,
   };
 
   it("publica {reporte, id, estado} en el tx, despues de transicionar y auditar", async () => {

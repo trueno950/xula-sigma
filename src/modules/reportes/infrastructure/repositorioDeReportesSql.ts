@@ -17,7 +17,7 @@ const ESTADOS_NO_TERMINALES = ESTADOS_DE_REPORTE.filter(
  * aisla cada operacion, cubierto por los tests de aislamiento y los de
  * integracion de esta rebanada, no por un mock de este archivo.
  *
- * Esta rebanada agrega `candidatoAOriginal`, `aplicarTransicion`,
+ * Esta rebanada agrega `candidatoAOriginalPorFolio`, `aplicarTransicion`,
  * `asignarArea` y `contarDuplicadosDe` -los cuatro que `cambiarEstadoDeReporte`,
  * `asignarAreaDeReporte` y el conteo de duplicados de tasks.md 5.13 necesitan-
  * (tasks.md 5.3, 5.14), sobre `guardar`, `buscarPorId` y `listar` de la
@@ -34,7 +34,7 @@ export const repositorioDeReportesSql: Pick<
   | "buscarPorId"
   | "listar"
   | "buscar"
-  | "candidatoAOriginal"
+  | "candidatoAOriginalPorFolio"
   | "aplicarTransicion"
   | "asignarArea"
   | "contarDuplicadosDe"
@@ -52,18 +52,14 @@ export const repositorioDeReportesSql: Pick<
     return fila ? aReporteGuardado(fila) : null;
   },
 
-  async candidatoAOriginal(tx, id) {
-    // `id` llega como `string` desde el caso de uso -es el `duplicadoDe`
-    // que eligio el operador, todavia sin verificar (design.md seccion 3)-;
-    // `comoReporteId` es el borde donde se vuelve el tipo marcado que espera
-    // la columna, mismo criterio que `?raiz=` en `territorio`.
+  async candidatoAOriginalPorFolio(tx, folio) {
     const [fila] = await tx
       .select({
         id: reportes.id,
         duplicadoDeReporteId: reportes.duplicadoDeReporteId,
       })
       .from(reportes)
-      .where(eq(reportes.id, comoReporteId(id)));
+      .where(eq(reportes.folio, folio));
 
     return fila ?? null;
   },

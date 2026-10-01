@@ -15,6 +15,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearCambiarEstadoDeReporte } from "./application/cambiarEstadoDeReporte";
 import { crearRegistrarReporte } from "./application/registrarReporte";
+import { folioDe } from "./folioDePrueba";
 import { contadorDeFoliosSql } from "./infrastructure/contadorDeFoliosSql";
 import { crearLectorDeReportantesPorPadron } from "./infrastructure/lectorDeReportantesPorPadron";
 import { crearLectorDeUbicacionesPorTerritorio } from "./infrastructure/lectorDeUbicacionesPorTerritorio";
@@ -101,7 +102,7 @@ describe("atomicidad de la transicion", () => {
           id,
           estadoNuevo: "EN_ATENCION",
           motivoDeRechazo: null,
-          duplicadoDe: null,
+          folioDelOriginal: null,
         },
         admin,
       ),
@@ -128,7 +129,7 @@ describe("contarDuplicadosDe", () => {
         id: idB,
         estadoNuevo: "RECHAZADO",
         motivoDeRechazo: "DUPLICADO",
-        duplicadoDe: idA,
+        folioDelOriginal: await folioDe(motul, idA),
       },
       admin,
     );

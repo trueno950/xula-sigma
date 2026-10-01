@@ -73,6 +73,7 @@ describe("nombres accesibles de las filas y acciones", () => {
           },
         ]}
         lugares={[]}
+        hayCabecera={false}
         puedeEscribir
         altaAbierta={false}
       />,

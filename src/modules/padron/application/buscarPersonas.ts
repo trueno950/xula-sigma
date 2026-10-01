@@ -1,7 +1,11 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { OrdenDePersonas } from "../domain";
-import { normalizarParaBusqueda, resolverPagina } from "../domain";
+import {
+  criteriosDeBusqueda,
+  normalizarParaBusqueda,
+  resolverPagina,
+} from "../domain";
 import { TAMANO_DE_PAGINA } from "./listarPersonas";
 import type {
   CatalogoDeAbreviaturas,
@@ -52,6 +56,7 @@ export function crearBuscarPersonas(
       const filas = await repositorio.buscar(tx, cadenaExpandida, {
         umbral: UMBRAL_BUSQUEDA,
         limite: limite + 1,
+        ...criteriosDeBusqueda(cadena, cadenaExpandida),
         ...(opciones?.orden ? { orden: opciones.orden } : {}),
       });
       const pagina = resolverPagina(filas, limite);

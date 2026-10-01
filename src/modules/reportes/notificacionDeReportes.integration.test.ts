@@ -98,7 +98,7 @@ describe("notificacion de mutaciones de reportes", () => {
         id,
         estadoNuevo: "EN_ATENCION",
         motivoDeRechazo: null,
-        duplicadoDe: null,
+        folioDelOriginal: null,
       },
       admin(),
     );
@@ -153,7 +153,7 @@ describe("notificacion de mutaciones de reportes", () => {
           id,
           estadoNuevo: "EN_ATENCION",
           motivoDeRechazo: null,
-          duplicadoDe: null,
+          folioDelOriginal: null,
         },
         contextoConActorInvalido(),
       ),

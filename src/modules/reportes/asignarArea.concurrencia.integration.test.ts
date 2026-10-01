@@ -93,7 +93,7 @@ describe("asignarArea contra un reporte ya cerrado", () => {
         id,
         estadoNuevo: "RESUELTO",
         motivoDeRechazo: null,
-        duplicadoDe: null,
+        folioDelOriginal: null,
       },
       admin,
     );

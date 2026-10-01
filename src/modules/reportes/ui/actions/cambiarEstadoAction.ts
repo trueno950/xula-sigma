@@ -16,7 +16,9 @@ import {
   DuplicadoDeSiMismoError,
   DuplicadoSinOriginalError,
   ESTADOS_DE_REPORTE,
+  esFolioDeReporte,
   MOTIVOS_DE_RECHAZO,
+  normalizarFolio,
   ReporteCerradoError,
   TransicionInvalidaError,
 } from "../../domain";
@@ -33,10 +35,16 @@ const esquemaDeEntrada = z.object({
   id: z.string().trim().uuid(),
   estadoNuevo: z.enum(ESTADOS_DE_REPORTE),
   motivoDeRechazo: z.enum(MOTIVOS_DE_RECHAZO).optional(),
-  duplicadoDe: z.string().trim().uuid().optional(),
+  folioDelOriginal: z
+    .string()
+    .transform(normalizarFolio)
+    .refine(esFolioDeReporte)
+    .optional(),
 });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Datos de la transicion invalidos.";
+const MENSAJE_FOLIO_INVALIDO =
+  "El folio del reporte original debe tener la forma REP-AAAA-000123.";
 const MENSAJE_GENERICO = "No se pudo cambiar el estado. Intente de nuevo.";
 
 const redirigirConError = (id: string, mensaje: string): never =>
@@ -64,14 +72,20 @@ export async function cambiarEstadoAction(formData: FormData): Promise<void> {
     id: formData.get("id"),
     estadoNuevo: formData.get("estadoNuevo"),
     motivoDeRechazo: formData.get("motivoDeRechazo") || undefined,
-    duplicadoDe: formData.get("duplicadoDe") || undefined,
+    folioDelOriginal: formData.get("folioDelOriginal") || undefined,
   });
 
   const idCrudo = formData.get("id");
   const idParaRedirigir = typeof idCrudo === "string" ? idCrudo : "";
 
   if (!analisis.success) {
-    redirigirConError(idParaRedirigir, MENSAJE_FORMULARIO_INVALIDO);
+    const fallaElFolio = analisis.error.issues.some(
+      (problema) => problema.path[0] === "folioDelOriginal",
+    );
+    redirigirConError(
+      idParaRedirigir,
+      fallaElFolio ? MENSAJE_FOLIO_INVALIDO : MENSAJE_FORMULARIO_INVALIDO,
+    );
     return;
   }
 
@@ -79,7 +93,7 @@ export async function cambiarEstadoAction(formData: FormData): Promise<void> {
 
   if (!contexto) redirect("/acceso");
 
-  const { id, estadoNuevo, motivoDeRechazo, duplicadoDe } = analisis.data;
+  const { id, estadoNuevo, motivoDeRechazo, folioDelOriginal } = analisis.data;
 
   try {
     await cambiarEstadoDeReporte(
@@ -87,7 +101,7 @@ export async function cambiarEstadoAction(formData: FormData): Promise<void> {
         id: comoReporteId(id),
         estadoNuevo,
         motivoDeRechazo: motivoDeRechazo ?? null,
-        duplicadoDe: duplicadoDe ?? null,
+        folioDelOriginal: folioDelOriginal ?? null,
       },
       contexto,
     );

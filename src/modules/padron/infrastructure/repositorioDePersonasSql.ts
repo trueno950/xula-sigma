@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, or, sql } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import type {
   OpcionesDeBusqueda,
   OpcionesDeListado,
@@ -8,8 +8,14 @@ import type {
 } from "../application/puertos";
 import type { PersonaId } from "../domain";
 import { comoPersonaId, normalizarParaBusqueda } from "../domain";
+import { consultaDeBusqueda } from "./coincidenciasDeBusquedaSql";
 import { personas } from "./esquema";
 import { fusionarSql, revertirFusionSql } from "./fusionDePersonasSql";
+import {
+  aPersonaGuardada,
+  columnasDeLectura,
+  ordenPorPersona,
+} from "./lecturaDePersonasSql";
 
 /**
  * Implementacion real de `RepositorioDePersonas` contra `personas`.
@@ -26,30 +32,6 @@ const cadenaDeNombre = (persona: PersonaParaGuardar): string =>
     .filter((parte): parte is string => Boolean(parte))
     .join(" ");
 
-const columnasDeLectura = {
-  id: personas.id,
-  nombres: personas.nombres,
-  primerApellido: personas.primerApellido,
-  segundoApellido: personas.segundoApellido,
-  curp: personas.curp,
-  bajaEn: personas.bajaEn,
-};
-
-/**
- * `personas.id` sale de Postgres como `string` a secas -Drizzle no conoce
- * la marca de `PersonaId`-, y `comoAyuntamientoId` ya fija el precedente
- * de validar incluso lo que viene de una fuente confiable en vez de un
- * `as` (`shared/tenancy/ayuntamientoId.ts`).
- */
-const aPersonaGuardada = (fila: {
-  id: string;
-  nombres: string;
-  primerApellido: string;
-  segundoApellido: string | null;
-  curp: string | null;
-  bajaEn: Date | null;
-}): PersonaGuardada => ({ ...fila, id: comoPersonaId(fila.id) });
-
 /**
  * `id` cualquiera -ganador o perdedor- resuelto a su terminal (design.md
  * decision 3, invariante: `fusionadaEn` ya llega colapsado, un solo
@@ -58,17 +40,6 @@ const aPersonaGuardada = (fila: {
  */
 const terminalDe = (id: string) =>
   sql`COALESCE((SELECT ${personas.fusionadaEn} FROM ${personas} WHERE ${personas.id} = ${id}), ${id})`;
-
-/**
- * El unico campo ordenable de `OpcionesDeListado` (`domain/ordenDePersonas.ts`,
- * "persona") es el mismo criterio que ya usa `listar` por defecto:
- * apellido, despues nombre. Compartido por `listar` y `buscar` para que las
- * dos ordenen exactamente igual cuando el operador lo pide.
- */
-const ordenPorPersona = (direccion: "asc" | "desc") => {
-  const aplicar = direccion === "desc" ? desc : asc;
-  return [aplicar(personas.primerApellido), aplicar(personas.nombres)];
-};
 
 export const repositorioDePersonasSql: RepositorioDePersonas = {
   async guardar(tx, { id, ayuntamientoId, persona, expansiones }) {
@@ -171,25 +142,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       sql`SELECT set_config('pg_trgm.similarity_threshold', ${String(opciones.umbral)}, true)`,
     );
 
-    const filas = await tx
-      .select(columnasDeLectura)
-      .from(personas)
-      .where(
-        and(
-          isNull(personas.bajaEn),
-          // Redirigida por una fusion: mismo motivo que `listar`, arriba.
-          isNull(personas.fusionadaEn),
-          sql`${personas.nombreNormalizado} % ${cadenaExpandida}`,
-        ),
-      )
-      .orderBy(
-        ...(opciones.orden
-          ? ordenPorPersona(opciones.orden.direccion)
-          : [
-              sql`similarity(${personas.nombreNormalizado}, ${cadenaExpandida}) desc`,
-            ]),
-      )
-      .limit(opciones.limite);
+    const filas = await consultaDeBusqueda(tx, cadenaExpandida, opciones);
 
     return filas.map(aPersonaGuardada);
   },
