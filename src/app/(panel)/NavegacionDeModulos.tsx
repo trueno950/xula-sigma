@@ -37,11 +37,15 @@ export function NavegacionDeModulos({
         href={destino}
         aria-current={activo ? "page" : undefined}
         className={`flex shrink-0 items-center gap-2 rounded-sm text-[15px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca ${
-          esBarra ? "h-11 px-3" : "h-9 px-2.5"
+          esBarra ? "h-11 border-l-2 px-3" : "h-9 px-2.5"
         } ${
           activo
-            ? "bg-caliza-relleno font-medium text-caliza-tinta"
-            : "text-caliza-apagada hover:bg-caliza-superficie hover:text-caliza-tinta"
+            ? esBarra
+              ? "border-marca bg-caliza-relleno font-medium text-caliza-tinta"
+              : "bg-caliza-relleno font-medium text-marca"
+            : `${
+                esBarra ? "border-transparent" : ""
+              } text-caliza-apagada hover:bg-caliza-superficie hover:text-caliza-tinta`
         }`}
       >
         <Icono size={20} weight={activo ? "fill" : "regular"} />
