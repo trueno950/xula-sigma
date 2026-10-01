@@ -7,16 +7,11 @@
  */
 export const PREFIJO_DE_REPORTE = "REP";
 
-/**
- * Misma forma que `Folio.crear`: `padStart(6, "0")` sin recorte, asi que el
- * consecutivo puede tener mas de seis digitos.
- */
 const FORMATO_DE_FOLIO = new RegExp(`^${PREFIJO_DE_REPORTE}-\\d{4}-\\d{6,}$`);
 
 export const esFolioDeReporte = (texto: string): boolean =>
   FORMATO_DE_FOLIO.test(texto);
 
-/** Lo que el operador teclea a mano: sin espacios de mas y sin importar mayusculas. */
 export const normalizarFolio = (texto: string): string =>
   texto.trim().toUpperCase();
 

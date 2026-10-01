@@ -112,10 +112,11 @@ describe("un ciclo metido por SQL crudo degrada, nunca cuelga", () => {
       `),
     );
 
-    // `candidatoAOriginal(A)` devuelve `{ id: A, duplicadoDeReporteId: B }`
-    // -no null-, asi que `vincularDuplicado` resuelve en UN salto a B, sin
-    // recursion. Es el estado equivocado, visible y acotado que design.md
-    // seccion 8 admite: nunca un bucle.
+    // `candidatoAOriginalPorFolio(tx, folioDeA)` resuelve por el folio -el
+    // numero que la operadora teclea- y devuelve `{ id: A,
+    // duplicadoDeReporteId: B }`, nunca null, asi que `vincularDuplicado`
+    // resuelve en UN salto a B, sin recursion. Es el estado equivocado,
+    // visible y acotado que design.md seccion 8 admite: nunca un bucle.
     await cambiarEstadoDeReporte(
       {
         id: idC,

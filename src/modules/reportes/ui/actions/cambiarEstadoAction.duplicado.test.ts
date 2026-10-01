@@ -70,7 +70,7 @@ describe("cambiarEstadoAction, rechazo por duplicado", () => {
     await expect(
       cambiarEstadoAction(rechazo({ folioDelOriginal: ID })),
     ).rejects.toThrow(
-      `error=${encodeURIComponent("El folio del reporte original debe tener la forma REP-2026-000123.")}`,
+      `error=${encodeURIComponent("El folio del reporte original debe tener la forma REP-AAAA-000123.")}`,
     );
 
     expect(cambiarEstadoMock).not.toHaveBeenCalled();

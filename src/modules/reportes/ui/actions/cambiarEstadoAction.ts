@@ -44,7 +44,7 @@ const esquemaDeEntrada = z.object({
 
 const MENSAJE_FORMULARIO_INVALIDO = "Datos de la transicion invalidos.";
 const MENSAJE_FOLIO_INVALIDO =
-  "El folio del reporte original debe tener la forma REP-2026-000123.";
+  "El folio del reporte original debe tener la forma REP-AAAA-000123.";
 const MENSAJE_GENERICO = "No se pudo cambiar el estado. Intente de nuevo.";
 
 const redirigirConError = (id: string, mensaje: string): never =>

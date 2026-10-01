@@ -87,7 +87,7 @@ export function AccionesDeReporte({ reporteId, estadoActual }: Props) {
             id={`original-${reporteId}`}
             name="folioDelOriginal"
             etiqueta="Folio del reporte original"
-            placeholder="REP-2026-000123"
+            placeholder="REP-AAAA-000123"
             ayuda="Solo si el motivo es Duplicado."
             tipografia="dato"
             autoComplete="off"
