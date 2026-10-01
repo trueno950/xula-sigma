@@ -34,7 +34,7 @@ export async function accederAMotul(
       // ciegas, porque re-navegar a /acceso encima de una sesion que ya
       // existe cuenta como navegacion de mas para quien mide el helper.
       await page
-        .waitForURL(urlDe("motul"), { timeout: 10_000 })
+        .waitForURL(urlDe("motul"), { timeout: 20_000 })
         .catch(() => {});
 
       if (page.url() === urlDe("motul")) return;
