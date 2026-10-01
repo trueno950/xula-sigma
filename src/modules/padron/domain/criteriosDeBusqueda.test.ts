@@ -49,4 +49,12 @@ describe("criteriosDeBusqueda", () => {
   it("no propone un fragmento con comodines de LIKE como CURP", () => {
     expect(criteriosDeBusqueda("POCM8%01", "pocm8%01").curp).toBe(undefined);
   });
+
+  it("corta en 8 palabras una cadena con mas, porque cada una se vuelve predicados", () => {
+    const veinte = Array.from({ length: 20 }, (_, i) => `palabra${i}`).join(
+      " ",
+    );
+
+    expect(criteriosDeBusqueda(veinte, veinte).palabras).toHaveLength(8);
+  });
 });

@@ -145,3 +145,34 @@ describe("aislamiento de la busqueda por palabra y por CURP", () => {
     expect(personas[0]?.id).not.toBe(personaDeMotul);
   });
 });
+
+/**
+ * El `ORDER BY` de `buscar` ordena por `similarity` y, si hay coincidencias,
+ * por CURP. Con `LIMIT`, una coincidencia de CURP -cuya similitud con la
+ * cadena tecleada es casi cero- queda detras de cualquier nombre que se
+ * parezca un poco, y se cae de la pagina.
+ */
+describe("la coincidencia por CURP no se cae de la pagina", () => {
+  it("con mas coincidencias por trigramas que el limite, la de CURP entra igual", async () => {
+    const porTrigramas = [
+      { nombres: "Xopz", primerApellido: "Uc" },
+      { nombres: "Xopz", primerApellido: "Uz" },
+      { nombres: "Xopo", primerApellido: "Xopz" },
+    ];
+
+    for (const nombres of porTrigramas) {
+      await altaDePersona(
+        { ...nombres, segundoApellido: null, curp: null },
+        enMotul,
+      );
+    }
+
+    const { personas, hayMas } = await buscarPersonas("XOPZ8001", enMotul, {
+      limite: 2,
+    });
+
+    expect(personas).toHaveLength(2);
+    expect(hayMas).toBe(true);
+    expect(personas[0]?.id).toBe(personaDeMotul);
+  });
+});

@@ -8,6 +8,16 @@
  */
 const FRAGMENTO_DE_CURP = /^[A-Z]{4}\d[A-Z0-9]{0,13}$/;
 
+/**
+ * Tope de palabras que entran al `WHERE`. Cada palabra se vuelve dos
+ * expresiones SQL -prefijo de la cadena y palabra interior-, y `/padron`
+ * acepta `q` sin largo maximo: sin tope, una cadena de cientos de palabras
+ * arma una consulta de cientos de condiciones contra la base. Ocho ya
+ * cubre "nombres y apellidos" de una persona real; lo que sobra se
+ * descarta por la cola, que es donde una cadena pegaso agrega ruido.
+ */
+const MAXIMO_DE_PALABRAS = 8;
+
 export type CriteriosDeBusqueda = {
   readonly palabras: readonly string[];
   readonly curp?: string;
@@ -27,7 +37,10 @@ export function criteriosDeBusqueda(
   cadena: string,
   cadenaExpandida: string,
 ): CriteriosDeBusqueda {
-  const palabras = cadenaExpandida.split(/\s+/).filter(Boolean);
+  const palabras = cadenaExpandida
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, MAXIMO_DE_PALABRAS);
   const compacta = cadena.replace(/\s+/g, "").toUpperCase();
 
   return FRAGMENTO_DE_CURP.test(compacta)
