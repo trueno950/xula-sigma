@@ -26,9 +26,8 @@ type Props = {
   /** Todos los lugares del municipio: de aca sale que cuelga de que. */
   lugares: readonly LugarDelArbol[];
   /**
-   * Lo lee la pagina con `existeCabecera`, no de `lugares`: el indice
-   * `lugares_una_cabecera` tambien cuenta las cabeceras dadas de baja, y
-   * `lugares` solo trae las activas.
+   * No se deriva de `lugares`; el motivo vive en `application/puertos.ts`,
+   * en el contrato de `RepositorioDeLugares.existeCabecera`.
    */
   hayCabecera: boolean;
   puedeEscribir: boolean;

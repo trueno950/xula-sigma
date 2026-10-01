@@ -17,11 +17,7 @@ const empiezaPalabra = (palabra: string) =>
   sql`(starts_with(${personas.nombreNormalizado}, ${palabra}) OR strpos(${personas.nombreNormalizado}, ${` ${palabra}`}) > 0)`;
 
 /**
- * Lo que la busqueda suma a la similitud de trigramas: prefijo de palabra
- * sobre el nombre normalizado y prefijo de CURP. La similitud sola no
- * encuentra "Poot" dentro de "maria guadalupe poot canul" -una palabra
- * suelta comparte pocos trigramas con la cadena entera-, y nunca consulta
- * la CURP.
+ * El motivo de los criterios vive en `domain/criteriosDeBusqueda.ts`.
  *
  * **Una rama por criterio, unidas con `UNION`, y no un solo `OR`.** Con el
  * `OR`, Postgres no puede armar un plan por indice: un `OR` se resuelve por
@@ -36,9 +32,6 @@ const empiezaPalabra = (palabra: string) =>
  * criterios consume un solo lugar del `LIMIT`, que es lo que un `UNION ALL`
  * con deduplicacion en la aplicacion no puede garantizar sin traer todas
  * las coincidencias del municipio.
- *
- * `cadenaExpandida` ya paso por `normalizarParaBusqueda`; la CURP sale de
- * `cadena` porque la expansion de abreviaturas no debe tocarla.
  */
 export const ramasDeCoincidencia = (
   cadenaExpandida: string,
