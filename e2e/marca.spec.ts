@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
 import { altaDePersona } from "@/shared/auth/alta";
 import { comoAyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
-import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+import { withTenant } from "@/shared/tenancy/withTenant";
 import { accederAMotul } from "./acceder";
 import { liberarVentanaDeRitmo } from "./calles.fixture";
 import { CLAVE, MUNICIPIOS, urlDe } from "./municipios";
@@ -20,18 +20,14 @@ const correoDeOperador = `operador-${randomUUID()}@example.com`;
 test.beforeAll(async () => {
   const motul = comoAyuntamientoId(MUNICIPIOS.motul.id);
 
-  try {
-    await withTenant(motul, (tx) =>
-      altaDePersona(tx, motul, {
-        nombre: "Operador de Motul",
-        email: correoDeOperador,
-        clave: CLAVE,
-        rol: "OPERADOR",
-      }),
-    );
-  } finally {
-    await cerrarConexion();
-  }
+  await withTenant(motul, (tx) =>
+    altaDePersona(tx, motul, {
+      nombre: "Operador de Motul",
+      email: correoDeOperador,
+      clave: CLAVE,
+      rol: "OPERADOR",
+    }),
+  );
 });
 
 /**
