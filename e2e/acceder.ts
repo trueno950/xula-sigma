@@ -29,7 +29,13 @@ export async function accederAMotul(
       if (!(error instanceof Error) || error.name !== "TimeoutError")
         throw error;
 
-      await page.waitForTimeout(5_000);
+      // El clic puede haber dejado el sign-in en vuelo (hidratacion lenta
+      // sobre un servidor cargado): esperar el redirect y no dormir a
+      // ciegas, porque re-navegar a /acceso encima de una sesion que ya
+      // existe cuenta como navegacion de mas para quien mide el helper.
+      await page
+        .waitForURL(urlDe("motul"), { timeout: 10_000 })
+        .catch(() => {});
 
       if (page.url() === urlDe("motul")) return;
     }
