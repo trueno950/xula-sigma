@@ -35,6 +35,10 @@ test("la pantalla de acceso lleva su propio titulo", async ({ page }) => {
 test("el helper reconoce el acceso que termina durante la espera de reintento", async ({
   page,
 }) => {
+  // La coreografia demora el sign-in 7s a proposito y el helper reintenta
+  // con esperas propias: el presupuesto por defecto de 30s quedo corto bajo
+  // la carga de la corrida completa.
+  test.setTimeout(60_000);
   page.setDefaultTimeout(1_000);
   page.setDefaultNavigationTimeout(15_000);
 
