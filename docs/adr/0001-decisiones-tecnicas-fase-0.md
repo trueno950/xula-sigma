@@ -682,7 +682,7 @@ Configuración en `.gga`, commiteada:
 
 | Clave | Valor | Por qué |
 |---|---|---|
-| `PROVIDER` | `opencode:deepseek/deepseek-v4-pro` | Modelo fijado, ver abajo |
+| `PROVIDER` | `opencode:deepseek/deepseek-flash` | Modelo fijado, ver abajo |
 | `OPENCODE_AGENT` | `gga-reviewer` | Agente propio, ver abajo |
 | `FILE_PATTERNS` | `*.ts,*.tsx,*.sql` | Los `.sql` entran a propósito, ver abajo |
 | `EXCLUDE_PATTERNS` | `*.d.ts` | Los tests **no** se excluyen, ver abajo |
@@ -699,8 +699,11 @@ Dos desvíos deliberados de la plantilla por defecto de GGA:
   del código generado por IA. Si el revisor no ve los tests, no puede
   detectarlo.
 
-`OPENCODE_VARIANT` queda sin fijar para que el pre-commit local corra
-rápido. CI lo sube con `GGA_OPENCODE_VARIANT=high`.
+`OPENCODE_VARIANT` queda sin fijar en `.gga`; cada superficie la pasa por
+entorno, porque el costo de razonamiento no es el mismo en todas: CI usa
+`low` —las variantes altas agotaban el presupuesto sobre un diff grande y no
+llegaban a escribir `STATUS:`, que con `STRICT_MODE` falla—, `pnpm revision`
+usa `high` y los `revision:local*`, `max`.
 
 ### El modelo se fija, no se hereda
 
@@ -711,7 +714,20 @@ configuración personal de la máquina y puede cambiar sin aviso.
 Una revisión de código tiene que ser reproducible: el modelo se fija en
 `.gga`, que está commiteado.
 
-Modelo elegido: `deepseek/deepseek-v4-pro`.
+Modelo elegido: `deepseek/deepseek-flash`.
+
+#### Corrección — 2026-09-30, por costo
+
+Esta sección elegía `deepseek-v4-pro`. Se cambió a `deepseek-flash`: mismo
+proveedor y misma credencial —`DEEPSEEK_API_KEY`, que no cambia— y menos
+gasto por corrida, que es lo que pesa cuando el revisor corre en cada push
+de cada PR.
+
+El motivo que había fijado `deepseek-v4-pro` sigue en pie y no se toca: el
+nombre anterior, `deepseek-v4-flash`, ya no existe en el catálogo y GGA
+fallaba con un `ProviderModelNotFoundError` disfrazado de `UnknownError`.
+La diferencia es que `deepseek-flash` **sí** está en el catálogo; se
+verificó con `opencode models deepseek` antes de fijarlo.
 
 ### El agente también se fija
 

@@ -6,22 +6,20 @@
 # merced del default de opencode, que puede cambiar sin avisar. Una revision
 # de codigo tiene que ser reproducible: el modelo se fija aca.
 #
-# `deepseek-v4-pro`: `deepseek-v4-flash` dejo de existir en el catalogo de
-# opencode 1.18.32 (`opencode models deepseek` lista `deepseek-flash` y
-# `deepseek-v4-pro`) y GGA fallaba con un `UnknownError` que en realidad era
-# `ProviderModelNotFoundError`. Mismo proveedor: sigue valiendo el reparto
-# de credenciales de abajo.
-PROVIDER="opencode:deepseek/deepseek-v4-pro"
+# `deepseek-flash`: mismo proveedor y misma credencial que antes, mas barato
+# que `deepseek-v4-pro` en cada corrida. El catalogo de opencode 1.18.32
+# (`opencode models deepseek`) lista exactamente `deepseek-flash` y
+# `deepseek-v4-pro`; el nombre viejo `deepseek-v4-flash` no existe ahi y GGA
+# fallaba con un `UnknownError` que en realidad era
+# `ProviderModelNotFoundError`.
+PROVIDER="opencode:deepseek/deepseek-flash"
 
-# Y sigue siendo DeepSeek en CI aunque en local se revise con otro modelo. No es
-# preferencia: en `opencode auth`, `deepseek` esta como `api` y `openai`
-# como `oauth`. La API key entra a un runner como secreto y se rota; el
-# token OAuth de una suscripcion esta atado a la maquina y a la cuenta, y
-# llevarlo a GitHub seria publicar la credencial personal.
-#
-# De ahi el reparto: los scripts `revision:local*` revisan con la suscripcion
-# de Luna mientras se trabaja, CI revisa con la API key. Lo fija
-# `GGA_PROVIDER`, que gana sobre esta linea sin tocarla.
+# Y es DeepSeek en CI y en local, tambien por credencial. En `opencode auth`,
+# `deepseek` esta como `api` y `openai` como `oauth`. La API key entra a un
+# runner como secreto y se rota; el token OAuth de una suscripcion esta atado
+# a la maquina y a la cuenta, y llevarlo a GitHub seria publicar la
+# credencial personal. Por eso los `revision:local*` ya no fijan
+# `GGA_PROVIDER`: revisan con esta misma linea y con `DEEPSEEK_API_KEY`.
 
 # Que se revisa.
 # Los .sql entran a proposito: una migracion que olvida FORCE ROW LEVEL
@@ -56,8 +54,11 @@ TIMEOUT="1800"
 # Rama base para --pr-mode. Explicita en vez de autodeteccion.
 PR_BASE_BRANCH="main"
 
-# Local usa `GGA_OPENCODE_VARIANT=max` para no cambiar de perfil entre
-# revisiones. CI conserva `GGA_OPENCODE_VARIANT=high` en su script.
+# La variante de razonamiento no se fija aca: la pasa el entorno de cada
+# superficie. CI usa `low` (`GGA_OPENCODE_VARIANT` en su paso de revision)
+# porque las variantes altas agotaban el presupuesto de razonamiento sobre un
+# diff grande y no llegaban a escribir `STATUS:`, que con STRICT_MODE falla;
+# `pnpm revision` usa `high` y los `revision:local*`, `max`.
 
 # Agente de revision, definido en .opencode/agents/gga-reviewer.md
 # Sin esto, opencode usa su agente primario por defecto, cuyo prompt de
