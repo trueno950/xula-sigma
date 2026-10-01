@@ -1,5 +1,6 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeFusionarPersonas } from "@/shared/auth/roles";
+import { ANILLO_DE_FOCO } from "@/shared/ui/estilos";
 import { fusionarPersonasAction } from "./actions/fusionarPersonas.action";
 
 type Props = {
@@ -9,8 +10,7 @@ type Props = {
 };
 
 const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca font-mono";
+const CLASE_CAMPO = `h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta font-mono ${ANILLO_DE_FOCO}`;
 
 /**
  * Visible solo si `puedeFusionarPersonas` (tasks.md 4.26). El resto de

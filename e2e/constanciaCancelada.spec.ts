@@ -1,18 +1,55 @@
+import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { textoDePdf } from "@/modules/constancias/textoDePdfDePrueba";
+import { altaDePersona } from "@/shared/auth/alta";
+import { comoAyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
+import { withTenant } from "@/shared/tenancy/withTenant";
 import { accederAMotul } from "./acceder";
 import { liberarVentanaDeRitmo } from "./calles.fixture";
 import {
   type ConstanciasSembradas,
   sembrarConstancias,
 } from "./constanciasFixture";
-import { urlDe } from "./municipios";
+import { CLAVE, MUNICIPIOS, urlDe } from "./municipios";
 
 let constancias: ConstanciasSembradas;
+const correoDeOperador = `operador-constancias-${randomUUID()}@example.com`;
 
 test.beforeAll(async () => {
   await liberarVentanaDeRitmo();
+
+  const motul = comoAyuntamientoId(MUNICIPIOS.motul.id);
+
+  await withTenant(motul, (tx) =>
+    altaDePersona(tx, motul, {
+      nombre: "Operador de Motul",
+      email: correoDeOperador,
+      clave: CLAVE,
+      rol: "OPERADOR",
+    }),
+  );
+
   constancias = await sembrarConstancias();
+});
+
+test("sembrar constancias reserva consecutivos distintos en paralelo", async () => {
+  const [primera, segunda] = await Promise.all([
+    sembrarConstancias(),
+    sembrarConstancias(),
+  ]);
+
+  // Si el incremento atomico de folios_de_documentos perdiera la
+  // actualizacion, la segunda siembra reutilizaria los folios de la primera
+  // y chocaria contra `constancias_serie_idx`: el choque falla las dos
+  // siembras. La asercion fija ademas que ningun folio se repitio.
+  const foliosDe = (sembradas: ConstanciasSembradas) => [
+    sembradas.folioVigente,
+    sembradas.folioCancelada,
+  ];
+
+  expect(foliosDe(segunda).some((f) => foliosDe(primera).includes(f))).toBe(
+    false,
+  );
 });
 
 const pdfDe = (id: string) => urlDe("motul", `/constancias/${id}/pdf`);
@@ -54,4 +91,22 @@ test("el detalle ofrece Imprimir solo si la constancia esta vigente", async ({
   await page.goto(urlDe("motul", `/constancias/${constancias.canceladaId}`));
   await expect(page.getByText("Documento cancelado")).toBeVisible();
   await expect(imprimir).toHaveCount(0);
+});
+
+test("un OPERADOR ve el aviso del bloque de firma en constancias", async ({
+  page,
+}) => {
+  await accederAMotul(page, correoDeOperador);
+  await page.goto(urlDe("motul", "/constancias"));
+
+  const aviso = page.getByText(
+    "Su rol no permite gestionar el bloque de firma de las constancias. Se requiere el rol de administrador municipal.",
+    { exact: true },
+  );
+
+  await expect(aviso).toBeVisible();
+  await expect(aviso).toHaveCount(1);
+  await expect(page.getByRole("link", { name: "Bloque de firma" })).toHaveCount(
+    0,
+  );
 });

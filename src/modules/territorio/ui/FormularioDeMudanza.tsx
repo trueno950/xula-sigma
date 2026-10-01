@@ -1,9 +1,9 @@
+import { ANILLO_DE_FOCO } from "@/shared/ui/estilos";
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
 import { registrarMudanzaAction } from "./actions/registrarMudanzaAction";
 
 const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO =
-  "h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta outline-none focus:border-marca focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-marca";
+const CLASE_CAMPO = `h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta ${ANILLO_DE_FOCO}`;
 
 type Props = {
   personaId: string;

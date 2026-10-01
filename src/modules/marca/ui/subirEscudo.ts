@@ -33,7 +33,11 @@ export async function subirEscudo(
       ok: false,
       mensaje: resultado.campos?.escudo ?? resultado.mensaje,
     };
-  } catch {
+  } catch (error: unknown) {
+    console.error(
+      "Fallo al subir el escudo",
+      error instanceof Error ? error.name : typeof error,
+    );
     return { ok: false, mensaje: MENSAJE_DE_SUBIDA_FALLIDA };
   }
 }

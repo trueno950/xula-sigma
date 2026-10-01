@@ -19,6 +19,16 @@ import {
 
 export const metadata: Metadata = { title: "Emitir constancia" };
 
+const migajaSinPersona = (
+  <Migaja
+    pasos={[
+      { etiqueta: "Padrón", href: "/padron" },
+      { etiqueta: "Emitir constancia" },
+    ]}
+    etiqueta="Ruta"
+  />
+);
+
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -66,10 +76,16 @@ export default async function PaginaDeEmisionDeConstancia({
 
   if (!personaId) {
     return (
-      <PantallaDeMensaje
-        mensaje="Elija una persona desde el padrón para emitir su constancia."
-        accion={<EnlaceDeAccion href="/padron">Ir al padrón</EnlaceDeAccion>}
-      />
+      <PaginaDePanel
+        titulo="Emitir constancia"
+        ancho="formulario"
+        migaja={migajaSinPersona}
+      >
+        <p className="text-[15px] text-caliza-apagada">
+          Elija una persona desde el padrón para emitir su constancia.
+        </p>
+        <EnlaceDeAccion href="/padron">Ir al padrón</EnlaceDeAccion>
+      </PaginaDePanel>
     );
   }
 

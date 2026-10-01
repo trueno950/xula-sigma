@@ -42,6 +42,17 @@ describe("inicio del municipio", () => {
     expect(delHub).toEqual(delPanel);
   });
 
+  it("la tarjeta de modulo usa la superficie del sistema, no blanco", async () => {
+    const html = await pintar();
+    const tarjetaDePadron =
+      [...html.matchAll(/<a\b[^>]*>/g)]
+        .map((etiqueta) => etiqueta[0])
+        .find((etiqueta) => etiqueta.includes('href="/padron"')) ?? "";
+
+    expect(tarjetaDePadron).toContain("bg-caliza-superficie");
+    expect(tarjetaDePadron).not.toContain("bg-white");
+  });
+
   it("dice el rol como lo dice el panel, no como lo guarda la base", async () => {
     const html = await pintar();
 

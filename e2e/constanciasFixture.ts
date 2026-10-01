@@ -6,6 +6,8 @@ export type ConstanciasSembradas = {
   vigenteId: string;
   canceladaId: string;
   canceladaAjenaId: string;
+  folioVigente: string;
+  folioCancelada: string;
 };
 
 type Municipio = keyof typeof MUNICIPIOS;
@@ -17,7 +19,7 @@ const sembrarMunicipio = async (
   tx: TransactionSql,
   municipio: Municipio,
   specs: Spec[],
-): Promise<string[]> => {
+): Promise<{ id: string; folio: string }[]> => {
   const { id } = MUNICIPIOS[municipio];
   const marca = randomBytes(3).toString("hex");
   await tx`SELECT set_config('app.tenant', ${id}, true)`;
@@ -40,20 +42,40 @@ const sembrarMunicipio = async (
     },
     firmante: { nombre: "Maria Poot", cargo: "Secretaria Municipal" },
   };
-  const ids: string[] = [];
+  const sembradas: { id: string; folio: string }[] = [];
 
   for (const { consecutivo, cancelada } of specs) {
-    const [fila] = await tx<{ id: string }[]>`
+    const [fila] = await tx<{ id: string; folio: string }[]>`
       INSERT INTO constancias (ayuntamiento_id, tipo, folio, anio, consecutivo, codigo_verificacion, persona_id, datos, plantilla_version, emitida_por_usuario_id, cancelada_en, cancelada_por_usuario_id, motivo_cancelacion)
       VALUES (${id}, 'VECINDAD', ${`VEC-2026-${consecutivo}`}, 2026, ${consecutivo}, ${randomBytes(8).toString("hex")}, ${persona.id}, ${tx.json(datos)}, 'vecindad-v1', ${usuario.id},
         ${cancelada ? new Date() : null}, ${cancelada ? usuario.id : null}, ${cancelada ? "ERROR_DE_CAPTURA" : null})
-      RETURNING id
+      RETURNING id, folio
     `;
     if (!fila) throw new Error("Falta la constancia sembrada.");
-    ids.push(fila.id);
+    sembradas.push({ id: fila.id, folio: fila.folio });
   }
 
-  return ids;
+  return sembradas;
+};
+
+/**
+ * Reserva dos consecutivos del anio con el incremento atomico del contador
+ * por municipio: en dos siembras en paralelo, el `ON CONFLICT DO UPDATE`
+ * reparte numeros sin repetir.
+ */
+const reservarBaseDeConsecutivos = async (
+  tx: TransactionSql,
+): Promise<number> => {
+  const [reserva] = await tx<{ ultimo_consecutivo: number }[]>`
+    INSERT INTO folios_de_documentos (ayuntamiento_id, tipo, anio, ultimo_consecutivo)
+    VALUES (${MUNICIPIOS.motul.id}, 'VECINDAD', 2026, 2)
+    ON CONFLICT (ayuntamiento_id, tipo, anio)
+    DO UPDATE SET ultimo_consecutivo = folios_de_documentos.ultimo_consecutivo + 2
+    RETURNING ultimo_consecutivo
+  `;
+  if (!reserva) throw new Error("Falta la reserva de consecutivos.");
+
+  return reserva.ultimo_consecutivo - 1;
 };
 
 /**
@@ -65,23 +87,31 @@ export async function sembrarConstancias(): Promise<ConstanciasSembradas> {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("Falta DATABASE_URL para el E2E.");
 
-  const base = 800000 + Math.floor(Math.random() * 100000) * 2;
   const app = postgres(url, { max: 1 });
   try {
     return await app.begin(async (tx) => {
-      const [vigenteId, canceladaId] = await sembrarMunicipio(tx, "motul", [
+      await tx`SELECT set_config('app.tenant', ${MUNICIPIOS.motul.id}, true)`;
+      const base = await reservarBaseDeConsecutivos(tx);
+
+      const [vigente, cancelada] = await sembrarMunicipio(tx, "motul", [
         { consecutivo: base, cancelada: false },
         { consecutivo: base + 1, cancelada: true },
       ]);
-      const [canceladaAjenaId] = await sembrarMunicipio(tx, "ticul", [
+      const [canceladaAjena] = await sembrarMunicipio(tx, "ticul", [
         { consecutivo: base, cancelada: true },
       ]);
 
-      if (!vigenteId || !canceladaId || !canceladaAjenaId) {
+      if (!vigente || !cancelada || !canceladaAjena) {
         throw new Error("Falta una constancia sembrada.");
       }
 
-      return { vigenteId, canceladaId, canceladaAjenaId };
+      return {
+        vigenteId: vigente.id,
+        canceladaId: cancelada.id,
+        canceladaAjenaId: canceladaAjena.id,
+        folioVigente: vigente.folio,
+        folioCancelada: cancelada.folio,
+      };
     });
   } finally {
     await app.end();
