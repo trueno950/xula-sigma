@@ -24,7 +24,7 @@ async function prepararTiles(page: Page): Promise<void> {
 async function acceder(page: Page): Promise<void> {
   await page.goto(urlDe("motul", "/acceso"));
   await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill(CLAVE);
+  await page.getByLabel("Contraseña").fill(CLAVE);
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.waitForURL(urlDe("motul"));
 }
@@ -40,7 +40,7 @@ async function abrirCalle(
 
 async function verificarLugarVacio(page: Page, lugarId: string): Promise<void> {
   await page.goto(urlDe("motul", territorio(lugarId)));
-  await expect(page.getByText(/no tiene calles todavia/)).toBeVisible();
+  await expect(page.getByText(/no tiene calles todavía/)).toBeVisible();
 }
 
 async function ubicarYReparentear(
@@ -52,11 +52,11 @@ async function ubicarYReparentear(
   await page.getByRole("link", { name: "Ubicar en el mapa" }).click();
   await expect(page.getByLabel("Latitud")).toBeVisible();
   await expect(page.getByLabel("Longitud")).toBeVisible();
-  await page.getByRole("button", { name: "Guardar ubicacion" }).click();
+  await page.getByRole("button", { name: "Guardar ubicación" }).click();
   await page.waitForLoadState("networkidle");
   await page.getByRole("link", { name: "Mover a otro lugar" }).click();
   await page.getByLabel("Nuevo lugar").selectOption({
-    label: `${escenario.destino} (comisaria)`,
+    label: `${escenario.destino} (comisaría)`,
   });
   await page.getByRole("button", { name: "Mover calle" }).click();
   await page.waitForLoadState("networkidle");
@@ -71,7 +71,7 @@ async function rechazarMovimientoDuplicado(
   await page.getByText("Acciones de calle").click();
   await page.getByRole("link", { name: "Mover a otro lugar" }).click();
   await page.getByLabel("Nuevo lugar").selectOption({
-    label: `${escenario.destino} (comisaria)`,
+    label: `${escenario.destino} (comisaría)`,
   });
   await page.getByRole("button", { name: "Mover calle" }).click();
   await expect(
@@ -125,7 +125,7 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
     page.getByRole("heading", { name: "Intervenciones", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("La bandeja de intervenciones todavia no esta disponible.", {
+    page.getByText("La bandeja de intervenciones todavía no está disponible.", {
       exact: true,
     }),
   ).toBeVisible();
@@ -134,14 +134,14 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
     urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
   );
   await expect(
-    page.getByRole("heading", { name: "Intervencion OBRA", exact: true }),
+    page.getByRole("heading", { name: "Intervención Obra", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Fecha de ocurrencia")).toBeVisible();
 
   await page
-    .getByLabel("Descripcion corregida")
-    .fill("Descripcion corregida en E2E");
-  await page.getByRole("button", { name: "Guardar correccion" }).click();
+    .getByLabel("Descripción corregida")
+    .fill("Descripción corregida en E2E");
+  await page.getByRole("button", { name: "Guardar corrección" }).click();
 
   await expect(page).toHaveURL(
     urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
@@ -149,7 +149,7 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
   await expect(
     page
       .getByRole("definition")
-      .filter({ hasText: "Descripcion corregida en E2E" }),
+      .filter({ hasText: "Descripción corregida en E2E" }),
   ).toBeVisible();
 });
 

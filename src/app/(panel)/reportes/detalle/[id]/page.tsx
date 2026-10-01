@@ -5,8 +5,12 @@ import {
   AccionesDeReporte,
   comoReporteId,
   DetalleDeReporte,
+  ETIQUETA_DE_AREA,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
   historialDeReporte,
   reportePorId,
+  SIN_AREA,
 } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarReportes } from "@/shared/auth/roles";
@@ -61,7 +65,7 @@ export default async function PaginaDeDetalleDeReporte({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { id } = await params;
@@ -99,19 +103,29 @@ export default async function PaginaDeDetalleDeReporte({
 
       {!puedeAdministrar ? (
         <AvisoDePermiso
-          capacidad="cambiar el estado y asignar el area de un reporte"
+          capacidad="cambiar el estado y asignar el área de un reporte"
           requisito="el rol de administrador municipal"
         />
       ) : null}
 
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
-        <Dato etiqueta="Tipo" valor={reporte.tipo} />
-        <Dato etiqueta="Estado" valor={reporte.estado} />
         <Dato
-          etiqueta="Area"
-          valor={reporte.areaResponsable ?? "Sin asignar"}
+          etiqueta="Tipo"
+          valor={ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
         />
-        <Dato etiqueta="Descripcion" valor={reporte.descripcion} />
+        <Dato
+          etiqueta="Estado"
+          valor={ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
+        />
+        <Dato
+          etiqueta="Área"
+          valor={
+            reporte.areaResponsable
+              ? ETIQUETA_DE_AREA[reporte.areaResponsable]
+              : SIN_AREA
+          }
+        />
+        <Dato etiqueta="Descripción" valor={reporte.descripcion} />
         {reporte.referencia ? (
           <Dato etiqueta="Referencia" valor={reporte.referencia} />
         ) : null}

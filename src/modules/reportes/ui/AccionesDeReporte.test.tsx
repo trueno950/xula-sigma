@@ -2,23 +2,34 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("./actions/cambiarEstadoAction", () => ({
-  cambiarEstadoAction: vi.fn(),
+  cambiarEstadoAction: "estado-action",
 }));
 vi.mock("./actions/asignarAreaAction", () => ({
-  asignarAreaAction: vi.fn(),
+  asignarAreaAction: "area-action",
 }));
 
 const { AccionesDeReporte } = await import("./AccionesDeReporte");
 
-const RECIBIDO = "11111111-1111-4111-8111-111111111111";
+describe("AccionesDeReporte", () => {
+  const pagina = renderToStaticMarkup(
+    <AccionesDeReporte
+      reporteId="11111111-1111-4111-8111-111111111111"
+      estadoActual="RECIBIDO"
+    />,
+  );
 
-describe("acciones de un reporte", () => {
-  it("el ejemplo de folio no fija un anio", () => {
-    const html = renderToStaticMarkup(
-      <AccionesDeReporte reporteId={RECIBIDO} estadoActual="RECIBIDO" />,
+  it("ofrece motivos de rechazo con etiqueta y el codigo como valor", () => {
+    expect(pagina).toContain(
+      '<option value="FUERA_DE_COMPETENCIA">Fuera de competencia</option>',
     );
+    expect(pagina).toContain(
+      '<option value="INFORMACION_INSUFICIENTE">Información insuficiente</option>',
+    );
+  });
 
-    expect(html).toContain('placeholder="REP-AAAA-000123"');
-    expect(html).not.toContain("REP-2026-000123");
+  it("ofrece areas con etiqueta y el codigo como valor", () => {
+    expect(pagina).toContain(
+      '<option value="LIMPIA_Y_RECOLECCION">Limpia y recolección</option>',
+    );
   });
 });

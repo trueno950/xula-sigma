@@ -32,6 +32,16 @@ export const ANILLO_DE_FOCO =
   "focus-visible:outline-solid focus-visible:outline-2 " +
   "focus-visible:outline-offset-2 focus-visible:outline-marca";
 
+/**
+ * El enlace dentro de una ficha o un parrafo. Subrayado y en tinta, no solo
+ * de otro color: el subrayado es lo que lo distingue del dato que lo
+ * rodea. El acento entra al pasar el cursor, que es donde `DESIGN.md` lo
+ * reserva.
+ */
+export const CLASES_DE_ENLACE =
+  "text-caliza-tinta underline underline-offset-2 hover:text-acento " +
+  ANILLO_DE_FOCO;
+
 export const VARIANTES_DE_BOTON = [
   "primaria",
   "secundaria",

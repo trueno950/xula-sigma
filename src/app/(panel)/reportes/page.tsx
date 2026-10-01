@@ -39,7 +39,7 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { filtros, q, limite, orden, error } = leerParametros(
@@ -85,7 +85,6 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
         q={q}
         orden={orden}
         limite={limite}
-        rol={contexto.usuario.rol}
       />
     </PaginaDePanel>
   );

@@ -16,7 +16,7 @@ export class ClaveDebilError extends Error {
   readonly codigo = "CLAVE_DEBIL";
 
   constructor() {
-    super(`La contrasenia necesita al menos ${LARGO_MINIMO} caracteres.`);
+    super(`La contraseña necesita al menos ${LARGO_MINIMO} caracteres.`);
     this.name = "ClaveDebilError";
   }
 }

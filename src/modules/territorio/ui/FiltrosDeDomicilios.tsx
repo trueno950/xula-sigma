@@ -45,7 +45,7 @@ export function FiltrosDeDomicilios({ filtros, raices }: Props) {
       </div>
       <div className="flex flex-col gap-1">
         <label htmlFor="numero" className={CLASES_DE_ETIQUETA}>
-          Numero
+          Número
         </label>
         <input
           id="numero"

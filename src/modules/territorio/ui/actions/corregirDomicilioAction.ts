@@ -27,7 +27,7 @@ const esquemaDeEntrada = z.object({
   referencia: z.string().trim().optional(),
 });
 const MENSAJE_FORMULARIO_INVALIDO = "La calle es obligatoria.";
-const MENSAJE_GENERICO = "No se pudo guardar la correccion. Intente de nuevo.";
+const MENSAJE_GENERICO = "No se pudo guardar la corrección. Intente de nuevo.";
 
 /** Sin zona no se declara nada: el caso de uso la deriva de la calle. */
 const zonaDeclarada = (datos: { zonaId: string }): readonly LugarId[] =>

@@ -1,5 +1,9 @@
 import { Migaja, Pestanas } from "@/shared/ui";
-import type { LugarId, TipoDeLugar } from "../domain";
+import {
+  ETIQUETA_DE_TIPO_DE_LUGAR,
+  type LugarId,
+  type TipoDeLugar,
+} from "../domain";
 import { pasosDeMigaja, pestanasDePanel } from "./vistaDePanel";
 
 /**
@@ -81,7 +85,7 @@ export function PanelDeNodo({
       aria-labelledby="panel-nodo-nombre"
       className="flex flex-col gap-3"
     >
-      <Migaja pasos={pasos} etiqueta="Ubicacion" />
+      <Migaja pasos={pasos} etiqueta="Ubicación" />
       <div className="flex flex-wrap items-baseline gap-2">
         <h2
           id="panel-nodo-nombre"
@@ -89,7 +93,9 @@ export function PanelDeNodo({
         >
           {nodo.nombre}
         </h2>
-        <span className="text-[13px] text-caliza-apagada">{nodo.tipo}</span>
+        <span className="text-[13px] text-caliza-apagada">
+          {ETIQUETA_DE_TIPO_DE_LUGAR[nodo.tipo]}
+        </span>
       </div>
       <Pestanas pestanas={pestanas} etiqueta="Contenido del lugar" />
     </section>

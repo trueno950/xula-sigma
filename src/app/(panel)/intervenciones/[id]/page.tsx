@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { z } from "zod";
 import {
   AccionesDeIntervencion,
   comoIntervencionId,
+  ETIQUETA_DE_ESTADO_DE_INTERVENCION,
+  ETIQUETA_DE_TIPO_DE_INTERVENCION,
   FormularioDeCorreccion,
-  intervencionPorId,
+  intervencionConReferencias,
 } from "@/modules/intervenciones";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarIntervenciones } from "@/shared/auth/roles";
@@ -14,6 +18,7 @@ import {
   Aviso,
   AvisoDePermiso,
   CLASES_DE_DATO,
+  CLASES_DE_ENLACE,
   CLASES_DE_ETIQUETA,
   Migaja,
   PaginaDePanel,
@@ -31,13 +36,29 @@ type Props = {
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
 
+const NO_DISPONIBLE = "No disponible";
+
+const enlaceAlReporte = (
+  reporteId: string | null,
+  reporte: { id: string; folio: string } | null,
+): ReactNode => {
+  if (reporteId === null) return "Sin reporte";
+  if (reporte === null) return NO_DISPONIBLE;
+
+  return (
+    <Link href={`/reportes/detalle/${reporte.id}`} className={CLASES_DE_ENLACE}>
+      {reporte.folio}
+    </Link>
+  );
+};
+
 const Dato = ({
   etiqueta,
   valor,
   dato = false,
 }: {
   etiqueta: string;
-  valor: string;
+  valor: ReactNode;
   dato?: boolean;
 }) => (
   <div className="flex flex-col gap-1">
@@ -55,16 +76,21 @@ export default async function PaginaDeDetalleDeIntervencion({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { id } = await params;
   const analisisDeId = esquemaDeId.safeParse(id);
-  const intervencion = analisisDeId.success
-    ? await intervencionPorId(comoIntervencionId(analisisDeId.data), contexto)
+  const ficha = analisisDeId.success
+    ? await intervencionConReferencias(
+        comoIntervencionId(analisisDeId.data),
+        contexto,
+      )
     : null;
 
-  if (!intervencion) notFound();
+  if (!ficha) notFound();
+
+  const { intervencion, referencias } = ficha;
 
   const analisisDeParametros = esquemaDeParametros.safeParse(
     await searchParams,
@@ -74,15 +100,17 @@ export default async function PaginaDeDetalleDeIntervencion({
     : undefined;
   const puedeAdministrar = puedeAdministrarIntervenciones(contexto.usuario.rol);
 
+  const tipo = ETIQUETA_DE_TIPO_DE_INTERVENCION[intervencion.tipo];
+
   return (
     <PaginaDePanel
-      titulo={`Intervencion ${intervencion.tipo}`}
+      titulo={`Intervención ${tipo}`}
       ancho="detalle"
       migaja={
         <Migaja
           pasos={[
             { etiqueta: "Intervenciones", href: "/intervenciones" },
-            { etiqueta: intervencion.tipo },
+            { etiqueta: tipo },
           ]}
           etiqueta="Ruta"
         />
@@ -98,8 +126,11 @@ export default async function PaginaDeDetalleDeIntervencion({
       ) : null}
 
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
-        <Dato etiqueta="Tipo" valor={intervencion.tipo} />
-        <Dato etiqueta="Estado" valor={intervencion.estado} />
+        <Dato etiqueta="Tipo" valor={tipo} />
+        <Dato
+          etiqueta="Estado"
+          valor={ETIQUETA_DE_ESTADO_DE_INTERVENCION[intervencion.estado]}
+        />
         <Dato
           etiqueta="Fecha de ocurrencia"
           valor={intervencion.fechaDeOcurrencia}
@@ -115,13 +146,20 @@ export default async function PaginaDeDetalleDeIntervencion({
           valor={fechaYHoraEnMerida(intervencion.actualizadoEn)}
           dato
         />
-        <Dato etiqueta="Lugar" valor={intervencion.lugarId} />
-        <Dato etiqueta="Calle" valor={intervencion.calleId ?? "Sin calle"} />
+        <Dato etiqueta="Lugar" valor={referencias.lugar ?? NO_DISPONIBLE} />
+        <Dato
+          etiqueta="Calle"
+          valor={
+            intervencion.calleId === null
+              ? "Sin calle"
+              : (referencias.calle ?? NO_DISPONIBLE)
+          }
+        />
         <Dato
           etiqueta="Reporte de origen"
-          valor={intervencion.reporteId ?? "Sin reporte"}
+          valor={enlaceAlReporte(intervencion.reporteId, referencias.reporte)}
         />
-        <Dato etiqueta="Descripcion" valor={intervencion.descripcion} />
+        <Dato etiqueta="Descripción" valor={intervencion.descripcion} />
       </dl>
 
       {puedeAdministrar ? (
@@ -129,7 +167,7 @@ export default async function PaginaDeDetalleDeIntervencion({
           <Panel titulo="Cambiar estado">
             <AccionesDeIntervencion intervencion={intervencion} />
           </Panel>
-          <Panel titulo="Corregir intervencion">
+          <Panel titulo="Corregir intervención">
             <FormularioDeCorreccion intervencion={intervencion} />
           </Panel>
         </>

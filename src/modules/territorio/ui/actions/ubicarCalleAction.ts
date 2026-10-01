@@ -14,15 +14,15 @@ import {
 } from "../../domain";
 import { navegacionDe, volverAlArbol } from "./volverAlArbol";
 
-const MENSAJE_FORMULARIO_INVALIDO = "Coordenada invalida.";
-const MENSAJE_PUNTO_FUERA_DE_YUCATAN = "El punto debe estar dentro de Yucatan.";
-const MENSAJE_GENERICO = "No se pudo guardar la ubicacion. Intente de nuevo.";
+const MENSAJE_FORMULARIO_INVALIDO = "Coordenada inválida.";
+const MENSAJE_PUNTO_FUERA_DE_YUCATAN = "El punto debe estar dentro de Yucatán.";
+const MENSAJE_GENERICO = "No se pudo guardar la ubicación. Intente de nuevo.";
 
 const coordenada = z
   .string()
   .trim()
   .refine((valor) => valor === "" || Number.isFinite(Number(valor)), {
-    error: "Coordenada invalida.",
+    error: "Coordenada inválida.",
   })
   .transform((valor) => (valor === "" ? null : Number(valor)));
 
@@ -34,7 +34,7 @@ const esquemaDeEntrada = z
   })
   .superRefine((datos, ctx) => {
     if ((datos.latitud === null) !== (datos.longitud === null)) {
-      ctx.addIssue({ code: "custom", message: "Coordenada invalida." });
+      ctx.addIssue({ code: "custom", message: "Coordenada inválida." });
     }
     if (
       datos.latitud !== null &&

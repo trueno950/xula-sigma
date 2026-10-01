@@ -69,7 +69,7 @@ test("cerrar sesion la revoca en el servidor y vuelve al acceso", async ({
   await expect(page.locator("header img")).toBeVisible();
   await expect(
     page
-      .getByRole("navigation", { name: "Modulos" })
+      .getByRole("navigation", { name: "Módulos" })
       .getByRole("link", { name: "Territorio" }),
   ).toBeVisible();
   expect(

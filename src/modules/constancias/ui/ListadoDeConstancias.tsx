@@ -62,9 +62,9 @@ export function ListadoDeConstancias({
       {estado.clase !== "con-filas" ? (
         <EstadoVacio
           estado={estado}
-          mensajeInicial="Todavia no hay constancias emitidas. Se emiten desde la ficha de la persona, en el padron."
+          mensajeInicial="Todavía no hay constancias emitidas. Se emiten desde la ficha de la persona, en el padrón."
           hrefSinFiltro="/constancias"
-          accion={<EnlaceDeAccion href="/padron">Ir al padron</EnlaceDeAccion>}
+          accion={<EnlaceDeAccion href="/padron">Ir al padrón</EnlaceDeAccion>}
         />
       ) : (
         <Tabla

@@ -54,7 +54,7 @@ describe("fuga de datos personales en /validar/[folio]", () => {
     const html = await htmlDe();
 
     expect(html).not.toContain("Titular");
-    expect(html).not.toContain("Direccion");
+    expect(html).not.toContain("Dirección");
   });
 
   it("sin codigo, nivel 1: ni titular ni direccion, aunque el documento sea vigente", async () => {
@@ -67,7 +67,7 @@ describe("fuga de datos personales en /validar/[folio]", () => {
     const html = await htmlDe();
 
     expect(html).not.toContain("Titular");
-    expect(html).not.toContain("Direccion");
+    expect(html).not.toContain("Dirección");
   });
 
   it("control positivo: con codigo correcto (nivel 2) si muestra titular y direccion", async () => {
@@ -83,5 +83,6 @@ describe("fuga de datos personales en /validar/[folio]", () => {
 
     expect(html).toContain("Juan Poot");
     expect(html).toContain("Calle 10, Motul");
+    expect(html).toContain("Dirección");
   });
 });

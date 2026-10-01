@@ -24,8 +24,8 @@ const esquemaDeEntrada = z.object({
   areaResponsable: z.enum(AREAS_RESPONSABLES),
 });
 
-const MENSAJE_FORMULARIO_INVALIDO = "Elija un area valida.";
-const MENSAJE_GENERICO = "No se pudo asignar el area. Intente de nuevo.";
+const MENSAJE_FORMULARIO_INVALIDO = "Elija un área válida.";
+const MENSAJE_GENERICO = "No se pudo asignar el área. Intente de nuevo.";
 
 const redirigirConError = (id: string, mensaje: string): never =>
   redirect(`/reportes/detalle/${id}?error=${encodeURIComponent(mensaje)}`);

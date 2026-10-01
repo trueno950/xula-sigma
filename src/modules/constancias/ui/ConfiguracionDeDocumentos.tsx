@@ -38,7 +38,7 @@ export function ConfiguracionDeDocumentos({ documentos }: Props) {
         id="leyenda-de-pie"
         name="leyendaDePie"
         etiqueta="Leyenda de pie"
-        ayuda="Opcional. Se deja vacia para quitarla."
+        ayuda="Opcional. Se deja vacía para quitarla."
         defaultValue={documentos?.leyendaDePie ?? ""}
         maxLength={300}
       />

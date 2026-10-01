@@ -9,6 +9,11 @@ export {
   ESTADOS_DE_CONSTANCIA,
   type EstadoDeConstancia,
 } from "./estadoDeConstancia";
+export {
+  ETIQUETA_DE_ESTADO_DE_CONSTANCIA,
+  ETIQUETA_DE_MOTIVO_DE_CANCELACION,
+  ETIQUETA_DE_MOTIVO_DE_REIMPRESION,
+} from "./etiquetas";
 export { Folio } from "./folio";
 export {
   type ConstanciaId,

@@ -9,7 +9,13 @@ import {
   estadoDeLista,
   Panel,
 } from "@/shared/ui";
-import { type LugarId, puedeSerRaiz, type TipoDeLugar } from "../domain";
+import {
+  ETIQUETA_DE_TIPO_DE_LUGAR,
+  type LugarId,
+  puedeSerRaiz,
+  type TipoDeLugar,
+  tipoDeLugarEnFrase,
+} from "../domain";
 import { masAdentroDe } from "./conteo";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 
@@ -89,12 +95,14 @@ export function VistaDeRaices({
                 <Link
                   href={`/territorio?raiz=${raiz.id}`}
                   className={CLASE_FILA}
-                  aria-label={`${raiz.nombre}, ${raiz.tipo}`}
+                  aria-label={`${raiz.nombre}, ${tipoDeLugarEnFrase(raiz.tipo)}`}
                 >
                   <span className="text-[15px] font-medium text-caliza-tinta">
                     {raiz.nombre}
                   </span>
-                  <span className={CLASES_DE_DATO}>{raiz.tipo}</span>
+                  <span className={CLASES_DE_DATO}>
+                    {ETIQUETA_DE_TIPO_DE_LUGAR[raiz.tipo]}
+                  </span>
                   {/*
                     `tipoDeLugar.ts` dice que un rango 0 es "raiz por
                     construccion". Lo contrario -una colonia, un sector o
@@ -108,7 +116,7 @@ export function VistaDeRaices({
                   {puedeSerRaiz(raiz.tipo) ? null : (
                     <span className="flex items-center gap-1 text-[13px] font-medium text-senial-aviso">
                       <Warning size={14} weight="fill" aria-hidden="true" />
-                      Deberia colgar de un asentamiento
+                      Debería colgar de un asentamiento
                     </span>
                   )}
                 </Link>
@@ -120,12 +128,14 @@ export function VistaDeRaices({
                         <Link
                           href={`/territorio?raiz=${raiz.id}&nodo=${hijo.id}`}
                           className={CLASE_FILA}
-                          aria-label={`${hijo.nombre}, ${hijo.tipo}`}
+                          aria-label={`${hijo.nombre}, ${tipoDeLugarEnFrase(hijo.tipo)}`}
                         >
                           <span className="text-[15px] text-caliza-tinta">
                             {hijo.nombre}
                           </span>
-                          <span className={CLASES_DE_DATO}>{hijo.tipo}</span>
+                          <span className={CLASES_DE_DATO}>
+                            {ETIQUETA_DE_TIPO_DE_LUGAR[hijo.tipo]}
+                          </span>
                         </Link>
                       </li>
                     ))}
@@ -134,7 +144,7 @@ export function VistaDeRaices({
 
                 {masAdentro > 0 ? (
                   <p className={`${CLASES_DE_ETIQUETA} px-3 pb-1 pl-9`}>
-                    {masAdentro} lugar{masAdentro === 1 ? "" : "es"} mas
+                    {masAdentro} lugar{masAdentro === 1 ? "" : "es"} más
                     adentro.
                   </p>
                 ) : null}
@@ -145,7 +155,7 @@ export function VistaDeRaices({
       ) : altaAbierta ? null : (
         <EstadoVacio
           estado={estado}
-          mensajeInicial="El municipio todavia no tiene asentamientos. Empiece por la cabecera o una comisaria."
+          mensajeInicial="El municipio todavía no tiene asentamientos. Empiece por la cabecera o una comisaría."
           hrefSinFiltro="/territorio"
         />
       )}

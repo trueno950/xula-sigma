@@ -34,7 +34,7 @@ describe("MapaOperativo", () => {
 
     expect(html).toContain("Ubicación aproximada de la calle");
     expect(html).toMatch(/1 reporte(?!s)/);
-    expect(html).toMatch(/1 intervencion(?!es)/);
+    expect(html).toMatch(/1 intervención(?!es)/);
     expect(html).toContain("Reporte ciudadano");
     expect(html).toContain("Intervención municipal");
     expect(html).toContain('href="/reportes/detalle/reporte-1"');
@@ -43,6 +43,28 @@ describe("MapaOperativo", () => {
     expect(html).toContain('name="tipo"');
     expect(html).toContain('name="estado"');
     expect(html).toContain('name="area"');
+  });
+
+  it("los filtros ofrecen etiquetas legibles y conservan el codigo como valor", () => {
+    const html = renderToStaticMarkup(
+      <MapaOperativo
+        filtros={{}}
+        mapa={{
+          estado: "VACIO",
+          marcadores: [],
+          cobertura: [],
+          conteos: { reportes: 0, intervenciones: 0, total: 0 },
+        }}
+      />,
+    );
+
+    expect(html).toContain('<option value="ALUMBRADO">Alumbrado</option>');
+    expect(html).toContain(
+      '<option value="EN_EJECUCION">En ejecución</option>',
+    );
+    expect(html).toContain(
+      '<option value="AGUA_POTABLE_Y_DRENAJE">Agua potable y drenaje</option>',
+    );
   });
 
   it("declara la calle en la cobertura faltante por calle sin punto", () => {

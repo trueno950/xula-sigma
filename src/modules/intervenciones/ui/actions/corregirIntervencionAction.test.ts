@@ -113,7 +113,7 @@ describe("corregirIntervencionAction", () => {
     );
 
     expect(decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string)).toBe(
-      `/intervenciones/${ID}?error=Esa intervencion no existe.`,
+      `/intervenciones/${ID}?error=Esa intervención no existe.`,
     );
   });
 
@@ -121,7 +121,7 @@ describe("corregirIntervencionAction", () => {
     [
       "autorizacion",
       new NoAutorizadoError(),
-      "No tiene permiso para esta operacion.",
+      "No tiene permiso para esta operación.",
     ],
     [
       "validacion",
@@ -167,7 +167,7 @@ describe("corregirIntervencionAction", () => {
     );
 
     expect(decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string)).toBe(
-      `/intervenciones/${ID}?error=No se pudo corregir la intervencion. Intente de nuevo.`,
+      `/intervenciones/${ID}?error=No se pudo corregir la intervención. Intente de nuevo.`,
     );
     expect(consoleError).toHaveBeenCalledWith(
       "[intervenciones] correccion fallo",

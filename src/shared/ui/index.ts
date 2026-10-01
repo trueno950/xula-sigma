@@ -11,6 +11,7 @@ export { type EstadoDeLista, estadoDeLista } from "./estadoDeLista";
 export {
   ANILLO_DE_FOCO,
   CLASES_DE_DATO,
+  CLASES_DE_ENLACE,
   CLASES_DE_ETIQUETA,
   clasesDeBoton,
   clasesDeCampo,
@@ -18,6 +19,7 @@ export {
   type VarianteDeBoton,
 } from "./estilos";
 export { Migaja, type PasoDeMigaja } from "./Migaja";
+export { opcionesEtiquetadas } from "./opcionesDeLista";
 export { PaginaDePanel, PantallaDeMensaje } from "./PaginaDePanel";
 export { Panel } from "./Panel";
 export { type Pestana, Pestanas } from "./Pestanas";

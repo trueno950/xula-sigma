@@ -33,9 +33,9 @@ export function FormularioDeDomicilio({ calles, zona }: Props) {
       <Campo
         id="domicilio-numero"
         name="numero"
-        etiqueta="Numero"
+        etiqueta="Número"
         tipografia="dato"
-        ayuda="Dejar vacio si el domicilio no tiene numero."
+        ayuda="Dejar vacío si el domicilio no tiene número."
       />
 
       <CampoDeLista
@@ -60,7 +60,7 @@ export function FormularioDeDomicilio({ calles, zona }: Props) {
         id="domicilio-referencia"
         name="referencia"
         etiqueta="Referencia"
-        ayuda="Una sena para encontrarlo: junto a la cancha, porton azul."
+        ayuda="Una seña para encontrarlo: junto a la cancha, portón azul."
       />
 
       <details>

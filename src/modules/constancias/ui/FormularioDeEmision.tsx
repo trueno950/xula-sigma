@@ -46,14 +46,14 @@ export function FormularioDeEmision({
 
         {direccion ? (
           <>
-            <Dato etiqueta="Direccion" valor={direccion.texto} />
+            <Dato etiqueta="Dirección" valor={direccion.texto} />
             <div className="flex flex-col gap-1">
               <span className={CLASES_DE_ETIQUETA}>Reside desde</span>
               <span className="font-mono text-[15px] text-caliza-tinta">
                 {direccion.desdeEn}
               </span>
               <span className="text-[13px] text-caliza-apagada">
-                El sistema no aplica un periodo minimo: verifique la fecha antes
+                El sistema no aplica un periodo mínimo: verifique la fecha antes
                 de confirmar.
               </span>
             </div>

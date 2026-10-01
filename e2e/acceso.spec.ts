@@ -19,7 +19,7 @@ async function acceder(
 ) {
   await page.goto(urlDe(municipio, "/acceso"));
   await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill(CLAVE);
+  await page.getByLabel("Contraseña").fill(CLAVE);
   await page.getByRole("button", { name: "Entrar" }).click();
 }
 
@@ -57,7 +57,7 @@ test("sin sesion, la raiz manda a la pantalla de acceso", async ({ page }) => {
 test("una clave incorrecta no entra y no dice por que", async ({ page }) => {
   await page.goto(urlDe("motul", "/acceso"));
   await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill("clave-larga-y-equivocada");
+  await page.getByLabel("Contraseña").fill("clave-larga-y-equivocada");
   await page.getByRole("button", { name: "Entrar" }).click();
 
   // Acotado al formulario: Next monta su propio `role="alert"` para
@@ -66,7 +66,7 @@ test("una clave incorrecta no entra y no dice por que", async ({ page }) => {
 
   await expect(aviso).toBeVisible();
   // Un mensaje distinto para "no existe" confirmaria que la cuenta existe.
-  await expect(aviso).toHaveText("Correo o contrasenia incorrectos.");
+  await expect(aviso).toHaveText("Correo o contraseña incorrectos.");
   await expect(page).toHaveURL(urlDe("motul", "/acceso"));
 });
 
@@ -82,13 +82,13 @@ test("un rechazo anterior no convive con el error de validacion nuevo", async ({
   // El boton se habilita al hidratar: antes de eso el envio es el nativo.
   await expect(page.getByRole("button", { name: "Entrar" })).toBeEnabled();
   await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill("clave-larga-y-equivocada");
+  await page.getByLabel("Contraseña").fill("clave-larga-y-equivocada");
   await page.getByRole("button", { name: "Entrar" }).click();
 
   const aviso = page.locator("form").getByRole("alert");
-  await expect(aviso).toHaveText("Correo o contrasenia incorrectos.");
+  await expect(aviso).toHaveText("Correo o contraseña incorrectos.");
 
-  await page.getByLabel("Contrasenia").fill("corta");
+  await page.getByLabel("Contraseña").fill("corta");
   await page.getByRole("button", { name: "Entrar" }).click();
 
   await expect(
@@ -119,14 +119,14 @@ test("sin JavaScript, Enter no envia el formulario de acceso", async ({
 
   await page.goto(urlDe("motul", "/acceso"));
   await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill(CLAVE);
+  await page.getByLabel("Contraseña").fill(CLAVE);
 
   const navegacion = page
     .waitForRequest((peticion) => peticion.isNavigationRequest(), {
       timeout: 1_000,
     })
     .catch(() => null);
-  await page.getByLabel("Contrasenia").press("Enter");
+  await page.getByLabel("Contraseña").press("Enter");
 
   expect(await navegacion).toBeNull();
   expect(page.url()).toBe(urlDe("motul", "/acceso"));
@@ -150,7 +150,7 @@ test("un envio nativo antes de hidratar nunca lleva la clave en la URL", async (
 
   await page.goto(urlDe("motul", "/acceso"));
   await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contrasenia").fill(CLAVE);
+  await page.getByLabel("Contraseña").fill(CLAVE);
 
   const navegacion = page.waitForRequest(
     (peticion) => peticion.isNavigationRequest(),
@@ -171,7 +171,7 @@ test("los campos del acceso muestran un anillo de foco de 2px", async ({
 }) => {
   await page.goto(urlDe("motul", "/acceso"));
 
-  for (const etiqueta of ["Correo", "Contrasenia"]) {
+  for (const etiqueta of ["Correo", "Contraseña"]) {
     const campo = page.getByLabel(etiqueta);
 
     // `focus()` y no `Tab`: el orden de tabulacion no es lo que se prueba.

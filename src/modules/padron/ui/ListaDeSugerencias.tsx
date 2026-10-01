@@ -75,7 +75,7 @@ export function ListaDeSugerencias({ sugerencias, activa }: Props) {
               rel="noopener"
               className={`${CLASES_DE_ETIQUETA} w-fit text-marca underline underline-offset-2`}
             >
-              Ver su ficha en otra pestana
+              Ver su ficha en otra pestaña
             </a>
           </div>
         ))}

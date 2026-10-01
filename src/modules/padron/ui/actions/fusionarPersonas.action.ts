@@ -25,7 +25,7 @@ const esquemaDeEntrada = z.object({
 });
 
 const MENSAJE_FORMULARIO_INVALIDO = "Selecciona las dos personas a fusionar.";
-const MENSAJE_GENERICO = "No se pudo completar la fusion. Intente de nuevo.";
+const MENSAJE_GENERICO = "No se pudo completar la fusión. Intente de nuevo.";
 
 const redirigirConError = (mensaje: string): never =>
   redirect(`/padron?error=${encodeURIComponent(mensaje)}`);

@@ -65,7 +65,7 @@ export default async function PaginaDePadron({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const analisis = esquemaDeBusqueda.safeParse(await searchParams);
@@ -96,10 +96,10 @@ export default async function PaginaDePadron({ searchParams }: Props) {
   const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
-    <PaginaDePanel titulo="Padron de personas" accion={alta}>
+    <PaginaDePanel titulo="Padrón de personas" accion={alta}>
       {!puedeActuar ? (
         <AvisoDePermiso
-          capacidad="dar de alta personas en el padron"
+          capacidad="dar de alta personas en el padrón"
           requisito="un rol con permisos de escritura"
         />
       ) : null}

@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
 import { z } from "zod";
-import { FormularioDeAlta, TIPOS_DE_INCIDENCIA } from "@/modules/reportes";
+import {
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  FormularioDeAlta,
+  TIPOS_DE_INCIDENCIA,
+} from "@/modules/reportes";
 import { listarCalles, listarLugares } from "@/modules/territorio";
+import { opcionesDeLugares } from "@/modules/territorio/ui/opciones";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import {
+  Migaja,
+  opcionesEtiquetadas,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
 
 export const metadata: Metadata = { title: "Nuevo reporte" };
 
@@ -32,7 +42,7 @@ export default async function PaginaDeAltaDeReporte({ searchParams }: Props) {
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   if (!puedeEscribir(contexto.usuario.rol)) {
@@ -49,10 +59,7 @@ export default async function PaginaDeAltaDeReporte({ searchParams }: Props) {
     lugaresGuardados.map((lugar) => listarCalles(lugar.id, contexto)),
   );
 
-  const lugares = lugaresGuardados.map((lugar) => ({
-    valor: lugar.id,
-    etiqueta: `${lugar.nombre} (${lugar.tipo})`,
-  }));
+  const lugares = opcionesDeLugares(lugaresGuardados);
   const calles = lugaresGuardados.flatMap((lugar, indice) =>
     (callesPorLugar[indice] ?? []).map((calle) => ({
       valor: calle.id,
@@ -60,10 +67,10 @@ export default async function PaginaDeAltaDeReporte({ searchParams }: Props) {
       lugarId: lugar.id,
     })),
   );
-  const tipos = TIPOS_DE_INCIDENCIA.map((tipo) => ({
-    valor: tipo,
-    etiqueta: tipo,
-  }));
+  const tipos = opcionesEtiquetadas(
+    TIPOS_DE_INCIDENCIA,
+    ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  );
 
   return (
     <PaginaDePanel

@@ -19,6 +19,7 @@ export {
   type DomicilioId,
   type LugarId,
   puedeTenerCatalogoDeCalles,
+  tipoDeLugarEnFrase,
 } from "./domain";
 export type * from "./types";
 export * from "./ui";

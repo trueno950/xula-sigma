@@ -28,6 +28,13 @@ export {
   transicionValida,
 } from "./estado";
 export {
+  ETIQUETA_DE_AREA,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
+  ETIQUETA_DE_MOTIVO_DE_RECHAZO,
+  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  SIN_AREA,
+} from "./etiquetas";
+export {
   esFolioDeReporte,
   Folio,
   normalizarFolio,

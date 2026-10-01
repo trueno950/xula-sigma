@@ -1,5 +1,8 @@
-import { Boton, CampoDeLista } from "@/shared/ui";
-import { MOTIVOS_DE_CANCELACION } from "../domain";
+import { Boton, CampoDeLista, opcionesEtiquetadas } from "@/shared/ui";
+import {
+  ETIQUETA_DE_MOTIVO_DE_CANCELACION,
+  MOTIVOS_DE_CANCELACION,
+} from "../domain";
 import { cancelarConstanciaAction } from "./actions/cancelarConstanciaAction";
 
 type Props = {
@@ -25,12 +28,12 @@ export function BotonDeCancelacion({ constanciaId }: Props) {
       <CampoDeLista
         id="motivo-de-cancelacion"
         name="motivo"
-        etiqueta="Motivo de cancelacion"
+        etiqueta="Motivo de cancelación"
         marcador="Seleccione un motivo"
-        opciones={MOTIVOS_DE_CANCELACION.map((motivo) => ({
-          valor: motivo,
-          etiqueta: motivo,
-        }))}
+        opciones={opcionesEtiquetadas(
+          MOTIVOS_DE_CANCELACION,
+          ETIQUETA_DE_MOTIVO_DE_CANCELACION,
+        )}
         ayuda="No se deshace. El documento queda cancelado con este motivo."
       />
       <Boton type="submit" variante="peligro">

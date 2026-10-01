@@ -5,12 +5,14 @@ import {
   ChipDeFiltro,
   CLASES_DE_ETIQUETA,
   clasesDeCampo,
+  opcionesEtiquetadas,
 } from "@/shared/ui";
 import type { FiltrosDeListado } from "../application/puertos";
-import { ESTADOS_DE_CONSTANCIA } from "../domain";
-import { ESTADOS_LEGIBLES } from "./estadosLegibles";
+import {
+  ESTADOS_DE_CONSTANCIA,
+  ETIQUETA_DE_ESTADO_DE_CONSTANCIA,
+} from "../domain";
 import { hrefSinEstado } from "./hrefsDeListado";
-import { opcionesDeCatalogo } from "./opciones";
 
 type Props = FiltrosDeListado & { q?: string | undefined };
 
@@ -52,7 +54,10 @@ export function FiltrosDeConstancias({ q, estado }: Props) {
           marcador="Todos"
           opcional
           defaultValue={estado ?? ""}
-          opciones={opcionesDeCatalogo(ESTADOS_DE_CONSTANCIA)}
+          opciones={opcionesEtiquetadas(
+            ESTADOS_DE_CONSTANCIA,
+            ETIQUETA_DE_ESTADO_DE_CONSTANCIA,
+          )}
         />
         <Boton type="submit" variante="secundaria">
           Buscar
@@ -62,7 +67,7 @@ export function FiltrosDeConstancias({ q, estado }: Props) {
       {estado ? (
         <div className="flex flex-wrap gap-2">
           <ChipDeFiltro
-            etiqueta={`Estado: ${ESTADOS_LEGIBLES[estado]}`}
+            etiqueta={`Estado: ${ETIQUETA_DE_ESTADO_DE_CONSTANCIA[estado]}`}
             hrefQuitar={hrefSinEstado({ q })}
           />
         </div>

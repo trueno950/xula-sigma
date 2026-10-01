@@ -6,7 +6,8 @@ const constanciaPorIdMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: vi.fn() }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
-vi.mock("@/modules/constancias", () => ({
+vi.mock("@/modules/constancias", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/constancias")>()),
   BotonDeCancelacion: () => null,
   BotonDeImprimir: () => <a href="/constancias/x/pdf">Imprimir</a>,
   BotonDeReimpresion: () => null,
@@ -67,7 +68,8 @@ describe("detalle de una constancia", () => {
     const pagina = await html();
 
     expect(pagina).not.toContain("Imprimir");
-    expect(pagina).toContain("Documento cancelado");
+    expect(pagina).toContain("Documento cancelado: Error de captura");
+    expect(pagina).not.toContain("ERROR_DE_CAPTURA");
     expect(pagina).toContain("Juan Poot");
     expect(pagina).toContain("VEC-2026-000001");
   });

@@ -80,7 +80,7 @@ export function SelectorDePunto({ punto: puntoInicial }: Props) {
         ref={mapaRef}
         hidden={mapaFallido}
         role="application"
-        aria-label="Mapa para elegir la ubicacion de la calle"
+        aria-label="Mapa para elegir la ubicación de la calle"
         aria-hidden={!mapaVisible}
         className="h-72 w-full rounded-md border border-caliza-divisor"
         style={{ visibility: mapaVisible ? "visible" : "hidden" }}

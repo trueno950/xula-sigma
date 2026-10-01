@@ -53,7 +53,7 @@ describe("acciones publicas de calles", () => {
 
   it("rechaza un formulario de ubicacion malformado antes de resolver sesion", async () => {
     await expect(ubicarCalleAction(formulario({}))).rejects.toThrow(
-      "REDIRECT:/territorio?error=Coordenada+invalida.",
+      "REDIRECT:/territorio?error=Coordenada+inv%C3%A1lida.",
     );
 
     expect(contextoActualMock).not.toHaveBeenCalled();
@@ -73,7 +73,7 @@ describe("acciones publicas de calles", () => {
         }),
       ),
     ).rejects.toThrow(
-      "REDIRECT:/territorio?error=Las+calles+solo+se+pueden+administrar+en+una+cabecera+o+una+comisaria.",
+      "REDIRECT:/territorio?error=Las+calles+solo+se+pueden+administrar+en+una+cabecera+o+una+comisar%C3%ADa.",
     );
   });
 
@@ -87,7 +87,7 @@ describe("acciones publicas de calles", () => {
         }),
       ),
     ).rejects.toThrow(
-      "REDIRECT:/territorio?error=El+punto+debe+estar+dentro+de+Yucatan.",
+      "REDIRECT:/territorio?error=El+punto+debe+estar+dentro+de+Yucat%C3%A1n.",
     );
 
     expect(contextoActualMock).not.toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe("acciones publicas de calles", () => {
         formulario({ calleId: CALLE, latitud: "20.937", longitud: "-89.6237" }),
       ),
     ).rejects.toThrow(
-      "REDIRECT:/territorio?error=No+se+pudo+guardar+la+ubicacion.",
+      "REDIRECT:/territorio?error=No+se+pudo+guardar+la+ubicaci%C3%B3n.",
     );
   });
 

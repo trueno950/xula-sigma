@@ -42,7 +42,7 @@ const esquemaDeEntrada = z.object({
     .optional(),
 });
 
-const MENSAJE_FORMULARIO_INVALIDO = "Datos de la transicion invalidos.";
+const MENSAJE_FORMULARIO_INVALIDO = "Datos de la transición inválidos.";
 const MENSAJE_FOLIO_INVALIDO =
   "El folio del reporte original debe tener la forma REP-AAAA-000123.";
 const MENSAJE_GENERICO = "No se pudo cambiar el estado. Intente de nuevo.";

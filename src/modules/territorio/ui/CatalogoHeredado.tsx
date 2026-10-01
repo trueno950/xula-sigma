@@ -26,7 +26,7 @@ export function CatalogoHeredado({ raizId, calles, lugares, permisos }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[15px] text-caliza-apagada">
-        {`Este lugar usa el catalogo de calles de ${asentamiento}.`}
+        {`Este lugar usa el catálogo de calles de ${asentamiento}.`}
       </p>
 
       {calles.length > 0 ? (
@@ -44,7 +44,7 @@ export function CatalogoHeredado({ raizId, calles, lugares, permisos }: Props) {
         </Tabla>
       ) : (
         <p className="py-6 text-[15px] text-caliza-apagada">
-          Todavia no hay calles cargadas en el catalogo del asentamiento.
+          Todavía no hay calles cargadas en el catálogo del asentamiento.
         </p>
       )}
 
@@ -59,7 +59,7 @@ export function CatalogoHeredado({ raizId, calles, lugares, permisos }: Props) {
             })}
             variante="primaria"
           >
-            Administrar el catalogo
+            Administrar el catálogo
           </EnlaceDeAccion>
         </BarraDeAcciones>
       ) : null}

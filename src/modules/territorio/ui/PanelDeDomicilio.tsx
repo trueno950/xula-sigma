@@ -98,7 +98,7 @@ export function PanelDeDomicilio({
           </summary>
           <div className="flex flex-col gap-4 pt-4">
             <p className="text-[15px] text-caliza-apagada">
-              Una direccion dada de baja deja de listarse, y no se puede asignar
+              Una dirección dada de baja deja de listarse, y no se puede asignar
               en una mudanza.
             </p>
             <EnlaceDeAccion

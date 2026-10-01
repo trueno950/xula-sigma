@@ -105,7 +105,7 @@ export function TabDeCalles({
       ) : (
         <EstadoVacio
           estado={{ clase: "vacio-inicial" }}
-          mensajeInicial={`${lugar.nombre} no tiene calles todavia. Un domicilio necesita una.`}
+          mensajeInicial={`${lugar.nombre} no tiene calles todavía. Un domicilio necesita una.`}
           hrefSinFiltro={rutaDe({
             raizId: raizId,
             nodoId: lugar.id,

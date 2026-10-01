@@ -22,7 +22,7 @@ const esquema = z.strictObject({
   id: z.string().trim().uuid(),
   estadoNuevo: z.enum(ESTADOS_DE_INTERVENCION),
 });
-const MENSAJE_INVALIDO = "Datos de la transicion invalidos.";
+const MENSAJE_INVALIDO = "Datos de la transición inválidos.";
 const MENSAJE_GENERICO = "No se pudo cambiar el estado. Intente de nuevo.";
 
 const redirigirConError = (id: string, mensaje: string): never =>
@@ -30,7 +30,7 @@ const redirigirConError = (id: string, mensaje: string): never =>
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
-  if (error instanceof NoEncontradoError) return "Esa intervencion no existe.";
+  if (error instanceof NoEncontradoError) return "Esa intervención no existe.";
   if (error instanceof TenantNoResueltoError) {
     return "No se pudo determinar el ayuntamiento del acceso.";
   }

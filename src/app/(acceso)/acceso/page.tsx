@@ -50,7 +50,7 @@ export default async function PaginaDeAcceso() {
       <FormularioDeAcceso />
 
       <p className="text-center text-xs text-neutral-500">
-        Si no tiene cuenta, pidasela a quien administra el sistema en su
+        Si no tiene cuenta, pídasela a quien administra el sistema en su
         ayuntamiento.
       </p>
     </main>

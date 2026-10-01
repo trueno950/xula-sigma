@@ -5,6 +5,7 @@ import {
   type LugarId,
   puedeSerRaiz,
   type TipoDeLugar,
+  tipoDeLugarEnFrase,
 } from "../domain";
 import { reparentearLugarAction } from "./actions/reparentearLugarAction";
 import { opcionesDeLugares } from "./opciones";
@@ -57,8 +58,8 @@ export function FormularioDeReparenteo({
     return (
       <p className="text-[15px] text-caliza-apagada">
         {puedeSerRaiz(tipoDelLugar)
-          ? `Una ${tipoDelLugar} es un asentamiento del municipio: no cuelga de ningun otro lugar.`
-          : `Todavia no hay ningun lugar en el municipio que pueda contener una ${tipoDelLugar}.`}
+          ? `Una ${tipoDeLugarEnFrase(tipoDelLugar)} es un asentamiento del municipio: no cuelga de ningún otro lugar.`
+          : `Todavía no hay ningún lugar en el municipio que pueda contener este lugar.`}
       </p>
     );
   }
@@ -81,9 +82,9 @@ export function FormularioDeReparenteo({
         <>
           <input type="hidden" name="nuevoPadreId" value="" />
           <p className="text-[15px] text-caliza-tinta">
-            Esta {tipoDelLugar} cuelga de otro lugar, y no deberia: es un
-            asentamiento del municipio. Soltarla la deja en el primer nivel con
-            todo lo que tiene adentro.
+            Esta {tipoDeLugarEnFrase(tipoDelLugar)} cuelga de otro lugar, y no
+            debería: es un asentamiento del municipio. Soltarla la deja en el
+            primer nivel con todo lo que tiene adentro.
           </p>
         </>
       ) : null}
@@ -93,7 +94,7 @@ export function FormularioDeReparenteo({
           id="lugar-padre-nuevo-id"
           name="nuevoPadreId"
           etiqueta="Nuevo lugar padre"
-          marcador={`Elija donde va esta ${tipoDelLugar}`}
+          marcador="Elija dónde va este lugar"
           opciones={[
             ...(oferta.muestraDesanclar
               ? [
@@ -105,7 +106,7 @@ export function FormularioDeReparenteo({
               : []),
             ...opcionesDeLugares(destinos),
           ]}
-          ayuda="Todo lo que cuelga de este lugar se mueve con el."
+          ayuda="Todo lo que cuelga de este lugar se mueve con él."
         />
       ) : null}
 

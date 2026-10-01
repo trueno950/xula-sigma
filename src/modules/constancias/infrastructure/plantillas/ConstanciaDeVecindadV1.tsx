@@ -126,7 +126,7 @@ export function ConstanciaDeVecindadV1({
             <Text style={estilos.marcaDeCancelada}>CANCELADA</Text>
           </>
         ) : reimpresion ? (
-          <Text style={estilos.marcaDeAgua}>REIMPRESION</Text>
+          <Text style={estilos.marcaDeAgua}>REIMPRESIÓN</Text>
         ) : null}
 
         <View style={estilos.encabezado}>
@@ -151,7 +151,7 @@ export function ConstanciaDeVecindadV1({
         </Text>
 
         <Text style={estilos.parrafo}>
-          Se expide la presente constancia a peticion de la parte interesada,
+          Se expide la presente constancia a petición de la parte interesada,
           para los fines que a la persona convengan.
         </Text>
 

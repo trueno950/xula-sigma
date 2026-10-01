@@ -162,13 +162,13 @@ describe("domicilios: fila y panel", () => {
    */
   it("nombra los domicilios hermanos que estan en el subarbol", () => {
     expect(render({ domicilio, domicilioId })).toContain(
-      "Hay 1 domicilio mas en esta direccion",
+      "Hay 1 domicilio más en esta dirección",
     );
   });
 
   it("no llama hermano al mismo numero de otra calle con el mismo nombre", () => {
     const html = render({ domicilio, domicilioId });
-    const hermanos = html.slice(html.indexOf("en esta direccion"));
+    const hermanos = html.slice(html.indexOf("en esta dirección"));
 
     expect(hermanos).not.toContain(`domicilio=${vecinaId}`);
   });
@@ -192,6 +192,6 @@ describe("domicilios: fila y panel", () => {
       nodos: nodos.filter((nodo) => nodo.id !== hermanaId),
     });
 
-    expect(html).not.toContain("domicilio mas en esta direccion");
+    expect(html).not.toContain("domicilio más en esta dirección");
   });
 });

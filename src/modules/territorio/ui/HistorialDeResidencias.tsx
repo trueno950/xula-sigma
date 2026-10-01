@@ -36,8 +36,8 @@ export function HistorialDeResidencias({ historial }: Props) {
         >
           <span className="text-[15px] text-caliza-tinta">
             {residencia.domicilio.numero
-              ? `Numero ${residencia.domicilio.numero}`
-              : "Sin numero"}
+              ? `Número ${residencia.domicilio.numero}`
+              : "Sin número"}
             {residencia === vigente ? " · Vigente" : ""}
           </span>
           <span className="text-[13px] text-caliza-apagada">

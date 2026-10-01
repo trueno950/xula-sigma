@@ -116,7 +116,7 @@ export function Tabla({ etiqueta, columnas, children, verMas }: PropsDeTabla) {
       {verMas ? (
         <div className="flex justify-center border-t border-caliza-divisor py-3">
           <Link href={verMas} className={clasesDeBoton("secundaria")}>
-            Ver mas
+            Ver más
           </Link>
         </div>
       ) : null}

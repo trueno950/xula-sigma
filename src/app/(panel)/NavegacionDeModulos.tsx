@@ -28,7 +28,7 @@ export function NavegacionDeModulos({
 
   return (
     <nav
-      aria-label="Modulos"
+      aria-label="Módulos"
       className={
         esBarra
           ? "flex flex-col gap-0.5 p-3"

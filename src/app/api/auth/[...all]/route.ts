@@ -118,7 +118,7 @@ async function conBorde(trabajo: () => Promise<Response>): Promise<Response> {
     console.error("[auth] fallo no manejado", datosSegurosDeError(error));
 
     return Response.json(
-      { message: "No se pudo completar la operacion." },
+      { message: "No se pudo completar la operación." },
       { status: 500 },
     );
   }

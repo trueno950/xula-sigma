@@ -8,6 +8,7 @@ import {
   BotonDeReimpresion,
   comoConstanciaId,
   constanciaPorId,
+  ETIQUETA_DE_MOTIVO_DE_CANCELACION,
   esquemaDeSnapshot,
 } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
@@ -32,6 +33,13 @@ type Props = {
 
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
+
+const textoDeCancelacion = (
+  motivo: keyof typeof ETIQUETA_DE_MOTIVO_DE_CANCELACION | null,
+) =>
+  motivo
+    ? `Documento cancelado: ${ETIQUETA_DE_MOTIVO_DE_CANCELACION[motivo]}`
+    : "Documento cancelado";
 
 const Dato = ({
   etiqueta,
@@ -83,7 +91,7 @@ export default async function PaginaDeDetalleDeConstancia({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { id } = await params;
@@ -124,7 +132,7 @@ export default async function PaginaDeDetalleDeConstancia({
       {error ? <Aviso tono="error">{error}</Aviso> : null}
       {cancelada ? (
         <Aviso tono="error">
-          {`Documento cancelado: ${constancia.motivoCancelacion}`}
+          {textoDeCancelacion(constancia.motivoCancelacion)}
         </Aviso>
       ) : null}
       {!cancelada && !puedeReimprimir ? (
@@ -141,7 +149,7 @@ export default async function PaginaDeDetalleDeConstancia({
       ) : null}
       <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
         <Dato etiqueta="Titular" valor={datos.titular.nombreCompleto} />
-        <Dato etiqueta="Direccion" valor={datos.direccion.texto} />
+        <Dato etiqueta="Dirección" valor={datos.direccion.texto} />
         <Dato etiqueta="Reside desde" valor={datos.direccion.desdeEn} dato />
         <Dato
           etiqueta="Emitida"

@@ -20,7 +20,7 @@ export function FormularioDeUbicacion({ raiz, nodo, calle }: Props) {
       <input type="hidden" name="calleId" value={calle.id} />
       <SelectorDePunto punto={calle.punto} />
       <Boton type="submit" variante="primaria">
-        Guardar ubicacion
+        Guardar ubicación
       </Boton>
     </form>
   );

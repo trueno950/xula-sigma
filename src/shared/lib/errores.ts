@@ -16,7 +16,7 @@ import { datosSegurosDeError } from "./registroDeError";
 export class NoAutorizadoError extends Error {
   readonly codigo = "NO_AUTORIZADO";
 
-  constructor(mensaje = "No tiene permiso para esta operacion.") {
+  constructor(mensaje = "No tiene permiso para esta operación.") {
     super(mensaje);
     this.name = "NoAutorizadoError";
   }
@@ -73,7 +73,7 @@ export class ValidacionError extends Error {
 
   constructor(
     campos: Record<string, string> = {},
-    mensaje = "Datos invalidos.",
+    mensaje = "Datos inválidos.",
   ) {
     super(mensaje);
     this.name = "ValidacionError";
@@ -134,7 +134,7 @@ export function mapearError(error: unknown): ActionResult<never> {
   const mensaje =
     typeof propiedades?.message === "string"
       ? propiedades.message
-      : "Datos invalidos.";
+      : "Datos inválidos.";
 
   if (esCodigoConocido(codigo)) {
     if (codigo === "VALIDACION") {
@@ -151,6 +151,6 @@ export function mapearError(error: unknown): ActionResult<never> {
   return {
     ok: false,
     codigo: "ERROR_INTERNO",
-    mensaje: "No se pudo completar la operacion. Intente de nuevo.",
+    mensaje: "No se pudo completar la operación. Intente de nuevo.",
   };
 }

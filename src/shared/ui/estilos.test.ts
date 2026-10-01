@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ANILLO_DE_FOCO,
+  CLASES_DE_ENLACE,
   clasesDeBoton,
   clasesDeCampo,
   descripcionDeCampo,
@@ -27,6 +28,15 @@ describe("ANILLO_DE_FOCO", () => {
 
   it("declara el estilo solido del anillo al enfocar", () => {
     expect(ANILLO_DE_FOCO).toContain("focus-visible:outline-solid");
+  });
+});
+
+describe("CLASES_DE_ENLACE", () => {
+  it("se distingue del texto por algo mas que el color y lleva el anillo de foco", () => {
+    // Un enlace dentro de una ficha no puede depender solo del color: quien
+    // no distingue tonos no lo veria como enlace.
+    expect(CLASES_DE_ENLACE).toContain("underline");
+    expect(CLASES_DE_ENLACE).toContain(ANILLO_DE_FOCO);
   });
 });
 

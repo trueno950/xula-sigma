@@ -1,14 +1,15 @@
-import { Boton, Campo, CampoDeLista } from "@/shared/ui";
+import { Boton, Campo, CampoDeLista, opcionesEtiquetadas } from "@/shared/ui";
 import {
   AREAS_RESPONSABLES,
   ESTADOS_DE_REPORTE,
   type EstadoDeReporte,
+  ETIQUETA_DE_AREA,
+  ETIQUETA_DE_MOTIVO_DE_RECHAZO,
   MOTIVOS_DE_RECHAZO,
   transicionValida,
 } from "../domain";
 import { asignarAreaAction } from "./actions/asignarAreaAction";
 import { cambiarEstadoAction } from "./actions/cambiarEstadoAction";
-import { opcionesDeCatalogo } from "./opciones";
 
 type Props = {
   reporteId: string;
@@ -17,7 +18,7 @@ type Props = {
 
 const ETIQUETAS: Record<EstadoDeReporte, string> = {
   RECIBIDO: "Marcar recibido",
-  EN_ATENCION: "Marcar en atencion",
+  EN_ATENCION: "Marcar en atención",
   RESUELTO: "Marcar resuelto",
   RECHAZADO: "Rechazar",
 };
@@ -81,7 +82,10 @@ export function AccionesDeReporte({ reporteId, estadoActual }: Props) {
             name="motivoDeRechazo"
             etiqueta="Motivo de rechazo"
             marcador="Seleccione un motivo"
-            opciones={opcionesDeCatalogo(MOTIVOS_DE_RECHAZO)}
+            opciones={opcionesEtiquetadas(
+              MOTIVOS_DE_RECHAZO,
+              ETIQUETA_DE_MOTIVO_DE_RECHAZO,
+            )}
           />
           <Campo
             id={`original-${reporteId}`}
@@ -106,12 +110,12 @@ export function AccionesDeReporte({ reporteId, estadoActual }: Props) {
         <CampoDeLista
           id={`area-${reporteId}`}
           name="areaResponsable"
-          etiqueta="Area responsable"
-          marcador="Seleccione un area"
-          opciones={opcionesDeCatalogo(AREAS_RESPONSABLES)}
+          etiqueta="Área responsable"
+          marcador="Seleccione un área"
+          opciones={opcionesEtiquetadas(AREAS_RESPONSABLES, ETIQUETA_DE_AREA)}
         />
         <Boton type="submit" variante="secundaria">
-          Asignar area
+          Asignar área
         </Boton>
       </form>
     </div>

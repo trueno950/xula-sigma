@@ -1,6 +1,11 @@
-import type { OpcionDeLista } from "@/shared/ui";
+import { type OpcionDeLista, opcionesEtiquetadas } from "@/shared/ui";
 import type { CalleGuardada, LugarGuardado } from "../application/puertos";
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
+import {
+  ETIQUETA_DE_TIPO_DE_LUGAR,
+  type TipoDeLugar,
+  tipoDeLugarEnFrase,
+} from "../domain";
 
 /**
  * Como se lee cada entidad del modulo dentro de un `<select>`.
@@ -16,7 +21,7 @@ export const opcionesDeLugares = (
 ): readonly OpcionDeLista[] =>
   lugares.map((lugar) => ({
     valor: lugar.id,
-    etiqueta: `${lugar.nombre} (${lugar.tipo})`,
+    etiqueta: `${lugar.nombre} (${tipoDeLugarEnFrase(lugar.tipo)})`,
   }));
 
 export const opcionesDeCalles = (
@@ -36,6 +41,6 @@ export const opcionesDeDomicilios = (
   }));
 
 export const opcionesDeTipos = (
-  tipos: readonly string[],
+  tipos: readonly TipoDeLugar[],
 ): readonly OpcionDeLista[] =>
-  tipos.map((tipo) => ({ valor: tipo, etiqueta: tipo }));
+  opcionesEtiquetadas(tipos, ETIQUETA_DE_TIPO_DE_LUGAR);

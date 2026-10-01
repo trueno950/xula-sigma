@@ -49,7 +49,7 @@ export default async function PaginaDeDetalleDePersona({
   const contexto = await contextoActual();
 
   if (!contexto) {
-    return <PantallaDeMensaje mensaje="No se pudo determinar su sesion." />;
+    return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
   const { id } = await params;
@@ -103,7 +103,7 @@ export default async function PaginaDeDetalleDePersona({
       migaja={
         <Migaja
           pasos={[
-            { etiqueta: "Padron", href: "/padron" },
+            { etiqueta: "Padrón", href: "/padron" },
             { etiqueta: nombre },
           ]}
           etiqueta="Ruta"
@@ -116,7 +116,7 @@ export default async function PaginaDeDetalleDePersona({
 
       {!puedeActuar ? (
         <AvisoDePermiso
-          capacidad="registrar cambios en el padron ni emitir constancias"
+          capacidad="registrar cambios en el padrón ni emitir constancias"
           requisito="un rol con permisos de escritura"
         />
       ) : null}

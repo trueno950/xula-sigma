@@ -31,8 +31,8 @@ const UN_MIB = 1024 * 1024;
  */
 const esquemaDeEntrada = z
   .instanceof(File, { message: "Suba un archivo." })
-  .refine((archivo) => archivo.size > 0, "El archivo esta vacio.")
-  .refine((archivo) => archivo.size <= UN_MIB, "El archivo pesa mas de 1 MiB.");
+  .refine((archivo) => archivo.size > 0, "El archivo está vacío.")
+  .refine((archivo) => archivo.size <= UN_MIB, "El archivo pesa más de 1 MiB.");
 
 export async function cambiarEscudoAction(
   formData: FormData,
@@ -42,7 +42,7 @@ export async function cambiarEscudoAction(
 
     if (!analisis.success) {
       throw new ValidacionError({
-        escudo: analisis.error.issues[0]?.message ?? "Archivo invalido.",
+        escudo: analisis.error.issues[0]?.message ?? "Archivo inválido.",
       });
     }
 
