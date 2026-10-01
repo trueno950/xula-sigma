@@ -11,6 +11,7 @@ export * from "./darDeBajaLugar";
 export * from "./direccionVigenteDePersona";
 export * from "./domicilioPorId";
 export * from "./editarLugar";
+export * from "./existeCabecera";
 export * from "./historialDeResidencias";
 export * from "./listarCalles";
 export * from "./listarCallesDelMunicipio";

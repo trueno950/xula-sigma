@@ -38,6 +38,7 @@ const repositorioCon = (
   subarbol: vi.fn(),
   listarRaices: vi.fn(),
   listarLugares: vi.fn(),
+  existeCabecera: vi.fn(),
 });
 
 const tx = {} as Parameters<RepositorioDeLugares["buscarPorId"]>[0];

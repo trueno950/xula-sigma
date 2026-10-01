@@ -73,6 +73,7 @@ const crearDependencias = () => {
     subarbol: vi.fn(),
     listarRaices: vi.fn(),
     listarLugares: vi.fn(),
+    existeCabecera: vi.fn(),
   };
 
   return { repositorioDeCalles, repositorioDeLugares };

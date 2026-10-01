@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   type DomicilioId,
   domicilioPorId,
+  existeCabecera,
   listarCalles,
   listarCallesDelMunicipio,
   listarLugares,
@@ -89,6 +90,14 @@ const cargarTerritorio = async (
   const lugares = await listarLugares(contexto);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
 
+  // Solo cuando el panel del alta va a dibujarse: `hayCabecera` no cambia
+  // nada en el resto de la pantalla, y la lectura no tiene por que correr en
+  // cada visita.
+  const hayCabecera =
+    !raiz && accion === "lugar" && puedeCrearLugar
+      ? await existeCabecera(contexto)
+      : false;
+
   // La entrada no conoce el asentamiento de antemano: lista las calles del
   // municipio entero y el caso de uso deriva cual es el de la elegida.
   const registroAbierto = !raiz && accion === "domicilio" && puedeCrearLugar;
@@ -104,6 +113,7 @@ const cargarTerritorio = async (
     calles,
     domicilio,
     lugares,
+    hayCabecera,
     puedeCrearLugar,
     registroAbierto,
     callesDelMunicipio,
@@ -132,6 +142,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
     calles,
     domicilio,
     lugares,
+    hayCabecera,
     raices,
     puedeCrearLugar,
     registroAbierto,
@@ -159,6 +170,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
           <VistaDeRaices
             raices={raices}
             lugares={lugares}
+            hayCabecera={hayCabecera}
             puedeEscribir={puedeCrearLugar}
             altaAbierta={accion === "lugar"}
           />

@@ -189,4 +189,12 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
 
     return filas.map(aLugarGuardado);
   },
+
+  async existeCabecera(tx) {
+    const filas = await tx
+      .select({ id: lugares.id })
+      .from(lugares)
+      .where(eq(lugares.tipo, "cabecera"));
+    return filas.length > 0;
+  },
 };

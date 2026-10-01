@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import { comoAyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import {
   limpiar,
   motul,
@@ -10,6 +12,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAltaDeLugar } from "./application/altaDeLugar";
+import { crearExisteCabecera } from "./application/existeCabecera";
 import { CabeceraDuplicadaError } from "./domain";
 import { lugares } from "./infrastructure/esquema";
 import { repositorioDeLugaresSql } from "./infrastructure/repositorioDeLugaresSql";
@@ -25,6 +28,7 @@ const enMotul = contextoDe();
 const enTicul: ContextoActual = { ...enMotul, ayuntamientoId: ticul };
 
 const altaDeLugar = crearAltaDeLugar(repositorioDeLugaresSql);
+const existeCabecera = crearExisteCabecera(repositorioDeLugaresSql);
 const nuevaCabecera = (nombre: string) => ({
   tipo: "cabecera" as const,
   nombre,
@@ -86,6 +90,32 @@ describe("alta de la cabecera municipal", () => {
     await expect(
       altaDeLugar(nuevaCabecera("Ticul de nuevo"), enTicul),
     ).rejects.toBeInstanceOf(CabeceraDuplicadaError);
+  });
+
+  it("una cabecera dada de baja sigue contando para el alta", async () => {
+    // El indice parcial no tiene clausula de baja: la fila sigue ahi y una
+    // cabecera nueva la rechazaria. La lectura del alta tiene que verla.
+    await withTenant(ticul, (tx) =>
+      tx
+        .update(lugares)
+        .set({ bajaEn: new Date() })
+        .where(eq(lugares.tipo, "cabecera")),
+    );
+
+    expect(await existeCabecera(enTicul)).toBe(true);
+  });
+
+  it("un municipio sin ninguna cabecera no la reporta", async () => {
+    const sinCabecera = comoAyuntamientoId(randomUUID());
+
+    await owner`
+      INSERT INTO ayuntamientos (id, subdominio, nombre)
+      VALUES (${sinCabecera}, ${`sin-cabecera-${sinCabecera.slice(0, 8)}`}, 'Sin cabecera')
+    `;
+
+    expect(
+      await existeCabecera({ ...enMotul, ayuntamientoId: sinCabecera }),
+    ).toBe(false);
   });
 
   it("un tipo distinto sigue entrando aunque ya haya cabecera", async () => {

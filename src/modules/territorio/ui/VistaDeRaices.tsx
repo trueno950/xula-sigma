@@ -25,6 +25,12 @@ type Props = {
   raices: readonly LugarDelArbol[];
   /** Todos los lugares del municipio: de aca sale que cuelga de que. */
   lugares: readonly LugarDelArbol[];
+  /**
+   * Lo lee la pagina con `existeCabecera`, no de `lugares`: el indice
+   * `lugares_una_cabecera` tambien cuenta las cabeceras dadas de baja, y
+   * `lugares` solo trae las activas.
+   */
+  hayCabecera: boolean;
   puedeEscribir: boolean;
   /** `?accion=lugar`: el alta esta abierta. */
   altaAbierta: boolean;
@@ -53,6 +59,7 @@ const CLASE_FILA =
 export function VistaDeRaices({
   raices,
   lugares,
+  hayCabecera,
   puedeEscribir,
   altaAbierta,
 }: Props) {
@@ -146,9 +153,7 @@ export function VistaDeRaices({
 
       {puedeEscribir && altaAbierta ? (
         <Panel titulo="Agregar asentamiento">
-          <FormularioDeAltaDeLugar
-            hayCabecera={lugares.some((lugar) => lugar.tipo === "cabecera")}
-          />
+          <FormularioDeAltaDeLugar hayCabecera={hayCabecera} />
           <EnlaceDeAccion href="/territorio" variante="fantasma">
             Cancelar
           </EnlaceDeAccion>

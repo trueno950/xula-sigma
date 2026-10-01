@@ -1,11 +1,8 @@
 /**
- * `postgres.js` (el driver, `shared/tenancy/withTenant.ts`) marca la
- * violacion de restriccion unica con SQLSTATE `23505` y expone el nombre de
- * la restriccion en `constraint_name` -mismo campo que ya lista
- * `registroDeError.ts` como seguro para loguear-, pero drizzle envuelve ese
- * error de Postgres: los campos viven en `.cause`, no en el error que
- * llega al repositorio (mismo hallazgo que documenta `registroDeError.ts`).
- * Por eso se recorre la cadena de `cause` en vez de mirar solo el primero.
+ * La violacion de restriccion unica llega con SQLSTATE `23505` y el nombre
+ * de la restriccion en `constraint_name`; `shared/lib/registroDeError.ts`
+ * documenta por que hay que buscar el error de Postgres en la cadena de
+ * `cause`.
  */
 export const violaRestriccionUnica = (
   error: unknown,

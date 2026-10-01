@@ -6,11 +6,9 @@ import {
 } from "../domain";
 
 /**
- * Los tipos que el alta de un lugar ofrece. Con padre, los que ese padre
- * contiene. Sin padre, los que pueden ser raiz -salvo la cabecera cuando el
- * municipio ya tiene una: `lugares_una_cabecera` la rechazaria al enviar.
- * Esconder la opcion no es la regla; la regla es el indice y su error de
- * dominio, que el caso de uso sigue lanzando.
+ * Los tipos que el alta de un lugar ofrece. Lo que de verdad cierra el
+ * camino es el indice `lugares_una_cabecera` y su `CabeceraDuplicadaError`:
+ * esconder una opcion no es una regla.
  */
 export const tiposParaElAlta = ({
   tipoDelPadre,

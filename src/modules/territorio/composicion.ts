@@ -12,6 +12,7 @@ import {
   crearDarDeBajaLugar,
   crearDireccionVigenteDePersona,
   crearEditarLugar,
+  crearExisteCabecera,
   crearHistorialDeResidencias,
   crearListarCalles,
   crearListarCallesDelMunicipio,
@@ -50,6 +51,7 @@ import {
  */
 export const altaDeLugar = crearAltaDeLugar(repositorioDeLugaresSql);
 export const editarLugar = crearEditarLugar(repositorioDeLugaresSql);
+export const existeCabecera = crearExisteCabecera(repositorioDeLugaresSql);
 export const darDeBajaLugar = crearDarDeBajaLugar(repositorioDeLugaresSql);
 export const darDeBajaCalle = crearDarDeBajaCalle(repositorioDeCallesSql);
 export const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
