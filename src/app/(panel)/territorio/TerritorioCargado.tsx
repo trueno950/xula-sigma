@@ -1,10 +1,6 @@
 import { VistaDeRaices } from "@/modules/territorio";
 import type { LugarGuardado } from "@/modules/territorio/application/puertos";
 import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
-import {
-  opcionesDeCallesDelMunicipio,
-  zonaDelFormulario,
-} from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { Aviso, PaginaDePanel } from "@/shared/ui";
 import { accionesDeRaiz } from "./AccionesDeRaiz";
@@ -13,7 +9,6 @@ import {
   type SeleccionDeTerritorio,
 } from "./cargaDeTerritorio";
 import type { ParametrosDeTerritorio } from "./parametros";
-import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 import { VistaDeLugar } from "./VistaDeLugar";
 
 type Props = {
@@ -43,8 +38,9 @@ export const TerritorioCargado = async ({
     hayCabecera,
     raices,
     puedeCrearLugar,
-    registroAbierto,
+    domicilioAbierto,
     callesDelMunicipio,
+    zona,
   } = await cargarTerritorio({ contexto, parametros, raiz, seleccion });
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, vista } = parametros;
@@ -52,27 +48,18 @@ export const TerritorioCargado = async ({
   return (
     <PaginaDePanel
       titulo="Territorio"
-      accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar, accion })}
+      accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar })}
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       {!raiz ? (
-        <>
-          {registroAbierto ? (
-            <RegistroDeDomicilio
-              calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
-              zona={zonaDelFormulario(lugares, undefined, undefined)}
-            />
-          ) : null}
-
-          <VistaDeRaices
-            raices={raices}
-            lugares={lugares}
-            hayCabecera={hayCabecera}
-            puedeEscribir={puedeCrearLugar}
-            altaAbierta={accion === "lugar"}
-          />
-        </>
+        <VistaDeRaices
+          raices={raices}
+          lugares={lugares}
+          hayCabecera={hayCabecera}
+          puedeEscribir={puedeCrearLugar}
+          altaAbierta={accion === "lugar"}
+        />
       ) : nodo ? (
         <VistaDeLugar
           raiz={raiz}
@@ -86,6 +73,9 @@ export const TerritorioCargado = async ({
           domicilioId={domicilioId}
           domicilio={domicilio ?? undefined}
           permisos={permisos}
+          domicilioAbierto={domicilioAbierto}
+          callesDelMunicipio={callesDelMunicipio}
+          zona={zona}
         />
       ) : null}
     </PaginaDePanel>

@@ -1,35 +1,25 @@
-import { MapPin, Plus } from "@phosphor-icons/react/ssr";
+import { Plus } from "@phosphor-icons/react/ssr";
 import { EnlaceDeAccion } from "@/shared/ui";
 
 /**
- * Las acciones de la entrada: registrar un domicilio es la tarea de todos
- * los dias y va primaria; el alta de un asentamiento pasa a secundaria
- * -un municipio suma uno por ano-. La que ya esta abierta no repite su
- * enlace, para no dejar dos primarias en pantalla.
+ * La accion de la entrada: dar de alta un asentamiento -un municipio suma
+ * uno por ano-. El alta de domicilio vive dentro del lugar, en su pestana
+ * Domicilios: el operador no sale del contexto de lo que esta viendo para
+ * crear lo que esta viendo.
  */
 export const accionesDeRaiz = ({
   puedeCrearLugar,
-  accion,
 }: {
   puedeCrearLugar: boolean;
-  accion: string | undefined;
 }) => {
   if (!puedeCrearLugar) return undefined;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {accion === "domicilio" ? null : (
-        <EnlaceDeAccion href="/territorio?accion=domicilio" variante="primaria">
-          <MapPin size={18} weight="bold" aria-hidden="true" />
-          Registrar domicilio
-        </EnlaceDeAccion>
-      )}
-      {accion === "lugar" ? null : (
-        <EnlaceDeAccion href="/territorio?accion=lugar" variante="secundaria">
-          <Plus size={18} weight="bold" aria-hidden="true" />
-          Agregar asentamiento
-        </EnlaceDeAccion>
-      )}
+      <EnlaceDeAccion href="/territorio?accion=lugar" variante="primaria">
+        <Plus size={18} weight="bold" aria-hidden="true" />
+        Agregar asentamiento
+      </EnlaceDeAccion>
     </div>
   );
 };

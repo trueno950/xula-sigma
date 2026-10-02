@@ -16,6 +16,10 @@ import type {
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
 import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
 import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
+import type { NivelDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
+import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDomicilios";
+import { EnlaceDeAccion } from "@/shared/ui";
+import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 
 type Props = {
   raiz: Pick<LugarGuardado, "id" | "tipo" | "nombre">;
@@ -29,6 +33,11 @@ type Props = {
   domicilioId: DomicilioId | undefined;
   domicilio: DomicilioGuardado | undefined;
   permisos: PermisosDeTerritorio;
+  /** El alta de domicilio esta abierta en la pestana Domicilios. */
+  domicilioAbierto: boolean;
+  /** Las calles del municipio para el formulario de alta. */
+  callesDelMunicipio: Parameters<typeof opcionesDeCallesDelMunicipio>[0];
+  zona: NivelDelFormulario | undefined;
 };
 
 /**
@@ -75,6 +84,9 @@ export function VistaDeLugar({
   domicilioId,
   domicilio,
   permisos,
+  domicilioAbierto,
+  callesDelMunicipio,
+  zona,
 }: Props) {
   return (
     <>
@@ -100,6 +112,23 @@ export function VistaDeLugar({
         accion={accion}
         permisos={permisos}
       />
+
+      {vista === "domicilios" && permisos.abreLaEdicion ? (
+        domicilioAbierto && zona ? (
+          <RegistroDeDomicilio
+            calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
+            zona={zona}
+            volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
+          />
+        ) : (
+          <EnlaceDeAccion
+            href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
+            variante="primaria"
+          >
+            Registrar domicilio
+          </EnlaceDeAccion>
+        )
+      ) : null}
     </>
   );
 }

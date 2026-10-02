@@ -27,6 +27,9 @@ vi.mock("@/modules/territorio", async () => ({
   ...(await vi.importActual<typeof import("@/modules/territorio/ui/acciones")>(
     "@/modules/territorio/ui/acciones",
   )),
+  // El panel de nodo y el contenido son estructura pura: pasan los hijos tal cual.
+  PanelDeNodo: ({ children }: { children: React.ReactNode }) => children,
+  ContenidoDeLugar: ({ children }: { children: React.ReactNode }) => children,
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
   FormularioDeDomicilio,
@@ -76,15 +79,14 @@ beforeEach(() => {
 });
 
 describe("Territorio root entry", () => {
-  it("ofrece registrar un domicilio como accion primaria y el alta como secundaria", async () => {
+  it("la entrada no registra domicilios: el alta vive en el lugar", async () => {
     const html = renderToStaticMarkup(await paginaCompleta({}));
 
-    expect(html.match(/Registrar domicilio/g) ?? []).toHaveLength(1);
+    expect(html).not.toContain('href="/territorio?accion=domicilio"');
     expect(html.match(/Agregar asentamiento/g) ?? []).toHaveLength(1);
-    expect(html).toContain('href="/territorio?accion=domicilio"');
   });
 
-  it("con accion=domicilio abre el formulario con Calle antes de la zona", async () => {
+  it("con accion=domicilio dentro del lugar abre el formulario con Calle antes de la zona", async () => {
     mocks.listarCallesDelMunicipio.mockResolvedValue([
       {
         id: "33333333-3333-4333-8333-333333333333",
@@ -104,9 +106,20 @@ describe("Territorio root entry", () => {
         bajaEn: null,
       },
     ]);
+    mocks.lugarPorId.mockResolvedValue({
+      id: "11111111-1111-4111-8111-111111111111",
+      tipo: "cabecera",
+      nombre: "Tepakan",
+      padreId: null,
+      bajaEn: null,
+    });
 
     const html = renderToStaticMarkup(
-      await paginaCompleta({ accion: "domicilio" }),
+      await paginaCompleta({
+        raiz: "11111111-1111-4111-8111-111111111111",
+        nodo: "11111111-1111-4111-8111-111111111111",
+        accion: "domicilio",
+      }),
     );
 
     expect(mocks.listarCallesDelMunicipio).toHaveBeenCalled();

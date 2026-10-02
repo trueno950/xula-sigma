@@ -10,6 +10,7 @@ import {
   type NodoSeleccionado,
   subarbol,
 } from "@/modules/territorio";
+import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -95,32 +96,43 @@ export const cargarTerritorio = async ({
         puedeCrearLugar,
       );
 
-  return { ...seleccion, raices, lugares, puedeCrearLugar, ...paneles };
+  const domicilioAbierto =
+    Boolean(raiz) && parametros.accion === "domicilio" && puedeCrearLugar;
+  const callesDelMunicipio =
+    parametros.accion === "domicilio" && puedeCrearLugar
+      ? await listarCallesDelMunicipio(contexto)
+      : [];
+  const zona = domicilioAbierto
+    ? zonaDelFormulario(lugares, undefined, undefined)
+    : undefined;
+
+  return {
+    ...seleccion,
+    raices,
+    lugares,
+    puedeCrearLugar,
+    ...paneles,
+    domicilioAbierto,
+    // Despues de paneles: el alta de domicilio vive con la raiz abierta y
+    // sus calles no pueden ser tapadas por el objeto de la entrada.
+    callesDelMunicipio,
+    zona,
+  };
 };
 
 /**
- * Los paneles de alta, cada uno con la lectura que necesita y ninguna mas:
- * `hayCabecera` no cambia nada en el resto de la pantalla, y la lista de
- * calles del municipio -la entrada no conoce el asentamiento de antemano, y
- * el caso de uso deriva cual es el de la elegida- solo alimenta el
- * formulario de domicilio.
+ * Los paneles de alta de la entrada: hoy solo el asentamiento dispara
+ * lectura -el alta de domicilio vive dentro del lugar-.
  */
 const cargarPanelesDeEntrada = async (
   contexto: ContextoActual,
   accion: ParametrosDeTerritorio["accion"],
   puedeCrearLugar: boolean,
 ) => {
-  const registroAbierto = accion === "domicilio" && puedeCrearLugar;
-  const callesDelMunicipio = registroAbierto
-    ? await listarCallesDelMunicipio(contexto)
-    : [];
-
   return {
     hayCabecera:
       accion === "lugar" && puedeCrearLugar
         ? await existeCabecera(contexto)
         : false,
-    registroAbierto,
-    callesDelMunicipio,
   };
 };
