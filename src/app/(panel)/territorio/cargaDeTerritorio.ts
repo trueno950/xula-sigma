@@ -10,7 +10,11 @@ import {
   type NodoSeleccionado,
   subarbol,
 } from "@/modules/territorio";
-import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
+import type { LugarConPadre } from "@/modules/territorio/ui/vistaDeDomicilios";
+import {
+  lugaresDeNodos,
+  zonaDelFormulario,
+} from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -98,14 +102,12 @@ export const cargarTerritorio = async ({
 
   const domicilioAbierto =
     Boolean(raiz) && parametros.accion === "domicilio" && puedeCrearLugar;
-  const { registroAbierto, callesDelMunicipio } = await cargarRegistroDeEntrada(
-    contexto,
-    parametros,
-    { puedeCrearLugar, conRaiz: Boolean(raiz) },
-  );
-  const zonaDeLaEntrada = registroAbierto
-    ? zonaDelFormulario(lugares, undefined, undefined)
-    : undefined;
+  const { registroAbierto, callesDelMunicipio, zonaDeLaEntrada } =
+    await cargarRegistroDeEntrada(contexto, parametros, {
+      puedeCrearLugar,
+      conRaiz: Boolean(raiz),
+      lugares: lugaresDeNodos(seleccion.nodos),
+    });
 
   return {
     ...seleccion,
@@ -122,21 +124,32 @@ export const cargarTerritorio = async ({
 
 /**
  * El alta de domicilio servida desde la entrada, cuando la piden sin
- * `?raiz=`: el registro abierto para el rol con permiso y las calles del
- * municipio para el select.
+ * `?raiz=`: el registro abierto para el rol con permiso, las calles del
+ * municipio para el select y su zona.
  */
 const cargarRegistroDeEntrada = async (
   contexto: ContextoActual,
   parametros: ParametrosDeTerritorio,
-  { puedeCrearLugar, conRaiz }: { puedeCrearLugar: boolean; conRaiz: boolean },
+  {
+    puedeCrearLugar,
+    conRaiz,
+    lugares,
+  }: {
+    puedeCrearLugar: boolean;
+    conRaiz: boolean;
+    lugares: readonly LugarConPadre[];
+  },
 ) => {
   const registroAbierto =
     !conRaiz && parametros.accion === "domicilio" && puedeCrearLugar;
   const callesDelMunicipio = registroAbierto
     ? await listarCallesDelMunicipio(contexto)
     : [];
+  const zonaDeLaEntrada = registroAbierto
+    ? zonaDelFormulario(lugares, undefined, undefined)
+    : undefined;
 
-  return { registroAbierto, callesDelMunicipio };
+  return { registroAbierto, callesDelMunicipio, zonaDeLaEntrada };
 };
 
 /**
