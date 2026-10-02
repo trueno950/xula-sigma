@@ -11,10 +11,7 @@ import {
   subarbol,
 } from "@/modules/territorio";
 import type { LugarConPadre } from "@/modules/territorio/ui/vistaDeDomicilios";
-import {
-  lugaresDeNodos,
-  zonaDelFormulario,
-} from "@/modules/territorio/ui/vistaDeDomicilios";
+import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -106,7 +103,7 @@ export const cargarTerritorio = async ({
     await cargarRegistroDeEntrada(contexto, parametros, {
       puedeCrearLugar,
       conRaiz: Boolean(raiz),
-      lugares: lugaresDeNodos(seleccion.nodos),
+      lugares,
     });
 
   return {
