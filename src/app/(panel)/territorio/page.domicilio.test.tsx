@@ -27,7 +27,8 @@ vi.mock("@/modules/territorio", async () => ({
   ...(await vi.importActual<typeof import("@/modules/territorio/ui/acciones")>(
     "@/modules/territorio/ui/acciones",
   )),
-  // El panel de nodo y el contenido son estructura pura: pasan los hijos tal cual.
+  // El panel de nodo y el contenido pasan los hijos tal cual: el motivo esta
+  // comentado en page.test.tsx, que comparte este montaje.
   PanelDeNodo: ({ children }: { children: ReactNode }) => children,
   ContenidoDeLugar: ({ children }: { children: ReactNode }) => children,
   comoCalleId: (id: string) => id,
@@ -50,9 +51,7 @@ type CuerpoDeLaPagina = ReactElement<{ children: ReactElement<Props> }>;
 type Props = Parameters<typeof TerritorioCargado>[0];
 
 /**
- * La pagina deja lo lento dentro de un Suspense y `renderToStaticMarkup` no
- * espera componentes asincronos: se resuelve el hijo a mano, con las mismas
- * propiedades que la pagina le dio.
+ * Misma tecnica que page.test.tsx: el hijo del Suspense se resuelve a mano.
  */
 const paginaCompleta = async (searchParams: Record<string, string>) => {
   const pagina = (await PaginaDeTerritorio({
