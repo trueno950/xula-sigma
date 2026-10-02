@@ -175,8 +175,11 @@ jobs:
       # con "bad file reference" antes de mandar una sola linea a revision.
       - name: Instalar Gentle AI y sincronizar prompts de SDD
         if: env.DEEPSEEK_API_KEY != ''
+        # El tap publica y el runner instala siempre la ultima version; el
+        # 4.0.0 quito el componente `sdd` y rompio este paso (PR 92, 2026-10-01).
+        # Se instala la formula fijada al commit de la 3.7.0, la que funciona.
         run: |
-          brew install gentleman-programming/tap/gentle-ai
+          brew install https://raw.githubusercontent.com/gentleman-programming/homebrew-tap/152eb567ec9a99fcbc7ffad2c5e30285ff823c08/Formula/gentle-ai.rb
           gentle-ai install --agent opencode --component sdd --scope global
 
       - name: Revisar el PR
