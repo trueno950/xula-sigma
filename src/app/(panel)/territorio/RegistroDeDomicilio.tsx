@@ -7,9 +7,8 @@ type Props = {
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
   volverA?: string;
-  /** El asentamiento abierto: en error, volver a su pestaana Domicilios. */
+  /** El contexto que FormularioDeDomicilio emite oculto. */
   raiz?: string | undefined;
-  /** El lugar abierto: idem, para no perder el nodo de la vista. */
   nodo?: string | undefined;
 };
 

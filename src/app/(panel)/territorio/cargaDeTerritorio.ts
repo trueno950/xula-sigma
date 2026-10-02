@@ -98,11 +98,11 @@ export const cargarTerritorio = async ({
 
   const domicilioAbierto =
     Boolean(raiz) && parametros.accion === "domicilio" && puedeCrearLugar;
-  const registroAbierto =
-    !raiz && parametros.accion === "domicilio" && puedeCrearLugar;
-  const callesDelMunicipio = registroAbierto
-    ? await listarCallesDelMunicipio(contexto)
-    : [];
+  const { registroAbierto, callesDelMunicipio } = await cargarRegistroDeEntrada(
+    contexto,
+    parametros,
+    { puedeCrearLugar, conRaiz: Boolean(raiz) },
+  );
   const zonaDeLaEntrada = registroAbierto
     ? zonaDelFormulario(lugares, undefined, undefined)
     : undefined;
@@ -118,6 +118,25 @@ export const cargarTerritorio = async ({
     zonaDeLaEntrada,
     ...paneles,
   };
+};
+
+/**
+ * El alta de domicilio servida desde la entrada, cuando la piden sin
+ * `?raiz=`: el registro abierto para el rol con permiso y las calles del
+ * municipio para el select.
+ */
+const cargarRegistroDeEntrada = async (
+  contexto: ContextoActual,
+  parametros: ParametrosDeTerritorio,
+  { puedeCrearLugar, conRaiz }: { puedeCrearLugar: boolean; conRaiz: boolean },
+) => {
+  const registroAbierto =
+    !conRaiz && parametros.accion === "domicilio" && puedeCrearLugar;
+  const callesDelMunicipio = registroAbierto
+    ? await listarCallesDelMunicipio(contexto)
+    : [];
+
+  return { registroAbierto, callesDelMunicipio };
 };
 
 /**
