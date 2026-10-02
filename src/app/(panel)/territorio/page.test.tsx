@@ -79,11 +79,12 @@ beforeEach(() => {
 });
 
 describe("Territorio root entry", () => {
-  it("la entrada no registra domicilios: el alta vive en el lugar", async () => {
+  it("ofrece registrar un domicilio como accion primaria y el alta como secundaria", async () => {
     const html = renderToStaticMarkup(await paginaCompleta({}));
 
-    expect(html).not.toContain('href="/territorio?accion=domicilio"');
+    expect(html.match(/Registrar domicilio/g) ?? []).toHaveLength(1);
     expect(html.match(/Agregar asentamiento/g) ?? []).toHaveLength(1);
+    expect(html).toContain('href="/territorio?accion=domicilio"');
   });
 
   it("con accion=domicilio dentro del lugar abre el formulario con Calle antes de la zona", async () => {

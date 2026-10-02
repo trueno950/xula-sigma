@@ -4,11 +4,13 @@ import {
   domicilioPorId,
   existeCabecera,
   listarCalles,
+  listarCallesDelMunicipio,
   listarLugares,
   listarRaices,
   type NodoSeleccionado,
   subarbol,
 } from "@/modules/territorio";
+import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -96,6 +98,13 @@ export const cargarTerritorio = async ({
 
   const domicilioAbierto =
     Boolean(raiz) && parametros.accion === "domicilio" && puedeCrearLugar;
+  const registroAbierto = !raiz && parametros.accion === "domicilio";
+  const callesDelMunicipio = registroAbierto
+    ? await listarCallesDelMunicipio(contexto)
+    : [];
+  const zonaDeLaEntrada = registroAbierto
+    ? zonaDelFormulario(lugares, undefined, undefined)
+    : undefined;
 
   return {
     ...seleccion,
@@ -103,6 +112,9 @@ export const cargarTerritorio = async ({
     lugares,
     puedeCrearLugar,
     domicilioAbierto,
+    registroAbierto,
+    callesDelMunicipio,
+    zonaDeLaEntrada,
     ...paneles,
   };
 };

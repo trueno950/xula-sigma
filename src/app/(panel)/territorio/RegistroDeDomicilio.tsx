@@ -6,11 +6,11 @@ import type { OpcionDeLista } from "@/shared/ui";
 type Props = {
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
-  volverA: string;
+  volverA?: string;
   /** El asentamiento abierto: en error, volver a su pestaana Domicilios. */
-  raiz: string;
+  raiz?: string | undefined;
   /** El lugar abierto: idem, para no perder el nodo de la vista. */
-  nodo: string;
+  nodo?: string | undefined;
 };
 
 /**
@@ -22,7 +22,7 @@ type Props = {
 export function RegistroDeDomicilio({
   calles,
   zona,
-  volverA,
+  volverA = "/territorio",
   raiz,
   nodo,
 }: Props) {

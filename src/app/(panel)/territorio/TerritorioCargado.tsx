@@ -1,6 +1,7 @@
 import { VistaDeRaices } from "@/modules/territorio";
 import type { LugarGuardado } from "@/modules/territorio/application/puertos";
 import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
+import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { Aviso, PaginaDePanel } from "@/shared/ui";
 import { accionesDeRaiz } from "./AccionesDeRaiz";
@@ -9,6 +10,7 @@ import {
   type SeleccionDeTerritorio,
 } from "./cargaDeTerritorio";
 import type { ParametrosDeTerritorio } from "./parametros";
+import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 import { VistaDeLugar } from "./VistaDeLugar";
 
 type Props = {
@@ -39,6 +41,9 @@ export const TerritorioCargado = async ({
     raices,
     puedeCrearLugar,
     domicilioAbierto,
+    registroAbierto,
+    callesDelMunicipio,
+    zonaDeLaEntrada,
   } = await cargarTerritorio({ contexto, parametros, raiz, seleccion });
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, vista } = parametros;
@@ -46,18 +51,27 @@ export const TerritorioCargado = async ({
   return (
     <PaginaDePanel
       titulo="Territorio"
-      accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar })}
+      accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar, accion })}
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       {!raiz ? (
-        <VistaDeRaices
-          raices={raices}
-          lugares={lugares}
-          hayCabecera={hayCabecera}
-          puedeEscribir={puedeCrearLugar}
-          altaAbierta={accion === "lugar"}
-        />
+        <>
+          {registroAbierto && zonaDeLaEntrada ? (
+            <RegistroDeDomicilio
+              calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
+              zona={zonaDeLaEntrada}
+            />
+          ) : null}
+
+          <VistaDeRaices
+            raices={raices}
+            lugares={lugares}
+            hayCabecera={hayCabecera}
+            puedeEscribir={puedeCrearLugar}
+            altaAbierta={accion === "lugar"}
+          />
+        </>
       ) : nodo ? (
         <VistaDeLugar
           raiz={raiz}
