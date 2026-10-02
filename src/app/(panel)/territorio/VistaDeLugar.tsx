@@ -15,9 +15,12 @@ import type {
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
 import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
+import { opcionesDeCalles } from "@/modules/territorio/ui/opciones";
 import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
-import type { NivelDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
-import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDomicilios";
+import {
+  lugaresDeNodos,
+  zonaDelFormulario,
+} from "@/modules/territorio/ui/vistaDeDomicilios";
 import { EnlaceDeAccion } from "@/shared/ui";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 
@@ -35,9 +38,6 @@ type Props = {
   permisos: PermisosDeTerritorio;
   /** El alta de domicilio esta abierta en la pestana Domicilios. */
   domicilioAbierto: boolean;
-  /** Las calles del municipio para el formulario de alta. */
-  callesDelMunicipio: Parameters<typeof opcionesDeCallesDelMunicipio>[0];
-  zona: NivelDelFormulario | undefined;
 };
 
 /**
@@ -85,9 +85,13 @@ export function VistaDeLugar({
   domicilio,
   permisos,
   domicilioAbierto,
-  callesDelMunicipio,
-  zona,
 }: Props) {
+  const zona = zonaDelFormulario(
+    lugaresDeNodos(nodos),
+    { id: raiz.id, nombre: raiz.nombre },
+    nodo,
+  );
+  const opciones = opcionesDeCalles(calles);
   return (
     <>
       <PanelDeNodo
@@ -114,11 +118,13 @@ export function VistaDeLugar({
       />
 
       {vista === "domicilios" && permisos.abreLaEdicion ? (
-        domicilioAbierto && zona ? (
+        domicilioAbierto ? (
           <RegistroDeDomicilio
-            calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
+            calles={opciones}
             zona={zona}
             volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
+            raiz={raiz.id}
+            nodo={nodo.id}
           />
         ) : (
           <EnlaceDeAccion

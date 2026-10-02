@@ -44,11 +44,14 @@ const calles = [
   },
 ];
 
-const renderFormulario = (lugar: {
-  id: typeof cabeceraId;
-  tipo: "cabecera" | "manzana";
-  nombre: string;
-}) =>
+const renderFormulario = (
+  lugar: {
+    id: typeof cabeceraId;
+    tipo: "cabecera" | "manzana";
+    nombre: string;
+  },
+  contexto?: { raiz: string; nodo: string },
+) =>
   renderToStaticMarkup(
     <FormularioDeDomicilio
       calles={opcionesDeCalles(calles)}
@@ -57,6 +60,8 @@ const renderFormulario = (lugar: {
         { id: cabeceraId, nombre: "Tepakan" },
         lugar,
       )}
+      raiz={contexto?.raiz}
+      nodo={contexto?.nodo}
     />,
   );
 
@@ -82,8 +87,27 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
     );
     expect(html).not.toContain("Se guardara en:");
     expect(html).toContain("Colonia (opcional)");
+    // Sin contexto de navegacion no hay raiz/nodo que emitir.
     expect(html).not.toContain('name="raiz"');
     expect(html).not.toContain('name="nodo"');
+  });
+
+  it("con contexto de navegacion emite raiz y nodo ocultos", () => {
+    const html = renderFormulario(
+      {
+        id: cabeceraId,
+        tipo: "cabecera",
+        nombre: "Tepakan",
+      },
+      { raiz: cabeceraId, nodo: coloniaId },
+    );
+
+    expect(html).toContain(
+      'name="raiz" value="11111111-1111-4111-8111-111111111111"',
+    );
+    expect(html).toContain(
+      'name="nodo" value="22222222-2222-4222-8222-222222222222"',
+    );
   });
 
   it("en el asentamiento abre sin zona y lista el catalogo de calles", () => {

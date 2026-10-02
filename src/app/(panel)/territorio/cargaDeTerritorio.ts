@@ -4,13 +4,11 @@ import {
   domicilioPorId,
   existeCabecera,
   listarCalles,
-  listarCallesDelMunicipio,
   listarLugares,
   listarRaices,
   type NodoSeleccionado,
   subarbol,
 } from "@/modules/territorio";
-import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -89,7 +87,7 @@ export const cargarTerritorio = async ({
   const lugares = await listarLugares(contexto);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
   const paneles = raiz
-    ? { hayCabecera: false, registroAbierto: false, callesDelMunicipio: [] }
+    ? { hayCabecera: false }
     : await cargarPanelesDeEntrada(
         contexto,
         parametros.accion,
@@ -98,25 +96,14 @@ export const cargarTerritorio = async ({
 
   const domicilioAbierto =
     Boolean(raiz) && parametros.accion === "domicilio" && puedeCrearLugar;
-  const callesDelMunicipio =
-    parametros.accion === "domicilio" && puedeCrearLugar
-      ? await listarCallesDelMunicipio(contexto)
-      : [];
-  const zona = domicilioAbierto
-    ? zonaDelFormulario(lugares, undefined, undefined)
-    : undefined;
 
   return {
     ...seleccion,
     raices,
     lugares,
     puedeCrearLugar,
-    ...paneles,
     domicilioAbierto,
-    // Despues de paneles: el alta de domicilio vive con la raiz abierta y
-    // sus calles no pueden ser tapadas por el objeto de la entrada.
-    callesDelMunicipio,
-    zona,
+    ...paneles,
   };
 };
 

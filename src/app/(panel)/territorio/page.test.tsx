@@ -114,6 +114,15 @@ describe("Territorio root entry", () => {
       bajaEn: null,
     });
 
+    mocks.listarCalles.mockResolvedValue([
+      {
+        id: "33333333-3333-4333-8333-333333333333",
+        nombre: "Calle 20",
+        lugarId: "11111111-1111-4111-8111-111111111111",
+        punto: null,
+      },
+    ]);
+
     const html = renderToStaticMarkup(
       await paginaCompleta({
         raiz: "11111111-1111-4111-8111-111111111111",
@@ -122,8 +131,7 @@ describe("Territorio root entry", () => {
       }),
     );
 
-    expect(mocks.listarCallesDelMunicipio).toHaveBeenCalled();
-    expect(html).toContain("Calle 20 — Tepakan");
+    expect(html).toContain("Calle 20");
     expect(html.indexOf('name="calleId"')).toBeLessThan(
       html.indexOf('name="lugarId"'),
     );

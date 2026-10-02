@@ -39,8 +39,6 @@ export const TerritorioCargado = async ({
     raices,
     puedeCrearLugar,
     domicilioAbierto,
-    callesDelMunicipio,
-    zona,
   } = await cargarTerritorio({ contexto, parametros, raiz, seleccion });
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, vista } = parametros;
@@ -74,8 +72,6 @@ export const TerritorioCargado = async ({
           domicilio={domicilio ?? undefined}
           permisos={permisos}
           domicilioAbierto={domicilioAbierto}
-          callesDelMunicipio={callesDelMunicipio}
-          zona={zona}
         />
       ) : null}
     </PaginaDePanel>
