@@ -126,14 +126,14 @@ export function VistaDeLugar({
             raiz={raiz.id}
             nodo={nodo.id}
           />
-        ) : (
+        ) : calles.length > 0 ? (
           <EnlaceDeAccion
             href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
             variante="primaria"
           >
             Registrar domicilio
           </EnlaceDeAccion>
-        )
+        ) : null
       ) : null}
     </>
   );

@@ -98,7 +98,8 @@ export const cargarTerritorio = async ({
 
   const domicilioAbierto =
     Boolean(raiz) && parametros.accion === "domicilio" && puedeCrearLugar;
-  const registroAbierto = !raiz && parametros.accion === "domicilio";
+  const registroAbierto =
+    !raiz && parametros.accion === "domicilio" && puedeCrearLugar;
   const callesDelMunicipio = registroAbierto
     ? await listarCallesDelMunicipio(contexto)
     : [];
