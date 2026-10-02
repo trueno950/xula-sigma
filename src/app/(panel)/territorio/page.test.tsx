@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FormularioDeDomicilio } from "@/modules/territorio/ui/FormularioDeDomicilio";
@@ -28,8 +28,8 @@ vi.mock("@/modules/territorio", async () => ({
     "@/modules/territorio/ui/acciones",
   )),
   // El panel de nodo y el contenido son estructura pura: pasan los hijos tal cual.
-  PanelDeNodo: ({ children }: { children: React.ReactNode }) => children,
-  ContenidoDeLugar: ({ children }: { children: React.ReactNode }) => children,
+  PanelDeNodo: ({ children }: { children: ReactNode }) => children,
+  ContenidoDeLugar: ({ children }: { children: ReactNode }) => children,
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
   FormularioDeDomicilio,
