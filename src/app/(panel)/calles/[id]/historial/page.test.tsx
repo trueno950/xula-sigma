@@ -1,3 +1,4 @@
+import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const notFoundMock = vi.hoisted(() =>
@@ -7,9 +8,16 @@ const notFoundMock = vi.hoisted(() =>
 );
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const leerHistorialDeCalleMock = vi.hoisted(() => vi.fn());
+const callePorIdMock = vi.hoisted(() => vi.fn());
+const listarLugaresMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
+vi.mock("@/modules/territorio", () => ({
+  callePorId: callePorIdMock,
+  comoCalleId: (id: string) => id,
+  listarLugares: listarLugaresMock,
+}));
 vi.mock("@/modules/historial-de-calle", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/historial-de-calle")>()),
   leerHistorialDeCalle: leerHistorialDeCalleMock,
@@ -26,7 +34,23 @@ const props = {
   params: Promise.resolve({ id: "22222222-2222-4222-8222-222222222222" }),
 };
 
-beforeEach(() => vi.clearAllMocks());
+const calle = {
+  id: "22222222-2222-4222-8222-222222222222",
+  nombre: "Calle 20",
+  lugarId: "col",
+  bajaEn: null,
+};
+const lugares = [
+  { id: "raiz", nombre: "Motul", padreId: null, bajaEn: null },
+  { id: "col", nombre: "Colonia Centro", padreId: "raiz", bajaEn: null },
+];
+const historial = { estado: "VACIO", entradas: [] };
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  callePorIdMock.mockResolvedValue(calle);
+  listarLugaresMock.mockResolvedValue(lugares);
+});
 
 describe("PaginaDeHistorialDeCalle", () => {
   it("no consulta el historial sin sesion", async () => {
@@ -67,5 +91,41 @@ describe("PaginaDeHistorialDeCalle", () => {
       contexto,
     );
     expect(notFoundMock).toHaveBeenCalled();
+  });
+
+  it("titula con el nombre de la calle y dice que es su historial", async () => {
+    contextoActualMock.mockResolvedValue(contexto);
+    leerHistorialDeCalleMock.mockResolvedValue(historial);
+
+    const html = renderToStaticMarkup(await PaginaDeHistorialDeCalle(props));
+
+    expect(html).toMatch(/<h1[^>]*>Calle 20</);
+    expect(html).toContain("Historial de la calle");
+    expect(html).not.toMatch(/<h1[^>]*>Historial de calle</);
+  });
+
+  it("enlaza a la calle en Territorio desde la migaja y el botón", async () => {
+    contextoActualMock.mockResolvedValue(contexto);
+    leerHistorialDeCalleMock.mockResolvedValue(historial);
+
+    const html = renderToStaticMarkup(await PaginaDeHistorialDeCalle(props));
+    const href = `/territorio?raiz=raiz&amp;nodo=col&amp;vista=calles&amp;calle=${calle.id}`;
+
+    expect(html).toContain(`href="${href}"`);
+    expect(html).toMatch(
+      /<a [^>]*>[^<]*(<svg[\s\S]*?<\/svg>)?Volver a la calle</,
+    );
+    expect(html).toContain("Colonia Centro");
+    expect(html).toContain('aria-current="page"');
+  });
+
+  it("convierte una calle que ya no se puede leer en 404", async () => {
+    contextoActualMock.mockResolvedValue(contexto);
+    leerHistorialDeCalleMock.mockResolvedValue(historial);
+    callePorIdMock.mockResolvedValue(null);
+
+    await expect(PaginaDeHistorialDeCalle(props)).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
   });
 });

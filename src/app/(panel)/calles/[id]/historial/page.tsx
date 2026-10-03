@@ -1,3 +1,4 @@
+import { ArrowLeft } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -6,8 +7,19 @@ import {
   LineaDeTiempoDeCalle,
   leerHistorialDeCalle,
 } from "@/modules/historial-de-calle";
+import {
+  callePorId,
+  comoCalleId as comoCalleIdDeTerritorio,
+  listarLugares,
+} from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
-import { Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
+import {
+  EnlaceDeAccion,
+  Migaja,
+  PaginaDePanel,
+  PantallaDeMensaje,
+} from "@/shared/ui";
+import { contextoDeCalle } from "./contextoDeCalle";
 
 export const metadata: Metadata = { title: "Historial de calle" };
 
@@ -29,18 +41,27 @@ export default async function PaginaDeHistorialDeCalle({ params }: Props) {
   const historial = await leerHistorialDeCalle(calleId, contexto);
   if (!historial) notFound();
 
+  const [calle, lugares] = await Promise.all([
+    callePorId(comoCalleIdDeTerritorio(calleId), contexto),
+    listarLugares(contexto),
+  ]);
+  if (!calle) notFound();
+  const { migaja, volverHref, volverEtiqueta } = contextoDeCalle(
+    calle,
+    lugares,
+  );
+
   return (
     <PaginaDePanel
-      titulo="Historial de calle"
+      titulo={calle.nombre}
+      descripcion="Historial de la calle: sus reportes, intervenciones y cambios, del más reciente al más antiguo."
       ancho="detalle"
-      migaja={
-        <Migaja
-          pasos={[
-            { etiqueta: "Territorio", href: "/territorio" },
-            { etiqueta: "Historial de calle" },
-          ]}
-          etiqueta="Ruta"
-        />
+      migaja={<Migaja pasos={migaja} etiqueta="Ruta" />}
+      accion={
+        <EnlaceDeAccion href={volverHref} variante="secundaria">
+          <ArrowLeft size={16} weight="bold" aria-hidden="true" />
+          {volverEtiqueta}
+        </EnlaceDeAccion>
       }
     >
       <LineaDeTiempoDeCalle historial={historial} />
