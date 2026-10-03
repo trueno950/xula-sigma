@@ -1,45 +1,52 @@
 ---
 name: XULA SIGMA
-description: Sistema de gestión municipal para ayuntamientos pequeños de Yucatán. Herramienta de oficio, no trámite de gobierno.
+description: Sistema de gestión municipal para ayuntamientos pequeños de Yucatán. Herramienta de oficio, bien terminada.
 colors:
   marca: "oklch(0.42 0.12 25)"
   marca-texto: "oklch(0.99 0 0)"
   acento: "oklch(0.55 0.1 25)"
-  caliza-lienzo: "oklch(0.99 0.003 80)"
+  marca-suave: "color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo))"
+  marca-tenue: "color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo))"
+  caliza-fondo: "oklch(0.962 0.005 80)"
+  caliza-lienzo: "oklch(0.995 0.002 80)"
   caliza-superficie: "oklch(0.975 0.004 80)"
   caliza-relleno: "oklch(0.94 0.005 80)"
-  caliza-divisor: "oklch(0.88 0.006 80)"
+  caliza-divisor: "oklch(0.9 0.006 80)"
   caliza-borde: "oklch(0.62 0.008 80)"
   caliza-inhabilitado: "oklch(0.68 0.007 80)"
-  caliza-apagada: "oklch(0.52 0.008 80)"
-  caliza-tinta: "oklch(0.24 0.008 80)"
+  caliza-apagada: "oklch(0.5 0.008 80)"
+  caliza-tinta: "oklch(0.22 0.008 80)"
   senial-error: "oklch(0.46 0.17 27)"
+  senial-error-suave: "oklch(0.96 0.025 27)"
   senial-exito: "oklch(0.46 0.11 150)"
+  senial-exito-suave: "oklch(0.96 0.03 150)"
   senial-aviso: "oklch(0.5 0.13 65)"
+  senial-aviso-suave: "oklch(0.965 0.035 85)"
 typography:
   display:
-    fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif"
-    fontSize: "1.5rem"
-    fontWeight: 600
-    lineHeight: 1.2
-    letterSpacing: "-0.01em"
+    fontFamily: "Inter Variable, system-ui, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 650
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
   headline:
-    fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif"
-    fontSize: "1.1875rem"
+    fontFamily: "Inter Variable, system-ui, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "1.25rem"
     fontWeight: 600
     lineHeight: 1.3
+    letterSpacing: "-0.01em"
   title:
-    fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif"
+    fontFamily: "Inter Variable, system-ui, 'Segoe UI', Roboto, sans-serif"
     fontSize: "0.9375rem"
     fontWeight: 600
     lineHeight: 1.4
   body:
-    fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif"
+    fontFamily: "Inter Variable, system-ui, 'Segoe UI', Roboto, sans-serif"
     fontSize: "0.9375rem"
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: 1.55
   label:
-    fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif"
+    fontFamily: "Inter Variable, system-ui, 'Segoe UI', Roboto, sans-serif"
     fontSize: "0.8125rem"
     fontWeight: 500
     lineHeight: 1.3
@@ -50,13 +57,11 @@ typography:
     lineHeight: 1.4
     fontFeature: "tabular-nums"
 rounded:
-  sm: "4px"
-  md: "6px"
-  lg: "8px"
-  xl: "10px"
-  2xl: "12px"
-  3xl: "14px"
-  4xl: "16px"
+  sm: "6px"
+  md: "8px"
+  lg: "12px"
+  xl: "16px"
+  pill: "999px"
 spacing:
   xs: "4px"
   sm: "8px"
@@ -64,481 +69,517 @@ spacing:
   lg: "16px"
   xl: "24px"
   xxl: "32px"
+  xxxl: "48px"
 components:
   button-primary:
     backgroundColor: "{colors.marca}"
     textColor: "{colors.marca-texto}"
-    rounded: "{rounded.sm}"
-    padding: "10px 16px"
+    rounded: "{rounded.md}"
+    padding: "10px 18px"
     typography: "{typography.title}"
     height: "44px"
   button-secondary:
     backgroundColor: "{colors.caliza-lienzo}"
     textColor: "{colors.caliza-tinta}"
-    rounded: "{rounded.sm}"
-    padding: "10px 16px"
+    rounded: "{rounded.md}"
+    padding: "10px 18px"
     typography: "{typography.title}"
     height: "44px"
   button-ghost:
     backgroundColor: "transparent"
     textColor: "{colors.caliza-apagada}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.md}"
     padding: "10px 12px"
     typography: "{typography.title}"
     height: "44px"
   input:
     backgroundColor: "{colors.caliza-lienzo}"
     textColor: "{colors.caliza-tinta}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.md}"
     padding: "10px 12px"
     typography: "{typography.body}"
     height: "44px"
-  input-error:
+  tarjeta:
     backgroundColor: "{colors.caliza-lienzo}"
     textColor: "{colors.caliza-tinta}"
-    rounded: "{rounded.sm}"
-    padding: "10px 12px"
-    height: "44px"
+    rounded: "{rounded.lg}"
+    padding: "20px"
   fila-tabla:
     backgroundColor: "{colors.caliza-lienzo}"
     textColor: "{colors.caliza-tinta}"
     typography: "{typography.body}"
-    height: "44px"
-    padding: "0 12px"
+    height: "48px"
+    padding: "0 16px"
   encabezado-tabla:
     backgroundColor: "{colors.caliza-superficie}"
     textColor: "{colors.caliza-apagada}"
     typography: "{typography.label}"
-    height: "36px"
-    padding: "0 12px"
-  filtro-activo:
+    height: "40px"
+    padding: "0 16px"
+  insignia:
     backgroundColor: "{colors.caliza-relleno}"
     textColor: "{colors.caliza-tinta}"
-    rounded: "{rounded.sm}"
-    padding: "6px 10px"
+    rounded: "{rounded.pill}"
+    padding: "2px 10px"
+    typography: "{typography.label}"
+  filtro-activo:
+    backgroundColor: "{colors.marca-suave}"
+    textColor: "{colors.caliza-tinta}"
+    rounded: "{rounded.pill}"
+    padding: "6px 12px"
     typography: "{typography.label}"
     height: "32px"
+  navegacion-activa:
+    backgroundColor: "{colors.marca-suave}"
+    textColor: "{colors.caliza-tinta}"
+    rounded: "{rounded.md}"
+    padding: "10px 12px"
+    typography: "{typography.title}"
+    height: "44px"
 ---
 
 # Design System: XULA SIGMA
 
 ## 1. Overview
 
-**Creative North Star: "La herramienta del oficio"**
+**Creative North Star: "El palacio bien atendido"**
 
-Una buena herramienta de mano no se presenta. No tiene pantalla de
-bienvenida, no celebra que la usaste, no se pone adelante de la tarea. Está
-gastada donde se la toca y lisa donde no. Pesa exactamente lo que necesita
-pesar. Quien la usa todos los días deja de verla, y esa desaparición es el
-elogio más alto que puede recibir.
+El palacio municipal es una casa vieja y digna: piedra caliza, patio, gente
+conocida detrás del mostrador. Un buen sistema para esa casa se siente igual:
+ordenado, cálido, con cada cosa en su lugar y sin gritar. No es el trámite
+frío de ventanilla ni el SaaS que se luce. Es una herramienta que alguien
+cuidó, y se nota en que las cosas están donde uno las busca, en que el texto
+se lee sin esfuerzo y en que nada se ve abandonado.
 
-Eso es lo que se está construyendo. Del otro lado del mostrador hay un
-vecino esperando su constancia, y cada pixel que no ayuda a entregársela es
-un pixel que estorba. La densidad de este sistema no es estética: es que
-alguien espera. Pero la densidad se gana y no se asume — se aprieta lo que
-el operador ya lee de un vistazo (nombre, fecha, estado) y se abre lo que
-tiene que decidir. Una fila mide 44px, no 32px, porque el operador está en
-un monitor viejo con escalado de Windows y porque esa misma fila tiene que
-funcionar bajo un dedo en el celular.
+Esta versión corrige un error de la anterior. El sistema confundió **ligero**
+con **austero**. Cada decisión se justificaba por la máquina vieja del
+operador, y la suma dejó una pantalla correcta y sin carácter. Ligero es una
+restricción de bytes y de JavaScript, y eso se mantiene entero. Austero fue
+una opción estética que nadie pidió. Se puede ser rápido y agradable: una
+fuente variable cacheada, dos sombras de CSS y el color del municipio bien
+usado no cuestan nada medible.
 
-Lo que este sistema rechaza explícitamente: **no se parece a un trámite de
-gobierno.** Nada de formularios que imitan papel, campos en mayúsculas,
-jerga legal, veinte campos "por si acaso". Tampoco al SaaS que compensa con
-aire e ilustraciones, ni a una hoja de cálculo de celdas sin jerarquía. Y
-hay una cosa más que rechaza, específica de este producto: **el sistema no
-tiene color propio.** El color es del municipio. Lo que el sistema aporta es
-la caliza, la forma y el orden.
+**Escena de uso (de ahí sale el tema claro).** Una operadora a media mañana,
+en un escritorio del palacio, frente a un monitor de 1366×768 con el escalado
+de Windows puesto y luz de ventana pegándole al panel. Atiende a un vecino
+parado frente a ella. Tema claro, contraste generoso, nada que dependa de un
+gris fino. En campo, el mismo sistema bajo un dedo y bajo el sol.
+
+**Lo que este sistema rechaza:**
+
+- **El trámite de gobierno:** formularios que imitan papel, mayúsculas
+  sostenidas, jerga legal, veinte campos por si acaso.
+- **El SaaS que compensa con adorno:** gradientes, ilustraciones, vidrio
+  esmerilado, tarjetas de métricas gigantes, microcopy simpático.
+- **La hoja de cálculo:** celdas sin jerarquía.
+- **La pantalla desnuda:** lo que había. Sin identidad, sin ritmo, con seis
+  cajas idénticas de inicio. Sobriedad no es ausencia de diseño.
 
 **Key Characteristics:**
 
-- Plano en reposo. La profundidad la dan el borde y el tono, no la sombra.
-- Neutro cálido fijo del sistema; el único color variable es la marca.
-- Tipografía del sistema operativo. Cero bytes de webfont.
-- Fila de 44px: una sola definición para escritorio y para el dedo.
+- Cálido y apoyado: fondo de piedra, superficies claras encima, borde fino y
+  una sombra tenue que las asienta.
+- El color del municipio tiene presencia real (navegación, encabezados,
+  selección) sin tomar nunca un rol semántico.
+- Una sola familia tipográfica variable, autoalojada, con respaldo del sistema.
+- Fila de 48px: una sola definición para escritorio y para el dedo.
 - Ningún estado se comunica solo por color, nunca.
 
-## 2. Colors: la paleta de caliza
+## 2. Colors: la paleta de caliza y el color prestado
 
-Un neutro cálido de piedra caliza —la del palacio municipal— sobre el que
-el color del ayuntamiento cae como única voz saturada.
+Estrategia de color: **Restringida con presencia.** Neutros cálidos de caliza
+y una voz saturada, la del municipio, que ahora sí se oye: entre el 10% y el
+20% de una vista típica, en lugares definidos.
 
-### Primary
+### Marca del municipio (variable)
 
-- **Marca del municipio** (`oklch(0.42 0.12 25)` por defecto): no es un
-  color, es una variable. Cada ayuntamiento carga el suyo y `leerMarca` lo
-  rechaza si no alcanza razón 4.5 contra su texto. El valor del token es
-  solo lo que se ve mientras un municipio no cargó marca. Se usa en la
-  acción primaria de la pantalla, el foco del control activo y el escudo.
-  En ningún lado más.
-- **Texto sobre marca** (`oklch(0.99 0 0)` por defecto): también variable,
-  también validado en par con el anterior.
-- **Acento** (`oklch(0.55 0.1 25)` por defecto): variable. Reservado para
-  enlaces y estados hover donde el primario sería demasiado peso.
+- **Marca** (`oklch(0.42 0.12 25)` por defecto): cada ayuntamiento carga la
+  suya y `leerMarca` la rechaza si no alcanza razón 4.5 contra su texto. El
+  valor del token es solo lo que se ve mientras no hay marca cargada.
+- **Marca texto:** variable, validada en par con la anterior.
+- **Acento:** variable. Relleno de hover y énfasis secundario.
+- **Marca suave / marca tenue:** derivados por `color-mix` de la marca sobre
+  el lienzo, al 10% y al 5%. Son **fondos**: nunca llevan texto de marca.
+  Texto de tinta sobre ellos pasa AA con holgura para cualquier marca
+  razonable; un municipio con una marca muy clara degrada a un fondo casi
+  blanco, nunca a uno ilegible.
 
-### Neutral
+**Dónde vive la marca (lista cerrada):**
 
-- **Caliza lienzo** (`oklch(0.99 0.003 80)`): el fondo de la página y de la
-  fila de tabla en reposo. Cálido por 0.003 de chroma, que no se nombra
-  pero se siente. No es `#fff`.
-- **Caliza superficie** (`oklch(0.975 0.004 80)`): encabezado de tabla,
-  barra de filtros, panel lateral. Un escalón por debajo del lienzo: así se
-  separa una zona sin dibujarle una caja alrededor.
-- **Caliza relleno** (`oklch(0.94 0.005 80)`): chip de filtro activo, celda
-  resaltada, fondo de control inhabilitado.
-- **Caliza divisor** (`oklch(0.88 0.006 80)`): línea entre filas y entre
-  secciones. **Decorativa** — nunca es el único indicador de nada, así que
-  puede permitirse 1.39:1.
-- **Caliza borde** (`oklch(0.62 0.008 80)`): el contorno de todo control
-  interactivo. Es 3.54:1 contra el lienzo, y ese número no es decorativo:
-  WCAG 1.4.11 exige 3:1 cuando el borde es lo único que dice que ahí hay un
-  campo. El `border-neutral-300` que usaba el login daba **1.47:1** y no
-  cumplía.
-- **Caliza inhabilitado** (`oklch(0.68 0.007 80)`): texto de control
-  inhabilitado y placeholder. Está por debajo de 4.5 a propósito: WCAG
-  exime a los controles inhabilitados, y bajar el contraste es justamente
-  cómo se comunica que no se puede tocar. Prohibido usarlo para texto que
-  el operador tiene que leer.
-- **Caliza apagada** (`oklch(0.52 0.008 80)`): etiqueta de campo,
-  encabezado de columna, texto secundario. 5.35:1 — pasa AA como texto
-  normal, que es el punto: una etiqueta de campo no es decoración.
-- **Caliza tinta** (`oklch(0.24 0.008 80)`): todo el texto que importa.
-  15.99:1. No es `#000`.
+1. Acción primaria de la pantalla.
+2. Anillo de foco.
+3. Escudo y nombre del municipio en el encabezado y en el login.
+4. Elemento activo de la navegación (fondo marca suave, ícono en marca).
+5. Chip de filtro aplicado (fondo marca suave).
+6. Banda de bienvenida de Inicio y panel lateral del login (marca tenue).
 
-### Tertiary
+**La marca no se usa como color de texto sobre claro.** `leerMarca` valida
+marca contra *su* texto, no contra el lienzo: una marca clara podría no
+alcanzar 4.5 como letra. Los enlaces van en tinta con subrayado; un ícono de
+marca siempre acompaña a una etiqueta en tinta.
 
-Las tres señales. Fijas, del sistema, **jamás derivadas de la marca**.
+### Neutros
 
-- **Señal error** (`oklch(0.46 0.17 27)`): 6.93:1. Mensajes de rechazo,
-  borde de campo inválido.
-- **Señal éxito** (`oklch(0.46 0.11 150)`): confirmación de operación
-  guardada.
-- **Señal aviso** (`oklch(0.5 0.13 65)`): sugerencia de duplicado, dato que
-  merece una segunda mirada sin ser un error.
+- **Fondo** (`oklch(0.962 0.005 80)`): el suelo de la página. Un escalón
+  *debajo* de las superficies: así las tarjetas se apoyan y no hace falta
+  dibujarles una jaula.
+- **Lienzo** (`oklch(0.995 0.002 80)`): tarjetas, tablas, inputs, panel
+  lateral. Es el papel sobre el suelo. No es `#fff`.
+- **Superficie** (`oklch(0.975 0.004 80)`): encabezado de tabla, zonas
+  internas de una tarjeta, hover de fila.
+- **Relleno** (`oklch(0.94 0.005 80)`): control inhabilitado, insignia
+  neutra, celda resaltada.
+- **Divisor** (`oklch(0.9 0.006 80)`): líneas entre filas y secciones.
+  Decorativo, nunca el único indicador de nada.
+- **Borde** (`oklch(0.62 0.008 80)`): contorno de todo control interactivo,
+  3.5:1 contra el lienzo. WCAG 1.4.11. No negociable.
+- **Inhabilitado** (`oklch(0.68 0.007 80)`): solo para controles
+  inhabilitados y placeholder. Prohibido para texto que se debe leer.
+- **Apagada** (`oklch(0.5 0.008 80)`): etiquetas, encabezados de columna,
+  texto secundario. Más de 5.5:1 sobre el lienzo y sobre el fondo.
+- **Tinta** (`oklch(0.22 0.008 80)`): todo el texto que importa. No es `#000`.
+
+### Señales
+
+Fijas, del sistema, **jamás derivadas de la marca**. Cada una tiene un tono
+fuerte (texto e ícono) y uno suave (fondo de insignia o aviso):
+
+- **Error** `oklch(0.46 0.17 27)` / suave `oklch(0.96 0.025 27)`.
+- **Éxito** `oklch(0.46 0.11 150)` / suave `oklch(0.96 0.03 150)`.
+- **Aviso** `oklch(0.5 0.13 65)` / suave `oklch(0.965 0.035 85)`.
 
 ### Named Rules
 
-**La regla de la voz prestada.** El color saturado de la pantalla es de
-otro. La marca ocupa menos del 10% de cualquier vista y solo en tres
-lugares: acción primaria, anillo de foco y escudo. Un municipio pintó su
-color ahí para reconocerse, no para que el sistema lo use de decoración.
+**La regla de la voz prestada.** El color saturado es del municipio. Tiene
+presencia, pero solo en los seis lugares de la lista. Nunca decora un
+elemento fuera de ella ni se usa como indicador semántico.
 
-**La regla del tono ocupado.** La marca por defecto es
-`oklch(0.42 0.12 25)` —tono 25— y la señal de error es tono 27. Un
-ayuntamiento con escudo rojo, que en Yucatán es lo común, deja error y
-botón primario indistinguibles por tono. Por eso el color nunca comunica
-solo: **todo estado lleva texto o icono, siempre**, y la marca tiene
-prohibido aparecer en un rol semántico. No es una precaución por
-daltonismo; es el caso base.
+**La regla del tono ocupado.** La marca por defecto es tono 25 y el error es
+tono 27: un escudo rojo es lo común en Yucatán. Por eso **todo estado lleva
+texto o ícono, siempre**. Es el caso base, no una precaución.
 
-**La regla de los dos neutros.** Hay un neutro para leer (tinta, apagada) y
-un neutro para separar (divisor, borde, relleno). Nunca se cruzan: un texto
-en el tono de un borde es texto que nadie lee, y un borde en el tono de la
-tinta es una jaula.
+**La regla de los dos neutros.** Un neutro para leer (tinta, apagada) y uno
+para separar (divisor, borde, relleno). Nunca se cruzan.
 
 ## 3. Typography
 
-**Display Font:** ninguna. `system-ui, "Segoe UI", Roboto, sans-serif`
-**Body Font:** la misma.
-**Label/Mono Font:** `ui-monospace, "Cascadia Mono", Consolas, monospace`
+**Familia:** `Inter Variable`, autoalojada, con respaldo
+`system-ui, "Segoe UI", Roboto, sans-serif`.
+**Dato:** `ui-monospace, "Cascadia Mono", Consolas, monospace`.
 
-**Character:** la fuente del sistema operativo, y eso es una decisión, no
-una omisión. El operador está en Windows con Segoe UI, que su máquina ya
-tiene cargada y sabe rasterizar en un monitor viejo. Una webfont costaría
-entre 40 y 120 KB sobre una red móvil rural para cambiar la forma de la "a"
-en una pantalla que existe para entregar constancias. La herramienta del
-oficio no trae tipografía propia.
+**Por qué una fuente propia ahora.** Segoe UI y Roboto son correctas, pero
+cambian de una máquina a otra, y la jerarquía que se diseña se ve distinta
+en cada una. Una sola fuente variable fija el resultado: los pesos
+intermedios (600, 650) existen y las cifras tabulares funcionan igual en
+todas. Es una decisión de calidad, y el costo está acotado:
 
-### Hierarchy
+- **Un solo archivo**, `woff2` variable, subconjunto latino (cubre español),
+  unos 50 KB. Descarga única; después sale de caché.
+- **Autoalojada** con `next/font/local`, desde el repositorio: sin Google
+  Fonts, sin petición a un tercero, sin depender de red externa al construir.
+- **`font-display: swap`** y respaldo de sistema con métricas ajustadas
+  (`adjustFontFallback`): el texto aparece de inmediato con la fuente del
+  sistema y no salta al cambiar.
+- **Ninguna otra.** Ni una segunda familia ni pesos estáticos extra. La
+  monoespaciada de `dato` sigue siendo la del sistema: cero bytes.
 
-- **Display** (600, 1.5rem / 24px, 1.2, tracking -0.01em): el título de la
-  pantalla. Uno por vista. No hay nada más grande.
-- **Headline** (600, 1.1875rem / 19px, 1.3): título de sección dentro de la
-  pantalla. Razón 1.26 contra display.
-- **Title** (600, 0.9375rem / 15px, 1.4): el mismo tamaño que el cuerpo, con
-  peso. **Acá la jerarquía la lleva el peso y no la escala**, a propósito:
-  seguir bajando de tamaño terminaba en texto de 12px que el operador no
-  lee.
-- **Body** (400, 0.9375rem / 15px, 1.5): todo el texto corrido. 15px y no
-  14px porque el usuario no es experto y el monitor es viejo. Máximo 70ch.
-- **Label** (500, 0.8125rem / 13px, 1.3): etiqueta de campo y encabezado de
-  columna. **Sin mayúsculas**: los campos en mayúsculas son literalmente la
-  anti-referencia del trámite de gobierno.
-- **Dato** (400, 0.875rem / 14px, tabular-nums, monoespaciada): CURP,
-  folios, fechas, identificadores. Monoespaciada porque una CURP se
-  verifica carácter por carácter contra un papel, y `tabular-nums` porque
-  una columna de fechas que baila es una columna que no se puede escanear
-  con la vista.
+### Jerarquía
+
+- **Display** (650, 1.75rem / 28px, 1.15, -0.02em): título de la pantalla.
+  Uno por vista.
+- **Headline** (600, 1.25rem / 20px, 1.3, -0.01em): sección dentro de la
+  pantalla. Razón 1.4 contra display.
+- **Title** (600, 0.9375rem / 15px, 1.4): mismo tamaño que el cuerpo, con
+  peso. Nombres en listas, botones, ítems de navegación.
+- **Body** (400, 0.9375rem / 15px, 1.55): todo el texto corrido. Máximo 70ch.
+- **Label** (500, 0.8125rem / 13px, 1.3): etiquetas de campo, encabezados de
+  columna, insignias. **Sin mayúsculas.**
+- **Dato** (400, 0.875rem / 14px, tabular-nums, mono): CURP, folios, fechas.
 
 ### Named Rules
 
-**La regla del oficio, no del acta.** Nada en mayúsculas sostenidas. Ni
-etiquetas, ni encabezados, ni botones. La mayúscula sostenida es la firma
-visual del formulario oficial y es la anti-referencia declarada.
+**La regla del oficio, no del acta.** Nada en mayúsculas sostenidas, ni
+siquiera en insignias o títulos de sección. Es la firma del formulario
+oficial.
 
-**La regla de los quince píxeles.** 15px es el piso del texto que el
-operador tiene que leer. Si un diseño necesita bajar de ahí para que algo
-entre, no entra: se rediseña la densidad, no la tipografía.
+**La regla de los quince píxeles.** 15px es el piso del texto que se debe
+leer. El único texto de 13px es etiqueta o metadato que acompaña a uno de 15.
 
 ## 4. Elevation
 
-Este sistema es **plano en reposo**. No hay sombras en ninguna superficie
-apoyada en la página: ni en tarjetas, ni en filas, ni en paneles, ni en
-botones. La profundidad la dan tres escalones de tono —lienzo, superficie,
-relleno— y una línea divisoria. Un panel se distingue del fondo porque es
-un tono más oscuro, no porque flote.
+El sistema pasa de plano a **apoyado**. Una superficie descansa sobre el
+fondo con tres ayudas coordinadas, en este orden de importancia:
 
-La razón es doble. Una es de identidad: una herramienta no levita. La otra
-es material: sombras suaves sobre un panel LCD viejo con mal gamma se ven
-como suciedad gris, y el operador termina limpiando la pantalla.
+1. **Escalón de tono**: el lienzo es más claro que el fondo.
+2. **Borde fino** de 1px en divisor.
+3. **Sombra de reposo**, tenue, que solo asienta.
 
-Hay exactamente **una** sombra en todo el sistema, y existe porque hay un
-caso donde el tono no alcanza: lo que se despega de la página de verdad y
-tapa contenido —un diálogo, un menú, el popover de sugerencias de
-duplicados—. Ahí la sombra no decora, informa que hay algo debajo.
+La sombra **nunca es el único separador**. Si se quitara, la superficie debe
+seguir leyéndose por tono y borde. Eso importa por el panel viejo de mal
+gamma, donde una sombra suave se confunde con suciedad: por eso es baja en
+alcance y opacidad, tinte cálido y no gris.
 
-### Shadow Vocabulary
+### Vocabulario
 
-- **Flotante** (`box-shadow: 0 6px 16px -4px oklch(0.24 0.008 80 / 0.18)`):
-  únicamente para superficies que tapan contenido. Tinte de caliza, no
-  negro: una sombra neutra sobre un fondo cálido se ve sucia.
+- **Reposo** (`0 1px 2px oklch(0.24 0.008 80 / 0.06), 0 1px 1px oklch(0.24 0.008 80 / 0.04)`):
+  tarjetas, tablas y paneles apoyados en la página.
+- **Elevada** (`0 4px 12px -2px oklch(0.24 0.008 80 / 0.1), 0 2px 4px oklch(0.24 0.008 80 / 0.05)`):
+  hover de tarjeta accionable y navegación móvil abierta.
+- **Flotante** (`0 8px 24px -6px oklch(0.24 0.008 80 / 0.22), 0 2px 6px oklch(0.24 0.008 80 / 0.08)`):
+  únicamente lo que tapa contenido: diálogo, menú, popover de sugerencias.
 
 ### Named Rules
 
-**La regla del plano.** Si una superficie no tapa a otra, no lleva sombra.
-La prueba de una línea: si al quitarle la sombra el elemento sigue
-entendiéndose, la sombra sobraba.
+**La regla del apoyo.** Tarjeta y tabla llevan *reposo*. Botón, fila, chip,
+campo y navegación **no llevan sombra**: se diferencian por tono y borde. Las
+sombras suben solo con la altura real (reposo, elevada, flotante).
 
-## 5. Components
+**La regla de la prueba mental.** Si al quitar la sombra el elemento sigue
+entendiéndose, la sombra está bien puesta. Si deja de entenderse, faltaba
+borde o tono.
 
-### Buttons
+## 5. Forma, espacio y movimiento
 
-- **Shape:** esquinas apenas quebradas (4px). Alto fijo 44px.
-- **Primary:** fondo de marca del municipio, texto de marca-texto, padding
-  10px 16px. Una sola acción primaria por pantalla — es la voz prestada.
-- **Secondary:** fondo lienzo, texto tinta, borde caliza-borde de 1px. La
-  acción que se usa seguido pero no es la principal.
-- **Ghost:** sin fondo ni borde, texto caliza-apagada. Cancelar, volver.
-- **Hover / Focus:** el hover baja el fondo un escalón de tono. El foco es
-  un anillo de 2px en el color de marca con 2px de separación
-  (`outline: 2px solid var(--color-marca); outline-offset: 2px`) —
-  **`outline` y no `box-shadow`**, para que sobreviva al modo de alto
-  contraste de Windows, que es un usuario real acá.
-- **Inhabilitado:** fondo caliza-relleno, texto caliza-inhabilitado, sin
-  cambio de opacidad. Bajar la opacidad de un botón entero también apaga su
-  texto contra un fondo impredecible; cambiar los tokens es medible.
+### Forma
 
-### Cards / Containers
+Esquinas más amables, en cuatro valores: `sm` 6px (insignias pequeñas,
+casillas), `md` 8px (botones, campos, ítem de navegación), `lg` 12px
+(tarjetas, tablas, paneles), `pill` (chips e insignias). Un elemento hijo
+nunca tiene el mismo radio que su contenedor: el radio interior es el del
+contenedor menos el relleno.
 
-- **Corner Style:** 6px.
-- **Background:** caliza-superficie sobre caliza-lienzo.
-- **Shadow Strategy:** ninguna. Ver Elevation.
-- **Border:** 1px caliza-divisor. Solo cuando el escalón de tono no alcanza
-  para separarla del fondo.
-- **Internal Padding:** 16px (lg), 24px (xl) en paneles de página completa.
-- **Prohibido anidar.** Una tarjeta dentro de otra tarjeta significa que la
-  jerarquía se resolvió con cajas en vez de con tipografía.
+### Espacio
 
-### Inputs / Fields
+Ritmo variable a propósito. Entre secciones 32 a 48px; dentro de una
+tarjeta 20px; entre campos 16px; entre etiqueta y campo 6px. Lo relacionado
+se junta y lo que no, se separa con claridad. Mismo relleno en todas partes
+es monotonía.
 
-- **Style:** fondo caliza-lienzo, borde 1px caliza-borde (3.54:1, no
-  negociable), 4px de radio, alto 44px, padding 10px 12px.
-- **Etiqueta:** siempre visible, arriba del campo, en Label. **Nunca
-  placeholder como etiqueta** — desaparece al escribir y el operador que se
-  distrajo pierde el contexto.
-- **Focus:** borde a color de marca más el mismo anillo de `outline` del
-  botón.
-- **Error:** borde en señal-error **más** un mensaje debajo con icono. El
-  borde rojo solo no alcanza: en un municipio de marca roja no se distingue
-  del foco.
-- **Ayuda:** una línea en Label, color caliza-apagada, debajo del campo.
-  Existe antes del error, no después.
+### Movimiento
+
+Antes prohibido; ahora **permitido con propósito**, y solo para dar
+retroalimentación.
+
+- **Qué se anima:** color, fondo, borde, sombra y `transform` (traslación de
+  1 a 2px o escala de 0.98 al presionar). **Nunca** propiedades de layout.
+- **Cuánto:** 120 a 180ms, `cubic-bezier(0.25, 1, 0.5, 1)` (ease-out-quart).
+  Sin rebote ni elástico.
+- **Dónde:** hover y foco de controles, aparición de menú y popover, cambio
+  de pestaña. No hay animación de entrada de página ni escalonada.
+- **`prefers-reduced-motion`:** apaga todo. La guarda global de `globals.css`
+  se conserva.
+
+## 6. Components
+
+### Estructura de la aplicación (shell)
+
+- **Fondo de página:** caliza-fondo. Todo el contenido vive en superficies
+  lienzo encima.
+- **Navegación lateral (≥1024px):** panel lienzo de 264px con borde derecho.
+  Arriba, el **bloque del municipio**: escudo (40px) y nombre en Title, sobre
+  marca tenue. Debajo, los módulos agrupados con un título de grupo en Label
+  apagada (por ejemplo "Atención", "Territorio", "Administración"). El ítem
+  activo es un bloque con fondo marca suave, texto en tinta y el ícono en
+  marca. **Nunca** una franja lateral de color. Abajo, el usuario y el rol.
+- **Barra superior:** delgada, con la migaja a la izquierda y a la derecha el
+  usuario y cerrar sesión. Sin bloque de marca (ya está en el lateral).
+- **Móvil (<1024px):** el lateral se convierte en una barra inferior de
+  cinco destinos más "Más", con ícono y texto siempre. Zona táctil de 48px.
+- **Contenido:** ancho máximo 1200px en listas, 720px en formularios.
+  Centrado a partir de 1280px.
+
+### Encabezado de página
+
+Título en Display, línea de descripción en Body apagada, y a la derecha la
+**acción primaria** (una sola). Debajo, el buscador y los filtros. Sin
+banda de color: el encabezado es tipografía sobre el fondo.
+
+### Botones
+
+- **Primario:** marca, texto marca-texto, 8px, 44px de alto. Una sola por
+  pantalla.
+- **Secundario:** lienzo, texto tinta, borde caliza-borde.
+- **Ghost:** sin fondo, texto apagada. Cancelar, volver.
+- **Hover:** el primario baja un escalón de tono (`color-mix` con tinta al
+  8%); el secundario pasa a superficie.
+- **Presionado:** `scale(0.98)`, 80ms.
+- **Foco:** `outline: 2px solid var(--color-marca); outline-offset: 2px`.
+  **`outline` y no `box-shadow`**: sobrevive al alto contraste de Windows.
+- **Inhabilitado:** fondo relleno, texto inhabilitado, sin opacidad.
+
+### Tarjetas
+
+- **Fondo** lienzo, **radio** 12px, **borde** 1px divisor, **sombra** reposo,
+  **relleno** 20px (24px en página completa).
+- La tarjeta se usa para agrupar contenido que se decide junto: un
+  formulario, una ficha, un bloque de configuración. No para decorar listas
+  de ítems iguales.
+- **Prohibido anidar.** Dentro de una tarjeta, la jerarquía la dan el
+  título, el espacio y las zonas en tono superficie, no otra caja.
+- **Tarjeta accionable** (enlace completo): hover sube a *elevada* y el
+  borde pasa a borde. Foco con el anillo estándar.
+
+### Campos
+
+- Fondo lienzo, borde 1px caliza-borde (3.5:1), 8px, 44px de alto.
+- **Etiqueta** siempre visible, arriba, en Label. Nunca placeholder como
+  etiqueta.
+- **Foco:** borde en marca más el anillo de `outline`.
+- **Error:** borde en señal-error, fondo suave de error en el mensaje,
+  ícono y texto debajo. Nunca solo el borde.
+- **Ayuda:** una línea en Label apagada, debajo, antes de que exista el
+  error.
+- Campos relacionados se agrupan en una tarjeta con un título (Headline); no
+  hay un formulario largo de una sola columna sin cortes.
+
+### Insignias de estado
+
+Pastilla de 24px: ícono 14px + texto en Label, fondo suave de la señal,
+texto en la señal fuerte. Se usan para estado de reporte, de intervención,
+de constancia y baja de registro. **Siempre ícono y palabra.** Estado
+neutro (borrador, sin asignar): fondo relleno y texto tinta.
 
 ### Tablas
 
-- **Fila:** 44px, fondo lienzo, divisor de 1px abajo. **Sin cebra** — el
-  divisor ya separa, y el rayado le compite a la señal de estado.
-- **Encabezado:** 36px, fondo caliza-superficie, texto Label en
-  caliza-apagada, pegajoso al hacer scroll.
-- **Hover de fila:** fondo a caliza-superficie. Es la única
-  retroalimentación de que la fila es accionable.
-- **Alineación:** texto a la izquierda; números, fechas y CURP en tipografía
-  Dato.
-- **Móvil:** la tabla **no hace scroll horizontal**. Por debajo de 640px la
-  misma fila se reordena en dos renglones: identificador arriba en Title,
-  datos de apoyo abajo en Label. La fila sigue midiendo 44px de alto
-  mínimo. Ambos dispositivos por igual significa dos formas reales, no una
-  forma con barra de scroll.
+- Contenedor: tarjeta de borde y sombra reposo, con `overflow: hidden` para
+  el radio. **No es un `overflow-x`.**
+- **Encabezado:** 40px, fondo superficie, Label apagada, pegajoso.
+- **Fila:** 48px, fondo lienzo, divisor de 1px. **Sin cebra.**
+- **Hover de fila accionable:** fondo superficie y un ícono de chevron que
+  aparece a la derecha, para indicar que abre.
+- **Alineación:** texto a la izquierda; CURP, folios y fechas en Dato.
+  Estados en insignia.
+- **Móvil (<640px):** la fila se reordena en dos renglones: identificador en
+  Title y datos de apoyo en Label, más la insignia a la derecha. Mínimo 56px
+  de alto, sin scroll horizontal.
 - **Sin cálculo de negocio.** La tabla recibe los datos ya resueltos.
 
-### Filtros
+### Filtros, buscador y orden
 
-- **Chip activo:** fondo caliza-relleno, texto tinta, 4px de radio, alto
-  32px, con la "x" de quitar dentro del chip.
-- **Los filtros aplicados se ven siempre**, en una fila arriba de la tabla.
-  Un filtro escondido en un panel plegado es un resultado vacío que el
-  operador no sabe explicar.
-- **Ninguno bloquea.** Filtrar no recarga la pantalla ni pierde el scroll.
-- **Un filtro de lista cerrada (`<select>`) igual se pinta como chip aplicado.** El control
-  que lo captura puede ser un select; lo que el operador ve arriba de la tabla es siempre el
-  chip. Un select que cambia de valor sin nada más arriba no le dice al operador que hay un
-  filtro puesto — se lee como la lista completa.
+Sin cambios de comportamiento: todo es GET resuelto en el servidor, sin
+estado de cliente.
 
-### Paginación
-
-Toda lista que puede crecer sin techo —personas, reportes, constancias emitidas— pagina por
-`?limite=` en la URL. Ninguna trae la tabla entera.
-
-- **"Ver más" por link, no numerada.** Un enlace al pie de la tabla que suma el tamaño de
-  página al límite actual, mismo tratamiento visual que un botón secundario. No hay "página 3
-  de 12": el operador no navega por índice, sigue leyendo donde se quedó.
-- **Tamaño de página fijo: 50 filas.** Bajarlo no ahorra en la red rural —sigue siendo una
-  sola respuesta HTML—, y subirlo pierde el punto de paginar.
-- **El link desaparece cuando ya no hay más.** Si la respuesta trae menos filas que el tamaño
-  de página, no hay "Ver más": no existe una página vacía a la que llegar.
-- **Sin cliente.** Es un link con query param, igual que el buscador y los filtros: recarga
-  la pantalla y no pierde nada, porque no hay estado que perder.
-
-### Buscador
-
-Texto libre en `?q=`, formulario GET resuelto en el servidor —mismo criterio que Filtros:
-ningún buscador bloquea ni pierde el resto de la pantalla al escribir.
-
-- **Un campo, sin autocompletar en vivo.** No es la sugerencia de duplicados: ese componente
-  existe donde bloquear la captura tiene costo real (personas parecidas mientras se da de
-  alta). Un buscador de listado espera Enter, como cualquier form nativo.
-- **Convive con los filtros de la misma pantalla, nunca los reemplaza.** `q` busca texto; los
-  filtros acotan categoría.
-
-### Ordenamiento de columnas
-
-Encabezado clicable en columnas que admiten orden natural (fecha, folio, nombre). Resuelto
-con `@tanstack/table-core` —el núcleo sin React de TanStack Table— corriendo en el Server
-Component: el estado de orden sale de `?ordenar=columna&direccion=asc|desc` en la URL, nunca
-de `useState`. `@tanstack/react-table` no se usa —es el hook, pide `"use client"` y guarda el
-estado en el navegador, lo que rompe el mismo patrón GET que ya usan Buscador, Filtros y
-Paginación.
-
-- **El encabezado es un link**, no un botón con `onClick`. Mismo criterio que "Ver más": es
-  navegación, no interacción de cliente.
-- **Un ícono de flecha marca la columna y dirección activas.** Nunca solo un cambio de peso
-  de fuente —el color/peso solo no alcanza (sección 2, "todo estado lleva texto o icono").
-- **No todas las columnas ordenan.** Solo las que tienen un orden natural que el operador
-  reconoce. Una columna de "acciones" no es clicable.
+- **Buscador:** un campo con ícono, `?q=`, espera Enter. Convive con filtros.
+- **Filtros aplicados:** siempre visibles en una fila sobre la tabla, como
+  chips pill con fondo marca suave y la "x" para quitar. Un select de lista
+  cerrada se pinta igual como chip.
+- **Orden:** encabezado que es un link; flecha de dirección en la columna
+  activa (nunca solo peso). `?ordenar=` y `?direccion=` en la URL.
+  `@tanstack/table-core` en servidor; `@tanstack/react-table` no se usa.
+- **Paginación:** "Ver más" por link (`?limite=`), de 50 en 50, con aspecto de
+  botón secundario. Desaparece cuando ya no hay más.
 
 ### Estados de lista
 
-Tres, y son componentes, no ausencias.
+Tres, y son componentes:
 
-- **Cargando:** esqueleto con la altura exacta de las filas que va a haber.
-  Sin spinner: en la red rural el spinner gira medio minuto y no dice nada.
-- **Vacío por primera vez:** una línea que dice qué es esta pantalla y el
-  botón primario que la llena. Sin ilustración.
-- **Vacío por filtro:** distinto del anterior. Dice qué filtro lo dejó
-  vacío y ofrece quitarlo. Confundir los dos manda al operador a crear un
-  registro que ya existe.
+- **Cargando:** esqueleto con la altura exacta de las filas (48px), con un
+  pulso de opacidad lento. Sin spinner.
+- **Vacío por primera vez:** un ícono de línea grande en caliza-apagada, una
+  frase que dice qué es la pantalla y la acción primaria que la llena. Esto
+  reemplaza a la prohibición total de ilustración: se admite **un ícono de
+  línea del mismo set**, nunca una ilustración ni un dibujo.
+- **Vacío por filtro:** distinto del anterior. Dice qué filtro lo dejó vacío
+  y ofrece quitarlo.
+
+### Inicio
+
+La pantalla de entrada deja de ser una lista de seis cajas iguales. Tiene
+tres zonas, en este orden:
+
+1. **Saludo:** "Buenos días, [nombre]" en Display y el nombre del municipio en
+   Body apagada, sobre una banda de marca tenue con el escudo.
+2. **Pendientes de hoy** (solo si hay): una lista corta, de filas de 48px,
+   con lo que pide atención: reportes sin asignar, constancias por emitir.
+   Cada fila lleva texto, un conteo en Dato y va al listado filtrado. No es un
+   tablero de métricas: es una lista de cosas por hacer, y si no hay nada,
+   no aparece.
+3. **Módulos:** tarjetas accionables agrupadas por área, con ícono de línea,
+   nombre en Title y una línea de descripción. Las tarjetas **no** son todas
+   iguales: la de mayor uso por rol va primero y más ancha.
+
+### Acceso (login)
+
+Dos mitades a partir de 960px: a la izquierda una superficie de marca tenue
+con el escudo grande, el nombre del municipio en Display y una línea de
+bienvenida; a la derecha, el formulario en una tarjeta de 400px. En móvil,
+una sola columna con el escudo arriba. Foco al primer campo, error redactado
+para el operador sobre el botón, y el botón de ingreso en marca.
 
 ### Sugerencia de duplicados (componente de firma)
 
-El patrón que define este producto. Mientras la operadora escribe el
-nombre, aparece debajo del campo una lista de hasta 5 personas parecidas.
+Mientras se escribe el nombre aparece debajo del campo una lista de hasta 5
+personas parecidas.
 
-- Superficie flotante: caliza-lienzo, 6px, sombra Flotante, ancho del campo.
-- Cada fila: nombre en Title, y debajo en Label los datos que permiten
-  descartar.
-- Marcada con señal-aviso **y la palabra "posible duplicado"**. Nunca solo
-  el color.
-- **No roba el foco. No frena el envío. No hay un "confirme que no es
-  duplicado".** El operador puede escribir hasta el final y guardar sin
-  mirarla. Esto es el principio 3 hecho componente: una validación que
-  bloquea manda el trámite al papel, y el papel no tiene RLS ni bitácora.
-- Navegable con flechas y Enter, cerrable con Escape, anunciada por lector
-  de pantalla como región viva y educada (`aria-live="polite"`).
+- Superficie flotante: lienzo, 12px, sombra *flotante*, ancho del campo.
+- Cada fila: nombre en Title y, en Label, los datos que permiten descartar.
+- Marcada con señal-aviso **y la palabra "posible duplicado"**.
+- **No roba el foco, no frena el envío, no pide confirmación.** El operador
+  puede guardar sin mirarla. Es el principio 3 hecho componente.
+- Navegable con flechas y Enter, cerrable con Escape, región viva
+  `aria-live="polite"`.
 
 ### Navegación (migas de pan)
 
-Toda pantalla que no es la raíz de su sección —tiene una pantalla padre a
-la que volver tiene sentido— lleva `<Migaja>` arriba del título. La raíz
-de una sección (`/constancias`, `/padron`, `/territorio`) no lleva: no hay
-padre al que subir, y una migaja de un solo paso es ruido en vez de
-orientación.
+Toda pantalla que no es raíz de su sección lleva `<Migaja>`, **por el prop
+`migaja` de `PaginaDePanel`**, en la barra superior. El último paso nunca es
+un enlace. Las raíces (`/padron`, `/territorio`, `/constancias`) no llevan.
 
-- **Va por el prop `migaja` de `PaginaDePanel`**, nunca un `<Migaja>`
-  suelto al borde de cada pantalla: la posición y el espaciado son del
-  contenedor, no de quien lo usa.
-- **El último paso nunca es un enlace.** Es donde el operador está parado.
-- Entró el 2026-09-04 porque `territorio` la tenía y `constancias` no,
-  sin que nada lo hiciera evidente hasta que alguien navegó la pantalla.
+### Divulgación progresiva
 
-### Divulgación progresiva (acciones raras o irreversibles)
+Acciones raras o irreversibles (reimprimir, dar de baja, cancelar) van en
+`<details>`/`<summary>` nativo, nunca una isla de cliente nueva. El
+disparador lleva ícono y texto. El giro de la flecha es instantáneo.
 
-Una acción que el operador toma poco —reimprimir, dar de baja, cancelar—
-y que además pide un motivo, no se muestra abierta por defecto junto al
-dato principal de la pantalla: compite por atención con lo que el
-operador vino a ver, y una acción irreversible visible sin pedirla se
-toca por error más seguido que una que hay que abrir primero.
+### Formularios de configuración
 
-- **`<details>`/`<summary>` nativo, nunca un `"use client"` nuevo.**
-  Colapsar y expandir es estado del navegador, no de React: resolverlo
-  con una isla de cliente es el antipatrón 1 de `docs/06-frontend.md` con
-  otro nombre.
-- **El disparador lleva ícono y texto**, nunca solo ícono (antipatrón 16).
-- **Sin animación en la flecha de estado.** Un `rotate-90` instantáneo
-  atado a `[open]` comunica el estado; agregarle `transition` es la
-  animación decorativa que la sección 4 prohíbe.
+Un formulario que configura cómo se ve un documento lleva al lado, o debajo,
+una vista previa renderizada en servidor de la última configuración
+guardada, con la misma estructura que la plantilla real. Dentro de una
+tarjeta propia, titulada "Vista previa".
 
-### Formularios de configuración: vista previa de lo que producen
-
-Un formulario que configura cómo se ve un documento —el bloque de firma
-de una constancia, y cualquier otro que llegue después con el mismo
-formato— no se llena a ciegas. Al lado o debajo va una vista previa
-server-rendered de la última configuración guardada, con la misma
-estructura que la plantilla real (`infrastructure/plantillas/*`).
-
-No hace falta que se actualice mientras se escribe: eso pediría un
-`"use client"` que esta pantalla no necesita, y guardar-y-ver es un ciclo
-aceptable para una configuración que se edita pocas veces.
-
-## 6. Do's and Don'ts
+## 7. Do's and Don'ts
 
 ### Do:
 
+- **Do** poner el color del municipio en la lista cerrada de seis lugares y
+  en ningún otro.
+- **Do** asentar las superficies con tono, borde y sombra de reposo, en ese
+  orden de importancia.
+- **Do** acompañar todo estado con ícono y texto, además del color.
 - **Do** usar `outline: 2px solid var(--color-marca); outline-offset: 2px`
-  para el foco de todo control. Sobrevive al alto contraste de Windows.
-- **Do** poner el borde de todo control interactivo en caliza-borde
-  (`oklch(0.62 0.008 80)`), que da 3.54:1. WCAG 1.4.11.
-- **Do** acompañar todo estado con texto o icono además del color. La marca
-  del municipio puede ser del mismo tono que la señal.
-- **Do** mantener las filas en 44px: es el blanco táctil mínimo y el
-  renglón cómodo del escritorio en un solo número.
-- **Do** separar el vacío-inicial del vacío-por-filtro. Son mensajes
-  distintos porque son problemas distintos.
-- **Do** usar tipografía Dato con `tabular-nums` para CURP, folios y fechas.
+  como foco de todo control.
+- **Do** poner el borde de todo control en caliza-borde (3.5:1).
+- **Do** mantener las filas en 48px y los blancos táctiles en 44px o más.
+- **Do** separar el vacío inicial del vacío por filtro.
+- **Do** usar Dato con `tabular-nums` para CURP, folios y fechas.
 - **Do** redactar los errores para el operador, en español, diciendo qué
   hacer.
+- **Do** animar solo retroalimentación (120 a 180ms, ease-out-quart) y
+  respetar `prefers-reduced-motion`.
 
 ### Don't:
 
-- **Don't** escribir etiquetas, encabezados ni botones en mayúsculas
-  sostenidas. Es la firma del **trámite de gobierno**, la anti-referencia
-  declarada.
+- **Don't** escribir etiquetas, encabezados, botones ni insignias en
+  mayúsculas sostenidas.
+- **Don't** usar la marca como color de texto sobre claro ni en un rol
+  semántico (error, éxito, aviso).
+- **Don't** usar `border-left` o `border-right` de más de 1px como franja de
+  color en filas, alertas, tarjetas o ítems de navegación.
+- **Don't** anidar tarjetas.
+- **Don't** poner sombra a botones, filas, chips ni campos, ni usar la
+  sombra como único separador.
+- **Don't** usar degradados, texto con degradado, vidrio esmerilado ni
+  blur decorativo.
+- **Don't** hacer una rejilla de tarjetas idénticas ícono, título y texto
+  como pantalla de inicio, ni una tarjeta de métrica gigante.
 - **Don't** usar el placeholder como etiqueta.
-- **Don't** meter veinte campos en una pantalla "por si acaso". Cada campo
-  justifica que existe.
-- **Don't** poner sombra en nada que no tape contenido. Una tarjeta apoyada
-  es plana.
-- **Don't** anidar tarjetas. Nunca.
-- **Don't** usar `border-left` o `border-right` de más de 1px como franja
-  de color en filas, alertas o tarjetas.
-- **Don't** usar el color de marca en un rol semántico (error, éxito,
-  aviso). Es de otro y puede ser rojo.
-- **Don't** resolver la tabla en móvil con `overflow-x`. Se reordena en dos
-  renglones.
-- **Don't** poner rayado de cebra en las tablas.
-- **Don't** animar nada por decoración. Antipatrón 12 de
-  `docs/06-frontend.md`.
-- **Don't** usar `#fff` ni `#000`. Existen caliza-lienzo y caliza-tinta.
-- **Don't** bloquear el alta con la sugerencia de duplicados, ni con un
-  diálogo de confirmación. Nada bloquea la captura.
-- **Don't** cargar una webfont. Ninguna.
-- **Don't** llenar el vacío con ilustraciones ni microcopy simpático. Nadie
-  quiere una experiencia; quieren terminar.
+- **Don't** meter veinte campos "por si acaso".
+- **Don't** resolver la tabla en móvil con `overflow-x`.
+- **Don't** poner cebra en las tablas.
+- **Don't** animar propiedades de layout ni animar por decoración.
+- **Don't** usar `#fff` ni `#000`.
+- **Don't** cargar una segunda familia tipográfica ni pesos estáticos extra.
+- **Don't** bloquear el alta con la sugerencia de duplicados.
+- **Don't** llenar el vacío con ilustraciones ni microcopy simpático. Un
+  ícono de línea sí; un dibujo no.
