@@ -58,7 +58,8 @@ Evidencia verificada en el codigo de hoy:
 - Listado plano de domicilios a nivel municipio, con busqueda por calle,
   numero y asentamiento, paginado; deja de cargarse todo en cada render.
 - El alta de domicilio deja de depender del nodo donde esta parado el
-  operador: una sola forma, calle + numero + transversales, zona opcional,
+  operador: una sola forma, calle + numero + transversales, colonia
+  opcional,
   servida desde dos entradas -el registro municipal y la pestana Domicilios
   del lugar- sobre el mismo componente. La ubicacion es el `lugarId`
   validado o, si se omite, la calle principal; nunca el `raiz`/`nodo` de

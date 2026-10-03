@@ -174,7 +174,7 @@ const cargarRegistroDeEntrada = async (
 
 /**
  * Los paneles de alta de la entrada: hoy solo el asentamiento dispara
- * lectura -el alta de domicilio vive dentro del lugar-.
+ * lectura.
  */
 const cargarPanelesDeEntrada = async (
   contexto: ContextoActual,

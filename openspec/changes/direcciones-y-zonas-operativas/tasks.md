@@ -163,9 +163,10 @@ anteriores.
 | Presupuesto | ~207 lineas cambiadas entre los dos commits, contra el limite de 400: sin excepcion |
 | Frontera de rollback | Revertir `1609704` y `fa04f00`; ningun cambio de esquema, migracion ni Server Action fuera de renombrar un campo de entrada |
 
-> Fila A3-GREEN-02 y verificacion A3-REFACTOR-04 superseded por D10: ver
-> la nota de sustitucion al inicio de la fase. El resto de A3 sigue
-> vigente.
+> De A3-GREEN-02 y A3-REFACTOR-04 queda superseded solo su parte de
+> entrada/UI (hidden `raiz`/`nodo` y punto de alta unico); la derivacion de
+> la ubicacion y la validacion de vocabulario siguen vigentes. Ver la nota
+> de sustitucion al inicio de la fase.
 
 Nota de ejecucion: la implementacion corrio con `opencode` (`openai/gpt-5.6-luna`, agente `build`) como escritor delegado; esta sesion (Claude) hizo la revision de diff completo exigida por el flujo -encontro y corrigio la rama muerta de `hrefAdministrarCalles`, un test vacuo y dos errores de formato antes de aceptar- y ejecuto los commits.
 

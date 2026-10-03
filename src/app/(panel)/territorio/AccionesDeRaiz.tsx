@@ -6,7 +6,8 @@ import { EnlaceDeAccion } from "@/shared/ui";
  * los dias y va primaria; el alta de un asentamiento pasa a secundaria
  * -un municipio suma uno por ano-. La que ya esta abierta no repite su
  * enlace, para no dejar dos primarias en pantalla. El alta de domicilio
- * vive tambien dentro de cada lugar (RegistroDeDomicilio lo documenta).
+ * tiene dos entradas; ver
+ * `openspec/changes/direcciones-y-zonas-operativas/design.md`, seccion 3.
  */
 export const accionesDeRaiz = ({
   puedeCrearLugar,
