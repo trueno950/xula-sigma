@@ -1,6 +1,6 @@
 import {
   AvisoDePermiso,
-  CeldaDeDato,
+  CeldaDeApoyo,
   CeldaPrincipal,
   CLASES_DE_TARJETA,
   type ColumnaDeTabla,
@@ -9,7 +9,7 @@ import {
 } from "@/shared/ui";
 import { puedeTenerCatalogoDeCalles } from "../domain";
 import {
-  domiciliosDirectosDe,
+  domiciliosDelSubarbolDe,
   type NodoDomicilio,
   type PropsDeContenido,
   rutaDe,
@@ -43,7 +43,11 @@ export function TabDeDomicilios({
   permisos,
 }: PropsDeContenido) {
   const puedeActuar = puedeAbrir("domicilio", permisos);
-  const colgados = domiciliosDirectosDe(nodos, lugar.id);
+  const colgados = domiciliosDelSubarbolDe(nodos, lugar.id);
+  const nombres = new Map<string, string>(
+    nodos.flatMap((n) => (n.clase === "lugar" ? [[n.id, n.nombre]] : [])),
+  );
+  const nombreDe = (lugarId: string) => nombres.get(lugarId) ?? lugar.nombre;
   const sinCalles = calles.length === 0;
   const poseeCatalogo = puedeTenerCatalogoDeCalles(lugar.tipo);
   const lugarDeCallesId = poseeCatalogo ? lugar.id : raizId;
@@ -66,14 +70,14 @@ export function TabDeDomicilios({
               key={fila.id}
               href={rutaDe({
                 raizId: raizId,
-                nodoId: lugar.id,
+                nodoId: fila.lugarId,
                 vista: "domicilios",
                 domicilioId: fila.id,
               })}
-              etiquetaAccesible={`${etiquetaDe(fila)}, ${lugar.nombre}`}
+              etiquetaAccesible={`${etiquetaDe(fila)}, ${nombreDe(fila.lugarId)}`}
             >
               <CeldaPrincipal>{etiquetaDe(fila)}</CeldaPrincipal>
-              <CeldaDeDato>{lugar.nombre}</CeldaDeDato>
+              <CeldaDeApoyo>{nombreDe(fila.lugarId)}</CeldaDeApoyo>
             </FilaDeTabla>
           ))}
         </Tabla>

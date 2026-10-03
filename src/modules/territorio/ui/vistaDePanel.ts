@@ -63,7 +63,7 @@ export const pestanasDePanel = ({
     cuenta: cuentas.calles,
     href: `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=calles`,
     activa: vista === "calles",
-    etiquetaAccesible: `Calles (de este lugar): ${cuentas.calles}`,
+    etiquetaAccesible: `Calles: ${cuentas.calles}`,
   },
   {
     clave: "domicilios",

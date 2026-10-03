@@ -1,7 +1,6 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import {
   AvisoDePermiso,
-  CeldaDeDato,
   CeldaPrincipal,
   CLASES_DE_TARJETA,
   type ColumnaDeTabla,
@@ -9,12 +8,9 @@ import {
   FilaDeTabla,
   Tabla,
 } from "@/shared/ui";
-import {
-  ETIQUETA_DE_TIPO_DE_LUGAR,
-  tipoDeLugarEnFrase,
-  tiposContenidosPor,
-} from "../domain";
+import { tipoDeLugarEnFrase, tiposContenidosPor } from "../domain";
 import { hijosDirectosDe, type PropsDeContenido, rutaDe } from "./contenido";
+import { Cuentas, PastillaDeTipo } from "./FilaDeLugar";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
 import { puedeAbrir } from "./permisos";
@@ -22,6 +18,7 @@ import { puedeAbrir } from "./permisos";
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,2fr)" },
   { clave: "tipo", etiqueta: "Tipo", ancho: "minmax(0,1fr)" },
+  { clave: "contenido", etiqueta: "Contenido", ancho: "minmax(0,2fr)" },
 ];
 
 /** Pestana Lugares: los hijos directos para entrar, y el alta de uno nuevo. */
@@ -31,6 +28,7 @@ export function TabDeLugares({
   nodos,
   accion,
   permisos,
+  conteos,
 }: PropsDeContenido) {
   const puedeActuar = puedeAbrir("lugar", permisos);
   const hijos = hijosDirectosDe(nodos, lugar.id);
@@ -77,7 +75,14 @@ export function TabDeLugares({
               etiquetaAccesible={`${hijo.nombre}, ${tipoDeLugarEnFrase(hijo.tipo)}`}
             >
               <CeldaPrincipal>{hijo.nombre}</CeldaPrincipal>
-              <CeldaDeDato>{ETIQUETA_DE_TIPO_DE_LUGAR[hijo.tipo]}</CeldaDeDato>
+              <span className="flex">
+                <PastillaDeTipo tipo={hijo.tipo} />
+              </span>
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Cuentas
+                  cuenta={conteos?.find((cuenta) => cuenta.lugarId === hijo.id)}
+                />
+              </span>
             </FilaDeTabla>
           ))}
         </Tabla>

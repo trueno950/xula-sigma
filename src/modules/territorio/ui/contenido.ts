@@ -3,8 +3,14 @@ import type {
   LugarGuardado,
   NodoDeSubarbol,
 } from "../application/puertos";
+import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
-import type { CalleId, DomicilioId, LugarId } from "../domain";
+import {
+  type CalleId,
+  type DomicilioId,
+  type LugarId,
+  puedeTenerCatalogoDeCalles,
+} from "../domain";
 import { descendientesDe } from "./conteo";
 import type {
   AccionDeNodo,
@@ -39,6 +45,8 @@ export type PropsDeContenido = {
   domicilioId: DomicilioId | undefined;
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
+  /** Las cuentas por lugar del municipio: las filas de la pestana Lugares. */
+  conteos?: readonly ConteoDeLugar[] | undefined;
 };
 
 /** La ruta del lugar actual con pestana y accion opcionales. */
@@ -85,6 +93,28 @@ export const domiciliosDirectosDe = (
   );
 
 /**
+ * Los domicilios de todo el subarbol del lugar: lo que cuenta la pestana
+ * Domicilios, para que el numero y la lista no se contradigan.
+ */
+export const domiciliosDelSubarbolDe = (
+  nodos: readonly NodoDeSubarbol[],
+  lugarId: LugarId,
+): readonly NodoDomicilio[] => {
+  const lugares = nodos.filter(
+    (n): n is Extract<NodoDeSubarbol, { clase: "lugar" }> =>
+      n.clase === "lugar",
+  );
+  const bajo = new Set<string>([
+    lugarId,
+    ...descendientesDe([lugarId], lugares),
+  ]);
+
+  return nodos.filter(
+    (n): n is NodoDomicilio => n.clase === "domicilio" && bajo.has(n.lugarId),
+  );
+};
+
+/**
  * Las otras direcciones vivas con la misma calle y el mismo numero, dentro
  * del subarbol que la pantalla ya trae. Compara `calleId`, no el nombre:
  * dos calles del mismo nombre no son la misma calle
@@ -120,12 +150,10 @@ export const hermanosDeDireccion = (
  * pregunta -que filas lista la pestana- y por eso `TabDeDomicilios` la
  * sigue usando en vez de esta.
  *
- * Calles: solo las que el nodo tiene por suyas (`lugarId === nodo.id`). La
- * pestana sigue listando el catalogo heredado del asentamiento -de solo
- * lectura, para que un domicilio se cree contra una calle suya-, pero el
- * numero de la pestana dice "calles de este nodo", no "catalogo que puede
- * usar" (`TabDeCalles.tsx` explica ese listado). Antes contaba el catalogo
- * entero y todos los nodos mostraban el mismo numero.
+ * Calles: lo que la pestana lista. Un lugar con catalogo cuenta las suyas;
+ * una colonia, sector o manzana lista el catalogo heredado de su
+ * asentamiento (`CatalogoHeredado`) y cuenta ese, porque un 0 sobre una
+ * tabla con filas era una contradiccion en la misma pantalla.
  */
 export const cuentasDeLugar = ({
   nodos,
@@ -140,16 +168,12 @@ export const cuentasDeLugar = ({
     (n): n is Extract<NodoDeSubarbol, { clase: "lugar" }> =>
       n.clase === "lugar",
   );
-  const bajo = new Set<string>([
-    nodo.id,
-    ...descendientesDe([nodo.id], lugares),
-  ]);
 
   return {
     lugares: lugares.filter((n) => n.padreId === nodo.id).length,
-    calles: calles.filter((calle) => calle.lugarId === nodo.id).length,
-    domicilios: nodos.filter(
-      (n): n is NodoDomicilio => n.clase === "domicilio" && bajo.has(n.lugarId),
-    ).length,
+    calles: puedeTenerCatalogoDeCalles(nodo.tipo)
+      ? calles.filter((calle) => calle.lugarId === nodo.id).length
+      : calles.length,
+    domicilios: domiciliosDelSubarbolDe(nodos, nodo.id).length,
   };
 };

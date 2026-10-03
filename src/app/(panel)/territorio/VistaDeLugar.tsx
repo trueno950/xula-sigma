@@ -13,8 +13,12 @@ import type {
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
-import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
+import {
+  cuentasDeLugar,
+  type PropsDeContenido,
+} from "@/modules/territorio/ui/contenido";
 import { opcionesDeCalles } from "@/modules/territorio/ui/opciones";
+import { BarraDeAcciones } from "@/modules/territorio/ui/PanelDeAccion";
 import {
   type PermisosDeTerritorio,
   puedeAbrir,
@@ -38,6 +42,7 @@ type Props = {
   domicilioId: DomicilioId | undefined;
   domicilio: DomicilioGuardado | undefined;
   permisos: PermisosDeTerritorio;
+  conteos?: PropsDeContenido["conteos"];
   /** El alta de domicilio esta abierta en la pestana Domicilios. */
   domicilioAbierto: boolean;
 };
@@ -60,6 +65,7 @@ export function VistaDeLugar({
   domicilioId,
   domicilio,
   permisos,
+  conteos,
   domicilioAbierto,
 }: Props) {
   const zona = zonaDelFormulario(
@@ -78,6 +84,20 @@ export function VistaDeLugar({
         abreLaEdicion={permisos.abreLaEdicion}
       />
 
+      {vista === "domicilios" &&
+      puedeAbrir("domicilio", permisos) &&
+      !domicilioAbierto &&
+      calles.length > 0 ? (
+        <BarraDeAcciones>
+          <EnlaceDeAccion
+            href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
+            variante="primaria"
+          >
+            Registrar domicilio
+          </EnlaceDeAccion>
+        </BarraDeAcciones>
+      ) : null}
+
       <ContenidoDeLugar
         raizId={raiz.id}
         lugar={nodo}
@@ -90,25 +110,19 @@ export function VistaDeLugar({
         vista={vista}
         accion={accion}
         permisos={permisos}
+        conteos={conteos}
       />
 
-      {vista === "domicilios" && puedeAbrir("domicilio", permisos) ? (
-        domicilioAbierto ? (
-          <RegistroDeDomicilio
-            calles={opciones}
-            zona={zona}
-            volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
-            raiz={raiz.id}
-            nodo={nodo.id}
-          />
-        ) : calles.length > 0 ? (
-          <EnlaceDeAccion
-            href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
-            variante="primaria"
-          >
-            Registrar domicilio
-          </EnlaceDeAccion>
-        ) : null
+      {vista === "domicilios" &&
+      puedeAbrir("domicilio", permisos) &&
+      domicilioAbierto ? (
+        <RegistroDeDomicilio
+          calles={opciones}
+          zona={zona}
+          volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
+          raiz={raiz.id}
+          nodo={nodo.id}
+        />
       ) : null}
     </>
   );

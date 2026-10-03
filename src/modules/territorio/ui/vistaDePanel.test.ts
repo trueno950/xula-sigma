@@ -93,7 +93,7 @@ describe("pestanasDePanel", () => {
     // nodos mostraban el mismo; la de domicilios decia "de este lugar"
     // cuando solo contaba lo colgado directo. Un `aria-label` que sobrevive
     // al cambio del numero que describe le miente a quien no ve la pantalla.
-    expect(porClave.get("calles")).toBe("Calles (de este lugar): 1");
+    expect(porClave.get("calles")).toBe("Calles: 1");
     expect(porClave.get("domicilios")).toBe(
       "Domicilios (de este lugar y lo que contiene): 0",
     );

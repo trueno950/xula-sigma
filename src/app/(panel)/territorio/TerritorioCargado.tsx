@@ -92,6 +92,7 @@ export const TerritorioCargado = async ({
           domicilioId={domicilioId}
           domicilio={domicilio ?? undefined}
           permisos={permisos}
+          conteos={cuentas}
           domicilioAbierto={domicilioAbierto}
         />
       ) : null}

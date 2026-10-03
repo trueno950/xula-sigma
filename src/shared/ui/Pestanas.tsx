@@ -38,7 +38,7 @@ export function Pestanas({
   return (
     <nav
       aria-label={etiqueta}
-      className="-mb-px flex gap-1 overflow-x-auto border-b border-caliza-divisor"
+      className="-mb-px flex flex-wrap gap-x-1 border-b border-caliza-divisor"
     >
       {pestanas.map((pestana) => (
         <Link
@@ -46,7 +46,7 @@ export function Pestanas({
           href={pestana.href}
           aria-current={pestana.activa ? "page" : undefined}
           aria-label={pestana.etiquetaAccesible}
-          className={`-mb-px flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-[15px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca ${
+          className={`-mb-px flex items-center gap-1.5 border-b-2 px-2 py-2.5 sm:gap-2 sm:px-4 text-[15px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca ${
             pestana.activa
               ? "border-marca font-medium text-caliza-tinta"
               : "border-transparent text-caliza-apagada hover:text-caliza-tinta"

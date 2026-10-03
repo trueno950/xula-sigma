@@ -6,7 +6,7 @@ import {
   InsigniaDeEstado,
 } from "@/shared/ui";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
-import { puedeSerRaiz, tipoDeLugarEnFrase } from "../domain";
+import { puedeSerRaiz, type TipoDeLugar, tipoDeLugarEnFrase } from "../domain";
 import type { NodoDeArbol } from "./arbolDeLugares";
 import { etiquetaDeTipo } from "./etiquetaDeTipo";
 
@@ -35,7 +35,7 @@ const plural = (cantidad: number, singular: string, plural: string) =>
   `${cantidad} ${cantidad === 1 ? singular : plural}`;
 
 /** Lo que cada fila cuenta, en voz baja: el nombre es lo que manda. */
-function Cuentas({ cuenta }: { cuenta: ConteoDeLugar | undefined }) {
+export function Cuentas({ cuenta }: { cuenta: ConteoDeLugar | undefined }) {
   if (!cuenta) return null;
 
   return (
@@ -52,6 +52,15 @@ function Cuentas({ cuenta }: { cuenta: ConteoDeLugar | undefined }) {
         <InsigniaDeEstado tono="aviso" etiqueta="Sin calles" />
       ) : null}
     </>
+  );
+}
+
+/** El tipo del lugar como pastilla: Label sobre relleno, no un dato. */
+export function PastillaDeTipo({ tipo }: { tipo: TipoDeLugar }) {
+  return (
+    <span className="inline-flex h-6 items-center rounded-pill bg-caliza-relleno px-2.5 text-[13px] leading-none font-medium text-caliza-tinta">
+      {etiquetaDeTipo(tipo)}
+    </span>
   );
 }
 
@@ -96,9 +105,7 @@ export function ContenidoDeFila({ nodo, cuenta, conAlternador }: Props) {
         >
           {lugar.nombre}
         </Link>
-        <span className="inline-flex h-6 items-center rounded-pill bg-caliza-relleno px-2.5 text-[13px] leading-none font-medium text-caliza-tinta">
-          {etiquetaDeTipo(lugar.tipo)}
-        </span>
+        <PastillaDeTipo tipo={lugar.tipo} />
         {/*
           Un rango 0 es "raiz por construccion" (`tipoDeLugar.ts`). Lo
           contrario -una colonia, un sector o una manzana arriba de todo- ya

@@ -128,7 +128,7 @@ describe("Territorio: entrada con arbol, cuentas y busqueda", () => {
     expect(html).not.toContain("todavía no tiene asentamientos");
   });
 
-  it("con ?raiz= no calcula cuentas: el arbol no se dibuja", async () => {
+  it("con ?raiz= calcula las cuentas: alimentan las filas de Lugares", async () => {
     mocks.lugarPorId.mockResolvedValue({
       id: CABECERA,
       tipo: "cabecera",
@@ -137,6 +137,6 @@ describe("Territorio: entrada con arbol, cuentas y busqueda", () => {
 
     await paginaCompleta({ raiz: CABECERA });
 
-    expect(mocks.contarContenidoDeLugares).not.toHaveBeenCalled();
+    expect(mocks.contarContenidoDeLugares).toHaveBeenCalledTimes(1);
   });
 });
