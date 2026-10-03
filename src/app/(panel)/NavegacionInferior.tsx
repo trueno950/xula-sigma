@@ -10,6 +10,7 @@ import {
   estaActivo,
   modulosDeBarraInferior,
 } from "@/shared/ui/modulosDelPanel";
+import { cerrarAlInteractuar } from "./cerrarAlInteractuar";
 
 const CELDA =
   "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-[13px] font-medium transition-[color,background-color] duration-150 ease-salida";
@@ -21,7 +22,8 @@ const CELDA =
  * una isla de cliente (`DESIGN.md`, Divulgacion progresiva): lleva el resto
  * de los modulos y, en `children`, lo que el layout quiera dejar a mano en
  * el movil, como el rol y cerrar sesion. `key={ruta}` lo vuelve a montar
- * cerrado al navegar, porque `<details>` no se cierra solo.
+ * cerrado al navegar, porque `<details>` no se cierra solo; Escape y el
+ * toque fuera lo cierran con `cerrarAlInteractuar`.
  *
  * Icono y texto siempre; cada celda mide 56px de alto.
  *
@@ -44,7 +46,7 @@ export function NavegacionInferior({
   return (
     <nav
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-20 flex items-stretch gap-1 border-t border-caliza-divisor bg-caliza-lienzo px-2 py-1 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 flex items-stretch gap-1 border-t border-caliza-divisor bg-caliza-lienzo px-2 pt-1 pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       {principales.map(({ nombre, ruta: destino, Icono }) => {
         const activo = estaActivo(ruta, destino);
@@ -67,7 +69,11 @@ export function NavegacionInferior({
           </Link>
         );
       })}
-      <details key={ruta} className="group relative flex flex-1">
+      <details
+        key={ruta}
+        ref={(menu) => (menu ? cerrarAlInteractuar(menu, document) : undefined)}
+        className="group relative flex flex-1"
+      >
         <summary
           className={`${CELDA} w-full cursor-pointer list-none ${ANILLO_DE_FOCO} marker:hidden group-open:bg-caliza-superficie ${
             activoEnMas

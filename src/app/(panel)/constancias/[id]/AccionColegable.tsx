@@ -17,9 +17,9 @@ export const AccionColegable = ({
   Icono: typeof CaretRight;
   children: ReactNode;
 }) => (
-  <details className="group rounded-md border border-caliza-divisor bg-caliza-superficie">
+  <details className="group rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo">
     <summary
-      className={`flex h-11 w-full cursor-pointer list-none items-center justify-between gap-2 rounded-md px-4 text-[15px] font-medium text-caliza-tinta hover:bg-caliza-relleno [&::-webkit-details-marker]:hidden ${ANILLO_DE_FOCO}`}
+      className={`flex h-12 w-full cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-5 text-[15px] font-medium text-caliza-tinta transition-colors duration-150 ease-salida hover:bg-caliza-superficie [&::-webkit-details-marker]:hidden ${ANILLO_DE_FOCO}`}
     >
       <span className="flex items-center gap-2">
         <Icono size={18} aria-hidden="true" />
@@ -28,10 +28,10 @@ export const AccionColegable = ({
       <CaretRight
         size={16}
         aria-hidden="true"
-        className="shrink-0 group-open:rotate-90"
+        className="shrink-0 transition-transform duration-150 ease-salida group-open:rotate-90"
       />
     </summary>
-    <div className="flex flex-col gap-4 border-t border-caliza-divisor p-4">
+    <div className="flex flex-col gap-4 border-t border-caliza-divisor p-5">
       {children}
     </div>
   </details>

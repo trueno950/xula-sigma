@@ -25,7 +25,7 @@ export function MapaVisual({ marcadores }: Props) {
         hidden={mapaFallido}
         role="img"
         aria-label="Mapa con los marcadores del municipio, ubicación aproximada"
-        className="h-96 w-full rounded-md border border-caliza-divisor"
+        className="h-96 w-full rounded-lg border border-caliza-divisor shadow-reposo"
         style={{ visibility: mapaVisible ? "visible" : "hidden" }}
       />
     </div>

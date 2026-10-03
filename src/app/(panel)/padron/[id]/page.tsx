@@ -122,15 +122,15 @@ export default async function PaginaDeDetalleDePersona({
       ) : null}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-semibold text-caliza-tinta">
+        <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
           Historial de residencias
         </h2>
         <HistorialDeResidencias historial={historial} />
       </section>
 
       {puedeActuar ? (
-        <section className="flex flex-col gap-3 border-t border-caliza-divisor pt-6">
-          <h2 className="text-[15px] font-semibold text-caliza-tinta">
+        <section className="flex flex-col gap-3">
+          <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
             Registrar mudanza
           </h2>
           <FormularioDeMudanza personaId={persona.id} domicilios={domicilios} />

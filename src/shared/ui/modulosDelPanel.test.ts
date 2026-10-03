@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ROLES } from "@/shared/auth/roles";
 import {
+  estaActivo,
   GRUPOS_DE_MODULOS,
   MODULOS_DEL_PANEL,
   modulosAgrupados,
@@ -60,5 +61,11 @@ describe("modulosDelPanel", () => {
         rutas(modulosVisibles(rol)).sort(),
       );
     }
+  });
+
+  it("el activo respeta el limite de segmento de la ruta", () => {
+    expect(estaActivo("/territorio", "/territorio")).toBe(true);
+    expect(estaActivo("/territorio/x", "/territorio")).toBe(true);
+    expect(estaActivo("/territorio2", "/territorio")).toBe(false);
   });
 });

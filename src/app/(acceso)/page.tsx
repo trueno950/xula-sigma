@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { listarReportes } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
 import { horaEnMerida } from "@/shared/lib/fecha";
+import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { leerMarca } from "@/shared/marca";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import { BotonDeCerrarSesion } from "@/shared/ui/BotonDeCerrarSesion";
@@ -12,6 +13,28 @@ import { PendientesDeHoy } from "./PendientesDeHoy";
 import { saludoDeLaHora } from "./saludo";
 
 export const metadata: Metadata = { title: "Inicio" };
+
+/**
+ * Los pendientes son un adorno del inicio, no su razon de ser: si no se
+ * pueden contar, el inicio se pinta sin ellos y el fallo queda en el log con
+ * los datos seguros del error (nunca el mensaje crudo, que puede traer datos
+ * personales). Captura todo error y no uno concreto porque la consulta puede
+ * fallar por red, base o permiso y en todos el inicio debe seguir en pie.
+ */
+async function contarRecibidos(
+  contexto: NonNullable<Awaited<ReturnType<typeof contextoActual>>>,
+) {
+  try {
+    return await listarReportes({ estado: "RECIBIDO" }, contexto);
+  } catch (error) {
+    console.error(
+      "[inicio] no se pudieron contar los pendientes",
+      datosSegurosDeError(error),
+    );
+
+    return null;
+  }
+}
 
 /**
  * Adonde se llega despues de entrar: saludo, pendientes y modulos.
@@ -34,7 +57,7 @@ export default async function PaginaDeInicio() {
 
   const ayuntamiento = await ayuntamientoActual();
   const { escudo } = leerMarca(ayuntamiento.marca);
-  const recibidos = await listarReportes({ estado: "RECIBIDO" }, contexto);
+  const recibidos = await contarRecibidos(contexto);
 
   return (
     <main className="flex min-h-dvh flex-col">
@@ -63,10 +86,12 @@ export default async function PaginaDeInicio() {
       </header>
 
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-8 md:px-6 lg:px-8">
-        <PendientesDeHoy
-          reportes={recibidos.reportes.length}
-          hayMasReportes={recibidos.hayMas}
-        />
+        {recibidos ? (
+          <PendientesDeHoy
+            reportes={recibidos.reportes.length}
+            hayMasReportes={recibidos.hayMas}
+          />
+        ) : null}
         <InicioDeModulos rol={contexto.usuario.rol} />
       </div>
     </main>

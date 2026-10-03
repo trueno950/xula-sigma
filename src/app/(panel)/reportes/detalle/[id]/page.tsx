@@ -17,7 +17,8 @@ import { puedeAdministrarReportes } from "@/shared/auth/roles";
 import {
   Aviso,
   AvisoDePermiso,
-  CLASES_DE_ETIQUETA,
+  FichaDeDatos,
+  FilaDeFicha,
   Migaja,
   PaginaDePanel,
   Panel,
@@ -33,13 +34,6 @@ type Props = {
 
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
-
-const Dato = ({ etiqueta, valor }: { etiqueta: string; valor: string }) => (
-  <div className="flex flex-col gap-1">
-    <dt className={CLASES_DE_ETIQUETA}>{etiqueta}</dt>
-    <dd className="text-[15px] text-caliza-tinta">{valor}</dd>
-  </div>
-);
 
 /**
  * Ficha del reporte con su historial y las transiciones (tasks.md 7.12).
@@ -108,28 +102,23 @@ export default async function PaginaDeDetalleDeReporte({
         />
       ) : null}
 
-      <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
-        <Dato
-          etiqueta="Tipo"
-          valor={ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
-        />
-        <Dato
-          etiqueta="Estado"
-          valor={ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
-        />
-        <Dato
-          etiqueta="Área"
-          valor={
-            reporte.areaResponsable
-              ? ETIQUETA_DE_AREA[reporte.areaResponsable]
-              : SIN_AREA
-          }
-        />
-        <Dato etiqueta="Descripción" valor={reporte.descripcion} />
+      <FichaDeDatos>
+        <FilaDeFicha etiqueta="Tipo">
+          {ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
+        </FilaDeFicha>
+        <FilaDeFicha etiqueta="Estado">
+          {ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
+        </FilaDeFicha>
+        <FilaDeFicha etiqueta="Área">
+          {reporte.areaResponsable
+            ? ETIQUETA_DE_AREA[reporte.areaResponsable]
+            : SIN_AREA}
+        </FilaDeFicha>
+        <FilaDeFicha etiqueta="Descripción">{reporte.descripcion}</FilaDeFicha>
         {reporte.referencia ? (
-          <Dato etiqueta="Referencia" valor={reporte.referencia} />
+          <FilaDeFicha etiqueta="Referencia">{reporte.referencia}</FilaDeFicha>
         ) : null}
-      </dl>
+      </FichaDeDatos>
 
       {puedeAdministrar ? (
         <Panel titulo="Transiciones">
@@ -141,7 +130,7 @@ export default async function PaginaDeDetalleDeReporte({
       ) : null}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-semibold text-caliza-tinta">
+        <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
           Historial
         </h2>
         <DetalleDeReporte historial={historial} />

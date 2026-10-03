@@ -9,6 +9,7 @@ import {
   fechaCivilDeMedianocheUtc,
   fechaYHoraEnMerida,
 } from "@/shared/lib/fecha";
+import { CLASES_DE_TARJETA } from "@/shared/ui";
 import type {
   EntradaDeHistorial,
   HistorialDeCalle as Historial,
@@ -31,7 +32,7 @@ const esDia = (entrada: EntradaDeHistorial) => entrada.precision === "DIA";
 function Entrada({ entrada }: { entrada: EntradaDeHistorial }) {
   const { etiqueta, Icono } = PRESENTACIONES[entrada.naturaleza];
   return (
-    <li className="flex items-start gap-3 border-b border-caliza-divisor py-3 last:border-b-0">
+    <li className="flex items-start gap-3 px-5 py-3">
       <Icono
         size={20}
         aria-hidden="true"
@@ -61,14 +62,17 @@ function Entrada({ entrada }: { entrada: EntradaDeHistorial }) {
 export function LineaDeTiempoDeCalle({ historial }: Props) {
   if (historial.estado === "VACIO") {
     return (
-      <p className="text-[15px] text-caliza-apagada">
+      <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
         Esta calle todavía no tiene hechos registrados.
       </p>
     );
   }
 
   return (
-    <ol className="flex flex-col" aria-label="Línea de tiempo de la calle">
+    <ol
+      className="divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo"
+      aria-label="Línea de tiempo de la calle"
+    >
       {historial.entradas.map((entrada) => (
         <Entrada
           key={`${entrada.naturaleza}-${entrada.id}`}

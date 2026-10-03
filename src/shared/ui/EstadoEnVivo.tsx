@@ -1,7 +1,9 @@
 "use client";
 
+import { WifiHigh, WifiSlash } from "@phosphor-icons/react/ssr";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { clasesDeBoton } from "./estilos";
 
 const UMBRAL_DE_LATIDO_MS = 45_000;
 
@@ -15,18 +17,25 @@ export function EstadoEnVivo() {
 
   useEventosEnVivo(router.refresh, setConectado);
 
+  const Icono = conectado ? WifiHigh : WifiSlash;
+
   return (
     <div
       aria-live="polite"
-      className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-caliza-divisor bg-caliza-superficie px-4 py-3"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-caliza-divisor bg-caliza-lienzo p-3 shadow-reposo"
     >
-      <span className="text-[15px] text-caliza-tinta">
+      <span className="flex items-center gap-2 pl-2 text-[15px] text-caliza-tinta">
+        <Icono
+          size={20}
+          aria-hidden="true"
+          className={conectado ? "text-senial-exito" : "text-caliza-apagada"}
+        />
         {etiquetaDeEstado(conectado)}
       </span>
       <button
         type="button"
         onClick={() => router.refresh()}
-        className="h-11 rounded-sm border border-caliza-divisor px-3 text-[15px] font-medium text-caliza-tinta transition-colors hover:bg-caliza-relleno focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+        className={clasesDeBoton("secundaria")}
       >
         Actualizar ahora
       </button>

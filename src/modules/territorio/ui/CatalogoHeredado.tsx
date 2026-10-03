@@ -1,6 +1,7 @@
 import {
   CeldaDeDato,
   CeldaPrincipal,
+  CLASES_DE_TARJETA,
   EnlaceDeAccion,
   FilaDeTabla,
   Tabla,
@@ -43,7 +44,7 @@ export function CatalogoHeredado({ raizId, calles, lugares, permisos }: Props) {
           ))}
         </Tabla>
       ) : (
-        <p className="py-6 text-[15px] text-caliza-apagada">
+        <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
           Todavía no hay calles cargadas en el catálogo del asentamiento.
         </p>
       )}

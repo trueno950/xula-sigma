@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CLASES_DE_DATO, CLASES_DE_ENLACE } from "@/shared/ui";
+import { CLASES_DE_ENLACE } from "@/shared/ui";
 
 const notFoundMock = vi.hoisted(() =>
   vi.fn((): never => {
@@ -85,11 +85,13 @@ describe("ficha de intervencion", () => {
 
     expect(html).toContain("Fecha de ocurrencia");
     expect(html).toContain("2026-01-15");
-    expect(html).toContain(`<dd class="${CLASES_DE_DATO}">2026-01-15</dd>`);
+    expect(html).toMatch(
+      /<dd class="[^"]*font-mono[^"]*tabular-nums[^"]*">2026-01-15<\/dd>/,
+    );
     expect(html).toContain("Capturado en");
-    expect(html).toContain(`<dd class="${CLASES_DE_DATO}">1 mar 2026`);
+    expect(html).toMatch(/<dd class="[^"]*font-mono[^"]*">1 mar 2026/);
     expect(html).toContain("1 mar 2026");
-    expect(html).toContain(`<dd class="${CLASES_DE_DATO}">2 mar 2026`);
+    expect(html).toMatch(/<dd class="[^"]*font-mono[^"]*">2 mar 2026/);
     expect(html).toContain("formulario de correccion");
     expect(html).toContain("acciones de estado");
   });

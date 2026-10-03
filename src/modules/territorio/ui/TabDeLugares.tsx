@@ -3,6 +3,7 @@ import {
   AvisoDePermiso,
   CeldaDeDato,
   CeldaPrincipal,
+  CLASES_DE_TARJETA,
   type ColumnaDeTabla,
   EnlaceDeAccion,
   FilaDeTabla,
@@ -81,7 +82,7 @@ export function TabDeLugares({
           ))}
         </Tabla>
       ) : (
-        <p className="py-6 text-[15px] text-caliza-apagada">
+        <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
           {admiteLugares
             ? `${lugar.nombre} no tiene lugares adentro todavía.`
             : `Una ${tipoDeLugarEnFrase(lugar.tipo)} es el último nivel: no lleva lugares adentro, solo domicilios.`}

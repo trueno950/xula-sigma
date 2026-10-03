@@ -17,7 +17,8 @@ import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
   Aviso,
   AvisoDePermiso,
-  CLASES_DE_ETIQUETA,
+  FichaDeDatos,
+  FilaDeFicha,
   Migaja,
   PaginaDePanel,
   PantallaDeMensaje,
@@ -40,23 +41,6 @@ const textoDeCancelacion = (
   motivo
     ? `Documento cancelado: ${ETIQUETA_DE_MOTIVO_DE_CANCELACION[motivo]}`
     : "Documento cancelado";
-
-const Dato = ({
-  etiqueta,
-  valor,
-  dato,
-}: {
-  etiqueta: string;
-  valor: string;
-  dato?: boolean;
-}) => (
-  <div className="flex flex-col gap-1">
-    <dt className={CLASES_DE_ETIQUETA}>{etiqueta}</dt>
-    <dd className={`text-[15px] text-caliza-tinta${dato ? " font-mono" : ""}`}>
-      {valor}
-    </dd>
-  </div>
-);
 
 /**
  * Muestra el snapshot congelado como texto plano, mas los tres bordes de
@@ -147,16 +131,18 @@ export default async function PaginaDeDetalleDeConstancia({
           requisito="el rol de administrador municipal"
         />
       ) : null}
-      <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
-        <Dato etiqueta="Titular" valor={datos.titular.nombreCompleto} />
-        <Dato etiqueta="Dirección" valor={datos.direccion.texto} />
-        <Dato etiqueta="Reside desde" valor={datos.direccion.desdeEn} dato />
-        <Dato
-          etiqueta="Emitida"
-          valor={fechaYHoraEnMerida(constancia.emitidaEn)}
-          dato
-        />
-      </dl>
+      <FichaDeDatos>
+        <FilaDeFicha etiqueta="Titular">
+          {datos.titular.nombreCompleto}
+        </FilaDeFicha>
+        <FilaDeFicha etiqueta="Dirección">{datos.direccion.texto}</FilaDeFicha>
+        <FilaDeFicha etiqueta="Reside desde" dato>
+          {datos.direccion.desdeEn}
+        </FilaDeFicha>
+        <FilaDeFicha etiqueta="Emitida" dato>
+          {fechaYHoraEnMerida(constancia.emitidaEn)}
+        </FilaDeFicha>
+      </FichaDeDatos>
       {!cancelada && puedeReimprimir ? (
         <AccionColegable titulo="Reimprimir constancia" Icono={ArrowsClockwise}>
           <BotonDeReimpresion constanciaId={constancia.id} />

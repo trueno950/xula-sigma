@@ -59,4 +59,10 @@ describe("NavegacionInferior", () => {
   it("no ofrece un modulo que el rol no puede usar", () => {
     expect(pintar("CONSULTA", "/padron")).not.toContain('href="/marca"');
   });
+
+  it("respeta el area segura inferior del dispositivo", () => {
+    const barra = pintar("ADMIN_MUNICIPAL", "/padron").match(/<nav[^>]*>/)?.[0];
+
+    expect(barra).toContain("pb-[env(safe-area-inset-bottom)]");
+  });
 });

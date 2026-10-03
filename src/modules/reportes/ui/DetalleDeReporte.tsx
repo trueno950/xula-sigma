@@ -1,4 +1,5 @@
 import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
+import { CLASES_DE_DATO } from "@/shared/ui";
 import type { MovimientoGuardado } from "../application/puertosDeMovimientos";
 import {
   ETIQUETA_DE_AREA,
@@ -37,16 +38,13 @@ export function DetalleDeReporte({ historial }: Props) {
   }
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo">
       {historial.map((movimiento) => (
-        <li
-          key={movimiento.id}
-          className="flex flex-col gap-0.5 rounded-sm border border-caliza-borde p-3"
-        >
+        <li key={movimiento.id} className="flex flex-col gap-0.5 px-5 py-3">
           <span className="text-[15px] text-caliza-tinta">
             {descripcionDe(movimiento)}
           </span>
-          <span className="text-[13px] text-caliza-apagada">
+          <span className={CLASES_DE_DATO}>
             {fechaYHoraEnMerida(movimiento.ocurridoEn)}
           </span>
         </li>

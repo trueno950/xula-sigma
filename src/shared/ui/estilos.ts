@@ -116,6 +116,9 @@ export const CLASES_DE_TARJETA =
   "rounded-lg border border-caliza-divisor bg-caliza-lienzo p-5 " +
   "text-caliza-tinta shadow-reposo";
 
+/** Un formulario completo sobre una tarjeta: 20px de relleno, 24px desde `md`. */
+export const CLASES_DE_FORMULARIO = `${CLASES_DE_TARJETA} flex flex-col gap-6 md:p-6`;
+
 /**
  * El mensaje de error de un campo: fondo suave de la senal y texto. El
  * icono lo pone `MensajeDeError`; nunca solo el borde (`DESIGN.md`, Campos).

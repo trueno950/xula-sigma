@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "./globals.css";
@@ -32,6 +32,9 @@ export const metadata: Metadata = {
   title: { default: "XULA SIGMA", template: "%s · XULA SIGMA" },
   description: "Sistema integral de gestión municipal",
 };
+
+/** Sin `cover`, `env(safe-area-inset-*)` vale 0 y la barra inferior se pierde bajo el borde del telefono. */
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function LayoutRaiz({ children }: { children: ReactNode }) {
   return (

@@ -120,4 +120,4 @@ export const modulosDeBarraInferior = (rol: Rol) => {
 };
 
 export const estaActivo = (ruta: string, destino: string): boolean =>
-  ruta.startsWith(destino);
+  ruta === destino || ruta.startsWith(`${destino}/`);

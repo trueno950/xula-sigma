@@ -92,7 +92,9 @@ export default async function LayoutDePanel({
             escudo={marca.escudo}
           />
         </div>
-        <div className="pb-24 lg:pb-0">{children}</div>
+        <div className="pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
+          {children}
+        </div>
       </div>
 
       <NavegacionInferior ruta={ruta} rol={contexto.usuario.rol}>

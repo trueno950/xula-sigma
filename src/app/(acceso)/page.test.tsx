@@ -141,6 +141,24 @@ describe("inicio del municipio", () => {
     expect(await pintar()).toContain(">50+<");
   });
 
+  it("sin poder contar los reportes, pinta el inicio sin pendientes y registra el fallo sin datos personales", async () => {
+    const consola = vi.spyOn(console, "error").mockImplementation(() => {});
+    listarReportesMock.mockRejectedValue(
+      new Error("CURP ABCD123456HYNXXX00 fuera de linea"),
+    );
+
+    try {
+      const html = await pintar();
+
+      expect(html).toContain("Atención");
+      expect(html).not.toContain("Pendientes de hoy");
+      expect(consola).toHaveBeenCalledTimes(1);
+      expect(JSON.stringify(consola.mock.calls)).not.toContain("ABCD123456");
+    } finally {
+      consola.mockRestore();
+    }
+  });
+
   it("saluda segun la hora de Merida, no la del proceso", async () => {
     vi.useFakeTimers();
     try {
