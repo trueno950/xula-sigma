@@ -41,8 +41,13 @@ const render = (
 
 describe("RegistroDeDomicilios: enlaces, filtros y vacio", () => {
   describe("filas con enlace", () => {
-    const fila = (html: string) =>
-      html.split('aria-label="Domicilios del municipio"')[1] ?? "";
+    const MARCA = 'aria-label="Domicilios del municipio"';
+    const fila = (html: string) => {
+      const [, tabla] = html.split(MARCA);
+      if (tabla === undefined) throw new Error(`Falta ${MARCA} en el marcado`);
+
+      return tabla;
+    };
 
     it("con filtro de asentamiento la fila enlaza al panel del domicilio", () => {
       const html = render({ filtros: { raizId: cabeceraId } });
@@ -66,8 +71,8 @@ describe("RegistroDeDomicilios: enlaces, filtros y vacio", () => {
     it("sin forma de saber el asentamiento la fila no promete un enlace", () => {
       const html = render();
 
-      expect(fila(html)).not.toContain("<a");
       expect(fila(html)).toContain("Calle 21 5");
+      expect(fila(html)).not.toContain("<a");
     });
   });
 

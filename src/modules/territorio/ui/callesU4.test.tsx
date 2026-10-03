@@ -126,7 +126,7 @@ describe("panel de calle como detalle", () => {
 });
 
 describe("acciones de calle con divulgacion progresiva", () => {
-  it("son cuatro details exclusivos y el de baja va al final", () => {
+  it("con punto son tres details exclusivos, Ubicar es un enlace y la baja va al final", () => {
     const html = renderTab({ seleccionada: conPunto });
     const items = detalles(html);
 

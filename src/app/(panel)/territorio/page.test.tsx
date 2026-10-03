@@ -149,14 +149,25 @@ describe("Territorio: titulo y migaja con contexto", () => {
 
   it("dentro de un lugar el titulo es su nombre, con el tipo como etiqueta", async () => {
     conColonia();
+    // El nombre no contiene el tipo: la pastilla es lo unico que dice "Colonia".
+    mocks.subarbol.mockResolvedValue([
+      {
+        clase: "lugar",
+        id: HIJO,
+        tipo: "colonia",
+        nombre: "Barrio Alto",
+        padreId: RAIZ,
+      },
+    ]);
     const html = renderToStaticMarkup(
       await paginaCompleta({ raiz: RAIZ, nodo: HIJO }),
     );
 
-    expect(html).toMatch(/<h1[^>]*>Colonia Centro<\/h1>/);
-    expect(html).toContain("Colonia");
+    expect(html).toMatch(
+      /<h1[^>]*>Barrio Alto<\/h1><span[^>]*rounded-pill[^>]*>Colonia<\/span>/,
+    );
     expect(html).not.toContain("font-mono");
-    expect(html.match(/Colonia Centro/g) ?? []).toHaveLength(2);
+    expect(html.match(/Barrio Alto/g) ?? []).toHaveLength(2);
   });
 
   it("el primer eslabon siempre es Territorio hacia /territorio", async () => {

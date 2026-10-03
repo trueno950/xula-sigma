@@ -13,6 +13,8 @@ import {
   listarLugares,
 } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
+import type { ContextoActual } from "@/shared/auth/contexto";
+import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import {
   EnlaceDeAccion,
   Migaja,
@@ -22,6 +24,25 @@ import {
 import { contextoDeCalle } from "./contextoDeCalle";
 
 export const metadata: Metadata = { title: "Historial de calle" };
+
+/**
+ * Los lugares solo arman la migaja: si su lectura falla la pagina sale con
+ * la migaja de respaldo hacia Territorio. Captura todo error porque la
+ * lectura puede fallar por red, base o permiso; la calle y el historial, que
+ * son el contenido, no pasan por aqui y siguen propagando.
+ */
+const lugaresDeLaMigaja = async (contexto: ContextoActual) => {
+  try {
+    return await listarLugares(contexto);
+  } catch (error) {
+    console.error(
+      "[historial-de-calle] no se pudo armar la migaja",
+      datosSegurosDeError(error),
+    );
+
+    return [];
+  }
+};
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -43,7 +64,7 @@ export default async function PaginaDeHistorialDeCalle({ params }: Props) {
 
   const [calle, lugares] = await Promise.all([
     callePorId(comoCalleIdDeTerritorio(calleId), contexto),
-    listarLugares(contexto),
+    lugaresDeLaMigaja(contexto),
   ]);
   if (!calle) notFound();
   const { migaja, volverHref, volverEtiqueta } = contextoDeCalle(

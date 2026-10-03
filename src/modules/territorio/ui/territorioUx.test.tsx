@@ -56,6 +56,15 @@ const renderTab = ({
     />,
   );
 
+/** Cada `<a>` con su href y su texto visible, sin iconos ni etiquetas. */
+const anclas = (html: string) =>
+  [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)].map(
+    ([, href, interior]) => ({
+      href,
+      texto: (interior ?? "").replace(/<[^>]*>/g, "").trim(),
+    }),
+  );
+
 describe("Territorio streets empty state", () => {
   it("has one creation CTA while the form is closed", () => {
     const html = renderTab({ accion: undefined });
@@ -135,6 +144,13 @@ describe("Territorio streets empty state", () => {
 
     expect(html).toContain("Calle del asentamiento");
     expect(html).not.toContain("Administrar el catálogo");
-    expect(html).not.toContain("accion=calle");
+    // La unica ancla es la entrada al asentamiento dueno del catalogo, sin
+    // `accion=calle`: ningun enlace de administracion.
+    expect(anclas(html)).toEqual([
+      {
+        href: `/territorio?raiz=${raizId}&amp;nodo=${raizId}&amp;vista=calles`,
+        texto: "Tepakan",
+      },
+    ]);
   });
 });

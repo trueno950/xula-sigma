@@ -31,6 +31,21 @@ export function salidaSinCalles(
   };
 }
 
+/**
+ * Sin calles, quien puede actuar recibe la instruccion; un rol de solo
+ * lectura recibe el dato, no una tarea que no puede hacer.
+ */
+const mensajeDeCalles = (
+  instruccion: string,
+  { sinCalles, puedeActuar }: { sinCalles: boolean; puedeActuar: boolean },
+) => {
+  if (!sinCalles) return "";
+
+  return puedeActuar
+    ? ` ${instruccion}`
+    : " Todavía no hay calles cargadas donde registrarlos.";
+};
+
 type Props = {
   raizId: LugarId;
   lugar: NodoSeleccionado;
@@ -55,9 +70,10 @@ export function VacioDeDomicilios({
   return (
     <EstadoVacio
       estado={{ clase: "vacio-inicial" }}
-      mensajeInicial={`${lugar.nombre} no tiene domicilios todavía.${
-        sinCalles ? ` ${salida.texto}` : ""
-      }`}
+      mensajeInicial={`${lugar.nombre} no tiene domicilios todavía.${mensajeDeCalles(
+        salida.texto,
+        { sinCalles, puedeActuar },
+      )}`}
       hrefSinFiltro={rutaDe({ raizId, nodoId: lugar.id, vista: "domicilios" })}
       {...(puedeActuar && sinCalles
         ? {

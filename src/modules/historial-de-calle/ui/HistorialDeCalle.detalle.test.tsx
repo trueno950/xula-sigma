@@ -54,6 +54,9 @@ describe("LineaDeTiempoDeCalle: detalle legible", () => {
       entrada("UBICACION", "c"),
     );
 
+    expect(html).toContain("Se cambió el nombre de la calle.");
+    expect(html).toContain("Se movió la calle a otro lugar.");
+    expect(html).toContain("Se actualizó el punto de la calle en el mapa.");
     expect(html).not.toContain("<a ");
   });
 
@@ -76,12 +79,14 @@ describe("LineaDeTiempoDeCalle: detalle legible", () => {
 
     expect(html).toContain("<ol");
     expect(html).toMatch(/font-semibold[^>]*>Renombre</);
-    expect(html).toContain("22 sep 2026");
+    expect(html).toMatch(/22 sep\.? 2026/);
   });
 
   it("no dibuja franjas laterales ni degradados", () => {
     const html = dibujar(entrada("REPORTE"), entrada("RENOMBRE", "x"));
 
+    expect(html).toContain("Se registró un reporte en esta calle.");
+    expect(html).toContain("Se cambió el nombre de la calle.");
     expect(html).not.toMatch(/border-l-|border-r-|gradient/);
   });
 

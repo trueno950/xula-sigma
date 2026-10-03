@@ -128,6 +128,18 @@ describe("TabDeLugares con cuentas", () => {
   });
 });
 
+describe("TabDeLugares sin cuentas", () => {
+  const { conteos: _omitido, ...sinConteos } = base;
+  const html = renderToStaticMarkup(<TabDeLugares {...sinConteos} />);
+
+  it("lista a los hijos con su tipo y sin ninguna cuenta", () => {
+    expect(html).toContain("Centro");
+    expect(html).toContain("Sisal");
+    expect(html).not.toContain("domicilio");
+    expect(html).not.toContain("Sin calles");
+  });
+});
+
 describe("TabDeDomicilios", () => {
   const enManzana = {
     clase: "domicilio" as const,

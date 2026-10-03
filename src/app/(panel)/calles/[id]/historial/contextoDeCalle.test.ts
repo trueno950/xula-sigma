@@ -79,4 +79,32 @@ describe("contextoDeCalle", () => {
 
     expect(contextoDeCalle(calle("a"), ciclo).volverHref).toBe("/territorio");
   });
+
+  describe("tope de profundidad de la cadena", () => {
+    /** `n` lugares encadenados: `l0` es la raiz y `l{n-1}` el de la calle. */
+    const cadenaDe = (n: number) =>
+      Array.from({ length: n }, (_, i) =>
+        lugar(`l${i}`, `Nivel ${i}`, i === 0 ? null : `l${i - 1}`),
+      ) as never[];
+
+    it("una cadena de exactamente 16 arma la migaja completa", () => {
+      const resultado = contextoDeCalle(calle("l15"), cadenaDe(16));
+
+      expect(resultado.migaja).toHaveLength(16 + 3);
+      expect(resultado.volverHref).toBe(
+        "/territorio?raiz=l0&nodo=l15&vista=calles&calle=calle-1",
+      );
+    });
+
+    it("una de 17 cae a /territorio", () => {
+      const resultado = contextoDeCalle(calle("l16"), cadenaDe(17));
+
+      expect(resultado.volverHref).toBe("/territorio");
+      expect(resultado.migaja.map((p) => p.etiqueta)).toEqual([
+        "Territorio",
+        "Calle 20",
+        "Historial",
+      ]);
+    });
+  });
 });

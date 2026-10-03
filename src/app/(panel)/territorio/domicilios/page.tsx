@@ -52,7 +52,7 @@ const filtroVisible = (
     (id) => raices.find((raiz) => raiz.id === id)?.nombre,
   )
     .map((filtro) => filtro.etiqueta)
-    .join(", ");
+    .join(", ") || undefined;
 
 export default async function PaginaDeDomicilios({ searchParams }: Props) {
   const contexto = await contextoActual();
