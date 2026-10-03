@@ -28,11 +28,6 @@ const etiquetaDe = (domicilio: NodoDomicilio) =>
 /**
  * Pestana Domicilios: los domicilios colgados del lugar.
  *
- * El alta vive en esta misma vista: el enlace "Registrar domicilio" que
- * la vista agrega abajo abre el formulario aca, con `raiz`/`nodo` ocultos
- * para que un error regrese a esta pestana. Tambien existe el registro
- * plano de la entrada.
- *
  * Sin enlace en la fila: un domicilio todavia no tiene pantalla propia.
  * Cuando la tenga -para ver quien vive ahi- la fila la gana sola.
  */

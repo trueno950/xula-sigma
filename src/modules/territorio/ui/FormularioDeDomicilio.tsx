@@ -6,9 +6,8 @@ type Props = {
   /** Ya rotuladas por el borde: en el asentamiento, solo el nombre. */
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
-  /** El asentamiento abierto: en error, volver a su pestaana Domicilios. */
+  /** Navegacion de retorno; ver `actions/volverAlArbol.ts`. */
   raiz?: string | undefined;
-  /** El lugar abierto: idem, para no perder el nodo de la vista. */
   nodo?: string | undefined;
 };
 
