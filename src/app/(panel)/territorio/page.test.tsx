@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VistaDeRaices } from "@/modules/territorio/ui/VistaDeRaices";
 
 const mocks = vi.hoisted(() => ({
+  contarContenidoDeLugares: vi.fn(),
   contextoActual: vi.fn(),
   listarCalles: vi.fn(),
   listarCallesDelMunicipio: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock("@/modules/territorio", async () => ({
   ContenidoDeLugar: ({ children }: { children: ReactNode }) => children,
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
+  contarContenidoDeLugares: mocks.contarContenidoDeLugares,
   listarCalles: mocks.listarCalles,
   listarCallesDelMunicipio: mocks.listarCallesDelMunicipio,
   listarDomicilios: mocks.listarDomicilios,
@@ -67,6 +69,7 @@ beforeEach(() => {
     usuario: { id: "u1", rol: "ADMIN_MUNICIPAL" },
     origen: "web",
   });
+  mocks.contarContenidoDeLugares.mockResolvedValue([]);
   mocks.listarCalles.mockResolvedValue([]);
   mocks.listarCallesDelMunicipio.mockResolvedValue([]);
   mocks.listarDomicilios.mockResolvedValue([]);

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import {
+  contarContenidoDeLugares,
   type DomicilioId,
   domicilioPorId,
   existeCabecera,
@@ -95,7 +96,12 @@ export const cargarTerritorio = async ({
   // la entrada y el destino del reparenteo, que mueve un lugar a cualquier
   // rama. Recortarlo al subarbol de la raiz abierta dejaba ese selector con
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
-  const lugares = await listarLugares(contexto);
+  // Las cuentas solo alimentan el arbol de la entrada: una consulta
+  // agrupada, y ninguna con raiz abierta.
+  const [lugares, cuentas] = await Promise.all([
+    listarLugares(contexto),
+    raiz ? Promise.resolve([]) : contarContenidoDeLugares(contexto),
+  ]);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
   const entrada = await cargarEntrada({
     contexto,
@@ -109,6 +115,7 @@ export const cargarTerritorio = async ({
     ...seleccion,
     raices,
     lugares,
+    cuentas,
     puedeCrearLugar,
     ...entrada,
   };

@@ -39,6 +39,7 @@ export const TerritorioCargado = async ({
     calles,
     domicilio,
     lugares,
+    cuentas,
     hayCabecera,
     raices,
     puedeCrearLugar,
@@ -71,6 +72,8 @@ export const TerritorioCargado = async ({
           <VistaDeRaices
             raices={raices}
             lugares={lugares}
+            cuentas={cuentas}
+            busqueda={parametros.busqueda}
             hayCabecera={hayCabecera}
             puedeEscribir={puedeCrearLugar}
             altaAbierta={accion === "lugar"}

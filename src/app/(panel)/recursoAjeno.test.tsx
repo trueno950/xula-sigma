@@ -48,6 +48,7 @@ vi.mock("@/modules/territorio", async () => ({
     "@/modules/territorio/ui/acciones",
   )),
   comoLugarId: (id: string) => id,
+  contarContenidoDeLugares: vi.fn().mockResolvedValue([]),
   FormularioDeMudanza: () => null,
   HistorialDeResidencias: () => null,
   historialDeResidencias: vi.fn().mockResolvedValue([]),

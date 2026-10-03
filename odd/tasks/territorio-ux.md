@@ -25,8 +25,8 @@ Presentación del módulo: `src/modules/territorio/ui/**`, `src/app/(panel)/terr
 
 ## Tareas
 
-- [x] U1 Base compartida: botón `peligro` con contorno (ya existía relleno), confirmación de éxito `?ok=` con 12 claves cerradas emitidas por las 12 acciones existentes (sin acción nueva en la tabla de excepciones de AGENTS.md), título con el nombre del lugar y etiqueta de tipo, migaja con primer eslabón "Territorio". Ruta: delegada (escritor). Evidencia: RED en peligro/ok/bajas (sin RED en redirects de acciones y tests de página); escritor: `pnpm test` 409 archivos/2098 tests, `pnpm check` exit 0; padre: 581 tests de unidad de `shared/ui`, `modules/territorio` y `(panel)/territorio` pasan, `pnpm check` exit 0; capturas revisadas. Nota: el escritor dejó datos de prueba en la base demo (lugares "Manzana Prueba U1*").
-- [ ] U2 Entrada y árbol: buscador de lugares, colapso, "N lugares más adentro" como enlace, entrada visible a `/territorio/domicilios`. Cuentas por fila: pendiente de decisión (consulta nueva).
+- [x] U1 Base compartida: botón `peligro` con contorno (ya existía relleno), confirmación de éxito `?ok=` con 12 claves cerradas emitidas por las 12 acciones existentes (sin acción nueva en la tabla de excepciones de AGENTS.md), título con el nombre del lugar y etiqueta de tipo, migaja con primer eslabón "Territorio". Ruta: delegada (escritor). Evidencia: RED en peligro/ok/bajas (sin RED en redirects de acciones y tests de página); escritor: `pnpm test` 409 archivos/2098 tests, `pnpm check` exit 0; padre: 581 tests de unidad de `shared/ui`, `modules/territorio` y `(panel)/territorio` pasan, `pnpm check` exit 0; capturas revisadas. Commit: 201de54. Revisión nativa: riesgo medio, consentimiento concedido, aprobada y acuse quemado; frontera revisada = 201de54. Advertencias informativas a absorber: (a) `?ok=` vive en la URL, así que recargar o volver atrás repite el aviso (aceptado como costo de ser sin estado; evaluar limpiarlo con `history.replaceState` en una hoja cliente mínima o aceptarlo); (b) la aserción del tipo en `page.test.tsx:155` usa `toContain("Colonia")` y pasa por el nombre "Colonia Centro": hacerla específica; (c) el escritor dejó datos de prueba en la base demo ("Manzana Prueba U1*"): limpiar al final.
+- [x] U2 Entrada y árbol: buscador `?q=` (servidor, sin acentos), filas colapsables con `<details>`, "N lugares más adentro" como enlace, entrada visible a `/territorio/domicilios`, y cuentas por fila con insignia "Sin calles" (decisión del usuario: consulta nueva permitida). Consulta: un puerto lector separado `LectorDeContenidoDeLugares.contarPorLugar` con SQL recursivo (baja_en IS NULL, profundidad < 8, sin parámetros), caso de uso `contarContenidoDeLugares` por `withTenant`; calles solo para cabecera y comisaría (regla de dominio en el caso de uso). Ruta: delegada (escritor). Evidencia: RED en unitarias/UI; escritor: `pnpm test` 416 archivos/2132 tests y `pnpm check` exit 0; padre: las 3 pruebas nuevas de la consulta (unidad, integración, aislamiento Motul/Ticul) pasan con la base local, `pnpm check` exit 0 (con `git add -N`); capturas revisadas. Pendiente menor: buscar descarta `?accion=` abierto (formulario GET plano).
 - [ ] U3 Cabecera de lugar y pestañas: contador de calles correcto (heredadas), pestañas con desplazamiento visible en móvil, tipo de lugar como etiqueta legible.
 - [ ] U4 Calles: panel de calle en lugar fijo, fila seleccionada resaltada, acciones jerarquizadas, enlaces a mapa e historial.
 - [ ] U5 Domicilios: filas con enlace, alta con búsqueda de calle, quitar la columna repetida.
@@ -40,7 +40,7 @@ Presentación del módulo: `src/modules/territorio/ui/**`, `src/app/(panel)/terr
 
 ## Progreso
 
-U1 hecha. Plan guardado en Engram (`odd/territorio-ux/plan`).
+U1 y U2 hechas. Plan guardado en Engram (`odd/territorio-ux/plan`).
 
 ## Estrategia de entrega
 
@@ -48,4 +48,4 @@ Un solo PR hacia `main` con un commit por tarea; la revisión nativa corre por r
 
 ## Siguiente paso
 
-Delegar U2 (preguntar antes si las cuentas por fila del árbol pueden usar una consulta nueva).
+Delegar U3 (cabecera y pestañas).

@@ -8,6 +8,7 @@ import {
   crearCallePorId,
   crearCallePorIdEnTransaccion,
   crearCallesParaMapa,
+  crearContarContenidoDeLugares,
   crearDarDeBajaCalle,
   crearDarDeBajaLugar,
   crearDireccionVigenteDePersona,
@@ -32,6 +33,7 @@ import {
 import {
   crearLectorDePersonasPorPadron,
   lectorDeCallesDeMapaSql,
+  lectorDeContenidoDeLugaresSql,
   lectorDeDireccionesSql,
   lectorDeUbicacionesSql,
   repositorioDeCallesSql,
@@ -79,6 +81,9 @@ export const callePorIdEnTransaccion = crearCallePorIdEnTransaccion(
 );
 export const listarLugares = crearListarLugares(repositorioDeLugaresSql);
 export const listarRaices = crearListarRaices(repositorioDeLugaresSql);
+export const contarContenidoDeLugares = crearContarContenidoDeLugares(
+  lectorDeContenidoDeLugaresSql,
+);
 export const registrarMudanza = crearRegistrarMudanza(
   repositorioDeResidenciasSql,
   repositorioDeDomiciliosSql,

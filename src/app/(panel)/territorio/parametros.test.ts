@@ -122,3 +122,25 @@ describe("nodoResuelto", () => {
     ).toBeNull();
   });
 });
+
+describe("leerParametros: q", () => {
+  it("recorta la busqueda", () => {
+    expect(leerParametros({ q: "  centro " }).busqueda).toBe("centro");
+  });
+
+  it("una busqueda vacia o solo de espacios se ignora", () => {
+    expect(leerParametros({ q: "   " }).busqueda).toBeUndefined();
+    expect(leerParametros({}).busqueda).toBeUndefined();
+  });
+
+  it("una busqueda demasiado larga se ignora sin tirar los demas campos", () => {
+    const parametros = leerParametros({ q: "x".repeat(101), raiz: RAIZ_AJENA });
+
+    expect(parametros.busqueda).toBeUndefined();
+    expect(parametros.raizId).toBe(RAIZ_AJENA);
+  });
+
+  it("varios valores de q caen a undefined", () => {
+    expect(leerParametros({ q: ["a", "b"] }).busqueda).toBeUndefined();
+  });
+});

@@ -1,4 +1,5 @@
 export { lectorDeCallesDeMapaSql } from "./lectorDeCallesDeMapaSql";
+export { lectorDeContenidoDeLugaresSql } from "./lectorDeContenidoDeLugaresSql";
 export { lectorDeDireccionesSql } from "./lectorDeDireccionesSql";
 export { crearLectorDePersonasPorPadron } from "./lectorDePersonasPorPadron";
 export { lectorDeUbicacionesSql } from "./lectorDeUbicacionesSql";
