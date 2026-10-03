@@ -10,5 +10,9 @@ describe("normalizarParaBusqueda", () => {
 
   it("conserva la enie como letra propia", () => {
     expect(normalizarParaBusqueda("Peña")).toBe("peña");
+    expect(normalizarParaBusqueda("PEÑA")).toBe("peña");
+    expect(normalizarParaBusqueda("Pena")).not.toBe(
+      normalizarParaBusqueda("Peña"),
+    );
   });
 });

@@ -8,6 +8,6 @@ export const normalizarParaBusqueda = (texto: string): string =>
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/ñ/g, "ñ")
+    .replace(/n\u0303/g, "\u00f1")
     .replace(/\p{Diacritic}/gu, "")
     .normalize("NFC");
