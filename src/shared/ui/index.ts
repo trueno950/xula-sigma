@@ -18,12 +18,14 @@ export {
   VARIANTES_DE_BOTON,
   type VarianteDeBoton,
 } from "./estilos";
+export { InsigniaDeEstado, type TonoDeInsignia } from "./InsigniaDeEstado";
 export { Migaja, type PasoDeMigaja } from "./Migaja";
 export { opcionesEtiquetadas } from "./opcionesDeLista";
 export { PaginaDePanel, PantallaDeMensaje } from "./PaginaDePanel";
 export { Panel } from "./Panel";
 export { type Pestana, Pestanas } from "./Pestanas";
 export {
+  CeldaDeApoyo,
   CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,

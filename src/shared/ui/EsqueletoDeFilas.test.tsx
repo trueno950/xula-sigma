@@ -11,6 +11,13 @@ describe("EsqueletoDeFilas", () => {
     expect(html).not.toContain("h-11");
   });
 
+  it("se apoya como la tabla: tarjeta con borde y sombra de reposo", () => {
+    const html = renderToStaticMarkup(<EsqueletoDeFilas />);
+
+    expect(html).toContain("rounded-lg");
+    expect(html).toContain("shadow-reposo");
+  });
+
   it("pulsa con la animacion lenta del sistema y se oculta al lector", () => {
     const html = renderToStaticMarkup(<EsqueletoDeFilas />);
 

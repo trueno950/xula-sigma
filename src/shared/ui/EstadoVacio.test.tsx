@@ -16,6 +16,8 @@ describe("EstadoVacio", () => {
     expect(html).toContain("<svg");
     expect(html).toContain("Aun no hay personas.");
     expect(html).toContain("Nueva persona");
+    expect(html).toContain("rounded-lg");
+    expect(html).toContain("shadow-reposo");
   });
 
   it("el vacio por filtro nombra el filtro y ofrece quitarlo", () => {
@@ -28,7 +30,10 @@ describe("EstadoVacio", () => {
     );
 
     expect(html).toContain("Lupita");
+    expect(html).toContain("<svg");
     expect(html).toContain('href="/padron"');
+    expect(html).toContain("Quitar el filtro");
+    expect(html).toContain("border-caliza-borde");
     expect(html).not.toContain("Aun no hay personas.");
   });
 });
