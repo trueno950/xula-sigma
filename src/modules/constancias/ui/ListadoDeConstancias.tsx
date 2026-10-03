@@ -17,6 +17,7 @@ import type { OrdenDeConstancias } from "../domain";
 import { resolverOrdenDeColumnas } from "./columnasOrdenables";
 import { FiltrosDeConstancias } from "./FiltrosDeConstancias";
 import { hrefDeVerMas } from "./hrefsDeListado";
+import { InsigniaDeConstancia } from "./InsigniaDeConstancia";
 
 type Props = {
   constancias: readonly ConstanciaGuardada[];
@@ -30,6 +31,7 @@ type Props = {
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "folio", etiqueta: "Folio", ancho: "minmax(0,2fr)" },
+  { clave: "estado", etiqueta: "Estado", ancho: "minmax(0,1fr)" },
   { clave: "emitida", etiqueta: "Emitida", ancho: "minmax(0,1fr)" },
 ];
 
@@ -39,8 +41,8 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
  * secciones de `design.md` que esta rebanada agrega sobre el listado
  * simple original. Mismo molde que `reportes/ui/ListadoDeReportes.tsx`.
  *
- * La etiqueta roja "Cancelada" en la celda del folio es la senal de que
- * *esta fila* esta cancelada; el chip de filtro dice que *el listado* esta
+ * La insignia de la columna Estado es la senal de que *esta fila* esta
+ * vigente o cancelada; el chip de filtro dice que *el listado* esta
  * filtrado por estado. Las dos conviven porque responden preguntas
  * distintas.
  */
@@ -81,12 +83,10 @@ export function ListadoDeConstancias({
             >
               <CeldaPrincipal>
                 <span className="font-mono">{constancia.folio}</span>
-                {constancia.canceladaEn ? (
-                  <span className="ml-2 font-sans text-[13px] font-normal text-senial-error">
-                    Cancelada
-                  </span>
-                ) : null}
               </CeldaPrincipal>
+              <InsigniaDeConstancia
+                cancelada={Boolean(constancia.canceladaEn)}
+              />
               <CeldaDeDato>{fechaEnMerida(constancia.emitidaEn)}</CeldaDeDato>
             </FilaDeTabla>
           ))}

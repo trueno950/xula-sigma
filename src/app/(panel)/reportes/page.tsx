@@ -2,6 +2,7 @@ import { Plus } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import {
   buscarReportes,
+  descripcionDeFiltrosDeReportes,
   ListadoDeReportes,
   listarReportes,
 } from "@/modules/reportes";
@@ -55,7 +56,7 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
     : await listarReportes(filtros, contexto, opciones);
   const estado = estadoDeLista({
     total: reportes.length,
-    filtro: q ?? filtros.estado ?? filtros.tipo,
+    filtro: descripcionDeFiltrosDeReportes(filtros, q),
   });
 
   const alta = puedeEscribir(contexto.usuario.rol) ? (

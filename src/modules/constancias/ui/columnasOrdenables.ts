@@ -25,6 +25,7 @@ const COLUMNAS_TANSTACK = [
     enableSorting: true,
     sortDescFirst: false,
   }),
+  columnHelper.accessor("canceladaEn", { id: "estado", enableSorting: false }),
   columnHelper.accessor("emitidaEn", {
     id: "emitida",
     enableSorting: true,
