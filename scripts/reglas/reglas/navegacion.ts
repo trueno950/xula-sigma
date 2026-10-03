@@ -45,7 +45,7 @@ export const paginaAnidadaSinMigaja: Regla = {
           linea: lineaDe(codigo, inicio),
           mensaje:
             "PaginaDePanel esta a mas de un nivel de su seccion y no pasa " +
-            "`migaja`. DESIGN.md, seccion 5, Navegacion.",
+            "`migaja`. DESIGN.md, seccion 6, Navegacion.",
         });
       }
     }

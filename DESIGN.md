@@ -7,6 +7,7 @@ colors:
   acento: "oklch(0.55 0.1 25)"
   marca-suave: "color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo))"
   marca-tenue: "color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo))"
+  marca-hover: "color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta))"
   caliza-fondo: "oklch(0.962 0.005 80)"
   caliza-lienzo: "oklch(0.995 0.002 80)"
   caliza-superficie: "oklch(0.975 0.004 80)"
@@ -199,7 +200,10 @@ y una voz saturada, la del municipio, que ahora sí se oye: entre el 10% y el
 - **Marca texto:** variable, validada en par con la anterior.
 - **Acento:** variable. Relleno de hover y énfasis secundario.
 - **Marca suave / marca tenue:** derivados por `color-mix` de la marca sobre
-  el lienzo, al 10% y al 5%. Son **fondos**: nunca llevan texto de marca.
+  el lienzo, al 10% y al 5%. Un tercero, **marca hover**, mezcla la marca con
+  tinta al 8% y solo sirve de hover del botón primario. Los tres se declaran
+  en `@theme inline` de `globals.css`, para que se resuelvan con la marca del
+  municipio y no con la del `:root`. Son **fondos**: nunca llevan texto de marca.
   Texto de tinta sobre ellos pasa AA con holgura para cualquier marca
   razonable; un municipio con una marca muy clara degrada a un fondo casi
   blanco, nunca a uno ilegible.
@@ -208,7 +212,8 @@ y una voz saturada, la del municipio, que ahora sí se oye: entre el 10% y el
 
 1. Acción primaria de la pantalla.
 2. Anillo de foco.
-3. Escudo y nombre del municipio en el encabezado y en el login.
+3. Escudo y nombre del municipio en el bloque del lateral (y su equivalente
+   sobre el contenido en móvil) y en el login.
 4. Elemento activo de la navegación (fondo marca suave, ícono en marca).
 5. Chip de filtro aplicado (fondo marca suave).
 6. Banda de bienvenida de Inicio y panel lateral del login (marca tenue).
@@ -274,7 +279,8 @@ intermedios (600, 650) existen y las cifras tabulares funcionan igual en
 todas. Es una decisión de calidad, y el costo está acotado:
 
 - **Un solo archivo**, `woff2` variable, subconjunto latino (cubre español),
-  unos 50 KB. Descarga única; después sale de caché.
+  unos 47 KB (`src/app/fonts/InterVariable-latin.woff2`). Descarga única;
+  después sale de caché.
 - **Autoalojada** con `next/font/local`, desde el repositorio: sin Google
   Fonts, sin petición a un tercero, sin depender de red externa al construir.
 - **`font-display: swap`** y respaldo de sistema con métricas ajustadas
@@ -375,16 +381,27 @@ retroalimentación.
 
 - **Fondo de página:** caliza-fondo. Todo el contenido vive en superficies
   lienzo encima.
-- **Navegación lateral (≥1024px):** panel lienzo de 264px con borde derecho.
-  Arriba, el **bloque del municipio**: escudo (40px) y nombre en Title, sobre
-  marca tenue. Debajo, los módulos agrupados con un título de grupo en Label
-  apagada (por ejemplo "Atención", "Territorio", "Administración"). El ítem
-  activo es un bloque con fondo marca suave, texto en tinta y el ícono en
-  marca. **Nunca** una franja lateral de color. Abajo, el usuario y el rol.
-- **Barra superior:** delgada, con la migaja a la izquierda y a la derecha el
-  usuario y cerrar sesión. Sin bloque de marca (ya está en el lateral).
-- **Móvil (<1024px):** el lateral se convierte en una barra inferior de
-  cinco destinos más "Más", con ícono y texto siempre. Zona táctil de 48px.
+- **Navegación lateral (≥1024px):** panel lienzo de 264px con borde derecho,
+  pegado a la ventana. Arriba, el **bloque del municipio**: escudo (40px) y
+  nombre en Title, sobre marca tenue. Debajo, los módulos agrupados con un
+  título de grupo en Label apagada ("Atención", "Territorio",
+  "Administración"). El grupo o módulo que el rol no puede abrir no se
+  ofrece: "Marca" (grupo "Administración") se oculta a los roles que no
+  pueden cambiarla (`permite` / `puedeCambiarMarca`) y el grupo vacío
+  desaparece. El ítem activo es un bloque con fondo marca suave, texto en
+  tinta y el ícono en marca. **Nunca** una franja lateral de color. Abajo, el
+  **rol** y cerrar sesión: la sesión no trae el nombre de la persona, así
+  que no se muestra.
+- **Sin barra superior.** No hay una barra aparte: la migaja se pinta arriba
+  del título, dentro de `PaginaDePanel`, porque el layout no ve el prop
+  `migaja` de la página.
+- **Móvil (<1024px):** el bloque del municipio queda sobre el contenido y el
+  lateral se convierte en una barra inferior fija con hasta cuatro
+  destinos y "Más", con ícono y texto siempre. "Más" es un `<details>`
+  nativo: lleva el resto de los módulos, el rol y cerrar sesión; se cierra
+  con Escape, con un toque fuera y al navegar. Respeta el área segura
+  (`viewport-fit=cover` y `env(safe-area-inset-bottom)`). Celdas de 56px de
+  alto.
 - **Contenido:** ancho máximo 1200px en listas, 720px en formularios.
   Centrado a partir de 1280px.
 
@@ -435,20 +452,31 @@ banda de color: el encabezado es tipografía sobre el fondo.
 ### Insignias de estado
 
 Pastilla de 24px: ícono 14px + texto en Label, fondo suave de la señal,
-texto en la señal fuerte. Se usan para estado de reporte, de intervención,
-de constancia y baja de registro. **Siempre ícono y palabra.** Estado
-neutro (borrador, sin asignar): fondo relleno y texto tinta.
+texto en la señal fuerte. **Siempre ícono y palabra.** Cuatro tonos, cada
+uno con su ícono: `neutro` (relleno y tinta), `exito`, `aviso` y `error`.
+`InsigniaDeEstado` no conoce estados de dominio: el mapeo estado a tono
+vive en la capa `ui` de cada módulo.
+
+- **Reportes:** RECIBIDO neutro, EN_ATENCION aviso, RESUELTO éxito,
+  RECHAZADO error.
+- **Constancias:** vigente éxito, cancelada error.
 
 ### Tablas
 
-- Contenedor: tarjeta de borde y sombra reposo, con `overflow: hidden` para
-  el radio. **No es un `overflow-x`.**
-- **Encabezado:** 40px, fondo superficie, Label apagada, pegajoso.
+- Contenedor: tarjeta de borde y sombra reposo, que recorta con
+  `overflow-clip` para el radio. **No `overflow-hidden`**: crea un
+  contenedor de scroll y el encabezado pegajoso dejaría de pegarse. Tampoco
+  es un `overflow-x`.
+- **Encabezado:** 40px, fondo superficie, Label apagada, pegajoso en
+  `top-0` (no hay barra superior que lo empuje).
 - **Fila:** 48px, fondo lienzo, divisor de 1px. **Sin cebra.**
-- **Hover de fila accionable:** fondo superficie y un ícono de chevron que
-  aparece a la derecha, para indicar que abre.
-- **Alineación:** texto a la izquierda; CURP, folios y fechas en Dato.
-  Estados en insignia.
+- **Fila accionable** (con `href`): hover en superficie y un chevron a la
+  derecha que aparece al pasar o enfocar en escritorio y siempre se ve en
+  móvil. Una fila sin destino no lleva hover, foco ni chevron.
+- **Alineación:** texto a la izquierda; CURP, folios y fechas en Dato
+  (`CeldaDeDato`). Un dato de apoyo que no es identificador (tipo, área,
+  nombre) va en Label apagada (`CeldaDeApoyo`), no en mono. Estados en
+  insignia.
 - **Móvil (<640px):** la fila se reordena en dos renglones: identificador en
   Title y datos de apoyo en Label, más la insignia a la derecha. Mínimo 56px
   de alto, sin scroll horizontal.
@@ -487,16 +515,20 @@ Tres, y son componentes:
 La pantalla de entrada deja de ser una lista de seis cajas iguales. Tiene
 tres zonas, en este orden:
 
-1. **Saludo:** "Buenos días, [nombre]" en Display y el nombre del municipio en
-   Body apagada, sobre una banda de marca tenue con el escudo.
-2. **Pendientes de hoy** (solo si hay): una lista corta, de filas de 48px,
-   con lo que pide atención: reportes sin asignar, constancias por emitir.
-   Cada fila lleva texto, un conteo en Dato y va al listado filtrado. No es un
-   tablero de métricas: es una lista de cosas por hacer, y si no hay nada,
-   no aparece.
-3. **Módulos:** tarjetas accionables agrupadas por área, con ícono de línea,
-   nombre en Title y una línea de descripción. Las tarjetas **no** son todas
-   iguales: la de mayor uso por rol va primero y más ancha.
+1. **Saludo:** banda de marca tenue con el escudo, "Buenos días", "Buenas
+   tardes" o "Buenas noches" en Display según la hora de Mérida
+   (`horaEnMerida`), y debajo el municipio y el rol en Body apagada, más
+   cerrar sesión. No se saluda por nombre: la sesión no lo trae.
+2. **Pendientes de hoy** (solo si hay): una lista corta de filas de 48px con
+   lo que pide atención. Hoy es una sola fila, "Reportes recibidos sin
+   atender", con el conteo en Dato y enlace al listado filtrado. El conteo
+   sale de una sola página del listado: si hay más, se muestra "50+". No es
+   un tablero de métricas: si no hay nada, o el conteo falla, no aparece.
+3. **Módulos:** tarjetas accionables agrupadas por área (las mismas que la
+   navegación, filtradas por rol), con ícono de línea, nombre en Title y una
+   línea de descripción. Las tarjetas **no** son todas iguales: la primera
+   de cada grupo es más ancha, justo lo necesario para que la última fila
+   quede llena y no sobre una tarjeta huérfana.
 
 ### Acceso (login)
 
@@ -522,8 +554,9 @@ personas parecidas.
 ### Navegación (migas de pan)
 
 Toda pantalla que no es raíz de su sección lleva `<Migaja>`, **por el prop
-`migaja` de `PaginaDePanel`**, en la barra superior. El último paso nunca es
-un enlace. Las raíces (`/padron`, `/territorio`, `/constancias`) no llevan.
+`migaja` de `PaginaDePanel`**, que la pinta arriba del título. El último
+paso nunca es un enlace. Las raíces de sección no llevan migaja, y
+`raicesSinMigaja.test.ts` lo comprueba para cada módulo del panel.
 
 ### Divulgación progresiva
 
@@ -531,12 +564,38 @@ Acciones raras o irreversibles (reimprimir, dar de baja, cancelar) van en
 `<details>`/`<summary>` nativo, nunca una isla de cliente nueva. El
 disparador lleva ícono y texto. El giro de la flecha es instantáneo.
 
+### Formularios y fichas
+
+- **`Panel`:** la tarjeta de lo que se abre (un formulario dentro de una
+  pestaña), de 720px de ancho máximo, con su título en Title.
+- **`GrupoDeCampos`:** campos relacionados en un `<fieldset>` con `<legend>`
+  en Headline. La agrupación la dan tipografía y espacio, no cajas anidadas.
+- **`BarraDeAcciones`:** pie del formulario con un divisor. En escritorio
+  los botones miden lo que su texto y van a la derecha, con la primaria al
+  extremo; en móvil ocupan el ancho y la primaria queda arriba.
+- **`FichaDeDatos`:** los datos de un registro como tarjeta de filas
+  definición: etiqueta en Label apagada y valor en tinta, separadas por
+  divisores de 1px. `dato` pone el valor en Dato (CURP, folios, fechas).
+
 ### Formularios de configuración
 
 Un formulario que configura cómo se ve un documento lleva al lado, o debajo,
 una vista previa renderizada en servidor de la última configuración
 guardada, con la misma estructura que la plantilla real. Dentro de una
 tarjeta propia, titulada "Vista previa".
+
+### Deuda conocida
+
+Lo que esta versión dejó sin resolver, para que no parezca hecho:
+
+- No se corrió una verificación numérica de contraste sobre los tokens
+  nuevos (señales suaves, marca suave y tenue, apagada sobre fondo).
+- La tarjeta "Transiciones" queda vacía en un reporte RESUELTO.
+- En los formularios de territorio, "Cancelar" queda debajo del botón
+  primario y no a su lado.
+- "Pendientes de hoy" no incluye constancias por emitir.
+- El texto nativo del campo de archivo en `/marca` no está localizado: lo
+  pone el navegador.
 
 ## 7. Do's and Don'ts
 
