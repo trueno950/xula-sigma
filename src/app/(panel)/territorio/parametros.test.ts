@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { comoLugarId } from "@/modules/territorio";
+import { CLAVES_DE_CONFIRMACION, comoLugarId } from "@/modules/territorio";
 import { leerParametros, nodoResuelto } from "./parametros";
 
 const RAIZ_AJENA = "11111111-1111-4111-8111-111111111111";
@@ -79,6 +79,29 @@ describe("leerParametros", () => {
     const parametros = leerParametros({ vista: "invalida" });
 
     expect(parametros.vista).toBe("lugares");
+  });
+
+  it("acepta cada clave de confirmacion del vocabulario cerrado", () => {
+    for (const clave of CLAVES_DE_CONFIRMACION) {
+      expect(leerParametros({ ok: clave }).ok).toBe(clave);
+    }
+  });
+
+  it("descarta un `ok` que no es del vocabulario, sin tocar lo demas", () => {
+    const parametros = leerParametros({
+      ok: "<b>guardado</b>",
+      raiz: RAIZ_AJENA,
+    });
+
+    expect(parametros.ok).toBeUndefined();
+    expect(parametros.raizId).toBe(RAIZ_AJENA);
+  });
+
+  it("el error gana: con los dos, la confirmacion no se lee", () => {
+    const parametros = leerParametros({ ok: "lugar-creado", error: "Falla" });
+
+    expect(parametros.error).toBe("Falla");
+    expect(parametros.ok).toBeUndefined();
   });
 });
 

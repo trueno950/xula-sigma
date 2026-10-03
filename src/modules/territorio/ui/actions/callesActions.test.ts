@@ -95,14 +95,16 @@ describe("acciones publicas de calles", () => {
   });
 
   it("ignora un ayuntamiento enviado por el formulario y usa el contexto del servidor", async () => {
-    await ubicarCalleAction(
-      formulario({
-        calleId: CALLE,
-        latitud: "20.937000",
-        longitud: "-89.623700",
-        ayuntamientoId: "ticul",
-      }),
-    );
+    await expect(
+      ubicarCalleAction(
+        formulario({
+          calleId: CALLE,
+          latitud: "20.937000",
+          longitud: "-89.623700",
+          ayuntamientoId: "ticul",
+        }),
+      ),
+    ).rejects.toThrow("REDIRECT:/territorio?ok=calle-ubicada");
 
     expect(ubicarCalleMock).toHaveBeenCalledWith(
       CALLE,
@@ -133,6 +135,6 @@ describe("acciones publicas de calles", () => {
       ),
     ).rejects.toThrow("REDIRECT:");
 
-    expect(redirectMock).toHaveBeenCalledWith("/territorio");
+    expect(redirectMock).toHaveBeenCalledWith("/territorio?ok=calle-baja");
   });
 });

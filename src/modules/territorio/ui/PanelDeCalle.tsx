@@ -59,6 +59,7 @@ export function PanelDeCalle({
               nodoId={nodoId}
               calleId={calle.id}
               permisos={permisos}
+              accionAbierta={accionAbierta}
             />
             <FormulariosDeCalle
               raizId={raizId}

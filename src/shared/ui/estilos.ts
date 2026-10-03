@@ -87,8 +87,15 @@ const POR_VARIANTE: Record<VarianteDeBoton, string> = {
    * vestir un rol semantico, una accion destructiva tampoco puede vestirse
    * de marca. En un municipio de marca roja, "Dar de baja" y "Guardar"
    * eran literalmente el mismo boton.
+   *
+   * De contorno y no de relleno: una baja es rara e irreversible, no la
+   * accion que la pantalla existe para hacer. Rellena competia con la
+   * primaria por el peso visual. El icono lo pone quien la usa: la senal
+   * nunca va sola en el color.
    */
-  peligro: "bg-senial-error text-caliza-lienzo hover:brightness-110",
+  peligro:
+    "border border-senial-error bg-caliza-lienzo text-senial-error " +
+    "hover:bg-senial-error-suave",
 };
 
 export const clasesDeBoton = (variante: VarianteDeBoton = "secundaria") =>

@@ -1,3 +1,4 @@
+import { Prohibit } from "@phosphor-icons/react/ssr";
 import { Boton } from "@/shared/ui";
 import { darDeBajaLugarAction } from "./actions/darDeBajaLugarAction";
 
@@ -42,6 +43,7 @@ export function FormularioDeBajaDeLugar({ raiz, nodo, padre, nombre }: Props) {
       </p>
 
       <Boton type="submit" variante="peligro">
+        <Prohibit size={18} aria-hidden />
         Dar de baja {nombre}
       </Boton>
     </form>

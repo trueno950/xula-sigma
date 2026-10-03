@@ -145,7 +145,7 @@ export function TabDeEdicion({
       ) : null}
 
       {accion === "baja" && puedeAbrir("baja", permisos) ? (
-        <PanelDeAccion titulo={`Dar de baja ${lugar.nombre}`} volverA={volverA}>
+        <PanelDeAccion titulo="Baja de lugar" volverA={volverA}>
           <FormularioDeBajaDeLugar
             raiz={raizId}
             nodo={lugar.id}

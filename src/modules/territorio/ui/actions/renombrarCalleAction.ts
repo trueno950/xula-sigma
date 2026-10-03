@@ -8,7 +8,7 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { renombrarCalle } from "../../composicion";
 import { comoCalleId, NombreDeCalleDuplicadoError } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `editarLugarAction`. Formulario nativo sin `use client`. */
 
@@ -61,4 +61,5 @@ export async function renombrarCalleAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
+  confirmarEnArbol(navegacion, "calle-renombrada");
 }

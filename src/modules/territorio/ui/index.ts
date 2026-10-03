@@ -1,4 +1,8 @@
-export { ACCIONES_DE_NODO } from "./acciones";
+export {
+  ACCIONES_DE_NODO,
+  CLAVES_DE_CONFIRMACION,
+  type ClaveDeConfirmacion,
+} from "./acciones";
 export { ContenidoDeLugar } from "./ContenidoDeLugar";
 export { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 export { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";

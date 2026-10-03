@@ -59,5 +59,6 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
   irAlArbol(
     navegacion.nodo === navegacion.raiz ? undefined : navegacion.raiz,
     navegacion.padre,
+    "lugar-baja",
   );
 }

@@ -3,6 +3,8 @@ import {
   ACCIONES_DE_NODO,
   type AccionDeNodo,
   type CalleId,
+  CLAVES_DE_CONFIRMACION,
+  type ClaveDeConfirmacion,
   comoCalleId,
   comoDomicilioId,
   comoLugarId,
@@ -29,6 +31,7 @@ export type ParametrosDeTerritorio = {
   nodoId: LugarId | undefined;
   accion: AccionDeNodo | undefined;
   error: string | undefined;
+  ok: ClaveDeConfirmacion | undefined;
   vista: TabDeLugar;
 };
 
@@ -51,6 +54,7 @@ const esquemaDeParametros = z.object({
     .catch(undefined),
   accion: z.enum(ACCIONES_DE_NODO).optional().catch(undefined),
   error: z.string().optional().catch(undefined),
+  ok: z.enum(CLAVES_DE_CONFIRMACION).optional().catch(undefined),
 });
 
 /** A que pestana pertenece cada accion, para no perder el contexto. */
@@ -83,6 +87,9 @@ export const leerParametros = (
     nodoId: datos.nodo ? comoLugarId(datos.nodo) : undefined,
     accion,
     error: datos.error,
+    // Un fallo y un exito juntos no pasan solos: el error gana, y la
+    // pantalla no celebra una accion que el mismo URL dice que fallo.
+    ok: datos.error ? undefined : datos.ok,
     // La accion fija su pestana; sin accion vale la elegida (o Lugares).
     vista: accion ? pestanaDeAccion[accion] : (datos.vista ?? "lugares"),
   };

@@ -12,7 +12,7 @@ import {
   comoLugarId,
   NombreDeCalleDuplicadoError,
 } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
@@ -68,4 +68,5 @@ export async function altaDeCalleAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
+  confirmarEnArbol(navegacion, "calle-creada");
 }

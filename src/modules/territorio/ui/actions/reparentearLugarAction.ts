@@ -71,5 +71,5 @@ export async function reparentearLugarAction(
 
   const destino = destinoDeReparenteo(analisis.data);
 
-  irAlArbol(destino.raiz, destino.nodo);
+  irAlArbol(destino.raiz, destino.nodo, "lugar-movido");
 }

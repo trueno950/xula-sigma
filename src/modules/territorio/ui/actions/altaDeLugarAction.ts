@@ -14,7 +14,7 @@ import {
   RaizInvalidaError,
   TIPOS_DE_LUGAR,
 } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /**
  * Borde de sesion del alta (mismo reparto que `altaDePersonaAction`,
@@ -82,4 +82,5 @@ export async function altaDeLugarAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
+  confirmarEnArbol(navegacion, "lugar-creado");
 }

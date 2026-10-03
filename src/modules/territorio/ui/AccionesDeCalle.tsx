@@ -57,32 +57,36 @@ export function AccionesDeCalle({
   nodoId,
   calleId,
   permisos,
+  accionAbierta,
 }: {
   raizId: LugarId;
   nodoId: LugarId;
   calleId: CalleId;
   permisos: PermisosDeTerritorio;
+  accionAbierta?: AccionDeCalle | undefined;
 }) {
   return (
     <>
-      {ACCIONES.filter((item) => puedeAbrir(item.accion, permisos)).map(
-        (item) => (
-          <EnlaceDeAccion
-            key={item.accion}
-            href={rutaDe({
-              raizId,
-              nodoId,
-              vista: "calles",
-              calleId,
-              accion: item.accion,
-            })}
-            {...(item.variante ? { variante: item.variante } : {})}
-          >
-            <item.Icono size={18} aria-hidden />
-            {item.etiqueta}
-          </EnlaceDeAccion>
-        ),
-      )}
+      {ACCIONES.filter(
+        (item) =>
+          puedeAbrir(item.accion, permisos) &&
+          !(item.variante === "peligro" && item.accion === accionAbierta),
+      ).map((item) => (
+        <EnlaceDeAccion
+          key={item.accion}
+          href={rutaDe({
+            raizId,
+            nodoId,
+            vista: "calles",
+            calleId,
+            accion: item.accion,
+          })}
+          {...(item.variante ? { variante: item.variante } : {})}
+        >
+          <item.Icono size={18} aria-hidden />
+          {item.etiqueta}
+        </EnlaceDeAccion>
+      ))}
     </>
   );
 }

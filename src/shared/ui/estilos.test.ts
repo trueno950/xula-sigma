@@ -129,8 +129,18 @@ describe("clasesDeBoton", () => {
     // rol semantico, una baja tampoco puede vestirse de marca. En un
     // municipio de marca roja, "Dar de baja" y "Guardar" eran el mismo
     // boton.
-    expect(clasesDeBoton("peligro")).toContain("bg-senial-error");
+    expect(clasesDeBoton("peligro")).toContain("text-senial-error");
+    expect(clasesDeBoton("peligro")).toContain("border-senial-error");
     expect(clasesDeBoton("peligro")).not.toContain("bg-marca");
+  });
+
+  it("no rellena la baja: pesa como una secundaria, no como la primaria", () => {
+    // Relleno de senal y relleno de marca eran dos rojos casi iguales y
+    // del mismo ancho. El contorno la baja de jerarquia sin esconderla.
+    const clases = clasesDeBoton("peligro");
+
+    expect(clases).not.toMatch(/(^|\s)bg-senial-error(\s|$)/);
+    expect(clases).toContain("hover:bg-senial-error-suave");
   });
 });
 

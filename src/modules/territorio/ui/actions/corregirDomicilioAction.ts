@@ -15,7 +15,7 @@ import {
   TransversalRepetidaError,
   ZonaIncoherenteError,
 } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const esquemaDeEntrada = z.object({
   domicilioId: z.string().trim().uuid(),
@@ -96,4 +96,5 @@ export async function corregirDomicilioAction(
   }
 
   revalidatePath("/territorio");
+  confirmarEnArbol(navegacion, "domicilio-corregido");
 }

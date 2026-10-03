@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { ACCIONES_DE_NODO } from "../acciones";
+import { ACCIONES_DE_NODO, type ClaveDeConfirmacion } from "../acciones";
 
 /**
  * El destino de las acciones de territorio: el arbol, con el contexto visible
@@ -18,6 +18,7 @@ export const rutaDelArbol = ({
   calle,
   domicilio,
   error,
+  ok,
 }: {
   raiz?: string | undefined;
   nodo?: string | undefined;
@@ -26,6 +27,7 @@ export const rutaDelArbol = ({
   calle?: string | undefined;
   domicilio?: string | undefined;
   error?: string | undefined;
+  ok?: ClaveDeConfirmacion | undefined;
 }): string => {
   const parametros = new URLSearchParams();
   if (raiz) parametros.set("raiz", raiz);
@@ -35,6 +37,7 @@ export const rutaDelArbol = ({
   if (calle) parametros.set("calle", calle);
   if (domicilio) parametros.set("domicilio", domicilio);
   if (error) parametros.set("error", error);
+  if (ok) parametros.set("ok", ok);
 
   const consulta = parametros.toString();
 
@@ -72,7 +75,23 @@ export const volverAlArbol = (
 export const irAlArbol = (
   raiz: string | undefined,
   nodo: string | undefined,
-): never => redirect(rutaDelArbol({ raiz, nodo }));
+  ok?: ClaveDeConfirmacion,
+): never => redirect(rutaDelArbol({ raiz, nodo, ok }));
+
+/**
+ * El destino de exito de las acciones que dejan la pantalla donde estaba:
+ * las altas y las ediciones. Vuelve al mismo contexto -la accion abierta
+ * incluida, para que el operador siga capturando en lote- y le agrega la
+ * clave que la pagina convierte en un aviso de exito.
+ *
+ * Antes no redirigian: `revalidatePath` repintaba la URL y nada decia que
+ * se habia guardado. La clave es de un vocabulario cerrado: nunca viaja
+ * texto del operador de vuelta a la URL.
+ */
+export const confirmarEnArbol = (
+  navegacion: ReturnType<typeof navegacionDe>,
+  ok: ClaveDeConfirmacion,
+): never => redirect(rutaDelArbol({ ...navegacion, ok }));
 
 /**
  * El contexto abierto del arbol, para poder volver donde estaba quien envio

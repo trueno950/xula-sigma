@@ -1,3 +1,4 @@
+import { Prohibit } from "@phosphor-icons/react/ssr";
 import { Boton } from "@/shared/ui";
 import { darDeBajaDomicilioAction } from "./actions/darDeBajaDomicilioAction";
 
@@ -16,7 +17,10 @@ export function FormularioDeBajaDeDomicilio({
   direccion,
 }: Props) {
   return (
-    <form action={darDeBajaDomicilioAction} className="flex flex-col gap-4">
+    <form
+      action={darDeBajaDomicilioAction}
+      className="flex flex-col gap-4 sm:items-start"
+    >
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
       <input type="hidden" name="vista" value="domicilios" />
@@ -28,7 +32,8 @@ export function FormularioDeBajaDeDomicilio({
       </p>
 
       <Boton type="submit" variante="peligro">
-        Dar de baja
+        <Prohibit size={18} aria-hidden />
+        {`Dar de baja ${direccion}`}
       </Boton>
     </form>
   );

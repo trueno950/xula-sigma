@@ -8,7 +8,7 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { editarLugar } from "../../composicion";
 import { comoLugarId } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
 
@@ -58,4 +58,5 @@ export async function editarLugarAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
+  confirmarEnArbol(navegacion, "lugar-editado");
 }

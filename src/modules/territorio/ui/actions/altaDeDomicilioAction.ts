@@ -14,7 +14,7 @@ import {
   TransversalRepetidaError,
   ZonaIncoherenteError,
 } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeCalleAction`. Formulario nativo sin `use client`. */
 
@@ -94,4 +94,5 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
+  confirmarEnArbol(navegacion, "domicilio-creado");
 }

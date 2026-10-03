@@ -5,7 +5,6 @@ import {
   type DomicilioId,
   type NodoSeleccionado,
   PanelDeNodo,
-  type PasoDeMigaja,
   type TabDeLugar,
 } from "@/modules/territorio";
 import type {
@@ -44,35 +43,9 @@ type Props = {
 };
 
 /**
- * La migaja de direccion del lugar: Tepakan > Colonia Centro > [lugar].
- * Cada paso previo es un link a ese nodo, para subir en la jerarquia.
- */
-const migajaDe = (
-  raiz: Pick<LugarGuardado, "id" | "nombre">,
-  nodos: readonly NodoDeSubarbol[],
-  nodo: NodoSeleccionado,
-): PasoDeMigaja[] => {
-  const porId = new Map(nodos.map((n) => [n.id, n]));
-  const cadena: PasoDeMigaja[] = [{ id: nodo.id, nombre: nodo.nombre }];
-  let actual: NodoDeSubarbol | undefined =
-    nodo.id === raiz.id ? undefined : porId.get(nodo.id);
-
-  while (actual && actual.clase === "lugar" && actual.padreId) {
-    const padre = porId.get(actual.padreId);
-    if (padre?.clase !== "lugar") break;
-    cadena.unshift({ id: padre.id, nombre: padre.nombre });
-    actual = padre;
-  }
-
-  if (nodo.id !== raiz.id) cadena.unshift({ id: raiz.id, nombre: raiz.nombre });
-
-  return cadena;
-};
-
-/**
- * La vista con `?raiz=` fijada: el panel del lugar (migaja + pestanas) y
+ * La vista con `?raiz=` fijada: las pestanas del lugar y
  * el contenido de la pestana activa, una categoria a la vez. Navegar es
- * entrar: cada hijo fija `?nodo=`; la migaja sube de nivel. Vive aparte
+ * entrar: cada hijo fija `?nodo=`; la migaja de la cabecera sube de nivel. Vive aparte
  * de la pagina para que ninguna pase las 200 lineas de la metrica.
  */
 export function VistaDeLugar({
@@ -100,7 +73,6 @@ export function VistaDeLugar({
       <PanelDeNodo
         raizId={raiz.id}
         nodo={nodo}
-        migaja={migajaDe(raiz, nodos, nodo)}
         vista={vista}
         cuentas={cuentasDeLugar({ nodos, calles, nodo })}
         abreLaEdicion={permisos.abreLaEdicion}

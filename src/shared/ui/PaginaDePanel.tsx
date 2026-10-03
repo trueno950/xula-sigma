@@ -13,6 +13,11 @@ type Props = {
   titulo: string;
   /** Una linea bajo el titulo que dice para que sirve la pantalla. */
   descripcion?: string;
+  /**
+   * Lo que el titulo es, en una palabra, cuando el nombre solo no lo dice:
+   * "Colonia Centro" y "Colonia". Va como pastilla junto al titulo.
+   */
+  etiqueta?: string;
   /** La unica accion primaria de la pantalla, si la hay. */
   accion?: ReactNode;
   /** El `<Migaja>` de `shared/ui`, si la pantalla esta a mas de un nivel. */
@@ -37,6 +42,7 @@ type Props = {
 export function PaginaDePanel({
   titulo,
   descripcion,
+  etiqueta,
   accion,
   migaja,
   ancho = "lista",
@@ -49,9 +55,16 @@ export function PaginaDePanel({
       {migaja}
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-[1.75rem] leading-[1.15] font-[650] tracking-[-0.02em] text-caliza-tinta">
-            {titulo}
-          </h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-[1.75rem] leading-[1.15] font-[650] tracking-[-0.02em] text-caliza-tinta">
+              {titulo}
+            </h1>
+            {etiqueta ? (
+              <span className="inline-flex h-6 items-center rounded-pill bg-caliza-relleno px-2.5 text-[13px] leading-none font-medium text-caliza-tinta">
+                {etiqueta}
+              </span>
+            ) : null}
+          </div>
           {descripcion ? (
             <p className="max-w-[70ch] text-[15px] text-caliza-apagada">
               {descripcion}

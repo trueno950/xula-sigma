@@ -10,7 +10,8 @@ type CuentasDeLugar = {
 };
 
 /**
- * El camino de la migaja: "Lugares" siempre primero, cada paso previo con
+ * El camino de la migaja: "Territorio" siempre primero -el mismo nombre que
+ * el titulo de la raiz y que las otras pantallas del modulo-, cada paso previo con
  * enlace, y el ultimo sin `href` -es el paso actual, no algo a donde ir-.
  */
 export const pasosDeMigaja = (
@@ -20,7 +21,7 @@ export const pasosDeMigaja = (
   const ultimo = migaja[migaja.length - 1];
 
   return [
-    { etiqueta: "Lugares", href: "/territorio" },
+    { etiqueta: "Territorio", href: "/territorio" },
     ...migaja.map((paso) => ({
       etiqueta: paso.nombre,
       ...(paso.id === ultimo?.id

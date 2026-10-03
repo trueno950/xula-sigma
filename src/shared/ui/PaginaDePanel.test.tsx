@@ -19,6 +19,31 @@ describe("PaginaDePanel", () => {
     expect(html).toContain("Alta");
   });
 
+  it("la etiqueta va junto al titulo como pastilla, no como dato monoespaciado", () => {
+    const html = renderToStaticMarkup(
+      <PaginaDePanel titulo="Colonia Centro" etiqueta="Colonia">
+        <p>contenido</p>
+      </PaginaDePanel>,
+    );
+
+    expect(html).toMatch(/<h1[^>]*>Colonia Centro<\/h1>/);
+    expect(html).toMatch(
+      /<span[^>]*rounded-pill[^>]*bg-caliza-relleno[^>]*>Colonia/,
+    );
+    expect(html).not.toContain("font-mono");
+    expect(html.indexOf("Colonia</span>")).toBeGreaterThan(
+      html.indexOf("</h1>"),
+    );
+  });
+
+  it("sin etiqueta no pinta pastilla", () => {
+    const html = renderToStaticMarkup(
+      <PaginaDePanel titulo="a">x</PaginaDePanel>,
+    );
+
+    expect(html).not.toContain("rounded-pill");
+  });
+
   it("la migaja va antes del titulo", () => {
     const html = renderToStaticMarkup(
       <PaginaDePanel titulo="Detalle" migaja={<nav>ruta</nav>}>

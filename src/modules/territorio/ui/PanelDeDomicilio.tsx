@@ -1,3 +1,4 @@
+import { Prohibit } from "@phosphor-icons/react/ssr";
 import { EnlaceDeAccion } from "@/shared/ui";
 import type {
   CalleGuardada,
@@ -111,7 +112,8 @@ export function PanelDeDomicilio({
               })}
               variante="peligro"
             >
-              Dar de baja
+              <Prohibit size={18} aria-hidden />
+              {`Dar de baja ${direccionDe(calle, domicilio.numero)}`}
             </EnlaceDeAccion>
           </div>
         </details>
