@@ -132,7 +132,7 @@
   }
 
   /*
-   * `prefers-reduced-motion` apaga todo movimiento (DESIGN.md, seccion 5).
+   * `prefers-reduced-motion` apaga todo movimiento (DESIGN.md, "Movimiento").
    * La guarda va general, en `@layer base`, para que cubra cualquier
    * animacion futura sin depender de que cada componente se acuerde de
    * repetirla.

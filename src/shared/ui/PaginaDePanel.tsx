@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 const ANCHOS = {
-  /** Listados: el ancho de `DESIGN.md` seccion 5 para tablas y fichas. */
+  /** Listados: el ancho de `DESIGN.md`, "Estructura de la aplicacion", para tablas y fichas. */
   lista: "max-w-[1200px]",
   /** Detalle de un registro. */
   detalle: "max-w-[720px]",

@@ -7,7 +7,7 @@ type PropsDeBoton = Omit<ComponentProps<"button">, "className"> & {
 };
 
 /**
- * El boton de `DESIGN.md` seccion 5. Sin `className`: la variante es la
+ * El boton de `DESIGN.md`, "Botones". Sin `className`: la variante es la
  * unica perilla, a proposito. Un `className` abierto es como cada pantalla
  * termino con su propia altura de boton.
  */

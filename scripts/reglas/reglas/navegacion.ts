@@ -5,8 +5,8 @@ import type { Regla } from "../tipos";
  * Una pantalla a mas de un nivel de la raiz de su seccion -un detalle, una
  * captura, una pantalla de administracion anidada- necesita `migaja` en su
  * `PaginaDePanel`: sin eso no hay forma de volver salvo el boton del
- * navegador. La regla completa, con el porque, vive en `DESIGN.md`, seccion
- * 5, "Navegacion (migas de pan)" -antipatron 23, una sola copia.
+ * navegador. La regla completa, con el porque, vive en `DESIGN.md`,
+ * "Navegacion (migas de pan)" -antipatron 23, una sola copia.
  *
  * La raiz de una seccion (`/constancias`, `/padron`) no lleva: no hay padre
  * al que subir, y `segmentos.length < 2` es exactamente esa condicion en la
@@ -45,7 +45,7 @@ export const paginaAnidadaSinMigaja: Regla = {
           linea: lineaDe(codigo, inicio),
           mensaje:
             "PaginaDePanel esta a mas de un nivel de su seccion y no pasa " +
-            "`migaja`. DESIGN.md, seccion 6, Navegacion.",
+            "`migaja`. DESIGN.md, Navegacion (migas de pan).",
         });
       }
     }

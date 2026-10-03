@@ -1,7 +1,7 @@
 import { CheckCircle, Warning } from "@phosphor-icons/react/ssr";
 
 /**
- * Las clases que `DESIGN.md` seccion 5 declara, en un solo lugar.
+ * Las clases que `DESIGN.md`, "Components", declara, en un solo lugar.
  *
  * Existen porque no existian: `FormularioDeAltaDePersona`,
  * `SugerenciaDeDuplicados` y `BuscadorDePersonas` llevaban cada uno su
