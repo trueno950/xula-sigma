@@ -4,6 +4,7 @@ import { contextoActual } from "@/shared/auth";
 import { leerMarca } from "@/shared/marca";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import { FormularioDeAcceso } from "./FormularioDeAcceso";
+import { PanelDeBienvenida } from "./PanelDeBienvenida";
 
 export const metadata: Metadata = { title: "Acceso" };
 
@@ -27,32 +28,21 @@ export default async function PaginaDeAcceso() {
   const { escudo } = leerMarca(ayuntamiento.marca);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-8 p-6">
-      <header className="flex flex-col items-center gap-3 text-center">
-        {escudo ? (
-          // biome-ignore lint/performance/noImgElement: el escudo sale de R2
-          // con dominio por municipio; `next/image` pediria declararlos todos
-          // en la configuracion de build, y son datos, no configuracion.
-          <img
-            src={escudo}
-            alt={`Escudo de ${ayuntamiento.nombre}`}
-            className="h-20 w-20 object-contain"
-          />
-        ) : null}
-        <div>
-          <h1 className="text-xl font-semibold text-neutral-900">
-            {ayuntamiento.nombre}
-          </h1>
-          <p className="text-sm text-neutral-600">XULA SIGMA</p>
-        </div>
-      </header>
+    <main className="grid min-h-dvh min-[960px]:grid-cols-2">
+      <PanelDeBienvenida nombre={ayuntamiento.nombre} escudo={escudo} />
 
-      <FormularioDeAcceso />
-
-      <p className="text-center text-xs text-neutral-500">
-        Si no tiene cuenta, pídasela a quien administra el sistema en su
-        ayuntamiento.
-      </p>
+      <div className="flex flex-col items-center justify-center gap-4 px-4 py-8 min-[960px]:px-8">
+        <section className="flex w-full max-w-[400px] flex-col gap-6 rounded-lg border border-caliza-divisor bg-caliza-lienzo p-6 text-caliza-tinta shadow-reposo">
+          <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em]">
+            Entrar
+          </h2>
+          <FormularioDeAcceso />
+        </section>
+        <p className="max-w-[400px] text-center text-[13px] text-caliza-apagada">
+          Si no tiene cuenta, pídasela a quien administra el sistema en su
+          ayuntamiento.
+        </p>
+      </div>
     </main>
   );
 }

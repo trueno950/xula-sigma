@@ -62,3 +62,17 @@ const formateadorDeFechaCivil = new Intl.DateTimeFormat("es-MX", {
  */
 export const fechaCivilDeMedianocheUtc = (fecha: Date): string =>
   formateadorDeFechaCivil.format(fecha);
+
+const formateadorDeHora = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Merida",
+  hour: "numeric",
+  hourCycle: "h23",
+});
+
+/**
+ * Hora (0-23) de un instante en `America/Merida`. `getHours()` usaria la
+ * zona del proceso (UTC en el servidor). `hourCycle: "h23"` evita el "24"
+ * que algunos motores devuelven a medianoche con `hour12: false`.
+ */
+export const horaEnMerida = (instante: Date): number =>
+  Number(formateadorDeHora.format(instante));

@@ -42,7 +42,7 @@ export default async function LayoutDeAcceso({
 
   return (
     <div
-      className="min-h-dvh bg-neutral-50"
+      className="min-h-dvh bg-caliza-fondo"
       style={variablesDeMarca(leerMarca(marca))}
     >
       {children}

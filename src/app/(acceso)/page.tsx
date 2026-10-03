@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { listarReportes } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
+import { horaEnMerida } from "@/shared/lib/fecha";
+import { leerMarca } from "@/shared/marca";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import { BotonDeCerrarSesion } from "@/shared/ui/BotonDeCerrarSesion";
 import { etiquetaDeRol } from "@/shared/ui/etiquetaDeRol";
-import { MODULOS_DEL_PANEL } from "@/shared/ui/modulosDelPanel";
+import { InicioDeModulos } from "./InicioDeModulos";
+import { PendientesDeHoy } from "./PendientesDeHoy";
+import { saludoDeLaHora } from "./saludo";
 
 export const metadata: Metadata = { title: "Inicio" };
 
 /**
- * Adonde se llega despues de entrar: el hub de modulos.
+ * Adonde se llega despues de entrar: saludo, pendientes y modulos.
  *
  * Existe por dos motivos concretos y no de relleno: el acceso necesita un
  * destino, y el E2E necesita algo que solo se vea con sesion para probar
@@ -20,6 +24,8 @@ export const metadata: Metadata = { title: "Inicio" };
  * antes de renderizar nada; esconder contenido en el cliente no es
  * autorizacion (`05-seguridad.md` seccion 6).
  *
+ * El saludo sigue la hora de `America/Merida`; la sesion trae el rol pero no
+ * el nombre de la persona, asi que no se saluda por nombre.
  */
 export default async function PaginaDeInicio() {
   const contexto = await contextoActual();
@@ -27,40 +33,42 @@ export default async function PaginaDeInicio() {
   if (!contexto) redirect("/acceso");
 
   const ayuntamiento = await ayuntamientoActual();
+  const { escudo } = leerMarca(ayuntamiento.marca);
+  const recibidos = await listarReportes({ estado: "RECIBIDO" }, contexto);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center gap-6 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold text-caliza-tinta">
-            {ayuntamiento.nombre}
-          </h1>
-          <p className="text-[15px] text-caliza-apagada">
-            Sesión iniciada como{" "}
-            <strong className="text-caliza-tinta">
-              {etiquetaDeRol(contexto.usuario.rol)}
-            </strong>
-            .
-          </p>
+    <main className="flex min-h-dvh flex-col">
+      <header className="bg-marca-tenue">
+        <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-6 md:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-4">
+            {escudo ? (
+              // biome-ignore lint/performance/noImgElement: host externo por municipio
+              <img
+                src={escudo}
+                alt={`Escudo de ${ayuntamiento.nombre}`}
+                className="h-14 w-14 shrink-0 object-contain"
+              />
+            ) : null}
+            <div className="flex min-w-0 flex-col gap-1">
+              <h1 className="text-[1.75rem] leading-[1.15] font-[650] tracking-[-0.02em] text-caliza-tinta">
+                {saludoDeLaHora(horaEnMerida(new Date()))}
+              </h1>
+              <p className="text-[15px] text-caliza-apagada">
+                {ayuntamiento.nombre} · {etiquetaDeRol(contexto.usuario.rol)}
+              </p>
+            </div>
+          </div>
+          <BotonDeCerrarSesion />
         </div>
-        <BotonDeCerrarSesion />
+      </header>
+
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-4 py-8 md:px-6 lg:px-8">
+        <PendientesDeHoy
+          reportes={recibidos.reportes.length}
+          hayMasReportes={recibidos.hayMas}
+        />
+        <InicioDeModulos rol={contexto.usuario.rol} />
       </div>
-      <nav aria-label="Módulos" className="flex flex-col gap-3">
-        {MODULOS_DEL_PANEL.map((modulo) => (
-          <Link
-            key={modulo.ruta}
-            href={modulo.ruta}
-            className="flex flex-col gap-0.5 rounded-sm border border-caliza-divisor bg-caliza-superficie p-4 transition-colors hover:border-marca"
-          >
-            <strong className="text-[15px] text-caliza-tinta">
-              {modulo.nombre}
-            </strong>
-            <span className="text-sm text-caliza-apagada">
-              {modulo.descripcion}
-            </span>
-          </Link>
-        ))}
-      </nav>
     </main>
   );
 }
