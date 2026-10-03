@@ -16,7 +16,10 @@ import type {
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
 import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
 import { opcionesDeCalles } from "@/modules/territorio/ui/opciones";
-import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
+import {
+  type PermisosDeTerritorio,
+  puedeAbrir,
+} from "@/modules/territorio/ui/permisos";
 import {
   lugaresDeNodos,
   zonaDelFormulario,
@@ -117,7 +120,7 @@ export function VistaDeLugar({
         permisos={permisos}
       />
 
-      {vista === "domicilios" && permisos.abreLaEdicion ? (
+      {vista === "domicilios" && puedeAbrir("domicilio", permisos) ? (
         domicilioAbierto ? (
           <RegistroDeDomicilio
             calles={opciones}

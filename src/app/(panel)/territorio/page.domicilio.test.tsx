@@ -76,6 +76,39 @@ beforeEach(() => {
   mocks.subarbol.mockResolvedValue([]);
 });
 
+const RAIZ = "11111111-1111-4111-8111-111111111111";
+const HIJO = "22222222-2222-4222-8222-222222222222";
+
+const conLugarDeUnaCalle = (rol: string) => {
+  mocks.contextoActual.mockResolvedValue({
+    ayuntamientoId: "motul",
+    usuario: { id: "u1", rol },
+    origen: "web",
+  });
+  mocks.lugarPorId.mockResolvedValue({
+    id: RAIZ,
+    tipo: "cabecera",
+    nombre: "Tepakan",
+  });
+  mocks.subarbol.mockResolvedValue([
+    {
+      clase: "lugar",
+      id: HIJO,
+      tipo: "colonia",
+      nombre: "Centro",
+      padreId: RAIZ,
+    },
+  ]);
+  mocks.listarCalles.mockResolvedValue([
+    {
+      id: "33333333-3333-4333-8333-333333333333",
+      nombre: "Calle 20",
+      lugarId: RAIZ,
+      punto: null,
+    },
+  ]);
+};
+
 describe("El alta de domicilio desde la entrada", () => {
   it("con accion=domicilio abre el registro plano con calles del municipio", async () => {
     mocks.listarCallesDelMunicipio.mockResolvedValue([
@@ -107,5 +140,47 @@ describe("El alta de domicilio desde la entrada", () => {
       html.indexOf('name="lugarId"'),
     );
     expect(html).not.toContain('href="/territorio?accion=domicilio"');
+  });
+});
+
+describe("El alta de domicilio dentro del lugar", () => {
+  it("un OPERADOR ve el enlace y abre el formulario con su raiz y su nodo", async () => {
+    conLugarDeUnaCalle("OPERADOR");
+
+    const enlace = renderToStaticMarkup(
+      await paginaCompleta({ raiz: RAIZ, vista: "domicilios" }),
+    );
+    const formulario = renderToStaticMarkup(
+      await paginaCompleta({
+        raiz: RAIZ,
+        nodo: HIJO,
+        vista: "domicilios",
+        accion: "domicilio",
+      }),
+    );
+
+    expect(enlace).toContain("Registrar domicilio");
+    expect(formulario).toContain('name="calleId"');
+    expect(formulario).toContain(`name="raiz" value="${RAIZ}"`);
+    expect(formulario).toContain(`name="nodo" value="${HIJO}"`);
+  });
+
+  it("un CONSULTA no ve el enlace ni el formulario del lugar", async () => {
+    conLugarDeUnaCalle("CONSULTA");
+
+    const enlace = renderToStaticMarkup(
+      await paginaCompleta({ raiz: RAIZ, vista: "domicilios" }),
+    );
+    const formulario = renderToStaticMarkup(
+      await paginaCompleta({
+        raiz: RAIZ,
+        nodo: HIJO,
+        vista: "domicilios",
+        accion: "domicilio",
+      }),
+    );
+
+    expect(enlace).not.toContain("Registrar domicilio");
+    expect(formulario).not.toContain('name="calleId"');
   });
 });
