@@ -71,6 +71,14 @@ type EntradaDeCarga = {
   seleccion: SeleccionDeTerritorio;
 };
 
+type EstadoDeEntrada = {
+  contexto: ContextoActual;
+  parametros: ParametrosDeTerritorio;
+  lugares: readonly LugarConPadre[];
+  puedeCrearLugar: boolean;
+  conRaiz: boolean;
+};
+
 /**
  * Las lecturas restantes de la pantalla, ya con la seleccion validada.
  * Corren dentro del Suspense de `page.tsx` y el esqueleto cubre su espera.
@@ -89,33 +97,48 @@ export const cargarTerritorio = async ({
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
   const lugares = await listarLugares(contexto);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
-  const paneles = raiz
-    ? { hayCabecera: false }
-    : await cargarPanelesDeEntrada(
-        contexto,
-        parametros.accion,
-        puedeCrearLugar,
-      );
-
-  const domicilioAbierto =
-    Boolean(raiz) && parametros.accion === "domicilio" && puedeCrearLugar;
-  const { registroAbierto, callesDelMunicipio, zonaDeLaEntrada } =
-    await cargarRegistroDeEntrada(contexto, parametros, {
-      puedeCrearLugar,
-      conRaiz: Boolean(raiz),
-      lugares,
-    });
+  const entrada = await cargarEntrada({
+    contexto,
+    parametros,
+    lugares,
+    puedeCrearLugar,
+    conRaiz: Boolean(raiz),
+  });
 
   return {
     ...seleccion,
     raices,
     lugares,
     puedeCrearLugar,
-    domicilioAbierto,
-    registroAbierto,
-    callesDelMunicipio,
-    zonaDeLaEntrada,
+    ...entrada,
+  };
+};
+
+const cargarEntrada = async ({
+  contexto,
+  parametros,
+  lugares,
+  puedeCrearLugar,
+  conRaiz,
+}: EstadoDeEntrada) => {
+  const paneles = conRaiz
+    ? { hayCabecera: false }
+    : await cargarPanelesDeEntrada(
+        contexto,
+        parametros.accion,
+        puedeCrearLugar,
+      );
+  const registro = await cargarRegistroDeEntrada(contexto, parametros, {
+    puedeCrearLugar,
+    conRaiz,
+    lugares,
+  });
+
+  return {
+    domicilioAbierto:
+      conRaiz && parametros.accion === "domicilio" && puedeCrearLugar,
     ...paneles,
+    ...registro,
   };
 };
 
