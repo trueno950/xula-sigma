@@ -4,89 +4,114 @@ import {
   PencilSimple,
   Prohibit,
 } from "@phosphor-icons/react/ssr";
-import type { ComponentProps, ComponentType } from "react";
-import { EnlaceDeAccion } from "@/shared/ui";
-import type { CalleId, LugarId } from "../domain";
+import type { ComponentType } from "react";
 import { rutaDe } from "./contenido";
+import {
+  type DatosDeFormularioDeCalle,
+  FormularioDeAccionDeCalle,
+} from "./FormulariosDeCalle";
+import {
+  EnlaceDeAccionDeCalle,
+  ItemDeAccionDeCalle,
+} from "./ItemDeAccionDeCalle";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
-
-export type AccionDeCalle = Extract<
-  AccionDeNodo,
-  "ubicarCalle" | "renombrarCalle" | "reparentearCalle" | "bajaCalle"
->;
-
-type Variante = ComponentProps<typeof EnlaceDeAccion>["variante"];
-
-type IconoDeAccion = ComponentType<{ size?: number; "aria-hidden"?: boolean }>;
+import type { AccionDeCalle } from "./tipoDeAccionDeCalle";
 
 type ItemDeAccion = {
   accion: AccionDeCalle;
   etiqueta: string;
-  Icono: IconoDeAccion;
-  variante?: Variante;
+  Icono: ComponentType<{ size?: number; "aria-hidden"?: boolean }>;
 };
 
 const ACCIONES: readonly ItemDeAccion[] = [
-  {
-    accion: "ubicarCalle",
-    etiqueta: "Ubicar en el mapa",
-    Icono: MapPin,
-    variante: "primaria",
-  },
+  { accion: "ubicarCalle", etiqueta: "Ubicar en el mapa", Icono: MapPin },
   { accion: "renombrarCalle", etiqueta: "Renombrar", Icono: PencilSimple },
   {
     accion: "reparentearCalle",
     etiqueta: "Mover a otro lugar",
     Icono: ArrowsOutCardinal,
   },
-  {
-    accion: "bajaCalle",
-    etiqueta: "Dar de baja",
-    Icono: Prohibit,
-    variante: "peligro",
-  },
+  { accion: "bajaCalle", etiqueta: "Dar de baja", Icono: Prohibit },
 ];
 
 export const esAccionDeCalle = (
   accion: AccionDeNodo | undefined,
 ): accion is AccionDeCalle => ACCIONES.some((item) => item.accion === accion);
 
-export function AccionesDeCalle({
-  raizId,
-  nodoId,
-  calleId,
-  permisos,
-  accionAbierta,
-}: {
-  raizId: LugarId;
-  nodoId: LugarId;
-  calleId: CalleId;
+type Props = {
+  datos: DatosDeFormularioDeCalle;
   permisos: PermisosDeTerritorio;
-  accionAbierta?: AccionDeCalle | undefined;
+  accionAbierta: AccionDeCalle | undefined;
+};
+
+function Renglon({
+  item,
+  abierto,
+  datos,
+}: {
+  item: ItemDeAccion;
+  abierto: boolean;
+  datos: DatosDeFormularioDeCalle;
 }) {
+  const { raizId, nodoId, calle } = datos;
+  if (item.accion === "ubicarCalle" && !abierto) {
+    const ruta = rutaDe({
+      raizId,
+      nodoId,
+      vista: "calles",
+      calleId: calle.id,
+      accion: item.accion,
+    });
+    return (
+      <EnlaceDeAccionDeCalle
+        etiqueta={item.etiqueta}
+        Icono={item.Icono}
+        href={`${ruta}#panel-de-calle`}
+      />
+    );
+  }
+  const destructiva = item.accion === "bajaCalle";
   return (
-    <>
-      {ACCIONES.filter(
-        (item) =>
-          puedeAbrir(item.accion, permisos) &&
-          !(item.variante === "peligro" && item.accion === accionAbierta),
-      ).map((item) => (
-        <EnlaceDeAccion
-          key={item.accion}
-          href={rutaDe({
-            raizId,
-            nodoId,
-            vista: "calles",
-            calleId,
-            accion: item.accion,
-          })}
-          {...(item.variante ? { variante: item.variante } : {})}
-        >
-          <item.Icono size={18} aria-hidden />
-          {item.etiqueta}
-        </EnlaceDeAccion>
-      ))}
-    </>
+    <div
+      className={destructiva ? "mt-2 border-t border-caliza-divisor pt-2" : ""}
+    >
+      <ItemDeAccionDeCalle
+        etiqueta={item.etiqueta}
+        Icono={item.Icono}
+        abierto={abierto}
+        destructiva={destructiva}
+      >
+        <FormularioDeAccionDeCalle accion={item.accion} datos={datos} />
+      </ItemDeAccionDeCalle>
+    </div>
+  );
+}
+
+/**
+ * Cuatro acciones en una lista compacta, cada una con su formulario en un
+ * `<details>` exclusivo. "Ubicar" abre sola cuando la calle no tiene punto.
+ *
+ * El mapa de Leaflet mide su contenedor al montarse: dentro de un detalle
+ * cerrado mediria 0. Por eso "Ubicar" solo se pinta como detalle cuando ya
+ * nace abierta; si no, es un enlace que recarga con el mapa visible.
+ */
+export function AccionesDeCalle({ datos, permisos, accionAbierta }: Props) {
+  const porDefecto =
+    accionAbierta ?? (datos.calle.punto ? undefined : "ubicarCalle");
+
+  return (
+    <div className="flex flex-col gap-1">
+      {ACCIONES.filter((item) => puedeAbrir(item.accion, permisos)).map(
+        (item) => (
+          <Renglon
+            key={item.accion}
+            item={item}
+            abierto={item.accion === porDefecto}
+            datos={datos}
+          />
+        ),
+      )}
+    </div>
   );
 }

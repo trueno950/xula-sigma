@@ -20,7 +20,10 @@ export function FormularioDeMovimientoDeCalle({
   const destinos = destinosDeMovimiento(calle.lugarId, lugares);
 
   return (
-    <form action={reparentearCalleAction} className="flex flex-col gap-4">
+    <form
+      action={reparentearCalleAction}
+      className="flex flex-col gap-4 [&>button]:self-start"
+    >
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
       <input type="hidden" name="vista" value="calles" />

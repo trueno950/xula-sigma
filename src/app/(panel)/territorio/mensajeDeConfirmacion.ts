@@ -7,9 +7,9 @@ import type { ClaveDeConfirmacion } from "@/modules/territorio";
  * siguiente. Ninguna lleva texto del operador.
  */
 export const MENSAJE_DE_CONFIRMACION: Record<ClaveDeConfirmacion, string> = {
-  "lugar-creado": "Lugar agregado. Puedes seguir agregando otro.",
-  "calle-creada": "Calle agregada. Puedes agregar otra.",
-  "domicilio-creado": "Domicilio registrado. Puedes registrar otro.",
+  "lugar-creado": "Lugar agregado. Puede seguir agregando otro.",
+  "calle-creada": "Calle agregada. Puede agregar otra.",
+  "domicilio-creado": "Domicilio registrado. Puede registrar otro.",
   "domicilio-corregido": "Domicilio corregido.",
   "lugar-editado": "Nombre del lugar actualizado.",
   "calle-renombrada": "Nombre de la calle actualizado.",

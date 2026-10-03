@@ -67,29 +67,25 @@ describe("la baja en territorio", () => {
     expect(html).toContain("<svg");
   });
 
-  it("con la baja de calle abierta, el disparador no se repite junto al formulario", () => {
-    const abierta = renderToStaticMarkup(
+  it("en el panel, la baja es un detalle propio, al final y en peligro", () => {
+    const html = renderToStaticMarkup(
       <AccionesDeCalle
-        raizId={comoLugarId(raiz)}
-        nodoId={comoLugarId(nodo)}
-        calleId={calle.id}
+        datos={{
+          raizId: comoLugarId(raiz),
+          nodoId: comoLugarId(nodo),
+          calle,
+          lugares: [],
+        }}
         permisos={permisosDeTerritorio("ADMIN_MUNICIPAL")}
         accionAbierta="bajaCalle"
       />,
     );
-    const cerrada = renderToStaticMarkup(
-      <AccionesDeCalle
-        raizId={comoLugarId(raiz)}
-        nodoId={comoLugarId(nodo)}
-        calleId={calle.id}
-        permisos={permisosDeTerritorio("ADMIN_MUNICIPAL")}
-        accionAbierta={undefined}
-      />,
-    );
 
-    expect(cerrada).toContain("Dar de baja");
-    expect(cerrada).toContain("border-senial-error");
-    expect(abierta).not.toContain("Dar de baja");
-    expect(abierta).toContain("Renombrar");
+    expect(vecesQue(html, "Dar de baja Calle 15")).toBe(1);
+    expect(html.lastIndexOf("Dar de baja")).toBeGreaterThan(
+      html.indexOf("Renombrar"),
+    );
+    expect(html).toContain("border-senial-error");
+    expect(html).toMatch(/<details[^>]*name="acciones-de-calle"[^>]*open/);
   });
 });

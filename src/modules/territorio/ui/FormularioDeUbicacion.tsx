@@ -11,13 +11,19 @@ type Props = {
 
 export function FormularioDeUbicacion({ raiz, nodo, calle }: Props) {
   return (
-    <form action={ubicarCalleAction} className="flex flex-col gap-4">
+    <form
+      action={ubicarCalleAction}
+      className="flex flex-col gap-4 [&>button]:self-start"
+    >
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
       <input type="hidden" name="vista" value="calles" />
       <input type="hidden" name="accion" value="ubicarCalle" />
       <input type="hidden" name="calle" value={calle.id} />
       <input type="hidden" name="calleId" value={calle.id} />
+      <p className="text-[13px] text-caliza-apagada">
+        Toque el mapa o escriba las coordenadas.
+      </p>
       <SelectorDePunto punto={calle.punto} />
       <Boton type="submit" variante="primaria">
         Guardar ubicación

@@ -52,7 +52,8 @@ describe("PanelDeCalle", () => {
     expect(html).toContain(
       "Su rol no permite administrar la estructura territorial.",
     );
-    expect(html).not.toContain("<a");
+    expect(html).not.toContain("accion=");
+    expect(html).not.toContain("<details");
   });
 
   it("abre el formulario pedido cuando el rol tiene permiso", () => {

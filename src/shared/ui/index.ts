@@ -5,6 +5,7 @@ export { Boton, EnlaceDeAccion } from "./Boton";
 export { BotonDeCerrarSesion } from "./BotonDeCerrarSesion";
 export { Campo } from "./Campo";
 export { CampoDeLista, type OpcionDeLista } from "./CampoDeLista";
+export { CeldaDeApoyo, CeldaDeDato, CeldaPrincipal } from "./CeldasDeTabla";
 export { ChipDeFiltro } from "./ChipDeFiltro";
 export { EsqueletoDeFilas } from "./EsqueletoDeFilas";
 export { EstadoVacio } from "./EstadoVacio";
@@ -29,11 +30,4 @@ export { opcionesEtiquetadas } from "./opcionesDeLista";
 export { PaginaDePanel, PantallaDeMensaje } from "./PaginaDePanel";
 export { Panel } from "./Panel";
 export { type Pestana, Pestanas } from "./Pestanas";
-export {
-  CeldaDeApoyo,
-  CeldaDeDato,
-  CeldaPrincipal,
-  type ColumnaDeTabla,
-  FilaDeTabla,
-  Tabla,
-} from "./Tabla";
+export { type ColumnaDeTabla, FilaDeTabla, Tabla } from "./Tabla";
