@@ -8,7 +8,10 @@ const redirectMock = vi.hoisted(() =>
 );
 const contextoActualMock = vi.hoisted(() => vi.fn());
 
-vi.mock("next/navigation", () => ({ redirect: redirectMock }));
+vi.mock("next/navigation", () => ({
+  redirect: redirectMock,
+  usePathname: () => null,
+}));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("@/shared/tenancy/contexto", () => ({
   ayuntamientoActual: async () => ({ nombre: "Motul" }),
@@ -33,7 +36,9 @@ describe("inicio del municipio", () => {
   it("enlaza los mismos modulos que la navegacion del panel", async () => {
     const delHub = enlaces(await pintar());
     const delPanel = enlaces(
-      renderToStaticMarkup(<NavegacionDeModulos ruta="/" forma="barra" />),
+      renderToStaticMarkup(
+        <NavegacionDeModulos ruta="/" rol="ADMIN_MUNICIPAL" />,
+      ),
     );
 
     expect(delPanel).toContain("/mapa-operativo");

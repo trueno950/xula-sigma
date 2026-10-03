@@ -1,6 +1,7 @@
 import { CaretRight } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { Fragment } from "react";
+import { ANILLO_DE_FOCO } from "./estilos";
 
 export type PasoDeMigaja = {
   etiqueta: string;
@@ -29,7 +30,7 @@ export function Migaja({
   return (
     <nav
       aria-label={etiqueta}
-      className="flex flex-wrap items-center gap-1 text-[13px] text-caliza-apagada"
+      className="flex min-h-8 flex-wrap items-center gap-x-1 text-[15px] text-caliza-apagada"
     >
       {pasos.map((paso, indice) => (
         <Fragment key={`${paso.etiqueta}-${paso.href ?? "actual"}`}>
@@ -39,12 +40,12 @@ export function Migaja({
           {paso.href ? (
             <Link
               href={paso.href}
-              className="rounded-sm text-marca hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+              className={`rounded-sm py-1 transition-colors duration-150 ease-salida hover:text-caliza-tinta hover:underline ${ANILLO_DE_FOCO}`}
             >
               {paso.etiqueta}
             </Link>
           ) : (
-            <span aria-current="page" className="text-caliza-tinta">
+            <span aria-current="page" className="font-medium text-caliza-tinta">
               {paso.etiqueta}
             </span>
           )}

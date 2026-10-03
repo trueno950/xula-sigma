@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { contextoActual } from "@/shared/auth";
@@ -12,7 +11,9 @@ import {
 import { BotonDeCerrarSesion } from "@/shared/ui/BotonDeCerrarSesion";
 import { etiquetaDeRol } from "@/shared/ui/etiquetaDeRol";
 import { variablesDeMarca } from "@/shared/ui/marca";
+import { BloqueDeMunicipio } from "./BloqueDeMunicipio";
 import { NavegacionDeModulos } from "./NavegacionDeModulos";
+import { NavegacionInferior } from "./NavegacionInferior";
 
 /**
  * Layout de las pantallas que necesitan sesion.
@@ -37,6 +38,10 @@ import { NavegacionDeModulos } from "./NavegacionDeModulos";
  * servidor y en el `style` del contenedor, por lo mismo que explica
  * `(acceso)/layout.tsx` —aplicadas despues de hidratar, la marca correcta
  * llega medio segundo tarde y se ve barato.
+ *
+ * El rol y cerrar sesion viven una sola vez por ancho: al pie del lateral
+ * en escritorio y dentro de "Mas" en el movil. Ni la sesion trae el nombre
+ * de la persona ni este layout lo pide: solo el rol.
  */
 export default async function LayoutDePanel({
   children,
@@ -58,66 +63,41 @@ export default async function LayoutDePanel({
   // controla (se sobreescribe siempre), igual que las de superficie.
   const ruta = (await headers()).get(CABECERA_RUTA) ?? "";
 
+  const pie = (
+    <div className="flex flex-col gap-1 [&_button]:w-full [&_button]:justify-start">
+      <span className="px-3 text-[13px] font-medium text-caliza-apagada">
+        {rol}
+      </span>
+      <BotonDeCerrarSesion />
+    </div>
+  );
+
   return (
-    <div className="min-h-dvh bg-caliza-lienzo" style={variablesDeMarca(marca)}>
-      <header className="flex min-h-16 flex-col items-stretch justify-between gap-3 border-b border-caliza-divisor bg-caliza-lienzo px-3 py-3 md:sticky md:top-0 md:z-10 md:h-16 md:flex-row md:items-center md:gap-4 md:px-6 md:py-0">
-        <Link
-          href="/padron"
-          aria-label={`${ayuntamiento.nombre}, Xula Sigma`}
-          title={ayuntamiento.nombre}
-          className="flex min-w-0 items-center gap-3 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
-        >
-          {marca.escudo ? (
-            // `next/image` exigiria declarar el host de R2 en
-            // `remotePatterns`, y el escudo lo sube cada municipio a una
-            // URL que la plataforma no elige. 40px de alto, sin recorte.
-            // biome-ignore lint/performance/noImgElement: host externo por municipio
-            <img
-              src={marca.escudo}
-              alt=""
-              className="h-10 w-10 shrink-0 object-contain"
-            />
-          ) : null}
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span className="break-words text-[15px] font-semibold text-caliza-tinta md:truncate">
-              {ayuntamiento.nombre}
-            </span>
-            {/*
-              Sin `uppercase`: la mayuscula sostenida es la firma del
-              tramite de gobierno, que es la anti-referencia declarada del
-              producto (`DESIGN.md`, Don't). El nombre de la plataforma va
-              debajo del municipio y en tono apagado porque el municipio es
-              quien atiende; nosotros somos la herramienta.
-            */}
-            <span className="text-[12px] tracking-wide text-caliza-apagada">
-              Xula Sigma
-            </span>
-          </span>
-        </Link>
-        <div className="flex min-w-0 flex-col items-stretch gap-2 md:flex-row md:items-center md:gap-3">
-          <span className="text-[13px] text-caliza-apagada">{rol}</span>
-          <BotonDeCerrarSesion />
+    <div
+      className="min-h-dvh bg-caliza-fondo lg:grid lg:grid-cols-[264px_1fr]"
+      style={variablesDeMarca(marca)}
+    >
+      <aside className="sticky top-0 hidden h-dvh flex-col overflow-y-auto border-r border-caliza-divisor bg-caliza-lienzo lg:flex">
+        <BloqueDeMunicipio nombre={ayuntamiento.nombre} escudo={marca.escudo} />
+        <div className="flex-1">
+          <NavegacionDeModulos ruta={ruta} rol={contexto.usuario.rol} />
         </div>
-      </header>
+        <div className="border-t border-caliza-divisor p-3">{pie}</div>
+      </aside>
 
-      <div className="md:grid md:grid-cols-[15rem_1fr] md:items-start">
-        {/*
-         * Mismo fondo que el lienzo y separada por una linea, no por un
-         * tono propio (`DESIGN.md`, Elevation): una barra de otro color
-         * parte la pantalla en dos mundos y el contenido deja de ser el
-         * centro.
-         */}
-        <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] border-r border-caliza-divisor md:block">
-          <NavegacionDeModulos ruta={ruta} forma="barra" />
-        </aside>
-
-        <div className="min-w-0">
-          <div className="sticky top-0 z-10 bg-caliza-lienzo md:hidden">
-            <NavegacionDeModulos ruta={ruta} forma="fila" />
-          </div>
-          {children}
+      <div className="min-w-0">
+        <div className="border-b border-caliza-divisor lg:hidden">
+          <BloqueDeMunicipio
+            nombre={ayuntamiento.nombre}
+            escudo={marca.escudo}
+          />
         </div>
+        <div className="pb-24 lg:pb-0">{children}</div>
       </div>
+
+      <NavegacionInferior ruta={ruta} rol={contexto.usuario.rol}>
+        {pie}
+      </NavegacionInferior>
     </div>
   );
 }

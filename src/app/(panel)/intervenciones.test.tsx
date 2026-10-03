@@ -10,7 +10,10 @@ const notFoundMock = vi.hoisted(() =>
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const intervencionConReferenciasMock = vi.hoisted(() => vi.fn());
 
-vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
+vi.mock("next/navigation", () => ({
+  notFound: notFoundMock,
+  usePathname: () => null,
+}));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("@/modules/intervenciones", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/intervenciones")>()),
@@ -171,7 +174,7 @@ describe("ficha de intervencion", () => {
 describe("navegacion de intervenciones", () => {
   it("ofrece el modulo y lo marca como activo", () => {
     const html = renderToStaticMarkup(
-      <NavegacionDeModulos ruta="/intervenciones" forma="fila" />,
+      <NavegacionDeModulos ruta="/intervenciones" rol="OPERADOR" />,
     );
 
     expect(html).toContain('aria-label="Módulos"');
