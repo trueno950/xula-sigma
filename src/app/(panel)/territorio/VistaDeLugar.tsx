@@ -15,7 +15,17 @@ import type {
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
 import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
-import type { PermisosDeTerritorio } from "@/modules/territorio/ui/permisos";
+import { opcionesDeCalles } from "@/modules/territorio/ui/opciones";
+import {
+  type PermisosDeTerritorio,
+  puedeAbrir,
+} from "@/modules/territorio/ui/permisos";
+import {
+  lugaresDeNodos,
+  zonaDelFormulario,
+} from "@/modules/territorio/ui/vistaDeDomicilios";
+import { EnlaceDeAccion } from "@/shared/ui";
+import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 
 type Props = {
   raiz: Pick<LugarGuardado, "id" | "tipo" | "nombre">;
@@ -29,6 +39,8 @@ type Props = {
   domicilioId: DomicilioId | undefined;
   domicilio: DomicilioGuardado | undefined;
   permisos: PermisosDeTerritorio;
+  /** El alta de domicilio esta abierta en la pestana Domicilios. */
+  domicilioAbierto: boolean;
 };
 
 /**
@@ -75,7 +87,14 @@ export function VistaDeLugar({
   domicilioId,
   domicilio,
   permisos,
+  domicilioAbierto,
 }: Props) {
+  const zona = zonaDelFormulario(
+    lugaresDeNodos(nodos),
+    { id: raiz.id, nombre: raiz.nombre },
+    nodo,
+  );
+  const opciones = opcionesDeCalles(calles);
   return (
     <>
       <PanelDeNodo
@@ -100,6 +119,25 @@ export function VistaDeLugar({
         accion={accion}
         permisos={permisos}
       />
+
+      {vista === "domicilios" && puedeAbrir("domicilio", permisos) ? (
+        domicilioAbierto ? (
+          <RegistroDeDomicilio
+            calles={opciones}
+            zona={zona}
+            volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
+            raiz={raiz.id}
+            nodo={nodo.id}
+          />
+        ) : calles.length > 0 ? (
+          <EnlaceDeAccion
+            href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
+            variante="primaria"
+          >
+            Registrar domicilio
+          </EnlaceDeAccion>
+        ) : null
+      ) : null}
     </>
   );
 }

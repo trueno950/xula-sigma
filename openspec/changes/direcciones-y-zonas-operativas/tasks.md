@@ -31,7 +31,7 @@ antes de aplicar.
 | A1a / PR #1 | Registro plano: contrato, paginacion, caso de uso, SQL y tests; sin UI | tracker de feature | pnpm vitest run --project unit src/modules/territorio/domain/paginacion.test.ts src/modules/territorio/application/registroDeDomicilios.test.ts; sin DB | N/A para runtime de UI; revertir puerto, caso de uso, repositorio y tests de A1a |
 | A1b / PR #2 | Ruta /territorio/domicilios, pantalla, filtro GET, etiqueta de nodo y retiro de carga ansiosa en page.tsx | rama de PR #1 | pnpm vitest run --project unit src/modules/territorio/ui/RegistroDeDomicilios.test.tsx; sin DB | pnpm dev + abrir /territorio/domicilios; revertir ruta/pantalla y cambio de carga |
 | A2 / PR #3 | Conteos inclusivos del subarbol y calles propias del nodo | rama de PR #2 | pnpm vitest run --project unit src/modules/territorio/ui/conteo.test.ts src/modules/territorio/ui/contenido.test.tsx; sin DB | pnpm dev + abrir panel de asentamiento/colonia; revertir conteo.ts y contenido.ts |
-| A3 / PR #4 | Alta unica desacoplada del nodo y vocabulario lugarId/Colonia | rama de PR #3 | pnpm vitest run --project unit src/modules/territorio/application/verificacionDeDomicilio.test.ts; sin DB | pnpm dev + POST nativo de alta; revertir formulario, composicion y ruta |
+| A3 / PR #4 | Alta desacoplada del nodo -entrada unica, superseded por D10- y vocabulario lugarId/Colonia | rama de PR #3 | pnpm vitest run --project unit src/modules/territorio/application/verificacionDeDomicilio.test.ts; sin DB | pnpm dev + POST nativo de alta; revertir formulario, composicion y ruta |
 | B1 / PR #5 | Tablas zonas/calles_de_zonas, migracion 0017, RLS/FK/GRANT, puertos, casos de uso y aislamiento | rama de PR #4 | pnpm db:local && pnpm vitest run --project integration src/modules/territorio/zonas.isolation.test.ts src/modules/territorio/callesDeZonas.isolation.test.ts; requiere Postgres | pnpm db:local && pnpm db:migrate; migracion inversa DROP TABLE calles_de_zonas, zonas y retirar unique de calles |
 | B3d / PR #6 | Script operativo y runbook de migracion de datos, bitacora, salida, conteo e idempotencia | rama de PR #5 | pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts; requiere Postgres y base scratch | Ejecutar solo con ventana operativa autorizada; restaurar domicilios desde bitacora e insertar lugares desde salida |
 | B2 / PR #7 | Corte de sector/manzana: CHECK, tipo, unos 40 archivos, deltas y AGENTS.md; no UI de zonas | rama de PR #6 | pnpm test; suite completa, sin rtk; cobertura con pnpm test -- --coverage | size:exception 850-1,050 lineas; migracion inversa del CHECK y revertir codigo/deltas |
@@ -50,7 +50,7 @@ anteriores.
 | A1a | Puerto registro, registroDeDomicilios, domain/paginacion.ts, SQL de registro y tests de contrato | UI, rutas, conteos, alta, renombres de vocabulario |
 | A1b | Ruta/screen /territorio/domicilios, filtro GET, etiqueta de NodoDeSubarbol, retiro de listarDomicilios en page.tsx | Caso de uso nuevo, conteos, alta, zonas |
 | A2 | descendientesDe y cuentasDeLugar en UI | Consultas SQL nuevas, cambios de esquema, alta |
-| A3 | Forma unica, zonaId a lugarId, textos Colonia/NivelDelFormulario | ZonaIncoherenteError/UbicacionIncoherenteError del corte, AGENTS.md, zonas operativas |
+| A3 | Forma unica (hoy dos entradas: D10), zonaId a lugarId, textos Colonia/NivelDelFormulario | ZonaIncoherenteError/UbicacionIncoherenteError del corte, AGENTS.md, zonas operativas |
 | B1 | Esquema, migracion, RLS/politica/GRANT, unique compuesto de calles, puertos, casos de uso, CalleEnZonaError y tests de aislamiento | UI, Server Actions, AGENTS.md, migracion de datos |
 | B3d | scripts/migrar-sectores-a-zonas.sql, runbook, salida, bitacora y pruebas scratch | TypeScript de dominio/aplicacion, corte del catalogo, UI |
 | B2 | TIPOS_DE_LUGAR, CHECK, codigo/tests afectados, deltas de spec y renombre en AGENTS.md | Tablas/puertos de zonas, migracion de datos, UI de zonas y acciones |
@@ -131,6 +131,15 @@ anteriores.
 
 ## Fase 4: A3 — alta unica desacoplada del nodo
 
+> **Sustitucion parcial, D10 (decision 2026-10-02, Merida).** El historial
+> de abajo no se reescribe. Lo superseded es solo la restriccion de
+> entrada/UI: el registro plano como unica entrada y la ausencia de
+> `raiz`/`nodo`. D10 -usuario autorizado, PR #92- restaura el alta
+> contextual y los ocultos `raiz`/`nodo` como navegacion de retorno.
+> Siguen vigentes la derivacion de la ubicacion (`lugarId` validado o, si
+> se omite, calle principal) y el vocabulario `lugarId`/`Colonia`
+> (A3-GREEN-03).
+
 - [x] A3-RED-01 (A3). Para el requisito exacto “Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2)”, ampliar primero src/modules/territorio/application/verificacionDeDomicilio.test.ts: alta sin lugarId deriva asentamiento de calle principal; un lugarId de otra cadena produce UbicacionIncoherenteError; la prueba debe fallar antes de cambiar forma. Test enfocado: pnpm vitest run --project unit src/modules/territorio/application/verificacionDeDomicilio.test.ts (sin DB). Rollback: retirar solo escenarios RED de A3.
 - [x] A3-GREEN-02 (A3). Requisito: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Servir una sola forma desde registro plano usando listarCallesDelMunicipio, eliminar hidden raiz/nodo de src/modules/territorio/ui/FormularioDeDomicilio.tsx y conservar derivación existente datos.lugarId ?? callePrincipal.lugarId; altaDeDomicilioAction mantiene POST nativo y redirect redactado. Test enfocado: pnpm vitest run --project unit src/modules/territorio/application/verificacionDeDomicilio.test.ts (sin DB). Rollback: revertir forma y composición de entrada, sin tocar verificacionDeDomicilio.ts fuera de lo probado.
 - [x] A3-GREEN-03 (A3). Requisito: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Renombrar exclusivamente vocabulario de formulario: name zonaId a name lugarId, Zona (opcional) a Colonia (opcional), ZonaDelFormulario a NivelDelFormulario, opcionesDeZona a opcionesDeNivel; no mover ZonaIncoherenteError/UbicacionIncoherenteError ni AGENTS.md (son B2). Test enfocado: pnpm vitest run --project unit src/modules/territorio/ui/FormularioDeDomicilio.test.tsx (sin DB). Rollback: revertir solo renombres de UI.
@@ -153,6 +162,11 @@ anteriores.
 | `pnpm check` | 0 errores en los archivos de A3; quedan 2 errores y 48 warnings preexistentes fuera del alcance (`direccionVigenteDePersona.test.ts`, `domicilios.isolation.test.ts`, y `noNonNullAssertion` disperso en tests de otros modulos) |
 | Presupuesto | ~207 lineas cambiadas entre los dos commits, contra el limite de 400: sin excepcion |
 | Frontera de rollback | Revertir `1609704` y `fa04f00`; ningun cambio de esquema, migracion ni Server Action fuera de renombrar un campo de entrada |
+
+> De A3-GREEN-02 y A3-REFACTOR-04 queda superseded solo su parte de
+> entrada/UI (hidden `raiz`/`nodo` y punto de alta unico); la derivacion de
+> la ubicacion y la validacion de vocabulario siguen vigentes. Ver la nota
+> de sustitucion al inicio de la fase.
 
 Nota de ejecucion: la implementacion corrio con `opencode` (`openai/gpt-5.6-luna`, agente `build`) como escritor delegado; esta sesion (Claude) hizo la revision de diff completo exigida por el flujo -encontro y corrigio la rama muerta de `hrefAdministrarCalles`, un test vacuo y dos errores de formato antes de aceptar- y ejecuto los commits.
 

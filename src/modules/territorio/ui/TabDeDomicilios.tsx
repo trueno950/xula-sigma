@@ -26,8 +26,7 @@ const etiquetaDe = (domicilio: NodoDomicilio) =>
   direccionDe(domicilio.calle, domicilio.numero);
 
 /**
- * Pestana Domicilios: los domicilios colgados del lugar. El alta vive en
- * el registro plano (`/territorio?accion=domicilio`), no aca.
+ * Pestana Domicilios: los domicilios colgados del lugar.
  *
  * Sin enlace en la fila: un domicilio todavia no tiene pantalla propia.
  * Cuando la tenga -para ver quien vive ahi- la fila la gana sola.

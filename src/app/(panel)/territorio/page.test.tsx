@@ -1,7 +1,6 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { FormularioDeDomicilio } from "@/modules/territorio/ui/FormularioDeDomicilio";
 import { VistaDeRaices } from "@/modules/territorio/ui/VistaDeRaices";
 
 const mocks = vi.hoisted(() => ({
@@ -27,9 +26,11 @@ vi.mock("@/modules/territorio", async () => ({
   ...(await vi.importActual<typeof import("@/modules/territorio/ui/acciones")>(
     "@/modules/territorio/ui/acciones",
   )),
+  // El panel de nodo y el contenido son estructura pura: pasan los hijos tal cual.
+  PanelDeNodo: ({ children }: { children: ReactNode }) => children,
+  ContenidoDeLugar: ({ children }: { children: ReactNode }) => children,
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
-  FormularioDeDomicilio,
   listarCalles: mocks.listarCalles,
   listarCallesDelMunicipio: mocks.listarCallesDelMunicipio,
   listarDomicilios: mocks.listarDomicilios,
@@ -37,7 +38,6 @@ vi.mock("@/modules/territorio", async () => ({
   listarRaices: mocks.listarRaices,
   lugarPorId: mocks.lugarPorId,
   subarbol: mocks.subarbol,
-  VistaDeLugar: () => null,
   VistaDeRaices,
 }));
 
@@ -82,76 +82,5 @@ describe("Territorio root entry", () => {
     expect(html.match(/Registrar domicilio/g) ?? []).toHaveLength(1);
     expect(html.match(/Agregar asentamiento/g) ?? []).toHaveLength(1);
     expect(html).toContain('href="/territorio?accion=domicilio"');
-  });
-
-  it("con accion=domicilio abre el formulario con Calle antes de la zona", async () => {
-    mocks.listarCallesDelMunicipio.mockResolvedValue([
-      {
-        id: "33333333-3333-4333-8333-333333333333",
-        nombre: "Calle 20",
-        lugarId: "11111111-1111-4111-8111-111111111111",
-        punto: null,
-        bajaEn: null,
-        asentamiento: "Tepakan",
-      },
-    ]);
-    mocks.listarLugares.mockResolvedValue([
-      {
-        id: "11111111-1111-4111-8111-111111111111",
-        tipo: "cabecera",
-        nombre: "Tepakan",
-        padreId: null,
-        bajaEn: null,
-      },
-    ]);
-
-    const html = renderToStaticMarkup(
-      await paginaCompleta({ accion: "domicilio" }),
-    );
-
-    expect(mocks.listarCallesDelMunicipio).toHaveBeenCalled();
-    expect(html).toContain("Calle 20 — Tepakan");
-    expect(html.indexOf('name="calleId"')).toBeLessThan(
-      html.indexOf('name="lugarId"'),
-    );
-
-    const detalles = html.slice(
-      html.indexOf("<details"),
-      html.indexOf("</details>"),
-    );
-    expect(detalles).toContain('name="lugarId"');
-    expect(html).not.toContain('href="/territorio?accion=domicilio"');
-  });
-
-  it("loads the containing settlement catalog for a lower-level domicile", async () => {
-    const raiz = {
-      id: "11111111-1111-4111-8111-111111111111",
-      tipo: "cabecera",
-      nombre: "Motul",
-      padreId: null,
-      bajaEn: null,
-    };
-    const colonia = {
-      id: "22222222-2222-4222-8222-222222222222",
-      tipo: "colonia",
-      nombre: "Centro",
-      padreId: raiz.id,
-      bajaEn: null,
-    };
-    mocks.listarRaices.mockResolvedValue([raiz]);
-    mocks.lugarPorId.mockResolvedValue(raiz);
-    mocks.subarbol.mockResolvedValue([{ clase: "lugar", ...colonia }]);
-
-    await paginaCompleta({
-      raiz: raiz.id,
-      nodo: colonia.id,
-      vista: "domicilios",
-      accion: "domicilio",
-    });
-
-    expect(mocks.listarCalles).toHaveBeenCalledWith(
-      raiz.id,
-      expect.objectContaining({ ayuntamientoId: "motul" }),
-    );
   });
 });

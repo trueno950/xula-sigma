@@ -1,10 +1,7 @@
 import { VistaDeRaices } from "@/modules/territorio";
 import type { LugarGuardado } from "@/modules/territorio/application/puertos";
 import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
-import {
-  opcionesDeCallesDelMunicipio,
-  zonaDelFormulario,
-} from "@/modules/territorio/ui/vistaDeDomicilios";
+import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { Aviso, PaginaDePanel } from "@/shared/ui";
 import { accionesDeRaiz } from "./AccionesDeRaiz";
@@ -43,8 +40,10 @@ export const TerritorioCargado = async ({
     hayCabecera,
     raices,
     puedeCrearLugar,
+    domicilioAbierto,
     registroAbierto,
     callesDelMunicipio,
+    zonaDeLaEntrada,
   } = await cargarTerritorio({ contexto, parametros, raiz, seleccion });
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, vista } = parametros;
@@ -58,10 +57,10 @@ export const TerritorioCargado = async ({
 
       {!raiz ? (
         <>
-          {registroAbierto ? (
+          {registroAbierto && zonaDeLaEntrada ? (
             <RegistroDeDomicilio
               calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
-              zona={zonaDelFormulario(lugares, undefined, undefined)}
+              zona={zonaDeLaEntrada}
             />
           ) : null}
 
@@ -86,6 +85,7 @@ export const TerritorioCargado = async ({
           domicilioId={domicilioId}
           domicilio={domicilio ?? undefined}
           permisos={permisos}
+          domicilioAbierto={domicilioAbierto}
         />
       ) : null}
     </PaginaDePanel>

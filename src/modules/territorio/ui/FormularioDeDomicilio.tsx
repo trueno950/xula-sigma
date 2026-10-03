@@ -6,6 +6,9 @@ type Props = {
   /** Ya rotuladas por el borde: en el asentamiento, solo el nombre. */
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
+  /** Navegacion de retorno; ver `actions/volverAlArbol.ts`. */
+  raiz?: string | undefined;
+  nodo?: string | undefined;
 };
 
 /**
@@ -16,11 +19,13 @@ type Props = {
  * `<details>` nativo es el unico despliegue del sistema que no necesita
  * JavaScript.
  */
-export function FormularioDeDomicilio({ calles, zona }: Props) {
+export function FormularioDeDomicilio({ calles, zona, raiz, nodo }: Props) {
   return (
     <form action={altaDeDomicilioAction} className="flex flex-col gap-4">
       <input type="hidden" name="vista" value="domicilios" />
       <input type="hidden" name="accion" value="domicilio" />
+      {raiz ? <input type="hidden" name="raiz" value={raiz} /> : null}
+      {nodo ? <input type="hidden" name="nodo" value={nodo} /> : null}
 
       <CampoDeLista
         id="domicilio-calle-id"

@@ -25,6 +25,7 @@ orden, es que la migracion del CHECK revienta si corre antes.
 | D7 | Zona no cruza asentamientos | CHECK, trigger, o FK compuesto ancho | FK compuesto ancho: la pertenencia lleva `lugar_id` y dos FK la atan al asentamiento de la zona **y** al de la calle. Lo garantiza Postgres, no el caso de uso |
 | D8 | Migracion de datos | SQL en la migracion Drizzle vs script en `scripts/` | Script: la migracion no fija `app.tenant`, y `FORCE RLS` alcanza al owner -- movería cero filas sin error. Si en cambio corriera como superusuario, escribiria sin reja ninguna. Las dos ramas condenan la primera opcion |
 | D9 | Superficies de `/territorio` | `?vista=` en una pagina vs tres rutas | Tres rutas hermanas unidas por `Pestanas`: cada una carga solo lo suyo, que es lo que estructuralmente mata el cargado ansioso |
+| D10 | Entradas del alta de domicilio | una sola entrada (solo el registro plano) vs dos entradas sobre el mismo formulario | Dos entradas y un componente. El usuario autorizo reabrir el alta contextual (PR #92, `fix/domicilio-en-contexto`), asi que esta decision reemplaza la restriccion de entrada/UI de A3 (seccion 3): el alta vuelve tambien a la pestana Domicilios del lugar y los ocultos `raiz`/`nodo` vuelven como navegacion de retorno. El porque y el limite exacto estan en la seccion 3 |
 
 ## 1. Registro plano de domicilios (A1)
 
@@ -100,12 +101,30 @@ sigue listando el catalogo heredado en solo lectura, con la linea que
 0 al lado de una lista visible es la respuesta correcta: esas calles no son
 de este nodo.
 
-## 3. Alta desacoplada del nodo (A3)
+## 3. Alta desacoplada del nodo, con dos entradas (A3)
 
-Una sola forma, servida desde el registro plano, con el catalogo de calles
-del municipio (`listarCallesDelMunicipio`). Se caen los `<input type="hidden"
-name="raiz|nodo">` de `FormularioDeDomicilio` y el punto de entrada anclado
-de `TabDeDomicilios`.
+El alta no depende del nodo donde esta parado el operador: la ubicacion
+de negocio de un domicilio es el `lugarId` validado o, si se omite, la
+calle principal; **nunca** el `raiz`/`nodo` de navegacion. **Un solo
+componente** -la forma unica de A3- sirve **dos entradas**, y esa es la
+sustitucion que fija D10:
+
+| Entrada | Calles que ofrece | `raiz`/`nodo` |
+|---|---|---|
+| Registro municipal (`/territorio?accion=domicilio`) | catalogo del municipio (`listarCallesDelMunicipio`) | ausentes |
+| Pestana Domicilios del lugar (`?raiz=&nodo=&vista=domicilios`) | las del asentamiento (`listarCalles(raiz.id)`) | ocultos, solo retorno |
+
+Los ocultos `raiz`/`nodo` **no son ubicacion del domicilio** ni identidad de
+tenant: no viajan al caso de uso ni eligen el `lugarId`. Su unico efecto es
+a donde regresa `volverAlArbol` cuando el alta falla; la explicacion
+canonica de esa navegacion vive en `ui/actions/volverAlArbol.ts`. Que
+existan dos entradas **si** cambia que calles ve el operador -la contextual
+solo lista las de su asentamiento, la municipal lista las del municipio-, y
+es una consecuencia de UX declarada, no de la validacion de la ubicacion.
+
+La historia de A3 no se reescribe: la restriccion original -registro plano
+como unica entrada, sin `raiz`/`nodo`- queda anotada como superseded en
+`tasks.md`, fase 4.
 
 **Sin cambio en `application`**: `verificarZonaYCalles` ya acepta `lugarId`
 ausente y lo deriva de la calle principal.
@@ -284,7 +303,7 @@ que existe, y B1 no trae ninguno.
 |---|---|---|
 | A1 | puerto `registro`, `registroDeDomicilios`, `domain/paginacion.ts`, SQL, `NodoDeSubarbol` con etiqueta, ruta `/territorio/domicilios`, desmontaje de `listarDomicilios` en `page.tsx` | conteos, alta, renombres de vocabulario |
 | A2 | `descendientesDe` en `conteo.ts`, `cuentasDeLugar` | consultas nuevas |
-| A3 | forma unica de alta, `zonaId` -> `lugarId` y su vocabulario de UI | `ZonaIncoherenteError`, `AGENTS.md` |
+| A3 | forma unica de alta (dos entradas, D10), `zonaId` -> `lugarId` y su vocabulario de UI | `ZonaIncoherenteError`, `AGENTS.md` |
 | B1 | esquema `zonas` + `calles_de_zonas`, migracion 0017, RLS/politica/GRANT, `unique` nuevo en `calles`, puertos y casos de uso, `CalleEnZonaError`, aislamiento | UI, acciones, `AGENTS.md`, datos |
 | B3d | `scripts/migrar-sectores-a-zonas.sql` y su runbook | codigo TypeScript |
 | B2 | corte de `TIPOS_DE_LUGAR`, CHECK, ~40 archivos, deltas de spec, `AGENTS.md` (error renombrado) | zonas, UI de zonas |

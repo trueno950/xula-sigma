@@ -58,7 +58,13 @@ Evidencia verificada en el codigo de hoy:
 - Listado plano de domicilios a nivel municipio, con busqueda por calle,
   numero y asentamiento, paginado; deja de cargarse todo en cada render.
 - El alta de domicilio deja de depender del nodo donde esta parado el
-  operador: una sola forma, calle + numero + transversales, zona opcional.
+  operador: una sola forma, calle + numero + transversales, colonia
+  opcional,
+  servida desde dos entradas -el registro municipal y la pestana Domicilios
+  del lugar- sobre el mismo componente. La ubicacion es el `lugarId`
+  validado o, si se omite, la calle principal; nunca el `raiz`/`nodo` de
+  navegacion (decision D10 del diseno). Lo que desaparece es la
+  contradiccion entre dos altas distintas, no la segunda entrada.
 - Los conteos del arbol pasan a incluir el subarbol, que es lo que
   `jerarquia-territorial` ya exige.
 - La pestana de calles cuenta las calles del nodo, no el catalogo del
@@ -202,7 +208,11 @@ Secuencia propuesta:
 
 - [ ] Un operador encuentra "Calle 20 #5" sin saber bajo que nodo se archivo.
 - [ ] Una colonia muestra los domicilios de todo su subarbol, no cero.
-- [ ] El alta de domicilio es una sola forma, sin depender del nodo actual.
+- [ ] El alta de domicilio es una sola forma -calle + numero +
+      transversales, colonia opcional- servida desde dos entradas: el
+      registro municipal y la pestana Domicilios del lugar. La ubicacion es
+      el `lugarId` validado o, si se omite, la calle principal; nunca el
+      `raiz`/`nodo` de navegacion.
 - [ ] Una zona lista sus domicilios sin que nadie haya declarado zona en el
       mostrador.
 - [ ] Ningun ayuntamiento ve las zonas de otro (test de aislamiento).

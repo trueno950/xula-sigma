@@ -10,6 +10,8 @@ import {
   type NodoSeleccionado,
   subarbol,
 } from "@/modules/territorio";
+import type { LugarConPadre } from "@/modules/territorio/ui/vistaDeDomicilios";
+import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -69,6 +71,14 @@ type EntradaDeCarga = {
   seleccion: SeleccionDeTerritorio;
 };
 
+type EstadoDeEntrada = {
+  contexto: ContextoActual;
+  parametros: ParametrosDeTerritorio;
+  lugares: readonly LugarConPadre[];
+  puedeCrearLugar: boolean;
+  conRaiz: boolean;
+};
+
 /**
  * Las lecturas restantes de la pantalla, ya con la seleccion validada.
  * Corren dentro del Suspense de `page.tsx` y el esqueleto cubre su espera.
@@ -87,40 +97,94 @@ export const cargarTerritorio = async ({
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
   const lugares = await listarLugares(contexto);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
-  const paneles = raiz
-    ? { hayCabecera: false, registroAbierto: false, callesDelMunicipio: [] }
+  const entrada = await cargarEntrada({
+    contexto,
+    parametros,
+    lugares,
+    puedeCrearLugar,
+    conRaiz: Boolean(raiz),
+  });
+
+  return {
+    ...seleccion,
+    raices,
+    lugares,
+    puedeCrearLugar,
+    ...entrada,
+  };
+};
+
+const cargarEntrada = async ({
+  contexto,
+  parametros,
+  lugares,
+  puedeCrearLugar,
+  conRaiz,
+}: EstadoDeEntrada) => {
+  const paneles = conRaiz
+    ? { hayCabecera: false }
     : await cargarPanelesDeEntrada(
         contexto,
         parametros.accion,
         puedeCrearLugar,
       );
+  const registro = await cargarRegistroDeEntrada(contexto, parametros, {
+    puedeCrearLugar,
+    conRaiz,
+    lugares,
+  });
 
-  return { ...seleccion, raices, lugares, puedeCrearLugar, ...paneles };
+  return {
+    domicilioAbierto:
+      conRaiz && parametros.accion === "domicilio" && puedeCrearLugar,
+    ...paneles,
+    ...registro,
+  };
 };
 
 /**
- * Los paneles de alta, cada uno con la lectura que necesita y ninguna mas:
- * `hayCabecera` no cambia nada en el resto de la pantalla, y la lista de
- * calles del municipio -la entrada no conoce el asentamiento de antemano, y
- * el caso de uso deriva cual es el de la elegida- solo alimenta el
- * formulario de domicilio.
+ * El alta de domicilio servida desde la entrada, cuando la piden sin
+ * `?raiz=`: el registro abierto para el rol con permiso, las calles del
+ * municipio para el select y su zona.
+ */
+const cargarRegistroDeEntrada = async (
+  contexto: ContextoActual,
+  parametros: ParametrosDeTerritorio,
+  {
+    puedeCrearLugar,
+    conRaiz,
+    lugares,
+  }: {
+    puedeCrearLugar: boolean;
+    conRaiz: boolean;
+    lugares: readonly LugarConPadre[];
+  },
+) => {
+  const registroAbierto =
+    !conRaiz && parametros.accion === "domicilio" && puedeCrearLugar;
+  const callesDelMunicipio = registroAbierto
+    ? await listarCallesDelMunicipio(contexto)
+    : [];
+  const zonaDeLaEntrada = registroAbierto
+    ? zonaDelFormulario(lugares, undefined, undefined)
+    : undefined;
+
+  return { registroAbierto, callesDelMunicipio, zonaDeLaEntrada };
+};
+
+/**
+ * Los paneles de alta de la entrada: hoy solo el asentamiento dispara
+ * lectura.
  */
 const cargarPanelesDeEntrada = async (
   contexto: ContextoActual,
   accion: ParametrosDeTerritorio["accion"],
   puedeCrearLugar: boolean,
 ) => {
-  const registroAbierto = accion === "domicilio" && puedeCrearLugar;
-  const callesDelMunicipio = registroAbierto
-    ? await listarCallesDelMunicipio(contexto)
-    : [];
-
   return {
     hayCabecera:
       accion === "lugar" && puedeCrearLugar
         ? await existeCabecera(contexto)
         : false,
-    registroAbierto,
-    callesDelMunicipio,
   };
 };
