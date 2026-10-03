@@ -1,11 +1,13 @@
 import { CaretRight } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
-import { ANILLO_DE_FOCO } from "@/shared/ui";
+import { ANILLO_DE_FOCO } from "./estilos";
 
 type Icono = ComponentType<{ size?: number; "aria-hidden"?: boolean }>;
 
 type Props = {
+  /** El `name` compartido: los detalles de un mismo grupo se cierran entre si. */
+  grupo: string;
   etiqueta: string;
   Icono: Icono;
   abierto: boolean;
@@ -24,11 +26,12 @@ const claseDeFila = (destructiva: boolean) =>
   }`;
 
 /**
- * Una accion de la calle: `<details>` nativo con `name` compartido, asi que
- * abrir una cierra las otras sin estado de cliente. El giro de la flecha es
- * instantaneo (`DESIGN.md`, "Divulgacion progresiva").
+ * Una accion de un panel de detalle: `<details>` nativo con `name`
+ * compartido, asi que abrir una cierra las otras sin estado de cliente. El
+ * giro de la flecha es instantaneo (`DESIGN.md`, "Divulgacion progresiva").
  */
-export function ItemDeAccionDeCalle({
+export function ItemDeAccion({
+  grupo,
   etiqueta,
   Icono,
   abierto,
@@ -36,7 +39,7 @@ export function ItemDeAccionDeCalle({
   children,
 }: Props) {
   return (
-    <details name="acciones-de-calle" open={abierto} className="group/accion">
+    <details name={grupo} open={abierto} className="group/accion">
       <summary
         className={`${claseDeFila(destructiva)} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}
       >
@@ -54,8 +57,8 @@ export function ItemDeAccionDeCalle({
   );
 }
 
-/** El mismo renglon que un detalle, pero que navega: ver `AccionesDeCalle`. */
-export function EnlaceDeAccionDeCalle({
+/** El mismo renglon que un detalle, pero que navega. */
+export function EnlaceDeItemDeAccion({
   etiqueta,
   Icono,
   href,

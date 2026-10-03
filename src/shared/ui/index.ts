@@ -25,6 +25,7 @@ export {
 export { FichaDeDatos, FilaDeFicha } from "./FichaDeDatos";
 export { GrupoDeCampos } from "./GrupoDeCampos";
 export { InsigniaDeEstado, type TonoDeInsignia } from "./InsigniaDeEstado";
+export { EnlaceDeItemDeAccion, ItemDeAccion } from "./ItemDeAccion";
 export { Migaja, type PasoDeMigaja } from "./Migaja";
 export { opcionesEtiquetadas } from "./opcionesDeLista";
 export { PaginaDePanel, PantallaDeMensaje } from "./PaginaDePanel";

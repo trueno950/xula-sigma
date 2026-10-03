@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import {
+  filtrosVisiblesDeDomicilios,
   listarRaices,
   RegistroDeDomicilios,
   registroDeDomicilios,
@@ -38,30 +39,20 @@ type Props = {
  * segundo nivel, y sin ella la unica salida era el boton del navegador.
  */
 /**
- * Que filtro dejo la lista vacia, para el vacio por filtro de
- * `estadoDeLista.ts`. El asentamiento entra por su nombre y no por su id:
- * `EstadoVacio` lo escribe tal cual en "Sin resultados para X", y un uuid
- * ahi no le dice nada a la operadora.
- *
- * Pero si el id no esta en el catalogo -una colonia, uno de otro municipio,
- * uno inexistente- el filtro se aplico igual y la lista vino vacia por eso.
- * Cae a "el asentamiento elegido" y no a `undefined`: rendirse aca devuelve
- * el vacio inicial, que es el mensaje que manda a dar de alta algo que
- * quiza ya existe en otra rama.
+ * Los filtros que dejaron la lista vacia, para el vacio por filtro de
+ * `estadoDeLista.ts`: todos, no solo el primero, porque la operadora los
+ * puso juntos y cualquiera puede ser el que no encuentra nada.
  */
 const filtroVisible = (
   filtros: FiltrosDeRegistro,
   raices: readonly LugarGuardado[],
-): string | undefined => {
-  if (filtros.calle) return filtros.calle;
-  if (filtros.numero) return filtros.numero;
-  if (!filtros.raizId) return undefined;
-
-  return (
-    raices.find((raiz) => raiz.id === filtros.raizId)?.nombre ??
-    "el asentamiento elegido"
-  );
-};
+): string | undefined =>
+  filtrosVisiblesDeDomicilios(
+    filtros,
+    (id) => raices.find((raiz) => raiz.id === id)?.nombre,
+  )
+    .map((filtro) => filtro.etiqueta)
+    .join(", ");
 
 export default async function PaginaDeDomicilios({ searchParams }: Props) {
   const contexto = await contextoActual();

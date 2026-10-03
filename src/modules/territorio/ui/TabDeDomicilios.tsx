@@ -1,36 +1,14 @@
-import {
-  AvisoDePermiso,
-  CeldaDeApoyo,
-  CeldaPrincipal,
-  CLASES_DE_TARJETA,
-  type ColumnaDeTabla,
-  FilaDeTabla,
-  Tabla,
-} from "@/shared/ui";
-import { puedeTenerCatalogoDeCalles } from "../domain";
-import {
-  domiciliosDelSubarbolDe,
-  type NodoDomicilio,
-  type PropsDeContenido,
-  rutaDe,
-} from "./contenido";
+import { AvisoDePermiso, CLASES_DE_ENLACE } from "@/shared/ui";
+import { domiciliosDelSubarbolDe, type PropsDeContenido } from "./contenido";
+import { ListaDeDomicilios } from "./ListaDeDomicilios";
 import { PanelDeDomicilio } from "./PanelDeDomicilio";
 import { puedeAbrir } from "./permisos";
-import { direccionDe } from "./vistaDeDomicilios";
-
-const COLUMNAS: readonly ColumnaDeTabla[] = [
-  { clave: "domicilio", etiqueta: "Domicilio", ancho: "minmax(0,2fr)" },
-  { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,1fr)" },
-];
-
-const etiquetaDe = (domicilio: NodoDomicilio) =>
-  direccionDe(domicilio.calle, domicilio.numero);
+import { salidaSinCalles, VacioDeDomicilios } from "./VacioDeDomicilios";
 
 /**
- * Pestana Domicilios: los domicilios colgados del lugar.
- *
- * Sin enlace en la fila: un domicilio todavia no tiene pantalla propia.
- * Cuando la tenga -para ver quien vive ahi- la fila la gana sola.
+ * Pestana Domicilios: los domicilios colgados del lugar, en maestro-detalle
+ * como Calles. Cada fila abre el panel de su domicilio al lado (`lg`) o
+ * debajo, sin estado de cliente.
  */
 export function TabDeDomicilios({
   raizId,
@@ -47,13 +25,9 @@ export function TabDeDomicilios({
   const nombres = new Map<string, string>(
     nodos.flatMap((n) => (n.clase === "lugar" ? [[n.id, n.nombre]] : [])),
   );
-  const nombreDe = (lugarId: string) => nombres.get(lugarId) ?? lugar.nombre;
   const sinCalles = calles.length === 0;
-  const poseeCatalogo = puedeTenerCatalogoDeCalles(lugar.tipo);
-  const lugarDeCallesId = poseeCatalogo ? lugar.id : raizId;
-  const textoSinCalles = poseeCatalogo
-    ? `Antes de cargar un domicilio hace falta al menos una calle en ${lugar.nombre}.`
-    : "Antes de cargar un domicilio hace falta al menos una calle en el asentamiento que lo contiene.";
+  const salida = salidaSinCalles(raizId, lugar);
+
   return (
     <div className="flex flex-col gap-4">
       {!puedeActuar ? (
@@ -63,65 +37,51 @@ export function TabDeDomicilios({
         />
       ) : null}
 
-      {colgados.length > 0 ? (
-        <Tabla etiqueta={`Domicilios de ${lugar.nombre}`} columnas={COLUMNAS}>
-          {colgados.map((fila) => (
-            <FilaDeTabla
-              key={fila.id}
-              href={rutaDe({
-                raizId: raizId,
-                nodoId: fila.lugarId,
-                vista: "domicilios",
-                domicilioId: fila.id,
-              })}
-              etiquetaAccesible={`${etiquetaDe(fila)}, ${nombreDe(fila.lugarId)}`}
-            >
-              <CeldaPrincipal>{etiquetaDe(fila)}</CeldaPrincipal>
-              <CeldaDeApoyo>{nombreDe(fila.lugarId)}</CeldaDeApoyo>
-            </FilaDeTabla>
-          ))}
-        </Tabla>
+      {colgados.length === 0 ? (
+        <VacioDeDomicilios
+          raizId={raizId}
+          lugar={lugar}
+          sinCalles={sinCalles}
+          puedeActuar={puedeActuar}
+        />
       ) : (
-        <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
-          {lugar.nombre} no tiene domicilios todavía.
-        </p>
+        <div
+          className={
+            domicilio
+              ? "grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-6"
+              : "flex flex-col gap-4"
+          }
+        >
+          <ListaDeDomicilios
+            raizId={raizId}
+            lugar={lugar}
+            filas={colgados}
+            nombreDeLugar={(lugarId) => nombres.get(lugarId) ?? lugar.nombre}
+            domicilioId={domicilio?.id}
+          />
+          {domicilio ? (
+            <PanelDeDomicilio
+              raizId={raizId}
+              nodoId={lugar.id}
+              domicilio={domicilio}
+              calles={calles}
+              lugares={lugares}
+              nodos={nodos}
+              accion={accion}
+              permisos={permisos}
+            />
+          ) : null}
+        </div>
       )}
 
-      {/*
-        Un domicilio necesita una calle: sin ninguna cargada, el formulario
-        se abriria con su unico campo obligatorio vacio y sin nada que
-        elegir. Decirlo aca, con la salida a la pestana que lo resuelve,
-        es lo unico que evita ese callejon.
-      */}
-      {puedeActuar && sinCalles ? (
+      {puedeActuar && sinCalles && colgados.length > 0 ? (
         <p className="text-[15px] text-caliza-apagada">
-          {textoSinCalles}{" "}
-          <a
-            href={rutaDe({
-              raizId: raizId,
-              nodoId: lugarDeCallesId,
-              vista: "calles",
-              accion: "calle",
-            })}
-            className="text-marca underline underline-offset-2"
-          >
+          {salida.texto}{" "}
+          <a href={salida.href} className={CLASES_DE_ENLACE}>
             Agregar la primera
           </a>
           .
         </p>
-      ) : null}
-
-      {domicilio ? (
-        <PanelDeDomicilio
-          raizId={raizId}
-          nodoId={lugar.id}
-          domicilio={domicilio}
-          calles={calles}
-          lugares={lugares}
-          nodos={nodos}
-          accion={accion}
-          permisos={permisos}
-        />
       ) : null}
     </div>
   );

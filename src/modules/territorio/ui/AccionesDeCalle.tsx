@@ -5,26 +5,23 @@ import {
   Prohibit,
 } from "@phosphor-icons/react/ssr";
 import type { ComponentType } from "react";
+import { EnlaceDeItemDeAccion, ItemDeAccion } from "@/shared/ui";
 import { rutaDe } from "./contenido";
 import {
   type DatosDeFormularioDeCalle,
   FormularioDeAccionDeCalle,
 } from "./FormulariosDeCalle";
-import {
-  EnlaceDeAccionDeCalle,
-  ItemDeAccionDeCalle,
-} from "./ItemDeAccionDeCalle";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
 import type { AccionDeCalle } from "./tipoDeAccionDeCalle";
 
-type ItemDeAccion = {
+type DefinicionDeAccion = {
   accion: AccionDeCalle;
   etiqueta: string;
   Icono: ComponentType<{ size?: number; "aria-hidden"?: boolean }>;
 };
 
-const ACCIONES: readonly ItemDeAccion[] = [
+const ACCIONES: readonly DefinicionDeAccion[] = [
   { accion: "ubicarCalle", etiqueta: "Ubicar en el mapa", Icono: MapPin },
   { accion: "renombrarCalle", etiqueta: "Renombrar", Icono: PencilSimple },
   {
@@ -50,7 +47,7 @@ function Renglon({
   abierto,
   datos,
 }: {
-  item: ItemDeAccion;
+  item: DefinicionDeAccion;
   abierto: boolean;
   datos: DatosDeFormularioDeCalle;
 }) {
@@ -64,7 +61,7 @@ function Renglon({
       accion: item.accion,
     });
     return (
-      <EnlaceDeAccionDeCalle
+      <EnlaceDeItemDeAccion
         etiqueta={item.etiqueta}
         Icono={item.Icono}
         href={`${ruta}#panel-de-calle`}
@@ -76,14 +73,15 @@ function Renglon({
     <div
       className={destructiva ? "mt-2 border-t border-caliza-divisor pt-2" : ""}
     >
-      <ItemDeAccionDeCalle
+      <ItemDeAccion
+        grupo="acciones-de-calle"
         etiqueta={item.etiqueta}
         Icono={item.Icono}
         abierto={abierto}
         destructiva={destructiva}
       >
         <FormularioDeAccionDeCalle accion={item.accion} datos={datos} />
-      </ItemDeAccionDeCalle>
+      </ItemDeAccion>
     </div>
   );
 }

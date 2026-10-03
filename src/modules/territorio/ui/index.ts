@@ -15,6 +15,7 @@ export { FormularioDeMudanza } from "./FormularioDeMudanza";
 export { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
 export { FormularioDeReparenteo } from "./FormularioDeReparenteo";
 export { FormularioDeUbicacion } from "./FormularioDeUbicacion";
+export { filtrosVisiblesDeDomicilios } from "./filtrosVisiblesDeDomicilios";
 export { HistorialDeResidencias } from "./HistorialDeResidencias";
 export { PanelDeCalle } from "./PanelDeCalle";
 export {

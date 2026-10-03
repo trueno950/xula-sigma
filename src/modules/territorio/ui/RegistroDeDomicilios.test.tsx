@@ -48,12 +48,13 @@ describe("RegistroDeDomicilios", () => {
     expect(html).toContain("Centro");
   });
 
-  it("pinta el numero como S/N cuando el domicilio no tiene", () => {
+  it("pinta el numero como sin numero cuando el domicilio no tiene", () => {
     const html = render({
       domicilios: [{ ...domicilio, numero: null }],
     });
 
-    expect(html).toContain("Calle 21 S/N");
+    expect(html).toContain("Calle 21 sin número");
+    expect(html).not.toContain("S/N");
   });
 
   it("sin filas y sin filtro pinta el vacio inicial, sin ofrecer Ver mas", () => {
