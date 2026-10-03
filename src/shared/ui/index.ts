@@ -1,5 +1,6 @@
 export { Aviso } from "./Aviso";
 export { AvisoDePermiso } from "./AvisoDePermiso";
+export { BarraDeAcciones } from "./BarraDeAcciones";
 export { Boton, EnlaceDeAccion } from "./Boton";
 export { BotonDeCerrarSesion } from "./BotonDeCerrarSesion";
 export { Campo } from "./Campo";
@@ -13,17 +14,23 @@ export {
   CLASES_DE_DATO,
   CLASES_DE_ENLACE,
   CLASES_DE_ETIQUETA,
+  CLASES_DE_FORMULARIO,
+  CLASES_DE_TARJETA,
   clasesDeBoton,
   clasesDeCampo,
   VARIANTES_DE_BOTON,
   type VarianteDeBoton,
 } from "./estilos";
+export { FichaDeDatos, FilaDeFicha } from "./FichaDeDatos";
+export { GrupoDeCampos } from "./GrupoDeCampos";
+export { InsigniaDeEstado, type TonoDeInsignia } from "./InsigniaDeEstado";
 export { Migaja, type PasoDeMigaja } from "./Migaja";
 export { opcionesEtiquetadas } from "./opcionesDeLista";
 export { PaginaDePanel, PantallaDeMensaje } from "./PaginaDePanel";
 export { Panel } from "./Panel";
 export { type Pestana, Pestanas } from "./Pestanas";
 export {
+  CeldaDeApoyo,
   CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,

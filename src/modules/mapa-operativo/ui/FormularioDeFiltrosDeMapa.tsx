@@ -1,4 +1,4 @@
-import { Boton, CampoDeLista } from "@/shared/ui";
+import { Boton, CampoDeLista, CLASES_DE_TARJETA } from "@/shared/ui";
 import type { FiltrosDeMapa } from "../application";
 import {
   AREAS_PARA_FILTRO,
@@ -24,7 +24,10 @@ type Props = FiltrosDeMapa;
  */
 export function FormularioDeFiltrosDeMapa({ tipo, estado, area }: Props) {
   return (
-    <form method="get" className="flex flex-wrap items-end gap-3">
+    <form
+      method="get"
+      className={`flex flex-wrap items-end gap-3 ${CLASES_DE_TARJETA}`}
+    >
       <CampoDeLista
         id="filtro-tipo"
         name="tipo"

@@ -1,5 +1,6 @@
 import { CaretDown } from "@phosphor-icons/react/ssr";
 import type { ComponentProps, ReactNode } from "react";
+import { MensajeDeError } from "./Campo";
 import {
   CLASES_DE_ETIQUETA,
   clasesDeCampo,
@@ -61,7 +62,7 @@ export function CampoDeLista({
   );
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className={CLASES_DE_ETIQUETA}>
         {etiqueta}
       </label>
@@ -95,11 +96,7 @@ export function CampoDeLista({
           {ayuda}
         </p>
       ) : null}
-      {error ? (
-        <p id={idDeError} className="text-[13px] font-medium text-senial-error">
-          {error}
-        </p>
-      ) : null}
+      {error ? <MensajeDeError id={idDeError} texto={error} /> : null}
     </div>
   );
 }

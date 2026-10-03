@@ -4,6 +4,7 @@ import {
   fechaCivilDeMedianocheUtc,
   fechaEnMerida,
   fechaYHoraEnMerida,
+  horaEnMerida,
   hoyEnMerida,
 } from "./fecha";
 
@@ -120,5 +121,19 @@ describe("fechaEnMerida", () => {
 
     expect(fechaEnMerida(emitida)).toContain("31 dic");
     expect(fechaEnMerida(emitida)).not.toContain("1 ene");
+  });
+});
+
+describe("horaEnMerida", () => {
+  it("03:00 UTC del 3 de octubre es 21 h del dia anterior en Merida", () => {
+    expect(horaEnMerida(new Date("2026-10-03T03:00:00.000Z"))).toBe(21);
+  });
+
+  it("medianoche en Merida es 0, no 24", () => {
+    expect(horaEnMerida(new Date("2026-10-03T06:00:00.000Z"))).toBe(0);
+  });
+
+  it("las 18:00 UTC son las 12 h en Merida", () => {
+    expect(horaEnMerida(new Date("2026-10-03T18:00:00.000Z"))).toBe(12);
   });
 });

@@ -17,9 +17,9 @@ import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
   Aviso,
   AvisoDePermiso,
-  CLASES_DE_DATO,
   CLASES_DE_ENLACE,
-  CLASES_DE_ETIQUETA,
+  FichaDeDatos,
+  FilaDeFicha,
   Migaja,
   PaginaDePanel,
   Panel,
@@ -61,12 +61,9 @@ const Dato = ({
   valor: ReactNode;
   dato?: boolean;
 }) => (
-  <div className="flex flex-col gap-1">
-    <dt className={CLASES_DE_ETIQUETA}>{etiqueta}</dt>
-    <dd className={dato ? CLASES_DE_DATO : "text-[15px] text-caliza-tinta"}>
-      {valor}
-    </dd>
-  </div>
+  <FilaDeFicha etiqueta={etiqueta} dato={dato}>
+    {valor}
+  </FilaDeFicha>
 );
 
 export default async function PaginaDeDetalleDeIntervencion({
@@ -125,7 +122,7 @@ export default async function PaginaDeDetalleDeIntervencion({
         />
       ) : null}
 
-      <dl className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
+      <FichaDeDatos>
         <Dato etiqueta="Tipo" valor={tipo} />
         <Dato
           etiqueta="Estado"
@@ -160,7 +157,7 @@ export default async function PaginaDeDetalleDeIntervencion({
           valor={enlaceAlReporte(intervencion.reporteId, referencias.reporte)}
         />
         <Dato etiqueta="Descripción" valor={intervencion.descripcion} />
-      </dl>
+      </FichaDeDatos>
 
       {puedeAdministrar ? (
         <>

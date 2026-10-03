@@ -1,9 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useForm } from "react-hook-form";
-import { ANILLO_DE_FOCO } from "@/shared/ui/estilos";
+import { Aviso } from "@/shared/ui/Aviso";
+import { Boton } from "@/shared/ui/Boton";
+import { Campo } from "@/shared/ui/Campo";
 import { type CamposDeAcceso, esquemaDeAcceso } from "./esquemaDeAcceso";
 
 /**
@@ -19,8 +21,6 @@ import { type CamposDeAcceso, esquemaDeAcceso } from "./esquemaDeAcceso";
  * La cookie la pone Better Auth en la respuesta, acotada al subdominio del
  * municipio. Sin `crossSubDomainCookies`: la de Motul no llega a Ticul.
  */
-
-const CLASES_DE_CAMPO = `rounded border border-neutral-300 px-3 py-2 focus:border-marca ${ANILLO_DE_FOCO}`;
 
 /**
  * `false` en el servidor y en el primer render del cliente, `true` una vez
@@ -53,8 +53,11 @@ export function FormularioDeAcceso() {
   const {
     register,
     handleSubmit,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm<CamposDeAcceso>({ resolver: zodResolver(esquemaDeAcceso) });
+
+  useEffect(() => setFocus("email"), [setFocus]);
 
   const acceder = async (campos: CamposDeAcceso) => {
     setFallo(null);
@@ -86,47 +89,36 @@ export function FormularioDeAcceso() {
       className="flex flex-col gap-4"
       noValidate
     >
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-800">Correo</span>
-        <input
-          {...register("email")}
-          type="email"
-          autoComplete="username"
-          className={CLASES_DE_CAMPO}
-        />
-        {errors.email ? (
-          <span className="text-sm text-red-700">{errors.email.message}</span>
-        ) : null}
-      </label>
+      <Campo
+        id="correo"
+        etiqueta="Correo"
+        type="email"
+        autoComplete="username"
+        {...(errors.email?.message ? { error: errors.email.message } : {})}
+        {...register("email")}
+      />
+      <Campo
+        id="contrasenia"
+        etiqueta="Contraseña"
+        type="password"
+        autoComplete="current-password"
+        {...(errors.password?.message
+          ? { error: errors.password.message }
+          : {})}
+        {...register("password")}
+      />
 
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-800">Contraseña</span>
-        <input
-          {...register("password")}
-          type="password"
-          autoComplete="current-password"
-          className={CLASES_DE_CAMPO}
-        />
-        {errors.password ? (
-          <span className="text-sm text-red-700">
-            {errors.password.message}
-          </span>
-        ) : null}
-      </label>
+      {fallo ? <Aviso tono="error">{fallo}</Aviso> : null}
 
-      {fallo ? (
-        <p role="alert" className="text-sm text-red-700">
-          {fallo}
-        </p>
-      ) : null}
-
-      <button
-        type="submit"
-        disabled={!hidratado || isSubmitting}
-        className="rounded bg-marca px-4 py-2 font-medium text-marca-texto disabled:opacity-60"
-      >
-        {isSubmitting ? "Entrando..." : "Entrar"}
-      </button>
+      <div className="[&_button]:w-full">
+        <Boton
+          type="submit"
+          variante="primaria"
+          disabled={!hidratado || isSubmitting}
+        >
+          {isSubmitting ? "Entrando..." : "Entrar"}
+        </Boton>
+      </div>
     </form>
   );
 }

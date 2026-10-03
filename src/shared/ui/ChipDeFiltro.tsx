@@ -10,12 +10,9 @@ type Props = {
 };
 
 /**
- * El chip de filtro activo de `DESIGN.md`, seccion "Filtros": fondo
- * caliza-relleno, texto tinta, 4px de radio, alto 32px, la "x" de quitar
- * dentro del chip. Va en `shared/ui` y no en un modulo porque es el mismo
- * componente para cualquier lista con filtros de lista cerrada -reportes lo
- * usa primero, pero el token `filtro-activo` de `DESIGN.md` ya lo declara
- * compartido.
+ * El chip de filtro aplicado de `DESIGN.md`: pastilla de 32px sobre marca
+ * suave, texto de tinta y la "x" de quitar dentro. Es uno de los seis lugares
+ * donde vive la marca, y solo como fondo.
  *
  * Es un `<Link>`, no un boton con `onClick`: quitar un filtro es
  * navegacion -mismo criterio que "Ver mas" y el encabezado ordenable de
@@ -25,7 +22,7 @@ export function ChipDeFiltro({ etiqueta, hrefQuitar }: Props) {
   return (
     <Link
       href={hrefQuitar}
-      className={`inline-flex h-8 items-center gap-1.5 rounded-sm bg-caliza-relleno px-2.5 text-[13px] font-medium text-caliza-tinta hover:bg-caliza-borde ${ANILLO_DE_FOCO}`}
+      className={`inline-flex h-8 items-center gap-1.5 rounded-pill bg-marca-suave px-3 text-[13px] font-medium text-caliza-tinta transition-colors duration-150 ease-salida hover:bg-caliza-relleno ${ANILLO_DE_FOCO}`}
     >
       {etiqueta}
       <X size={12} weight="bold" aria-hidden="true" />

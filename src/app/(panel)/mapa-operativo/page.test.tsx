@@ -68,7 +68,7 @@ describe("PaginaDeMapaOperativo", () => {
 describe("navegacion del mapa operativo", () => {
   it("ofrece el mapa a cualquier rol autenticado y lo marca activo", () => {
     const html = renderToStaticMarkup(
-      <NavegacionDeModulos ruta="/mapa-operativo" forma="fila" />,
+      <NavegacionDeModulos ruta="/mapa-operativo" rol="OPERADOR" />,
     );
 
     expect(html).toContain('href="/mapa-operativo"');

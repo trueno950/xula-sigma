@@ -2,6 +2,7 @@ import { Gear } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import {
   buscarConstancias,
+  descripcionDeFiltrosDeConstancias,
   ListadoDeConstancias,
   listarConstancias,
 } from "@/modules/constancias";
@@ -62,7 +63,7 @@ export default async function PaginaDeConstancias({ searchParams }: Props) {
     : await listarConstancias(filtros, contexto, opciones);
   const estado = estadoDeLista({
     total: constancias.length,
-    filtro: q ?? filtros.estado,
+    filtro: descripcionDeFiltrosDeConstancias(filtros, q),
   });
 
   const configuracion = puedeAdministrarDocumentos(contexto.usuario.rol) ? (

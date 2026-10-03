@@ -1,16 +1,18 @@
 import type { ReactNode } from "react";
 
 const ANCHOS = {
-  /** Listados: el ancho donde una fila de 44px todavia se barre de un ojo. */
-  lista: "max-w-4xl",
+  /** Listados: el ancho de `DESIGN.md`, "Estructura de la aplicacion", para tablas y fichas. */
+  lista: "max-w-[1200px]",
   /** Detalle de un registro. */
-  detalle: "max-w-2xl",
+  detalle: "max-w-[720px]",
   /** Captura: angosto a proposito, para que el campo no se estire. */
-  formulario: "max-w-md",
+  formulario: "max-w-[720px]",
 } as const;
 
 type Props = {
   titulo: string;
+  /** Una linea bajo el titulo que dice para que sirve la pantalla. */
+  descripcion?: string;
   /** La unica accion primaria de la pantalla, si la hay. */
   accion?: ReactNode;
   /** El `<Migaja>` de `shared/ui`, si la pantalla esta a mas de un nivel. */
@@ -34,6 +36,7 @@ type Props = {
  */
 export function PaginaDePanel({
   titulo,
+  descripcion,
   accion,
   migaja,
   ancho = "lista",
@@ -41,14 +44,21 @@ export function PaginaDePanel({
 }: Props) {
   return (
     <main
-      className={`mx-auto flex w-full flex-col gap-6 px-4 py-6 md:px-6 ${ANCHOS[ancho]}`}
+      className={`mx-auto flex w-full flex-col gap-6 px-4 py-6 md:px-6 lg:px-8 lg:py-8 ${ANCHOS[ancho]}`}
     >
       {migaja}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-caliza-tinta">
-          {titulo}
-        </h1>
-        {accion}
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="text-[1.75rem] leading-[1.15] font-[650] tracking-[-0.02em] text-caliza-tinta">
+            {titulo}
+          </h1>
+          {descripcion ? (
+            <p className="max-w-[70ch] text-[15px] text-caliza-apagada">
+              {descripcion}
+            </p>
+          ) : null}
+        </div>
+        {accion ? <div className="min-w-0 max-w-full">{accion}</div> : null}
       </div>
       {children}
     </main>

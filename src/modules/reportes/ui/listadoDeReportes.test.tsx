@@ -45,6 +45,14 @@ describe("ListadoDeReportes", () => {
     expect(pagina).not.toContain(">EN_ATENCION<");
   });
 
+  it("el estado sale en una insignia con icono y la palabra", () => {
+    const pagina = html([reporte({ estado: "RESUELTO" })]);
+
+    expect(pagina).toMatch(
+      /bg-senial-exito-suave[^>]*><svg[^>]*>.*<\/svg>Resuelto</,
+    );
+  });
+
   it("un reporte sin area se lee igual para cualquier rol", () => {
     const pagina = html([reporte({ areaResponsable: null })]);
 

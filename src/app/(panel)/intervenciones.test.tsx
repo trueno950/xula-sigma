@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CLASES_DE_DATO, CLASES_DE_ENLACE } from "@/shared/ui";
+import { CLASES_DE_ENLACE } from "@/shared/ui";
 
 const notFoundMock = vi.hoisted(() =>
   vi.fn((): never => {
@@ -10,7 +10,10 @@ const notFoundMock = vi.hoisted(() =>
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const intervencionConReferenciasMock = vi.hoisted(() => vi.fn());
 
-vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
+vi.mock("next/navigation", () => ({
+  notFound: notFoundMock,
+  usePathname: () => null,
+}));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("@/modules/intervenciones", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/intervenciones")>()),
@@ -82,11 +85,13 @@ describe("ficha de intervencion", () => {
 
     expect(html).toContain("Fecha de ocurrencia");
     expect(html).toContain("2026-01-15");
-    expect(html).toContain(`<dd class="${CLASES_DE_DATO}">2026-01-15</dd>`);
+    expect(html).toMatch(
+      /<dd class="[^"]*font-mono[^"]*tabular-nums[^"]*">2026-01-15<\/dd>/,
+    );
     expect(html).toContain("Capturado en");
-    expect(html).toContain(`<dd class="${CLASES_DE_DATO}">1 mar 2026`);
+    expect(html).toMatch(/<dd class="[^"]*font-mono[^"]*">1 mar 2026/);
     expect(html).toContain("1 mar 2026");
-    expect(html).toContain(`<dd class="${CLASES_DE_DATO}">2 mar 2026`);
+    expect(html).toMatch(/<dd class="[^"]*font-mono[^"]*">2 mar 2026/);
     expect(html).toContain("formulario de correccion");
     expect(html).toContain("acciones de estado");
   });
@@ -171,7 +176,7 @@ describe("ficha de intervencion", () => {
 describe("navegacion de intervenciones", () => {
   it("ofrece el modulo y lo marca como activo", () => {
     const html = renderToStaticMarkup(
-      <NavegacionDeModulos ruta="/intervenciones" forma="fila" />,
+      <NavegacionDeModulos ruta="/intervenciones" rol="OPERADOR" />,
     );
 
     expect(html).toContain('aria-label="Módulos"');

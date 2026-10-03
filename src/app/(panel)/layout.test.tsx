@@ -16,6 +16,7 @@ vi.mock("next/navigation", () => ({
     throw new Error("NEXT_NOT_FOUND");
   },
   redirect: redirectMock,
+  usePathname: () => null,
 }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("@/shared/tenancy/contexto", () => ({
@@ -36,14 +37,37 @@ describe("layout del panel", () => {
     });
   });
 
-  it("ofrece cerrar la sesion desde la cabecera", async () => {
+  it("ofrece cerrar la sesion y el rol desde el lateral", async () => {
     const html = await pintar();
-    const cabecera = html.slice(
-      html.indexOf("<header"),
-      html.indexOf("</header>"),
+    const lateral = html.slice(
+      html.indexOf("<aside"),
+      html.indexOf("</aside>"),
     );
 
-    expect(cabecera).toContain("Cerrar sesión");
+    expect(lateral).toContain("Cerrar sesión");
+    expect(lateral).toContain("Administrador");
+  });
+
+  it("muestra el municipio en el lateral y el contenido al lado", async () => {
+    const html = await pintar();
+    const lateral = html.slice(
+      html.indexOf("<aside"),
+      html.indexOf("</aside>"),
+    );
+
+    expect(lateral).toContain("Motul");
+    expect(html).toContain("contenido");
+  });
+
+  it("solo ofrece los modulos que el rol puede usar", async () => {
+    contextoActualMock.mockResolvedValue({
+      usuario: { id: "u2", rol: "OPERADOR" },
+    });
+
+    const html = await pintar();
+
+    expect(html).not.toContain('href="/marca"');
+    expect(html).toContain('href="/padron"');
   });
 
   it("sin sesion manda a la pantalla de acceso", async () => {

@@ -1,4 +1,4 @@
-import { CaretDown, CaretUp } from "@phosphor-icons/react/ssr";
+import { CaretDown, CaretRight, CaretUp } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import {
@@ -38,54 +38,57 @@ type PropsDeTabla = {
   verMas?: string;
 };
 
+/** La ultima pista es la del chevron: alinea encabezado y filas. */
+const PLANTILLA_DE_FILA =
+  "sm:[grid-template-columns:var(--columnas-de-tabla)_1rem]";
+
 const ETIQUETA_DE_DIRECCION: Record<"asc" | "desc", string> = {
   asc: "ascendente",
   desc: "descendente",
 };
 
+function FlechaDeOrden({ direccion }: { direccion: "asc" | "desc" }) {
+  const Flecha = direccion === "asc" ? CaretUp : CaretDown;
+  return (
+    <Flecha size={12} weight="bold" aria-hidden="true" data-orden-flecha />
+  );
+}
+
 /**
- * La tabla de `DESIGN.md`: encabezado pegajoso de 36px, filas de 44px,
- * divisor de 1px, sin cebra, sin scroll horizontal.
+ * La tabla de `DESIGN.md`: tarjeta con encabezado pegajoso de 40px, filas de
+ * 48px, divisor de 1px, sin cebra, sin scroll horizontal.
  *
- * **No es un `<table>`, es una lista de enlaces.** Cada fila entra a una
- * pantalla; el marcado que describe eso es `ul`/`li`/`a`, y el que lo
- * anuncia bien es ese. Un `role="row"` sobre un `<a>` le quita al enlace su
- * propia semantica, que es la que el operador usa para navegar.
+ * Recorta con `overflow-clip` y no `overflow-hidden`: este ultimo crea un
+ * contenedor de scroll y el encabezado dejaria de pegarse a la ventana.
+ * El `top-0` es porque el shell ya no tiene barra superior pegada.
  *
- * Por eso las columnas sin orden llevan `aria-hidden`: son una guia visual
- * y nada mas, y lo que el lector de pantalla necesita saber de cada celda
- * va en el texto del enlace de fila, que se lee entero. Una columna
- * ordenable (`columna.orden`) es la excepcion: ahi el encabezado deja de
- * ser decorativo -es un link real que reordena la lista-, asi que pierde el
- * `aria-hidden` y gana un `aria-label` con la direccion activa, porque el
- * peso visual del icono solo no alcanza (`DESIGN.md`, "todo estado lleva
- * texto o icono").
+ * **No es un `<table>`, es una lista de enlaces**: cada fila entra a una
+ * pantalla, y un `role="row"` sobre un `<a>` le quita su semantica. Por eso
+ * las columnas sin orden llevan `aria-hidden` (guia visual; el enlace de
+ * fila se lee entero). Una columna ordenable es un link real, asi que gana
+ * un `aria-label` con la direccion: el icono solo no alcanza (`DESIGN.md`,
+ * "todo estado lleva texto o icono").
  *
- * El encabezado se esconde por debajo de 640px porque abajo de ese ancho no
- * hay columnas que encabezar: la fila se reordena en dos renglones
- * (identificador arriba, datos de apoyo abajo). Dos formas reales, no una
- * forma con barra de scroll.
- *
- * Se pega debajo de lo que ya esta pegado arriba, que cambia con el ancho:
- * la barra de identidad mide 64px siempre, y por debajo de 768px se le suma
- * la fila de modulos de 48px. Con `top-0` el encabezado de la tabla se
- * metia debajo de las dos al hacer scroll.
+ * El encabezado se esconde por debajo de 640px: ahi la fila se reordena en
+ * dos renglones (identificador arriba, apoyo abajo), no hay barra de scroll.
  */
 export function Tabla({ etiqueta, columnas, children, verMas }: PropsDeTabla) {
   const plantilla = plantillaDeColumnas(columnas);
 
   return (
     <div
-      className="flex flex-col"
+      className="flex flex-col overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo"
       style={{ "--columnas-de-tabla": plantilla } as CSSProperties}
     >
-      <div className="sticky top-28 z-[5] hidden md:top-16 h-9 items-center gap-4 border-b border-caliza-divisor bg-caliza-superficie px-3 sm:grid sm:[grid-template-columns:var(--columnas-de-tabla)]">
+      <div
+        className={`sticky top-0 z-[5] hidden h-10 items-center gap-4 border-b border-caliza-divisor bg-caliza-superficie px-4 sm:grid ${PLANTILLA_DE_FILA}`}
+      >
         {columnas.map((columna) =>
           columna.orden ? (
             <Link
               key={columna.clave}
               href={columna.orden.href}
-              className={`inline-flex items-center gap-1 ${CLASES_DE_ETIQUETA} hover:text-caliza-tinta`}
+              className={`inline-flex items-center gap-1 transition-colors duration-150 ease-salida ${CLASES_DE_ETIQUETA} hover:text-caliza-tinta`}
               aria-label={`${columna.etiqueta}, ${
                 columna.orden.activa
                   ? `ordenado ${ETIQUETA_DE_DIRECCION[columna.orden.activa]}`
@@ -93,10 +96,8 @@ export function Tabla({ etiqueta, columnas, children, verMas }: PropsDeTabla) {
               }`}
             >
               {columna.etiqueta}
-              {columna.orden.activa === "asc" ? (
-                <CaretUp size={12} weight="bold" aria-hidden="true" />
-              ) : columna.orden.activa === "desc" ? (
-                <CaretDown size={12} weight="bold" aria-hidden="true" />
+              {columna.orden.activa ? (
+                <FlechaDeOrden direccion={columna.orden.activa} />
               ) : null}
             </Link>
           ) : (
@@ -114,7 +115,7 @@ export function Tabla({ etiqueta, columnas, children, verMas }: PropsDeTabla) {
         {children}
       </ul>
       {verMas ? (
-        <div className="flex justify-center border-t border-caliza-divisor py-3">
+        <div className="flex justify-center border-t border-caliza-divisor py-4">
           <Link href={verMas} className={clasesDeBoton("secundaria")}>
             Ver más
           </Link>
@@ -137,8 +138,7 @@ type PropsDeFila = {
   children: ReactNode;
 };
 
-const DISPOSICION_DE_FILA =
-  "flex min-h-11 flex-col justify-center gap-0.5 px-3 py-2 sm:grid sm:h-11 sm:items-center sm:gap-4 sm:py-0 sm:[grid-template-columns:var(--columnas-de-tabla)]";
+const DISPOSICION_DE_FILA = `relative flex min-h-14 flex-col justify-center gap-0.5 px-4 py-2 sm:grid sm:h-12 sm:min-h-0 sm:items-center sm:gap-4 sm:py-0 ${PLANTILLA_DE_FILA}`;
 
 /**
  * Una fila. Cuando lleva `href`, el hover a caliza-superficie es la unica
@@ -152,14 +152,21 @@ export function FilaDeTabla({
   children,
 }: PropsDeFila) {
   return (
-    <li className="border-b border-caliza-divisor">
+    <li className="border-b border-caliza-divisor last:border-b-0">
       {href ? (
         <Link
           href={href}
           aria-label={etiquetaAccesible}
-          className={`${DISPOSICION_DE_FILA} transition-colors hover:bg-caliza-superficie focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca`}
+          className={`group pr-10 sm:pr-4 ${DISPOSICION_DE_FILA} transition-colors duration-150 ease-salida hover:bg-caliza-superficie focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca`}
         >
           {children}
+          <CaretRight
+            size={16}
+            weight="bold"
+            aria-hidden="true"
+            data-chevron
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-caliza-apagada transition-colors duration-150 ease-salida sm:static sm:translate-y-0 sm:text-transparent sm:group-hover:text-caliza-apagada sm:group-focus-visible:text-caliza-apagada"
+          />
         </Link>
       ) : (
         <div className={DISPOSICION_DE_FILA}>{children}</div>
@@ -171,7 +178,7 @@ export function FilaDeTabla({
 /** La celda que identifica la fila: tipografia Title, tinta plena. */
 export function CeldaPrincipal({ children }: { children: ReactNode }) {
   return (
-    <span className="truncate text-[15px] font-medium text-caliza-tinta">
+    <span className="truncate text-[15px] font-semibold text-caliza-tinta">
       {children}
     </span>
   );
@@ -180,4 +187,12 @@ export function CeldaPrincipal({ children }: { children: ReactNode }) {
 /** CURP, folio, fecha: tipografia Dato, `tabular-nums`, tono apagado. */
 export function CeldaDeDato({ children }: { children: ReactNode }) {
   return <span className={`truncate ${CLASES_DE_DATO}`}>{children}</span>;
+}
+
+/**
+ * Dato de apoyo que no es un identificador: un tipo, un area, un nombre.
+ * Label en apagada; Dato (mono) es solo para CURP, folios y fechas.
+ */
+export function CeldaDeApoyo({ children }: { children: ReactNode }) {
+  return <span className={`truncate ${CLASES_DE_ETIQUETA}`}>{children}</span>;
 }

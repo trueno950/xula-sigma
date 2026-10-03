@@ -1,3 +1,4 @@
+import { CLASES_DE_DATO } from "@/shared/ui";
 import type { ResidenciaGuardada } from "../application/puertosDeResidencias";
 import { vigenteDe } from "../domain";
 
@@ -28,19 +29,16 @@ export function HistorialDeResidencias({ historial }: Props) {
   const vigente = vigenteDe(historial);
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo">
       {historial.map((residencia) => (
-        <li
-          key={residencia.id}
-          className="flex flex-col gap-0.5 rounded-sm border border-caliza-borde p-3"
-        >
+        <li key={residencia.id} className="flex flex-col gap-0.5 px-5 py-3">
           <span className="text-[15px] text-caliza-tinta">
             {residencia.domicilio.numero
               ? `Número ${residencia.domicilio.numero}`
               : "Sin número"}
             {residencia === vigente ? " · Vigente" : ""}
           </span>
-          <span className="text-[13px] text-caliza-apagada">
+          <span className={CLASES_DE_DATO}>
             Desde {residencia.desdeEn}
             {residencia.hastaEn ? ` hasta ${residencia.hastaEn}` : ""}
           </span>

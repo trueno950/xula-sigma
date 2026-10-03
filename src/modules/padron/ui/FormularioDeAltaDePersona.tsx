@@ -1,4 +1,11 @@
-import { Aviso, Boton, Campo } from "@/shared/ui";
+import {
+  Aviso,
+  BarraDeAcciones,
+  Boton,
+  Campo,
+  CLASES_DE_FORMULARIO,
+  GrupoDeCampos,
+} from "@/shared/ui";
 import { altaDePersonaAction } from "./actions/altaDePersona.action";
 import { SugerenciaDeDuplicados } from "./SugerenciaDeDuplicados";
 
@@ -19,30 +26,36 @@ type Props = {
  */
 export function FormularioDeAltaDePersona({ error }: Props) {
   return (
-    <form action={altaDePersonaAction} className="flex flex-col gap-4">
+    <form action={altaDePersonaAction} className={CLASES_DE_FORMULARIO}>
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      <SugerenciaDeDuplicados />
+      <GrupoDeCampos titulo="Datos de la persona">
+        <SugerenciaDeDuplicados />
 
-      <Campo
-        id="segundoApellido"
-        name="segundoApellido"
-        etiqueta="Segundo apellido"
-        ayuda="Dejar vacío si la persona no lo usa."
-      />
+        <Campo
+          id="segundoApellido"
+          name="segundoApellido"
+          etiqueta="Segundo apellido"
+          ayuda="Dejar vacío si la persona no lo usa."
+        />
+      </GrupoDeCampos>
 
-      <Campo
-        id="curp"
-        name="curp"
-        etiqueta="CURP"
-        maxLength={18}
-        ayuda="18 caracteres. Se puede completar después."
-        tipografia="dato"
-      />
+      <GrupoDeCampos titulo="Identificación">
+        <Campo
+          id="curp"
+          name="curp"
+          etiqueta="CURP"
+          maxLength={18}
+          ayuda="18 caracteres. Se puede completar después."
+          tipografia="dato"
+        />
+      </GrupoDeCampos>
 
-      <Boton type="submit" variante="primaria">
-        Guardar
-      </Boton>
+      <BarraDeAcciones>
+        <Boton type="submit" variante="primaria">
+          Guardar
+        </Boton>
+      </BarraDeAcciones>
     </form>
   );
 }

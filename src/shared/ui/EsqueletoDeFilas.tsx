@@ -14,16 +14,20 @@ const CLAVES = Array.from({ length: 24 }, (_, indice) => `esqueleto-${indice}`);
  * dice nada; el esqueleto ya dice cuanto va a ocupar lo que viene y evita
  * que la pantalla salte cuando llega.
  *
- * `animate-pulse` es la unica animacion del sistema y no es decoracion:
- * distingue "esto va a llegar" de "esto es una fila gris vacia".
+ * El pulso de opacidad lento no es decoracion: distingue "esto va a llegar"
+ * de "esto es una fila gris vacia". Las filas miden 48px (`h-12`), la misma
+ * altura que `Tabla`.
  */
 export function EsqueletoDeFilas({ filas = 6 }: { filas?: number }) {
   return (
-    <ul aria-hidden="true" className="flex animate-pulse flex-col">
+    <ul
+      aria-hidden="true"
+      className="flex animate-pulso-lento flex-col overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo"
+    >
       {CLAVES.slice(0, filas).map((clave) => (
         <li
           key={clave}
-          className="flex h-11 items-center border-b border-caliza-divisor px-3"
+          className="flex h-12 items-center border-b border-caliza-divisor px-4 last:border-b-0"
         >
           <span className="h-3 w-1/3 rounded-sm bg-caliza-relleno" />
         </li>

@@ -2,6 +2,10 @@
 
 Convenciones de UI, estado, formularios y generación de documentos.
 
+Lo visual (paleta, tipografía, sombras, movimiento, componentes y patrones de
+pantalla) vive en [DESIGN.md](../DESIGN.md). Este documento no lo repite: solo
+fija cómo se arma la UI y señala ese documento donde hace falta.
+
 ---
 
 ## 1. Stack
@@ -245,7 +249,9 @@ Cada ayuntamiento ve su escudo y sus colores. Sin código por municipio.
 
 shadcn/ui se eligió precisamente por esto: sus componentes se estilan con
 variables CSS, no con clases fijas. Cambiar `--primary` cambia botones,
-foco, enlaces y estados activos de toda la aplicación de una sola vez. Con
+foco, acción primaria y estados activos de toda la aplicación de una sola vez.
+Dónde puede aparecer la marca es una lista cerrada en
+[DESIGN.md](../DESIGN.md), sección 2. Con
 una librería empaquetada esto sería una pelea; acá es el mecanismo previsto.
 
 ### Inyección en servidor
@@ -454,6 +460,8 @@ Reglas:
 - Paginación **en servidor** para cualquier listado que pueda superar 100
   filas. El padrón de un municipio no se manda entero al navegador.
 - La definición de columnas vive junto a la vista, no en un archivo global
+- El aspecto (tarjeta, encabezado pegajoso, fila de 48px, insignias) lo define
+  [DESIGN.md](../DESIGN.md), "Tablas"; los primitivos están en `shared/ui`
 - Una tabla no ejecuta cálculos de negocio: recibe los datos ya calculados
 
 ---
@@ -536,10 +544,12 @@ municipal.
 Consecuencias prácticas:
 
 - Server Components por defecto reduce el JavaScript enviado
-- Sin animaciones decorativas: entorpecen el trabajo del operador y cuestan
-  batería y CPU
+- Movimiento solo como retroalimentación y sin propiedades de layout; la
+  regla completa está en [DESIGN.md](../DESIGN.md), sección 5. Nada decorativo:
+  cuesta batería y CPU
 - Imágenes por `next/image`, escudos servidos ya redimensionados
-- Sin fuentes externas: se autoalojan o se usa la del sistema
+- Sin fuentes externas: una sola fuente variable autoalojada, con respaldo de
+  sistema ([DESIGN.md](../DESIGN.md), sección 3)
 - Paginación en servidor siempre
 
 ---
@@ -559,7 +569,7 @@ Consecuencias prácticas:
 | 9 | Hook que hace tres cosas | Tres hooks y un facade |
 | 10 | Componente shadcn modificado sin registrar por qué | Se copia al repo: documentar el cambio |
 | 11 | Fuente o script desde CDN externo | Autoalojado |
-| 12 | Animación decorativa en pantalla operativa | Sin animación |
+| 12 | Animación decorativa o de propiedades de layout | Solo retroalimentación; ver [DESIGN.md](../DESIGN.md), sección 5 |
 | 13 | Emoji usado como icono de interfaz | Phosphor |
 | 14 | Icono de Lucide sobreviviendo en un componente shadcn copiado | Reemplazar por su equivalente Phosphor |
 | 15 | Pesos de Phosphor mezclados sin criterio | `regular`, y `fill` solo para estado activo |

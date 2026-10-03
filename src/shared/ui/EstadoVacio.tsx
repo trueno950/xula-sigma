@@ -1,16 +1,27 @@
+import { MagnifyingGlass, Tray } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { EstadoDeLista } from "./estadoDeLista";
+import { CLASES_DE_TARJETA, clasesDeBoton } from "./estilos";
 
 type Props = {
   estado: Exclude<EstadoDeLista, { clase: "con-filas" }>;
   /** Que es esta pantalla, en una linea, cuando todavia no tiene nada. */
   mensajeInicial: string;
-  /** El boton primario que la llena. Sin ilustracion y sin microcopy. */
+  /** El boton primario que la llena. Un icono de linea, nunca ilustracion. */
   accion?: ReactNode;
   /** La misma pantalla sin el filtro puesto. */
   hrefSinFiltro: string;
 };
+
+const CONTENEDOR = `flex flex-col items-center gap-4 px-6 py-12 text-center ${CLASES_DE_TARJETA}`;
+
+const ICONO = {
+  size: 40,
+  weight: "light",
+  "aria-hidden": true,
+  className: "text-caliza-apagada",
+} as const;
 
 /**
  * Los dos vacios de `DESIGN.md`, que son dos mensajes porque son dos
@@ -28,23 +39,22 @@ export function EstadoVacio({
 }: Props) {
   if (estado.clase === "vacio-por-filtro") {
     return (
-      <div className="flex flex-col items-start gap-2 py-8">
+      <div className={CONTENEDOR}>
+        <MagnifyingGlass {...ICONO} />
         <p className="text-[15px] text-caliza-tinta">
           Sin resultados para{" "}
-          <span className="font-medium">{estado.filtro}</span>.
+          <span className="font-semibold">{estado.filtro}</span>.
         </p>
-        <Link
-          href={hrefSinFiltro}
-          className="text-[15px] text-marca underline underline-offset-2"
-        >
-          Quitar la busqueda
+        <Link href={hrefSinFiltro} className={clasesDeBoton("secundaria")}>
+          Quitar el filtro
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-start gap-4 py-8">
+    <div className={CONTENEDOR}>
+      <Tray {...ICONO} />
       <p className="text-[15px] text-caliza-apagada">{mensajeInicial}</p>
       {accion}
     </div>

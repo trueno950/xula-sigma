@@ -1,5 +1,6 @@
 import { fechaEnMerida } from "@/shared/lib/fecha";
 import {
+  CeldaDeApoyo,
   CeldaDeDato,
   CeldaPrincipal,
   type ColumnaDeTabla,
@@ -11,7 +12,6 @@ import {
 import type { FiltrosDeListado, ReporteGuardado } from "../application/puertos";
 import {
   ETIQUETA_DE_AREA,
-  ETIQUETA_DE_ESTADO_DE_REPORTE,
   ETIQUETA_DE_TIPO_DE_INCIDENCIA,
   type OrdenDeReportes,
   SIN_AREA,
@@ -19,6 +19,7 @@ import {
 import { resolverOrdenDeColumnas } from "./columnasOrdenables";
 import { FiltrosDeReportes } from "./FiltrosDeReportes";
 import { hrefDeVerMas } from "./hrefsDeListado";
+import { InsigniaDeReporte } from "./InsigniaDeReporte";
 
 type Props = {
   reportes: readonly ReporteGuardado[];
@@ -81,17 +82,15 @@ export function ListadoDeReportes({
               href={`/reportes/detalle/${reporte.id}`}
             >
               <CeldaPrincipal>{reporte.folio}</CeldaPrincipal>
-              <CeldaDeDato>
+              <CeldaDeApoyo>
                 {ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
-              </CeldaDeDato>
-              <CeldaDeDato>
-                {ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
-              </CeldaDeDato>
-              <CeldaDeDato>
+              </CeldaDeApoyo>
+              <InsigniaDeReporte estado={reporte.estado} />
+              <CeldaDeApoyo>
                 {reporte.areaResponsable
                   ? ETIQUETA_DE_AREA[reporte.areaResponsable]
                   : SIN_AREA}
-              </CeldaDeDato>
+              </CeldaDeApoyo>
               <CeldaDeDato>{fechaEnMerida(reporte.registradoEn)}</CeldaDeDato>
             </FilaDeTabla>
           ))}

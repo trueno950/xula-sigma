@@ -40,4 +40,16 @@ describe("FormularioDeAcceso antes de hidratar", () => {
   it("no lleva el valor de la contrasenia en el marcado", () => {
     expect(html).not.toMatch(/name="password"[^>]*value=/);
   });
+
+  it("usa los campos del sistema, con id y etiqueta enlazados", () => {
+    expect(html).toContain('for="correo"');
+    expect(html).toContain('id="correo"');
+    expect(html).toContain('for="contrasenia"');
+    expect(html).toContain('id="contrasenia"');
+  });
+
+  it("no lleva estilos crudos: el boton de ingreso es el de marca", () => {
+    expect(html).not.toContain("neutral-");
+    expect(html).toMatch(/<button[^>]*class="[^"]*bg-marca\b/);
+  });
 });

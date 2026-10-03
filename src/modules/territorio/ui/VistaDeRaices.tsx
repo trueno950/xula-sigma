@@ -42,7 +42,7 @@ type Props = {
 };
 
 const CLASE_FILA =
-  "flex min-h-11 flex-wrap items-center gap-x-3 gap-y-0.5 rounded-sm px-3 py-2 transition-colors hover:bg-caliza-superficie focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca";
+  "flex min-h-12 flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2 transition-colors duration-150 ease-salida hover:bg-caliza-superficie focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca";
 
 /**
  * La entrada de `/territorio`: los asentamientos del municipio y, indentado,
@@ -82,7 +82,10 @@ export function VistaDeRaices({
       ) : null}
 
       {estado.clase === "con-filas" ? (
-        <ul aria-label="Asentamientos del municipio" className="flex flex-col">
+        <ul
+          aria-label="Asentamientos del municipio"
+          className="flex flex-col divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo"
+        >
           {raices.map((raiz) => {
             const hijos = hijosDe(raiz.id);
             const masAdentro = masAdentroDe(
@@ -91,7 +94,7 @@ export function VistaDeRaices({
             );
 
             return (
-              <li key={raiz.id} className="border-b border-caliza-divisor py-1">
+              <li key={raiz.id}>
                 <Link
                   href={`/territorio?raiz=${raiz.id}`}
                   className={CLASE_FILA}
@@ -122,12 +125,12 @@ export function VistaDeRaices({
                 </Link>
 
                 {hijos.length > 0 ? (
-                  <ul className="flex flex-col border-l border-caliza-divisor pl-3 ml-3">
+                  <ul className="flex flex-col divide-y divide-caliza-divisor border-t border-caliza-divisor">
                     {hijos.map((hijo) => (
                       <li key={hijo.id}>
                         <Link
                           href={`/territorio?raiz=${raiz.id}&nodo=${hijo.id}`}
-                          className={CLASE_FILA}
+                          className={`${CLASE_FILA} pl-9`}
                           aria-label={`${hijo.nombre}, ${tipoDeLugarEnFrase(hijo.tipo)}`}
                         >
                           <span className="text-[15px] text-caliza-tinta">
@@ -143,7 +146,9 @@ export function VistaDeRaices({
                 ) : null}
 
                 {masAdentro > 0 ? (
-                  <p className={`${CLASES_DE_ETIQUETA} px-3 pb-1 pl-9`}>
+                  <p
+                    className={`${CLASES_DE_ETIQUETA} border-t border-caliza-divisor px-4 py-2 pl-9`}
+                  >
                     {masAdentro} lugar{masAdentro === 1 ? "" : "es"} más
                     adentro.
                   </p>

@@ -2,6 +2,7 @@ import {
   AvisoDePermiso,
   CeldaDeDato,
   CeldaPrincipal,
+  CLASES_DE_TARJETA,
   type ColumnaDeTabla,
   FilaDeTabla,
   Tabla,
@@ -77,7 +78,7 @@ export function TabDeDomicilios({
           ))}
         </Tabla>
       ) : (
-        <p className="py-6 text-[15px] text-caliza-apagada">
+        <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
           {lugar.nombre} no tiene domicilios todavía.
         </p>
       )}

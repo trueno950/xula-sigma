@@ -3,49 +3,88 @@
 /**
  * Tailwind 4 configura desde el CSS, no desde `tailwind.config.js`.
  *
- * Los colores de marca son **variables**, no valores fijos: cada municipio
- * elige los suyos y el layout de su superficie los inyecta desde el
- * servidor (ver `(acceso)/layout.tsx`). Lo que hay aca son los valores por
- * defecto, que es lo que se ve mientras un municipio no haya cargado marca.
- *
- * El resto de la paleta —caliza, senales, radios, tipografia— es de
- * `DESIGN.md`. Los nombres de token son los mismos ahi y aca a proposito,
- * para que un cambio en uno sea facil de auditar contra el otro a simple
- * vista; nada los sincroniza automaticamente.
+ * Los tokens son los de `DESIGN.md` (colores, radios, sombras, movimiento)
+ * con los mismos nombres, para auditar un archivo contra el otro a simple
+ * vista; nada los sincroniza automaticamente. Los valores y su porque viven
+ * en ese documento, no aca.
  */
 @theme {
-  --color-marca: var(--primary, oklch(0.42 0.12 25));
-  --color-marca-texto: var(--primary-foreground, oklch(0.99 0 0));
-  --color-acento: var(--accent, oklch(0.55 0.1 25));
-
-  --color-caliza-lienzo: oklch(0.99 0.003 80);
+  --color-caliza-fondo: oklch(0.962 0.005 80);
+  --color-caliza-lienzo: oklch(0.995 0.002 80);
   --color-caliza-superficie: oklch(0.975 0.004 80);
   --color-caliza-relleno: oklch(0.94 0.005 80);
-  --color-caliza-divisor: oklch(0.88 0.006 80);
+  --color-caliza-divisor: oklch(0.9 0.006 80);
   --color-caliza-borde: oklch(0.62 0.008 80);
   --color-caliza-inhabilitado: oklch(0.68 0.007 80);
-  --color-caliza-apagada: oklch(0.52 0.008 80);
-  --color-caliza-tinta: oklch(0.24 0.008 80);
+  --color-caliza-apagada: oklch(0.5 0.008 80);
+  --color-caliza-tinta: oklch(0.22 0.008 80);
 
   /* Fijas, nunca derivadas de la marca: ver DESIGN.md, "la regla del tono ocupado". */
   --color-senial-error: oklch(0.46 0.17 27);
+  --color-senial-error-suave: oklch(0.96 0.025 27);
   --color-senial-exito: oklch(0.46 0.11 150);
+  --color-senial-exito-suave: oklch(0.96 0.03 150);
   --color-senial-aviso: oklch(0.5 0.13 65);
+  --color-senial-aviso-suave: oklch(0.965 0.035 85);
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 10px;
-  --radius-2xl: 12px;
-  --radius-3xl: 14px;
-  --radius-4xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
 
-  /* Un solo stack, el del sistema operativo. Cero bytes de webfont. */
-  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  /* Inter Variable llega por `next/font/local` (layout.tsx) en `--fuente-inter`. */
+  --font-sans: var(--fuente-inter), system-ui, sans-serif;
   --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
 
-  /* La unica sombra del sistema: solo para lo que tapa contenido. */
-  --shadow-flotante: 0 6px 16px -4px oklch(0.24 0.008 80 / 0.18);
+  --shadow-reposo:
+    0 1px 2px oklch(0.24 0.008 80 / 0.06), 0 1px 1px oklch(0.24 0.008 80 / 0.04);
+  --shadow-elevada:
+    0 4px 12px -2px oklch(0.24 0.008 80 / 0.1),
+    0 2px 4px oklch(0.24 0.008 80 / 0.05);
+  --shadow-flotante:
+    0 8px 24px -6px oklch(0.24 0.008 80 / 0.22),
+    0 2px 6px oklch(0.24 0.008 80 / 0.08);
+
+  --ease-salida: cubic-bezier(0.25, 1, 0.5, 1);
+
+  --animate-pulso-lento: pulso-lento 1.8s ease-in-out infinite;
+  @keyframes pulso-lento {
+    50% {
+      opacity: 0.55;
+    }
+  }
+}
+
+/*
+ * La marca es variable: cada municipio inyecta `--primary`, `--accent` y
+ * `--primary-foreground` en el `style` del contenedor de su superficie, no
+ * en `:root`. `inline` hace que las utilidades lleven la expresion completa
+ * y se resuelva en el elemento que las usa; sin eso, `:root` resolveria el
+ * valor por defecto una vez y lo heredaria el municipio.
+ *
+ * Los derivados (suave, tenue, hover) son fondos: nunca llevan texto de
+ * marca (DESIGN.md, seccion 2).
+ */
+@theme inline {
+  --color-marca: var(--primary, oklch(0.42 0.12 25));
+  --color-marca-texto: var(--primary-foreground, oklch(0.99 0 0));
+  --color-acento: var(--accent, oklch(0.55 0.1 25));
+  --color-marca-suave: color-mix(
+    in oklch,
+    var(--primary, oklch(0.42 0.12 25)) 10%,
+    var(--color-caliza-lienzo)
+  );
+  --color-marca-tenue: color-mix(
+    in oklch,
+    var(--primary, oklch(0.42 0.12 25)) 5%,
+    var(--color-caliza-lienzo)
+  );
+  --color-marca-hover: color-mix(
+    in oklch,
+    var(--primary, oklch(0.42 0.12 25)) 92%,
+    var(--color-caliza-tinta)
+  );
 }
 
 :root {
@@ -53,16 +92,16 @@
 }
 
 /*
- * Alias semanticos que `body` ya consume abajo (`bg-background`,
- * `text-foreground`) y que los componentes de shadcn/Radix van a esperar
- * cuando se generen en la rebanada 2 (`bg-primary`, `border-border`, etc.).
- * Cada uno apunta a un token real de arriba: no hay paleta gris propia de
- * shadcn en este archivo.
+ * Alias semanticos que `body` consume (`bg-background`, `text-foreground`)
+ * y que los componentes de shadcn/Radix esperan (`bg-primary`,
+ * `border-border`). Cada uno apunta a un token real de arriba: no hay
+ * paleta gris propia de shadcn en este archivo. `background` es el suelo
+ * de la pagina; `card` y `popover` son el lienzo que se apoya encima.
  */
 @theme inline {
-  --color-background: var(--color-caliza-lienzo);
+  --color-background: var(--color-caliza-fondo);
   --color-foreground: var(--color-caliza-tinta);
-  --color-card: var(--color-caliza-superficie);
+  --color-card: var(--color-caliza-lienzo);
   --color-card-foreground: var(--color-caliza-tinta);
   --color-popover: var(--color-caliza-lienzo);
   --color-popover-foreground: var(--color-caliza-tinta);
@@ -93,7 +132,7 @@
   }
 
   /*
-   * DESIGN.md exige movimiento reducido en su seccion de accesibilidad.
+   * `prefers-reduced-motion` apaga todo movimiento (DESIGN.md, "Movimiento").
    * La guarda va general, en `@layer base`, para que cubra cualquier
    * animacion futura sin depender de que cada componente se acuerde de
    * repetirla.

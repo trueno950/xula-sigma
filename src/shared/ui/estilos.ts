@@ -1,7 +1,7 @@
 import { CheckCircle, Warning } from "@phosphor-icons/react/ssr";
 
 /**
- * Las clases que `DESIGN.md` seccion 5 declara, en un solo lugar.
+ * Las clases que `DESIGN.md`, "Components", declara, en un solo lugar.
  *
  * Existen porque no existian: `FormularioDeAltaDePersona`,
  * `SugerenciaDeDuplicados` y `BuscadorDePersonas` llevaban cada uno su
@@ -35,11 +35,11 @@ export const ANILLO_DE_FOCO =
 /**
  * El enlace dentro de una ficha o un parrafo. Subrayado y en tinta, no solo
  * de otro color: el subrayado es lo que lo distingue del dato que lo
- * rodea. El acento entra al pasar el cursor, que es donde `DESIGN.md` lo
- * reserva.
+ * rodea. La marca no se usa como color de texto sobre claro (`DESIGN.md`,
+ * seccion 2), asi que al pasar el cursor solo engrosa el subrayado.
  */
 export const CLASES_DE_ENLACE =
-  "text-caliza-tinta underline underline-offset-2 hover:text-acento " +
+  "text-caliza-tinta underline underline-offset-2 hover:decoration-2 " +
   ANILLO_DE_FOCO;
 
 export const VARIANTES_DE_BOTON = [
@@ -52,8 +52,10 @@ export const VARIANTES_DE_BOTON = [
 export type VarianteDeBoton = (typeof VARIANTES_DE_BOTON)[number];
 
 /**
- * Compartido por todas las variantes: el alto tactil, el radio apenas
- * quebrado y el apagado por token. El `disabled:` va aca —y no por
+ * Compartido por todas las variantes: el alto tactil, el radio de 8px, el
+ * movimiento de retroalimentacion y el apagado por token. Se anima solo
+ * color, fondo, borde y `scale` (la propiedad que escribe `active:scale-*`
+ * en Tailwind 4), nunca layout ni `transition-all`. El `disabled:` va aca —y no por
  * variante— porque un boton inhabilitado deja de tener jerarquia: se apagan
  * todas igual.
  *
@@ -63,13 +65,15 @@ export type VarianteDeBoton = (typeof VARIANTES_DE_BOTON)[number];
  */
 const BASE_DE_BOTON =
   "inline-flex h-11 shrink-0 items-center justify-center gap-2 " +
-  "rounded-sm px-4 text-[15px] font-medium transition-colors " +
+  "rounded-md px-[18px] text-[15px] font-semibold " +
+  "transition-[color,background-color,border-color,scale] duration-150 " +
+  "ease-salida active:scale-[0.98] " +
   "disabled:pointer-events-none disabled:border-transparent " +
   "disabled:bg-caliza-relleno disabled:text-caliza-inhabilitado";
 
 const POR_VARIANTE: Record<VarianteDeBoton, string> = {
   /** La voz prestada del municipio. Una sola por pantalla. */
-  primaria: "bg-marca text-marca-texto hover:bg-acento",
+  primaria: "bg-marca text-marca-texto hover:bg-marca-hover",
   /** Se usa seguido pero no es la accion principal de la pantalla. */
   secundaria:
     "border border-caliza-borde bg-caliza-lienzo text-caliza-tinta " +
@@ -98,10 +102,30 @@ export const clasesDeBoton = (variante: VarianteDeBoton = "secundaria") =>
  * que no es el orden en que se escriben.
  */
 export const clasesDeCampo = (opciones?: { conError?: boolean }) =>
-  "h-11 w-full rounded-sm border bg-caliza-lienzo px-3 text-[15px] " +
+  "h-11 w-full rounded-md border bg-caliza-lienzo px-3 text-[15px] " +
   "text-caliza-tinta placeholder:text-caliza-inhabilitado " +
+  "transition-[border-color] duration-150 ease-salida " +
   `${opciones?.conError ? "border-senial-error" : "border-caliza-borde"} ` +
   ANILLO_DE_FOCO;
+
+/**
+ * La tarjeta de `DESIGN.md`: lienzo apoyado en el fondo por tono, borde de
+ * 1px y sombra de reposo, en ese orden de importancia. Prohibido anidar.
+ */
+export const CLASES_DE_TARJETA =
+  "rounded-lg border border-caliza-divisor bg-caliza-lienzo p-5 " +
+  "text-caliza-tinta shadow-reposo";
+
+/** Un formulario completo sobre una tarjeta: 20px de relleno, 24px desde `md`. */
+export const CLASES_DE_FORMULARIO = `${CLASES_DE_TARJETA} flex flex-col gap-6 md:p-6`;
+
+/**
+ * El mensaje de error de un campo: fondo suave de la senal y texto. El
+ * icono lo pone `MensajeDeError`; nunca solo el borde (`DESIGN.md`, Campos).
+ */
+export const CLASES_DE_ERROR_DE_CAMPO =
+  "flex items-start gap-1.5 rounded-sm bg-senial-error-suave px-2 py-1.5 " +
+  "text-[13px] font-medium text-senial-error";
 
 /** Tipografia Label: etiqueta de campo, encabezado de tabla, metadato. */
 export const CLASES_DE_ETIQUETA =
@@ -128,6 +152,12 @@ export const presentacionDeAviso = (tono: "error" | "exito" | "aviso") => ({
       : tono === "aviso"
         ? "text-senial-aviso"
         : "text-senial-exito",
+  fondo:
+    tono === "error"
+      ? "bg-senial-error-suave"
+      : tono === "aviso"
+        ? "bg-senial-aviso-suave"
+        : "bg-senial-exito-suave",
   role: tono === "error" ? ("alert" as const) : ("status" as const),
 });
 
