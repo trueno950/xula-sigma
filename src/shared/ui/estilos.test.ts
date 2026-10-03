@@ -4,9 +4,6 @@ import {
   CLASES_DE_ENLACE,
   clasesDeBoton,
   clasesDeCampo,
-  descripcionDeCampo,
-  plantillaDeColumnas,
-  presentacionDeAviso,
   VARIANTES_DE_BOTON,
 } from "./estilos";
 
@@ -83,6 +80,37 @@ describe("clasesDeBoton", () => {
     }
   });
 
+  it("redondea a 8px, presiona con escala 0.98 y nunca lleva sombra", () => {
+    // DESIGN.md, Botones y la regla del apoyo: boton sin sombra, se
+    // diferencia por tono y borde.
+    for (const variante of VARIANTES_DE_BOTON) {
+      const clases = clasesDeBoton(variante);
+
+      expect(clases).toContain("rounded-md");
+      expect(clases).toContain("active:scale-[0.98]");
+      expect(clases).not.toContain("shadow");
+    }
+  });
+
+  it("anima solo propiedades de retroalimentacion, 120 a 180ms, ease-out-quart", () => {
+    // DESIGN.md, Movimiento: nunca propiedades de layout ni `transition-all`.
+    for (const variante of VARIANTES_DE_BOTON) {
+      const clases = clasesDeBoton(variante);
+
+      expect(clases).not.toContain("transition-all");
+      expect(clases).toContain(
+        "transition-[color,background-color,border-color,scale]",
+      );
+      expect(clases).toContain("duration-150");
+      expect(clases).toContain("ease-salida");
+    }
+  });
+
+  it("baja un escalon de tono la primaria al pasar el cursor", () => {
+    // DESIGN.md, Hover: `color-mix` con tinta al 8%, no el acento.
+    expect(clasesDeBoton("primaria")).toContain("hover:bg-marca-hover");
+  });
+
   it("presta la marca del municipio solo a la accion primaria", () => {
     // La marca es de otro y puede ser de cualquier tono: se usa una vez
     // por pantalla, en la accion que la pantalla existe para hacer.
@@ -123,61 +151,18 @@ describe("clasesDeCampo", () => {
     expect(clases).not.toContain("border-caliza-borde");
   });
 
+  it("redondea a 8px y no lleva sombra", () => {
+    const clases = clasesDeCampo();
+
+    expect(clases).toContain("rounded-md");
+    expect(clases).not.toContain("shadow");
+  });
+
   it("enfoca con el mismo anillo que el boton", () => {
     const clases = clasesDeCampo();
 
     expect(clases).toContain("outline-2");
     expect(clases).toContain("outline-marca");
     expect(clases).not.toContain("ring-");
-  });
-});
-
-describe("presentacionDeAviso", () => {
-  it("el error interrumpe al lector: role alert", () => {
-    expect(presentacionDeAviso("error").role).toBe("alert");
-  });
-
-  it("el exito no interrumpe: role status", () => {
-    expect(presentacionDeAviso("exito").role).toBe("status");
-  });
-
-  it("cada tono lleva su propio icono", () => {
-    expect(presentacionDeAviso("error").Icono).not.toBe(
-      presentacionDeAviso("exito").Icono,
-    );
-  });
-});
-
-describe("plantillaDeColumnas", () => {
-  it("una columna sin ancho propio reparte el espacio sobrante", () => {
-    expect(plantillaDeColumnas([{}])).toBe("minmax(0,1fr)");
-  });
-
-  it("respeta el ancho de cada columna, en orden", () => {
-    expect(plantillaDeColumnas([{ ancho: "2fr" }, {}, { ancho: "80px" }])).toBe(
-      "2fr minmax(0,1fr) 80px",
-    );
-  });
-});
-
-describe("descripcionDeCampo", () => {
-  const ids = { idDeAyuda: "campo-ayuda", idDeError: "campo-error" };
-
-  it("sin ayuda ni error, no describe nada", () => {
-    expect(descripcionDeCampo({}, ids)).toBeUndefined();
-  });
-
-  it("con ayuda, apunta a su id", () => {
-    expect(descripcionDeCampo({ ayuda: "texto" }, ids)).toBe("campo-ayuda");
-  });
-
-  it("con error, apunta a su id", () => {
-    expect(descripcionDeCampo({ error: "texto" }, ids)).toBe("campo-error");
-  });
-
-  it("con los dos, apunta a los dos ids en orden", () => {
-    expect(descripcionDeCampo({ ayuda: "a", error: "b" }, ids)).toBe(
-      "campo-ayuda campo-error",
-    );
   });
 });

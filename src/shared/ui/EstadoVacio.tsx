@@ -1,12 +1,14 @@
+import { Tray } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { EstadoDeLista } from "./estadoDeLista";
+import { CLASES_DE_ENLACE } from "./estilos";
 
 type Props = {
   estado: Exclude<EstadoDeLista, { clase: "con-filas" }>;
   /** Que es esta pantalla, en una linea, cuando todavia no tiene nada. */
   mensajeInicial: string;
-  /** El boton primario que la llena. Sin ilustracion y sin microcopy. */
+  /** El boton primario que la llena. Un icono de linea, nunca ilustracion. */
   accion?: ReactNode;
   /** La misma pantalla sin el filtro puesto. */
   hrefSinFiltro: string;
@@ -33,10 +35,7 @@ export function EstadoVacio({
           Sin resultados para{" "}
           <span className="font-medium">{estado.filtro}</span>.
         </p>
-        <Link
-          href={hrefSinFiltro}
-          className="text-[15px] text-marca underline underline-offset-2"
-        >
+        <Link href={hrefSinFiltro} className={CLASES_DE_ENLACE}>
           Quitar la busqueda
         </Link>
       </div>
@@ -45,6 +44,12 @@ export function EstadoVacio({
 
   return (
     <div className="flex flex-col items-start gap-4 py-8">
+      <Tray
+        size={40}
+        weight="light"
+        aria-hidden="true"
+        className="text-caliza-apagada"
+      />
       <p className="text-[15px] text-caliza-apagada">{mensajeInicial}</p>
       {accion}
     </div>

@@ -16,10 +16,13 @@ type Props = {
  * eso se justifica cuando algo salio mal, no cuando salio bien.
  */
 export function Aviso({ tono, children }: Props) {
-  const { Icono, color, role } = presentacionDeAviso(tono);
+  const { Icono, color, fondo, role } = presentacionDeAviso(tono);
 
   return (
-    <p role={role} className={`flex items-start gap-2 text-[15px] ${color}`}>
+    <p
+      role={role}
+      className={`flex items-start gap-2 rounded-md px-3 py-2 text-[15px] ${fondo} ${color}`}
+    >
       <Icono size={20} weight="fill" className="mt-px shrink-0" />
       {children}
     </p>

@@ -1,7 +1,11 @@
 import { globSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { metadata as metadataRaiz } from "./layout";
+
+// `next/font/local` es una transformacion del compilador de Next: fuera de
+// el, la importacion no es una funcion.
+vi.mock("next/font/local", () => ({ default: () => ({ variable: "" }) }));
 
 /**
  * El titulo de cada pantalla, por ruta. Es la unica lista: una pantalla
