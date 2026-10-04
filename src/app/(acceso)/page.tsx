@@ -19,9 +19,8 @@ export const metadata: Metadata = { title: "Inicio" };
  * Los pendientes son un adorno del inicio, no su razon de ser: si no se
  * pueden contar, el inicio se pinta sin ellos y el fallo queda en el log con
  * los datos seguros del error (nunca el mensaje crudo, que puede traer datos
- * personales). Un `NoAutorizadoError` se vuelve a lanzar: un permiso negado
- * no es un fallo de infraestructura. Cualquier otro fallo (red, base) degrada
- * y el inicio sigue en pie.
+ * personales). Un `NoAutorizadoError` se relanza (ver `errores.ts`); cualquier
+ * otro fallo degrada y el inicio sigue en pie.
  */
 async function contarRecibidos(
   contexto: NonNullable<Awaited<ReturnType<typeof contextoActual>>>,

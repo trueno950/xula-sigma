@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import { comoCalleId, type EntradaDeHistorial } from "../domain";
 import { LineaDeTiempoDeCalle } from "./HistorialDeCalle";
 
@@ -79,7 +80,7 @@ describe("LineaDeTiempoDeCalle: detalle legible", () => {
 
     expect(html).toContain("<ol");
     expect(html).toMatch(/font-semibold[^>]*>Renombre</);
-    expect(html).toMatch(/22 sep\.? 2026/);
+    expect(html).toContain(fechaYHoraEnMerida(entrada("RENOMBRE").ocurridoEn));
   });
 
   it("no dibuja franjas laterales ni degradados", () => {

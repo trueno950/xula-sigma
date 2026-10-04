@@ -66,3 +66,7 @@ Trajo dos hallazgos nuevos; el usuario eligió corregir ambos. (1) La consulta d
 ## Ronda 4 del revisor de IA en CI (PR #94)
 
 Un hallazgo nuevo: `cadenaDe` (`cabeceraDeLugar.tsx`) sube por `padreId` sin guarda y "colgaría" con un ciclo. Verificación: NO es alcanzable con datos de `subarbol` (la consulta excluye la raíz del resultado y un nodo tiene un solo padre, así que cualquier ascenso termina en la raíz, que no está en el mapa); en la ronda 3 el revisor había dicho lo mismo. Se agregó igualmente una guarda de visitados (consistente con `cadenaDeZona`) y una prueba de ciclo directo sobre `cabeceraDeLugar` por decisión del usuario; sin RED observable porque el bucle original no termina. Si la ronda 5 trae hallazgos nuevos, ya no se corrige más: decide una persona cómo cerrar.
+
+## Ronda 5 del revisor de IA y comentarios de Codex (PR #94)
+
+Codex dejó 4 comentarios P1 sobre el commit 73c7020 (funciones de más de 30 líneas en `armarArbol`, `contextoDeCalle` y `contarPorLugar`, y un comentario falso de `contenido.ts`): ya estaban corregidos en f34bdab y 67d57b8; verificado contra el código actual (10, 24 y 11 líneas de código). La ronda 5 del revisor de IA pidió: una sola explicación de `NoAutorizadoError` (ahora vive en `shared/lib/errores.ts` y los tres sitios apuntan a ella), quitar un `as never` de `territorioU3.test.tsx` (usa `comoDomicilioId`) y una aserción de fecha independiente del ICU (compara con el helper del propio componente; verificada con una mutación). Respuestas en los hilos con el commit como evidencia.

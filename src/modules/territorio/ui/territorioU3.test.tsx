@@ -1,7 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
-import { comoCalleId, comoLugarId, type TipoDeLugar } from "../domain";
+import {
+  comoCalleId,
+  comoDomicilioId,
+  comoLugarId,
+  type TipoDeLugar,
+} from "../domain";
 import { CatalogoHeredado } from "./CatalogoHeredado";
 import type { PropsDeContenido } from "./contenido";
 import { permisosDeTerritorio } from "./permisos";
@@ -143,7 +148,7 @@ describe("TabDeLugares sin cuentas", () => {
 describe("TabDeDomicilios", () => {
   const enManzana = {
     clase: "domicilio" as const,
-    id: "55555555-5555-4555-8555-555555555555" as never,
+    id: comoDomicilioId("55555555-5555-4555-8555-555555555555"),
     lugarId: coloniaId,
     calleId: calle.id,
     calle: "Calle 21",

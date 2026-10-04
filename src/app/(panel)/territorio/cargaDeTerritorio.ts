@@ -73,11 +73,9 @@ type EntradaDeCarga = {
 
 /**
  * Las cuentas son decoracion de las filas: si su consulta falla la pantalla
- * sale sin ellas. Un `NoAutorizadoError` se vuelve a lanzar: un permiso
- * negado no es un fallo de infraestructura y esconderlo ocultaria la
- * autorizacion rota. Cualquier otro fallo (red, base) degrada a sin cuentas,
- * con registro saneado, y el arbol y las pestanas siguen en pie; las lecturas
- * primarias no pasan por aqui y siguen propagando.
+ * sale sin ellas. Un `NoAutorizadoError` se relanza (ver `errores.ts`); el
+ * arbol y las pestanas siguen en pie, y las lecturas primarias no pasan por
+ * aqui y siguen propagando.
  */
 const contarSinRomper = async (contexto: ContextoActual) => {
   try {

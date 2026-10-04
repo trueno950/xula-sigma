@@ -28,10 +28,9 @@ export const metadata: Metadata = { title: "Historial de calle" };
 
 /**
  * Los lugares solo arman la migaja: si su lectura falla la pagina sale con
- * la migaja de respaldo hacia Territorio. Un `NoAutorizadoError` se vuelve a
- * lanzar: un permiso negado no es un fallo de infraestructura. Cualquier otro
- * fallo (red, base) degrada con registro saneado; la calle y el historial,
- * que son el contenido, no pasan por aqui y siguen propagando.
+ * la migaja de respaldo hacia Territorio. Un `NoAutorizadoError` se relanza
+ * (ver `errores.ts`); la calle y el historial, que son el contenido, no pasan
+ * por aqui y siguen propagando.
  */
 const lugaresDeLaMigaja = async (contexto: ContextoActual) => {
   try {
