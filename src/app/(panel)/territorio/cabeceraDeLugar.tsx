@@ -28,9 +28,12 @@ const cadenaDe = (
   let actual: NodoDeSubarbol | undefined =
     nodo.id === raiz.id ? undefined : porId.get(nodo.id);
 
+  const vistos = new Set<string>([nodo.id]);
+
   while (actual && actual.clase === "lugar" && actual.padreId) {
     const padre = porId.get(actual.padreId);
-    if (padre?.clase !== "lugar") break;
+    if (padre?.clase !== "lugar" || vistos.has(padre.id)) break;
+    vistos.add(padre.id);
     cadena.unshift({ id: padre.id, nombre: padre.nombre });
     actual = padre;
   }
