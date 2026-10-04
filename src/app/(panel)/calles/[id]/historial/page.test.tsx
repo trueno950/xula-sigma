@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 
 const notFoundMock = vi.hoisted(() =>
   vi.fn((): never => {
@@ -143,6 +144,19 @@ describe("PaginaDeHistorialDeCalle", () => {
     expect(html).not.toContain("Colonia Centro");
     expect(registro).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(registro.mock.calls)).not.toContain("SECRETO");
+    registro.mockRestore();
+  });
+
+  it("un NoAutorizadoError al leer los lugares no se traga: se propaga", async () => {
+    contextoActualMock.mockResolvedValue(contexto);
+    leerHistorialDeCalleMock.mockResolvedValue(historial);
+    listarLugaresMock.mockRejectedValue(new NoAutorizadoError());
+    const registro = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(PaginaDeHistorialDeCalle(props)).rejects.toBeInstanceOf(
+      NoAutorizadoError,
+    );
+    expect(registro).not.toHaveBeenCalled();
     registro.mockRestore();
   });
 

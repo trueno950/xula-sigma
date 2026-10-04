@@ -58,3 +58,7 @@ Falló solo "Revisión de IA" con tres hallazgos reales contra las reglas del pr
 ## Ronda 2 del revisor de IA en CI (PR #94)
 
 Trajo tres hallazgos distintos a los de la ronda 1; por la regla de dos rondas se detuvo y el usuario decidió corregirlos y correr una tercera. Verificados como reales: dos comentarios que este mismo PR dejó falsos (`volverAlArbol.ts`: el éxito sí redirige con clave; `contenido.ts`: `TabDeDomicilios` ya usa `domiciliosDelSubarbolDe`) y `contarPorLugar` de unas 40 líneas (la consulta SQL va ahora en la constante `CONSULTA_DE_CONTENIDO`). Corregidos; pruebas de unidad, integración y aislamiento de la consulta pasan. Si la ronda 3 trae hallazgos nuevos, se detiene y decide una persona.
+
+## Ronda 3 del revisor de IA en CI (PR #94)
+
+Trajo dos hallazgos nuevos; el usuario eligió corregir ambos. (1) La consulta de conteo inflaba domicilios ante un ciclo de `padre_id` (la CTE siembra todos los lugares y `count(*)` repetía el domicilio): ahora `count(DISTINCT dom.id)`, con prueba de integración que cierra el ciclo con un UPDATE bajo `withTenant` (el rol owner no puede: `lugares` tiene FORCE RLS con políticas `TO xula_app`) y que falló con `expected 4 to be 1` antes del arreglo. (2) Los `catch` amplios (antipatrón 14) de `contarSinRomper`, `lugaresDeLaMigaja` y `contarRecibidos`: ahora relanzan `NoAutorizadoError` (`@/shared/lib/errores`) y degradan solo con los demás fallos, con prueba por cada uno. Si la ronda 4 trae hallazgos nuevos, se propone parar y cerrar con revisión humana.

@@ -17,7 +17,9 @@ type FilaDeContenido = {
  * lugar activo por `padre_id` -mismo cinturon `profundidad < 8` y
  * `baja_en IS NULL` que `subarbol`, asi que un lugar dado de baja corta su
  * rama y sus domicilios no suman-; despues se agrupan los domicilios activos
- * por ancestro. Las calles son las propias del lugar, sin bajar. Todo es
+ * por ancestro, con `DISTINCT` porque un ciclo de `padre_id` repite el
+ * lugar en la bajada (el tope de profundidad corta el bucle, no la
+ * repeticion) e inflaria la cuenta. Las calles son las propias del lugar, sin bajar. Todo es
  * identificador fijo: no hay parametro ni texto de usuario. RLS acota cada
  * tabla porque corre bajo el `tx` de `withTenant`.
  */
@@ -33,7 +35,7 @@ const CONSULTA_DE_CONTENIDO = sql`
      WHERE b.profundidad < 8 AND l.baja_en IS NULL
   ),
   de_domicilios AS (
-    SELECT b.ancestro, count(*)::int AS total
+    SELECT b.ancestro, count(DISTINCT dom.id)::int AS total
       FROM bajada b
       JOIN domicilios dom ON dom.lugar_id = b.lugar
      WHERE dom.baja_en IS NULL

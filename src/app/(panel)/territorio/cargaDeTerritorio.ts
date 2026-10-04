@@ -11,6 +11,7 @@ import {
 } from "@/modules/territorio";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { cargarEntrada } from "./cargaDeEntrada";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -72,14 +73,17 @@ type EntradaDeCarga = {
 
 /**
  * Las cuentas son decoracion de las filas: si su consulta falla la pantalla
- * sale sin ellas. Captura todo error porque la consulta puede fallar por red,
- * base o permiso, y en todos el arbol y las pestanas deben seguir en pie; las
- * lecturas primarias no pasan por aqui y siguen propagando.
+ * sale sin ellas. Un `NoAutorizadoError` se vuelve a lanzar: un permiso
+ * negado no es un fallo de infraestructura y esconderlo ocultaria la
+ * autorizacion rota. Cualquier otro fallo (red, base) degrada a sin cuentas,
+ * con registro saneado, y el arbol y las pestanas siguen en pie; las lecturas
+ * primarias no pasan por aqui y siguen propagando.
  */
 const contarSinRomper = async (contexto: ContextoActual) => {
   try {
     return await contarContenidoDeLugares(contexto);
   } catch (error) {
+    if (error instanceof NoAutorizadoError) throw error;
     console.error(
       "[territorio] no se pudieron contar los lugares",
       datosSegurosDeError(error),

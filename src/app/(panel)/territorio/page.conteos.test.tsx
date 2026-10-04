@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VistaDeRaices } from "@/modules/territorio/ui/VistaDeRaices";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 
 const mocks = vi.hoisted(() => ({
   contarContenidoDeLugares: vi.fn(),
@@ -111,6 +112,17 @@ describe("Territorio: cuentas de la pestana Lugares", () => {
     expect(html).not.toContain("domicilios<");
     expect(registro).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(registro.mock.calls)).not.toContain("SECRETO");
+    registro.mockRestore();
+  });
+
+  it("si el conteo es un NoAutorizadoError no se traga: se propaga", async () => {
+    const registro = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.contarContenidoDeLugares.mockRejectedValue(new NoAutorizadoError());
+
+    await expect(paginaCompleta({ raiz: RAIZ })).rejects.toBeInstanceOf(
+      NoAutorizadoError,
+    );
+    expect(registro).not.toHaveBeenCalled();
     registro.mockRestore();
   });
 
