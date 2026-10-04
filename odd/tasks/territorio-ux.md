@@ -54,3 +54,7 @@ PR hacia `main` (decisión del usuario).
 ## Ronda 1 del revisor de IA en CI (PR #94)
 
 Falló solo "Revisión de IA" con tres hallazgos reales contra las reglas del proyecto: `contextoDeCalle` de 46 líneas, `armarArbol` de 43 líneas (tope 30) e ids `string` sueltos en `contextoDeCalle` donde corresponde `LugarId`. Corregidos sin cambio de comportamiento. Otras funciones no JSX de más de 30 líneas en archivos tocados por la rama, ya existentes y no marcadas en la ronda 1: `cargaDeTerritorio.ts:96` (36), `lectorDeContenidoDeLugaresSql.ts:25` (43), acciones `altaDeCalle` (32), `altaDeDomicilio` (47), `altaDeLugar` (36), `corregirDomicilio` (51), `darDeBajaLugar` (33), `reparentearLugar` (37), `volverAlArbol:13` (33) y `vistaDePanel.ts:39` (48). Si la ronda 2 marca alguna, decide una persona (regla de dos rondas de CLAUDE.md).
+
+## Ronda 2 del revisor de IA en CI (PR #94)
+
+Trajo tres hallazgos distintos a los de la ronda 1; por la regla de dos rondas se detuvo y el usuario decidió corregirlos y correr una tercera. Verificados como reales: dos comentarios que este mismo PR dejó falsos (`volverAlArbol.ts`: el éxito sí redirige con clave; `contenido.ts`: `TabDeDomicilios` ya usa `domiciliosDelSubarbolDe`) y `contarPorLugar` de unas 40 líneas (la consulta SQL va ahora en la constante `CONSULTA_DE_CONTENIDO`). Corregidos; pruebas de unidad, integración y aislamiento de la consulta pasan. Si la ronda 3 trae hallazgos nuevos, se detiene y decide una persona.

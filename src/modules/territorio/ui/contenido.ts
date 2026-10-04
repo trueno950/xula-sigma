@@ -146,9 +146,9 @@ export const hermanosDeDireccion = (
  * cuatro tienen que verse a la vez en la cabecera, y una pestana solo sabe
  * de lo suyo.
  *
- * Domicilios: coexiste con `domiciliosDirectosDe`, que contesta otra
- * pregunta -que filas lista la pestana- y por eso `TabDeDomicilios` la
- * sigue usando en vez de esta.
+ * Domicilios: los del subarbol del lugar, que es lo mismo que lista
+ * `TabDeDomicilios` (`domiciliosDelSubarbolDe`), para que el contador y la
+ * tabla no se contradigan.
  *
  * Calles: lo que la pestana lista. Un lugar con catalogo cuenta las suyas;
  * una colonia, sector o manzana lista el catalogo heredado de su

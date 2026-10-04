@@ -48,11 +48,11 @@ export const rutaDelArbol = ({
  * El destino de error comun de las acciones de territorio: volver al arbol
  * con el contexto seleccionado y el mensaje.
  *
- * El exito de la mayoria de las acciones NO redirige: revalidan y el
- * re-render de la pagina muestra el cambio al instante. La baja y el
- * reparenteo son la excepcion -mueven o borran el nodo que la URL nombra,
- * asi que quedarse ahi ya no resuelve nada- y por que lo son esta en
- * `irAlArbol`.
+ * El exito tambien redirige, con una clave de confirmacion: las altas y las
+ * ediciones por `confirmarEnArbol`, que se quedan en el mismo contexto; la
+ * baja y el reparenteo por `irAlArbol`, porque mueven o borran el nodo que
+ * la URL nombra y quedarse ahi ya no resuelve nada -por que esta en
+ * `irAlArbol`-.
  */
 export const volverAlArbol = (
   navegacion: ReturnType<typeof navegacionDe>,
