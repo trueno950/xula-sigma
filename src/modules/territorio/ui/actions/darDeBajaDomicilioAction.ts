@@ -55,5 +55,5 @@ export async function darDeBajaDomicilioAction(
 
   revalidatePath("/territorio");
   // La direccion que la URL nombra dejo de existir: quedarse ahi no resuelve.
-  irAlArbol(navegacion.raiz, navegacion.nodo);
+  irAlArbol(navegacion.raiz, navegacion.nodo, "domicilio-baja");
 }

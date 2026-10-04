@@ -1,4 +1,5 @@
-import { EnlaceDeAccion } from "@/shared/ui";
+import { X } from "@phosphor-icons/react/ssr";
+import { CLASES_DE_TARJETA, EnlaceDeAccion } from "@/shared/ui";
 import type {
   CalleGuardada,
   LugarGuardado,
@@ -6,12 +7,13 @@ import type {
 } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import type { LugarId } from "../domain";
+import {
+  type AccionDeDomicilio,
+  AccionesDeDomicilio,
+} from "./AccionesDeDomicilio";
 import { hermanosDeDireccion, rutaDe } from "./contenido";
 import { DatosDeDomicilio } from "./DatosDeDomicilio";
-import { FormularioDeBajaDeDomicilio } from "./FormularioDeBajaDeDomicilio";
-import { FormularioDeCorreccionDeDomicilio } from "./FormularioDeCorreccionDeDomicilio";
 import { HermanosDeDireccion } from "./HermanosDeDireccion";
-import { opcionesDeCalles } from "./opciones";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
 import {
@@ -33,9 +35,14 @@ type Props = {
 
 const esAccionDeDomicilio = (
   accion: AccionDeNodo | undefined,
-): accion is "corregirDomicilio" | "bajaDomicilio" =>
+): accion is AccionDeDomicilio =>
   accion === "corregirDomicilio" || accion === "bajaDomicilio";
 
+/**
+ * El detalle del domicilio elegido. Con `lg` se sienta junto a la tabla y
+ * se pega a la ventana; debajo de 1024px queda tras la lista y la fila
+ * enlaza a `#panel-de-domicilio` para que entre a la vista sin JavaScript.
+ */
 export function PanelDeDomicilio({
   raizId,
   nodoId,
@@ -50,105 +57,56 @@ export function PanelDeDomicilio({
   const calle =
     calles.find((posible) => posible.id === domicilio.calleId)?.nombre ??
     "Calle desconocida";
-  const hermanos = hermanosDeDireccion(nodos, domicilio);
+  const direccion = direccionDe(calle, domicilio.numero);
   const accionAbierta =
     esAccionDeDomicilio(accion) && puedeAbrir(accion, permisos)
       ? accion
       : undefined;
-  const volver = rutaDe({
-    raizId,
-    nodoId,
-    vista: "domicilios",
-    domicilioId: domicilio.id,
-  });
-  const puedeCorregir =
-    puedeAbrir("corregirDomicilio", permisos) && !accionAbierta;
-  const puedeDarDeBaja =
-    puedeAbrir("bajaDomicilio", permisos) && !accionAbierta;
 
   return (
-    <section className="flex flex-col gap-4 rounded-md border border-caliza-divisor bg-caliza-superficie p-4">
-      <DatosDeDomicilio
+    <section
+      id="panel-de-domicilio"
+      aria-label={direccion}
+      className={`flex scroll-mt-4 flex-col gap-4 ${CLASES_DE_TARJETA} lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <DatosDeDomicilio
+          raizId={raizId}
+          domicilio={domicilio}
+          calles={calles}
+          lugares={lugares}
+          nodos={nodos}
+        />
+        <EnlaceDeAccion
+          href={rutaDe({ raizId, nodoId, vista: "domicilios" })}
+          variante="fantasma"
+        >
+          <X size={16} weight="bold" aria-hidden="true" />
+          Cerrar
+        </EnlaceDeAccion>
+      </div>
+
+      <AccionesDeDomicilio
         raizId={raizId}
+        nodoId={nodoId}
         domicilio={domicilio}
+        direccion={direccion}
         calles={calles}
-        lugares={lugares}
-        nodos={nodos}
+        zona={zonaConInicial(
+          lugaresDeNodos(nodos),
+          asentamiento
+            ? { id: raizId, nombre: asentamiento.nombre }
+            : undefined,
+          domicilio.lugarId,
+        )}
+        permisos={permisos}
+        accionAbierta={accionAbierta}
       />
 
-      {puedeCorregir ? (
-        <EnlaceDeAccion
-          href={rutaDe({
-            raizId,
-            nodoId,
-            vista: "domicilios",
-            domicilioId: domicilio.id,
-            accion: "corregirDomicilio",
-          })}
-          variante="primaria"
-        >
-          Corregir
-        </EnlaceDeAccion>
-      ) : null}
-
-      {puedeDarDeBaja ? (
-        <details>
-          <summary className="cursor-pointer text-[15px] font-medium text-caliza-tinta">
-            Dar de baja
-          </summary>
-          <div className="flex flex-col gap-4 pt-4">
-            <p className="text-[15px] text-caliza-apagada">
-              Una dirección dada de baja deja de listarse, y no se puede asignar
-              en una mudanza.
-            </p>
-            <EnlaceDeAccion
-              href={rutaDe({
-                raizId,
-                nodoId,
-                vista: "domicilios",
-                domicilioId: domicilio.id,
-                accion: "bajaDomicilio",
-              })}
-              variante="peligro"
-            >
-              Dar de baja
-            </EnlaceDeAccion>
-          </div>
-        </details>
-      ) : null}
-
-      <HermanosDeDireccion raizId={raizId} hermanos={hermanos} />
-
-      {accionAbierta === "corregirDomicilio" ? (
-        <FormularioDeCorreccionDeDomicilio
-          raiz={raizId}
-          nodo={nodoId}
-          domicilio={domicilio}
-          calles={opcionesDeCalles(calles)}
-          zona={zonaConInicial(
-            lugaresDeNodos(nodos),
-            asentamiento
-              ? { id: raizId, nombre: asentamiento.nombre }
-              : undefined,
-            domicilio.lugarId,
-          )}
-        />
-      ) : null}
-
-      {accionAbierta === "bajaDomicilio" ? (
-        <FormularioDeBajaDeDomicilio
-          raiz={raizId}
-          nodo={nodoId}
-          domicilio={domicilio.id}
-          direccion={direccionDe(calle, domicilio.numero)}
-        />
-      ) : null}
-
-      {accionAbierta ? (
-        <EnlaceDeAccion href={volver} variante="fantasma">
-          Cancelar
-        </EnlaceDeAccion>
-      ) : null}
+      <HermanosDeDireccion
+        raizId={raizId}
+        hermanos={hermanosDeDireccion(nodos, domicilio)}
+      />
     </section>
   );
 }

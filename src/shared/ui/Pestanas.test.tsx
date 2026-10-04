@@ -25,3 +25,27 @@ describe("Pestanas", () => {
     );
   });
 });
+
+describe("Pestanas en movil", () => {
+  const pestanas = ["Lugares", "Calles", "Domicilios", "Editar"].map(
+    (etiqueta) => ({
+      clave: etiqueta,
+      etiqueta,
+      href: `/x?${etiqueta}`,
+      activa: etiqueta === "Lugares",
+    }),
+  );
+  const html = renderToStaticMarkup(
+    <Pestanas etiqueta="Contenido" pestanas={pestanas} />,
+  );
+
+  it("las pestanas se ajustan al ancho en vez de recortarse", () => {
+    expect(html).toContain("flex-wrap");
+    expect(html).not.toContain("overflow-x-auto");
+  });
+
+  it("conserva aria-current y el anillo de foco", () => {
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain("focus-visible:outline");
+  });
+});

@@ -1,7 +1,8 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import {
-  CeldaDeDato,
+  CeldaDeApoyo,
   CeldaPrincipal,
+  ChipDeFiltro,
   type ColumnaDeTabla,
   EnlaceDeAccion,
   type EstadoDeLista,
@@ -15,7 +16,12 @@ import type {
   FiltrosDeRegistro,
 } from "../application/puertosDeDomicilios";
 import { FiltrosDeDomicilios } from "./FiltrosDeDomicilios";
-import { hrefDeVerMasDeDomicilios } from "./hrefsDeDomicilios";
+import { filtrosVisiblesDeDomicilios } from "./filtrosVisiblesDeDomicilios";
+import {
+  hrefDeDomicilioDelRegistro,
+  hrefDeVerMasDeDomicilios,
+  hrefSinFiltroDeDomicilios,
+} from "./hrefsDeDomicilios";
 import { BarraDeAcciones } from "./PanelDeAccion";
 import { direccionDe } from "./vistaDeDomicilios";
 
@@ -38,8 +44,9 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
 /**
  * El registro plano de domicilios del municipio: busqueda por calle y
  * numero, filtro por asentamiento y paginacion por `?limite=`, las tres
- * secciones de `design.md` seccion 1. Sin enlace en la fila: un domicilio
- * todavia no tiene pantalla propia, mismo criterio que `TabDeDomicilios`.
+ * secciones de `design.md` seccion 1. Cada fila abre el panel del
+ * domicilio en su lugar; ver `hrefDeDomicilioDelRegistro` para cuando no
+ * puede armar el enlace.
  *
  * La fila no arma su direccion a mano: `direccionDe` es la misma que usa el
  * arbol, para que un domicilio se lea igual en las dos pantallas.
@@ -53,9 +60,21 @@ export function RegistroDeDomicilios({
   raices,
   puedeCrear,
 }: Props) {
+  const nombreDeRaiz = (id: string) =>
+    raices.find((raiz) => raiz.valor === id)?.etiqueta;
+  const chips = filtrosVisiblesDeDomicilios(filtros, nombreDeRaiz);
+  const idsDeRaices = raices.map((raiz) => raiz.valor);
+  const conEnlace = (domicilio: DomicilioDelRegistro) => {
+    const href = hrefDeDomicilioDelRegistro(domicilio, {
+      filtros,
+      raices: idsDeRaices,
+    });
+    return href ? { href } : {};
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      {puedeCrear ? (
+      {puedeCrear && estado.clase !== "vacio-inicial" ? (
         <BarraDeAcciones>
           <EnlaceDeAccion
             href="/territorio?accion=domicilio"
@@ -69,10 +88,36 @@ export function RegistroDeDomicilios({
 
       <FiltrosDeDomicilios filtros={filtros} raices={raices} />
 
+      {chips.length > 0 ? (
+        <ul aria-label="Filtros aplicados" className="flex flex-wrap gap-2">
+          {chips.map((chip) => (
+            <li key={chip.clave}>
+              <ChipDeFiltro
+                etiqueta={chip.etiqueta}
+                hrefQuitar={hrefSinFiltroDeDomicilios(filtros, chip.clave)}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
       {estado.clase !== "con-filas" ? (
         <EstadoVacio
           estado={estado}
           mensajeInicial="Todavía no hay domicilios registrados."
+          {...(puedeCrear
+            ? {
+                accion: (
+                  <EnlaceDeAccion
+                    href="/territorio?accion=domicilio"
+                    variante="primaria"
+                  >
+                    <Plus size={18} weight="bold" aria-hidden="true" />
+                    Agregar domicilio
+                  </EnlaceDeAccion>
+                ),
+              }
+            : {})}
           hrefSinFiltro="/territorio/domicilios"
         />
       ) : (
@@ -86,6 +131,7 @@ export function RegistroDeDomicilios({
           {domicilios.map((domicilio) => (
             <FilaDeTabla
               key={domicilio.id}
+              {...conEnlace(domicilio)}
               etiquetaAccesible={`${direccionDe(
                 domicilio.calle,
                 domicilio.numero,
@@ -94,7 +140,7 @@ export function RegistroDeDomicilios({
               <CeldaPrincipal>
                 {direccionDe(domicilio.calle, domicilio.numero)}
               </CeldaPrincipal>
-              <CeldaDeDato>{domicilio.lugar}</CeldaDeDato>
+              <CeldaDeApoyo>{domicilio.lugar}</CeldaDeApoyo>
             </FilaDeTabla>
           ))}
         </Tabla>

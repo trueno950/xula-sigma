@@ -1,3 +1,4 @@
+import { Prohibit } from "@phosphor-icons/react/ssr";
 import { Boton } from "@/shared/ui";
 import { darDeBajaCalleAction } from "./actions/darDeBajaCalleAction";
 import type { CalleParaPanel } from "./vistaDeCalles";
@@ -10,7 +11,10 @@ type Props = {
 
 export function FormularioDeBajaDeCalle({ raiz, nodo, calle }: Props) {
   return (
-    <form action={darDeBajaCalleAction} className="flex flex-col gap-4">
+    <form
+      action={darDeBajaCalleAction}
+      className="flex flex-col gap-4 sm:items-start"
+    >
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
       <input type="hidden" name="vista" value="calles" />
@@ -22,6 +26,7 @@ export function FormularioDeBajaDeCalle({ raiz, nodo, calle }: Props) {
         domicilios, pero los reportes existentes no bloquean la baja.
       </p>
       <Boton type="submit" variante="peligro">
+        <Prohibit size={18} aria-hidden />
         Dar de baja {calle.nombre}
       </Boton>
     </form>

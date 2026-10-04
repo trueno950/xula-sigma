@@ -1,9 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { reparentearLugar } from "../../composicion";
@@ -13,6 +10,7 @@ import {
   RaizInvalidaError,
 } from "../../domain";
 import { destinoDeReparenteo } from "../reparenteo";
+import { ejecutarEnContexto } from "./ejecutarEnContexto";
 import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
@@ -51,25 +49,20 @@ export async function reparentearLugarAction(
     return;
   }
 
-  const contexto = await contextoActual();
+  const { lugarId, nuevoPadreId } = analisis.data;
 
-  if (!contexto) redirect("/acceso");
-
-  try {
-    await reparentearLugar(
-      comoLugarId(analisis.data.lugarId),
-      analisis.data.nuevoPadreId
-        ? comoLugarId(analisis.data.nuevoPadreId)
-        : null,
-      contexto,
-    );
-  } catch (error) {
-    volverAlArbol(navegacion, mensajeDeError(error));
-  }
-
-  revalidatePath("/territorio");
+  await ejecutarEnContexto(
+    navegacion,
+    (contexto) =>
+      reparentearLugar(
+        comoLugarId(lugarId),
+        nuevoPadreId ? comoLugarId(nuevoPadreId) : null,
+        contexto,
+      ),
+    mensajeDeError,
+  );
 
   const destino = destinoDeReparenteo(analisis.data);
 
-  irAlArbol(destino.raiz, destino.nodo);
+  irAlArbol(destino.raiz, destino.nodo, "lugar-movido");
 }

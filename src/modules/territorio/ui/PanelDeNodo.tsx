@@ -1,10 +1,6 @@
-import { Migaja, Pestanas } from "@/shared/ui";
-import {
-  ETIQUETA_DE_TIPO_DE_LUGAR,
-  type LugarId,
-  type TipoDeLugar,
-} from "../domain";
-import { pasosDeMigaja, pestanasDePanel } from "./vistaDePanel";
+import { Pestanas } from "@/shared/ui";
+import type { LugarId, TipoDeLugar } from "../domain";
+import { pestanasDePanel } from "./vistaDePanel";
 
 /**
  * `tipo` es `TipoDeLugar` y no `string`: los dos origenes que lo arman
@@ -35,8 +31,6 @@ export type CuentasDeLugar = {
 type Props = {
   raizId: LugarId;
   nodo: NodoSeleccionado;
-  /** La migaja completa, de la raiz al nodo. Los pasos previos son links. */
-  migaja: readonly PasoDeMigaja[];
   /** La pestana activa: la unica categoria visible. */
   vista: TabDeLugar;
   cuentas: CuentasDeLugar;
@@ -49,29 +43,23 @@ type Props = {
 };
 
 /**
- * La cabecera del lugar actual: migaja, nombre y las pestanas que separan
- * su contenido.
+ * Las pestanas del lugar actual. El nombre y la migaja ya no viven aca: son
+ * el titulo y la ruta de la pagina (`PaginaDePanel`), y repetirlos en un
+ * segundo encabezado dejaba dos "Colonia Centro" una sobre otra.
  *
  * Las pestanas llevan la cuenta de lo que tienen adentro, y eso es lo que
  * las vuelve una respuesta en vez de una pregunta: sin el numero, saber si
  * un lugar tiene calles cargadas obligaba a entrar a la pestana, y despues
- * volver. Con cuatro pestanas eran cuatro viajes por lugar.
- *
- * "Editar" no lleva cuenta a proposito: no es una categoria de contenido,
- * es lo que se le hace al lugar mismo.
- *
- * Plana, sin caja: la jerarquia la dan la tipografia y la linea de
- * pestanas, no un borde alrededor.
+ * volver. "Editar" no lleva cuenta a proposito: no es una categoria de
+ * contenido, es lo que se le hace al lugar mismo.
  */
 export function PanelDeNodo({
   raizId,
   nodo,
-  migaja,
   vista,
   cuentas,
   abreLaEdicion,
 }: Props) {
-  const pasos = pasosDeMigaja(raizId, migaja);
   const pestanas = pestanasDePanel({
     raizId,
     nodoId: nodo.id,
@@ -80,24 +68,5 @@ export function PanelDeNodo({
     abreLaEdicion,
   });
 
-  return (
-    <section
-      aria-labelledby="panel-nodo-nombre"
-      className="flex flex-col gap-3"
-    >
-      <Migaja pasos={pasos} etiqueta="Ubicación" />
-      <div className="flex flex-wrap items-baseline gap-2">
-        <h2
-          id="panel-nodo-nombre"
-          className="text-[19px] font-semibold text-caliza-tinta"
-        >
-          {nodo.nombre}
-        </h2>
-        <span className="text-[13px] text-caliza-apagada">
-          {ETIQUETA_DE_TIPO_DE_LUGAR[nodo.tipo]}
-        </span>
-      </div>
-      <Pestanas pestanas={pestanas} etiqueta="Contenido del lugar" />
-    </section>
-  );
+  return <Pestanas pestanas={pestanas} etiqueta="Contenido del lugar" />;
 }

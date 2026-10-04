@@ -1,4 +1,7 @@
+import { RoadHorizon } from "@phosphor-icons/react/ssr";
+import Link from "next/link";
 import {
+  ANILLO_DE_FOCO,
   CeldaDeDato,
   CeldaPrincipal,
   CLASES_DE_TARJETA,
@@ -20,15 +23,43 @@ type Props = {
   permisos: PermisosDeTerritorio;
 };
 
+const ENLACE = `rounded-sm text-caliza-tinta underline underline-offset-2 ${ANILLO_DE_FOCO}`;
+
 export function CatalogoHeredado({ raizId, calles, lugares, permisos }: Props) {
   const asentamiento =
     lugares.find((lugar) => lugar.id === raizId)?.nombre ?? "su asentamiento";
+  const hrefDelCatalogo = rutaDe({
+    raizId,
+    nodoId: raizId,
+    vista: "calles",
+  });
+  const enlace = (
+    <Link href={hrefDelCatalogo} className={ENLACE}>
+      {asentamiento}
+    </Link>
+  );
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[15px] text-caliza-apagada">
-        {`Este lugar usa el catálogo de calles de ${asentamiento}.`}
+        Este lugar usa el catálogo de calles de {enlace}.
       </p>
+
+      {puedeAbrir("calle", permisos) ? (
+        <BarraDeAcciones>
+          <EnlaceDeAccion
+            href={rutaDe({
+              raizId,
+              nodoId: raizId,
+              vista: "calles",
+              accion: "calle",
+            })}
+            variante="secundaria"
+          >
+            Administrar el catálogo
+          </EnlaceDeAccion>
+        </BarraDeAcciones>
+      ) : null}
 
       {calles.length > 0 ? (
         <Tabla
@@ -44,26 +75,18 @@ export function CatalogoHeredado({ raizId, calles, lugares, permisos }: Props) {
           ))}
         </Tabla>
       ) : (
-        <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
-          Todavía no hay calles cargadas en el catálogo del asentamiento.
+        <p
+          className={`${CLASES_DE_TARJETA} flex items-start gap-2 text-[15px] text-caliza-apagada`}
+        >
+          <RoadHorizon
+            size={20}
+            weight="regular"
+            aria-hidden="true"
+            className="mt-0.5 shrink-0"
+          />
+          <span>El catálogo de {enlace} aún no tiene calles.</span>
         </p>
       )}
-
-      {puedeAbrir("calle", permisos) ? (
-        <BarraDeAcciones>
-          <EnlaceDeAccion
-            href={rutaDe({
-              raizId: raizId,
-              nodoId: raizId,
-              vista: "calles",
-              accion: "calle",
-            })}
-            variante="primaria"
-          >
-            Administrar el catálogo
-          </EnlaceDeAccion>
-        </BarraDeAcciones>
-      ) : null}
     </div>
   );
 }

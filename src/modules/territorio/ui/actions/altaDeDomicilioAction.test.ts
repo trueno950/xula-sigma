@@ -55,13 +55,11 @@ describe("altaDeDomicilioAction: zona opcional", () => {
   });
 
   it("guarda en la zona elegida y la declara", async () => {
-    await altaDeDomicilioAction(
-      formulario({
-        ...navegacion,
-        calleId: CALLE,
-        lugarId: MANZANA,
-      }),
-    );
+    await expect(
+      altaDeDomicilioAction(
+        formulario({ ...navegacion, calleId: CALLE, lugarId: MANZANA }),
+      ),
+    ).rejects.toThrow("ok=domicilio-creado");
 
     expect(altaDeDomicilioMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -74,13 +72,11 @@ describe("altaDeDomicilioAction: zona opcional", () => {
   });
 
   it("sin zona, deja que el caso de uso derive el asentamiento de la calle", async () => {
-    await altaDeDomicilioAction(
-      formulario({
-        ...navegacion,
-        calleId: CALLE,
-        lugarId: "",
-      }),
-    );
+    await expect(
+      altaDeDomicilioAction(
+        formulario({ ...navegacion, calleId: CALLE, lugarId: "" }),
+      ),
+    ).rejects.toThrow("ok=domicilio-creado");
 
     const [datos] = altaDeDomicilioMock.mock.calls[0] ?? [];
 

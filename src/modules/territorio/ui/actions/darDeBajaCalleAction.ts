@@ -45,5 +45,5 @@ export async function darDeBajaCalleAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
-  irAlArbol(undefined, undefined);
+  irAlArbol(undefined, undefined, "calle-baja");
 }

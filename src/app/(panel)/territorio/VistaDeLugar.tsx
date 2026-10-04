@@ -5,7 +5,6 @@ import {
   type DomicilioId,
   type NodoSeleccionado,
   PanelDeNodo,
-  type PasoDeMigaja,
   type TabDeLugar,
 } from "@/modules/territorio";
 import type {
@@ -14,8 +13,12 @@ import type {
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
-import { cuentasDeLugar } from "@/modules/territorio/ui/contenido";
+import {
+  cuentasDeLugar,
+  type PropsDeContenido,
+} from "@/modules/territorio/ui/contenido";
 import { opcionesDeCalles } from "@/modules/territorio/ui/opciones";
+import { BarraDeAcciones } from "@/modules/territorio/ui/PanelDeAccion";
 import {
   type PermisosDeTerritorio,
   puedeAbrir,
@@ -39,40 +42,15 @@ type Props = {
   domicilioId: DomicilioId | undefined;
   domicilio: DomicilioGuardado | undefined;
   permisos: PermisosDeTerritorio;
+  conteos?: PropsDeContenido["conteos"];
   /** El alta de domicilio esta abierta en la pestana Domicilios. */
   domicilioAbierto: boolean;
 };
 
 /**
- * La migaja de direccion del lugar: Tepakan > Colonia Centro > [lugar].
- * Cada paso previo es un link a ese nodo, para subir en la jerarquia.
- */
-const migajaDe = (
-  raiz: Pick<LugarGuardado, "id" | "nombre">,
-  nodos: readonly NodoDeSubarbol[],
-  nodo: NodoSeleccionado,
-): PasoDeMigaja[] => {
-  const porId = new Map(nodos.map((n) => [n.id, n]));
-  const cadena: PasoDeMigaja[] = [{ id: nodo.id, nombre: nodo.nombre }];
-  let actual: NodoDeSubarbol | undefined =
-    nodo.id === raiz.id ? undefined : porId.get(nodo.id);
-
-  while (actual && actual.clase === "lugar" && actual.padreId) {
-    const padre = porId.get(actual.padreId);
-    if (padre?.clase !== "lugar") break;
-    cadena.unshift({ id: padre.id, nombre: padre.nombre });
-    actual = padre;
-  }
-
-  if (nodo.id !== raiz.id) cadena.unshift({ id: raiz.id, nombre: raiz.nombre });
-
-  return cadena;
-};
-
-/**
- * La vista con `?raiz=` fijada: el panel del lugar (migaja + pestanas) y
+ * La vista con `?raiz=` fijada: las pestanas del lugar y
  * el contenido de la pestana activa, una categoria a la vez. Navegar es
- * entrar: cada hijo fija `?nodo=`; la migaja sube de nivel. Vive aparte
+ * entrar: cada hijo fija `?nodo=`; la migaja de la cabecera sube de nivel. Vive aparte
  * de la pagina para que ninguna pase las 200 lineas de la metrica.
  */
 export function VistaDeLugar({
@@ -87,6 +65,7 @@ export function VistaDeLugar({
   domicilioId,
   domicilio,
   permisos,
+  conteos,
   domicilioAbierto,
 }: Props) {
   const zona = zonaDelFormulario(
@@ -100,11 +79,24 @@ export function VistaDeLugar({
       <PanelDeNodo
         raizId={raiz.id}
         nodo={nodo}
-        migaja={migajaDe(raiz, nodos, nodo)}
         vista={vista}
         cuentas={cuentasDeLugar({ nodos, calles, nodo })}
         abreLaEdicion={permisos.abreLaEdicion}
       />
+
+      {vista === "domicilios" &&
+      puedeAbrir("domicilio", permisos) &&
+      !domicilioAbierto &&
+      calles.length > 0 ? (
+        <BarraDeAcciones>
+          <EnlaceDeAccion
+            href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
+            variante="primaria"
+          >
+            Registrar domicilio
+          </EnlaceDeAccion>
+        </BarraDeAcciones>
+      ) : null}
 
       <ContenidoDeLugar
         raizId={raiz.id}
@@ -118,25 +110,19 @@ export function VistaDeLugar({
         vista={vista}
         accion={accion}
         permisos={permisos}
+        conteos={conteos}
       />
 
-      {vista === "domicilios" && puedeAbrir("domicilio", permisos) ? (
-        domicilioAbierto ? (
-          <RegistroDeDomicilio
-            calles={opciones}
-            zona={zona}
-            volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
-            raiz={raiz.id}
-            nodo={nodo.id}
-          />
-        ) : calles.length > 0 ? (
-          <EnlaceDeAccion
-            href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
-            variante="primaria"
-          >
-            Registrar domicilio
-          </EnlaceDeAccion>
-        ) : null
+      {vista === "domicilios" &&
+      puedeAbrir("domicilio", permisos) &&
+      domicilioAbierto ? (
+        <RegistroDeDomicilio
+          calles={opciones}
+          zona={zona}
+          volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
+          raiz={raiz.id}
+          nodo={nodo.id}
+        />
       ) : null}
     </>
   );

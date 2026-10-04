@@ -1,12 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import {
-  CeldaDeApoyo,
-  CeldaPrincipal,
-  type ColumnaDeTabla,
-  FilaDeTabla,
-  Tabla,
-} from "./Tabla";
+import { CeldaDeApoyo, CeldaPrincipal } from "./CeldasDeTabla";
+import { type ColumnaDeTabla, FilaDeTabla, Tabla } from "./Tabla";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   {
@@ -103,5 +98,30 @@ describe("CeldaDeApoyo", () => {
 
     expect(html).toContain("Obras");
     expect(html).not.toContain("font-mono");
+  });
+});
+
+describe("FilaDeTabla seleccionada", () => {
+  it("marca aria-current, fondo de superficie y chevron visible", () => {
+    const html = renderToStaticMarkup(
+      <FilaDeTabla href="/p/1" seleccionada>
+        <CeldaPrincipal>Ana</CeldaPrincipal>
+      </FilaDeTabla>,
+    );
+
+    expect(html).toContain('aria-current="true"');
+    expect(html).toContain("bg-caliza-superficie");
+    expect(html).toContain("text-caliza-tinta");
+    expect(html).not.toContain("sm:text-transparent");
+  });
+
+  it("sin seleccionar no marca nada", () => {
+    const html = renderToStaticMarkup(
+      <FilaDeTabla href="/p/1">
+        <CeldaPrincipal>Ana</CeldaPrincipal>
+      </FilaDeTabla>,
+    );
+
+    expect(html).not.toContain("aria-current");
   });
 });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { listarReportes } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 import { horaEnMerida } from "@/shared/lib/fecha";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { leerMarca } from "@/shared/marca";
@@ -18,8 +19,8 @@ export const metadata: Metadata = { title: "Inicio" };
  * Los pendientes son un adorno del inicio, no su razon de ser: si no se
  * pueden contar, el inicio se pinta sin ellos y el fallo queda en el log con
  * los datos seguros del error (nunca el mensaje crudo, que puede traer datos
- * personales). Captura todo error y no uno concreto porque la consulta puede
- * fallar por red, base o permiso y en todos el inicio debe seguir en pie.
+ * personales). Un `NoAutorizadoError` se relanza (ver `errores.ts`); cualquier
+ * otro fallo degrada y el inicio sigue en pie.
  */
 async function contarRecibidos(
   contexto: NonNullable<Awaited<ReturnType<typeof contextoActual>>>,
@@ -27,6 +28,7 @@ async function contarRecibidos(
   try {
     return await listarReportes({ estado: "RECIBIDO" }, contexto);
   } catch (error) {
+    if (error instanceof NoAutorizadoError) throw error;
     console.error(
       "[inicio] no se pudieron contar los pendientes",
       datosSegurosDeError(error),

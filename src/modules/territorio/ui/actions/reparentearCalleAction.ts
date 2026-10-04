@@ -68,5 +68,5 @@ export async function reparentearCalleAction(
   }
 
   revalidatePath("/territorio");
-  irAlArbol(undefined, undefined);
+  irAlArbol(undefined, undefined, "calle-movida");
 }

@@ -13,6 +13,11 @@ import { datosSegurosDeError } from "./registroDeError";
  * Ver ADR 0001 seccion 3.
  */
 
+/**
+ * Un permiso negado no es un fallo de infraestructura. Un `catch` que
+ * degrada ante fallos de red o base debe volver a lanzarlo: tragarlo
+ * esconderia una autorizacion rota detras de una pantalla que "funciona".
+ */
 export class NoAutorizadoError extends Error {
   readonly codigo = "NO_AUTORIZADO";
 

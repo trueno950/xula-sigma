@@ -1,13 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { darDeBajaLugar } from "../../composicion";
 import { comoLugarId, LugarConDependientesError } from "../../domain";
+import { ejecutarEnContexto } from "./ejecutarEnContexto";
 import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
@@ -41,17 +39,13 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
     return;
   }
 
-  const contexto = await contextoActual();
+  const id = comoLugarId(analisis.data.id);
 
-  if (!contexto) redirect("/acceso");
-
-  try {
-    await darDeBajaLugar(comoLugarId(analisis.data.id), contexto);
-  } catch (error) {
-    volverAlArbol(navegacion, mensajeDeError(error));
-  }
-
-  revalidatePath("/territorio");
+  await ejecutarEnContexto(
+    navegacion,
+    (contexto) => darDeBajaLugar(id, contexto),
+    mensajeDeError,
+  );
 
   // El nodo abierto es justo el que se dio de baja, asi que la URL actual
   // ya no resuelve: se sube al padre. Dando de baja la raiz misma no queda
@@ -59,5 +53,6 @@ export async function darDeBajaLugarAction(formData: FormData): Promise<void> {
   irAlArbol(
     navegacion.nodo === navegacion.raiz ? undefined : navegacion.raiz,
     navegacion.padre,
+    "lugar-baja",
   );
 }

@@ -12,7 +12,7 @@ import {
   estaEnYucatan,
   PuntoFueraDeYucatanError,
 } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const MENSAJE_FORMULARIO_INVALIDO = "Coordenada inválida.";
 const MENSAJE_PUNTO_FUERA_DE_YUCATAN = "El punto debe estar dentro de Yucatán.";
@@ -96,4 +96,5 @@ export async function ubicarCalleAction(formData: FormData): Promise<void> {
   }
 
   revalidatePath("/territorio");
+  confirmarEnArbol(navegacion, "calle-ubicada");
 }

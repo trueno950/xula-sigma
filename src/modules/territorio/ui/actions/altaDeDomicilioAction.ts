@@ -1,9 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeDomicilio } from "../../composicion";
@@ -14,7 +11,8 @@ import {
   TransversalRepetidaError,
   ZonaIncoherenteError,
 } from "../../domain";
-import { navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { ejecutarEnContexto } from "./ejecutarEnContexto";
+import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeCalleAction`. Formulario nativo sin `use client`. */
 
@@ -32,6 +30,25 @@ const MENSAJE_GENERICO = "No se pudo completar el alta. Intente de nuevo.";
 /** Sin zona no se declara nada: el caso de uso la deriva de la calle. */
 const zonaDeclarada = (datos: { lugarId: string }): readonly LugarId[] =>
   datos.lugarId ? [comoLugarId(datos.lugarId)] : [];
+
+const comandoDe = (datos: z.infer<typeof esquemaDeEntrada>) => {
+  const declarados = zonaDeclarada(datos);
+  const [zona] = declarados;
+
+  return {
+    ...(zona ? { lugarId: zona } : {}),
+    nivelesDeclarados: declarados,
+    calleId: comoCalleId(datos.calleId),
+    numero: datos.numero || null,
+    entreCalleAId: datos.entreCalleAId
+      ? comoCalleId(datos.entreCalleAId)
+      : null,
+    entreCalleBId: datos.entreCalleBId
+      ? comoCalleId(datos.entreCalleBId)
+      : null,
+    referencia: datos.referencia || null,
+  };
+};
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -66,32 +83,10 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
     return;
   }
 
-  const declarados = zonaDeclarada(analisis.data);
-  const [zona] = declarados;
-  const contexto = await contextoActual();
-
-  if (!contexto) redirect("/acceso");
-
-  try {
-    await altaDeDomicilio(
-      {
-        ...(zona ? { lugarId: zona } : {}),
-        nivelesDeclarados: declarados,
-        calleId: comoCalleId(analisis.data.calleId),
-        numero: analisis.data.numero || null,
-        entreCalleAId: analisis.data.entreCalleAId
-          ? comoCalleId(analisis.data.entreCalleAId)
-          : null,
-        entreCalleBId: analisis.data.entreCalleBId
-          ? comoCalleId(analisis.data.entreCalleBId)
-          : null,
-        referencia: analisis.data.referencia || null,
-      },
-      contexto,
-    );
-  } catch (error) {
-    volverAlArbol(navegacion, mensajeDeError(error));
-  }
-
-  revalidatePath("/territorio");
+  await ejecutarEnContexto(
+    navegacion,
+    (contexto) => altaDeDomicilio(comandoDe(analisis.data), contexto),
+    mensajeDeError,
+  );
+  confirmarEnArbol(navegacion, "domicilio-creado");
 }

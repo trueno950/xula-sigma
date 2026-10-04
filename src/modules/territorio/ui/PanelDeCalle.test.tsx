@@ -40,6 +40,15 @@ const renderPanel = (accion: AccionDeNodo, permisos: PermisosDeTerritorio) =>
     />,
   );
 
+/** Cada `<a>` con su href y su texto visible, sin iconos ni etiquetas. */
+const anclas = (html: string) =>
+  [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)].map(
+    ([, href, interior]) => ({
+      href,
+      texto: (interior ?? "").replace(/<[^>]*>/g, "").trim(),
+    }),
+  );
+
 describe("PanelDeCalle", () => {
   it("no abre un formulario ante una accion forjada para un rol sin permiso", () => {
     const html = renderPanel(
@@ -52,7 +61,18 @@ describe("PanelDeCalle", () => {
     expect(html).toContain(
       "Su rol no permite administrar la estructura territorial.",
     );
-    expect(html).not.toContain("<a");
+    expect(anclas(html)).toEqual([
+      {
+        href: `/territorio?raiz=${raizId}&amp;nodo=${nodoId}&amp;vista=calles`,
+        texto: "Cerrar",
+      },
+      {
+        href: `/calles/${calle.id}/historial`,
+        texto: "Ver historial de la calle",
+      },
+      { href: "/mapa-operativo", texto: "Ver en el mapa operativo" },
+    ]);
+    expect(html).not.toContain("<details");
   });
 
   it("abre el formulario pedido cuando el rol tiene permiso", () => {

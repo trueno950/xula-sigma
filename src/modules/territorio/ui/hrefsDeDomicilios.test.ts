@@ -3,10 +3,12 @@ import {
   LIMITE_MAXIMO,
   TAMANO_DE_PAGINA,
 } from "../application/registroDeDomicilios";
-import { comoLugarId } from "../domain";
+import { comoDomicilioId, comoLugarId } from "../domain";
 import {
   construirHrefDeDomicilios,
+  hrefDeDomicilioDelRegistro,
   hrefDeVerMasDeDomicilios,
+  hrefSinFiltroDeDomicilios,
 } from "./hrefsDeDomicilios";
 
 const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
@@ -76,5 +78,57 @@ describe("hrefDeVerMasDeDomicilios", () => {
     const href = hrefDeVerMasDeDomicilios({ limite: LIMITE_MAXIMO });
 
     expect(href).toContain(`limite=${LIMITE_MAXIMO}`);
+  });
+});
+
+describe("hrefDeDomicilioDelRegistro", () => {
+  const coloniaId = comoLugarId("22222222-2222-4222-8222-222222222222");
+  const domicilio = {
+    id: comoDomicilioId("55555555-5555-4555-8555-555555555555"),
+    lugarId: coloniaId,
+  };
+  const destino = (raiz: string) =>
+    `/territorio?raiz=${raiz}&nodo=${coloniaId}&vista=domicilios&domicilio=${domicilio.id}#panel-de-domicilio`;
+
+  it("usa el asentamiento del filtro como raiz", () => {
+    expect(
+      hrefDeDomicilioDelRegistro(domicilio, {
+        filtros: { raizId: cabeceraId },
+        raices: [],
+      }),
+    ).toBe(destino(cabeceraId));
+  });
+
+  it("si el lugar es un asentamiento, el es la raiz", () => {
+    expect(
+      hrefDeDomicilioDelRegistro(
+        { ...domicilio, lugarId: cabeceraId },
+        { filtros: {}, raices: [cabeceraId] },
+      ),
+    ).toBe(
+      `/territorio?raiz=${cabeceraId}&nodo=${cabeceraId}&vista=domicilios&domicilio=${domicilio.id}#panel-de-domicilio`,
+    );
+  });
+
+  it("sin raiz conocida no inventa un enlace", () => {
+    expect(
+      hrefDeDomicilioDelRegistro(domicilio, { filtros: {}, raices: [] }),
+    ).toBeUndefined();
+  });
+});
+
+describe("hrefSinFiltroDeDomicilios", () => {
+  const filtros = { raizId: cabeceraId, calle: "Calle 21", numero: "5" };
+
+  it("quita solo el filtro nombrado y descarta el limite", () => {
+    expect(hrefSinFiltroDeDomicilios(filtros, "calle")).toBe(
+      `/territorio/domicilios?numero=5&raiz=${cabeceraId}`,
+    );
+    expect(hrefSinFiltroDeDomicilios(filtros, "numero")).toBe(
+      `/territorio/domicilios?q=Calle+21&raiz=${cabeceraId}`,
+    );
+    expect(hrefSinFiltroDeDomicilios(filtros, "raizId")).toBe(
+      "/territorio/domicilios?q=Calle+21&numero=5",
+    );
   });
 });

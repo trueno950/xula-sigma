@@ -5,10 +5,12 @@ import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDom
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { Aviso, PaginaDePanel } from "@/shared/ui";
 import { accionesDeRaiz } from "./AccionesDeRaiz";
+import { cabeceraDeLugar } from "./cabeceraDeLugar";
 import {
   cargarTerritorio,
   type SeleccionDeTerritorio,
 } from "./cargaDeTerritorio";
+import { MENSAJE_DE_CONFIRMACION } from "./mensajeDeConfirmacion";
 import type { ParametrosDeTerritorio } from "./parametros";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 import { VistaDeLugar } from "./VistaDeLugar";
@@ -37,6 +39,7 @@ export const TerritorioCargado = async ({
     calles,
     domicilio,
     lugares,
+    cuentas,
     hayCabecera,
     raices,
     puedeCrearLugar,
@@ -46,14 +49,16 @@ export const TerritorioCargado = async ({
     zonaDeLaEntrada,
   } = await cargarTerritorio({ contexto, parametros, raiz, seleccion });
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
-  const { accion, calleId, domicilioId, error, vista } = parametros;
+  const { accion, calleId, domicilioId, error, ok, vista } = parametros;
+  const cabecera = cabeceraDeLugar(raiz, nodos, nodo);
 
   return (
     <PaginaDePanel
-      titulo="Territorio"
+      {...cabecera}
       accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar, accion })}
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
+      {ok ? <Aviso tono="exito">{MENSAJE_DE_CONFIRMACION[ok]}</Aviso> : null}
 
       {!raiz ? (
         <>
@@ -67,6 +72,8 @@ export const TerritorioCargado = async ({
           <VistaDeRaices
             raices={raices}
             lugares={lugares}
+            cuentas={cuentas}
+            busqueda={parametros.busqueda}
             hayCabecera={hayCabecera}
             puedeEscribir={puedeCrearLugar}
             altaAbierta={accion === "lugar"}
@@ -85,6 +92,7 @@ export const TerritorioCargado = async ({
           domicilioId={domicilioId}
           domicilio={domicilio ?? undefined}
           permisos={permisos}
+          conteos={cuentas}
           domicilioAbierto={domicilioAbierto}
         />
       ) : null}

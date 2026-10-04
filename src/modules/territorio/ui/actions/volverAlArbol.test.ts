@@ -38,6 +38,22 @@ describe("rutaDelArbol", () => {
     );
   });
 
+  it("escribe la clave de confirmacion despues del contexto", () => {
+    expect(rutaDelArbol({ raiz: "r1", nodo: "n1", ok: "lugar-creado" })).toBe(
+      "/territorio?raiz=r1&nodo=n1&ok=lugar-creado",
+    );
+  });
+
+  /**
+   * El borde de entrada de una clave: `ok` sale de la URL y vuelve a ella.
+   */
+  it("navegacionDe no lee `ok` del formulario", () => {
+    const formulario = new FormData();
+    formulario.set("ok", "<script>");
+
+    expect(navegacionDe(formulario)).not.toHaveProperty("ok");
+  });
+
   /**
    * El panel de un domicilio abierto es contexto igual que `calle`: sin el
    * id, el error devuelve al operador al listado y lo obliga a volver a

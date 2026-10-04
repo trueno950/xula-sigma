@@ -1,6 +1,28 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { ACCIONES_DE_NODO } from "../acciones";
+import { ACCIONES_DE_NODO, type ClaveDeConfirmacion } from "../acciones";
+
+type ParametrosDelArbol = {
+  raiz?: string | undefined;
+  nodo?: string | undefined;
+  vista?: string | undefined;
+  accion?: string | undefined;
+  calle?: string | undefined;
+  domicilio?: string | undefined;
+  error?: string | undefined;
+  ok?: ClaveDeConfirmacion | undefined;
+};
+
+const CLAVES_DE_CONSULTA = [
+  "raiz",
+  "nodo",
+  "vista",
+  "accion",
+  "calle",
+  "domicilio",
+  "error",
+  "ok",
+] as const;
 
 /**
  * El destino de las acciones de territorio: el arbol, con el contexto visible
@@ -10,31 +32,13 @@ import { ACCIONES_DE_NODO } from "../acciones";
  * Next y no nuestro. Sin ningun parametro devuelve `/territorio` pelado:
  * `?` colgando ensucia la barra y no significa nada.
  */
-export const rutaDelArbol = ({
-  raiz,
-  nodo,
-  vista,
-  accion,
-  calle,
-  domicilio,
-  error,
-}: {
-  raiz?: string | undefined;
-  nodo?: string | undefined;
-  vista?: string | undefined;
-  accion?: string | undefined;
-  calle?: string | undefined;
-  domicilio?: string | undefined;
-  error?: string | undefined;
-}): string => {
+export const rutaDelArbol = (datos: ParametrosDelArbol): string => {
   const parametros = new URLSearchParams();
-  if (raiz) parametros.set("raiz", raiz);
-  if (nodo) parametros.set("nodo", nodo);
-  if (vista) parametros.set("vista", vista);
-  if (accion) parametros.set("accion", accion);
-  if (calle) parametros.set("calle", calle);
-  if (domicilio) parametros.set("domicilio", domicilio);
-  if (error) parametros.set("error", error);
+
+  for (const clave of CLAVES_DE_CONSULTA) {
+    const valor = datos[clave];
+    if (valor) parametros.set(clave, valor);
+  }
 
   const consulta = parametros.toString();
 
@@ -45,11 +49,11 @@ export const rutaDelArbol = ({
  * El destino de error comun de las acciones de territorio: volver al arbol
  * con el contexto seleccionado y el mensaje.
  *
- * El exito de la mayoria de las acciones NO redirige: revalidan y el
- * re-render de la pagina muestra el cambio al instante. La baja y el
- * reparenteo son la excepcion -mueven o borran el nodo que la URL nombra,
- * asi que quedarse ahi ya no resuelve nada- y por que lo son esta en
- * `irAlArbol`.
+ * El exito tambien redirige, con una clave de confirmacion: las altas y las
+ * ediciones por `confirmarEnArbol`, que se quedan en el mismo contexto; la
+ * baja y el reparenteo por `irAlArbol`, porque mueven o borran el nodo que
+ * la URL nombra y quedarse ahi ya no resuelve nada -por que esta en
+ * `irAlArbol`-.
  */
 export const volverAlArbol = (
   navegacion: ReturnType<typeof navegacionDe>,
@@ -72,7 +76,23 @@ export const volverAlArbol = (
 export const irAlArbol = (
   raiz: string | undefined,
   nodo: string | undefined,
-): never => redirect(rutaDelArbol({ raiz, nodo }));
+  ok?: ClaveDeConfirmacion,
+): never => redirect(rutaDelArbol({ raiz, nodo, ok }));
+
+/**
+ * El destino de exito de las acciones que dejan la pantalla donde estaba:
+ * las altas y las ediciones. Vuelve al mismo contexto -la accion abierta
+ * incluida, para que el operador siga capturando en lote- y le agrega la
+ * clave que la pagina convierte en un aviso de exito.
+ *
+ * Antes no redirigian: `revalidatePath` repintaba la URL y nada decia que
+ * se habia guardado. La clave es de un vocabulario cerrado: nunca viaja
+ * texto del operador de vuelta a la URL.
+ */
+export const confirmarEnArbol = (
+  navegacion: ReturnType<typeof navegacionDe>,
+  ok: ClaveDeConfirmacion,
+): never => redirect(rutaDelArbol({ ...navegacion, ok }));
 
 /**
  * El contexto abierto del arbol, para poder volver donde estaba quien envio

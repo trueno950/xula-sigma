@@ -2,7 +2,6 @@ import { CaretDown, CaretRight, CaretUp } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import {
-  CLASES_DE_DATO,
   CLASES_DE_ETIQUETA,
   clasesDeBoton,
   plantillaDeColumnas,
@@ -135,6 +134,12 @@ type PropsDeFila = {
   href?: string;
   /** El nombre completo de la fila: las celdas van pegadas sin esto. */
   etiquetaAccesible?: string;
+  /**
+   * La fila cuyo detalle esta abierto al lado. Fondo de superficie y
+   * chevron siempre visible, no una franja de color: el estado se ve y se
+   * lee (`aria-current`) sin depender del hover.
+   */
+  seleccionada?: boolean;
   children: ReactNode;
 };
 
@@ -149,6 +154,7 @@ const DISPOSICION_DE_FILA = `relative flex min-h-14 flex-col justify-center gap-
 export function FilaDeTabla({
   href,
   etiquetaAccesible,
+  seleccionada = false,
   children,
 }: PropsDeFila) {
   return (
@@ -157,7 +163,8 @@ export function FilaDeTabla({
         <Link
           href={href}
           aria-label={etiquetaAccesible}
-          className={`group pr-10 sm:pr-4 ${DISPOSICION_DE_FILA} transition-colors duration-150 ease-salida hover:bg-caliza-superficie focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca`}
+          {...(seleccionada ? { "aria-current": "true" as const } : {})}
+          className={`group pr-10 sm:pr-4 ${DISPOSICION_DE_FILA} transition-colors duration-150 ease-salida hover:bg-caliza-superficie ${seleccionada ? "bg-caliza-superficie" : ""} focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca`}
         >
           {children}
           <CaretRight
@@ -165,7 +172,7 @@ export function FilaDeTabla({
             weight="bold"
             aria-hidden="true"
             data-chevron
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-caliza-apagada transition-colors duration-150 ease-salida sm:static sm:translate-y-0 sm:text-transparent sm:group-hover:text-caliza-apagada sm:group-focus-visible:text-caliza-apagada"
+            className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors duration-150 ease-salida sm:static sm:translate-y-0 sm:group-hover:text-caliza-apagada sm:group-focus-visible:text-caliza-apagada ${seleccionada ? "text-caliza-tinta" : "text-caliza-apagada sm:text-transparent"}`}
           />
         </Link>
       ) : (
@@ -173,26 +180,4 @@ export function FilaDeTabla({
       )}
     </li>
   );
-}
-
-/** La celda que identifica la fila: tipografia Title, tinta plena. */
-export function CeldaPrincipal({ children }: { children: ReactNode }) {
-  return (
-    <span className="truncate text-[15px] font-semibold text-caliza-tinta">
-      {children}
-    </span>
-  );
-}
-
-/** CURP, folio, fecha: tipografia Dato, `tabular-nums`, tono apagado. */
-export function CeldaDeDato({ children }: { children: ReactNode }) {
-  return <span className={`truncate ${CLASES_DE_DATO}`}>{children}</span>;
-}
-
-/**
- * Dato de apoyo que no es un identificador: un tipo, un area, un nombre.
- * Label en apagada; Dato (mono) es solo para CURP, folios y fechas.
- */
-export function CeldaDeApoyo({ children }: { children: ReactNode }) {
-  return <span className={`truncate ${CLASES_DE_ETIQUETA}`}>{children}</span>;
 }

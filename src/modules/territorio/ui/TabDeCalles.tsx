@@ -1,21 +1,13 @@
 import { Plus } from "@phosphor-icons/react/ssr";
-import {
-  AvisoDePermiso,
-  CeldaDeDato,
-  CeldaPrincipal,
-  EnlaceDeAccion,
-  EstadoVacio,
-  FilaDeTabla,
-  Tabla,
-} from "@/shared/ui";
+import { AvisoDePermiso, EnlaceDeAccion } from "@/shared/ui";
 import { puedeTenerCatalogoDeCalles } from "../domain";
 import { CatalogoHeredado } from "./CatalogoHeredado";
 import { type PropsDeContenido, rutaDe } from "./contenido";
 import { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
+import { ListaDeCalles } from "./ListaDeCalles";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
 import { PanelDeCalle } from "./PanelDeCalle";
 import { puedeAbrir } from "./permisos";
-import { COLUMNAS_DE_CALLES, formatoDePunto } from "./vistaDeCalles";
 
 /**
  * Pestana Calles: el catalogo del asentamiento, el alta de una nueva calle
@@ -81,38 +73,30 @@ export function TabDeCalles({
         </BarraDeAcciones>
       ) : null}
 
-      {calles.length > 0 ? (
-        <Tabla
-          etiqueta={`Calles de ${lugar.nombre}`}
-          columnas={COLUMNAS_DE_CALLES}
-        >
-          {calles.map((calle) => (
-            <FilaDeTabla
-              key={calle.id}
-              href={rutaDe({
-                raizId: raizId,
-                nodoId: lugar.id,
-                vista: "calles",
-                calleId: calle.id,
-              })}
-              etiquetaAccesible={`${calle.nombre}, ${formatoDePunto(calle.punto)}`}
-            >
-              <CeldaPrincipal>{calle.nombre}</CeldaPrincipal>
-              <CeldaDeDato>{formatoDePunto(calle.punto)}</CeldaDeDato>
-            </FilaDeTabla>
-          ))}
-        </Tabla>
-      ) : (
-        <EstadoVacio
-          estado={{ clase: "vacio-inicial" }}
-          mensajeInicial={`${lugar.nombre} no tiene calles todavía. Un domicilio necesita una.`}
-          hrefSinFiltro={rutaDe({
-            raizId: raizId,
-            nodoId: lugar.id,
-            vista: "calles",
-          })}
+      <div
+        className={
+          calleSeleccionada
+            ? "grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-6"
+            : "flex flex-col gap-4"
+        }
+      >
+        <ListaDeCalles
+          raizId={raizId}
+          lugar={lugar}
+          calles={calles}
+          calleId={calleSeleccionada?.id}
         />
-      )}
+        {calleSeleccionada ? (
+          <PanelDeCalle
+            raizId={raizId}
+            nodoId={lugar.id}
+            calle={calleSeleccionada}
+            lugares={lugares}
+            accion={accion}
+            permisos={permisos}
+          />
+        ) : null}
+      </div>
 
       {puedeAgregar && accion === "calle" ? (
         <PanelDeAccion
@@ -125,17 +109,6 @@ export function TabDeCalles({
         >
           <FormularioDeAltaDeCalle raiz={raizId} nodo={lugar.id} />
         </PanelDeAccion>
-      ) : null}
-
-      {calleSeleccionada ? (
-        <PanelDeCalle
-          raizId={raizId}
-          nodoId={lugar.id}
-          calle={calleSeleccionada}
-          lugares={lugares}
-          accion={accion}
-          permisos={permisos}
-        />
       ) : null}
     </div>
   );

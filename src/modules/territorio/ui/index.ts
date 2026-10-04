@@ -1,4 +1,8 @@
-export { ACCIONES_DE_NODO } from "./acciones";
+export {
+  ACCIONES_DE_NODO,
+  CLAVES_DE_CONFIRMACION,
+  type ClaveDeConfirmacion,
+} from "./acciones";
 export { ContenidoDeLugar } from "./ContenidoDeLugar";
 export { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 export { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
@@ -11,6 +15,7 @@ export { FormularioDeMudanza } from "./FormularioDeMudanza";
 export { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
 export { FormularioDeReparenteo } from "./FormularioDeReparenteo";
 export { FormularioDeUbicacion } from "./FormularioDeUbicacion";
+export { filtrosVisiblesDeDomicilios } from "./filtrosVisiblesDeDomicilios";
 export { HistorialDeResidencias } from "./HistorialDeResidencias";
 export { PanelDeCalle } from "./PanelDeCalle";
 export {

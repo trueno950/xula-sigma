@@ -1,19 +1,19 @@
 import { notFound } from "next/navigation";
 import {
+  contarContenidoDeLugares,
   type DomicilioId,
   domicilioPorId,
-  existeCabecera,
   listarCalles,
-  listarCallesDelMunicipio,
   listarLugares,
   listarRaices,
   type NodoSeleccionado,
   subarbol,
 } from "@/modules/territorio";
-import type { LugarConPadre } from "@/modules/territorio/ui/vistaDeDomicilios";
-import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
+import { NoAutorizadoError } from "@/shared/lib/errores";
+import { datosSegurosDeError } from "@/shared/lib/registroDeError";
+import { cargarEntrada } from "./cargaDeEntrada";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
 
 /**
@@ -71,12 +71,24 @@ type EntradaDeCarga = {
   seleccion: SeleccionDeTerritorio;
 };
 
-type EstadoDeEntrada = {
-  contexto: ContextoActual;
-  parametros: ParametrosDeTerritorio;
-  lugares: readonly LugarConPadre[];
-  puedeCrearLugar: boolean;
-  conRaiz: boolean;
+/**
+ * Las cuentas son decoracion de las filas: si su consulta falla la pantalla
+ * sale sin ellas. Un `NoAutorizadoError` se relanza (ver `errores.ts`); el
+ * arbol y las pestanas siguen en pie, y las lecturas primarias no pasan por
+ * aqui y siguen propagando.
+ */
+const contarSinRomper = async (contexto: ContextoActual) => {
+  try {
+    return await contarContenidoDeLugares(contexto);
+  } catch (error) {
+    if (error instanceof NoAutorizadoError) throw error;
+    console.error(
+      "[territorio] no se pudieron contar los lugares",
+      datosSegurosDeError(error),
+    );
+
+    return undefined;
+  }
 };
 
 /**
@@ -95,7 +107,12 @@ export const cargarTerritorio = async ({
   // la entrada y el destino del reparenteo, que mueve un lugar a cualquier
   // rama. Recortarlo al subarbol de la raiz abierta dejaba ese selector con
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
-  const lugares = await listarLugares(contexto);
+  // Las cuentas alimentan el arbol de la entrada y las filas de la pestana
+  // Lugares: una consulta agrupada para todo el municipio.
+  const [lugares, cuentas] = await Promise.all([
+    listarLugares(contexto),
+    contarSinRomper(contexto),
+  ]);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
   const entrada = await cargarEntrada({
     contexto,
@@ -109,82 +126,8 @@ export const cargarTerritorio = async ({
     ...seleccion,
     raices,
     lugares,
+    cuentas,
     puedeCrearLugar,
     ...entrada,
-  };
-};
-
-const cargarEntrada = async ({
-  contexto,
-  parametros,
-  lugares,
-  puedeCrearLugar,
-  conRaiz,
-}: EstadoDeEntrada) => {
-  const paneles = conRaiz
-    ? { hayCabecera: false }
-    : await cargarPanelesDeEntrada(
-        contexto,
-        parametros.accion,
-        puedeCrearLugar,
-      );
-  const registro = await cargarRegistroDeEntrada(contexto, parametros, {
-    puedeCrearLugar,
-    conRaiz,
-    lugares,
-  });
-
-  return {
-    domicilioAbierto:
-      conRaiz && parametros.accion === "domicilio" && puedeCrearLugar,
-    ...paneles,
-    ...registro,
-  };
-};
-
-/**
- * El alta de domicilio servida desde la entrada, cuando la piden sin
- * `?raiz=`: el registro abierto para el rol con permiso, las calles del
- * municipio para el select y su zona.
- */
-const cargarRegistroDeEntrada = async (
-  contexto: ContextoActual,
-  parametros: ParametrosDeTerritorio,
-  {
-    puedeCrearLugar,
-    conRaiz,
-    lugares,
-  }: {
-    puedeCrearLugar: boolean;
-    conRaiz: boolean;
-    lugares: readonly LugarConPadre[];
-  },
-) => {
-  const registroAbierto =
-    !conRaiz && parametros.accion === "domicilio" && puedeCrearLugar;
-  const callesDelMunicipio = registroAbierto
-    ? await listarCallesDelMunicipio(contexto)
-    : [];
-  const zonaDeLaEntrada = registroAbierto
-    ? zonaDelFormulario(lugares, undefined, undefined)
-    : undefined;
-
-  return { registroAbierto, callesDelMunicipio, zonaDeLaEntrada };
-};
-
-/**
- * Los paneles de alta de la entrada: hoy solo el asentamiento dispara
- * lectura.
- */
-const cargarPanelesDeEntrada = async (
-  contexto: ContextoActual,
-  accion: ParametrosDeTerritorio["accion"],
-  puedeCrearLugar: boolean,
-) => {
-  return {
-    hayCabecera:
-      accion === "lugar" && puedeCrearLugar
-        ? await existeCabecera(contexto)
-        : false,
   };
 };

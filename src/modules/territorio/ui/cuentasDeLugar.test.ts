@@ -34,21 +34,22 @@ describe("cuentasDeLugar", () => {
     expect(cuentas.domicilios).toBe(1);
   });
 
-  it("un nodo sin catalogo propio cuenta cero calles", () => {
+  /** La pestana lista el catalogo del asentamiento: el numero no puede ser 0. */
+  it("un nodo sin catalogo propio cuenta las calles heredadas que la pestana lista", () => {
     const cuentas = cuentasDeLugar({
       nodos,
       calles: [calleDeLaColonia],
       nodo: { id: manzanaId, tipo: "manzana", nombre: "Manzana 3" },
     });
 
-    expect(cuentas.calles).toBe(0);
+    expect(cuentas.calles).toBe(1);
   });
 
   it("un nodo con catalogo propio cuenta solo sus calles", () => {
     const cuentas = cuentasDeLugar({
       nodos,
       calles: [calleDeLaColonia, calleDeLaManzana],
-      nodo: colonia,
+      nodo: { id: coloniaId, tipo: "cabecera", nombre: "Centro" },
     });
 
     expect(cuentas.calles).toBe(1);

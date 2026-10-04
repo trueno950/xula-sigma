@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VistaDeRaices } from "@/modules/territorio/ui/VistaDeRaices";
 
 const mocks = vi.hoisted(() => ({
+  contarContenidoDeLugares: vi.fn(),
   contextoActual: vi.fn(),
   listarCalles: vi.fn(),
   listarCallesDelMunicipio: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock("@/modules/territorio", async () => ({
   ContenidoDeLugar: ({ children }: { children: ReactNode }) => children,
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
+  contarContenidoDeLugares: mocks.contarContenidoDeLugares,
   listarCalles: mocks.listarCalles,
   listarCallesDelMunicipio: mocks.listarCallesDelMunicipio,
   listarDomicilios: mocks.listarDomicilios,
@@ -67,6 +69,7 @@ beforeEach(() => {
     usuario: { id: "u1", rol: "ADMIN_MUNICIPAL" },
     origen: "web",
   });
+  mocks.contarContenidoDeLugares.mockResolvedValue([]);
   mocks.listarCalles.mockResolvedValue([]);
   mocks.listarCallesDelMunicipio.mockResolvedValue([]);
   mocks.listarDomicilios.mockResolvedValue([]);
@@ -82,5 +85,98 @@ describe("Territorio root entry", () => {
     expect(html.match(/Registrar domicilio/g) ?? []).toHaveLength(1);
     expect(html.match(/Agregar asentamiento/g) ?? []).toHaveLength(1);
     expect(html).toContain('href="/territorio?accion=domicilio"');
+  });
+});
+
+const RAIZ = "11111111-1111-4111-8111-111111111111";
+const HIJO = "22222222-2222-4222-8222-222222222222";
+
+const conColonia = () => {
+  mocks.lugarPorId.mockResolvedValue({
+    id: RAIZ,
+    tipo: "cabecera",
+    nombre: "Tepakan",
+  });
+  mocks.subarbol.mockResolvedValue([
+    {
+      clase: "lugar",
+      id: HIJO,
+      tipo: "colonia",
+      nombre: "Colonia Centro",
+      padreId: RAIZ,
+    },
+  ]);
+};
+
+describe("Territorio: confirmacion de exito", () => {
+  it("pinta un solo aviso de exito, politico y sin robar el foco", async () => {
+    const html = renderToStaticMarkup(
+      await paginaCompleta({ ok: "lugar-creado" }),
+    );
+
+    expect(html.match(/Lugar agregado/g) ?? []).toHaveLength(1);
+    expect(html).toContain('role="status"');
+    expect(html).not.toContain('role="alert"');
+    expect(html).not.toContain("autofocus");
+  });
+
+  it("una clave desconocida no pinta nada", async () => {
+    const html = renderToStaticMarkup(
+      await paginaCompleta({ ok: "<b>hola</b>" }),
+    );
+
+    expect(html).not.toContain('role="status"');
+    expect(html).not.toContain("hola");
+  });
+
+  it("si hay error, el error gana y no hay confirmacion", async () => {
+    const html = renderToStaticMarkup(
+      await paginaCompleta({ ok: "lugar-creado", error: "No se pudo" }),
+    );
+
+    expect(html).toContain("No se pudo");
+    expect(html).not.toContain("Lugar agregado");
+  });
+});
+
+describe("Territorio: titulo y migaja con contexto", () => {
+  it("en la raiz el titulo es Territorio y no hay migaja", async () => {
+    const html = renderToStaticMarkup(await paginaCompleta({}));
+
+    expect(html).toMatch(/<h1[^>]*>Territorio<\/h1>/);
+    expect(html).not.toContain('aria-label="Ubicación"');
+  });
+
+  it("dentro de un lugar el titulo es su nombre, con el tipo como etiqueta", async () => {
+    conColonia();
+    // El nombre no contiene el tipo: la pastilla es lo unico que dice "Colonia".
+    mocks.subarbol.mockResolvedValue([
+      {
+        clase: "lugar",
+        id: HIJO,
+        tipo: "colonia",
+        nombre: "Barrio Alto",
+        padreId: RAIZ,
+      },
+    ]);
+    const html = renderToStaticMarkup(
+      await paginaCompleta({ raiz: RAIZ, nodo: HIJO }),
+    );
+
+    expect(html).toMatch(
+      /<h1[^>]*>Barrio Alto<\/h1><span[^>]*rounded-pill[^>]*>Colonia<\/span>/,
+    );
+    expect(html).not.toContain("font-mono");
+    expect(html.match(/Barrio Alto/g) ?? []).toHaveLength(2);
+  });
+
+  it("el primer eslabon siempre es Territorio hacia /territorio", async () => {
+    conColonia();
+    const html = renderToStaticMarkup(
+      await paginaCompleta({ raiz: RAIZ, nodo: HIJO }),
+    );
+
+    expect(html).toMatch(/<a[^>]*href="\/territorio"[^>]*>Territorio<\/a>/);
+    expect(html).not.toContain(">Lugares</a>");
   });
 });

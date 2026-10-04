@@ -6,10 +6,10 @@ const idA = comoLugarId("11111111-1111-4111-8111-111111111111");
 const idB = comoLugarId("22222222-2222-4222-8222-222222222222");
 
 describe("pasosDeMigaja", () => {
-  it("siempre abre con Lugares hacia el listado", () => {
+  it("siempre abre con Territorio hacia el listado", () => {
     const pasos = pasosDeMigaja(idA, [{ id: idA, nombre: "Motul" }]);
 
-    expect(pasos[0]).toEqual({ etiqueta: "Lugares", href: "/territorio" });
+    expect(pasos[0]).toEqual({ etiqueta: "Territorio", href: "/territorio" });
   });
 
   it("el ultimo paso no lleva href: es el actual, no un destino", () => {
@@ -93,9 +93,28 @@ describe("pestanasDePanel", () => {
     // nodos mostraban el mismo; la de domicilios decia "de este lugar"
     // cuando solo contaba lo colgado directo. Un `aria-label` que sobrevive
     // al cambio del numero que describe le miente a quien no ve la pantalla.
-    expect(porClave.get("calles")).toBe("Calles (de este lugar): 1");
+    expect(porClave.get("calles")).toBe("Calles: 1");
     expect(porClave.get("domicilios")).toBe(
       "Domicilios (de este lugar y lo que contiene): 0",
     );
+  });
+});
+
+describe("los enlaces del panel no arrastran la confirmacion", () => {
+  it("ni la migaja ni las pestanas llevan `ok`", () => {
+    const pasos = pasosDeMigaja(idA, [
+      { id: idA, nombre: "Motul" },
+      { id: idB, nombre: "Centro" },
+    ]);
+    const pestanas = pestanasDePanel({
+      raizId: idA,
+      nodoId: idB,
+      vista: "lugares",
+      cuentas: { lugares: 1, calles: 1, domicilios: 1 },
+      abreLaEdicion: true,
+    });
+    const hrefs = [...pasos, ...pestanas].map((paso) => paso.href ?? "");
+
+    expect(hrefs.join(" ")).not.toContain("ok=");
   });
 });

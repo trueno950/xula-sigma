@@ -1,36 +1,26 @@
-import { Warning } from "@phosphor-icons/react/ssr";
-import Link from "next/link";
 import {
   AvisoDePermiso,
-  CLASES_DE_DATO,
-  CLASES_DE_ETIQUETA,
   EnlaceDeAccion,
   EstadoVacio,
   estadoDeLista,
   Panel,
 } from "@/shared/ui";
-import {
-  ETIQUETA_DE_TIPO_DE_LUGAR,
-  type LugarId,
-  puedeSerRaiz,
-  type TipoDeLugar,
-  tipoDeLugarEnFrase,
-} from "../domain";
-import { masAdentroDe } from "./conteo";
+import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
+import { armarArbol, type LugarDelArbol } from "./arbolDeLugares";
+import { BuscadorDeLugares } from "./BuscadorDeLugares";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
+import { NodoDelArbol } from "./NodoDelArbol";
 
-/** Lo minimo para dibujar el arbol: lo tienen `LugarGuardado` y el subarbol. */
-export type LugarDelArbol = {
-  id: LugarId;
-  nombre: string;
-  tipo: TipoDeLugar;
-  padreId: LugarId | null;
-};
+export type { LugarDelArbol } from "./arbolDeLugares";
 
 type Props = {
   raices: readonly LugarDelArbol[];
   /** Todos los lugares del municipio: de aca sale que cuelga de que. */
   lugares: readonly LugarDelArbol[];
+  /** Una sola lectura agrupada de la pagina; sin ella las filas no cuentan. */
+  cuentas?: readonly ConteoDeLugar[] | undefined;
+  /** `?q=`: filtra por nombre, sin acentos ni mayusculas. */
+  busqueda?: string | undefined;
   /**
    * No se deriva de `lugares`; el motivo vive en `application/puertos.ts`,
    * en el contrato de `RepositorioDeLugares.existeCabecera`.
@@ -41,22 +31,15 @@ type Props = {
   altaAbierta: boolean;
 };
 
-const CLASE_FILA =
-  "flex min-h-12 flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2 transition-colors duration-150 ease-salida hover:bg-caliza-superficie focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca";
-
 /**
- * La entrada de `/territorio`: los asentamientos del municipio y, indentado,
- * lo que cuelga directo de cada uno.
+ * La entrada de `/territorio`: los asentamientos del municipio y lo que
+ * cuelga de ellos, hasta tres niveles, cada rama colapsable; lo que queda
+ * mas adentro es un enlace a la vista de ese lugar. Un municipio con
+ * trescientas manzanas volveria esta pantalla un scroll infinito, y la
+ * tarea de todos los dias es entrar a un asentamiento, no leer el censo.
  *
- * **Dos niveles y no el arbol entero**: un municipio con trescientas
- * manzanas cargadas volveria esta pantalla un scroll infinito, y la tarea
- * de todos los dias es entrar a un asentamiento, no leer el censo. El
- * segundo nivel esta porque sin el la lista era plana y no habia forma de
- * ver que cuelga de que — que es justo lo que hace falta para notar que
- * algo quedo colgado donde no va.
- *
- * Se arma con los lugares que la pagina ya trajo para el catalogo del alta:
- * cero consultas nuevas.
+ * Se arma con los lugares y las cuentas que la pagina ya trajo: una
+ * consulta agrupada, nunca una por fila.
  *
  * El alta ya no vive en un panel lateral permanente. Ocupaba 320px fijos
  * estuviera o no en uso, y competia con la tarea de todos los dias.
@@ -64,13 +47,15 @@ const CLASE_FILA =
 export function VistaDeRaices({
   raices,
   lugares,
+  cuentas = [],
+  busqueda,
   hayCabecera,
   puedeEscribir,
   altaAbierta,
 }: Props) {
-  const estado = estadoDeLista({ total: raices.length });
-  const hijosDe = (padreId: LugarId) =>
-    lugares.filter((lugar) => lugar.padreId === padreId);
+  const arbol = armarArbol({ raices, lugares, busqueda });
+  const estado = estadoDeLista({ total: arbol.length, filtro: busqueda });
+  const cuentasPorLugar = new Map(cuentas.map((c) => [c.lugarId, c]));
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,81 +66,23 @@ export function VistaDeRaices({
         />
       ) : null}
 
+      {raices.length > 0 || busqueda ? (
+        <BuscadorDeLugares busqueda={busqueda} />
+      ) : null}
+
       {estado.clase === "con-filas" ? (
         <ul
           aria-label="Asentamientos del municipio"
           className="flex flex-col divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo"
         >
-          {raices.map((raiz) => {
-            const hijos = hijosDe(raiz.id);
-            const masAdentro = masAdentroDe(
-              hijos.map((h) => h.id),
-              lugares,
-            );
-
-            return (
-              <li key={raiz.id}>
-                <Link
-                  href={`/territorio?raiz=${raiz.id}`}
-                  className={CLASE_FILA}
-                  aria-label={`${raiz.nombre}, ${tipoDeLugarEnFrase(raiz.tipo)}`}
-                >
-                  <span className="text-[15px] font-medium text-caliza-tinta">
-                    {raiz.nombre}
-                  </span>
-                  <span className={CLASES_DE_DATO}>
-                    {ETIQUETA_DE_TIPO_DE_LUGAR[raiz.tipo]}
-                  </span>
-                  {/*
-                    `tipoDeLugar.ts` dice que un rango 0 es "raiz por
-                    construccion". Lo contrario -una colonia, un sector o
-                    una manzana arriba de todo- ya no se puede crear:
-                    `altaDeLugar` y `reparentearLugar` lanzan
-                    `RaizInvalidaError`. Lo que queda aca es dato anterior a
-                    esa regla, y la pantalla lo senala en vez de esconderlo
-                    porque hay que moverlo a mano. `scripts/auditar-raices.sql`
-                    es el mismo barrido del lado de la base.
-                  */}
-                  {puedeSerRaiz(raiz.tipo) ? null : (
-                    <span className="flex items-center gap-1 text-[13px] font-medium text-senial-aviso">
-                      <Warning size={14} weight="fill" aria-hidden="true" />
-                      Debería colgar de un asentamiento
-                    </span>
-                  )}
-                </Link>
-
-                {hijos.length > 0 ? (
-                  <ul className="flex flex-col divide-y divide-caliza-divisor border-t border-caliza-divisor">
-                    {hijos.map((hijo) => (
-                      <li key={hijo.id}>
-                        <Link
-                          href={`/territorio?raiz=${raiz.id}&nodo=${hijo.id}`}
-                          className={`${CLASE_FILA} pl-9`}
-                          aria-label={`${hijo.nombre}, ${tipoDeLugarEnFrase(hijo.tipo)}`}
-                        >
-                          <span className="text-[15px] text-caliza-tinta">
-                            {hijo.nombre}
-                          </span>
-                          <span className={CLASES_DE_DATO}>
-                            {ETIQUETA_DE_TIPO_DE_LUGAR[hijo.tipo]}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-
-                {masAdentro > 0 ? (
-                  <p
-                    className={`${CLASES_DE_ETIQUETA} border-t border-caliza-divisor px-4 py-2 pl-9`}
-                  >
-                    {masAdentro} lugar{masAdentro === 1 ? "" : "es"} más
-                    adentro.
-                  </p>
-                ) : null}
-              </li>
-            );
-          })}
+          {arbol.map((nodo) => (
+            <NodoDelArbol
+              key={nodo.lugar.id}
+              nodo={nodo}
+              cuentas={cuentasPorLugar}
+              abrirTodo={Boolean(busqueda)}
+            />
+          ))}
         </ul>
       ) : altaAbierta ? null : (
         <EstadoVacio

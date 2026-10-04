@@ -1,4 +1,4 @@
-import { Boton, Campo } from "@/shared/ui";
+import { BarraDeAcciones, Boton, Campo, GrupoDeCampos } from "@/shared/ui";
 import { altaDeCalleAction } from "./actions/altaDeCalleAction";
 
 type Props = {
@@ -10,24 +10,28 @@ type Props = {
 /** Server Component, `<form action={...}>` nativo sin `"use client"`. */
 export function FormularioDeAltaDeCalle({ raiz, nodo }: Props) {
   return (
-    <form action={altaDeCalleAction} className="flex flex-col gap-4">
+    <form action={altaDeCalleAction} className="flex flex-col gap-6">
       <input type="hidden" name="raiz" value={raiz} />
       <input type="hidden" name="nodo" value={nodo} />
       <input type="hidden" name="vista" value="calles" />
       <input type="hidden" name="accion" value="calle" />
       <input type="hidden" name="lugarId" value={nodo} />
 
-      <Campo
-        id="calle-nombre"
-        name="nombre"
-        etiqueta="Nombre"
-        required
-        ayuda="Como la conoce el municipio: Calle 20, Camino a Sisal."
-      />
+      <GrupoDeCampos titulo="Datos de la calle">
+        <Campo
+          id="calle-nombre"
+          name="nombre"
+          etiqueta="Nombre"
+          required
+          ayuda="Como la conoce el municipio: Calle 20, Camino a Sisal."
+        />
+      </GrupoDeCampos>
 
-      <Boton type="submit" variante="primaria">
-        Dar de alta
-      </Boton>
+      <BarraDeAcciones>
+        <Boton type="submit" variante="primaria">
+          Dar de alta
+        </Boton>
+      </BarraDeAcciones>
     </form>
   );
 }
