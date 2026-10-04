@@ -34,6 +34,54 @@ type Entrada = {
   busqueda: string | undefined;
 };
 
+type Contexto = {
+  lugares: readonly LugarDelArbol[];
+  aguja: string;
+  raizId: LugarId;
+};
+
+const hijosDe = (lugares: readonly LugarDelArbol[], lugar: LugarDelArbol) =>
+  lugares.filter((otro) => otro.padreId === lugar.id);
+
+const coincideCon = (aguja: string, lugar: LugarDelArbol) =>
+  aguja !== "" && normalizarParaBusqueda(lugar.nombre).includes(aguja);
+
+const construirHoja = (
+  { lugares }: Contexto,
+  base: Omit<NodoDeArbol, "hijos" | "masAdentro">,
+): NodoDeArbol => {
+  const directos = hijosDe(lugares, base.lugar).map((hijo) => hijo.id);
+  return {
+    ...base,
+    hijos: [],
+    masAdentro: directos.length + masAdentroDe(directos, lugares),
+  };
+};
+
+const construir = (
+  contexto: Contexto,
+  lugar: LugarDelArbol,
+  nivel: number,
+): NodoDeArbol | null => {
+  const { lugares, aguja, raizId } = contexto;
+  const base = { lugar, raizId, nivel, coincide: coincideCon(aguja, lugar) };
+
+  if (aguja === "" && nivel === NIVELES_VISIBLES - 1) {
+    return construirHoja(contexto, base);
+  }
+
+  const hijos =
+    nivel + 1 >= NIVEL_MAXIMO
+      ? []
+      : hijosDe(lugares, lugar)
+          .map((hijo) => construir(contexto, hijo, nivel + 1))
+          .filter((nodo): nodo is NodoDeArbol => nodo !== null);
+
+  if (aguja !== "" && !base.coincide && hijos.length === 0) return null;
+
+  return { ...base, hijos, masAdentro: 0 };
+};
+
 /**
  * Sin busqueda, el arbol se corta en `NIVELES_VISIBLES`: un municipio con
  * trescientas manzanas volveria la pantalla un scroll infinito. Con
@@ -46,40 +94,8 @@ export const armarArbol = ({
   busqueda,
 }: Entrada): readonly NodoDeArbol[] => {
   const aguja = busqueda ? normalizarParaBusqueda(busqueda) : "";
-  const hijosDe = (lugar: LugarDelArbol) =>
-    lugares.filter((otro) => otro.padreId === lugar.id);
-  const coincideCon = (lugar: LugarDelArbol) =>
-    aguja !== "" && normalizarParaBusqueda(lugar.nombre).includes(aguja);
-
-  const construir = (
-    lugar: LugarDelArbol,
-    raizId: LugarId,
-    nivel: number,
-  ): NodoDeArbol | null => {
-    const base = { lugar, raizId, nivel, coincide: coincideCon(lugar) };
-
-    if (aguja === "" && nivel === NIVELES_VISIBLES - 1) {
-      const directos = hijosDe(lugar).map((hijo) => hijo.id);
-      return {
-        ...base,
-        hijos: [],
-        masAdentro: directos.length + masAdentroDe(directos, lugares),
-      };
-    }
-
-    const hijos =
-      nivel + 1 >= NIVEL_MAXIMO
-        ? []
-        : hijosDe(lugar)
-            .map((hijo) => construir(hijo, raizId, nivel + 1))
-            .filter((nodo): nodo is NodoDeArbol => nodo !== null);
-
-    if (aguja !== "" && !base.coincide && hijos.length === 0) return null;
-
-    return { ...base, hijos, masAdentro: 0 };
-  };
 
   return raices
-    .map((raiz) => construir(raiz, raiz.id, 0))
+    .map((raiz) => construir({ lugares, aguja, raizId: raiz.id }, raiz, 0))
     .filter((nodo): nodo is NodoDeArbol => nodo !== null);
 };

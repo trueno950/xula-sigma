@@ -50,3 +50,7 @@ Un solo PR hacia `main` con un commit por tarea; la revisión nativa corre por r
 ## Siguiente paso
 
 PR hacia `main` (decisión del usuario).
+
+## Ronda 1 del revisor de IA en CI (PR #94)
+
+Falló solo "Revisión de IA" con tres hallazgos reales contra las reglas del proyecto: `contextoDeCalle` de 46 líneas, `armarArbol` de 43 líneas (tope 30) e ids `string` sueltos en `contextoDeCalle` donde corresponde `LugarId`. Corregidos sin cambio de comportamiento. Otras funciones no JSX de más de 30 líneas en archivos tocados por la rama, ya existentes y no marcadas en la ronda 1: `cargaDeTerritorio.ts:96` (36), `lectorDeContenidoDeLugaresSql.ts:25` (43), acciones `altaDeCalle` (32), `altaDeDomicilio` (47), `altaDeLugar` (36), `corregirDomicilio` (51), `darDeBajaLugar` (33), `reparentearLugar` (37), `volverAlArbol:13` (33) y `vistaDePanel.ts:39` (48). Si la ronda 2 marca alguna, decide una persona (regla de dos rondas de CLAUDE.md).

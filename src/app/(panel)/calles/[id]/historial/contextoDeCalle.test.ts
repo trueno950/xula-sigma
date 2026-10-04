@@ -1,21 +1,28 @@
 import { describe, expect, it } from "vitest";
+import type { CalleId, LugarId } from "@/modules/territorio";
 import { contextoDeCalle } from "./contextoDeCalle";
 
+/** Los ids de estos casos no son UUID: el cast a la marca vive solo aqui. */
+const lid = (valor: string) => valor as LugarId;
+
 const lugar = (id: string, nombre: string, padreId: string | null) => ({
-  id,
+  id: lid(id),
   nombre,
-  padreId,
-  tipo: "COLONIA",
+  padreId: padreId === null ? null : lid(padreId),
   bajaEn: null as Date | null,
 });
 
-const calle = (lugarId: string, bajaEn: Date | null = null) =>
-  ({ id: "calle-1", nombre: "Calle 20", lugarId, bajaEn }) as never;
+const calle = (lugarId: string, bajaEn: Date | null = null) => ({
+  id: "calle-1" as CalleId,
+  nombre: "Calle 20",
+  lugarId: lid(lugarId),
+  bajaEn,
+});
 
 const lugares = [
   lugar("raiz", "Motul", null),
   lugar("col", "Colonia Centro", "raiz"),
-] as never[];
+];
 
 describe("contextoDeCalle", () => {
   it("arma la migaja Territorio > lugares > calle > Historial", () => {
@@ -56,7 +63,7 @@ describe("contextoDeCalle", () => {
     const conBaja = [
       { ...lugar("raiz", "Motul", null), bajaEn: new Date("2026-01-01") },
       lugar("col", "Colonia Centro", "raiz"),
-    ] as never[];
+    ];
 
     expect(contextoDeCalle(calle("col"), conBaja).volverHref).toBe(
       "/territorio",
@@ -75,7 +82,7 @@ describe("contextoDeCalle", () => {
   });
 
   it("no se cuelga con un ciclo de padres", () => {
-    const ciclo = [lugar("a", "A", "b"), lugar("b", "B", "a")] as never[];
+    const ciclo = [lugar("a", "A", "b"), lugar("b", "B", "a")];
 
     expect(contextoDeCalle(calle("a"), ciclo).volverHref).toBe("/territorio");
   });
@@ -85,7 +92,7 @@ describe("contextoDeCalle", () => {
     const cadenaDe = (n: number) =>
       Array.from({ length: n }, (_, i) =>
         lugar(`l${i}`, `Nivel ${i}`, i === 0 ? null : `l${i - 1}`),
-      ) as never[];
+      );
 
     it("una cadena de exactamente 16 arma la migaja completa", () => {
       const resultado = contextoDeCalle(calle("l15"), cadenaDe(16));

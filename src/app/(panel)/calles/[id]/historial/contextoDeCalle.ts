@@ -1,4 +1,8 @@
-import type { CalleGuardada, LugarGuardado } from "@/modules/territorio";
+import type {
+  CalleGuardada,
+  LugarGuardado,
+  LugarId,
+} from "@/modules/territorio";
 import { rutaDe } from "@/modules/territorio/ui/contenido";
 import type { PasoDeMigaja } from "@/shared/ui";
 
@@ -26,9 +30,9 @@ const PROFUNDIDAD_MAXIMA = 16;
  */
 const cadenaDeLugares = (
   lugares: readonly LugarDeContexto[],
-  lugarId: string,
+  lugarId: LugarId,
 ): readonly LugarDeContexto[] | null => {
-  const porId = new Map(lugares.map((lugar) => [lugar.id as string, lugar]));
+  const porId = new Map(lugares.map((lugar) => [lugar.id, lugar]));
   const cadena: LugarDeContexto[] = [];
   let actual = porId.get(lugarId);
 
@@ -41,49 +45,55 @@ const cadenaDeLugares = (
   return null;
 };
 
+const sinCadena = (calle: CalleDeContexto): ContextoDeCalle => ({
+  migaja: [
+    { etiqueta: "Territorio", href: "/territorio" },
+    { etiqueta: calle.nombre },
+    { etiqueta: "Historial" },
+  ],
+  volverHref: "/territorio",
+  volverEtiqueta: "Volver a Territorio",
+});
+
+const hrefDeLugar = (raizId: LugarId, nodoId: LugarId) =>
+  `/territorio?raiz=${raizId}&nodo=${nodoId}`;
+
+const migajaDe = (
+  calle: CalleDeContexto,
+  pasosDeLugares: readonly PasoDeMigaja[],
+  hrefDeCalle: string,
+): readonly PasoDeMigaja[] => [
+  { etiqueta: "Territorio", href: "/territorio" },
+  ...pasosDeLugares,
+  calle.bajaEn !== null
+    ? { etiqueta: calle.nombre }
+    : { etiqueta: calle.nombre, href: hrefDeCalle },
+  { etiqueta: "Historial" },
+];
+
 export function contextoDeCalle(
   calle: CalleDeContexto,
   lugares: readonly LugarDeContexto[],
 ): ContextoDeCalle {
   const cadena = cadenaDeLugares(lugares, calle.lugarId);
-  const historial = { etiqueta: "Historial" };
-
-  if (!cadena?.[0]) {
-    return {
-      migaja: [
-        { etiqueta: "Territorio", href: "/territorio" },
-        { etiqueta: calle.nombre },
-        historial,
-      ],
-      volverHref: "/territorio",
-      volverEtiqueta: "Volver a Territorio",
-    };
-  }
+  if (!cadena?.[0]) return sinCadena(calle);
 
   const raizId = cadena[0].id;
-  const hrefDeLugar = (nodoId: string) =>
-    `/territorio?raiz=${raizId}&nodo=${nodoId}`;
   const hrefDeCalle = rutaDe({
     raizId,
     nodoId: calle.lugarId,
     vista: "calles",
     calleId: calle.id,
   });
+  const pasosDeLugares = cadena.map((lugar) => ({
+    etiqueta: lugar.nombre,
+    href: hrefDeLugar(raizId, lugar.id),
+  }));
   const deBaja = calle.bajaEn !== null;
 
   return {
-    migaja: [
-      { etiqueta: "Territorio", href: "/territorio" },
-      ...cadena.map((lugar) => ({
-        etiqueta: lugar.nombre,
-        href: hrefDeLugar(lugar.id),
-      })),
-      deBaja
-        ? { etiqueta: calle.nombre }
-        : { etiqueta: calle.nombre, href: hrefDeCalle },
-      historial,
-    ],
-    volverHref: deBaja ? hrefDeLugar(calle.lugarId) : hrefDeCalle,
+    migaja: migajaDe(calle, pasosDeLugares, hrefDeCalle),
+    volverHref: deBaja ? hrefDeLugar(raizId, calle.lugarId) : hrefDeCalle,
     volverEtiqueta: deBaja ? "Volver al lugar" : "Volver a la calle",
   };
 }
