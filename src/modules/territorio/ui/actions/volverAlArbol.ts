@@ -2,24 +2,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { ACCIONES_DE_NODO, type ClaveDeConfirmacion } from "../acciones";
 
-/**
- * El destino de las acciones de territorio: el arbol, con el contexto visible
- * que correspondan y, si la hubo, la falla.
- *
- * Pura y exportada para poder probar el destino sin `redirect`, que es de
- * Next y no nuestro. Sin ningun parametro devuelve `/territorio` pelado:
- * `?` colgando ensucia la barra y no significa nada.
- */
-export const rutaDelArbol = ({
-  raiz,
-  nodo,
-  vista,
-  accion,
-  calle,
-  domicilio,
-  error,
-  ok,
-}: {
+type ParametrosDelArbol = {
   raiz?: string | undefined;
   nodo?: string | undefined;
   vista?: string | undefined;
@@ -28,16 +11,34 @@ export const rutaDelArbol = ({
   domicilio?: string | undefined;
   error?: string | undefined;
   ok?: ClaveDeConfirmacion | undefined;
-}): string => {
+};
+
+const CLAVES_DE_CONSULTA = [
+  "raiz",
+  "nodo",
+  "vista",
+  "accion",
+  "calle",
+  "domicilio",
+  "error",
+  "ok",
+] as const;
+
+/**
+ * El destino de las acciones de territorio: el arbol, con el contexto visible
+ * que correspondan y, si la hubo, la falla.
+ *
+ * Pura y exportada para poder probar el destino sin `redirect`, que es de
+ * Next y no nuestro. Sin ningun parametro devuelve `/territorio` pelado:
+ * `?` colgando ensucia la barra y no significa nada.
+ */
+export const rutaDelArbol = (datos: ParametrosDelArbol): string => {
   const parametros = new URLSearchParams();
-  if (raiz) parametros.set("raiz", raiz);
-  if (nodo) parametros.set("nodo", nodo);
-  if (vista) parametros.set("vista", vista);
-  if (accion) parametros.set("accion", accion);
-  if (calle) parametros.set("calle", calle);
-  if (domicilio) parametros.set("domicilio", domicilio);
-  if (error) parametros.set("error", error);
-  if (ok) parametros.set("ok", ok);
+
+  for (const clave of CLAVES_DE_CONSULTA) {
+    const valor = datos[clave];
+    if (valor) parametros.set(clave, valor);
+  }
 
   const consulta = parametros.toString();
 

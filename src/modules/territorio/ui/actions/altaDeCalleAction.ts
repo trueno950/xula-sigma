@@ -1,9 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeCalle } from "../../composicion";
@@ -12,6 +9,7 @@ import {
   comoLugarId,
   NombreDeCalleDuplicadoError,
 } from "../../domain";
+import { ejecutarEnContexto } from "./ejecutarEnContexto";
 import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeLugarAction`. Formulario nativo sin `use client`. */
@@ -51,22 +49,13 @@ export async function altaDeCalleAction(formData: FormData): Promise<void> {
     return;
   }
 
-  const contexto = await contextoActual();
+  const { nombre, lugarId } = analisis.data;
 
-  if (!contexto) redirect("/acceso");
-
-  try {
-    await altaDeCalle(
-      {
-        nombre: analisis.data.nombre,
-        lugarId: comoLugarId(analisis.data.lugarId),
-      },
-      contexto,
-    );
-  } catch (error) {
-    volverAlArbol(navegacion, mensajeDeError(error));
-  }
-
-  revalidatePath("/territorio");
+  await ejecutarEnContexto(
+    navegacion,
+    (contexto) =>
+      altaDeCalle({ nombre, lugarId: comoLugarId(lugarId) }, contexto),
+    mensajeDeError,
+  );
   confirmarEnArbol(navegacion, "calle-creada");
 }

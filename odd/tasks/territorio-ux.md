@@ -70,3 +70,7 @@ Un hallazgo nuevo: `cadenaDe` (`cabeceraDeLugar.tsx`) sube por `padreId` sin gua
 ## Ronda 5 del revisor de IA y comentarios de Codex (PR #94)
 
 Codex dejó 4 comentarios P1 sobre el commit 73c7020 (funciones de más de 30 líneas en `armarArbol`, `contextoDeCalle` y `contarPorLugar`, y un comentario falso de `contenido.ts`): ya estaban corregidos en f34bdab y 67d57b8; verificado contra el código actual (10, 24 y 11 líneas de código). La ronda 5 del revisor de IA pidió: una sola explicación de `NoAutorizadoError` (ahora vive en `shared/lib/errores.ts` y los tres sitios apuntan a ella), quitar un `as never` de `territorioU3.test.tsx` (usa `comoDomicilioId`) y una aserción de fecha independiente del ICU (compara con el helper del propio componente; verificada con una mutación). Respuestas en los hilos con el commit como evidencia.
+
+## Ronda 6 del revisor de IA (PR #94)
+
+El revisor pidió que toda función que no sea JSX tenga 30 líneas de código o menos; el usuario eligió dividir las 8 señaladas. `pestanasDePanel` (48) se apoya en `pestanaDeCuenta` y `hrefDePanel`; `rutaDelArbol` (33) recorre una lista de claves; las seis acciones (32 a 51) comparten `ejecutarEnContexto` (sesión, caso de uso con vuelta al árbol si falla, repintado) y las dos de domicilio extraen `comandoDe`. Sin cambio de comportamiento: el orden validar, navegación, sesión, caso de uso, revalidar y redirigir es el mismo y las pruebas existentes pasan sin tocarlas. Mayor resultado: 26 líneas de código (`reparentearLugarAction`).

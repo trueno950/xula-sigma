@@ -1,9 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeLugar } from "../../composicion";
@@ -14,6 +11,7 @@ import {
   RaizInvalidaError,
   TIPOS_DE_LUGAR,
 } from "../../domain";
+import { ejecutarEnContexto } from "./ejecutarEnContexto";
 import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 /**
@@ -62,25 +60,16 @@ export async function altaDeLugarAction(formData: FormData): Promise<void> {
     return;
   }
 
-  const contexto = await contextoActual();
+  const { tipo, nombre, padreId } = analisis.data;
 
-  if (!contexto) redirect("/acceso");
-
-  try {
-    await altaDeLugar(
-      {
-        tipo: analisis.data.tipo,
-        nombre: analisis.data.nombre,
-        padreId: analisis.data.padreId
-          ? comoLugarId(analisis.data.padreId)
-          : null,
-      },
-      contexto,
-    );
-  } catch (error) {
-    volverAlArbol(navegacion, mensajeDeError(error));
-  }
-
-  revalidatePath("/territorio");
+  await ejecutarEnContexto(
+    navegacion,
+    (contexto) =>
+      altaDeLugar(
+        { tipo, nombre, padreId: padreId ? comoLugarId(padreId) : null },
+        contexto,
+      ),
+    mensajeDeError,
+  );
   confirmarEnArbol(navegacion, "lugar-creado");
 }
