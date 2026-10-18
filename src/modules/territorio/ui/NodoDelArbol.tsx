@@ -44,7 +44,7 @@ const CLASE_DEL_RESUMEN =
  */
 export function NodoDelArbol({ nodo, cuentas, abrirTodo }: Props) {
   const cuenta = cuentas.get(nodo.lugar.id);
-  const sangria = sangriaDe(nodo.nivel);
+  const sangria = sangriaDe();
   const conHijos = nodo.hijos.length > 0;
 
   return (

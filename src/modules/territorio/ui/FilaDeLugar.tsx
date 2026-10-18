@@ -10,17 +10,21 @@ import { puedeSerRaiz, type TipoDeLugar, tipoDeLugarEnFrase } from "../domain";
 import type { NodoDeArbol } from "./arbolDeLugares";
 import { etiquetaDeTipo } from "./etiquetaDeTipo";
 
-const SANGRIA = [
-  "pl-4",
-  "pl-9",
-  "pl-14",
-  "pl-[4.5rem]",
-  "pl-[5.5rem]",
-  "pl-[6.5rem]",
-] as const;
+/**
+ * El escalon de una fila del arbol, en un solo valor.
+ *
+ * **Es un paso, no una posicion.** Cada fila vive dentro del `<ul>` de su
+ * padre, que ya viene desplazado, asi que lo que agrega una fila se suma a lo
+ * que agregaron sus ancestros. Con la tabla de posiciones acumuladas —`pl-4`,
+ * `pl-9`, `pl-14`, `pl-[4.5rem]`…— el nivel 2 sumaba 1rem + 2.25rem + 3.5rem y
+ * el arbol se abria en abanico: es el hallazgo `R3-cumulative-tree-indentation`
+ * de la revision nativa del cierre UX/UI. Un paso fijo deja la sangria
+ * proporcional a la profundidad —1rem, 2rem, 3rem—, que es lo que la escala
+ * sugiere al leerla.
+ */
+export const PASO_DE_SANGRIA = "pl-4";
 
-export const sangriaDe = (nivel: number): string =>
-  SANGRIA[Math.min(nivel, SANGRIA.length - 1)] ?? SANGRIA[0];
+export const sangriaDe = (): string => PASO_DE_SANGRIA;
 
 /** La fila de 48px: movil en dos renglones (nombre y tipo, luego cuentas). */
 export const CLASE_DE_FILA =
