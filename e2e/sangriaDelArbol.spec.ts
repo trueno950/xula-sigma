@@ -17,9 +17,15 @@ import { CLAVE, CORREO, urlDe } from "./municipios";
  * El arbol se arma por la interfaz: comisaria, colonia y manzana, la jerarquia
  * que permite `puedeContener` (rango estrictamente creciente).
  */
-const COMISARIA = "Comisaria Sangria E2E";
-const COLONIA = "Colonia Sangria E2E";
-const MANZANA = "Manzana Sangria E2E";
+/**
+ * Nombres unicos por corrida: el spec da de alta tres lugares por la interfaz
+ * y no los borra, asi que con nombres fijos la segunda corrida deja dos
+ * comisarias iguales y el `first()` de cada busqueda puede medir la vieja.
+ */
+const corrida = String(Date.now()).slice(-6);
+const COMISARIA = `Comisaria Sangria ${corrida}`;
+const COLONIA = `Colonia Sangria ${corrida}`;
+const MANZANA = `Manzana Sangria ${corrida}`;
 
 test.beforeAll(async () => {
   const url = process.env.MIGRATION_DATABASE_URL;
@@ -70,7 +76,30 @@ async function darDeAlta(
   await page.getByLabel("Tipo").selectOption(tipo);
   await page.getByLabel("Nombre").fill(nombre);
   await page.getByRole("button", { name: "Dar de alta" }).click();
-  await page.waitForLoadState("networkidle");
+  // El POST nativo redirige a la vista del padre, donde el lugar nuevo ya
+  // aparece. Esperarlo es determinista; `waitForLoadState("networkidle")` no
+  // lo es —Playwright lo desaconseja—: mide que la red quede quieta, no que el
+  // alta haya ocurrido.
+  await expect(
+    page.getByRole("link", { name: new RegExp(`^${nombre},`) }),
+  ).toBeVisible();
+}
+
+/** El `padding-left` renderizado de la fila que lleva ese nombre. */
+async function sangriaPintada(page: Page, nombre: string) {
+  return page.evaluate((n) => {
+    const enlace = document.querySelector(`main a[aria-label^="${n}"]`);
+    let nodo: Element | null = enlace;
+
+    while (
+      nodo &&
+      Number.parseFloat(getComputedStyle(nodo).paddingLeft) === 0
+    ) {
+      nodo = nodo.parentElement;
+    }
+
+    return nodo ? Number.parseFloat(getComputedStyle(nodo).paddingLeft) : 0;
+  }, nombre);
 }
 
 /** La izquierda del nombre de una fila, en px. */
@@ -94,9 +123,10 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
   await page.getByLabel("Tipo").selectOption("comisaria");
   await page.getByLabel("Nombre").fill(COMISARIA);
   await page.getByRole("button", { name: "Dar de alta" }).click();
-  await page.waitForLoadState("networkidle");
+  await expect(
+    page.getByRole("link", { name: new RegExp(`^${COMISARIA},`) }),
+  ).toBeVisible();
 
-  await page.goto(urlDe("motul", "/territorio"));
   await page.getByRole("link", { name: new RegExp(`^${COMISARIA},`) }).click();
   await darDeAlta(page, { tipo: "colonia", nombre: COLONIA });
 
@@ -120,6 +150,9 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
 
   expect(primerPaso).toBeGreaterThan(0);
   expect(Math.abs(primerPaso - segundoPaso)).toBeLessThanOrEqual(1);
-  // Un paso chico: el arbol se abre en abanico cuando crece con la profundidad.
-  expect(primerPaso).toBeLessThanOrEqual(24);
+  // El paso geometrico tiene que ser el mismo que pinta la clase de la fila:
+  // asi el numero es la sangria real de un nivel y no un tope elegido a ojo.
+  expect(Math.round(primerPaso)).toBe(
+    Math.round(await sangriaPintada(page, COMISARIA)),
+  );
 });
