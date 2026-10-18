@@ -9,6 +9,7 @@ import {
 } from "../domain";
 import { reparentearLugarAction } from "./actions/reparentearLugarAction";
 import { opcionesDeLugares } from "./opciones";
+import { PieDeFormulario } from "./PieDeFormulario";
 import { ofertaDeReparenteo } from "./reparenteo";
 
 type Props = {
@@ -21,6 +22,8 @@ type Props = {
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   /** De quien cuelga hoy. Ausente si ya es una raiz del municipio. */
   padre?: LugarId | undefined;
+  /** Navegacion de retorno del cancelar; ver `PieDeFormulario`. */
+  volverA?: string | undefined;
 };
 
 /**
@@ -42,6 +45,7 @@ export function FormularioDeReparenteo({
   tipoDelLugar,
   lugares,
   padre,
+  volverA,
 }: Props) {
   const destinos = destinosDeReparenteo(
     { id: nodo, tipo: tipoDelLugar },
@@ -56,11 +60,15 @@ export function FormularioDeReparenteo({
 
   if (!oferta.muestraDestinos && !oferta.muestraDesanclar) {
     return (
-      <p className="text-[15px] text-caliza-apagada">
-        {puedeSerRaiz(tipoDelLugar)
-          ? `Una ${tipoDeLugarEnFrase(tipoDelLugar)} es un asentamiento del municipio: no cuelga de ningún otro lugar.`
-          : `Todavía no hay ningún lugar en el municipio que pueda contener este lugar.`}
-      </p>
+      <div className="flex flex-col gap-4">
+        <p className="text-[15px] text-caliza-apagada">
+          {puedeSerRaiz(tipoDelLugar)
+            ? `Una ${tipoDeLugarEnFrase(tipoDelLugar)} es un asentamiento del municipio: no cuelga de ningún otro lugar.`
+            : `Todavía no hay ningún lugar en el municipio que pueda contener este lugar.`}
+        </p>
+        {/* Sin formulario no hay envio que agrupar, pero la salida sigue. */}
+        <PieDeFormulario volverA={volverA} />
+      </div>
     );
   }
 
@@ -110,9 +118,11 @@ export function FormularioDeReparenteo({
         />
       ) : null}
 
-      <Boton type="submit" variante="primaria">
-        {oferta.muestraDestinos ? "Mover lugar" : "Soltar del lugar padre"}
-      </Boton>
+      <PieDeFormulario volverA={volverA}>
+        <Boton type="submit" variante="primaria">
+          {oferta.muestraDestinos ? "Mover lugar" : "Soltar del lugar padre"}
+        </Boton>
+      </PieDeFormulario>
     </form>
   );
 }

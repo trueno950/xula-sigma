@@ -1,6 +1,7 @@
 import { Prohibit } from "@phosphor-icons/react/ssr";
 import { Boton } from "@/shared/ui";
 import { darDeBajaLugarAction } from "./actions/darDeBajaLugarAction";
+import { PieDeFormulario } from "./PieDeFormulario";
 
 type Props = {
   /** Contexto del arbol: se da de baja el nodo seleccionado. */
@@ -13,6 +14,8 @@ type Props = {
   padre?: string | undefined;
   /** El nombre del lugar, escrito en el boton: la baja no es generica. */
   nombre: string;
+  /** Navegacion de retorno del cancelar; ver `PieDeFormulario`. */
+  volverA?: string | undefined;
 };
 
 /**
@@ -27,7 +30,13 @@ type Props = {
  * No hay dialogo de confirmacion a proposito: nada bloquea, y el nombre
  * escrito en el boton hace el mismo trabajo sin frenar a nadie.
  */
-export function FormularioDeBajaDeLugar({ raiz, nodo, padre, nombre }: Props) {
+export function FormularioDeBajaDeLugar({
+  raiz,
+  nodo,
+  padre,
+  nombre,
+  volverA,
+}: Props) {
   return (
     <form action={darDeBajaLugarAction} className="flex flex-col gap-4">
       <input type="hidden" name="raiz" value={raiz} />
@@ -42,10 +51,12 @@ export function FormularioDeBajaDeLugar({ raiz, nodo, padre, nombre }: Props) {
         lugares debajo o domicilios, la baja se rechaza.
       </p>
 
-      <Boton type="submit" variante="peligro">
-        <Prohibit size={18} aria-hidden />
-        Dar de baja {nombre}
-      </Boton>
+      <PieDeFormulario volverA={volverA}>
+        <Boton type="submit" variante="peligro">
+          <Prohibit size={18} aria-hidden />
+          Dar de baja {nombre}
+        </Boton>
+      </PieDeFormulario>
     </form>
   );
 }

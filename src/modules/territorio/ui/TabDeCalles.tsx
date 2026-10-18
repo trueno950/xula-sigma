@@ -99,15 +99,16 @@ export function TabDeCalles({
       </div>
 
       {puedeAgregar && accion === "calle" ? (
-        <PanelDeAccion
-          titulo={`Agregar una calle en ${lugar.nombre}`}
-          volverA={rutaDe({
-            raizId: raizId,
-            nodoId: lugar.id,
-            vista: "calles",
-          })}
-        >
-          <FormularioDeAltaDeCalle raiz={raizId} nodo={lugar.id} />
+        <PanelDeAccion titulo={`Agregar una calle en ${lugar.nombre}`}>
+          <FormularioDeAltaDeCalle
+            raiz={raizId}
+            nodo={lugar.id}
+            volverA={rutaDe({
+              raizId: raizId,
+              nodoId: lugar.id,
+              vista: "calles",
+            })}
+          />
         </PanelDeAccion>
       ) : null}
     </div>

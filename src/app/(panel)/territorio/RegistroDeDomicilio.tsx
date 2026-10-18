@@ -23,10 +23,11 @@ export function RegistroDeDomicilio({
   nodo,
 }: Props) {
   return (
-    <PanelDeAccion titulo="Registrar domicilio" volverA={volverA}>
+    <PanelDeAccion titulo="Registrar domicilio">
       <FormularioDeDomicilio
         calles={calles}
         zona={zona}
+        volverA={volverA}
         raiz={raiz}
         nodo={nodo}
       />

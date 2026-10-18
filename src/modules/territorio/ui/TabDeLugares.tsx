@@ -95,19 +95,17 @@ export function TabDeLugares({
       )}
 
       {puedeActuar && abierta ? (
-        <PanelDeAccion
-          titulo={`Agregar un lugar dentro de ${lugar.nombre}`}
-          volverA={rutaDe({
-            raizId: raizId,
-            nodoId: lugar.id,
-            vista: "lugares",
-          })}
-        >
+        <PanelDeAccion titulo={`Agregar un lugar dentro de ${lugar.nombre}`}>
           <FormularioDeAltaDeLugar
             raiz={raizId}
             nodo={lugar.id}
             padreId={lugar.id}
             tipoDelPadre={lugar.tipo}
+            volverA={rutaDe({
+              raizId: raizId,
+              nodoId: lugar.id,
+              vista: "lugares",
+            })}
           />
         </PanelDeAccion>
       ) : null}

@@ -123,34 +123,37 @@ export function TabDeEdicion({
       </ul>
 
       {accion === "renombrar" && puedeAbrir("renombrar", permisos) ? (
-        <PanelDeAccion titulo={`Renombrar ${lugar.nombre}`} volverA={volverA}>
+        <PanelDeAccion titulo={`Renombrar ${lugar.nombre}`}>
           <FormularioDeEdicionDeLugar
             raiz={raizId}
             nodo={lugar.id}
             nombreActual={lugar.nombre}
+            volverA={volverA}
           />
         </PanelDeAccion>
       ) : null}
 
       {accion === "reparentear" && puedeAbrir("reparentear", permisos) ? (
-        <PanelDeAccion titulo={`Mover ${lugar.nombre}`} volverA={volverA}>
+        <PanelDeAccion titulo={`Mover ${lugar.nombre}`}>
           <FormularioDeReparenteo
             raiz={raizId}
             nodo={lugar.id}
             tipoDelLugar={lugar.tipo}
             lugares={lugares}
             padre={padreDe(nodos, lugar.id)}
+            volverA={volverA}
           />
         </PanelDeAccion>
       ) : null}
 
       {accion === "baja" && puedeAbrir("baja", permisos) ? (
-        <PanelDeAccion titulo="Baja de lugar" volverA={volverA}>
+        <PanelDeAccion titulo="Baja de lugar">
           <FormularioDeBajaDeLugar
             raiz={raizId}
             nodo={lugar.id}
             padre={padreDe(nodos, lugar.id)}
             nombre={lugar.nombre}
+            volverA={volverA}
           />
         </PanelDeAccion>
       ) : null}

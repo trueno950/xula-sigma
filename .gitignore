@@ -20,6 +20,10 @@ coverage/
 test-results/
 playwright-report/
 .playwright/
+# Capturas y sesiones efimeras de `agent-browser`: no se versionan y, sin
+# esta linea, quedan como archivos sin seguimiento que la evaluacion nativa
+# de RDD no puede declarar.
+.playwright-cli/
 
 # Herramientas
 .husky/_/

@@ -1,10 +1,4 @@
-import {
-  AvisoDePermiso,
-  EnlaceDeAccion,
-  EstadoVacio,
-  estadoDeLista,
-  Panel,
-} from "@/shared/ui";
+import { AvisoDePermiso, EstadoVacio, estadoDeLista, Panel } from "@/shared/ui";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
 import { armarArbol, type LugarDelArbol } from "./arbolDeLugares";
 import { BuscadorDeLugares } from "./BuscadorDeLugares";
@@ -94,10 +88,10 @@ export function VistaDeRaices({
 
       {puedeEscribir && altaAbierta ? (
         <Panel titulo="Agregar asentamiento">
-          <FormularioDeAltaDeLugar hayCabecera={hayCabecera} />
-          <EnlaceDeAccion href="/territorio" variante="fantasma">
-            Cancelar
-          </EnlaceDeAccion>
+          <FormularioDeAltaDeLugar
+            hayCabecera={hayCabecera}
+            volverA="/territorio"
+          />
         </Panel>
       ) : null}
     </div>

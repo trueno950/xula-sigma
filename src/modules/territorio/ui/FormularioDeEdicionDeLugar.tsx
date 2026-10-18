@@ -1,5 +1,6 @@
 import { Boton, Campo } from "@/shared/ui";
 import { editarLugarAction } from "./actions/editarLugarAction";
+import { PieDeFormulario } from "./PieDeFormulario";
 
 type Props = {
   /** Contexto del arbol: se renombra el nodo seleccionado. */
@@ -7,6 +8,8 @@ type Props = {
   nodo: string;
   /** El nombre de hoy, para que el campo no arranque vacio. */
   nombreActual: string;
+  /** Navegacion de retorno del cancelar; ver `PieDeFormulario`. */
+  volverA?: string | undefined;
 };
 
 /**
@@ -20,6 +23,7 @@ export function FormularioDeEdicionDeLugar({
   raiz,
   nodo,
   nombreActual,
+  volverA,
 }: Props) {
   return (
     <form action={editarLugarAction} className="flex flex-col gap-4">
@@ -37,9 +41,11 @@ export function FormularioDeEdicionDeLugar({
         defaultValue={nombreActual}
       />
 
-      <Boton type="submit" variante="primaria">
-        Renombrar
-      </Boton>
+      <PieDeFormulario volverA={volverA}>
+        <Boton type="submit" variante="primaria">
+          Renombrar
+        </Boton>
+      </PieDeFormulario>
     </form>
   );
 }

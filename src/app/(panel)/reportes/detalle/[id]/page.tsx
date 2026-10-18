@@ -8,6 +8,7 @@ import {
   ETIQUETA_DE_AREA,
   ETIQUETA_DE_ESTADO_DE_REPORTE,
   ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  esTerminal,
   historialDeReporte,
   reportePorId,
   SIN_AREA,
@@ -41,9 +42,11 @@ const esquemaDeParametros = z.object({ error: z.string().optional() });
  * `reportePorId` en `null` para un reporte de otro tenant, y la pantalla
  * responde 404 sin distinguirla de uno inexistente (regla 8).
  *
- * `AccionesDeReporte` solo se monta si `puedeAdministrarReportes`: ocultar
- * el formulario es UX, la guarda real vive en `cambiarEstadoDeReporte`/
- * `asignarAreaDeReporte` (Fase 5, design.md seccion 15).
+ * `AccionesDeReporte` solo se monta si `puedeAdministrarReportes` y el
+ * estado no es terminal: ocultar el formulario es UX, la guarda real vive
+ * en `cambiarEstadoDeReporte`/`asignarAreaDeReporte` (Fase 5, design.md
+ * seccion 15). En `RESUELTO`/`RECHAZADO` no hay transiciones validas que
+ * ofrecer, y montarlo dejaba la tarjeta sin contenido.
  *
  * **Vive en `/reportes/detalle/[id]` y no en `/reportes/[id]`** -desvio de
  * tasks.md 7.12, que escribia `{page,alta,[id]}`-: `src/app/reportes/[folio]`
@@ -120,7 +123,7 @@ export default async function PaginaDeDetalleDeReporte({
         ) : null}
       </FichaDeDatos>
 
-      {puedeAdministrar ? (
+      {puedeAdministrar && !esTerminal(reporte.estado) ? (
         <Panel titulo="Transiciones">
           <AccionesDeReporte
             reporteId={reporte.id}

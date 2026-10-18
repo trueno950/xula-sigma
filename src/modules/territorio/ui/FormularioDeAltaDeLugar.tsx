@@ -2,6 +2,7 @@ import { Boton, Campo, CampoDeLista } from "@/shared/ui";
 import type { TipoDeLugar } from "../domain";
 import { altaDeLugarAction } from "./actions/altaDeLugarAction";
 import { opcionesDeTipos } from "./opciones";
+import { PieDeFormulario } from "./PieDeFormulario";
 import { tiposParaElAlta } from "./tiposDelAlta";
 
 type Props = {
@@ -18,6 +19,8 @@ type Props = {
   tipoDelPadre?: TipoDeLugar;
   /** El municipio ya tiene su cabecera: sin padre, deja de ofrecerse. */
   hayCabecera?: boolean;
+  /** Navegacion de retorno del cancelar; ver `PieDeFormulario`. */
+  volverA?: string | undefined;
 };
 
 /**
@@ -45,6 +48,7 @@ export function FormularioDeAltaDeLugar({
   padreId,
   tipoDelPadre,
   hayCabecera = false,
+  volverA,
 }: Props) {
   const tipos = tiposParaElAlta({
     hayCabecera,
@@ -75,9 +79,11 @@ export function FormularioDeAltaDeLugar({
 
       <Campo id="lugar-nombre" name="nombre" etiqueta="Nombre" required />
 
-      <Boton type="submit" variante="primaria">
-        Dar de alta
-      </Boton>
+      <PieDeFormulario volverA={volverA}>
+        <Boton type="submit" variante="primaria">
+          Dar de alta
+        </Boton>
+      </PieDeFormulario>
     </form>
   );
 }
