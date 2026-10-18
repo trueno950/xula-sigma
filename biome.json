@@ -11,8 +11,7 @@
       "**/*.tsx",
       "**/*.json",
       "**/*.jsonc",
-      "!drizzle/meta",
-      "!opencode.json"
+      "!drizzle/meta"
     ]
   },
   "formatter": {

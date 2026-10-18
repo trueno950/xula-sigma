@@ -41,11 +41,11 @@ El corte es por audiencia y no por herramienta. `AGENTS.md` es además el
 lleva stack ni flujo de trabajo, que no son criterio de revisión. Este
 archivo lleva eso y no lleva reglas.
 
-Cada agente llega a los dos por un camino distinto, y ninguno de los dos es
-automático en ambos lados: Claude carga `CLAUDE.md` y desde ahí importa
-`AGENTS.md` con `@`; opencode carga `AGENTS.md` solo y llega a este por
-`instructions` en `opencode.json`. Ese archivo existe para eso y para nada
-más.
+Cada agente llega a los dos por un camino distinto: Claude carga `CLAUDE.md`
+y desde ahí importa `AGENTS.md` con `@`; el agente de gentle-shell carga
+`AGENTS.md` y este archivo por su cuenta. OpenCode dejó de usarse el
+2026-10-18: `opencode.json` ya no se versiona y vive, ignorado, en cada
+máquina.
 
 ### Estructura
 ```
@@ -114,17 +114,18 @@ propio: cada vuelta re-manda el diff completo y trae el veredicto entero de
 vuelta. En `auth-rbac` fue el gasto más grande del cambio, y casi todo en
 vueltas que no encontraron nada nuevo.
 
-**El revisor corre en CI y nada más.** Corría también en `pre-commit` y en
-`pre-push` — y el de `pre-push` ejecutaba el mismo comando que CI, así que no
+**Ya no corre en CI.** Desde el 2026-10-18 el job `revision` se retiró: la
+revisión de IA se hace desde gentle-shell, en la máquina de quien escribe.
+Antes corría en CI y nada más —también había corrido en `pre-commit` y en
+`pre-push`, y el de `pre-push` ejecutaba el mismo comando que CI, así que no
 evitaba la vuelta: la pagaba dos veces con un modelo que no coincide consigo
-mismo. Una rama de tres commits pagaba cinco revisiones del mismo trabajo.
-Ver ADR 0001 §7.
+mismo—. GGA queda como herramienta local a demanda. Ver ADR 0001 §7.
 
 | Comando | Qué es | Cuándo |
 |---|---|---|
 | `pnpm reglas` | Determinista, un segundo, nueve antipatrones y dos métricas de AGENTS.md | `pre-commit`, `check` y CI |
 | `pnpm revision:local` | El revisor con la suscripción de OpenAI, sobre lo que está en *stage* y con caché | Mientras se trabaja |
-| `pnpm revision` | El revisor de IA, mismo comando que CI | A demanda, cuando el PR es grande |
+| `pnpm revision` | El revisor de IA por GGA, local | A demanda, cuando el cambio es grande |
 
 Lo que un patrón decide, no paga un modelo.
 

@@ -520,9 +520,22 @@ por día, y el sello de la bitácora cuando se muestra.
 | Herramienta | Rol | Dónde vive |
 |---|---|---|
 | **Husky** | Dueño de los hooks | `devDependency` + `.husky/`, commiteado |
-| **GGA** | Revisión de IA sobre lo generado | Job `revision` de CI, y `pnpm revision` a demanda |
+| **GGA** | Revisión de IA sobre lo generado | Local, a demanda (`pnpm revision`). El job `revision` de CI se retiró el 2026-10-18 |
 | **`pnpm reglas`** | Las reglas de AGENTS.md que decide un patrón | `pre-commit`, `check` y CI |
 | **commitlint** | Formato del mensaje de commit | `commit-msg` |
+
+### El retiro del job de CI (2026-10-18)
+
+La reja automática de CI se retiró y GGA quedó como herramienta local, a
+demanda. El porqué de tenerlo sigue vigente y se conserva abajo; lo que
+cambió es dónde corre: la revisión se hace desde gentle-shell, en la máquina
+de quien escribe, que es donde está el contexto del cambio y donde el
+veredicto se puede discutir en el momento. El repositorio dejó además de
+versionar `opencode.json` y `.opencode/`: son configuración de la
+herramienta y viven en cada máquina, ignorados por git.
+
+Lo que se pierde, para que quede escrito: el PR ya no trae un veredicto
+automático adjunto. La revisión es un paso humano.
 
 ### No se corre `gga install`
 

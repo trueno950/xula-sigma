@@ -58,3 +58,10 @@ playwright-report/
 # Preflight local de gentle-ai SDD. Mismo criterio que `.codegraph/`:
 # describe esta copia, no el proyecto.
 .pi/
+
+# Configuracion de las herramientas de agentes (opencode/gentle-ai). Se
+# versionaba hasta el 2026-10-18; ahora vive solo en cada maquina: la
+# revision de IA ya no corre en CI y el flujo local lo lleva gentle-shell.
+# El archivo sigue en disco, con sus reglas de permisos y sus MCP.
+opencode.json
+.opencode/

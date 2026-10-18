@@ -489,6 +489,14 @@ Lo que sí cambia para quien escribe: `pnpm reglas` da la señal determinista
 en cada commit, y `pnpm revision` corre el revisor de IA a demanda cuando el
 PR es grande y conviene verlo antes de empujar.
 
+**Desde el 2026-10-18 ya no corre en CI.** Se retiró el job `revision`: la
+revisión de IA se hace desde gentle-shell, en la máquina de quien escribe,
+que es donde está el contexto del cambio. GGA y `.gga` quedan para uso local
+a demanda; el runner ya no instala el revisor ni gasta la credencial del
+proveedor. Lo que se pierde, dicho explícito: el PR deja de traer un
+veredicto automático adjunto, así que la revisión pasa a ser un paso humano
+y no una reja del CI.
+
 ### Dos rondas, y la segunda no corrige
 
 - **Ronda 1** — se corrige todo lo que el veredicto marcó.
