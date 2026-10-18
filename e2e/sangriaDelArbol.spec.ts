@@ -86,20 +86,32 @@ async function darDeAlta(
   ).toBeVisible();
 }
 
-/** El `padding-left` renderizado de la fila que lleva ese nombre. */
+/**
+ * El `padding-left` renderizado por la fila que lleva ese nombre, buscado
+ * **solo adentro de su propio `<li>`**.
+ *
+ * La busqueda no sube mas alla a proposito: trepar por los ancestros hasta
+ * encontrar un padding encuentra el de cualquier contenedor de la pagina, y
+ * entonces la asercion pasaria aunque la fila no pintara nada —justo la
+ * regresion que este test existe para atrapar—. Sin padding propio devuelve
+ * -1, y el test lo dice.
+ */
 async function sangriaPintada(page: Page, nombre: string) {
   return page.evaluate((n) => {
-    const enlace = document.querySelector(`main a[aria-label^="${n}"]`);
-    let nodo: Element | null = enlace;
+    const fila = document
+      .querySelector(`main a[aria-label^="${n}"]`)
+      ?.closest("li");
 
-    while (
-      nodo &&
-      Number.parseFloat(getComputedStyle(nodo).paddingLeft) === 0
-    ) {
-      nodo = nodo.parentElement;
-    }
+    if (!fila) return -1;
 
-    return nodo ? Number.parseFloat(getComputedStyle(nodo).paddingLeft) : 0;
+    const conSangria = [
+      fila,
+      ...fila.querySelectorAll(":scope > span, :scope > div"),
+    ].find((el) => Number.parseFloat(getComputedStyle(el).paddingLeft) > 0);
+
+    return conSangria
+      ? Number.parseFloat(getComputedStyle(conSangria).paddingLeft)
+      : -1;
   }, nombre);
 }
 
@@ -153,7 +165,10 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
   expect(Math.abs(primerPaso - segundoPaso)).toBeLessThanOrEqual(1);
   // El paso geometrico tiene que ser el mismo que pinta la clase de la fila:
   // asi el numero es la sangria real de un nivel y no un tope elegido a ojo.
-  expect(Math.round(primerPaso)).toBe(
-    Math.round(await sangriaPintada(page, COMISARIA)),
+  const sangria = await sangriaPintada(page, COMISARIA);
+
+  expect(sangria, "la fila deberia pintar su propia sangria").toBeGreaterThan(
+    0,
   );
+  expect(Math.round(primerPaso)).toBe(Math.round(sangria));
 });
