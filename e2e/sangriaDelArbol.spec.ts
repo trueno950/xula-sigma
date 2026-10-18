@@ -18,14 +18,15 @@ import { CLAVE, CORREO, urlDe } from "./municipios";
  * que permite `puedeContener` (rango estrictamente creciente).
  */
 /**
- * Nombres unicos por corrida: el spec da de alta tres lugares por la interfaz
- * y no los borra, asi que con nombres fijos la segunda corrida deja dos
- * comisarias iguales y el `first()` de cada busqueda puede medir la vieja.
+ * Nombres fijos, y a proposito: `e2e/preparar.ts` trunca `bitacora` y
+ * `ayuntamientos` al empezar **cada** corrida, asi que la base nunca trae
+ * los lugares de la anterior. Sufijarlos con el reloj —lo primero que uno
+ * escribe— haria que dos corridas del mismo codigo buscarán nombres distintos:
+ * el test deja de ser reproducible y su fallo deja de ser comparable.
  */
-const corrida = String(Date.now()).slice(-6);
-const COMISARIA = `Comisaria Sangria ${corrida}`;
-const COLONIA = `Colonia Sangria ${corrida}`;
-const MANZANA = `Manzana Sangria ${corrida}`;
+const COMISARIA = "Comisaria Sangria E2E";
+const COLONIA = "Colonia Sangria E2E";
+const MANZANA = "Manzana Sangria E2E";
 
 test.beforeAll(async () => {
   const url = process.env.MIGRATION_DATABASE_URL;
