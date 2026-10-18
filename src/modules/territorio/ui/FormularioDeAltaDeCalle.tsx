@@ -1,14 +1,17 @@
-import { BarraDeAcciones, Boton, Campo, GrupoDeCampos } from "@/shared/ui";
+import { Boton, Campo, GrupoDeCampos } from "@/shared/ui";
 import { altaDeCalleAction } from "./actions/altaDeCalleAction";
+import { PieDeFormulario } from "./PieDeFormulario";
 
 type Props = {
   /** Contexto del arbol: la calle cuelga del nodo seleccionado. */
   raiz: string;
   nodo: string;
+  /** Navegacion de retorno del cancelar; ver `PieDeFormulario`. */
+  volverA?: string | undefined;
 };
 
 /** Server Component, `<form action={...}>` nativo sin `"use client"`. */
-export function FormularioDeAltaDeCalle({ raiz, nodo }: Props) {
+export function FormularioDeAltaDeCalle({ raiz, nodo, volverA }: Props) {
   return (
     <form action={altaDeCalleAction} className="flex flex-col gap-6">
       <input type="hidden" name="raiz" value={raiz} />
@@ -27,11 +30,11 @@ export function FormularioDeAltaDeCalle({ raiz, nodo }: Props) {
         />
       </GrupoDeCampos>
 
-      <BarraDeAcciones>
+      <PieDeFormulario volverA={volverA}>
         <Boton type="submit" variante="primaria">
           Dar de alta
         </Boton>
-      </BarraDeAcciones>
+      </PieDeFormulario>
     </form>
   );
 }

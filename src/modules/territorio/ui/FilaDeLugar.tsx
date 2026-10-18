@@ -26,6 +26,16 @@ export const sangriaDe = (nivel: number): string =>
 export const CLASE_DE_FILA =
   "flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 py-2 pr-4";
 
+/**
+ * La fila de una rama. No puede vivir dentro de su propio `<details>`: con
+ * la rama cerrada el navegador esconde todo lo que no sea el `<summary>`, y
+ * el nombre desaparece. Va antes y como contenido en linea, y el `<details>`
+ * queda `inline`: la lista de hijos, que si envuelve, rompe la linea y ocupa
+ * el ancho completo del `<li>`.
+ */
+export const CLASE_DE_FILA_DE_RAMA =
+  "inline-flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 py-2 align-middle";
+
 export const hrefDeLugar = ({ lugar, raizId, nivel }: NodoDeArbol): string =>
   nivel === 0
     ? `/territorio?raiz=${lugar.id}`
@@ -86,13 +96,13 @@ export function AlternadorDeRama() {
   );
 }
 
-type Props = {
+export function ContenidoDeFila({
+  nodo,
+  cuenta,
+}: {
   nodo: NodoDeArbol;
   cuenta: ConteoDeLugar | undefined;
-  conAlternador: boolean;
-};
-
-export function ContenidoDeFila({ nodo, cuenta, conAlternador }: Props) {
+}) {
   const { lugar, nivel } = nodo;
 
   return (
@@ -124,7 +134,6 @@ export function ContenidoDeFila({ nodo, cuenta, conAlternador }: Props) {
       </span>
       <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <Cuentas cuenta={cuenta} />
-        {conAlternador ? <AlternadorDeRama /> : null}
       </span>
     </>
   );

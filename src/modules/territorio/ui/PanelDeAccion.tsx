@@ -23,9 +23,11 @@ export function BarraDeAcciones({ children }: { children: ReactNode }) {
  * El formulario que se abrio, en su propia superficie y con la salida al
  * final.
  *
- * "Cancelar" va **despues** del envio y no antes: leido de arriba abajo, el
- * orden anterior ofrecia irse antes de mostrar de que se trataba. Y es
- * fantasma, no un segundo boton con peso: cancelar no compite con guardar.
+ * El pie agrupado -envio y "Cancelar" en la misma barra- lo pone el
+ * formulario, que recibe su `volverA`: adentro del `<form>` "Cancelar"
+ * navega sin enviar y comparte la fila con el envio. Esta tarjeta conserva
+ * el respaldo para quien arma el panel con un formulario que no lleva pie
+ * propio.
  */
 export function PanelDeAccion({
   titulo,
@@ -33,15 +35,17 @@ export function PanelDeAccion({
   children,
 }: {
   titulo: string;
-  volverA: string;
+  volverA?: string;
   children: ReactNode;
 }) {
   return (
     <Panel titulo={titulo}>
       {children}
-      <EnlaceDeAccion href={volverA} variante="fantasma">
-        Cancelar
-      </EnlaceDeAccion>
+      {volverA ? (
+        <EnlaceDeAccion href={volverA} variante="fantasma">
+          Cancelar
+        </EnlaceDeAccion>
+      ) : null}
     </Panel>
   );
 }
