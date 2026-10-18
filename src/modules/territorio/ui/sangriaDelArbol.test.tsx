@@ -43,12 +43,12 @@ const pintar = (n: NodoDeArbol) =>
   );
 
 /**
- * La sangria de una fila es un **paso por nivel**, no una posicion acumulada:
- * cada fila vive dentro de la lista de su padre, que ya viene desplazada, asi
- * que el ancho que agrega un nivel tiene que ser el mismo en todos. Con la
- * tabla de posiciones que habia antes —`pl-4`, `pl-9`, `pl-14`, `pl-[4.5rem]`…—
- * el nivel 2 sumaba 1rem + 2.25rem + 3.5rem y el arbol se abria en abanico: es
- * el hallazgo `R3-cumulative-tree-indentation` de la revision nativa.
+ * El invariante barato: una sola clase de sangria para todas las filas, porque
+ * cada una vive dentro de la lista de su padre, que ya viene desplazada. El
+ * porque del paso fijo esta en `FilaDeLugar.tsx`, y la comprobacion de que el
+ * paso medido sea el mismo en cada nivel vive en
+ * `e2e/sangriaDelArbol.spec.ts`: sobre el marcado no se puede distinguir una
+ * sangria acumulada de una plana.
  */
 describe("sangria del arbol de lugares", () => {
   const rama = nodo({
@@ -63,23 +63,15 @@ describe("sangria del arbol de lugares", () => {
     ],
   });
 
-  it("el mismo paso en todos los niveles, sin posiciones acumuladas", () => {
-    const html = pintar(rama);
-    const pasos = [...html.matchAll(/pl-(?:\[[^\]]*\]|\d+)/g)].map((m) => m[0]);
+  it("el mismo paso en todas las filas", () => {
+    const pasos = [...pintar(rama).matchAll(/pl-(?:\[[^\]]*\]|\d+)/g)].map(
+      (m) => m[0],
+    );
 
     expect(new Set(pasos)).toEqual(new Set(["pl-4"]));
   });
 
-  it("no repite la sangria de los ancestros en cada fila", () => {
-    const html = pintar(rama);
-
-    expect(html).not.toMatch(/pl-9|pl-14|pl-\[4\.5rem\]/);
-  });
-
-  it("una rama de tres niveles lleva un paso por fila", () => {
-    const html = pintar(rama);
-    const pasos = [...html.matchAll(/pl-4/g)].length;
-
-    expect(pasos).toBe(3);
+  it("un paso por fila, aunque la rama tenga tres niveles", () => {
+    expect([...pintar(rama).matchAll(/pl-4/g)]).toHaveLength(3);
   });
 });

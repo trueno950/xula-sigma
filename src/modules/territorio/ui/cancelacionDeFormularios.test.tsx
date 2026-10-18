@@ -47,6 +47,21 @@ const formularioDe = (html: string) =>
 const cancelarDe = (html: string) =>
   html.match(/<a [^>]*href="([^"]*)"[^>]*>Cancelar<\/a>/);
 
+/**
+ * Lo que sigue al envio adentro del pie: el cancelar pegado al boton, en el
+ * mismo contenedor.
+ *
+ * Antes se afirmaba solo que "Cancelar" apareciera despues del envio en algun
+ * lugar del formulario, y eso seguia siendo cierto si el enlace terminaba en
+ * otro contenedor al final de la tarjeta: justo la regresion que este archivo
+ * atrapa. La agrupacion es que los dos sean hermanos dentro de la barra.
+ */
+const hermanoDelEnvio = (form: string) => {
+  const cierre = form.indexOf("</button>", form.lastIndexOf('type="submit"'));
+
+  return form.slice(cierre + "</button>".length).split("</div>")[0];
+};
+
 const destinoHtml = (volverA: string) => volverA.replaceAll("&", "&amp;");
 
 describe("Cancelar agrupado con el envio", () => {
@@ -58,9 +73,7 @@ describe("Cancelar agrupado con el envio", () => {
 
     expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeLugares));
     expect(html.match(/>Cancelar</g) ?? []).toHaveLength(1);
-    expect(form.indexOf("Cancelar")).toBeGreaterThan(
-      form.lastIndexOf('type="submit"'),
-    );
+    expect(hermanoDelEnvio(form)).toMatch(/^<a [^>]*>Cancelar<\/a>$/);
     expect(form).toContain('name="accion" value="lugar"');
   });
 
@@ -69,9 +82,7 @@ describe("Cancelar agrupado con el envio", () => {
     const form = formularioDe(html);
 
     expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeCalles));
-    expect(form.indexOf("Cancelar")).toBeGreaterThan(
-      form.lastIndexOf('type="submit"'),
-    );
+    expect(hermanoDelEnvio(form)).toMatch(/^<a [^>]*>Cancelar<\/a>$/);
     expect(form).toContain('name="accion" value="calle"');
   });
 
@@ -92,6 +103,7 @@ describe("Cancelar agrupado con el envio", () => {
     expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeEditar));
     expect(form).toContain("Dar de baja");
     expect(form).toContain("border-senial-error");
+    expect(hermanoDelEnvio(form)).toMatch(/^<a [^>]*>Cancelar<\/a>$/);
   });
 
   it("el alta de la raiz desde la entrada de territorio agrupa el cancelar", () => {
@@ -107,6 +119,7 @@ describe("Cancelar agrupado con el envio", () => {
     const form = formularioDe(html);
 
     expect(cancelarDe(form)?.[1]).toBe("/territorio");
+    expect(hermanoDelEnvio(form)).toMatch(/^<a [^>]*>Cancelar<\/a>$/);
     expect(form).toContain('name="accion" value="lugar"');
   });
 });
