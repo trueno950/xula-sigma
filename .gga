@@ -54,15 +54,17 @@ TIMEOUT="1800"
 # Rama base para --pr-mode. Explicita en vez de autodeteccion.
 PR_BASE_BRANCH="main"
 
-# La variante de razonamiento no se fija aca: la pasa el entorno de cada
-# superficie. CI usa `low` (`GGA_OPENCODE_VARIANT` en su paso de revision)
-# porque las variantes altas agotaban el presupuesto de razonamiento sobre un
-# diff grande y no llegaban a escribir `STATUS:`, que con STRICT_MODE falla;
-# `pnpm revision` usa `high` y los `revision:local*`, `max`.
+# La variante de razonamiento no se fija aca: la pasa la superficie que
+# invoca. `pnpm revision` usa `high` y los `revision:local*`, `max`. La
+# variante `low` era la de CI, que ya no revisa: las altas agotaban el
+# presupuesto de razonamiento sobre un diff grande y no llegaban a escribir
+# `STATUS:`, que con STRICT_MODE falla.
 
-# Agente de revision, definido en .opencode/agents/gga-reviewer.md
-# Sin esto, opencode usa su agente primario por defecto, cuyo prompt de
-# orquestacion SDD pesa 64 KB y viaja en cada revision. Ademas ese agente
-# esta escrito para coordinar y delegar trabajo, no para revisar un diff.
-# El de aca tiene edit y bash denegados: un revisor no toca el repositorio.
+# Agente de revision, definido en el `.opencode/agents/gga-reviewer.md` LOCAL:
+# desde el 2026-10-18 ese directorio no se versiona (ADR 0001, seccion 7), asi
+# que en una maquina limpia este nombre no resuelve y opencode cae a su agente
+# primario, cuyo prompt de orquestacion SDD pesa 64 KB y viaja en cada
+# revision. Ademas ese agente esta escrito para coordinar y delegar trabajo,
+# no para revisar un diff. El de aca tiene edit y bash denegados: un revisor
+# no toca el repositorio.
 OPENCODE_AGENT="gga-reviewer"

@@ -31,8 +31,8 @@ jobs:
       - run: pnpm layers
       # Las reglas de AGENTS.md que no necesitan un modelo para decidirse.
       # Determinista: el mismo commit da el mismo resultado aca y en la
-      # maquina de quien lo escribio, que es justo lo que el job `revision`
-      # no puede prometer.
+      # maquina de quien lo escribio. La revision con IA no corre en este
+      # workflow: va a demanda con `pnpm revision` (ADR 0001, seccion 7).
       - run: pnpm reglas
 
   unitarios:
