@@ -11,6 +11,12 @@ import type { PorcionExportable } from "@/shared/exportacion/exportar";
  *
  * Por que vive en `src/app` y no en `shared`: el `@param porciones` de
  * `exportarAyuntamiento` (`exportar.ts`).
+ *
+ * Todavia no hay ruta que consuma este arreglo: la exportacion completa por
+ * ayuntamiento es el cierre del `ROADMAP.md` (seccion 4, "Exportacion por
+ * ayuntamiento"), donde cada modulo suma su porcion conforme se construye.
+ * Que `grep` no encuentre llamador es el estado esperado hasta que exista esa
+ * pantalla, no una senal de codigo muerto.
  */
 export const porciones: readonly PorcionExportable[] = [
   porcionDePadron,
