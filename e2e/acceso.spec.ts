@@ -191,7 +191,13 @@ test("la cookie de Motul no abre sesion en Ticul", async ({ page }) => {
    */
   await acceder(page, "motul");
   await expect(page).toHaveURL(urlDe("motul"));
-  await expect(page.getByRole("heading")).toHaveText(MUNICIPIOS.motul.nombre);
+  // El inicio identifica a su municipio en su linea de encabezado
+  // («<nombre> · <rol>»), y ahi el nombre aparece una sola vez. Un
+  // `getByRole("heading")` a secas resolvia **cuatro** encabezados —el `h1`
+  // de "Buenas noches" y los tres grupos del menu—, asi que Playwright
+  // cortaba por ambiguedad antes de llegar a la asercion que justifica este
+  // archivo: que la cookie de un municipio no abra sesion en el otro.
+  await expect(page.getByText(MUNICIPIOS.motul.nombre)).toBeVisible();
 
   await page.goto(urlDe("ticul"));
 
