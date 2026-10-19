@@ -2,12 +2,16 @@
 -- separado y recolapsa su subarbol de fusiones directas.
 --
 --   psql "$DATABASE_URL" -v tenant=<uuid> -v persona=<uuid> \
---     -f scripts/deshacer-fusion.sql
+--     -v actor=<uuid> -f scripts/deshacer-fusion.sql
 --
 -- Es la via de operacion que reemplaza a `revertirFusion` (padron), retirada
 -- del codigo: deshacer una fusion pasa pocas veces al ano, y una conexion
 -- mas con el tenant puesto es superficie que queda abierta siempre. Ver
 -- `AGENTS.md`, seccion `scripts/*.sql`.
+--
+-- El `actor` es obligatorio y es el usuario que pide la reversion: sin el, el
+-- guion no corre. Una reversion sin autor atribuible es peor que no tener
+-- guion, porque el unico rastro quedaria en un ticket de otro sistema.
 --
 -- Corre con el rol de la conexion, que debe ser el de aplicacion: `personas`
 -- tiene FORCE ROW LEVEL SECURITY y su unica politica es `personas_tenant`
@@ -23,6 +27,9 @@
 --   2. Recolapsa TODO el subarbol de fusiones directas bajo esa persona, no
 --      solo los hijos inmediatos, para que cada descendiente vuelva a
 --      apuntar a su destino directo en vez de al terminal que dejo de serlo.
+--   3. Registra la reversion en `bitacora` (`REVERTIR_FUSION`, entidad
+--      `personas`) con el actor que la pidio, adentro de la misma
+--      transaccion.
 --
 -- Que NO hace:
 --
@@ -33,11 +40,6 @@
 --   - No reapunta a quien ya guardo el `persona_id` ganador (domicilios,
 --     constancias, reportes). Esos siguen apuntando al ganador: la reversion
 --     devuelve a la persona al padron, no reescribe el historial.
---   - No escribe bitacora. La entrada `REVERTIR_FUSION` que dejaba el caso
---     de uso no se reproduce porque no hay sesion ni actor que la origine;
---     el registro de la operacion va en el ticket que la pide. `bitacora`
---     solo tiene GRANT de SELECT e INSERT para `xula_app`, y una fila con
---     actor inventado seria peor que la ausencia.
 --
 -- Los dos parametros entran por `-v` y no hardcodeados: el script no decide
 -- de que municipio es la persona. Un parametro olvidado no escribe nada, y
@@ -57,6 +59,7 @@ BEGIN;
 -- sustituye nada.
 SET LOCAL app.tenant = :'tenant';
 SELECT set_config('reversion.persona', :'persona', true);
+SELECT set_config('reversion.actor', :'actor', true);
 
 DO $$
 DECLARE
@@ -112,6 +115,30 @@ BEGIN
    WHERE id IN (SELECT id FROM subarbol);
 
   GET DIAGNOSTICS filas = ROW_COUNT;
+
+  /*
+   * La bitacora va adentro de la misma transaccion, como el caso de uso que
+   * esto reemplaza: si la operacion se deshace, la entrada tambien. `origen`
+   * nombra el guion y no a la persona: un log no lleva datos personales
+   * (ADR 0001, seccion 5).
+   */
+  INSERT INTO bitacora (ayuntamiento_id, actor, accion, entidad, entidad_id, origen)
+  VALUES (
+    current_setting('app.tenant')::uuid,
+    current_setting('reversion.actor')::uuid,
+    'REVERTIR_FUSION',
+    'personas',
+    current_setting('reversion.persona')::uuid,
+    'scripts/deshacer-fusion.sql'
+  );
+
+  GET DIAGNOSTICS filas = ROW_COUNT;
+
+  IF filas <> 1 THEN
+    RAISE EXCEPTION
+      'La reversion no quedo registrada en bitacora (% fila/s). Se deshace todo.',
+      filas;
+  END IF;
 
   RAISE NOTICE
     'Fusion deshecha: % persona(s) del subarbol vuelven a apuntar a la persona %.',
