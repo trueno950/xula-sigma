@@ -55,22 +55,26 @@ test("cerrar sesion la revoca en el servidor y vuelve al acceso", async ({
     };
   });
 
-  const cerrar = page.getByRole("button", { name: "Cerrar sesión" });
+  const barraInferior = page.getByRole("navigation", {
+    name: "Navegación principal",
+  });
+  // A 320px el pie del panel (rol y cerrar sesion) vive dentro del
+  // `<details>` "Más" de la barra inferior: hay que abrirlo para verlo.
+  await barraInferior.locator("summary").click();
+
+  const cerrar = barraInferior.getByRole("button", { name: "Cerrar sesión" });
   await cerrar.click();
-  await expect(page.locator("header").getByRole("alert")).toHaveText(
+  await expect(barraInferior.getByRole("alert")).toHaveText(
     "No se pudo cerrar la sesión. Intente de nuevo.",
   );
   await expect(cerrar).toBeEnabled();
+  const encabezadoDelPanel = page.getByRole("link", {
+    name: `${MUNICIPIOS.motul.nombre}, inicio`,
+  });
+  await expect(encabezadoDelPanel).toBeVisible();
+  await expect(encabezadoDelPanel.locator("img")).toBeVisible();
   await expect(
-    page.getByRole("link", {
-      name: `${MUNICIPIOS.motul.nombre}, Xula Sigma`,
-    }),
-  ).toBeVisible();
-  await expect(page.locator("header img")).toBeVisible();
-  await expect(
-    page
-      .getByRole("navigation", { name: "Módulos" })
-      .getByRole("link", { name: "Territorio" }),
+    barraInferior.getByRole("link", { name: "Territorio" }),
   ).toBeVisible();
   expect(
     await cerrar.evaluate((boton) => boton.getBoundingClientRect().height),
@@ -78,12 +82,10 @@ test("cerrar sesion la revoca en el servidor y vuelve al acceso", async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     320,
   );
-  const medidasDeCabecera = await page
-    .locator("header")
-    .evaluate((cabecera) => ({
-      contenido: cabecera.scrollWidth,
-      disponible: cabecera.clientWidth,
-    }));
+  const medidasDeCabecera = await encabezadoDelPanel.evaluate((cabecera) => ({
+    contenido: cabecera.scrollWidth,
+    disponible: cabecera.clientWidth,
+  }));
   expect(medidasDeCabecera.contenido).toBeLessThanOrEqual(
     medidasDeCabecera.disponible,
   );

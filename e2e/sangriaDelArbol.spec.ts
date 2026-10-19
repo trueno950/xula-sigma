@@ -75,7 +75,11 @@ async function darDeAlta(
 ) {
   await page.getByRole("link", { name: "Agregar lugar" }).click();
   await page.getByLabel("Tipo").selectOption(tipo);
-  await page.getByLabel("Nombre").fill(nombre);
+  // Por rol y exacto: `getByLabel("Nombre")` tambien matchea el buscador del
+  // arbol ("Buscar lugar por **nombre**"), que aparece cuando el municipio ya
+  // tiene lugares —o sea, cuando otra spec sembro antes— y volvia el
+  // localizador ambiguo.
+  await page.getByRole("textbox", { name: "Nombre", exact: true }).fill(nombre);
   await page.getByRole("button", { name: "Dar de alta" }).click();
   // El POST nativo redirige a la vista del padre, donde el lugar nuevo ya
   // aparece. Esperarlo es determinista; `waitForLoadState("networkidle")` no
@@ -134,7 +138,9 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
 
   await page.goto(urlDe("motul", "/territorio?accion=lugar"));
   await page.getByLabel("Tipo").selectOption("comisaria");
-  await page.getByLabel("Nombre").fill(COMISARIA);
+  await page
+    .getByRole("textbox", { name: "Nombre", exact: true })
+    .fill(COMISARIA);
   await page.getByRole("button", { name: "Dar de alta" }).click();
   await expect(
     page.getByRole("link", { name: new RegExp(`^${COMISARIA},`) }),

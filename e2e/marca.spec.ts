@@ -54,7 +54,7 @@ const abrirMarca = async (page: Page) => {
   await page.goto(urlDe("motul", "/marca"));
 };
 
-test("la pagina de marca muestra su ruta y no desborda en movil ni escritorio", async ({
+test("la pagina de marca muestra su ubicacion y no desborda en movil ni escritorio", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -71,22 +71,34 @@ test("la pagina de marca muestra su ruta y no desborda en movil ni escritorio", 
     )
     .toBeLessThanOrEqual(dimensionesMoviles.altoVentana);
 
-  const migaja = page.getByRole("navigation", { name: "Ruta" });
-  expect.soft(await migaja.count(), "La pagina debe mostrar la migaja").toBe(1);
+  // `/marca` es una pantalla de primer nivel: la migaja es solo para
+  // pantallas anidadas (`PaginaDePanel`, antipatron 26 de AGENTS.md). La
+  // ubicacion la dicen el titulo de la pagina y el enlace del municipio al
+  // inicio; el modulo activo se marca en la barra inferior (ver el test
+  // siguiente).
+  const inicio = page.getByRole("link", {
+    name: `${MUNICIPIOS.motul.nombre}, inicio`,
+  });
   expect
     .soft(
-      await migaja.getByRole("link", { name: "Inicio" }).getAttribute("href"),
-      "Inicio debe enlazar a la raiz del panel",
+      await page
+        .getByRole("heading", {
+          name: "Escudo del ayuntamiento",
+          exact: true,
+        })
+        .count(),
+      "La pagina debe titularse con su ubicacion",
+    )
+    .toBe(1);
+  expect
+    .soft(await inicio.count(), "El encabezado debe llevar al inicio")
+    .toBe(1);
+  expect
+    .soft(
+      await inicio.getAttribute("href"),
+      "El inicio debe enlazar a la raiz del panel",
     )
     .toBe("/");
-  expect
-    .soft(
-      await migaja
-        .getByText("Escudo del ayuntamiento", { exact: true })
-        .getAttribute("aria-current"),
-      "El escudo del ayuntamiento debe ser el paso actual",
-    )
-    .toBe("page");
   expect.soft(await page.locator("main").count()).toBe(1);
 
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -106,49 +118,47 @@ test("la pagina de marca muestra su ruta y no desborda en movil ni escritorio", 
 });
 
 /**
- * El modulo activo es el ultimo de la lista (`Marca`) y a 390px arranca
- * fuera del tramo visible de la hilera: si la fila no se desplaza hasta el,
- * el operador no ve donde esta parado.
+ * A 390px la barra inferior muestra cuatro destinos fijos y un `<details>`
+ * "Más" con el resto, incluido `Marca` (el ultimo modulo). El modulo activo
+ * no vive en una hilera desplazable: hay que abrir "Más" para verlo marcado
+ * con `aria-current`, y al navegar en cliente `key={ruta}` vuelve a montarlo
+ * cerrado.
  */
-test("la fila movil deja a la vista el modulo activo a 390px", async ({
+test("el modulo activo queda a la vista en la barra inferior a 390px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await accederAMotul(page);
-  await page.goto(urlDe("motul", "/"));
+  // La barra inferior vive en las pantallas del panel; el inicio (`/`) es la
+  // landing de `(acceso)`, con su propia navegacion de modulos.
+  await page.goto(urlDe("motul", "/padron"));
 
-  const fila = page.getByRole("navigation", { name: "Módulos" });
+  const barra = page.getByRole("navigation", {
+    name: "Navegación principal",
+  });
 
-  // Navegación por clic y no goto: lo que se prueba es el ajuste de la
-  // hilera cuando el panel navega en cliente, camino en el que el layout
-  // no se remonta y el efecto depende de la ruta.
-  await fila.getByRole("link", { name: "Marca" }).click();
+  // Navegacion por clic y no goto: lo que se prueba es la marca del activo
+  // cuando el panel navega en cliente.
+  await barra.locator("summary").click();
+  await barra.getByRole("link", { name: "Marca" }).click();
+  await expect(page).toHaveURL(urlDe("motul", "/marca"));
 
-  const activo = fila.getByRole("link", { name: "Marca" });
-
+  await barra.locator("summary").click();
+  const activo = barra.getByRole("link", { name: "Marca" });
   await expect(activo).toHaveAttribute("aria-current", "page");
 
   await expect
     .poll(
       async () => {
-        const cajaDeLaFila = await fila.boundingBox();
-        const cajaDelActivo = await activo.boundingBox();
-        if (!cajaDeLaFila || !cajaDelActivo) return "sin caja";
+        const caja = await activo.boundingBox();
+        if (!caja) return "sin caja";
 
-        const dentroDeLaFila =
-          cajaDelActivo.x >= cajaDeLaFila.x &&
-          cajaDelActivo.x + cajaDelActivo.width <=
-            cajaDeLaFila.x + cajaDeLaFila.width;
-        const dentroDeLaVentana =
-          cajaDelActivo.x >= 0 && cajaDelActivo.x + cajaDelActivo.width <= 390;
+        const dentroDeLaVentana = caja.x >= 0 && caja.x + caja.width <= 390;
 
-        return dentroDeLaFila && dentroDeLaVentana
-          ? "visible"
-          : `fila=${JSON.stringify(cajaDeLaFila)} activo=${JSON.stringify(cajaDelActivo)}`;
+        return dentroDeLaVentana ? "visible" : `activo=${JSON.stringify(caja)}`;
       },
       {
-        message:
-          "El modulo activo debe quedar dentro del tramo visible de la hilera",
+        message: "El modulo activo debe quedar dentro de la ventana a 390px",
         timeout: 10_000,
       },
     )
@@ -156,7 +166,7 @@ test("la fila movil deja a la vista el modulo activo a 390px", async ({
 
   expect(
     await page.evaluate(() => window.scrollY),
-    "El ajuste del modulo activo no debe desplazar la pagina en vertical",
+    "Abrir Mas para ver el modulo activo no debe desplazar la pagina",
   ).toBe(0);
 });
 
@@ -228,8 +238,11 @@ test("un OPERADOR ve el aviso de permiso y no el formulario", async ({
     page.getByText("Su rol no tiene permiso para cambiar la marca"),
   ).toBeVisible();
   await expect(page.getByLabel("Escudo del ayuntamiento")).toHaveCount(0);
-  await expect(page.getByRole("navigation", { name: "Ruta" })).toContainText(
-    "Inicio",
-  );
+  await expect(
+    page.getByRole("heading", {
+      name: "Escudo del ayuntamiento",
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(page.locator("main")).toHaveCount(1);
 });
