@@ -106,7 +106,12 @@ async function verificarHistorial(page: Page): Promise<void> {
     .first()
     .click();
   await expect(
-    page.getByRole("heading", { name: "Historial de calle", exact: true }),
+    page.getByRole("heading", { name: escenario.reporte, exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Ruta" })
+      .getByText(escenario.reporte, { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Reporte", { exact: true })).toBeVisible();
   await expect(page.getByText("Intervención", { exact: true })).toBeVisible();
@@ -135,7 +140,7 @@ async function verificarAislamientoDeTicul(page: Page): Promise<void> {
     page.getByText("No encontramos eso. Puede que ya no exista."),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Historial de calle" }),
+    page.getByRole("heading", { name: escenario.reporte }),
   ).toHaveCount(0);
 }
 

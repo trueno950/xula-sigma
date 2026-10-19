@@ -43,18 +43,31 @@ async function verificarLugarVacio(page: Page, lugarId: string): Promise<void> {
   await expect(page.getByText(/no tiene calles todavía/)).toBeVisible();
 }
 
+/**
+ * Las acciones de la calle son renglones de acordeon dentro de
+ * `PanelDeCalle`: cada etiqueta es el `summary` de su propio `<details>`. El
+ * encabezado de grupo "Acciones de calle" ya no existe en el shell actual.
+ */
+async function abrirAccionDeCalle(page: Page, etiqueta: string): Promise<void> {
+  await page
+    .locator("summary", { hasText: new RegExp(`^${etiqueta}$`) })
+    .click();
+}
+
 async function ubicarYReparentear(
   page: Page,
   escenario: Scenario,
 ): Promise<void> {
   await abrirCalle(page, escenario.origenId, escenario.movible);
-  await page.getByText("Acciones de calle").click();
-  await page.getByRole("link", { name: "Ubicar en el mapa" }).click();
+  // La calle no tiene punto, asi que "Ubicar en el mapa" nace abierta.
+  await expect(
+    page.locator("summary", { hasText: /^Ubicar en el mapa$/ }),
+  ).toBeVisible();
   await expect(page.getByLabel("Latitud")).toBeVisible();
   await expect(page.getByLabel("Longitud")).toBeVisible();
   await page.getByRole("button", { name: "Guardar ubicación" }).click();
   await page.waitForLoadState("networkidle");
-  await page.getByRole("link", { name: "Mover a otro lugar" }).click();
+  await abrirAccionDeCalle(page, "Mover a otro lugar");
   await page.getByLabel("Nuevo lugar").selectOption({
     label: `${escenario.destino} (comisaría)`,
   });
@@ -68,8 +81,7 @@ async function rechazarMovimientoDuplicado(
   escenario: Scenario,
 ): Promise<void> {
   await abrirCalle(page, escenario.origenId, escenario.duplicada);
-  await page.getByText("Acciones de calle").click();
-  await page.getByRole("link", { name: "Mover a otro lugar" }).click();
+  await abrirAccionDeCalle(page, "Mover a otro lugar");
   await page.getByLabel("Nuevo lugar").selectOption({
     label: `${escenario.destino} (comisaría)`,
   });
@@ -84,8 +96,7 @@ async function rechazarBajaConDomicilio(
   escenario: Scenario,
 ): Promise<void> {
   await abrirCalle(page, escenario.origenId, escenario.domicilio);
-  await page.getByText("Acciones de calle").click();
-  await page.getByRole("link", { name: "Dar de baja" }).click();
+  await abrirAccionDeCalle(page, "Dar de baja");
   await page
     .getByRole("button", {
       name: new RegExp(`Dar de baja ${escenario.domicilio}`),
@@ -101,15 +112,20 @@ async function darDeBajaReporte(
   escenario: Scenario,
 ): Promise<void> {
   await abrirCalle(page, escenario.origenId, escenario.reporte);
-  await page.getByText("Acciones de calle").click();
-  await page.getByRole("link", { name: "Dar de baja" }).click();
+  await abrirAccionDeCalle(page, "Dar de baja");
   await page
     .getByRole("button", {
       name: new RegExp(`Dar de baja ${escenario.reporte}`),
     })
     .click();
   await page.waitForLoadState("networkidle");
-  expect(page.url()).toBe(urlDe("motul", "/territorio"));
+  // La accion exitosa vuelve al arbol **con su aviso**: el `?ok=` que emite
+  // `darDeBajaCalleAction` (`irAlArbol(..., "calle-baja")`). Comprobar el
+  // pathname a secas dejaria pasar una vuelta sin aviso o con el aviso de
+  // otra accion.
+  const volvio = new URL(page.url());
+  expect(volvio.pathname).toBe("/territorio");
+  expect(volvio.searchParams.get("ok")).toBe("calle-baja");
 }
 
 test("intervenciones conserva la ficha y la correccion nativa", async ({
