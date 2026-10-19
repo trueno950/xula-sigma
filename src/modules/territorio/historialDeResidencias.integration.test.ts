@@ -1,10 +1,5 @@
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-  altaDePersona,
-  fusionarPersonas,
-  revertirFusion,
-} from "@/modules/padron";
+import { altaDePersona, fusionarPersonas } from "@/modules/padron";
 import {
   limpiar,
   motul,
@@ -107,29 +102,5 @@ describe("historialDeResidencias: colapso de una identidad fusionada", () => {
 
     expect(vigente?.domicilioId).toBe(domicilioNuevo);
     expect(historial.map((r) => r.domicilioId)).toContain(domicilioViejo);
-  });
-
-  it("revertir la fusion deja el historial de la perdedora solo con las suyas, sin reescribir ninguna fila de residencias", async () => {
-    const { id: personaG } = await personaDePrueba("Gaby");
-    const { id: personaH } = await personaDePrueba("Herminia");
-    const domicilioG = await domicilioDePrueba("Calle de Gaby");
-    const domicilioH = await domicilioDePrueba("Calle de Herminia");
-    await abrirResidencia(personaG, domicilioG, "2020-01-01");
-    await abrirResidencia(personaH, domicilioH, "2021-01-01");
-
-    const filasAntes = await withTenant(motul, (tx) =>
-      tx.select().from(residencias).where(eq(residencias.personaId, personaG)),
-    );
-
-    await fusionarPersonas(personaG, personaH, contextoDe());
-    await revertirFusion(personaG, contextoDe());
-
-    const historial = await historialDeResidencias(personaG, contextoDe());
-    const filasDespues = await withTenant(motul, (tx) =>
-      tx.select().from(residencias).where(eq(residencias.personaId, personaG)),
-    );
-
-    expect(historial.map((r) => r.domicilioId)).toEqual([domicilioG]);
-    expect(filasDespues).toEqual(filasAntes);
   });
 });

@@ -7,5 +7,4 @@ export * from "./identidadesDePersona";
 export * from "./listarPersonas";
 export * from "./personaPorId";
 export type * from "./puertos";
-export * from "./revertirFusion";
 export * from "./sugerirDuplicados";

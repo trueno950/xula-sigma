@@ -54,7 +54,6 @@ describe("editarPersona", () => {
     listar: vi.fn(),
     buscar: vi.fn(),
     fusionar: vi.fn(),
-    revertirFusion: vi.fn(),
     identidadesDe: vi.fn(),
   };
   const catalogo: CatalogoDeAbreviaturas = { leer: vi.fn() };

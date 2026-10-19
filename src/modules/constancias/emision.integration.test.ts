@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { comoPersonaId, editarPersona } from "@/modules/padron";
+import {
+  altaDePersona,
+  comoPersonaId,
+  fusionarPersonas,
+} from "@/modules/padron";
 import {
   altaDeLugar,
   comoLugarId,
@@ -94,7 +98,7 @@ describe("el snapshot no se re-deriva en ninguna lectura posterior", () => {
     expect(despuesDelReparenteo?.datos).toEqual(antesDelReparenteo?.datos);
   });
 
-  it("corregir el apellido de la persona en padron no cambia el nombre impreso en la constancia ya emitida", async () => {
+  it("fusionar la identidad del titular en padron no cambia el nombre impreso en la constancia ya emitida", async () => {
     const admin = actor("ADMIN_MUNICIPAL");
     const { personaId } = await titularConResidenciaVigente(
       "Correccion",
@@ -103,15 +107,15 @@ describe("el snapshot no se re-deriva en ninguna lectura posterior", () => {
     await configurarFirmaDePrueba(admin);
 
     const id = await emitirConstancia(personaId, actor("OPERADOR"));
-    const antesDeCorregir = await constanciaPorId(id, admin);
-    expect(antesDeCorregir).not.toBeNull();
-    const datosOriginales = antesDeCorregir?.datos as {
+    const antesDeFusionar = await constanciaPorId(id, admin);
+    expect(antesDeFusionar).not.toBeNull();
+    const datosOriginales = antesDeFusionar?.datos as {
       titular: { nombreCompleto: string };
     };
     expect(datosOriginales.titular.nombreCompleto).toBe("Correccion Poot");
 
-    await editarPersona(
-      comoPersonaId(personaId),
+    const lector = crearLectorDeTitularesPorPadron(admin);
+    const { id: sustitutoId } = await altaDePersona(
       {
         nombres: "Correccion",
         primerApellido: "ApellidoCorregido",
@@ -120,8 +124,14 @@ describe("el snapshot no se re-deriva en ninguna lectura posterior", () => {
       },
       admin,
     );
+    await fusionarPersonas(comoPersonaId(personaId), sustitutoId, admin);
 
-    const despuesDeCorregir = await constanciaPorId(id, admin);
-    expect(despuesDeCorregir?.datos).toEqual(antesDeCorregir?.datos);
+    // El padron si cambio: el `id` del titular ahora resuelve al sustituto.
+    // Si la constancia re-derivara su titular, el nombre impreso cambiaria.
+    expect((await lector.porId(personaId))?.nombreCompleto).toBe(
+      "Correccion ApellidoCorregido",
+    );
+    const despuesDeFusionar = await constanciaPorId(id, admin);
+    expect(despuesDeFusionar?.datos).toEqual(antesDeFusionar?.datos);
   });
 });

@@ -20,9 +20,9 @@ export type CatalogoDeAbreviaturas = {
 /**
  * Lo que un caso de uso puede suministrar del lado de la escritura. **No
  * lleva `nombreNormalizado`** (decision 6 de proposal.md, design.md
- * seccion 5): ni `altaDePersona` ni `editarPersona` la conocen, la calcula
- * el adaptador con la funcion de dominio en el mismo paso que persiste. Es
- * la costura por tipo, no por convencion.
+ * seccion 5): `altaDePersona` no la conoce, la calcula el adaptador con la
+ * funcion de dominio en el mismo paso que persiste. Es la costura por tipo,
+ * no por convencion.
  */
 export type PersonaParaGuardar = {
   nombres: string;
@@ -172,20 +172,6 @@ export type RepositorioDePersonas = {
     perdedoraId: PersonaId,
     ganadoraId: PersonaId,
   ): Promise<void>;
-  /**
-   * Deshace una fusion directa (design.md decision 3, "Reversion"):
-   * `id` vuelve a ser terminal, y quienes se habian reenganchado a traves
-   * suyo (`fusionadaDirectoEn = id`) se des-colapsan de vuelta a `id` en
-   * vez de quedar apuntando al que fuera terminal antes de revertir.
-   *
-   * Devuelve si `id` existia, pertenecia a este tenant y **estaba
-   * fusionada** -RLS deja un `UPDATE` sobre una fila ajena o inexistente en
-   * cero filas sin error, y una fila propia que nunca se fusiono tampoco
-   * cuenta como reversion real-, asi el caso de uso puede distinguir
-   * "revirtio" de "no-op silencioso" y responder 404 en vez de registrar en
-   * bitacora una reversion que nunca paso.
-   */
-  revertirFusion(tx: TransaccionTenant, id: PersonaId): Promise<boolean>;
   /**
    * La direccion inversa de `buscarPorId`: no "id cualquiera -> terminal"
    * sino "terminal -> todos los ids que colapsan en el". El invariante de

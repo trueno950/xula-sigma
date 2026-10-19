@@ -8,7 +8,6 @@ import {
   crearIdentidadesDePersona,
   crearListarPersonas,
   crearPersonaPorId,
-  crearRevertirFusion,
   crearSugerirDuplicados,
 } from "./application";
 import {
@@ -37,7 +36,6 @@ export const buscarPersonas = crearBuscarPersonas(
   catalogoDeAbreviaturasSql,
 );
 export const fusionarPersonas = crearFusionarPersonas(repositorioDePersonasSql);
-export const revertirFusion = crearRevertirFusion(repositorioDePersonasSql);
 export const sugerirDuplicados = crearSugerirDuplicados(
   repositorioDePersonasSql,
   catalogoDeAbreviaturasSql,

@@ -12,7 +12,6 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import {
   crearAltaDePersona,
-  crearEditarPersona,
   crearFusionarPersonas,
   crearListarPersonas,
 } from "./application";
@@ -42,10 +41,6 @@ const altaDePersona = crearAltaDePersona(
   repositorioDePersonasSql,
   catalogoDeAbreviaturasSql,
 );
-const editarPersona = crearEditarPersona(
-  repositorioDePersonasSql,
-  catalogoDeAbreviaturasSql,
-);
 const fusionarPersonas = crearFusionarPersonas(repositorioDePersonasSql);
 const listarPersonas = crearListarPersonas(repositorioDePersonasSql);
 
@@ -72,55 +67,35 @@ afterAll(async () => {
 });
 
 describe("fusionarPersonas", () => {
-  it("consultar por el id perdedor sigue resolviendo tras editar al ganador", async () => {
+  it("consultar por el id perdedor sigue resolviendo, con datos al dia, tras cambiar al ganador", async () => {
     const contexto = contextoDe(motul);
     const a = await personaDe(contexto, "Ana", "Poot");
     const b = await personaDe(contexto, "Beto", "Chan");
 
     await fusionarPersonas(a, b, contexto);
-    await editarPersona(
-      b,
-      {
-        nombres: "Beto",
-        primerApellido: "Uc",
-        segundoApellido: null,
-        curp: null,
-      },
-      contexto,
+    await withTenant(motul, (tx) =>
+      repositorioDePersonasSql.actualizar(tx, {
+        id: b,
+        persona: {
+          nombres: "Beto",
+          primerApellido: "Uc",
+          segundoApellido: null,
+          curp: null,
+        },
+        expansiones: new Map(),
+      }),
     );
 
     const resuelta = await withTenant(motul, (tx) =>
       repositorioDePersonasSql.buscarPorId(tx, a),
     );
 
+    // Las dos garantias de design.md decision 3 en una lectura: el `id`
+    // crudo del perdedor resuelve al ganador -no hay fila fantasma que el
+    // `UPDATE` hubiera dejado atras-, y devuelve sus datos actuales, no una
+    // foto del momento de la fusion.
+    expect(resuelta?.id).toBe(b);
     expect(resuelta?.primerApellido).toBe("Uc");
-  });
-
-  it("editar por el id perdedor edita al ganador resuelto, no crea una fila fantasma", async () => {
-    const contexto = contextoDe(motul);
-    const a = await personaDe(contexto, "Ana5", "Poot");
-    const b = await personaDe(contexto, "Beto5", "Chan");
-
-    await fusionarPersonas(a, b, contexto);
-    await editarPersona(
-      a,
-      {
-        nombres: "Beto5",
-        primerApellido: "Editado",
-        segundoApellido: null,
-        curp: null,
-      },
-      contexto,
-    );
-
-    const resuelta = await withTenant(motul, (tx) =>
-      repositorioDePersonasSql.buscarPorId(tx, a),
-    );
-
-    // Si `editarPersona` hubiera escrito sobre el `id` crudo (el perdedor),
-    // la fila oculta cambiaria pero `buscarPorId(a)` -que resuelve al
-    // ganador- seguiria mostrando el apellido viejo.
-    expect(resuelta?.primerApellido).toBe("Editado");
   });
 
   it("cadena de fusiones resuelve en un salto", async () => {

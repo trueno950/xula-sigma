@@ -10,7 +10,7 @@ import type { PersonaId } from "../domain";
 import { comoPersonaId, normalizarParaBusqueda } from "../domain";
 import { consultaDeBusqueda } from "./coincidenciasDeBusquedaSql";
 import { personas } from "./esquema";
-import { fusionarSql, revertirFusionSql } from "./fusionDePersonasSql";
+import { fusionarSql } from "./fusionDePersonasSql";
 import {
   aPersonaGuardada,
   columnasDeLectura,
@@ -92,10 +92,9 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
     await tx.update(personas).set({ bajaEn }).where(eq(personas.id, id));
   },
 
-  // `fusionar`/`revertirFusion` viven en `fusionDePersonasSql.ts` (motivo
-  // de la separacion en su comentario de cabecera).
+  // `fusionar` vive en `fusionDePersonasSql.ts` (motivo de la separacion
+  // en su comentario de cabecera).
   fusionar: fusionarSql,
-  revertirFusion: revertirFusionSql,
 
   async identidadesDe(tx, id): Promise<readonly PersonaId[]> {
     const terminal = terminalDe(id);

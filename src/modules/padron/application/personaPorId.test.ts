@@ -37,7 +37,6 @@ describe("personaPorId", () => {
     listar: vi.fn(),
     buscar: vi.fn(),
     fusionar: vi.fn(),
-    revertirFusion: vi.fn(),
     identidadesDe: vi.fn(),
   };
 

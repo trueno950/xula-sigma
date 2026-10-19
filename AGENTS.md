@@ -90,7 +90,7 @@ toca datos, marcá el hallazgo.
      no son las esperadas.
    - Ningún secreto adentro: contraseñas y hashes entran por `-v`.
 
-   Los nueve que existen hoy, con lo que hace cada uno —el contador va con
+   Los diez que existen hoy, con lo que hace cada uno —el contador va con
    la lista y no aparte, porque un número suelto es el que se queda viejo:
 
    - `bootstrap.sql`: roles, con el superusuario del proveedor.
@@ -109,6 +109,9 @@ toca datos, marcá el hallazgo.
      filas. Es el que motivó el `GRANT DELETE` de la excepción de abajo.
    - `spike-busqueda-personas.sql`: el banco que sostiene los números del
      ADR 0002, contra un Postgres desechable.
+   - `deshacer-fusion.sql`: devuelve a una persona del padrón a existir por
+     separado y recolapsa su subárbol de fusiones directas. Es la vía de
+     operación que reemplaza a `revertirFusion`, retirada del código.
 
    `pnpm reglas` sí los mira, pero no con las dos puertas: sobre
    `scripts/*.sql` corren las reglas que no dependen de `src/` —RLS de tabla
