@@ -90,10 +90,30 @@ toca datos, marcá el hallazgo.
      no son las esperadas.
    - Ningún secreto adentro: contraseñas y hashes entran por `-v`.
 
-   Los cuatro que existen: `bootstrap.sql` (roles, con el superusuario del
-   proveedor), `plataforma.sql` y `plataforma-admin.sql` (siembra del
-   ayuntamiento reservado) y `restablecer-admin.sql` (destraba a un
-   `ADMIN_MUNICIPAL`, decisión de la tarea 4.16 de `auth-rbac`).
+   Los nueve que existen hoy, con lo que hace cada uno —el contador va con
+   la lista y no aparte, porque un número suelto es el que se queda viejo:
+
+   - `bootstrap.sql`: roles, con el superusuario del proveedor.
+   - `plataforma.sql` y `plataforma-admin.sql`: siembra del ayuntamiento
+     reservado.
+   - `restablecer-admin.sql`: destraba a un `ADMIN_MUNICIPAL` (decisión de la
+     tarea 4.16 de `auth-rbac`).
+   - `auditar-raices.sql`: lista los lugares que violan el MUST de raíz de
+     `jerarquia-territorial`.
+   - `reparar-raices-huerfanas.sql`: les da padre a los lugares de baja que
+     quedaron colgados; corre después del anterior, que es el que los halla.
+   - `baja-calles-fuera-de-asentamiento.sql`: da de baja las calles activas
+     que cuelgan de un lugar que no es asentamiento.
+   - `migrar-sectores-a-zonas.sql`: mueve los domicilios de sector o manzana
+     a su asentamiento, crea una zona por sector y borra físicamente esas
+     filas. Es el que motivó el `GRANT DELETE` de la excepción de abajo.
+   - `spike-busqueda-personas.sql`: el banco que sostiene los números del
+     ADR 0002, contra un Postgres desechable.
+
+   `pnpm reglas` sí los mira, pero no con las dos puertas: sobre
+   `scripts/*.sql` corren las reglas que no dependen de `src/` —RLS de tabla
+   nueva, folio por secuencia y `SET LOCAL`—, y no corre el conteo de
+   métricas, que se limita a `src/**`.
 
    **El andamiaje de los tests de aislamiento es una tercera categoría.**
    `*DePrueba.ts` y `*.isolation.test.ts` viven dentro de `src/` y abren
@@ -106,8 +126,10 @@ toca datos, marcá el hallazgo.
    esquema real por la misma razón.
 
    Los que hoy abren conexión son `municipiosDePrueba.ts`,
-   `superAdminDePrueba.ts` y `esquema.isolation.test.ts`, pero `pnpm reglas`
-   reconoce la categoría por el nombre y no por una lista: un ayudante nuevo
+   `superAdminDePrueba.ts`, `esquema.isolation.test.ts` y
+   `escuchaDePrueba.ts` —este último abre la suya para un `LISTEN` real, de
+   máximo una; `carrerasDeCalleDePrueba.ts` solo importa un tipo—, pero
+   `pnpm reglas` reconoce la categoría por el nombre y no por una lista: un ayudante nuevo
    no debe obligar a editar el verificador. Es la diferencia con las salidas de producción, que sí se
    enumeran, y el motivo es el que separa a las dos categorías: una salida de
    producción es superficie alcanzable desde la aplicación y el andamiaje de
@@ -228,7 +250,11 @@ límite, conteo de filas afectadas). Hoy hay una:
   invoca un `DELETE`—, pero esa garantía ya no vive en el privilegio:
   vive en que el código no lo use. Es riesgo residual aceptado, no
   ausente, y el `GRANT` es permanente: no se revierte al terminar la
-  operación puntual que lo motivó.
+  operación puntual que lo motivó. Lo que esta excepción gobierna es la
+  **ampliación de un verbo negado a propósito**, no el universo de `DELETE`:
+  `xula_app` ya lo tiene sobre `sesiones`, `verificaciones` e
+  `intentos_acceso` (`drizzle/0001_auth.sql`) y sobre `calles_de_zonas`
+  (`drizzle/0017`), y ninguna de esas apariciones pasó por aquí.
 
 **Una segunda no entra sin agregarse a esta lista**, misma razón que la
 excepción anterior.
@@ -319,6 +345,7 @@ que devuelva, y devolverlo sería código muerto.
 | `cancelarConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
 | `altaDeReporteAction` | `reportes` | Server Component, `<form action={...}>` |
 | `cambiarEstadoAction` | `reportes` | Server Component, `<form action={...}>` |
+| `cambiarEstadoAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `corregirIntervencionAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `asignarAreaAction` | `reportes` | Server Component, `<form action={...}>` |
 
@@ -374,8 +401,13 @@ Notas que no caben en la tabla, una por fila que las necesita:
   duplicado, decision 14 de `reportes-ciudadanos`-; `asignarAreaAction`
   redacta `NoAutorizadoError`, `NoEncontradoError` y `ReporteCerradoError`.
 - `corregirIntervencionAction` (`intervenciones`, rebanada 1): mismo motivo
-  que `cambiarEstadoAction`; redacta `NoAutorizadoError`, `NoEncontradoError`,
+  que `cambiarEstadoAction` —la de `reportes`, que es otra acción con el
+  mismo nombre—; redacta `NoAutorizadoError`, `NoEncontradoError`,
   `ValidacionError` y el fallo de resolucion del tenant, sin exponer detalles.
+- `cambiarEstadoAction` (`intervenciones`, rebanada 1): **el nombre se repite
+  entre dos módulos y son acciones distintas**; ésta redacta
+  `NoAutorizadoError`, `NoEncontradoError`, `TenantNoResueltoError`,
+  `ValidacionError`, `IntervencionCerradaError` y `TransicionInvalidaError`.
 - `corregirDomicilioAction`/`darDeBajaDomicilioAction` (`territorio`, Fase 2
   de direcciones editables): mismo motivo exacto que `renombrarCalleAction`,
   cada uno su `<form>` nativo. `corregirDomicilioAction` redacta

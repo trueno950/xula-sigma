@@ -40,7 +40,7 @@ Los links de este índice se validan en CI. Un link roto rompe el build.
 │                LAS 12 REGLAS QUE NADIE ROMPE                    │
 ├─────────────────────────────────────────────────────────────────┤
 │  1. any = muerte. unknown + type guard.                         │
-│  2. Todo acceso a BD pasa por withTenant. Sin excepción.        │
+│  2. BD solo por withTenant: 4 excepciones en AGENTS.md.         │
 │  3. SET LOCAL dentro de transacción. Nunca SET suelto.          │
 │  4. ayuntamiento_id del contexto del servidor, nunca del cliente│
 │  5. Tabla nueva = RLS + test de aislamiento, mismo commit       │
