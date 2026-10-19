@@ -64,3 +64,20 @@ peor que ninguna, porque nadie la discute.
   (805 KB del 2026-09-26, sin índice que lo enlace). Decisión pendiente del
   humano, junto con la de si conviene anotar el escalonamiento para que otra
   auditoría no lo lea como código muerto.
+- **L5** — Alcance de S4, decidido por la persona: «si no se usa es mejor
+  eliminarlo», y después «corregir y subir» + «3». S4 se había leído como
+  identificar-y-reportar; la decisión autorizó **retirar** `revertirFusion` y
+  devolver la capacidad como guion de operación (`scripts/deshacer-fusion.sql`),
+  y **devolver al código** `editarPersona`, `darDeBajaPersona` y
+  `administracionDeUsuarios` cuando el lente de confiabilidad los reclamó.
+- **L6** — Revisión nativa del rango `c9b29e7..HEAD`, tres intentos: los dos
+  primeros escalaron por causalidad desconocida (5 y 2 hallazgos), el tercero
+  pasó por los cuatro lentes, un refuter, un plan de corrección acotado y un
+  validador dirigido. El validador encontró una **regresión real** que mis
+  pruebas no vieron —`filas` de personas pisada por el `ROW_COUNT` de la
+  bitácora, con una sola persona fusionada los dos conteos coinciden—,
+  corregida en `9a263fc` y verificada con una cadena A→B→C. El criterio
+  restante pide que `revertirFusion` vuelva al código; la persona eligió
+  **aceptar el escalamiento**: la traza atribuible ya existe (`REVERTIR_FUSION`
+  con actor, entidad, id y origen, en la misma transacción) y el límite lo pone
+  la política RLS. La revisión queda escalada, nunca aprobada: es informativa.
