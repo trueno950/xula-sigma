@@ -118,7 +118,11 @@ async function altaDeLugar(
   nombre: string,
 ) {
   await page.getByLabel("Tipo").selectOption(tipo);
-  await page.getByLabel("Nombre").fill(nombre);
+  // Por rol y exacto: `getByLabel("Nombre")` tambien matchea el buscador del
+  // arbol ("Buscar lugar por **nombre**"), que aparece apenas el municipio
+  // tiene lugares. Hoy esta spec corre antes de la que los siembra y no lo
+  // nota; con otro orden, el localizador se vuelve ambiguo.
+  await page.getByRole("textbox", { name: "Nombre", exact: true }).fill(nombre);
   await page.getByRole("button", { name: "Dar de alta" }).click();
   await page.waitForLoadState("networkidle");
 }
