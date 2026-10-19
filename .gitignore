@@ -63,9 +63,8 @@ playwright-report/
 # describe esta copia, no el proyecto.
 .pi/
 
-# Configuracion de las herramientas de agentes (opencode/gentle-ai). Se
-# versionaba hasta el 2026-10-18; ahora vive solo en cada maquina: la
-# revision de IA ya no corre en CI y el flujo local lo lleva gentle-shell.
-# El archivo sigue en disco, con sus reglas de permisos y sus MCP.
+# Configuracion de las herramientas de agentes: vive en cada maquina, no en
+# el repositorio. Lo que se acepta con eso: dos maquinas pueden tener permisos
+# y MCP distintos, y ese cambio no pasa por un PR.
 opencode.json
 .opencode/
