@@ -64,6 +64,7 @@ SELECT set_config('reversion.actor', :'actor', true);
 DO $$
 DECLARE
   filas integer;
+  filasBitacora integer;
 BEGIN
   /*
    * `fusionada_en IS NOT NULL` no es adorno: sin esa condicion, revertir a
@@ -117,6 +118,9 @@ BEGIN
   GET DIAGNOSTICS filas = ROW_COUNT;
 
   /*
+   * Variable propia para la bitacora: reusar `filas` pisaria el conteo de
+   * personas del subarbol y el aviso de exito informaria siempre 1.
+   *
    * La bitacora va adentro de la misma transaccion, como el caso de uso que
    * esto reemplaza: si la operacion se deshace, la entrada tambien. `origen`
    * nombra el guion y no a la persona: un log no lleva datos personales
@@ -132,12 +136,12 @@ BEGIN
     'scripts/deshacer-fusion.sql'
   );
 
-  GET DIAGNOSTICS filas = ROW_COUNT;
+  GET DIAGNOSTICS filasBitacora = ROW_COUNT;
 
-  IF filas <> 1 THEN
+  IF filasBitacora <> 1 THEN
     RAISE EXCEPTION
       'La reversion no quedo registrada en bitacora (% fila/s). Se deshace todo.',
-      filas;
+      filasBitacora;
   END IF;
 
   RAISE NOTICE
