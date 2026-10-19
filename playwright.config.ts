@@ -45,7 +45,10 @@ export default defineConfig({
    */
   workers: 1,
   fullyParallel: false,
-  reporter: process.env.CI ? "github" : "list",
+  // En CI, `github` anota cada fallo sobre el PR y `html` deja el informe que
+  // el workflow sube como artefacto: una reja que falla sin rastro obliga a
+  // reproducir en local lo que el navegador ya vio.
+  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     trace: "on-first-retry",
     // Sin `baseURL`: cada test dice a que municipio va, y esconderlo detras

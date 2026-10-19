@@ -106,6 +106,73 @@ jobs:
           MIGRATION_DATABASE_URL: postgresql://xula_migrator:postgres@localhost:5432/xula_test
           SUPER_ADMIN_DATABASE_URL: postgresql://xula_super_admin:postgres@localhost:5432/xula_test
 
+  e2e:
+    name: E2E en navegador
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: xula_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Mismos roles y mismas migraciones que el job de aislamiento: el E2E
+      # entra por la aplicacion, pero la base que encuentra es la misma.
+      - name: Provisionar roles
+        run: |
+          psql "postgresql://postgres:postgres@localhost:5432/xula_test" \
+            -v clave_migrator=postgres \
+            -v clave_app=postgres \
+            -v clave_super_admin=postgres \
+            -f scripts/bootstrap.sql
+
+      - name: Migrar
+        run: pnpm db:migrate
+        env:
+          MIGRATION_DATABASE_URL: postgresql://xula_migrator:postgres@localhost:5432/xula_test
+
+      # El navegador con sus bibliotecas de sistema: el runner de Ubuntu no
+      # trae las que Chromium necesita y sin ellas no arranca.
+      - name: Instalar Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Este job es reja, no aviso: ver docs/04-calidad.md, seccion 3.
+      # `E2E_PUERTO` queda sin fijar a proposito. Existe por el 3000 y el
+      # 5000 que AirPlay ocupa en macOS; aca eso no aplica, y el valor por
+      # defecto (3000) no choca con el 5432 del servicio de Postgres.
+      # `playwright.config.ts` levanta `build` + `start` y siembra los dos
+      # municipios en `e2e/preparar.ts`.
+      - name: E2E
+        run: pnpm test:e2e
+        env:
+          DATABASE_URL: postgresql://xula_app:postgres@localhost:5432/xula_test
+          MIGRATION_DATABASE_URL: postgresql://xula_migrator:postgres@localhost:5432/xula_test
+          SUPER_ADMIN_DATABASE_URL: postgresql://xula_super_admin:postgres@localhost:5432/xula_test
+
+      # La reja bloquea el merge, asi que cuando falla hay que poder ver por
+      # que sin reproducirlo en local. Se sube solo si algo fallo.
+      - name: Guardar el informe de Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-e2e
+          path: playwright-report/
+          retention-days: 7
+
   docs:
     name: Links de documentacion
     runs-on: ubuntu-latest

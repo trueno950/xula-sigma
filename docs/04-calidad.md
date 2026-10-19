@@ -184,6 +184,41 @@ Todo lo que se pueda enforzar, se enforza. Lo que no, va al checklist.
 | Pre-push | Suite completa, `dependency-cruiser` |
 | CI en PR | Todo lo anterior + integración + E2E + test de esquema RLS + validación de links de docs |
 
+### El E2E es reja, no aviso
+
+Job `e2e` de `.github/workflows/ci.yml`. Levanta Postgres igual que el job
+de aislamiento —mismos roles por `scripts/bootstrap.sql`, mismas
+migraciones con el rol owner—, instala Chromium con sus bibliotecas y corre
+`pnpm test:e2e` contra la aplicación **construida**: `playwright.config.ts`
+hace `build` + `start`, y `e2e/preparar.ts` siembra dos municipios con el
+mismo correo y la misma clave.
+
+Qué verifica: lo que ningún otro job puede. Que la cookie de un municipio no
+abra sesión en otro, que un recurso de otro tenant dé 404 y no 403, que un
+`Host` ajeno no mueva el municipio del lado del navegador, que el respaldo
+por host no se pueda mover desde la petición, que ningún tenant se lleve el
+árbol territorial de otro. La garantía la dan RLS **más** el alcance de la
+cookie: un doble de prueba no tiene ninguna de las dos, así que no hay forma
+de bajar estas aserciones a un test rápido.
+
+Por qué reja y no aviso: un aviso que no bloquea es una suite que nadie
+corre, con el costo de mantenerla. El modo de falla que cubre —los datos de
+un municipio vistos desde otro— no aparece en ningún otro lado, y en verde
+no se nota.
+
+Lo que cuesta, dicho explícito: es el job más lento del workflow, porque
+compila la aplicación y arranca un navegador. Corre en serie y con un solo
+worker a propósito: los dos municipios comparten base y la ventana de
+limitación de ritmo es estado global por correo.
+
+**No se fija `E2E_PUERTO`.** La variable existe porque en macOS el 3000, el
+5000 y el 7000 los ocupa AirPlay; en el runner no aplica, y el valor por
+defecto (3000) no choca con el 5432 del servicio de Postgres. El dominio
+base es `xula.localhost`, que Chromium mapea a loopback sin tocar
+`/etc/hosts`.
+
+Entró el 2026-10-19.
+
 ### Reglas duras de lint
 
 ```jsonc
