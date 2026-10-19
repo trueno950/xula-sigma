@@ -25,6 +25,7 @@ lee cuando el trabajo lo toca, no de corrido.
 | 07 | [Estructura y Stack](./architecture/estructura.md) | Árbol general, capas, herramientas, git |
 | 08 | [Invariantes Críticos](./architecture/invariantes-criticos.md) | Contratos que no pueden romperse |
 | 09 | [Template de Módulo](./architecture/module-template.md) | Crear un módulo nuevo |
+| 10 | [Mapa de construcción](./architecture/xula-construccion.lifecycle.html) | El mapa de construcción del producto, del estado actual al siguiente corte |
 | **Decisiones** | | |
 | ADR 0001 | [Decisiones técnicas de Fase 0](./adr/0001-decisiones-tecnicas-fase-0.md) | Auth, migraciones, errores, Server Actions, logging, fecha y hora, hooks |
 | ADR 0002 | [Búsqueda de personas tolerante a variantes](./adr/0002-busqueda-de-personas.md) | Trigramas, diccionario de abreviaturas, umbral, columna normalizada |

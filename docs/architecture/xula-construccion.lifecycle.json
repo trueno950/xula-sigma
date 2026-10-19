@@ -36,19 +36,19 @@
   "states": [
     {
       "id": "foundation",
-      "type": "active",
+      "type": "success",
       "label": "Fundamentos",
-      "sublabel": "cierre pendiente",
+      "sublabel": "cerrada con CI y RLS",
       "lane": "main",
       "col": 0,
       "step": "00",
-      "tag": "base"
+      "tag": "hecho"
     },
     {
       "id": "core",
       "type": "success",
       "label": "Padrón + territorio",
-      "sublabel": "completos",
+      "sublabel": "completos; calles y mapa",
       "lane": "main",
       "col": 1,
       "step": "01",
@@ -164,8 +164,10 @@
       "dot": "emerald",
       "title": "Dónde estamos",
       "items": [
-        "Padrón, territorio y reportes ciudadanos están completos",
-        "Constancias están implementadas, pero el piloto físico sigue abierto"
+        "Fundamentos cerrados: CI de cuatro jobs, 19 migraciones y RLS probada por tabla",
+        "Padrón y territorio completos, con calles con coordenadas y mapa operativo",
+        "Constancias implementadas, pero el piloto físico sigue abierto",
+        "Cierre de UX/UI hecho: panel rediseñado, accesibilidad verificada y 45 pruebas e2e en verde"
       ]
     },
     {
