@@ -2,8 +2,9 @@
 
 **Sistema Integral de Gestión Municipal y Administración**
 
-**Estado:** Fase de planeación
-**Última actualización:** 2026-08-12
+**Estado:** fases 0 a 3 construidas; falta el piloto de constancias y las
+fases 4 a 7 no empezaron. El avance vive en cada fase, no en esta línea.
+**Última actualización:** 2026-10-19
 
 ---
 
@@ -66,6 +67,7 @@ Responde a tres criterios, en este orden de prioridad:
 ## 4. Fases
 
 ### Fase 0 — Fundación multi-tenant
+**Estado:** cerrada: CI de cuatro jobs, 19 migraciones y RLS probada por tabla.
 **Estimado:** 3–4 semanas
 **Vendible:** No. Es infraestructura.
 
@@ -150,6 +152,7 @@ aislamiento explícitas antes de avanzar. Ver
 ---
 
 ### Fase 1 — Padrón ciudadano y capa territorial
+**Estado:** completa: padrón, capa territorial, calles con coordenadas, domicilios y mapa operativo.
 **Estimado:** 2–3 semanas
 **Vendible:** No por sí solo. Son las dos columnas vertebrales.
 
@@ -185,6 +188,7 @@ constancias, y entrega domiciliaria de apoyos.
 ---
 
 ### Fase 2 — Constancias y oficios ⭐
+**Estado:** implementada; falta el piloto físico con un ayuntamiento real.
 **Estimado:** 3–4 semanas
 **Vendible:** Sí. Este es el punto de primer ingreso.
 
@@ -210,6 +214,7 @@ se inventan.
 ---
 
 ### Fase 3 — Reportes ciudadanos
+**Estado:** implementada: reportes, intervenciones y áreas.
 **Estimado:** 2–3 semanas
 **Vendible:** Sí, como plan superior.
 
@@ -227,6 +232,7 @@ tener el costo real medido.
 ---
 
 ### Fase 4 — Apoyos sociales
+**Estado:** no iniciada.
 **Estimado:** 3–4 semanas
 **Vendible:** Sí.
 **Prerrequisito bloqueante:** infraestructura de privacidad completa.
@@ -278,6 +284,7 @@ evidencia. El diseño debe asumirlo.
 ---
 
 ### Fase 5 — Operación interna
+**Estado:** no iniciada.
 **Estimado:** 3–4 semanas
 **Vendible:** Sí, como plan superior.
 
@@ -298,6 +305,7 @@ evidencia. El diseño debe asumirlo.
 ---
 
 ### Fase 6 — Campañas de salud pública y portal
+**Estado:** no iniciada.
 **Estimado:** 3–4 semanas
 **Vendible:** Sí, como plan superior.
 **Depende de:** capa territorial (Fase 1.b)
@@ -346,6 +354,7 @@ No es portal de transparencia. Ver sección 2.
 ---
 
 ### Fase 7 — Libro digital del juzgado de paz
+**Estado:** no iniciada.
 **Estimado:** 2 semanas
 **Vendible:** Sí.
 **Posición:** respaldo e índice. Nunca registro oficial.
