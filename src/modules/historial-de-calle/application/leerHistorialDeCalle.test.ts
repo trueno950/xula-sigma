@@ -25,10 +25,33 @@ const contexto: ContextoActual = {
 const calleId = comoCalleId("22222222-2222-4222-8222-222222222222");
 const instante = new Date("2026-03-10T00:00:00.000Z");
 
+const sinCambio = {
+  nombre: { anterior: null, nuevo: null },
+  punto: { anterior: null, nuevo: null },
+  lugar: { anterior: null, nuevo: null },
+};
 const calle: CalleParaHistorial = [
-  { id: "evento-z", naturaleza: "RENOMBRE", ocurridoEn: instante },
-  { id: "evento-a", naturaleza: "RENOMBRE", ocurridoEn: instante },
-  { id: "evento-u", naturaleza: "UBICACION", ocurridoEn: instante },
+  {
+    id: "evento-z",
+    naturaleza: "RENOMBRE",
+    ocurridoEn: instante,
+    cambio: {
+      ...sinCambio,
+      nombre: { anterior: "Calle 20", nuevo: "Calle 20-A" },
+    },
+  },
+  {
+    id: "evento-a",
+    naturaleza: "RENOMBRE",
+    ocurridoEn: instante,
+    cambio: null,
+  },
+  {
+    id: "evento-u",
+    naturaleza: "UBICACION",
+    ocurridoEn: instante,
+    cambio: null,
+  },
 ];
 const reporte: ReporteParaHistorial = {
   id: "reporte-1",
@@ -86,6 +109,23 @@ describe("leerHistorialDeCalle", () => {
       contexto.ayuntamientoId,
       expect.any(Function),
     );
+  });
+
+  it("conserva el payload del evento y deja nulo el de un evento viejo", async () => {
+    const historial = await crearLeerHistorialDeCalle(fuentes)(
+      calleId,
+      contexto,
+    );
+
+    const porId = (id: string) =>
+      historial?.entradas.find((entrada) => entrada.id === id)?.cambio;
+
+    expect(porId("evento-z")).toEqual({
+      ...sinCambio,
+      nombre: { anterior: "Calle 20", nuevo: "Calle 20-A" },
+    });
+    expect(porId("evento-a")).toBeNull();
+    expect(porId("reporte-1")).toBeNull();
   });
 
   it("devuelve el estado vacio cuando la calle no tiene hechos", async () => {

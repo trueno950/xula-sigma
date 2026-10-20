@@ -89,15 +89,11 @@ describe("renombrarCalle", () => {
     vi.mocked(repositorio.actualizar).mockResolvedValue(calleGuardada);
     const renombrarCalle = crearRenombrarCalle(repositorio);
 
-    await renombrarCalle(
-      calleId,
-      "Calle Veintiuno",
-      contextoCon("ADMIN_MUNICIPAL"),
-    );
+    await renombrarCalle(calleId, "Calle 20-A", contextoCon("ADMIN_MUNICIPAL"));
 
     expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
       id: calleId,
-      nombre: "Calle Veintiuno",
+      nombre: "Calle 20-A",
       lugarId,
       punto: null,
       bajaEn: null,
@@ -106,6 +102,8 @@ describe("renombrarCalle", () => {
     expect(repositorio.registrarEventoDeRenombre).toHaveBeenCalledWith(tx, {
       ayuntamientoId: "motul",
       calleId,
+      nombreAnterior: "Calle Veintiuno",
+      nombreNuevo: "Calle 20-A",
     });
     expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();

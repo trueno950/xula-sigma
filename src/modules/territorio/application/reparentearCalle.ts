@@ -102,6 +102,8 @@ export function crearReparentearCalle(
       await repositorio.registrarEventoDeReparenteo(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         calleId: id,
+        lugarAnteriorId: existente.lugarId,
+        lugarNuevoId: destino.id,
       });
 
       await publicarActualizacion(tx, contexto.ayuntamientoId, {

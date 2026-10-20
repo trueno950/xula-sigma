@@ -103,8 +103,19 @@ export const calles = pgTable(
 /**
  * Append-only: el `GRANT` de `0015_eventos_de_calles.sql` da SELECT e
  * INSERT y nada mas, mismo mecanismo que `bitacora`
- * (`shared/tenancy/esquema.ts`). Sin JSON, nombres ni coordenadas: la
- * proyeccion rehidrata el estado con `callesParaMapa` o `callePorId`.
+ * (`shared/tenancy/esquema.ts`).
+ *
+ * Las columnas de payload son nullable a proposito: guardan el antes y el
+ * despues de un cambio, y el antes no se puede reconstruir despues -el
+ * punto anterior de una calle no existe en ninguna otra fila-. Los eventos
+ * escritos antes de que existieran estas columnas quedan en NULL y no hay
+ * forma de rellenarlos: el historial los cuenta sin detalle en vez de
+ * inventarlo.
+ *
+ * `lugar_anterior_id` y `lugar_nuevo_id` no llevan FK, a diferencia de
+ * `calle_id`: `scripts/migrar-sectores-a-zonas.sql` borra filas de
+ * `lugares` fisicamente, y un FK bloquearia esa operacion. El limite entre
+ * municipios lo pone la politica de tenant al resolver el nombre, no el FK.
  */
 export const eventosDeCalles = pgTable(
   "eventos_de_calles",
@@ -114,6 +125,14 @@ export const eventosDeCalles = pgTable(
     calleId: uuid().notNull().$type<CalleId>(),
     naturaleza: text().notNull().$type<NaturalezaDeEvento>(),
     ocurridoEn: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    nombreAnterior: text(),
+    nombreNuevo: text(),
+    latitudAnterior: doublePrecision(),
+    longitudAnterior: doublePrecision(),
+    latitudNueva: doublePrecision(),
+    longitudNueva: doublePrecision(),
+    lugarAnteriorId: uuid().$type<LugarId>(),
+    lugarNuevoId: uuid().$type<LugarId>(),
   },
   (t) => [
     index("eventos_de_calles_tenant_idx").on(t.ayuntamientoId),

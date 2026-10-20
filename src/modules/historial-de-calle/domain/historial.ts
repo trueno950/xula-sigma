@@ -15,10 +15,17 @@ export const comoCalleId = (valor: string): CalleId => {
   return valor as CalleId;
 };
 
+export type PuntoDeHistorial = { latitud: number; longitud: number };
+export type CambioDeCalle = {
+  nombre: { anterior: string | null; nuevo: string | null };
+  punto: { anterior: PuntoDeHistorial | null; nuevo: PuntoDeHistorial | null };
+  lugar: { anterior: string | null; nuevo: string | null };
+};
 export type EventoEstructuralParaHistorial = {
   id: string;
   naturaleza: Exclude<NaturalezaDeHistorial, "REPORTE" | "INTERVENCION">;
   ocurridoEn: Date;
+  cambio: CambioDeCalle | null;
 };
 export type CalleParaHistorial = readonly EventoEstructuralParaHistorial[];
 export type ReporteParaHistorial = { id: string; registradoEn: Date };
@@ -32,6 +39,7 @@ export type EntradaDeHistorial = {
   naturaleza: NaturalezaDeHistorial;
   ocurridoEn: Date;
   precision: PrecisionDeEntrada;
+  cambio: CambioDeCalle | null;
 };
 export type HistorialDeCalle = {
   calleId: CalleId;
@@ -74,12 +82,14 @@ export const componerHistorialDeCalle = (datos: {
       naturaleza: "REPORTE" as const,
       ocurridoEn: registradoEn,
       precision: "MOMENTO" as const,
+      cambio: null,
     })),
     ...datos.intervenciones.map(({ id, fechaDeOcurrencia }) => ({
       id,
       naturaleza: "INTERVENCION" as const,
       ocurridoEn: fechaDeOcurrenciaComoMomento(fechaDeOcurrencia),
       precision: "DIA" as const,
+      cambio: null,
     })),
     ...datos.eventos.map((evento) => ({
       ...evento,

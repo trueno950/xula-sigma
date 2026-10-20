@@ -91,6 +91,8 @@ describe("casos de uso de calles", () => {
     expect(repositorio.registrarEventoDeUbicacion).toHaveBeenCalledWith(tx, {
       ayuntamientoId: "motul",
       calleId,
+      puntoAnterior: punto,
+      puntoNuevo: punto,
     });
     expect(publicarMock).toHaveBeenCalledWith(tx, "motul", {
       tipo: "calle",

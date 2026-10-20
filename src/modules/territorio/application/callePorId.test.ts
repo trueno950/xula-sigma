@@ -35,11 +35,13 @@ const calleConEventos: CalleConEventos = {
       id: "evento-1",
       naturaleza: "RENOMBRE",
       ocurridoEn: new Date("2026-01-01T00:00:00.000Z"),
+      cambio: null,
     },
     {
       id: "evento-2",
       naturaleza: "UBICACION",
       ocurridoEn: new Date("2026-01-02T00:00:00.000Z"),
+      cambio: null,
     },
   ],
 };

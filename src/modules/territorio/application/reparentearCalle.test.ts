@@ -18,13 +18,9 @@ const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
 const publicarMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@/shared/tenancy/withTenant", () => ({
-  withTenant: withTenantMock,
-}));
+vi.mock("@/shared/tenancy/withTenant", () => ({ withTenant: withTenantMock }));
 
-vi.mock("@/shared/tenancy/bitacora", () => ({
-  registrar: registrarMock,
-}));
+vi.mock("@/shared/tenancy/bitacora", () => ({ registrar: registrarMock }));
 
 vi.mock("@/shared/notificaciones/notificar", () => ({
   publicarActualizacion: publicarMock,
@@ -180,6 +176,8 @@ describe("reparentear calles", () => {
     expect(repositorio.registrarEventoDeReparenteo).toHaveBeenCalledWith(tx, {
       ayuntamientoId: "motul",
       calleId,
+      lugarAnteriorId: lugarActualId,
+      lugarNuevoId: destinoId,
     });
     expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
     expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();

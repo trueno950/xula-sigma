@@ -12,9 +12,11 @@ import {
   ticul,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+import { crearCallePorId } from "./application/callePorId";
 import { crearRenombrarCalle } from "./application/renombrarCalle";
 import type { CalleId, NaturalezaDeEvento } from "./domain";
 import { calles, eventosDeCalles } from "./infrastructure/esquema";
+import { lectorDeCallesDeMapaSql } from "./infrastructure/lectorDeCallesDeMapaSql";
 import { repositorioDeCallesSql } from "./infrastructure/repositorioDeCallesSql";
 import { crearCalleEn, crearLugarEn } from "./lugarDePrueba";
 
@@ -78,6 +80,36 @@ describe("aislamiento de eventos de calles", () => {
     const filas = await appSinTenant`SELECT id FROM eventos_de_calles`;
 
     expect(filas).toHaveLength(0);
+  });
+
+  it("un evento no resuelve el nombre de un lugar de otro municipio", async () => {
+    const calleMotul = await sembrarEvento(motul, "Calle lugar ajeno");
+    const lugarTicul = await crearLugarEn(ticul, "comisaria", "Lugar de Ticul");
+
+    await withTenant(motul, (tx) =>
+      tx.insert(eventosDeCalles).values({
+        ayuntamientoId: motul,
+        calleId: calleMotul,
+        naturaleza: "REPARENTEO",
+        lugarNuevoId: lugarTicul,
+      }),
+    );
+
+    const calle = await crearCallePorId(lectorDeCallesDeMapaSql)(calleMotul, {
+      ayuntamientoId: motul,
+      usuario: {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        rol: "OPERADOR",
+      },
+      origen: "web",
+    });
+
+    // El cambio existe aunque el nombre no se resuelva: no se puede leer el
+    // lugar de otro municipio, pero tampoco se pierde que hubo reparenteo.
+    expect(calle?.eventos[0]?.cambio?.lugar).toStrictEqual({
+      anterior: null,
+      nuevo: null,
+    });
   });
 
   it("una calle de otro municipio no puede recibir un evento", async () => {

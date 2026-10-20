@@ -115,21 +115,44 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
       .values({ ayuntamientoId, calleId, naturaleza: "ALTA" });
   },
 
-  async registrarEventoDeRenombre(tx, { ayuntamientoId, calleId }) {
-    await tx
-      .insert(eventosDeCalles)
-      .values({ ayuntamientoId, calleId, naturaleza: "RENOMBRE" });
+  async registrarEventoDeRenombre(
+    tx,
+    { ayuntamientoId, calleId, nombreAnterior, nombreNuevo },
+  ) {
+    await tx.insert(eventosDeCalles).values({
+      ayuntamientoId,
+      calleId,
+      naturaleza: "RENOMBRE",
+      nombreAnterior,
+      nombreNuevo,
+    });
   },
 
-  async registrarEventoDeReparenteo(tx, { ayuntamientoId, calleId }) {
-    await tx
-      .insert(eventosDeCalles)
-      .values({ ayuntamientoId, calleId, naturaleza: "REPARENTEO" });
+  async registrarEventoDeReparenteo(
+    tx,
+    { ayuntamientoId, calleId, lugarAnteriorId, lugarNuevoId },
+  ) {
+    await tx.insert(eventosDeCalles).values({
+      ayuntamientoId,
+      calleId,
+      naturaleza: "REPARENTEO",
+      lugarAnteriorId,
+      lugarNuevoId,
+    });
   },
 
-  async registrarEventoDeUbicacion(tx, { ayuntamientoId, calleId }) {
-    await tx
-      .insert(eventosDeCalles)
-      .values({ ayuntamientoId, calleId, naturaleza: "UBICACION" });
+  async registrarEventoDeUbicacion(
+    tx,
+    { ayuntamientoId, calleId, puntoAnterior, puntoNuevo },
+  ) {
+    await tx.insert(eventosDeCalles).values({
+      ayuntamientoId,
+      calleId,
+      naturaleza: "UBICACION",
+      latitudAnterior: puntoAnterior?.latitud ?? null,
+      longitudAnterior: puntoAnterior?.longitud ?? null,
+      latitudNueva: puntoNuevo?.latitud ?? null,
+      longitudNueva: puntoNuevo?.longitud ?? null,
+    });
   },
 };

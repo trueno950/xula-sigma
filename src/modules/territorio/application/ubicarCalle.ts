@@ -43,6 +43,8 @@ export function crearUbicarCalle(repositorio: RepositorioDeCalles) {
       await repositorio.registrarEventoDeUbicacion(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         calleId: id,
+        puntoAnterior: existente.punto,
+        puntoNuevo: puntoGuardado,
       });
 
       await publicarActualizacion(tx, contexto.ayuntamientoId, {

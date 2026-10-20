@@ -17,6 +17,7 @@ import type {
   EntradaDeHistorial,
   HistorialDeCalle as Historial,
 } from "../domain";
+import { detalleDe } from "./detalleDeEntrada";
 
 type Props = { historial: Historial };
 
@@ -29,9 +30,8 @@ type Presentacion = {
 };
 
 /**
- * El historial solo trae naturaleza, fecha e id: no guarda el nombre
- * anterior, el punto ni el lugar de origen. Por eso las frases dicen qué
- * pasó y no con qué valores.
+ * El detalle fijo de cada naturaleza, para el evento que no trae payload;
+ * `detalleDe` lo reemplaza por el antes y el despues cuando lo hay.
  */
 const PRESENTACIONES: Record<EntradaDeHistorial["naturaleza"], Presentacion> = {
   REPORTE: {
@@ -96,7 +96,9 @@ function Entrada({ entrada }: { entrada: EntradaDeHistorial }) {
               : fechaYHoraEnMerida(entrada.ocurridoEn)}
           </time>
         </div>
-        <p className="text-[15px] text-caliza-tinta">{detalle}</p>
+        <p className="text-[15px] text-caliza-tinta">
+          {detalleDe(entrada, detalle)}
+        </p>
         {enlace ? (
           <Link
             href={enlace.href(entrada.id)}

@@ -11,16 +11,23 @@ describe("componerHistorialDeCalle: precision de cada entrada", () => {
         id: "renombre",
         naturaleza: "RENOMBRE",
         ocurridoEn: new Date("2026-09-20T15:00:00.000Z"),
+        cambio: {
+          nombre: { anterior: "Calle 20", nuevo: "Calle 20-A" },
+          punto: { anterior: null, nuevo: null },
+          lugar: { anterior: null, nuevo: null },
+        },
       },
       {
         id: "reparenteo",
         naturaleza: "REPARENTEO",
         ocurridoEn: new Date("2026-09-19T15:00:00.000Z"),
+        cambio: null,
       },
       {
         id: "ubicacion",
         naturaleza: "UBICACION",
         ocurridoEn: new Date("2026-09-18T15:00:00.000Z"),
+        cambio: null,
       },
     ],
     reportes: [
@@ -42,6 +49,18 @@ describe("componerHistorialDeCalle: precision de cada entrada", () => {
     { id: "ubicacion" },
   ])("$id es de precision MOMENTO porque tiene un instante real", ({ id }) => {
     expect(precisionDe(id)).toBe("MOMENTO");
+  });
+
+  it("conserva el cambio de un evento y deja nulo el de uno sin payload", () => {
+    const cambioDe = (id: string) =>
+      historial.entradas.find((entrada) => entrada.id === id)?.cambio;
+
+    expect(cambioDe("renombre")).toEqual({
+      nombre: { anterior: "Calle 20", nuevo: "Calle 20-A" },
+      punto: { anterior: null, nuevo: null },
+      lugar: { anterior: null, nuevo: null },
+    });
+    expect(cambioDe("reparenteo")).toBeNull();
   });
 
   it("conserva el orden por instante, naturaleza e id", () => {

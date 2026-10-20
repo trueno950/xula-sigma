@@ -1,6 +1,22 @@
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
-import type { CalleId, NaturalezaEstructural } from "../domain";
+import type {
+  CalleId,
+  NaturalezaEstructural,
+  PuntoGeografico,
+} from "../domain";
 import type { CalleGuardada } from "./puertos";
+
+/**
+ * El antes y el despues de un cambio. `cambio: null` es un evento escrito
+ * antes de que existiera el payload: no se puede reconstruir (ver
+ * `infrastructure/esquemaDeCalles.ts`).
+ */
+export type CambioDeCalle = {
+  nombre: { anterior: string | null; nuevo: string | null };
+  punto: { anterior: PuntoGeografico | null; nuevo: PuntoGeografico | null };
+  /** Nombres de lugar, resueltos bajo la politica de tenant al leer el evento. */
+  lugar: { anterior: string | null; nuevo: string | null };
+};
 
 /**
  * Un evento del contrato de `callePorId`. La naturaleza es la estructural:
@@ -10,6 +26,7 @@ export type EventoEstructuralDeCalle = {
   id: string;
   naturaleza: NaturalezaEstructural;
   ocurridoEn: Date;
+  cambio: CambioDeCalle | null;
 };
 
 export type CalleConEventos = CalleGuardada & {

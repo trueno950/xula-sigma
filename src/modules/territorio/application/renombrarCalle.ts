@@ -41,6 +41,8 @@ export function crearRenombrarCalle(repositorio: RepositorioDeCalles) {
       await repositorio.registrarEventoDeRenombre(tx, {
         ayuntamientoId: contexto.ayuntamientoId,
         calleId: id,
+        nombreAnterior: existente.nombre,
+        nombreNuevo: nombre,
       });
 
       await publicarActualizacion(tx, contexto.ayuntamientoId, {

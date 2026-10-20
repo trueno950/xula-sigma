@@ -96,3 +96,26 @@ resueltos:
   `use client` mínima con un `type="search"` sin `name` que acorta la lista del
   `<select name="calleId">`. El SSR emite todas las opciones, así que sin
   JavaScript se elige igual. Va sólo en el campo Calle obligatorio.
+
+## Cierre del limite de datos de U6
+
+El "LÍMITE DE DATOS" de U6 queda resuelto: \`eventos_de_calles\` guarda ahora el
+antes y el después de cada cambio estructural (migración \`0019\`, ocho columnas
+nullable, sin tocar RLS, política ni \`GRANT\`).
+
+- **Qué se guarda**: nombre anterior y nuevo, coordenadas anteriores y nuevas,
+  y los **ids** de lugar anterior y nuevo. Los ids y no los nombres porque el
+  nombre se resuelve al leer con dos \`LEFT JOIN lugares\` bajo RLS: así un
+  lugar dado de baja sigue nombrando, y el evento no se queda con un nombre
+  viejo. Sin \`FOREIGN KEY\` a propósito: \`scripts/migrar-sectores-a-zonas.sql\`
+  borra \`lugares\` físicamente y una clave lo bloquearía.
+- **Quién lo escribe**: \`renombrarCalle\`, \`reparentearCalle\` y \`ubicarCalle\`,
+  dentro de la misma transacción y leyendo el «antes» de la fila bloqueada. No
+  se inventa el valor previo.
+- **Cómo se lee**: el discriminador de payload mira los **ids guardados**, no
+  los nombres resueltos. Un lugar de otro municipio o borrado no resuelve el
+  join y entonces el lado del cambio queda en \`null\` explícito —la prueba de
+  aislamiento lo pinea con \`toStrictEqual\`—; antes se clasificaba como «evento
+  sin payload» y la vista recibía un \`undefined\`.
+- **Los eventos anteriores a la migración** no tienen de dónde sacar el cambio:
+  siguen mostrando naturaleza y fecha. Ese dato no existe y no se reconstruye.

@@ -21,6 +21,7 @@ const entrada = (
   naturaleza,
   precision: "MOMENTO",
   ocurridoEn: new Date("2026-09-22T15:30:00.000Z"),
+  cambio: null,
 });
 
 describe("LineaDeTiempoDeCalle: detalle legible", () => {
@@ -84,7 +85,7 @@ describe("LineaDeTiempoDeCalle: detalle legible", () => {
   });
 
   it("no dibuja franjas laterales ni degradados", () => {
-    const html = dibujar(entrada("REPORTE"), entrada("RENOMBRE", "x"));
+    const html = dibujar(entrada("REPORTE", "r"), entrada("RENOMBRE", "x"));
 
     expect(html).toContain("Se registró un reporte en esta calle.");
     expect(html).toContain("Se cambió el nombre de la calle.");

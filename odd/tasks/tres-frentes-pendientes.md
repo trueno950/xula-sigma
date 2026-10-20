@@ -43,8 +43,12 @@ funcional de territorio.
   salida nombrada, y selector de calle con búsqueda que degrada a la lista
   completa sin JavaScript. Verificación del padre: check 0, unit 315/1830,
   integration 121/434 —el test 434 es la cadena manzana→sector→colonia→cabecera.
-- [ ] **T4** · S3(d) · decidir — Si el historial amplía su capa de datos para
-  mostrar nombre anterior/nuevo, coordenadas y folio.
+- [x] **T4** · S3(d) · decidir — Si el historial amplía su capa de datos para
+  mostrar nombre anterior/nuevo, coordenadas y folio. **Decidido y hecho**:
+  migración `0019` con ocho columnas nullable, escritura en los tres casos de
+  uso, lectura que resuelve nombres por join bajo RLS y vista con
+  «antes «X» → ahora «Y»». El folio no entra: vive en reportes y ya se enlaza
+  por id desde la línea de tiempo.
 - [ ] **T5** · S1-S3 · directo — `pnpm check` y suites en verde; commits por
   unidad y revisión nativa.
 

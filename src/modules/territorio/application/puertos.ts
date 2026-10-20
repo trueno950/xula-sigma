@@ -1,6 +1,12 @@
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type { CalleId, LugarId, PuntoGeografico, TipoDeLugar } from "../domain";
+import type {
+  EventoDeCalleNuevo,
+  EventoDeRenombre,
+  EventoDeReparenteo,
+  EventoDeUbicacion,
+} from "./eventosDeCalles";
 import type { NodoDeSubarbol } from "./nodoDeSubarbol";
 
 export type DatosDeAltaDeLugar = {
@@ -113,14 +119,13 @@ export type DatosDeActualizacionDeCalle = {
   bajaEn: Date | null;
 };
 
-/**
- * Un evento estructural nuevo. El `ayuntamientoId` sale del contexto del
- * servidor y `ocurridoEn` lo asigna Postgres.
- */
-export type EventoDeCalleNuevo = {
-  ayuntamientoId: AyuntamientoId;
-  calleId: CalleId;
-};
+/** Los tipos de evento viven en `eventosDeCalles.ts`; aca se reexportan. */
+export type {
+  EventoDeCalleNuevo,
+  EventoDeRenombre,
+  EventoDeReparenteo,
+  EventoDeUbicacion,
+} from "./eventosDeCalles";
 
 /**
  * `actualizar` devuelve la fila actualizada o `null` si el `UPDATE` afecto
@@ -169,15 +174,15 @@ export type RepositorioDeCalles = {
   ): Promise<void>;
   registrarEventoDeRenombre(
     tx: TransaccionTenant,
-    evento: EventoDeCalleNuevo,
+    evento: EventoDeRenombre,
   ): Promise<void>;
   registrarEventoDeReparenteo(
     tx: TransaccionTenant,
-    evento: EventoDeCalleNuevo,
+    evento: EventoDeReparenteo,
   ): Promise<void>;
   registrarEventoDeUbicacion(
     tx: TransaccionTenant,
-    evento: EventoDeCalleNuevo,
+    evento: EventoDeUbicacion,
   ): Promise<void>;
 };
 
