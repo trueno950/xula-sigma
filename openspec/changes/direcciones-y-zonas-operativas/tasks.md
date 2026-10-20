@@ -11,7 +11,7 @@
 | Estrategia de entrega | single-pr: un PR, un merge, con commits por unidad |
 | Estrategia de cadena | No aplicable; reemplazada por la regla del proyecto, sin ramas apiladas |
 
-Decision needed before apply: Yes (sobrecarga de B2)
+Decision needed before apply: No para desarrollo aislado (sobrecarga B2 aprobada); sí para operación real
 Chained PRs recommended: No
 Chain strategy: not-applicable
 400-line budget risk: High
@@ -40,8 +40,9 @@ antes de aplicar.
 La tabla de unidades conserva las fronteras históricas, no autoriza una cadena
 de PRs: las columnas «PR» y «Base de la cadena» describen el plan original,
 sustituido por un PR y commits por unidad. Cada unidad conserva sus tests y
-docs/runbook junto al cambio que prueba. La sobrecarga de B2 queda pendiente
-de aprobación; no se crea una etiqueta remota ni se publica por este plan.
+docs/runbook junto al cambio que prueba. La sobrecarga de B2 fue aprobada
+por el usuario en la reanudación («Sí, completar B2 con esa sobrecarga»);
+no se crea una etiqueta remota ni se publica por este plan.
 
 ### Reanudación autorizada: desarrollo aislado
 
@@ -513,7 +514,7 @@ sucesivas, todos verificados contra el codigo antes de corregir:
 | 3 | Una sola transaccion para todos los municipios (no se puede `COMMIT` dentro de un `DO`) | **No es un bug**: mismo patron que el precedente `baja-calles-fuera-de-asentamiento.sql`, no se toco. Runbook corregido donde afirmaba lo contrario ("la transaccion del municipio se revierte") |
 | 4 | El precheck de duplicados no filtraba por `baja_en`, pero el indice real es parcial (`WHERE baja_en IS NULL`) | **Real**: reportaba colisiones que el indice no iba a rechazar (un sector de baja con el mismo nombre que uno activo). Filtro agregado; runbook precisado |
 | 5 | Una `manzana` puede colgar directo de una `colonia`/`cabecera` sin sector intermedio (`puedeContener` es por rango); esas calles nunca entraban a `calles_rechazadas` | **Real**: el CTE recursivo solo captura cuando la cadena llega a `tipo = 'sector'`. Se reportan ahora como `registros_dependientes` (`entidad: "calles"`). Test propio (`migrarSectoresAZonasCalleSinSector.integration.test.ts`) |
-| 6 | Falta `drizzle/meta/0018_snapshot.json`: el journal tiene la entrada pero no su snapshot | **Real**: regenerado con el procedimiento de `openspec/changes/mapa-operativo-territorial/design.md` (journal truncado a 0017, base scratch, `pnpm db:generate` confirma "No schema changes" porque el GRANT no toca el esquema de Drizzle, snapshot = copia de 0017 con `id`/`prevId` nuevos). Journal real restaurado, verificado sin diff |
+| 6 | Falta `drizzle/meta/0018_snapshot.json`: el journal tiene la entrada pero no su snapshot | **Real**: regenerado con el procedimiento de `openspec/changes/archive/2026-10-20-mapa-operativo-territorial/design.md` (journal truncado a 0017, base scratch, `pnpm db:generate` confirma "No schema changes" porque el GRANT no toca el esquema de Drizzle, snapshot = copia de 0017 con `id`/`prevId` nuevos). Journal real restaurado, verificado sin diff |
 | 7 | Dos funciones de test superaban 30 lineas (el `it` de idempotencia, el `beforeAll` de registros dependientes) | **Real**: partidas (`verificarRestauracion`; `sembrarArbolConDependientes`/`sembrarReporteYIntervencion`) |
 | 8 | `GRANT DELETE` a `xula_app` sigue marcado como pendiente en este mismo archivo (ronda 2, hallazgo 1) | **Cerrado con el usuario**: documentado como excepcion sancionada en `AGENTS.md` ("La unica excepcion: ampliacion de privilegio para un script operativo"), mismo formato que `abreviaturas` y las excepciones de Server Actions |
 

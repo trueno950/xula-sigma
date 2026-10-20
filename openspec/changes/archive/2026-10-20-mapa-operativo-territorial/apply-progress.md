@@ -37,12 +37,31 @@
   desde navegacion.
 - [x] 1.3 — U2: registro por `puedeEscribir` y administracion por
   `puedeAdministrarIntervenciones`.
-- [ ] 2.1 — U3: eventos, lecturas y NOTIFY de `territorio`.
-- [ ] 2.2 — U4: lectura operativa y NOTIFY de reportes.
-- [ ] 3.1 — U5/U6: historial de calle y mapa operativo.
-- [ ] 3.2 — U7: hub, SSE e isla de estado en vivo.
-- [ ] 4.1 — U8: navegacion y E2E.
-- [ ] 4.2 — verificacion completa del cambio.
+- [x] 2.1 — U3: eventos, lecturas y NOTIFY de `territorio`.
+- [x] 2.2 — U4: lectura operativa y NOTIFY de reportes.
+- [x] 3.1 — U5/U6: historial de calle y mapa operativo.
+- [x] 3.2 — U7: hub, SSE e isla de estado en vivo.
+- [x] 4.1 — U8: navegacion y E2E.
+- [x] 4.2 — verificacion completa del cambio.
+
+### Reconciliacion de casillas (2026-10-20)
+
+Las seis casillas de arriba quedaron sin marcar aunque este mismo ledger ya
+documentaba su evidencia en las secciones posteriores, y `tasks.md` las
+tenia en `[x]` desde cada unidad. Se marcan contra esa evidencia observada;
+no se marco ninguna por inferencia y no se agrego ni se retiro
+comportamiento. El bloque `## Estado` del encabezado conserva el work unit
+de una unidad temprana (`U2-permisos-evidence-remediation`); la ultima
+unidad documentada aqui es la verificacion final de U8 (4.5).
+
+| Casilla | Evidencia en este ledger |
+|---|---|
+| 2.1 U3 (eventos, lecturas y NOTIFY de `territorio`) | `U3a: eventos de calles, RLS y lecturas` (2.2/2.3) y `U3b: publicacion de cambios de calle` (2.4/2.5) |
+| 2.2 U4 (lectura operativa y NOTIFY de reportes) | `U4a: lectura de reportes para el mapa` (2.6/2.7) y `U4b: publication from reportes and intervenciones use cases` (2.8/2.9) |
+| 3.1 U5/U6 (historial y mapa) | `U5: historial de calle` (3.1/3.2) y `U6: mapa operativo y snapshot` con su rerun de verificacion (3.3/3.4) |
+| 3.2 U7 (hub, SSE e isla) | `U7: LISTEN hub, SSE route and live-status island` (4.1/4.2), `U7 hardening: reconnect resync` (4.2a) y `U7 review follow-up: subscriber error isolation` |
+| 4.1 U8 (navegacion y E2E) | `U8: map navigation and live snapshot composition` y sus correcciones (4.3/4.4) |
+| 4.2 Verificacion completa | `U8 orchestrator closure and final verification` (4.5): `pnpm check` exit 0, 338 archivos y 1687 pruebas, E2E 13 de 13 en dos corridas consecutivas |
 
 ## TDD Cycle Evidence
 
@@ -1889,3 +1908,58 @@ Open observations, not blockers:
   make.
 - Tooling: `rtk` swallows flags such as `--write`; format with
   `./node_modules/.bin/biome format --write`.
+
+## Payload del historial en `0019` (posterior a este ledger, 2026-10-20)
+
+Esta seccion no es evidencia de ninguna unidad de este cambio. Documenta un
+cambio posterior del repositorio para que la fusion de deltas no archive una
+especificacion mas chica que el comportamiento ya autorizado.
+
+**Procedencia.** Commit `90164bb` («el historial cuenta que cambio, no solo
+cuando») y migracion `drizzle/0019_narrow_fantastic_four.sql`: ocho columnas
+nullable en `eventos_de_calles` —`nombre_anterior`, `nombre_nuevo`,
+`latitud_anterior`, `longitud_anterior`, `latitud_nueva`, `longitud_nueva`,
+`lugar_anterior_id`, `lugar_nuevo_id`—. No crea tabla y no toca RLS,
+politica ni `GRANT`: la tabla conserva `SELECT` e `INSERT` y nada mas.
+
+**Que implementa.**
+
+- Las tres mutaciones que producen evento escriben el antes y el despues en
+  la misma transaccion: `renombrarCalle` (`nombreAnterior`/`nombreNuevo`),
+  `reparentearCalle` (`lugarAnteriorId`/`lugarNuevoId`) y `ubicarCalle`
+  (`puntoAnterior`/`puntoNuevo`). El anterior sale de la fila bloqueada por
+  `bloquearPorId`, nunca del cliente ni de una derivacion.
+- Los ids de lugar se guardan como referencia y el nombre se resuelve al
+  leer con dos `LEFT JOIN lugares` en `lectorDeCallesDeMapaSql`, bajo la
+  politica de tenant. Sin `FOREIGN KEY` a proposito:
+  `scripts/migrar-sectores-a-zonas.sql` borra `lugares` fisicamente.
+- El payload se decide por las columnas guardadas, no por el join: un id de
+  otro municipio deja el nombre en `null` y conserva el evento como cambio
+  registrado. Un evento anterior a la migracion lee `cambio: null` y no se
+  reconstruye.
+- La UI muestra el antes y despues por naturaleza y cae a su frase generica
+  cuando falta un lado o los dos valores son iguales
+  (`src/modules/historial-de-calle/ui/detalleDeEntrada.ts`).
+
+**Pruebas que el commit `90164bb` reporta como corridas** (historicas; este
+escritor no las repitio): `callePorId.integration.test.ts` (payload y evento
+sin payload), `eventosDeCalles.isolation.test.ts` (lugar de otro municipio
+no resuelve nombre), `ubicarCalle.test.ts` (punto anterior nulo y punto
+quitado), `HistorialDeCalle.cambios.test.tsx` (siete detalles de UI),
+`leerHistorialDeCalle.test.ts` y `historial.test.ts`. El mismo mensaje
+declara `pnpm check` en 0, integracion 121 archivos/437 pruebas sobre
+`xula_test` y la migracion 19 aplicada. Nada de eso se atribuye a las
+corridas de este cambio.
+
+**Que deja viejo.** La decision D2 de `design.md` («sin JSON, valores,
+nombres ni coordenadas») describia el evento antes de `0019`. El evento
+actual guarda nombres y coordenadas tipados y sigue sin JSON, sin
+descripcion, sin referencia y sin datos personales. `design.md` no se
+reescribe: queda como decision historica de U3a y esta seccion la acota.
+
+**Efecto en la fusion.** `openspec/specs/historial-de-calle/spec.md` agrega
+el requisito «Detalle del cambio de un evento estructural», con seis
+escenarios, porque ese comportamiento ya existe. La fusion pendiente de
+`territorio` —ver `verify-report.md`— agrega el requisito de la columna de
+payload y su resolucion de nombres; los seis requisitos del delta no
+cambian.
