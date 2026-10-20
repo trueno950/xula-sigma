@@ -2,15 +2,14 @@ import { and, eq } from "drizzle-orm";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { bitacora } from "@/shared/tenancy/esquema";
 import { motul } from "@/shared/tenancy/municipiosDePrueba";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import {
+  crearCalleAnterior,
+  crearDomicilioAnterior,
+  crearLugarAnterior,
+  withTenantAnterior,
+} from "./conexionAnteriorAlCorteDePrueba";
 import type { LugarId } from "./domain";
 import { domicilios } from "./infrastructure/esquema";
-import {
-  crearCalleEn,
-  crearDomicilioEnCalleEn,
-  crearLugarEn,
-  crearLugarHijoEn,
-} from "./lugarDePrueba";
 
 type ArbolDeMigracion = {
   asentamientoId: LugarId;
@@ -22,30 +21,30 @@ type ArbolDeMigracion = {
 const sembrarArbol = async (
   ayuntamientoId: AyuntamientoId,
 ): Promise<ArbolDeMigracion> => {
-  const asentamientoId = await crearLugarEn(
+  const asentamientoId = await crearLugarAnterior({
     ayuntamientoId,
-    "cabecera",
-    "Cabecera migracion",
-  );
-  const coloniaId = await crearLugarHijoEn({
+    tipo: "cabecera",
+    nombre: "Cabecera migracion",
+  });
+  const coloniaId = await crearLugarAnterior({
     ayuntamientoId,
     tipo: "colonia",
     nombre: "Colonia migracion",
     padreId: asentamientoId,
   });
-  const sectorId = await crearLugarHijoEn({
+  const sectorId = await crearLugarAnterior({
     ayuntamientoId,
     tipo: "sector",
     nombre: "Sector migracion",
     padreId: coloniaId,
   });
-  const manzanaId = await crearLugarHijoEn({
+  const manzanaId = await crearLugarAnterior({
     ayuntamientoId,
     tipo: "manzana",
     nombre: "Manzana migracion",
     padreId: sectorId,
   });
-  const sectorVacioId = await crearLugarHijoEn({
+  const sectorVacioId = await crearLugarAnterior({
     ayuntamientoId,
     tipo: "sector",
     nombre: "Sector vacio",
@@ -57,17 +56,17 @@ const sembrarDomiciliosPropios = async (
   ayuntamientoId: AyuntamientoId,
   arbol: ArbolDeMigracion,
 ) => {
-  const callePrincipalId = await crearCalleEn(
+  const callePrincipalId = await crearCalleAnterior(
     ayuntamientoId,
     arbol.asentamientoId,
     "Calle migracion",
   );
-  const domicilioDelSectorId = await crearDomicilioEnCalleEn(
+  const domicilioDelSectorId = await crearDomicilioAnterior(
     ayuntamientoId,
     arbol.sectorId,
     callePrincipalId,
   );
-  const domicilioDeLaManzanaId = await crearDomicilioEnCalleEn(
+  const domicilioDeLaManzanaId = await crearDomicilioAnterior(
     ayuntamientoId,
     arbol.manzanaId,
     callePrincipalId,
@@ -78,17 +77,17 @@ const sembrarDomicilioConCalleAjena = async (
   ayuntamientoId: AyuntamientoId,
   sectorId: LugarId,
 ) => {
-  const asentamientoAjenoId = await crearLugarEn(
+  const asentamientoAjenoId = await crearLugarAnterior({
     ayuntamientoId,
-    "comisaria",
-    "Comisaria ajena",
-  );
-  const calleDeOtroAsentamientoId = await crearCalleEn(
+    tipo: "comisaria",
+    nombre: "Comisaria ajena",
+  });
+  const calleDeOtroAsentamientoId = await crearCalleAnterior(
     ayuntamientoId,
     asentamientoAjenoId,
     "Calle ajena",
   );
-  const domicilioConCalleAjenaId = await crearDomicilioEnCalleEn(
+  const domicilioConCalleAjenaId = await crearDomicilioAnterior(
     ayuntamientoId,
     sectorId,
     calleDeOtroAsentamientoId,
@@ -115,7 +114,7 @@ export const leerDomiciliosMigrados = (
   ayuntamientoId: AyuntamientoId,
   coloniaId: LugarId,
 ) =>
-  withTenant(ayuntamientoId, async (tx) => ({
+  withTenantAnterior(ayuntamientoId, async (tx) => ({
     domiciliosMigrados: await tx
       .select({ id: domicilios.id, lugarId: domicilios.lugarId })
       .from(domicilios)

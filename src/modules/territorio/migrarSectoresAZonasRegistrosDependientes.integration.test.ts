@@ -1,15 +1,13 @@
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { sembrarGente } from "@/shared/auth/genteDePrueba";
+import { motul } from "@/shared/tenancy/municipiosDePrueba";
 import {
-  limpiar,
-  motul,
-  owner,
-  sembrar,
-} from "@/shared/tenancy/municipiosDePrueba";
-import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+  cerrarBaseAnterior,
+  crearLugarAnterior,
+  prepararBaseAnterior,
+  withTenantAnterior,
+} from "./conexionAnteriorAlCorteDePrueba";
 import type { LugarId } from "./domain";
-import { crearLugarEn, crearLugarHijoEn } from "./lugarDePrueba";
 import { parsearRegistrosDependientes } from "./migracionDeZonasReportesDePrueba";
 import { ejecutarMigracionConBloqueo } from "./migracionDeZonasRollbackDePrueba";
 
@@ -31,19 +29,36 @@ const databaseUrl = () => {
 let sectorConReporteId: LugarId;
 let manzanaConIntervencionId: LugarId;
 
-const sembrarArbolConDependientes = async () => {
-  const asentamientoId = await crearLugarEn(
-    motul,
-    "comisaria",
-    "Asentamiento con registros dependientes",
+/**
+ * Un usuario del esquema anterior para sostener las dos FK de
+ * `registrado_por_usuario_id`. `sembrarGente` siembra en el esquema vivo, y
+ * el reporte de prueba cuelga del anterior.
+ */
+const sembrarUsuarioAnterior = async (): Promise<string> => {
+  const filas = await withTenantAnterior(motul, (tx) =>
+    tx.execute<{ id: string }>(sql`
+      INSERT INTO usuarios (ayuntamiento_id, name, email, rol)
+      VALUES (${motul}, 'Operador B3D', 'b3d@motul.mx', 'OPERADOR')
+      RETURNING id
+    `),
   );
-  const sectorId = await crearLugarHijoEn({
+
+  return filas[0]!.id;
+};
+
+const sembrarArbolConDependientes = async () => {
+  const asentamientoId = await crearLugarAnterior({
+    ayuntamientoId: motul,
+    tipo: "comisaria",
+    nombre: "Asentamiento con registros dependientes",
+  });
+  const sectorId = await crearLugarAnterior({
     ayuntamientoId: motul,
     tipo: "sector",
     nombre: "Sector con reporte",
     padreId: asentamientoId,
   });
-  const manzanaId = await crearLugarHijoEn({
+  const manzanaId = await crearLugarAnterior({
     ayuntamientoId: motul,
     tipo: "manzana",
     nombre: "Manzana con intervencion",
@@ -58,7 +73,7 @@ const sembrarReporteYIntervencion = (opciones: {
   manzanaId: LugarId;
 }) =>
   Promise.all([
-    withTenant(motul, (tx) =>
+    withTenantAnterior(motul, (tx) =>
       tx.execute(sql`
         INSERT INTO reportes (
           ayuntamiento_id, folio, anio, consecutivo, tipo, estado,
@@ -70,7 +85,7 @@ const sembrarReporteYIntervencion = (opciones: {
         )
       `),
     ),
-    withTenant(motul, (tx) =>
+    withTenantAnterior(motul, (tx) =>
       tx.execute(sql`
         INSERT INTO intervenciones (
           ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id,
@@ -85,23 +100,15 @@ const sembrarReporteYIntervencion = (opciones: {
   ]);
 
 beforeAll(async () => {
-  await sembrar();
-  const gente = await sembrarGente();
+  await prepararBaseAnterior();
+  const usuarioId = await sembrarUsuarioAnterior();
   const { sectorId, manzanaId } = await sembrarArbolConDependientes();
   sectorConReporteId = sectorId;
   manzanaConIntervencionId = manzanaId;
-  await sembrarReporteYIntervencion({
-    usuarioId: gente.motul.OPERADOR,
-    sectorId,
-    manzanaId,
-  });
+  await sembrarReporteYIntervencion({ usuarioId, sectorId, manzanaId });
 });
 
-afterAll(async () => {
-  await limpiar();
-  await owner.end();
-  await cerrarConexion();
-});
+afterAll(cerrarBaseAnterior);
 
 describe("migracion de sectores a zonas: registros dependientes", () => {
   it("reporta reportes e intervenciones colgando de un sector antes de que la FK revierta el DELETE", async () => {

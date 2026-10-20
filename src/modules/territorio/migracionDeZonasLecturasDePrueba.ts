@@ -1,12 +1,13 @@
 import { and, eq, or } from "drizzle-orm";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { bitacora } from "@/shared/tenancy/esquema";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import type { TransaccionAnterior } from "./conexionAnteriorAlCorteDePrueba";
+import { withTenantAnterior } from "./conexionAnteriorAlCorteDePrueba";
 import type { LugarId, ZonaId } from "./domain";
 import { callesDeZonas, lugares, zonas } from "./infrastructure/esquema";
 
 const membresiasDe = (
-  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  tx: TransaccionAnterior,
   ayuntamientoId: AyuntamientoId,
   zonaId: ZonaId | undefined,
 ) =>
@@ -26,7 +27,7 @@ const membresiasDe = (
     : [];
 
 const leerLugaresBorrados = (
-  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  tx: TransaccionAnterior,
   sectorId: LugarId,
   manzanaId: LugarId,
 ) =>
@@ -49,7 +50,7 @@ const leerLugaresBorrados = (
   ]);
 
 const leerZonasDelAsentamiento = async (
-  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  tx: TransaccionAnterior,
   opciones: {
     ayuntamientoId: AyuntamientoId;
     asentamientoId: LugarId;
@@ -91,7 +92,7 @@ export const leerZonasYBajas = (opciones: {
   nombreDelSector: string;
   nombreDeLaZonaVacia: string;
 }) =>
-  withTenant(opciones.ayuntamientoId, async (tx) => {
+  withTenantAnterior(opciones.ayuntamientoId, async (tx) => {
     const { zonasMigradas, zonaDelSector, zonaVacia } =
       await leerZonasDelAsentamiento(tx, opciones);
     const [lugaresRestantes, bajas] = await leerLugaresBorrados(

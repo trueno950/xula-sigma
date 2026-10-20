@@ -1,7 +1,7 @@
-import { asc, eq, or } from "drizzle-orm";
+import { asc, eq, or, sql } from "drizzle-orm";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { bitacora } from "@/shared/tenancy/esquema";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import { withTenantAnterior } from "./conexionAnteriorAlCorteDePrueba";
 import { lugares, zonas } from "./infrastructure/esquema";
 
 export const leerEstadoDeIdempotencia = ({
@@ -9,7 +9,7 @@ export const leerEstadoDeIdempotencia = ({
 }: {
   ayuntamientoId: AyuntamientoId;
 }) =>
-  withTenant(ayuntamientoId, async (tx) => {
+  withTenantAnterior(ayuntamientoId, async (tx) => {
     const bitacoraMigracion = await tx
       .select({ id: bitacora.id, accion: bitacora.accion })
       .from(bitacora)
@@ -24,11 +24,14 @@ export const leerEstadoDeIdempotencia = ({
       .select({ id: zonas.id })
       .from(zonas)
       .orderBy(asc(zonas.id));
+    // Los dos tipos que el corte elimino: la comparacion va como texto
+    // porque `lugares.tipo` se tipa con el catalogo vigente y estos valores
+    // ya no estan en el.
     const lugaresSectorManzana = await tx
-      .select({ id: lugares.id, tipo: lugares.tipo })
+      .select({ id: lugares.id, tipo: sql<string>`${lugares.tipo}` })
       .from(lugares)
-      .where(or(eq(lugares.tipo, "sector"), eq(lugares.tipo, "manzana")))
-      .orderBy(asc(lugares.tipo), asc(lugares.id));
+      .where(sql`${lugares.tipo} IN ('sector', 'manzana')`)
+      .orderBy(asc(sql`${lugares.tipo}`), asc(lugares.id));
     return {
       migraciones: bitacoraMigracion
         .filter(({ accion }) => accion === "MIGRACION_DOMICILIO")

@@ -1,5 +1,9 @@
-import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import {
+  ejecutarPsql,
+  ejecutarPsqlFallido,
+  RUTA_DE_BUSQUEDA_ANTERIOR,
+} from "./baseAnteriorAlCorteDePrueba";
 import { comoLugarId } from "./domain";
 import { esRegistro } from "./migracionDeZonasReportesDePrueba";
 import type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
@@ -9,60 +13,23 @@ const MARCADOR_FIN = "__B3D_LUGARES_BORRADOS_JSON_FIN__";
 
 export type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
 
-let psqlNativoDisponible: boolean | null = null;
-const hayPsqlNativo = () => {
-  if (psqlNativoDisponible === null) {
-    try {
-      execFileSync("psql", ["--version"], {
-        stdio: ["ignore", "ignore", "ignore"],
-      });
-      psqlNativoDisponible = true;
-    } catch {
-      psqlNativoDisponible = false;
-    }
-  }
-  return psqlNativoDisponible;
-};
-const comandoPsql = (databaseUrl: string): [string, string[]] =>
-  hayPsqlNativo()
-    ? ["psql", [databaseUrl, "-X", "-v", "ON_ERROR_STOP=1"]]
-    : [
-        "docker",
-        [
-          "exec",
-          "-i",
-          "xula-pg",
-          "psql",
-          databaseUrl.replace(":55432", ":5432"),
-          "-X",
-          "-v",
-          "ON_ERROR_STOP=1",
-        ],
-      ];
-const ejecutarPsql = (opciones: { databaseUrl: string; entrada: string }) => {
-  const [cmd, args] = comandoPsql(opciones.databaseUrl);
-  return execFileSync(cmd, args, {
-    input: opciones.entrada,
-    encoding: "utf8",
-    stdio: ["pipe", "pipe", "pipe"],
-  }).toString();
-};
-const salidaDeError = (error: unknown) => {
-  if (!(error instanceof Error)) throw error;
-  const salida = error as Error & { stdout?: string; stderr?: string };
-  return `${salida.stdout ?? ""}${salida.stderr ?? ""}`;
-};
+/**
+ * El script corre como `xula_app` -el rol de menor privilegio que alcanza,
+ * la regla de `AGENTS.md` para scripts operativos- y con el `search_path`
+ * del esquema anterior, que es donde viven los `sector` y `manzana` que
+ * viene a migrar. En el esquema vivo ya no puede existir ninguno.
+ */
+const entradaConEsquema = (entrada: string) =>
+  `SET search_path TO ${RUTA_DE_BUSQUEDA_ANTERIOR};\n${entrada}`;
+
 const ejecutarPsqlFallida = (opciones: {
   databaseUrl: string;
   entrada: string;
-}) => {
-  try {
-    ejecutarPsql(opciones);
-  } catch (error) {
-    return salidaDeError(error);
-  }
-  throw new Error("La migracion debio fallar por la clave foranea.");
-};
+}) =>
+  ejecutarPsqlFallido({
+    databaseUrl: opciones.databaseUrl,
+    entrada: entradaConEsquema(opciones.entrada),
+  });
 const comandosDeSalida = [
   "\\pset format unaligned",
   "\\pset tuples_only on",
@@ -70,11 +37,21 @@ const comandosDeSalida = [
   "SELECT COALESCE(json_agg(json_build_object('subdominio', subdominio, 'lugar_id', lugar_id, 'tipo', tipo, 'nombre', nombre, 'padre_id', padre_id, 'baja_en', baja_en) ORDER BY subdominio, tipo, nombre, lugar_id), '[]'::json) FROM lugares_borrados;",
   `\\echo ${MARCADOR_FIN}`,
 ].join("\n");
-export const ejecutarMigracion = ({ databaseUrl }: { databaseUrl: string }) =>
+const guionDeLaMigracion = () =>
+  readFileSync("scripts/migrar-sectores-a-zonas.sql", "utf8");
+
+const ejecutarGuion = (opciones: { databaseUrl: string; extra?: string }) =>
   ejecutarPsql({
-    databaseUrl,
-    entrada: readFileSync("scripts/migrar-sectores-a-zonas.sql", "utf8"),
+    databaseUrl: opciones.databaseUrl,
+    entrada: entradaConEsquema(
+      `${guionDeLaMigracion()}\n${opciones.extra ?? ""}`,
+    ),
   });
+
+export const ejecutarMigracion = (opciones: {
+  databaseUrl: string;
+  extra?: string;
+}) => ejecutarGuion(opciones);
 const parsearLugar = (valor: unknown): LugarBorradoDeSalida => {
   if (
     !esRegistro(valor) ||
@@ -118,16 +95,16 @@ export type { CalleRechazadaDeSalida } from "./migracionDeZonasReportesDePrueba"
 export const ejecutarMigracionConBloqueo = (databaseUrl: string) => ({
   salida: ejecutarPsqlFallida({
     databaseUrl,
-    entrada: readFileSync("scripts/migrar-sectores-a-zonas.sql", "utf8"),
+    entrada: guionDeLaMigracion(),
   }),
 });
 export const ejecutarMigracionConSalida = (opciones: {
   databaseUrl: string;
   subdominio: string;
 }) => {
-  const salida = ejecutarPsql({
+  const salida = ejecutarGuion({
     databaseUrl: opciones.databaseUrl,
-    entrada: `${readFileSync("scripts/migrar-sectores-a-zonas.sql", "utf8")}\n${comandosDeSalida}\n`,
+    extra: `${comandosDeSalida}\n`,
   });
   return {
     salida,

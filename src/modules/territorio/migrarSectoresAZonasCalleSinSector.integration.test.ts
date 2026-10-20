@@ -1,13 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { motul } from "@/shared/tenancy/municipiosDePrueba";
 import {
-  limpiar,
-  motul,
-  owner,
-  sembrar,
-} from "@/shared/tenancy/municipiosDePrueba";
-import { cerrarConexion } from "@/shared/tenancy/withTenant";
+  cerrarBaseAnterior,
+  crearCalleAnterior,
+  crearLugarAnterior,
+  prepararBaseAnterior,
+} from "./conexionAnteriorAlCorteDePrueba";
 import type { CalleId, LugarId } from "./domain";
-import { crearCalleEn, crearLugarEn, crearLugarHijoEn } from "./lugarDePrueba";
 import { parsearRegistrosDependientes } from "./migracionDeZonasReportesDePrueba";
 import { ejecutarMigracionConBloqueo } from "./migracionDeZonasRollbackDePrueba";
 
@@ -31,32 +30,32 @@ let manzanaSinSectorId: LugarId;
 let calleSinSectorId: CalleId;
 
 beforeAll(async () => {
-  await sembrar();
-  const cabeceraId = await crearLugarEn(motul, "cabecera", "Cabecera");
-  const coloniaId = await crearLugarHijoEn({
+  await prepararBaseAnterior();
+  const cabeceraId = await crearLugarAnterior({
+    ayuntamientoId: motul,
+    tipo: "cabecera",
+    nombre: "Cabecera",
+  });
+  const coloniaId = await crearLugarAnterior({
     ayuntamientoId: motul,
     tipo: "colonia",
     nombre: "Colonia sin sectores",
     padreId: cabeceraId,
   });
-  manzanaSinSectorId = await crearLugarHijoEn({
+  manzanaSinSectorId = await crearLugarAnterior({
     ayuntamientoId: motul,
     tipo: "manzana",
     nombre: "Manzana directa bajo colonia",
     padreId: coloniaId,
   });
-  calleSinSectorId = await crearCalleEn(
+  calleSinSectorId = await crearCalleAnterior(
     motul,
     manzanaSinSectorId,
     "Calle sin sector en su cadena",
   );
 });
 
-afterAll(async () => {
-  await limpiar();
-  await owner.end();
-  await cerrarConexion();
-});
+afterAll(cerrarBaseAnterior);
 
 describe("migracion de sectores a zonas: calle sin sector en su cadena", () => {
   it("reporta la calle como dependiente antes de que la FK revierta el DELETE", async () => {

@@ -1,13 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { motul } from "@/shared/tenancy/municipiosDePrueba";
 import {
-  limpiar,
-  motul,
-  owner,
-  sembrar,
-} from "@/shared/tenancy/municipiosDePrueba";
-import { cerrarConexion } from "@/shared/tenancy/withTenant";
+  cerrarBaseAnterior,
+  crearLugarAnterior,
+  prepararBaseAnterior,
+} from "./conexionAnteriorAlCorteDePrueba";
 import type { LugarId } from "./domain";
-import { crearLugarEn, crearLugarHijoEn } from "./lugarDePrueba";
 import { parsearZonasDuplicadas } from "./migracionDeZonasReportesDePrueba";
 import { ejecutarMigracionConBloqueo } from "./migracionDeZonasRollbackDePrueba";
 
@@ -31,19 +29,19 @@ let sectorAId: LugarId;
 let sectorBId: LugarId;
 
 beforeAll(async () => {
-  await sembrar();
-  asentamientoId = await crearLugarEn(
-    motul,
-    "comisaria",
-    "Asentamiento con sectores duplicados",
-  );
-  sectorAId = await crearLugarHijoEn({
+  await prepararBaseAnterior();
+  asentamientoId = await crearLugarAnterior({
+    ayuntamientoId: motul,
+    tipo: "comisaria",
+    nombre: "Asentamiento con sectores duplicados",
+  });
+  sectorAId = await crearLugarAnterior({
     ayuntamientoId: motul,
     tipo: "sector",
     nombre: "Sector repetido",
     padreId: asentamientoId,
   });
-  sectorBId = await crearLugarHijoEn({
+  sectorBId = await crearLugarAnterior({
     ayuntamientoId: motul,
     tipo: "sector",
     nombre: "Sector repetido",
@@ -51,11 +49,7 @@ beforeAll(async () => {
   });
 });
 
-afterAll(async () => {
-  await limpiar();
-  await owner.end();
-  await cerrarConexion();
-});
+afterAll(cerrarBaseAnterior);
 
 describe("migracion de sectores a zonas: nombres duplicados", () => {
   it("reporta sectores con el mismo nombre antes de que el indice unico revierta la migracion", async () => {

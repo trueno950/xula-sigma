@@ -1,17 +1,15 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { motul, ticul } from "@/shared/tenancy/municipiosDePrueba";
 import {
-  appSinTenant,
-  limpiar,
-  motul,
-  owner,
-  sembrar,
-  ticul,
-} from "@/shared/tenancy/municipiosDePrueba";
-import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+  cerrarBaseAnterior,
+  crearCalleAnterior,
+  prepararBaseAnterior,
+  sinTenantAnterior,
+  withTenantAnterior,
+} from "./conexionAnteriorAlCorteDePrueba";
 import type { CalleId } from "./domain";
 import { calles, domicilios, lugares } from "./infrastructure/esquema";
-import { crearCalleEn } from "./lugarDePrueba";
 import { verificarMigracionDeAmbosTenants } from "./migracionDeZonasAsercionesDePrueba";
 import {
   type EscenarioDeMigracion,
@@ -41,7 +39,7 @@ const databaseUrl = () => {
 };
 const bajaEnDelSectorMotul = new Date("2026-01-01T00:00:00Z");
 const quitarBloqueoDirecto = () =>
-  withTenant(ticul, async (tx) => {
+  withTenantAnterior(ticul, async (tx) => {
     await tx
       .update(calles)
       .set({ lugarId: ticulEscenario.asentamientoId })
@@ -52,32 +50,27 @@ const quitarBloqueoDirecto = () =>
       .where(eq(calles.id, calleDirectaEnManzanaTiculId));
   });
 beforeAll(async () => {
-  await sembrar();
+  await prepararBaseAnterior();
   motulEscenario = await sembrarEscenarioDeMigracion(motul);
   ticulEscenario = await sembrarEscenarioDeMigracion(ticul);
-  calleDirectaTiculId = await crearCalleEn(
+  calleDirectaTiculId = await crearCalleAnterior(
     ticul,
     ticulEscenario.sectorId,
     "Calle bloqueadora",
   );
-  calleDirectaEnManzanaTiculId = await crearCalleEn(
+  calleDirectaEnManzanaTiculId = await crearCalleAnterior(
     ticul,
     ticulEscenario.manzanaId,
     "Calle bloqueadora en manzana",
   );
-  await withTenant(motul, (tx) =>
+  await withTenantAnterior(motul, (tx) =>
     tx
       .update(lugares)
       .set({ bajaEn: bajaEnDelSectorMotul })
       .where(eq(lugares.id, motulEscenario.sectorId)),
   );
 });
-afterAll(async () => {
-  await limpiar();
-  await owner.end();
-  await appSinTenant.end();
-  await cerrarConexion();
-});
+afterAll(cerrarBaseAnterior);
 
 const verificarRestauracion = (
   restauracion: Awaited<ReturnType<typeof leerRestauracion>>,
@@ -116,9 +109,9 @@ const verificarRestauracion = (
 describe("migracion de sectores a zonas", () => {
   it("un UPDATE sin tenant queda bloqueado por RLS con cero filas y sin error", async () => {
     const filas =
-      await appSinTenant`UPDATE domicilios SET lugar_id = ${motulEscenario.coloniaId} WHERE id = ${motulEscenario.domicilioDeLaManzanaId} RETURNING id`;
+      await sinTenantAnterior`UPDATE domicilios SET lugar_id = ${motulEscenario.coloniaId} WHERE id = ${motulEscenario.domicilioDeLaManzanaId} RETURNING id`;
     expect(filas).toHaveLength(0);
-    const [domicilio] = await withTenant(motul, (tx) =>
+    const [domicilio] = await withTenantAnterior(motul, (tx) =>
       tx
         .select({ lugarId: domicilios.lugarId })
         .from(domicilios)
