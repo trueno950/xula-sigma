@@ -6,14 +6,14 @@
 |---|---|
 | Lineas autorales estimadas | 2,100-2,700 en ocho unidades; B2 estima 850-1,050 por el corte de CHECK, tipos y unos 40 archivos de tests |
 | Presupuesto fijo | 400 lineas cambiadas por PR |
-| Riesgo de 400 lineas | High; cada unidad se mantiene como PR propio y B2 requiere size:exception visible |
-| Cadena | PR #1 A1a -> PR #2 A1b -> PR #3 A2 -> PR #4 A3 -> PR #5 B1 -> PR #6 B3d -> PR #7 B2 -> PR #8 B3u |
-| Estrategia de entrega | ask-on-risk |
-| Estrategia de cadena | feature-branch-chain: tracker de feature; cada PR hijo apunta a la rama del PR anterior |
+| Riesgo de 400 lineas | High; B2 conserva su pronóstico de 850-1,050 líneas y necesita aprobación de sobrecarga antes de aplicarse |
+| Orden de unidades | A1a -> A1b -> A2 -> A3 -> B1 -> B3d -> B2 -> B3u; el orden de despliegue no cambia |
+| Estrategia de entrega | single-pr: un PR, un merge, con commits por unidad |
+| Estrategia de cadena | No aplicable; reemplazada por la regla del proyecto, sin ramas apiladas |
 
-Decision needed before apply: Yes
-Chained PRs recommended: Yes
-Chain strategy: feature-branch-chain
+Decision needed before apply: Yes (sobrecarga de B2)
+Chained PRs recommended: No
+Chain strategy: not-applicable
 400-line budget risk: High
 
 A1 usa la costura nombrada por el diseno: A1a contiene puerto, caso de uso,
@@ -37,11 +37,23 @@ antes de aplicar.
 | B2 / PR #7 | Corte de sector/manzana: CHECK, tipo, unos 40 archivos, deltas y AGENTS.md; no UI de zonas | rama de PR #6 | pnpm test; suite completa, sin rtk; cobertura con pnpm test -- --coverage | size:exception 850-1,050 lineas; migracion inversa del CHECK y revertir codigo/deltas |
 | B3u / PR #8 | Rutas, pantallas, cinco acciones y cinco filas de AGENTS.md para zonas | rama de PR #7 | pnpm db:local && pnpm vitest run --project integration src/modules/territorio/zonas.ui.integration.test.ts; requiere Postgres | pnpm db:local + escenario Playwright de /territorio/zonas; revertir rutas, UI y acciones |
 
-En cada PR de la cadena debe aparecer el diagrama de dependencia con el PR
-actual marcado con el simbolo de ubicacion; se conserva el limite de 400 lineas
-salvo el size:exception explicito de B2. Cada unidad conserva sus tests y
-docs/runbook junto al cambio que prueban, y su rollback no revierte unidades
-anteriores.
+La tabla de unidades conserva las fronteras históricas, no autoriza una cadena
+de PRs: las columnas «PR» y «Base de la cadena» describen el plan original,
+sustituido por un PR y commits por unidad. Cada unidad conserva sus tests y
+docs/runbook junto al cambio que prueba. La sobrecarga de B2 queda pendiente
+de aprobación; no se crea una etiqueta remota ni se publica por este plan.
+
+### Reanudación autorizada: desarrollo aislado
+
+El usuario eligió «Seguir en una base aislada — recomendado»: se permite
+desarrollar y verificar B2/B3u con datos aislados aunque la corrida operativa
+B3d-REFACTOR-06 siga pendiente. Esa tarea NO se marca completa y este SDD NO
+se archiva mientras falte la operación autorizada. Para desplegar el CHECK
+en un entorno con datos reales sigue siendo obligatorio ejecutar primero
+B3d en su ventana aprobada y comprobar que no queden tipos incompatibles.
+No se altera la dependencia de despliegue ni se autoriza usar `xula_dev`.
+La continuidad de esta reanudación vive en
+`odd/tasks/cierre-direcciones-y-zonas.md`.
 
 ## Limites vinculantes de cada unidad
 
@@ -324,12 +336,13 @@ Frontera de rollback: retirar unicamente el runbook; el script y su comportamien
 Frontera inseparable: estimacion visible de 850-1,050 lineas cambiadas, por
 encima de 400. Se autoriza solo como size:exception aprobado por mantenedor; no
 se finge una costura entre CHECK, union de TypeScript y los aproximadamente 40
-archivos/tests que deben compilar juntos. B3d debe haber terminado antes de
-aplicar este cambio.
+archivos/tests que deben compilar juntos. B3d debe haber terminado en el
+entorno de destino antes de aplicar allí el CHECK. La decisión de reanudación
+permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
 
 - [ ] B2-RED-01 (B2). Para el requisito exacto “Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2)”, actualizar primero tests de dominio/integración para cabecera/comisaria como raices, rechazo de comisaria bajo cabecera, colonia sin hijos y ciclo rechazado; conservar RED antes de editar TIPOS_DE_LUGAR. Test enfocado: pnpm test (suite completa, sin rtk; integración requiere pnpm db:local). Rollback: revertir tests B2 sin tocar B3d.
 - [ ] B2-RED-02 (B2). Para “Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2)” y “Direccion compuesta como texto imprimible”, actualizar tests de src/modules/territorio/domain/direccion.test.ts, alta/correccion y fixtures que aún usan sector/manzana; deben fallar por contrato vigente antes de cambiarlo. Test enfocado: pnpm test. Rollback: revertir únicamente fixtures/tests del contrato de domicilios.
-- [ ] B2-GREEN-03 (B2). Requisito: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2). Cambiar src/modules/territorio/domain/tipoDeLugar.ts a TIPOS_DE_LUGAR = [cabecera, comisaria, colonia], derivar RANGO vigente, regenerar drizzle/0019_corte_tipos_lugar.sql (numero corrido por B3d-GREEN-03: 0018 ya lo uso drizzle/0018_grant_baja_fisica_lugares.sql) con CHECK tipo IN (cabecera, comisaria, colonia) y actualizar los aproximadamente 40 archivos de territorio/tests afectados; DELETE de B3d debe haber eliminado filas incompatibles antes de aplicar CHECK. Test enfocado: pnpm test y pnpm check. Rollback: migracion inversa que restituya ambos tipos al CHECK y revertir commit inseparable.
+- [ ] B2-GREEN-03 (B2). Requisito: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2). Cambiar src/modules/territorio/domain/tipoDeLugar.ts a TIPOS_DE_LUGAR = [cabecera, comisaria, colonia], derivar RANGO vigente, generar la siguiente migración libre, hoy drizzle/0020_corte_tipos_lugar.sql (0019 ya pertenece al payload del historial; preservar ese SQL y su snapshot) con CHECK tipo IN (cabecera, comisaria, colonia) y actualizar los aproximadamente 40 archivos de territorio/tests afectados; DELETE de B3d debe haber eliminado filas incompatibles antes de aplicar CHECK. Test enfocado: pnpm test y pnpm check. Rollback: migracion inversa que restituya ambos tipos al CHECK y revertir commit inseparable.
 - [ ] B2-GREEN-04 (B2). Requisitos: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2); Direccion compuesta como texto imprimible. Actualizar cadenaHastaAsentamiento, direccion.ts, fixtures y validaciones para que lugarId acepte solo asentamiento/colonia; renombrar ZonaIncoherenteError a UbicacionIncoherenteError donde corresponda, y editar deltas de specs/jerarquia-territorial/spec.md y specs/domicilios/spec.md sin cambiar decisiones aprobadas. Test enfocado: pnpm test. Rollback: revertir codigo y deltas junto con B2-GREEN-03.
 - [ ] B2-GREEN-05 (B2). Requisito: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Actualizar en AGENTS.md la referencia al error renombrado y conservar reglas de Server Actions sin agregar todavía las cinco filas de zonas (son B3u); verificar que no se enumeren salidas nuevas ni se contradiga el límite de unidades. Test enfocado: pnpm reglas && pnpm check. Rollback: revertir cambio de nomenclatura de AGENTS.md junto con B2 si el mantenedor rechaza la excepción.
 - [ ] B2-REFACTOR-06 (B2). Requisitos: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2); Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Ejecutar suite completa con cobertura y confirmar pisos CI: 80% statements en shared/** y modules/**/{domain,application}, 75% branches, sin rtk en tests/psql; leer el diff completo antes de aceptar size:exception. Test enfocado: pnpm db:local && pnpm test:integration && pnpm check; cobertura con vitest run --coverage. Rollback: revertir commit completo B2 y ejecutar migracion inversa.
@@ -351,11 +364,12 @@ aplicar este cambio.
 - Supuesto propuesto (pendiente de confirmacion): un sector sin calles usadas
   por domicilios se convierte igual en una zona vacia y se reporta en la salida
   para curacion municipal.
-- Precondicion bloqueante, no tarea: B3d requiere una ventana operativa aprobada
-  por municipio; sin ella no se corre ni se marca B3d.
-- Coordinacion: B1 espera que mapa-operativo-territorial cierre U3 o asiente
-  migracion de eventos_de_calles, para no crear linajes hermanos en
-  drizzle/meta/_journal.json.
+- Precondición operativa: B3d requiere una ventana aprobada por municipio;
+  sin ella no se corre ni se marca B3d. El desarrollo aislado B2/B3u sí fue
+  autorizado en la reanudación; no autoriza desplegar el CHECK sobre datos reales.
+- Coordinación resuelta: `eventos_de_calles` y el payload de 0019 están
+  asentados en `main` (`90164bb`). Generar B2 desde el journal vigente, sin
+  reescribir migraciones aplicadas ni crear linajes hermanos.
 - Decision diferida a B3u (revision local del PR #65, `pnpm revision:local:pr`,
   verificada antes de descartarla): `repositorioDeCallesDeZonasSql.domiciliosDeZona`
   no filtra `zonas.bajaEn IS NULL` -una zona dada de baja seguiria devolviendo
