@@ -27,11 +27,16 @@ funcional de territorio.
 
 ## Tasks
 
-- [ ] **T1** · S1 · delegado — Job de e2e en CI como reja que bloquea, con
+- [x] **T1** · S1 · delegado — Job de e2e en CI como reja que bloquea, con
   Postgres como el job `aislamiento`, `playwright install chromium` y la
-  documentación actualizada.
-- [ ] **T2** · S2 · delegado — Cerrar los dos avisos de axe sin debilitar
-  ninguna aserción existente.
+  documentación actualizada. Commit `f15f26e`: reporter `[github, html]` y
+  artefacto si falla, `playwright-report/` ignorado. **Sin verificar en
+  ejecución real**: el workflow no corre en local, lo prueba el primer PR.
+- [x] **T2** · S2 · delegado — Cerrar los dos avisos de axe sin debilitar
+  ninguna aserción existente. Commit `8637331`: barra móvil a `header`,
+  `Panel` a `h2` y el mismo salto `h1→h3` en `PanelDeCalle` y
+  `DatosDeDomicilio`. Medido con axe-core 4.12.1: 0 violaciones a 390×844 y a
+  1280×900, barra comprobada como `header` único y secuencia `h1→h2`.
 - [ ] **T3** · S3(a,b,c) · delegado — Los tres arreglos de territorio que no
   necesitan decisión de producto.
 - [ ] **T4** · S3(d) · decidir — Si el historial amplía su capa de datos para
@@ -45,3 +50,7 @@ funcional de territorio.
   limpio», sobre la lista que el agente dejó abierta al cerrar la auditoría:
   el job de e2e en CI, los dos avisos de axe y la deuda funcional del
   territorio.
+- **L2** — Revisión nativa del rango `1e027a8..HEAD` (11 archivos, 237
+  líneas): **aprobada** con un aviso informativo (R2-task-status) por las
+  casillas de este documento sin marcar mientras el trabajo ya estaba hecho.
+  Corregido acá. Autoridad quemada.
