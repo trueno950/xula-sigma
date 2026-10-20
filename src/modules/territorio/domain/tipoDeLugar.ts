@@ -1,7 +1,9 @@
 /**
  * Jerarquia territorial modelada como rango, no como cadena (design.md
  * decision 6). `cabecera` y `comisaria` comparten el rango 0: son dos
- * asentamientos hermanos, ninguno contiene al otro.
+ * asentamientos hermanos, ninguno contiene al otro. `colonia` es el unico
+ * rango 1 y el tipo mas profundo: el arbol de direcciones tiene dos
+ * niveles fijos (design.md decision 5, rebanada B2).
  *
  * Regla unica, estricta: `rango(padre) < rango(hijo)`. De ahi salen sin
  * regla adicional: (1) `cabecera`/`comisaria` no se contienen entre si —
@@ -9,13 +11,7 @@
  * por construccion, y (3) no hay ciclos, porque toda arista aumenta el
  * rango y ningun ciclo puede volver a un rango menor o igual.
  */
-export const TIPOS_DE_LUGAR = [
-  "cabecera",
-  "comisaria",
-  "colonia",
-  "sector",
-  "manzana",
-] as const;
+export const TIPOS_DE_LUGAR = ["cabecera", "comisaria", "colonia"] as const;
 
 export type TipoDeLugar = (typeof TIPOS_DE_LUGAR)[number];
 
@@ -23,8 +19,6 @@ const RANGO: Record<TipoDeLugar, number> = {
   cabecera: 0,
   comisaria: 0,
   colonia: 1,
-  sector: 2,
-  manzana: 3,
 };
 
 export const puedeContener = (padre: TipoDeLugar, hijo: TipoDeLugar): boolean =>
@@ -37,8 +31,8 @@ export const puedeContener = (padre: TipoDeLugar, hijo: TipoDeLugar): boolean =>
  * de rango 0 nunca es hijo de nadie, raiz por construccion"— escrita como
  * funcion en vez de como prosa. Mientras vivio solo en el comentario, nada
  * la consultaba: `altaDeLugar` valida `puedeContener` unicamente cuando hay
- * `padreId`, asi que con `padreId: null` aceptaba los cinco tipos y una
- * manzana suelta quedaba de raiz del municipio.
+ * `padreId`, asi que con `padreId: null` aceptaba todos los tipos del
+ * catalogo y un lugar de rango hondo quedaba de raiz del municipio.
  */
 export const puedeSerRaiz = (tipo: TipoDeLugar): boolean => RANGO[tipo] === 0;
 
@@ -49,7 +43,7 @@ export const puedeTenerCatalogoDeCalles = (tipo: TipoDeLugar): boolean =>
  * Los tipos que ese padre acepta adentro, en el orden del catalogo.
  *
  * La usa el alta para ofrecer solo lo que va a pasar la validacion: antes
- * el formulario ofrecia los cinco tipos siempre, asi que elegir "comisaria"
+ * el formulario ofrecia todos los tipos siempre, asi que elegir "comisaria"
  * dentro de una cabecera era un camino abierto que terminaba en
  * `JerarquiaInvalidaError` despues de enviar.
  */

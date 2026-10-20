@@ -9,8 +9,6 @@ export const ETIQUETA_DE_TIPO_DE_LUGAR: Record<TipoDeLugar, string> = {
   cabecera: "Cabecera",
   comisaria: "Comisaría",
   colonia: "Colonia",
-  sector: "Sector",
-  manzana: "Manzana",
 };
 
 /** El tipo en medio de una frase: "Kantirix, comisaría", no "Comisaría". */

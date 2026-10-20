@@ -33,7 +33,7 @@ export function TabDeLugares({
   const puedeActuar = puedeAbrir("lugar", permisos);
   const hijos = hijosDirectosDe(nodos, lugar.id);
   const abierta = accion === "lugar";
-  // Una manzana es el ultimo rango: no hay tipo que pueda ir adentro, asi
+  // Una colonia es el ultimo rango: no hay tipo que pueda ir adentro, asi
   // que ofrecer "Agregar lugar" abriria un formulario sin una sola opcion.
   const admiteLugares = tiposContenidosPor(lugar.tipo).length > 0;
 

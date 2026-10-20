@@ -2,33 +2,36 @@ import { describe, expect, it } from "vitest";
 import type { NodoDeSubarbol } from "../application/puertos";
 import { cuentasDeLugar } from "./contenido";
 import {
+  cabecera,
+  calleDeLaCabecera,
   calleDeLaColonia,
-  calleDeLaManzana,
+  calleDeLaOtraColonia,
   colonia,
   coloniaId,
-  manzanaId,
   nodoDomicilio,
   nodos,
+  otraColoniaId,
 } from "./contenidoDePrueba";
 
 describe("cuentasDeLugar", () => {
-  /** Antes contaba solo las directas: una colonia con todo en las manzanas
-   *  reportaba cero, que es el modo de falla que esta rebanada corrige. */
+  /** Antes contaba solo las directas: un asentamiento con todo en sus
+   *  colonias reportaba cero, que es el modo de falla que esta rebanada
+   *  corrige. */
   it("cuenta los domicilios de todo el subarbol, no solo los directos", () => {
-    const cuentas = cuentasDeLugar({ nodos, calles: [], nodo: colonia });
+    const cuentas = cuentasDeLugar({ nodos, calles: [], nodo: cabecera });
 
     expect(cuentas.domicilios).toBe(3);
   });
 
-  it("una colonia con todas sus direcciones en las manzanas las cuenta", () => {
-    const soloLaManzana = nodos.filter(
-      (nodo) => nodo.clase !== "domicilio" || nodo.lugarId === manzanaId,
+  it("una cabecera con todas sus direcciones en las colonias las cuenta", () => {
+    const soloLaOtraColonia = nodos.filter(
+      (nodo) => nodo.clase !== "domicilio" || nodo.lugarId === otraColoniaId,
     );
 
     const cuentas = cuentasDeLugar({
-      nodos: soloLaManzana,
+      nodos: soloLaOtraColonia,
       calles: [],
-      nodo: colonia,
+      nodo: cabecera,
     });
 
     expect(cuentas.domicilios).toBe(1);
@@ -39,7 +42,7 @@ describe("cuentasDeLugar", () => {
     const cuentas = cuentasDeLugar({
       nodos,
       calles: [calleDeLaColonia],
-      nodo: { id: manzanaId, tipo: "manzana", nombre: "Manzana 3" },
+      nodo: colonia,
     });
 
     expect(cuentas.calles).toBe(1);
@@ -48,17 +51,17 @@ describe("cuentasDeLugar", () => {
   it("un nodo con catalogo propio cuenta solo sus calles", () => {
     const cuentas = cuentasDeLugar({
       nodos,
-      calles: [calleDeLaColonia, calleDeLaManzana],
-      nodo: { id: coloniaId, tipo: "cabecera", nombre: "Centro" },
+      calles: [calleDeLaCabecera, calleDeLaColonia, calleDeLaOtraColonia],
+      nodo: cabecera,
     });
 
     expect(cuentas.calles).toBe(1);
   });
 
   it("cuenta los lugares hijos directos", () => {
-    const cuentas = cuentasDeLugar({ nodos, calles: [], nodo: colonia });
+    const cuentas = cuentasDeLugar({ nodos, calles: [], nodo: cabecera });
 
-    expect(cuentas.lugares).toBe(1);
+    expect(cuentas.lugares).toBe(2);
   });
 
   /**
@@ -75,16 +78,16 @@ describe("cuentasDeLugar", () => {
         id: coloniaId,
         tipo: "colonia",
         nombre: "Centro",
-        padreId: manzanaId,
+        padreId: otraColoniaId,
       },
       {
         clase: "lugar",
-        id: manzanaId,
-        tipo: "manzana",
-        nombre: "Manzana 3",
+        id: otraColoniaId,
+        tipo: "colonia",
+        nombre: "Norte",
         padreId: coloniaId,
       },
-      nodoDomicilio("99999999-9999-4999-8999-999999999999", manzanaId),
+      nodoDomicilio("99999999-9999-4999-8999-999999999999", otraColoniaId),
     ];
 
     const cuentas = cuentasDeLugar({

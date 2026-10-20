@@ -25,6 +25,12 @@ const lugar = ({
   padreId: padre ? id(padre) : null,
 });
 
+/**
+ * Dos niveles: una cabecera con dos colonias hermanas y una comisaria
+ * aparte. La segunda colonia ocupa el lugar que antes tenia el sector, y es
+ * lo que permite seguir mirando "otro lugar del municipio" sin inventar un
+ * tercer nivel que `puedeContener` ya no permite.
+ */
 const cabecera = lugar({ n: 1, nombre: "Buenavista", tipo: "cabecera" });
 const centro = lugar({
   n: 2,
@@ -32,20 +38,19 @@ const centro = lugar({
   tipo: "colonia",
   padre: 1,
 });
-const sector = lugar({
+const norte = lugar({
   n: 3,
-  nombre: "Sector Único",
-  tipo: "sector",
-  padre: 2,
+  nombre: "Colonia Norte",
+  tipo: "colonia",
+  padre: 1,
 });
-const manzana = lugar({ n: 4, nombre: "Manzana 7", tipo: "manzana", padre: 3 });
 const comisaria = lugar({ n: 5, nombre: "Dzununcan", tipo: "comisaria" });
-const todos = [cabecera, centro, sector, manzana, comisaria];
+const todos = [cabecera, centro, norte, comisaria];
 
 const cuentas: ConteoDeLugar[] = [
   { lugarId: cabecera.id, domicilios: 12, calles: 6 },
   { lugarId: centro.id, domicilios: 1, calles: null },
-  { lugarId: sector.id, domicilios: 0, calles: null },
+  { lugarId: norte.id, domicilios: 0, calles: null },
   { lugarId: comisaria.id, domicilios: 0, calles: 0 },
 ];
 
@@ -93,7 +98,9 @@ describe("VistaDeRaices: arbol colapsable", () => {
 
     expect(html).toContain("<details open");
     expect(html.match(/<details open/g) ?? []).toHaveLength(1);
-    expect(html.match(/<details/g) ?? []).toHaveLength(2);
+    // Un solo alternador: el de la raiz con hijos. Las colonias cierran el
+    // arbol, porque no hay un tipo que pueda ir adentro de ellas.
+    expect(html.match(/<details/g) ?? []).toHaveLength(1);
   });
 
   it("cada resumen lleva el icono del chevron y una palabra", () => {
@@ -113,14 +120,12 @@ describe("VistaDeRaices: arbol colapsable", () => {
     );
   });
 
-  it("lo que queda mas adentro del tercer nivel es un enlace real", () => {
+  it("cada colonia es un enlace real a su propia vista", () => {
     const html = pintar();
 
-    expect(html).toContain("1 lugar más adentro");
     expect(html).toContain(
-      `href="/territorio?raiz=${cabecera.id}&amp;nodo=${sector.id}"`,
+      `href="/territorio?raiz=${cabecera.id}&amp;nodo=${norte.id}"`,
     );
-    expect(html).not.toContain("Manzana 7");
   });
 
   it("las filas llevan el tipo como pastilla y la fila movil se reordena", () => {
@@ -142,15 +147,15 @@ describe("VistaDeRaices: busqueda", () => {
   });
 
   it("filtrada, conserva los ancestros, abre las ramas y muestra el chip", () => {
-    const html = pintar({ busqueda: "manzana" });
+    const html = pintar({ busqueda: "norte" });
 
-    expect(html).toContain("Manzana 7");
+    expect(html).toContain("Colonia Norte");
     expect(html).toContain("Buenavista");
     expect(html).not.toContain("Dzununcan");
-    expect(html.match(/<details open/g) ?? []).toHaveLength(3);
-    expect(html).toContain("Quitar filtro: Búsqueda: manzana");
+    expect(html.match(/<details open/g) ?? []).toHaveLength(1);
+    expect(html).toContain("Quitar filtro: Búsqueda: norte");
     expect(html).toContain('href="/territorio"');
-    expect(html).toContain('value="manzana"');
+    expect(html).toContain('value="norte"');
   });
 
   it("sin coincidencias nombra la busqueda y ofrece quitarla", () => {

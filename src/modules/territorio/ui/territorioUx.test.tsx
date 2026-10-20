@@ -100,7 +100,7 @@ describe("Territorio streets empty state", () => {
     });
   }
 
-  for (const tipo of ["colonia", "sector", "manzana"] as const) {
+  for (const tipo of ["colonia"] as const) {
     it(`inherits the settlement catalog at ${tipo}`, () => {
       const html = renderTab({ accion: undefined, tipo });
 

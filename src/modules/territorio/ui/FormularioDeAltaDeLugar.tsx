@@ -27,12 +27,12 @@ type Props = {
  * Server Component, `<form action={...}>` nativo sin `"use client"`
  * (`AGENTS.md`, seccion Server Actions).
  *
- * **Solo ofrece tipos que van a pasar la validacion.** Antes ofrecia los
- * cinco siempre: elegir "comisaria" dentro de una cabecera era un camino
- * abierto que terminaba en `JerarquiaInvalidaError` despues de enviar, y
- * dejar el padre vacio permitia crear una manzana suelta como raiz del
- * municipio -que el comentario de `tipoDeLugar.ts` ya declaraba imposible
- * sin que nada lo hiciera cumplir-.
+ * **Solo ofrece tipos que van a pasar la validacion.** Antes ofrecia todos
+ * los tipos del catalogo siempre: elegir "comisaria" dentro de una cabecera
+ * era un camino abierto que terminaba en `JerarquiaInvalidaError` despues de
+ * enviar, y dejar el padre vacio permitia crear una colonia suelta como
+ * raiz del municipio -que el comentario de `tipoDeLugar.ts` ya declaraba
+ * imposible sin que nada lo hiciera cumplir-.
  *
  * Sin padre, los tipos son los de rango 0 (`puedeSerRaiz`), sin la cabecera
  * si ya existe. Con padre, los que `tiposContenidosPor` deja pasar

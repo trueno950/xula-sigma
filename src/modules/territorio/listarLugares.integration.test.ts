@@ -22,22 +22,22 @@ afterAll(async () => {
 
 describe("listarLugares", () => {
   it("devuelve todos los lugares activos, anidados y raices, ordenados por nombre", async () => {
-    await crearLugar("comisaria", "Zeta raiz");
+    const zeta = await crearLugar("comisaria", "Zeta raiz");
     await crearLugar("comisaria", "Alfa raiz");
-    const colonia = await crearLugar("colonia", "Colonia con hijos");
-    await crearLugar("manzana", "Manzana anidada", colonia);
+    await crearLugar("colonia", "Colonia hermana", zeta);
+    await crearLugar("colonia", "Colonia anidada", zeta);
 
     const catalogo = await withTenant(contextoDe().ayuntamientoId, (tx) =>
       repositorioDeLugaresSql.listarLugares(tx),
     );
 
     const nombres = catalogo.map((l) => l.nombre);
-    expect(nombres).toContain("Alfa raiz");
-    expect(nombres).toContain("Zeta raiz");
-    expect(nombres).toContain("Manzana anidada");
-    expect(nombres.indexOf("Alfa raiz")).toBeLessThan(
-      nombres.indexOf("Zeta raiz"),
-    );
+    expect(nombres).toEqual([
+      "Alfa raiz",
+      "Colonia anidada",
+      "Colonia hermana",
+      "Zeta raiz",
+    ]);
   });
 
   it("no alcanza los lugares de otro municipio: RLS acota el catalogo", async () => {

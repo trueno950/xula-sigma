@@ -6,7 +6,7 @@ import {
   comoLugarId,
   type LugarId,
   TransversalRepetidaError,
-  ZonaIncoherenteError,
+  UbicacionIncoherenteError,
 } from "../domain";
 import type {
   CalleGuardada,
@@ -176,7 +176,7 @@ describe("altaDeDomicilio", () => {
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
-  it("rechaza una calle de otro asentamiento del mismo tenant como zona incoherente", async () => {
+  it("rechaza una calle de otro asentamiento del mismo tenant como ubicacion incoherente", async () => {
     vi.mocked(repositorioDeCalles.bloquearPorId).mockResolvedValue({
       ...calleGuardada,
       lugarId: otroAsentamientoId,
@@ -189,7 +189,7 @@ describe("altaDeDomicilio", () => {
 
     await expect(
       altaDeDomicilio(datosValidos, contextoCon("OPERADOR")),
-    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+    ).rejects.toBeInstanceOf(UbicacionIncoherenteError);
 
     expect(repositorio.crear).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
@@ -237,35 +237,24 @@ describe("altaDeDomicilio", () => {
         { ...datosValidos, entreCalleAId },
         contextoCon("OPERADOR"),
       ),
-    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+    ).rejects.toBeInstanceOf(UbicacionIncoherenteError);
 
     expect(repositorio.crear).not.toHaveBeenCalled();
   });
 
   const siguientes = (
-    manzanaPadreId: LugarId,
+    coloniaPadreId: LugarId,
   ): ReadonlyMap<LugarId, LugarGuardado> => {
-    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
-    const sectorId = comoLugarId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+    const coloniaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
 
     return new Map<LugarId, LugarGuardado>([
       [
-        manzanaId,
+        coloniaId,
         {
-          id: manzanaId,
-          tipo: "manzana",
+          id: coloniaId,
+          tipo: "colonia",
           nombre: "San Pedro",
-          padreId: manzanaPadreId,
-          bajaEn: null,
-        },
-      ],
-      [
-        sectorId,
-        {
-          id: sectorId,
-          tipo: "sector",
-          nombre: "2",
-          padreId: lugarId,
+          padreId: coloniaPadreId,
           bajaEn: null,
         },
       ],
@@ -275,11 +264,8 @@ describe("altaDeDomicilio", () => {
   };
 
   it("acepta una zona declarada que es el lugar mas profundo o un ancestro", async () => {
-    const porId = siguientes(
-      comoLugarId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
-    );
-    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
-    const sectorId = comoLugarId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+    const porId = siguientes(lugarId);
+    const coloniaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
     vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
       async (_tx, id) => porId.get(id) ?? null,
     );
@@ -292,21 +278,24 @@ describe("altaDeDomicilio", () => {
     await altaDeDomicilio(
       {
         ...datosValidos,
-        lugarId: manzanaId,
-        nivelesDeclarados: [lugarId, sectorId, manzanaId],
+        lugarId: coloniaId,
+        nivelesDeclarados: [lugarId, coloniaId],
       },
       contextoCon("OPERADOR"),
     );
 
     expect(repositorio.crear).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ lugarId: manzanaId }),
+      expect.objectContaining({ lugarId: coloniaId }),
     );
   });
 
-  it("acepta una manzana colgada directo de la colonia, sin sector", async () => {
+  it("acepta declarar solo el asentamiento, sin la colonia donde cae", async () => {
+    // Quien captura puede no conocer el nivel mas hondo; el que manda es el
+    // `lugarId` guardado. Basta con que lo declarado sea un eslabon de su
+    // cadena.
     const porId = siguientes(lugarId);
-    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    const coloniaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
     vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
       async (_tx, id) => porId.get(id) ?? null,
     );
@@ -319,21 +308,21 @@ describe("altaDeDomicilio", () => {
     await altaDeDomicilio(
       {
         ...datosValidos,
-        lugarId: manzanaId,
-        nivelesDeclarados: [lugarId, manzanaId],
+        lugarId: coloniaId,
+        nivelesDeclarados: [asentamientoId],
       },
       contextoCon("OPERADOR"),
     );
 
     expect(repositorio.crear).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ lugarId: manzanaId }),
+      expect.objectContaining({ lugarId: coloniaId }),
     );
   });
 
   it("rechaza un nivel declarado que no pertenece a la cadena del lugar", async () => {
     const porId = siguientes(lugarId);
-    const manzanaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    const coloniaId = comoLugarId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
     vi.mocked(repositorioDeLugares.buscarPorId).mockImplementation(
       async (_tx, id) => porId.get(id) ?? null,
     );
@@ -347,12 +336,12 @@ describe("altaDeDomicilio", () => {
       altaDeDomicilio(
         {
           ...datosValidos,
-          lugarId: manzanaId,
+          lugarId: coloniaId,
           nivelesDeclarados: [lugarId, otroAsentamientoId],
         },
         contextoCon("OPERADOR"),
       ),
-    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+    ).rejects.toBeInstanceOf(UbicacionIncoherenteError);
 
     expect(repositorio.crear).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
@@ -370,7 +359,7 @@ describe("altaDeDomicilio", () => {
     };
     const enCicloB: LugarGuardado = {
       id: cicloB,
-      tipo: "sector",
+      tipo: "colonia",
       nombre: "Ciclo B",
       padreId: cicloA,
       bajaEn: null,

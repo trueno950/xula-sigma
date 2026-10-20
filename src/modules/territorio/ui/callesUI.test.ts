@@ -20,8 +20,8 @@ describe("presentacion del catalogo de calles", () => {
         { id: destino, nombre: "San Juan", tipo: "comisaria" },
         {
           id: comoLugarId("33333333-3333-4333-8333-333333333333"),
-          nombre: "Sector 1",
-          tipo: "sector",
+          nombre: "Colonia 1",
+          tipo: "colonia",
         },
       ]),
     ).toEqual([{ id: destino, nombre: "San Juan", tipo: "comisaria" }]);

@@ -151,9 +151,9 @@ export const hermanosDeDireccion = (
  * tabla no se contradigan.
  *
  * Calles: lo que la pestana lista. Un lugar con catalogo cuenta las suyas;
- * una colonia, sector o manzana lista el catalogo heredado de su
- * asentamiento (`CatalogoHeredado`) y cuenta ese, porque un 0 sobre una
- * tabla con filas era una contradiccion en la misma pantalla.
+ * una colonia lista el catalogo heredado de su asentamiento
+ * (`CatalogoHeredado`) y cuenta ese, porque un 0 sobre una tabla con filas
+ * era una contradiccion en la misma pantalla.
  */
 export const cuentasDeLugar = ({
   nodos,

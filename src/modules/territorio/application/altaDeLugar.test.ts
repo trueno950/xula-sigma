@@ -65,7 +65,7 @@ describe("altaDeLugar", () => {
 
     await expect(
       altaDeLugar(
-        { tipo: "sector", nombre: "Sector 3", padreId: comisariaId },
+        { tipo: "colonia", nombre: "Colonia 3", padreId: comisariaId },
         contextoCon("CONSULTA"),
       ),
     ).rejects.toBeInstanceOf(NoAutorizadoError);
@@ -75,12 +75,12 @@ describe("altaDeLugar", () => {
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
-  it("un sector cuyo padre es una comisaria sin colonias se crea sin fila de relleno", async () => {
+  it("una colonia cuyo padre es una comisaria se crea con un solo INSERT", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(comisariaGuardada);
     const altaDeLugar = crearAltaDeLugar(repositorio);
 
     const resultado = await altaDeLugar(
-      { tipo: "sector", nombre: "Sector 3", padreId: comisariaId },
+      { tipo: "colonia", nombre: "Colonia 3", padreId: comisariaId },
       contextoCon("OPERADOR"),
     );
 
@@ -88,8 +88,8 @@ describe("altaDeLugar", () => {
     expect(repositorio.crear).toHaveBeenCalledWith(expect.anything(), {
       id: resultado.id,
       ayuntamientoId: "motul",
-      tipo: "sector",
-      nombre: "Sector 3",
+      tipo: "colonia",
+      nombre: "Colonia 3",
       padreId: comisariaId,
     });
     expect(registrarMock).toHaveBeenCalledWith(
@@ -123,7 +123,7 @@ describe("altaDeLugar", () => {
 
     await expect(
       altaDeLugar(
-        { tipo: "sector", nombre: "Sector 3", padreId: comisariaId },
+        { tipo: "colonia", nombre: "Colonia 3", padreId: comisariaId },
         contextoCon("OPERADOR"),
       ),
     ).rejects.toBeInstanceOf(NoEncontradoError);
@@ -154,16 +154,17 @@ describe("altaDeLugar", () => {
   /**
    * El otro lado de `padreId = null`: sin padre, el unico chequeo posible
    * es el del propio tipo. `altaDeLugar` no lo hacia -solo validaba
-   * `puedeContener` cuando habia padre-, asi que una manzana suelta era una
-   * raiz aceptada, contra el MUST de `openspec/specs/jerarquia-territorial`
+   * `puedeContener` cuando habia padre-, asi que un lugar de rango hondo
+   * era una raiz aceptada, contra el MUST de
+   * `openspec/specs/jerarquia-territorial`
    * ("ningun otro tipo MUST tener `padreId NULL`").
    */
-  it("rechaza una manzana sin padre: solo el rango 0 es raiz", async () => {
+  it("rechaza una colonia sin padre: solo el rango 0 es raiz", async () => {
     const altaDeLugar = crearAltaDeLugar(repositorio);
 
     await expect(
       altaDeLugar(
-        { tipo: "manzana", nombre: "Manzana 4", padreId: null },
+        { tipo: "colonia", nombre: "Colonia 4", padreId: null },
         contextoCon("OPERADOR"),
       ),
     ).rejects.toBeInstanceOf(RaizInvalidaError);

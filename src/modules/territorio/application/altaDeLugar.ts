@@ -23,13 +23,14 @@ export type NuevoLugar = {
 
 /**
  * Alta de un lugar: `puedeEscribir`, no `puedeAdministrarTerritorio` (criterio
- * en `shared/auth/roles.ts`). Un solo `INSERT`: la jerarquia raggeada
- * (design.md seccion 7) permite que un sector cuelgue directo de una
- * comisaria sin fila de relleno para la colonia que falta.
+ * en `shared/auth/roles.ts`). Un solo `INSERT`: el arbol de direcciones tiene
+ * dos niveles (design.md decision 5), asi que no hay escalon intermedio que
+ * rellenar.
  *
  * **Sin padre tambien hay que validar.** Faltaba: el chequeo corria solo
- * cuando `padreId !== null`, asi que una manzana con `padreId: null` se
- * creaba sin objecion y quedaba de raiz del municipio. Contra el MUST de
+ * cuando `padreId !== null`, asi que un lugar de rango hondo con
+ * `padreId: null` se creaba sin objecion y quedaba de raiz del municipio.
+ * Contra el MUST de
  * `openspec/specs/jerarquia-territorial` -"ningun otro tipo MUST tener
  * `padreId NULL`"- y contra la consecuencia (2) que el propio
  * `tipoDeLugar.ts` enuncia: un rango 0 es raiz por construccion, y solo el.

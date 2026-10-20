@@ -4,9 +4,9 @@
 
 | Campo | Valor |
 |---|---|
-| Lineas autorales estimadas | 2,100-2,700 en ocho unidades; B2 estima 850-1,050 por el corte de CHECK, tipos y unos 40 archivos de tests |
+| Lineas autorales estimadas | 2,100-2,700 en ocho unidades; B2: 757 de andamiaje independiente + 1503 del corte/fixtures, medicion aprobada en ODD S5 |
 | Presupuesto fijo | 400 lineas cambiadas por PR |
-| Riesgo de 400 lineas | High; B2 conserva su pronóstico de 850-1,050 líneas y necesita aprobación de sobrecarga antes de aplicarse |
+| Riesgo de 400 lineas | High; sobrecarga B2 aprobada: dos commits del mismo PR, andamiaje y corte inseparable |
 | Orden de unidades | A1a -> A1b -> A2 -> A3 -> B1 -> B3d -> B2 -> B3u; el orden de despliegue no cambia |
 | Estrategia de entrega | single-pr: un PR, un merge, con commits por unidad |
 | Estrategia de cadena | No aplicable; reemplazada por la regla del proyecto, sin ramas apiladas |
@@ -34,7 +34,7 @@ antes de aplicar.
 | A3 / PR #4 | Alta desacoplada del nodo -entrada unica, superseded por D10- y vocabulario lugarId/Colonia | rama de PR #3 | pnpm vitest run --project unit src/modules/territorio/application/verificacionDeDomicilio.test.ts; sin DB | pnpm dev + POST nativo de alta; revertir formulario, composicion y ruta |
 | B1 / PR #5 | Tablas zonas/calles_de_zonas, migracion 0017, RLS/FK/GRANT, puertos, casos de uso y aislamiento | rama de PR #4 | pnpm db:local && pnpm vitest run --project integration src/modules/territorio/zonas.isolation.test.ts src/modules/territorio/callesDeZonas.isolation.test.ts; requiere Postgres | pnpm db:local && pnpm db:migrate; migracion inversa DROP TABLE calles_de_zonas, zonas y retirar unique de calles |
 | B3d / PR #6 | Script operativo y runbook de migracion de datos, bitacora, salida, conteo e idempotencia | rama de PR #5 | pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts; requiere Postgres y base scratch | Ejecutar solo con ventana operativa autorizada; restaurar domicilios desde bitacora e insertar lugares desde salida |
-| B2 / PR #7 | Corte de sector/manzana: CHECK, tipo, unos 40 archivos, deltas y AGENTS.md; no UI de zonas | rama de PR #6 | pnpm test; suite completa, sin rtk; cobertura con pnpm test -- --coverage | size:exception 850-1,050 lineas; migracion inversa del CHECK y revertir codigo/deltas |
+| B2 / PR #7 | Corte de sector/manzana: CHECK, tipo, unos 40 archivos, deltas y AGENTS.md; no UI de zonas | rama de PR #6 | pnpm test; suite completa, sin rtk; cobertura con pnpm test -- --coverage | size:exception aprobada en ODD S5; migracion inversa del CHECK y revertir codigo/deltas |
 | B3u / PR #8 | Rutas, pantallas, cinco acciones y cinco filas de AGENTS.md para zonas | rama de PR #7 | pnpm db:local && pnpm vitest run --project integration src/modules/territorio/zonas.ui.integration.test.ts; requiere Postgres | pnpm db:local + escenario Playwright de /territorio/zonas; revertir rutas, UI y acciones |
 
 La tabla de unidades conserva las fronteras históricas, no autoriza una cadena
@@ -334,8 +334,8 @@ Frontera de rollback: retirar unicamente el runbook; el script y su comportamien
 
 ## Fase 7: B2 — corte de tipos y contratos (size:exception)
 
-Frontera inseparable: estimacion visible de 850-1,050 lineas cambiadas, por
-encima de 400. Se autoriza solo como size:exception aprobado por mantenedor; no
+Frontera inseparable: medicion aprobada de 1503 lineas diff del corte y
+fixtures, aparte de 757 de andamiaje anterior independiente (ODD S5). No
 se finge una costura entre CHECK, union de TypeScript y los aproximadamente 40
 archivos/tests que deben compilar juntos. B3d debe haber terminado en el
 entorno de destino antes de aplicar allí el CHECK. La decisión de reanudación
@@ -343,10 +343,35 @@ permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
 
 - [ ] B2-RED-01 (B2). Para el requisito exacto “Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2)”, actualizar primero tests de dominio/integración para cabecera/comisaria como raices, rechazo de comisaria bajo cabecera, colonia sin hijos y ciclo rechazado; conservar RED antes de editar TIPOS_DE_LUGAR. Test enfocado: pnpm test (suite completa, sin rtk; integración requiere pnpm db:local). Rollback: revertir tests B2 sin tocar B3d.
 - [ ] B2-RED-02 (B2). Para “Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2)” y “Direccion compuesta como texto imprimible”, actualizar tests de src/modules/territorio/domain/direccion.test.ts, alta/correccion y fixtures que aún usan sector/manzana; deben fallar por contrato vigente antes de cambiarlo. Test enfocado: pnpm test. Rollback: revertir únicamente fixtures/tests del contrato de domicilios.
-- [ ] B2-GREEN-03 (B2). Requisito: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2). Cambiar src/modules/territorio/domain/tipoDeLugar.ts a TIPOS_DE_LUGAR = [cabecera, comisaria, colonia], derivar RANGO vigente, generar la siguiente migración libre, hoy drizzle/0020_corte_tipos_lugar.sql (0019 ya pertenece al payload del historial; preservar ese SQL y su snapshot) con CHECK tipo IN (cabecera, comisaria, colonia) y actualizar los aproximadamente 40 archivos de territorio/tests afectados; DELETE de B3d debe haber eliminado filas incompatibles antes de aplicar CHECK. Test enfocado: pnpm test y pnpm check. Rollback: migracion inversa que restituya ambos tipos al CHECK y revertir commit inseparable.
-- [ ] B2-GREEN-04 (B2). Requisitos: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2); Direccion compuesta como texto imprimible. Actualizar cadenaHastaAsentamiento, direccion.ts, fixtures y validaciones para que lugarId acepte solo asentamiento/colonia; renombrar ZonaIncoherenteError a UbicacionIncoherenteError donde corresponda, y editar deltas de specs/jerarquia-territorial/spec.md y specs/domicilios/spec.md sin cambiar decisiones aprobadas. Test enfocado: pnpm test. Rollback: revertir codigo y deltas junto con B2-GREEN-03.
-- [ ] B2-GREEN-05 (B2). Requisito: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Actualizar en AGENTS.md la referencia al error renombrado y conservar reglas de Server Actions sin agregar todavía las cinco filas de zonas (son B3u); verificar que no se enumeren salidas nuevas ni se contradiga el límite de unidades. Test enfocado: pnpm reglas && pnpm check. Rollback: revertir cambio de nomenclatura de AGENTS.md junto con B2 si el mantenedor rechaza la excepción.
+- [x] B2-GREEN-03 (B2). Requisito: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2). Cambiar src/modules/territorio/domain/tipoDeLugar.ts a TIPOS_DE_LUGAR = [cabecera, comisaria, colonia], derivar RANGO vigente, generar la siguiente migración libre, hoy drizzle/0020_corte_tipos_lugar.sql (0019 ya pertenece al payload del historial; preservar ese SQL y su snapshot) con CHECK tipo IN (cabecera, comisaria, colonia) y actualizar los aproximadamente 40 archivos de territorio/tests afectados; DELETE de B3d debe haber eliminado filas incompatibles antes de aplicar CHECK. Test enfocado: pnpm test y pnpm check. Rollback: migracion inversa que restituya ambos tipos al CHECK y revertir commit inseparable.
+- [x] B2-GREEN-04 (B2). Requisitos: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2); Direccion compuesta como texto imprimible. Actualizar cadenaHastaAsentamiento, direccion.ts, fixtures y validaciones para que lugarId acepte solo asentamiento/colonia; renombrar ZonaIncoherenteError a UbicacionIncoherenteError donde corresponda, y editar deltas de specs/jerarquia-territorial/spec.md y specs/domicilios/spec.md sin cambiar decisiones aprobadas. Test enfocado: pnpm test. Rollback: revertir codigo y deltas junto con B2-GREEN-03.
+- [x] B2-GREEN-05 (B2). Requisito: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Actualizar en AGENTS.md la referencia al error renombrado y conservar reglas de Server Actions sin agregar todavía las cinco filas de zonas (son B3u); verificar que no se enumeren salidas nuevas ni se contradiga el límite de unidades. Test enfocado: pnpm reglas && pnpm check. Rollback: revertir cambio de nomenclatura de AGENTS.md junto con B2 si el mantenedor rechaza la excepción.
 - [ ] B2-REFACTOR-06 (B2). Requisitos: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2); Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Ejecutar suite completa con cobertura y confirmar pisos CI: 80% statements en shared/** y modules/**/{domain,application}, 75% branches, sin rtk en tests/psql; leer el diff completo antes de aceptar size:exception. Test enfocado: pnpm db:local && pnpm test:integration && pnpm check; cobertura con vitest run --coverage. Rollback: revertir commit completo B2 y ejecutar migracion inversa.
+
+### Evidencia de recuperación B2
+
+- Andamiaje pre-corte independiente: `1c38089`, 14 archivos, +565/-192;
+  revisión `review-4f7277133c3ef45d` aprobada y consumida. Tres avisos
+  informativos, sin corrección abierta: R2-001 (legibilidad), R3-001
+  (confiabilidad), R4-001 (resiliencia). No se incorporan a este corte.
+- Corte: 0020 solo restringe el CHECK; 0019/metadata anterior conservados.
+  Verificador independiente: 65 unitarias y 22 integración, snapshot/RLS/
+  privilegios y abort/rollback en base propia. Único bloqueo TS2379 corregido;
+  recheck independiente: TSC exit 0 y 1 archivo/5 pruebas verdes.
+- Auto-verificación observada: suite con cobertura 440 archivos/2267 pruebas
+  (job-60), sentencias 97.86%, ramas 93.30%, funciones 98.93%, líneas 98.86%;
+  build y E2E 45/45 en base aislada y puerto 5100 (job-58).
+- La cronología RED original del escritor interrumpido no es recuperable:
+  B2-RED-01/02 conservan su casilla abierta por esa limitación, no por falta
+  de los tests funcionales finales. Caracterización retrospectiva del catálogo:
+  base exit 1, nuevo exit 0; matriz de tipos conservados sin diferencias.
+  El formateador `componerDireccion` no cambia lógica, solo documentación y
+  fixtures; no se fabrica un RED funcional para un cambio pasivo.
+- Sí se observaron RED reales en integración durante la recuperación y GREEN
+  posteriores (ODD L10); no equivalen a afirmar test-first del escritor.
+- Check final actualizado (job-63) exit 0: 54 warnings y 2 infos previos;
+  tipos, dependencias y reglas verdes. Revisión del commit del corte pendiente.
+  B3u no iniciado; B3d-REFACTOR-06 sigue sin ejecutar en entornos reales.
 
 ## Fase 8: B3u — UI y acciones de zonas
 

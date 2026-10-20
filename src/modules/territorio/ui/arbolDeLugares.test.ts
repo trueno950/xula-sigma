@@ -29,43 +29,32 @@ const centro = lugar({
   tipo: "colonia",
   padre: 1,
 });
-const sectorUno = lugar({
-  n: 3,
-  nombre: "Sector Único",
-  tipo: "sector",
-  padre: 2,
-});
-const manzana = lugar({ n: 4, nombre: "Manzana 7", tipo: "manzana", padre: 3 });
 const otraColonia = lugar({
   n: 5,
   nombre: "Colonia Norte",
   tipo: "colonia",
   padre: 1,
 });
-const comisaria = lugar({ n: 6, nombre: "Dzununcan", tipo: "comisaria" });
-const todos = [cabecera, centro, sectorUno, manzana, otraColonia, comisaria];
+const comisaria = lugar({ n: 6, nombre: "Dzuncán", tipo: "comisaria" });
+const todos = [cabecera, centro, otraColonia, comisaria];
 const raices = [cabecera, comisaria];
 
 describe("armarArbol sin busqueda", () => {
-  it("muestra tres niveles y resume lo que queda mas adentro", () => {
+  it("muestra los dos niveles del arbol, sin nada que resumir", () => {
     const arbol = armarArbol({ raices, lugares: todos, busqueda: undefined });
 
     const [raiz] = arbol;
-    const hijo = raiz?.hijos[0];
-    const nieto = hijo?.hijos[0];
 
-    expect(arbol.map((n) => n.lugar.nombre)).toEqual([
-      "Buenavista",
-      "Dzununcan",
-    ]);
+    expect(arbol.map((n) => n.lugar.nombre)).toEqual(["Buenavista", "Dzuncán"]);
     expect(raiz?.hijos.map((n) => n.lugar.nombre)).toEqual([
       "Colonia Centro",
       "Colonia Norte",
     ]);
-    expect(nieto?.lugar.nombre).toBe("Sector Único");
-    expect(nieto?.hijos).toEqual([]);
-    expect(nieto?.masAdentro).toBe(1);
-    expect(hijo?.masAdentro).toBe(0);
+    // Una colonia no admite hijos: no hay tercer nivel ni resumen de lo que
+    // queda debajo.
+    expect(raiz?.hijos.every((hijo) => hijo.hijos.length === 0)).toBe(true);
+    expect(raiz?.hijos.every((hijo) => hijo.masAdentro === 0)).toBe(true);
+    expect(raiz?.masAdentro).toBe(0);
   });
 
   it("cada nodo conoce la raiz para armar su enlace", () => {
@@ -77,19 +66,20 @@ describe("armarArbol sin busqueda", () => {
 
 describe("armarArbol con busqueda", () => {
   it("conserva los ancestros del que coincide y sigue hasta el fondo", () => {
-    const arbol = armarArbol({ raices, lugares: todos, busqueda: "manzana" });
+    const arbol = armarArbol({ raices, lugares: todos, busqueda: "norte" });
 
     expect(arbol.map((n) => n.lugar.nombre)).toEqual(["Buenavista"]);
-    const profundo = arbol[0]?.hijos[0]?.hijos[0]?.hijos[0];
-    expect(profundo?.lugar.nombre).toBe("Manzana 7");
+    const profundo = arbol[0]?.hijos[0];
+    expect(profundo?.lugar.nombre).toBe("Colonia Norte");
     expect(profundo?.coincide).toBe(true);
     expect(arbol[0]?.coincide).toBe(false);
   });
 
   it("ignora acentos y mayusculas", () => {
-    const arbol = armarArbol({ raices, lugares: todos, busqueda: "UNICO" });
+    const arbol = armarArbol({ raices, lugares: todos, busqueda: "dzuncan" });
 
-    expect(arbol[0]?.hijos[0]?.hijos[0]?.coincide).toBe(true);
+    expect(arbol.map((n) => n.lugar.nombre)).toEqual(["Dzuncán"]);
+    expect(arbol[0]?.coincide).toBe(true);
   });
 
   it("descarta las ramas sin coincidencias", () => {

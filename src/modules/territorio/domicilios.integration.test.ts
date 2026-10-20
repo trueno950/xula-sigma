@@ -50,13 +50,9 @@ const altaEn = (lugarId: LugarId, calleId: CalleId) =>
   );
 
 describe("altaDeDomicilio", () => {
-  it("un domicilio sin manzana conocida, colgado directo de una colonia, se crea correctamente", async () => {
-    const comisaria = await crearLugar("comisaria", "Comisaria sin manzanas");
-    const colonia = await crearLugar(
-      "colonia",
-      "Colonia sin manzanas",
-      comisaria,
-    );
+  it("un domicilio sin colonia conocida, colgado directo del asentamiento, se crea correctamente", async () => {
+    const comisaria = await crearLugar("comisaria", "Comisaria sin colonias");
+    const colonia = await crearLugar("colonia", "Colonia sin hijos", comisaria);
     const calle = await crearCalle(comisaria, "Calle 21");
 
     const { id } = await altaEn(colonia, calle);
@@ -129,37 +125,40 @@ describe("altaDeDomicilio", () => {
 });
 
 describe("porLugarYSubarbol", () => {
-  it("los domicilios de un sector incluyen el colgado directo y los de sus manzanas, en una sola consulta", async () => {
-    const sector = await crearLugar("sector", "Sector con colgado");
-    const manzanaA = await crearLugar("manzana", "Manzana A", sector);
-    const manzanaB = await crearLugar("manzana", "Manzana B", sector);
-    const calleDelSector = await crearCalle(sector, "Calle del sector");
-    const calleDeA = await crearCalle(manzanaA, "Calle de A");
-    const calleDeB = await crearCalle(manzanaB, "Calle de B");
-
-    const colgadoDelSector = await crearDomicilioEnCalle(
-      sector,
-      calleDelSector,
+  it("los domicilios de un asentamiento incluyen el colgado directo y los de sus colonias, en una sola consulta", async () => {
+    const comisaria = await crearLugar("comisaria", "Comisaria con colgado");
+    const coloniaA = await crearLugar("colonia", "Colonia A", comisaria);
+    const coloniaB = await crearLugar("colonia", "Colonia B", comisaria);
+    const calleDelAsentamiento = await crearCalle(
+      comisaria,
+      "Calle del asentamiento",
     );
-    const deManzanaA = await crearDomicilioEnCalle(manzanaA, calleDeA);
-    const deManzanaB = await crearDomicilioEnCalle(manzanaB, calleDeB);
+    const calleDeA = await crearCalle(comisaria, "Calle de A");
+    const calleDeB = await crearCalle(comisaria, "Calle de B");
+
+    const colgadoDelAsentamiento = await crearDomicilioEnCalle(
+      comisaria,
+      calleDelAsentamiento,
+    );
+    const deColoniaA = await crearDomicilioEnCalle(coloniaA, calleDeA);
+    const deColoniaB = await crearDomicilioEnCalle(coloniaB, calleDeB);
 
     const domicilios = await withTenant(contextoDe().ayuntamientoId, (tx) =>
-      repositorioDeDomiciliosSql.porLugarYSubarbol(tx, sector),
+      repositorioDeDomiciliosSql.porLugarYSubarbol(tx, comisaria),
     );
 
     expect(domicilios.map((d) => d.id).sort()).toEqual(
-      [colgadoDelSector, deManzanaA, deManzanaB].sort(),
+      [colgadoDelAsentamiento, deColoniaA, deColoniaB].sort(),
     );
   });
 
-  it("un domicilio sin residentes aparece igual en la consulta por zona", async () => {
-    const sector = await crearLugar("sector", "Sector sin residentes");
-    const calle = await crearCalle(sector, "Calle desierta");
-    const domicilio = await crearDomicilioEnCalle(sector, calle);
+  it("un domicilio sin residentes aparece igual en la consulta por subarbol", async () => {
+    const comisaria = await crearLugar("comisaria", "Comisaria sin residentes");
+    const calle = await crearCalle(comisaria, "Calle desierta");
+    const domicilio = await crearDomicilioEnCalle(comisaria, calle);
 
     const domicilios = await withTenant(contextoDe().ayuntamientoId, (tx) =>
-      repositorioDeDomiciliosSql.porLugarYSubarbol(tx, sector),
+      repositorioDeDomiciliosSql.porLugarYSubarbol(tx, comisaria),
     );
 
     expect(domicilios.map((d) => d.id)).toContain(domicilio);
@@ -167,22 +166,22 @@ describe("porLugarYSubarbol", () => {
 });
 
 describe("porCalle", () => {
-  it("los domicilios de la Calle 21 incluyen los de todas las manzanas que atraviesa", async () => {
-    const sector = await crearLugar("sector", "Sector atravesado");
-    const manzanaA = await crearLugar(
-      "manzana",
-      "Manzana A de Calle 21",
-      sector,
+  it("los domicilios de la Calle 21 incluyen los de todas las colonias que atraviesa", async () => {
+    const comisaria = await crearLugar("comisaria", "Comisaria atravesada");
+    const coloniaA = await crearLugar(
+      "colonia",
+      "Colonia A de Calle 21",
+      comisaria,
     );
-    const manzanaB = await crearLugar(
-      "manzana",
-      "Manzana B de Calle 21",
-      sector,
+    const coloniaB = await crearLugar(
+      "colonia",
+      "Colonia B de Calle 21",
+      comisaria,
     );
-    const calle21 = await crearCalle(manzanaA, "Calle 21");
+    const calle21 = await crearCalle(comisaria, "Calle 21");
 
-    const enA = await crearDomicilioEnCalle(manzanaA, calle21);
-    const enB = await crearDomicilioEnCalle(manzanaB, calle21);
+    const enA = await crearDomicilioEnCalle(coloniaA, calle21);
+    const enB = await crearDomicilioEnCalle(coloniaB, calle21);
 
     const domicilios = await withTenant(contextoDe().ayuntamientoId, (tx) =>
       repositorioDeDomiciliosSql.porCalle(tx, calle21),

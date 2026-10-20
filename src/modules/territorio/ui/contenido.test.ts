@@ -5,7 +5,7 @@ import {
   calleId,
   coloniaId,
   enColonia,
-  enManzana,
+  enOtraColonia,
   hermano,
   nodoDomicilio,
   nodos,
@@ -19,7 +19,7 @@ describe("domiciliosDirectosDe", () => {
       hermano,
     ]);
     expect(domiciliosDirectosDe(nodos, coloniaId)).not.toContainEqual(
-      enManzana,
+      enOtraColonia,
     );
   });
 

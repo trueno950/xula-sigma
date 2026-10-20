@@ -14,8 +14,6 @@ import { zonaDelFormulario } from "./zonaDelFormulario";
  */
 export const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 export const coloniaId = comoLugarId("22222222-2222-4222-8222-222222222222");
-export const sectorId = comoLugarId("33333333-3333-4333-8333-333333333333");
-export const manzanaId = comoLugarId("44444444-4444-4444-8444-444444444444");
 
 export const nodos: readonly NodoDeSubarbol[] = [
   {
@@ -24,20 +22,6 @@ export const nodos: readonly NodoDeSubarbol[] = [
     tipo: "colonia",
     nombre: "Pablo",
     padreId: cabeceraId,
-  },
-  {
-    clase: "lugar",
-    id: sectorId,
-    tipo: "sector",
-    nombre: "2",
-    padreId: coloniaId,
-  },
-  {
-    clase: "lugar",
-    id: manzanaId,
-    tipo: "manzana",
-    nombre: "San Pedro",
-    padreId: sectorId,
   },
 ];
 
@@ -53,7 +37,7 @@ export const calles = [
 export const renderFormulario = (
   lugar: {
     id: typeof cabeceraId;
-    tipo: "cabecera" | "manzana";
+    tipo: "cabecera" | "colonia";
     nombre: string;
   },
   contexto?: { raiz: string; nodo: string },

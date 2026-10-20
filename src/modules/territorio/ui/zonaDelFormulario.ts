@@ -27,17 +27,17 @@ export type NivelDelFormulario = {
   /** La frase completa que describe donde se guarda por defecto. */
   resumen: string;
   /**
-   * No hay ninguna colonia, sector ni manzana en el municipio. El campo de
-   * colonia no se puede elegir: `CamposDeDomicilio` lo deshabilita y el
-   * marcador y el resumen dicen por que, en vez de dejar un `<select>` con
-   * el marcador solo, que se lee como un control roto.
+   * No hay ninguna colonia en el municipio. El campo de colonia no se puede
+   * elegir: `CamposDeDomicilio` lo deshabilita y el marcador y el resumen
+   * dicen por que, en vez de dejar un `<select>` con el marcador solo, que
+   * se lee como un control roto.
    */
   sinZonas: boolean;
 };
 
 const MARCADOR_SIN_ZONAS = "Sin colonias registradas";
 const AYUDA_SIN_ZONAS =
-  "Todavía no hay colonias, sectores ni manzanas en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.";
+  "Todavía no hay colonias en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.";
 
 const marcadorDe = (
   sinZonas: boolean,

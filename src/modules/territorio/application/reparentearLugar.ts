@@ -60,9 +60,10 @@ async function validarDestino({
  * `changes/archive/` es registro historico de una decision; `specs/` es la
  * regla vigente, y gana.
  *
- * La raggedness es otra cosa y sigue intacta: saltear niveles —un sector
- * colgado directo de una comisaria, sin la colonia intermedia— lo permite
- * `puedeContener`, que solo compara rangos.
+ * La raggedness -saltear niveles- se queda sin escalones que saltear con el
+ * corte de `sector` y `manzana`: quedan dos niveles. La regla que sigue
+ * vigente es la de siempre, que `puedeContener` ya expresa sola: solo
+ * compara rangos.
  */
 export function crearReparentearLugar(repositorio: RepositorioDeLugares) {
   return async function reparentearLugar(

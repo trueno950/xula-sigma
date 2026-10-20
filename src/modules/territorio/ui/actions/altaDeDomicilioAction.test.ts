@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { ZonaIncoherenteError } from "../../domain";
+import { UbicacionIncoherenteError } from "../../domain";
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const altaDeDomicilioMock = vi.hoisted(() => vi.fn());
@@ -29,7 +29,7 @@ const contexto: ContextoActual = {
 const RAIZ = "11111111-1111-4111-8111-111111111111";
 const NODO = "22222222-2222-4222-8222-222222222222";
 const CALLE = "33333333-3333-4333-8333-333333333333";
-const MANZANA = "66666666-6666-4666-8666-666666666666";
+const COLONIA = "66666666-6666-4666-8666-666666666666";
 
 const formulario = (campos: Record<string, string>) => {
   const formData = new FormData();
@@ -57,14 +57,14 @@ describe("altaDeDomicilioAction: zona opcional", () => {
   it("guarda en la zona elegida y la declara", async () => {
     await expect(
       altaDeDomicilioAction(
-        formulario({ ...navegacion, calleId: CALLE, lugarId: MANZANA }),
+        formulario({ ...navegacion, calleId: CALLE, lugarId: COLONIA }),
       ),
     ).rejects.toThrow("ok=domicilio-creado");
 
     expect(altaDeDomicilioMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        lugarId: MANZANA,
-        nivelesDeclarados: [MANZANA],
+        lugarId: COLONIA,
+        nivelesDeclarados: [COLONIA],
         calleId: CALLE,
       }),
       contexto,
@@ -86,18 +86,18 @@ describe("altaDeDomicilioAction: zona opcional", () => {
     );
   });
 
-  it("redacta la zona incoherente para el operador y no el mensaje generico", async () => {
-    altaDeDomicilioMock.mockRejectedValue(new ZonaIncoherenteError());
+  it("redacta la ubicacion incoherente para el operador y no el mensaje generico", async () => {
+    altaDeDomicilioMock.mockRejectedValue(new UbicacionIncoherenteError());
 
     await expect(
       altaDeDomicilioAction(
         formulario({
           ...navegacion,
           calleId: CALLE,
-          lugarId: MANZANA,
+          lugarId: COLONIA,
         }),
       ),
-    ).rejects.toThrow(/error=La\+zona\+elegida\+no\+coincide/);
+    ).rejects.toThrow(/error=La\+ubicaci%C3%B3n\+elegida\+no\+coincide/);
   });
 
   it("rechaza un formulario sin calle antes de resolver sesion", async () => {

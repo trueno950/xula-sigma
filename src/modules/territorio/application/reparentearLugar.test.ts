@@ -28,8 +28,8 @@ const contextoCon = (
 
 const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const comisariaId = comoLugarId("22222222-2222-4222-8222-222222222222");
-const sectorId = comoLugarId("33333333-3333-4333-8333-333333333333");
-const colonia = comoLugarId("44444444-4444-4444-8444-444444444444");
+const coloniaId = comoLugarId("33333333-3333-4333-8333-333333333333");
+const otraColoniaId = comoLugarId("44444444-4444-4444-8444-444444444444");
 
 const lugarGuardado = (
   parcial: Partial<LugarGuardado> & Pick<LugarGuardado, "id" | "tipo">,
@@ -108,34 +108,39 @@ describe("reparentearLugar", () => {
     expect(repositorio.actualizar).not.toHaveBeenCalled();
   });
 
-  it("un sector no puede volverse padre de su propia colonia (rango menor)", async () => {
+  it("una colonia no puede volverse padre de un asentamiento (rango mayor)", async () => {
     vi.mocked(repositorio.buscarPorId).mockImplementation(async (_tx, id) =>
-      id === colonia
-        ? lugarGuardado({ id: colonia, tipo: "colonia" })
-        : lugarGuardado({ id: sectorId, tipo: "sector" }),
+      id === comisariaId
+        ? lugarGuardado({ id: comisariaId, tipo: "comisaria" })
+        : lugarGuardado({ id: otraColoniaId, tipo: "colonia" }),
     );
     const reparentearLugar = crearReparentearLugar(repositorio);
 
     await expect(
-      reparentearLugar(colonia, sectorId, contextoCon("ADMIN_MUNICIPAL")),
+      reparentearLugar(
+        comisariaId,
+        otraColoniaId,
+        contextoCon("ADMIN_MUNICIPAL"),
+      ),
     ).rejects.toBeInstanceOf(JerarquiaInvalidaError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
   });
 
   /**
-   * Este test afirmaba lo contrario -que un sector podia quedar de raiz- y
-   * lo respaldaba un comentario que citaba design.md contra el spec. Por
-   * que el spec gana, en la cabecera de `reparentearLugar.ts`.
+   * Este test afirmaba lo contrario -que un lugar de rango hondo podia
+   * quedar de raiz- y lo respaldaba un comentario que citaba design.md
+   * contra el spec. Por que el spec gana, en la cabecera de
+   * `reparentearLugar.ts`.
    */
-  it("un sector no puede quedar sin padre: solo el rango 0 es raiz", async () => {
+  it("una colonia no puede quedar sin padre: solo el rango 0 es raiz", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(
-      lugarGuardado({ id: sectorId, tipo: "sector", padreId: comisariaId }),
+      lugarGuardado({ id: coloniaId, tipo: "colonia", padreId: comisariaId }),
     );
     const reparentearLugar = crearReparentearLugar(repositorio);
 
     await expect(
-      reparentearLugar(sectorId, null, contextoCon("ADMIN_MUNICIPAL")),
+      reparentearLugar(coloniaId, null, contextoCon("ADMIN_MUNICIPAL")),
     ).rejects.toBeInstanceOf(RaizInvalidaError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
@@ -160,20 +165,24 @@ describe("reparentearLugar", () => {
 
   it("con permiso y jerarquia valida, mueve el lugar y registra solo ids", async () => {
     vi.mocked(repositorio.buscarPorId).mockImplementation(async (_tx, id) =>
-      id === sectorId
-        ? lugarGuardado({ id: sectorId, tipo: "sector", padreId: comisariaId })
+      id === coloniaId
+        ? lugarGuardado({
+            id: coloniaId,
+            tipo: "colonia",
+            padreId: comisariaId,
+          })
         : lugarGuardado({ id: comisariaId, tipo: "comisaria" }),
     );
     const reparentearLugar = crearReparentearLugar(repositorio);
 
     await reparentearLugar(
-      sectorId,
+      coloniaId,
       comisariaId,
       contextoCon("ADMIN_MUNICIPAL"),
     );
 
     expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
-      id: sectorId,
+      id: coloniaId,
       nombre: "nombre",
       padreId: comisariaId,
       bajaEn: null,
@@ -184,7 +193,7 @@ describe("reparentearLugar", () => {
       origen: "web",
       accion: "REPARENTEAR_LUGAR",
       entidad: "lugares",
-      entidadId: sectorId,
+      entidadId: coloniaId,
     });
   });
 });

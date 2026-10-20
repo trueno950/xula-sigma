@@ -10,7 +10,7 @@ import {
   comoLugarId,
   type LugarId,
   TransversalRepetidaError,
-  ZonaIncoherenteError,
+  UbicacionIncoherenteError,
 } from "../../domain";
 import { ejecutarEnContexto } from "./ejecutarEnContexto";
 import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
@@ -55,7 +55,7 @@ const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
   if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof TransversalRepetidaError) return error.message;
-  if (error instanceof ZonaIncoherenteError) return error.message;
+  if (error instanceof UbicacionIncoherenteError) return error.message;
 
   console.error(
     "[territorio] correccion de domicilio fallo",

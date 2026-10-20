@@ -25,7 +25,7 @@ describe("listarRaices", () => {
     await crearLugar("comisaria", "Zeta raiz");
     await crearLugar("comisaria", "Alfa raiz");
     const colonia = await crearLugar("colonia", "Colonia con hijos");
-    await crearLugar("manzana", "Manzana anidada", colonia);
+    await crearLugar("colonia", "Colonia anidada", colonia);
 
     const raices = await withTenant(contextoDe().ayuntamientoId, (tx) =>
       repositorioDeLugaresSql.listarRaices(tx),
@@ -34,7 +34,7 @@ describe("listarRaices", () => {
     const nombres = raices.map((l) => l.nombre);
     expect(nombres).toContain("Alfa raiz");
     expect(nombres).toContain("Zeta raiz");
-    expect(nombres).not.toContain("Manzana anidada");
+    expect(nombres).not.toContain("Colonia anidada");
     expect(nombres.indexOf("Alfa raiz")).toBeLessThan(
       nombres.indexOf("Zeta raiz"),
     );

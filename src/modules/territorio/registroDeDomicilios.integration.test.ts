@@ -166,17 +166,15 @@ describe("registroDeDomicilios", () => {
    * tiene `?raiz=` en la URL, y esa es la pantalla desde la que se entra a
    * buscar un domicilio: sin este dato la fila no podia ofrecer su enlace.
    */
-  it("sin filtro cada fila trae la raiz de su lugar, aunque cuelgue de una manzana", async () => {
+  it("sin filtro cada fila trae la raiz de su lugar, aunque cuelgue de una colonia", async () => {
     const colonia = await crearLugar("colonia", "ConRaiz", cabecera);
-    const sector = await crearLugar("sector", "Sector 3", colonia);
-    const manzana = await crearLugar("manzana", "Manzana 4", sector);
-    const calle = await crearCalle(manzana, "Calle Raiz");
-    const domicilio = await crearDomicilioEnCalle(manzana, calle, "1");
+    const calle = await crearCalle(colonia, "Calle Raiz");
+    const domicilio = await crearDomicilioEnCalle(colonia, calle, "1");
 
     const resultado = await pedir({ calle: "Calle Raiz" }, 10);
     const fila = resultado.domicilios.find(({ id }) => id === domicilio);
 
-    expect(fila?.lugarId).toBe(manzana);
+    expect(fila?.lugarId).toBe(colonia);
     expect(fila?.raizId).toBe(cabecera);
   });
 

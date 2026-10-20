@@ -26,7 +26,7 @@ const contextoCon = (
   origen: "web",
 });
 
-const sectorId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const coloniaId = comoLugarId("11111111-1111-4111-8111-111111111111");
 
 describe("darDeBajaLugar", () => {
   const repositorio: RepositorioDeLugares = {
@@ -47,9 +47,9 @@ describe("darDeBajaLugar", () => {
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
     );
     vi.mocked(repositorio.buscarPorId).mockResolvedValue({
-      id: sectorId,
-      tipo: "sector",
-      nombre: "Sector 3",
+      id: coloniaId,
+      tipo: "colonia",
+      nombre: "Colonia 3",
       padreId: null,
       bajaEn: null,
     });
@@ -61,7 +61,7 @@ describe("darDeBajaLugar", () => {
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 
     await expect(
-      darDeBajaLugar(sectorId, contextoCon("CONSULTA")),
+      darDeBajaLugar(coloniaId, contextoCon("CONSULTA")),
     ).rejects.toBeInstanceOf(NoAutorizadoError);
 
     expect(withTenantMock).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe("darDeBajaLugar", () => {
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 
     await expect(
-      darDeBajaLugar(sectorId, contextoCon("OPERADOR")),
+      darDeBajaLugar(coloniaId, contextoCon("OPERADOR")),
     ).rejects.toBeInstanceOf(NoEncontradoError);
   });
 
@@ -81,7 +81,7 @@ describe("darDeBajaLugar", () => {
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 
     await expect(
-      darDeBajaLugar(sectorId, contextoCon("OPERADOR")),
+      darDeBajaLugar(coloniaId, contextoCon("OPERADOR")),
     ).rejects.toBeInstanceOf(LugarConDependientesError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe("darDeBajaLugar", () => {
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 
     await expect(
-      darDeBajaLugar(sectorId, contextoCon("OPERADOR")),
+      darDeBajaLugar(coloniaId, contextoCon("OPERADOR")),
     ).rejects.toBeInstanceOf(LugarConDependientesError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
@@ -101,17 +101,17 @@ describe("darDeBajaLugar", () => {
   it("sin hijos activos ni domicilios colgados, marca la baja", async () => {
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 
-    await darDeBajaLugar(sectorId, contextoCon("OPERADOR"));
+    await darDeBajaLugar(coloniaId, contextoCon("OPERADOR"));
 
     expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
-      id: sectorId,
-      nombre: "Sector 3",
+      id: coloniaId,
+      nombre: "Colonia 3",
       padreId: null,
       bajaEn: expect.any(Date),
     });
     expect(registrarMock).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ accion: "BAJA_LUGAR", entidadId: sectorId }),
+      expect.objectContaining({ accion: "BAJA_LUGAR", entidadId: coloniaId }),
     );
   });
 });

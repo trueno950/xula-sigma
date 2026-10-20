@@ -32,10 +32,14 @@ const colonia = lugar({
   tipo: "colonia",
   padre: 1,
 });
-const sector = lugar({ n: 3, nombre: "Sector Uno", tipo: "sector", padre: 2 });
-const manzana = lugar({ n: 4, nombre: "Manzana 7", tipo: "manzana", padre: 3 });
+const otraColonia = lugar({
+  n: 3,
+  nombre: "Colonia Norte",
+  tipo: "colonia",
+  padre: 1,
+});
 const comisaria = lugar({ n: 5, nombre: "Dzununcan", tipo: "comisaria" });
-const todos = [cabecera, colonia, sector, manzana, comisaria];
+const todos = [cabecera, colonia, otraColonia, comisaria];
 
 const cuentas: ConteoDeLugar[] = [
   { lugarId: cabecera.id, domicilios: 12, calles: 6 },
@@ -94,17 +98,16 @@ describe("NodoDelArbol: comportamiento que se conserva", () => {
     expect(html).toContain(
       `href="/territorio?raiz=${cabecera.id}&amp;nodo=${colonia.id}"`,
     );
-    expect(html).toContain("1 lugar más adentro");
     expect(html).toContain(
-      `href="/territorio?raiz=${cabecera.id}&amp;nodo=${sector.id}"`,
+      `href="/territorio?raiz=${cabecera.id}&amp;nodo=${otraColonia.id}"`,
     );
   });
 
   it("con busqueda abre las ramas que llevan a la coincidencia", () => {
-    const html = pintar("manzana");
+    const html = pintar("norte");
 
-    expect(html).toContain("Manzana 7");
-    expect(html.match(/<details open/g) ?? []).toHaveLength(3);
+    expect(html).toContain("Colonia Norte");
+    expect(html.match(/<details open/g) ?? []).toHaveLength(1);
   });
 });
 
@@ -133,24 +136,26 @@ const finDeDetails = (html: string, abre: number) => {
 };
 
 describe("NodoDelArbol: el enlace de la rama vive fuera de su propio details", () => {
+  // Con dos niveles el unico nodo con hijos es el asentamiento, asi que es
+  // el unico que puede alternarse.
+  const hrefCabecera = `/territorio?raiz=${cabecera.id}`;
   const hrefColonia = `/territorio?raiz=${cabecera.id}&amp;nodo=${colonia.id}`;
-  const hrefSector = `/territorio?raiz=${cabecera.id}&amp;nodo=${sector.id}`;
 
   it("la rama cerrada conserva su enlace fuera del details que la alterna", () => {
     const html = pintar();
-    const abreColonia = abreDeCadaDetails(html)[1] ?? -1;
+    const abreCabecera = abreDeCadaDetails(html)[0] ?? -1;
 
-    expect(abreColonia).toBeGreaterThan(0);
-    expect(html.indexOf(`href="${hrefColonia}"`)).toBeGreaterThan(-1);
-    expect(html.indexOf(`href="${hrefColonia}"`)).toBeLessThan(abreColonia);
+    expect(abreCabecera).toBeGreaterThan(0);
+    expect(html.indexOf(`href="${hrefCabecera}"`)).toBeGreaterThan(-1);
+    expect(html.indexOf(`href="${hrefCabecera}"`)).toBeLessThan(abreCabecera);
   });
 
   it("lo que cuelga de la rama si queda dentro de su details", () => {
     const html = pintar();
-    const abreColonia = abreDeCadaDetails(html)[1] ?? -1;
-    const finColonia = finDeDetails(html, abreColonia);
+    const abreCabecera = abreDeCadaDetails(html)[0] ?? -1;
+    const finCabecera = finDeDetails(html, abreCabecera);
 
-    expect(html.indexOf(`href="${hrefSector}"`)).toBeGreaterThan(abreColonia);
-    expect(html.indexOf(`href="${hrefSector}"`)).toBeLessThan(finColonia);
+    expect(html.indexOf(`href="${hrefColonia}"`)).toBeGreaterThan(abreCabecera);
+    expect(html.indexOf(`href="${hrefColonia}"`)).toBeLessThan(finCabecera);
   });
 });

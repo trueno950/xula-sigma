@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   cabeceraId,
   coloniaId,
-  manzanaId,
   renderFormulario,
 } from "./fixturasDeFormularioDeDomicilio";
 
@@ -58,18 +57,18 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
     expect(html).toContain("Calle 21");
   });
 
-  it("en una manzana prefija el nodo y el resumen nombra la cadena", () => {
+  it("en una colonia prefija el nodo y el resumen nombra la cadena", () => {
     const html = renderFormulario({
-      id: manzanaId,
-      tipo: "manzana",
-      nombre: "San Pedro",
+      id: coloniaId,
+      tipo: "colonia",
+      nombre: "Pablo",
     });
 
     expect(html).toContain(
-      "Sin cambiar la colonia, se guarda en Manzana San Pedro · Sector 2 · Colonia Pablo · Tepakan.",
+      "Sin cambiar la colonia, se guarda en Colonia Pablo · Tepakan.",
     );
     expect(html).not.toContain("Se guardara en:");
-    expect(html).toContain(`value="${manzanaId}" selected=""`);
-    expect(html).toContain("San Pedro — Tepakan › Pablo › 2");
+    expect(html).toContain(`value="${coloniaId}" selected=""`);
+    expect(html).toContain("Pablo — Tepakan");
   });
 });

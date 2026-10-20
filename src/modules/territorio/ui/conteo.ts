@@ -35,9 +35,9 @@ export const descendientesDe = <Id extends string>(
 /**
  * Cuantos lugares quedan por debajo de los que la fila ya muestra.
  *
- * Contaba un solo nivel -los hijos de los hijos-, asi que un municipio con
- * comisaria, seccion y manzana declaraba menos lugares de los que esconde.
- * La etiqueta dice "mas adentro", no "un nivel mas adentro".
+ * Contaba un solo nivel -los hijos de los hijos-, asi que declaraba menos
+ * lugares de los que esconde. La etiqueta dice "mas adentro", no "un nivel
+ * mas adentro".
  */
 export const masAdentroDe = <Id extends string>(
   ids: readonly Id[],

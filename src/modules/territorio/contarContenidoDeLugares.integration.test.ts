@@ -33,14 +33,18 @@ describe("contarPorLugar", () => {
   it("suma los domicilios de todo el subarbol y cuenta las calles propias, sin las bajas", async () => {
     const cabecera = await crearLugar("cabecera", "Cabecera de cuentas");
     const colonia = await crearLugar("colonia", "Colonia de cuentas", cabecera);
-    const manzana = await crearLugar("manzana", "Manzana de cuentas", colonia);
+    const otraColonia = await crearLugar(
+      "colonia",
+      "Otra colonia de cuentas",
+      cabecera,
+    );
     const calleA = await crearCalle(cabecera, "Calle 1");
     const calleBaja = await crearCalle(cabecera, "Calle de baja");
     await crearDomicilioEnCalle(cabecera, calleA, "1");
     await crearDomicilioEnCalle(colonia, calleA, "2");
     await crearDomicilioEnCalle(colonia, calleA, "3");
-    await crearDomicilioEnCalle(manzana, calleA, "4");
-    const dadoDeBaja = await crearDomicilioEnCalle(manzana, calleA, "5");
+    await crearDomicilioEnCalle(otraColonia, calleA, "4");
+    const dadoDeBaja = await crearDomicilioEnCalle(otraColonia, calleA, "5");
     await withTenant(contextoDe().ayuntamientoId, async (tx) => {
       await tx
         .update(calles)
@@ -59,8 +63,8 @@ describe("contarPorLugar", () => {
       domicilios: 4,
       calles: 1,
     });
-    expect(cuentas.get(colonia)?.domicilios).toBe(3);
-    expect(cuentas.get(manzana)?.domicilios).toBe(1);
+    expect(cuentas.get(colonia)?.domicilios).toBe(2);
+    expect(cuentas.get(otraColonia)?.domicilios).toBe(1);
   });
 
   it("un lugar sin nada adentro cuenta cero, y uno dado de baja no aparece ni suma", async () => {

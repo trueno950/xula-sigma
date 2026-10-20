@@ -10,18 +10,16 @@ const lugar = (n: number, tipo: TipoDeLugar) => ({ id: id(n), tipo });
 const CABECERA = lugar(1, "cabecera");
 const COMISARIA = lugar(2, "comisaria");
 const COLONIA = lugar(3, "colonia");
-const SECTOR = lugar(4, "sector");
-const MANZANA = lugar(5, "manzana");
+const OTRA_COLONIA = lugar(4, "colonia");
 
-const CATALOGO = [CABECERA, COMISARIA, COLONIA, SECTOR, MANZANA];
+const CATALOGO = [CABECERA, COMISARIA, COLONIA, OTRA_COLONIA];
 
 describe("destinosDeReparenteo", () => {
   it("ofrece solo los lugares cuyo tipo puede contener al que se mueve", () => {
-    expect(destinosDeReparenteo(MANZANA, CATALOGO)).toEqual([
+    // Una colonia solo cabe en un asentamiento: el arbol tiene dos niveles.
+    expect(destinosDeReparenteo(COLONIA, CATALOGO)).toEqual([
       CABECERA,
       COMISARIA,
-      COLONIA,
-      SECTOR,
     ]);
   });
 
@@ -30,24 +28,22 @@ describe("destinosDeReparenteo", () => {
   });
 
   it("nunca se ofrece a si mismo", () => {
-    const otraColonia = lugar(6, "colonia");
-
-    expect(destinosDeReparenteo(COLONIA, [COLONIA, otraColonia])).toEqual([]);
+    expect(destinosDeReparenteo(COLONIA, [COLONIA, OTRA_COLONIA])).toEqual([]);
   });
 
   it("conserva el orden del catalogo", () => {
-    expect(destinosDeReparenteo(SECTOR, [COLONIA, CABECERA])).toEqual([
-      COLONIA,
+    expect(destinosDeReparenteo(COLONIA, [COMISARIA, CABECERA])).toEqual([
+      COMISARIA,
       CABECERA,
     ]);
   });
 
   /**
-   * El caso que abrio esto: `norte`, una manzana suelta, se abria como raiz
-   * de `/territorio`, y el formulario de mover recibia el subarbol de esa
+   * El caso que abrio esto: un lugar de rango hondo se abria como raiz de
+   * `/territorio`, y el formulario de mover recibia el subarbol de esa
    * misma raiz —vacio— en vez del catalogo del municipio.
    */
   it("con catalogo vacio no hay destino", () => {
-    expect(destinosDeReparenteo(MANZANA, [])).toEqual([]);
+    expect(destinosDeReparenteo(COLONIA, [])).toEqual([]);
   });
 });

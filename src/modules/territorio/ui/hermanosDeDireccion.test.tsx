@@ -5,11 +5,11 @@ import {
   base,
   domicilio,
   domicilioId,
-  enOtraManzana,
-  hermanaEnManzanaId,
+  enOtraColonia,
+  hermanaEnOtraColoniaId,
   hermanaId,
-  manzanaId,
   nodos,
+  otraColoniaId,
   vecinaId,
 } from "./fixturasDeDomicilios";
 import { TabDeDomicilios } from "./TabDeDomicilios";
@@ -44,16 +44,16 @@ describe("domicilios: hermanos de direccion", () => {
     expect(hermanos).not.toContain(`domicilio=${vecinaId}`);
   });
 
-  it("enlaza a un hermano de otra manzana con el lugar del hermano, no el del panel abierto", () => {
+  it("enlaza a un hermano de otra colonia con el lugar del hermano, no el del panel abierto", () => {
     const html = render({
       domicilio,
       domicilioId,
-      nodos: [...nodos, enOtraManzana],
+      nodos: [...nodos, enOtraColonia],
     });
-    const inicioDelLink = html.indexOf(`domicilio=${hermanaEnManzanaId}`);
+    const inicioDelLink = html.indexOf(`domicilio=${hermanaEnOtraColoniaId}`);
     const href = html.slice(Math.max(0, inicioDelLink - 100), inicioDelLink);
 
-    expect(href).toContain(`nodo=${manzanaId}`);
+    expect(href).toContain(`nodo=${otraColoniaId}`);
   });
 
   it("sin otro domicilio en la misma direccion no dice nada", () => {

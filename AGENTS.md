@@ -415,8 +415,8 @@ Notas que no caben en la tabla, una por fila que las necesita:
   de direcciones editables): mismo motivo exacto que `renombrarCalleAction`,
   cada uno su `<form>` nativo. `corregirDomicilioAction` redacta
   `NoAutorizadoError`, `NoEncontradoError`, `TransversalRepetidaError` y
-  `ZonaIncoherenteError` -la zona o la calle elegidas no pertenecen al
-  asentamiento de la direccion-; `darDeBajaDomicilioAction` redacta
+  `UbicacionIncoherenteError` -la colonia o la calle elegidas no pertenecen
+  al asentamiento de la direccion-; `darDeBajaDomicilioAction` redacta
   `NoAutorizadoError`, `NoEncontradoError` y `DomicilioConResidentesError`
   -hay una residencia vigente y la direccion no se da de baja por debajo de
   ella-.
