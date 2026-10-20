@@ -57,9 +57,9 @@ export function DatosDeDomicilio({
 
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <h3 className="break-words text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
+      <h2 className="break-words text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
         {direccionDe(calle, domicilio.numero)}
-      </h3>
+      </h2>
       {zona ? (
         <p className={CLASES_DE_ETIQUETA}>
           {"Lugar: "}

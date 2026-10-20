@@ -86,12 +86,17 @@ export default async function LayoutDePanel({
       </aside>
 
       <div className="min-w-0">
-        <div className="border-b border-caliza-divisor lg:hidden">
+        {/*
+          `header` y no `nav`: la barra solo lleva la marca y el nombre del
+          municipio. Un segundo `nav` competiria con la barra inferior, y
+          sin landmark su contenido queda fuera de todo (`region`, axe).
+        */}
+        <header className="border-b border-caliza-divisor lg:hidden">
           <BloqueDeMunicipio
             nombre={ayuntamiento.nombre}
             escudo={marca.escudo}
           />
-        </div>
+        </header>
         <div className="pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
           {children}
         </div>

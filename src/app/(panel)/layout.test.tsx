@@ -59,6 +59,27 @@ describe("layout del panel", () => {
     expect(html).toContain("contenido");
   });
 
+  it("encierra la barra superior del movil en un landmark", async () => {
+    const html = await pintar();
+    const desde = html.indexOf("<header");
+    const cabecera = html.slice(desde, html.indexOf("</header>"));
+
+    expect(desde).toBeGreaterThan(-1);
+    expect(cabecera).toMatch(/^<header[^>]*class="[^"]*lg:hidden/);
+    expect(cabecera).toMatch(/<a[^>]*aria-label="Motul, inicio"[^>]*href="\/"/);
+  });
+
+  it("no duplica el landmark de la barra inferior", async () => {
+    const html = await pintar();
+    const cabecera = html.slice(
+      html.indexOf("<header"),
+      html.indexOf("</header>"),
+    );
+
+    expect(cabecera).not.toContain("<nav");
+    expect(html.match(/aria-label="Navegación principal"/g)).toHaveLength(1);
+  });
+
   it("solo ofrece los modulos que el rol puede usar", async () => {
     contextoActualMock.mockResolvedValue({
       usuario: { id: "u2", rol: "OPERADOR" },

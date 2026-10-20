@@ -13,6 +13,11 @@ import { CLASES_DE_TARJETA } from "./estilos";
  * **Prohibido anidar** (mismo documento): un panel dentro de otro significa
  * que la jerarquia se resolvio con cajas en vez de con tipografia. No hay
  * nada en el codigo que lo impida; el que lo hace es el que revisa.
+ *
+ * El titulo va en `h2` y no en `h3`: el panel siempre cuelga del `h1` de
+ * `PaginaDePanel` y ninguna de sus pantallas pone un `h2` antes, asi que el
+ * segundo nivel es el suyo. Con `h3` la jerarquia saltaba de uno a tres
+ * —`heading-order` de axe, moderado, en `/territorio?accion=domicilio`—.
  */
 export function Panel({
   titulo,
@@ -25,7 +30,7 @@ export function Panel({
     <section
       className={`flex w-full max-w-[720px] flex-col gap-4 ${CLASES_DE_TARJETA} md:p-6 [&>a]:self-start [&_form>button]:self-start max-sm:[&>a]:self-stretch max-sm:[&_form>button]:self-stretch`}
     >
-      <h3 className="text-[15px] font-semibold text-caliza-tinta">{titulo}</h3>
+      <h2 className="text-[15px] font-semibold text-caliza-tinta">{titulo}</h2>
       {children}
     </section>
   );
