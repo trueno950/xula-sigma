@@ -5,7 +5,8 @@ import {
   GrupoDeCampos,
   type OpcionDeLista,
 } from "@/shared/ui";
-import type { NivelDelFormulario } from "./vistaDeDomicilios";
+import { SelectorDeCalleConBusqueda } from "./SelectorDeCalleConBusqueda";
+import type { NivelDelFormulario } from "./zonaDelFormulario";
 
 type Valores = {
   calleId: string;
@@ -54,7 +55,13 @@ function Seccion({
  * alta y la correccion; solo cambian los `id` y los valores de arranque.
  *
  * La colonia es un campo con etiqueta y no un bloque plegado: es opcional,
- * pero esconderla hacia que la operadora no supiera que existia.
+ * pero esconderla hacia que la operadora no supiera que existia. Cuando el
+ * municipio no tiene ninguna zona el campo se deshabilita y explica el
+ * vacio (`NivelDelFormulario.sinZonas`): un `<select>` con el marcador solo
+ * se lee como un control roto.
+ *
+ * La calle es el unico campo obligatorio y el unico con buscador; ver
+ * `SelectorDeCalleConBusqueda`.
  */
 export function CamposDeDomicilio({
   prefijo,
@@ -71,14 +78,13 @@ export function CamposDeDomicilio({
   return (
     <>
       <Seccion titulo="Dónde" agrupar={agrupar}>
-        <CampoDeLista
+        <SelectorDeCalleConBusqueda
           id={`${prefijo}-calle-id`}
           name="calleId"
-          etiqueta="Calle"
-          marcador="Seleccione una calle"
           opciones={opciones}
+          marcador="Seleccione una calle"
           ayuda="La calle donde está el domicilio."
-          {...por("calleId")}
+          valorInicial={valores?.calleId}
         />
         <Campo
           id={`${prefijo}-numero`}
@@ -97,6 +103,7 @@ export function CamposDeDomicilio({
           opciones={zona.opciones}
           ayuda={zona.resumen}
           defaultValue={zona.inicial}
+          disabled={zona.sinZonas}
         />
       </Seccion>
 

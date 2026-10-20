@@ -7,7 +7,7 @@ import { FormularioDeBajaDeDomicilio } from "./FormularioDeBajaDeDomicilio";
 import { FormularioDeCorreccionDeDomicilio } from "./FormularioDeCorreccionDeDomicilio";
 import { opcionesDeCalles } from "./opciones";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
-import type { NivelDelFormulario } from "./vistaDeDomicilios";
+import type { NivelDelFormulario } from "./zonaDelFormulario";
 
 export type AccionDeDomicilio = "corregirDomicilio" | "bajaDomicilio";
 

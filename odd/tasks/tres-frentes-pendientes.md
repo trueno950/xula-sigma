@@ -37,8 +37,12 @@ funcional de territorio.
   `Panel` a `h2` y el mismo salto `h1→h3` en `PanelDeCalle` y
   `DatosDeDomicilio`. Medido con axe-core 4.12.1: 0 violaciones a 390×844 y a
   1280×900, barra comprobada como `header` único y secuencia `h1→h2`.
-- [ ] **T3** · S3(a,b,c) · delegado — Los tres arreglos de territorio que no
-  necesitan decisión de producto.
+- [x] **T3** · S3(a,b,c) · delegado — Los tres arreglos de territorio que no
+  necesitan decisión de producto. `raizId` derivado por tres saltos en la
+  consulta (la fila siempre enlaza), Colonia vacía ofrecida deshabilitada con
+  salida nombrada, y selector de calle con búsqueda que degrada a la lista
+  completa sin JavaScript. Verificación del padre: check 0, unit 315/1830,
+  integration 121/434 —el test 434 es la cadena manzana→sector→colonia→cabecera.
 - [ ] **T4** · S3(d) · decidir — Si el historial amplía su capa de datos para
   mostrar nombre anterior/nuevo, coordenadas y folio.
 - [ ] **T5** · S1-S3 · directo — `pnpm check` y suites en verde; commits por

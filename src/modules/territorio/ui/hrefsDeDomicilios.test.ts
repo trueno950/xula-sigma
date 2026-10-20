@@ -86,34 +86,30 @@ describe("hrefDeDomicilioDelRegistro", () => {
   const domicilio = {
     id: comoDomicilioId("55555555-5555-4555-8555-555555555555"),
     lugarId: coloniaId,
+    raizId: cabeceraId,
   };
   const destino = (raiz: string) =>
     `/territorio?raiz=${raiz}&nodo=${coloniaId}&vista=domicilios&domicilio=${domicilio.id}#panel-de-domicilio`;
 
-  it("usa el asentamiento del filtro como raiz", () => {
-    expect(
-      hrefDeDomicilioDelRegistro(domicilio, {
-        filtros: { raizId: cabeceraId },
-        raices: [],
-      }),
-    ).toBe(destino(cabeceraId));
+  /**
+   * La raiz viaja en la fila: el registro sin filtro no tiene `?raiz=` de
+   * donde sacarla, y esa es justamente la pantalla de la que se entra a
+   * buscar un domicilio.
+   */
+  it("usa la raiz que trae la fila", () => {
+    expect(hrefDeDomicilioDelRegistro(domicilio)).toBe(destino(cabeceraId));
   });
 
   it("si el lugar es un asentamiento, el es la raiz", () => {
     expect(
-      hrefDeDomicilioDelRegistro(
-        { ...domicilio, lugarId: cabeceraId },
-        { filtros: {}, raices: [cabeceraId] },
-      ),
+      hrefDeDomicilioDelRegistro({
+        ...domicilio,
+        lugarId: cabeceraId,
+        raizId: cabeceraId,
+      }),
     ).toBe(
       `/territorio?raiz=${cabeceraId}&nodo=${cabeceraId}&vista=domicilios&domicilio=${domicilio.id}#panel-de-domicilio`,
     );
-  });
-
-  it("sin raiz conocida no inventa un enlace", () => {
-    expect(
-      hrefDeDomicilioDelRegistro(domicilio, { filtros: {}, raices: [] }),
-    ).toBeUndefined();
   });
 });
 

@@ -13,6 +13,7 @@ type FilaDeRegistro = {
   numero: string | null;
   lugar: string;
   lugarId: string;
+  raizId: string;
 };
 
 const aDomicilioDelRegistro = (fila: FilaDeRegistro): DomicilioDelRegistro => ({
@@ -20,12 +21,20 @@ const aDomicilioDelRegistro = (fila: FilaDeRegistro): DomicilioDelRegistro => ({
   id: comoDomicilioId(fila.id),
   calleId: comoCalleId(fila.calleId),
   lugarId: comoLugarId(fila.lugarId),
+  raizId: comoLugarId(fila.raizId),
 });
 
 /**
  * Si `raizId` no existe, el CTE no tiene filas y el filtro conserva el
  * resultado vacio; no se degrada a consultar todo el tenant. RLS acota ambas
  * ramas y el SELECT final dentro de la misma transaccion de tenant.
+ *
+ * La raiz de cada fila sale de subir por `padre_id`, no del filtro: sin
+ * filtro no hay `?raiz=` en la URL. Tres saltos alcanzan porque
+ * `tipoDeLugar.ts` modela la jerarquia con `RANGO` 0..3 -de una manzana a su
+ * cabecera hay tres aristas-, y los `LEFT JOIN` son finitos aunque un dato
+ * malo encadenara mas niveles: en ese caso la fila apunta al tercer
+ * ancestro, que ya no es un asentamiento.
  */
 export const registroDeDomiciliosSql: Pick<
   RepositorioDeDomicilios,
@@ -57,10 +66,14 @@ export const registroDeDomiciliosSql: Pick<
          WHERE d.profundidad < 8 AND l.baja_en IS NULL
       )
       SELECT dom.id, cal.nombre AS calle, dom.calle_id AS "calleId",
-             dom.numero, lug.nombre AS lugar, dom.lugar_id AS "lugarId"
+             dom.numero, lug.nombre AS lugar, dom.lugar_id AS "lugarId",
+             COALESCE(padre3.id, padre2.id, padre1.id, lug.id) AS "raizId"
         FROM domicilios dom
         JOIN calles cal ON cal.id = dom.calle_id
         JOIN lugares lug ON lug.id = dom.lugar_id
+        LEFT JOIN lugares padre1 ON padre1.id = lug.padre_id
+        LEFT JOIN lugares padre2 ON padre2.id = padre1.padre_id
+        LEFT JOIN lugares padre3 ON padre3.id = padre2.padre_id
        WHERE dom.baja_en IS NULL
              ${condicionDeRaiz}
              ${condicionDeCalle}

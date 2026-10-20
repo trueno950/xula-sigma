@@ -6,8 +6,8 @@ import {
   type LugarConPadre,
   opcionesDeCallesDelMunicipio,
   opcionesDeNivel,
-  zonaDelFormulario,
 } from "./vistaDeDomicilios";
+import { zonaDelFormulario } from "./zonaDelFormulario";
 
 const motulId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const tepakanId = comoLugarId("22222222-2222-4222-8222-222222222222");
@@ -100,6 +100,7 @@ describe("zonaDelFormulario", () => {
 
     expect(zona.marcador).toBe("Sin colonia: Tepakan");
     expect(zona.inicial).toBe("");
+    expect(zona.sinZonas).toBe(false);
     expect(zona.resumen).toBe(
       "Sin elegir colonia, se guarda en el asentamiento de la calle.",
     );
@@ -125,5 +126,35 @@ describe("zonaDelFormulario", () => {
     expect(zona.resumen).toBe(
       "Sin elegir colonia, se guarda en el asentamiento de la calle.",
     );
+  });
+
+  /**
+   * La entrada del municipio ofrece el alta sin zonas cargadas cuando nadie
+   * creo una todavia, y el `<select>` de Colonia salia con el marcador solo:
+   * un control vacio que la operadora no puede distinguir de uno roto. Con
+   * `sinZonas` el campo lo dice y nombra la salida en vez de mentir.
+   */
+  it("sin ninguna zona en el municipio el campo lo dice en vez de quedar vacio", () => {
+    const soloAsentamientos = lugares.filter((lugar) => lugar.padreId === null);
+
+    const zona = zonaDelFormulario(soloAsentamientos, undefined, undefined);
+
+    expect(zona.opciones).toEqual([]);
+    expect(zona.sinZonas).toBe(true);
+    expect(zona.marcador).toBe("Sin colonias registradas");
+    expect(zona.resumen).toBe(
+      "Todavía no hay colonias, sectores ni manzanas en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.",
+    );
+  });
+
+  it("con una sola zona el campo vuelve a ofrecerse normal", () => {
+    const zona = zonaDelFormulario(
+      lugares.filter((lugar) => lugar.tipo !== "manzana"),
+      undefined,
+      undefined,
+    );
+
+    expect(zona.sinZonas).toBe(false);
+    expect(zona.marcador).toBe("Sin colonia");
   });
 });

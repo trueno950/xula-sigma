@@ -143,6 +143,12 @@ describe("El alta de domicilio desde la entrada", () => {
       html.indexOf('name="lugarId"'),
     );
     expect(html).not.toContain('href="/territorio?accion=domicilio"');
+    // Un municipio recien creado tiene una cabecera y ninguna colonia: ahi
+    // el `<select>` de Colonia salia con el marcador solo, sin decir por que.
+    expect(html).toContain("Sin colonias registradas");
+    expect(html).toContain(
+      "Todavía no hay colonias, sectores ni manzanas en el municipio",
+    );
   });
 });
 

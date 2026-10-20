@@ -24,6 +24,7 @@ const domicilioDePrueba = (id: string): DomicilioDelRegistro => ({
   numero: "5",
   lugar: "Centro",
   lugarId: raizId,
+  raizId,
 });
 
 describe("registroDeDomicilios", () => {

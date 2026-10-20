@@ -74,3 +74,25 @@ Codex dejó 4 comentarios P1 sobre el commit 73c7020 (funciones de más de 30 l�
 ## Ronda 6 del revisor de IA (PR #94)
 
 El revisor pidió que toda función que no sea JSX tenga 30 líneas de código o menos; el usuario eligió dividir las 8 señaladas. `pestanasDePanel` (48) se apoya en `pestanaDeCuenta` y `hrefDePanel`; `rutaDelArbol` (33) recorre una lista de claves; las seis acciones (32 a 51) comparten `ejecutarEnContexto` (sesión, caso de uso con vuelta al árbol si falla, repintado) y las dos de domicilio extraen `comandoDe`. Sin cambio de comportamiento: el orden validar, navegación, sesión, caso de uso, revalidar y redirigir es el mismo y las pruebas existentes pasan sin tocarlas. Mayor resultado: 26 líneas de código (`reparentearLugarAction`).
+
+## Cierre de la deuda de U5
+
+Los tres puntos del "Pendiente (requiere datos)" de la rebanada U5 quedaron
+resueltos:
+
+- **`raizId` en el registro**: la consulta lo deriva subiendo por `padre_id`
+  con tres `LEFT JOIN` (el `RANGO` 0..3 de `tipoDeLugar.ts`: de una manzana a
+  su cabecera hay tres aristas) y `COALESCE` se queda con el ancestro más alto
+  disponible. `hrefDeDomicilioDelRegistro(fila)` ya no recibe contexto ni
+  puede devolver `undefined`: la fila siempre enlaza, con o sin filtro de
+  asentamiento. Lo prueba una integración con la cadena real
+  manzana→sector→colonia→cabecera.
+- **Colonia vacía en la entrada**: el select se ofrece **deshabilitado**, con
+  "Sin colonias registradas" y la salida nombrada, en vez de ocultarse.
+  Ocultarlo haría que la forma del formulario dependiera de los datos y que la
+  operadora no descubriera el campo; un control vacío sin frase se lee como
+  roto.
+- **Selector de calle con búsqueda**: `SelectorDeCalleConBusqueda` es una hoja
+  `use client` mínima con un `type="search"` sin `name` que acorta la lista del
+  `<select name="calleId">`. El SSR emite todas las opciones, así que sin
+  JavaScript se elige igual. Va sólo en el campo Calle obligatorio.

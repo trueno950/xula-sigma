@@ -23,10 +23,8 @@ import {
   type PermisosDeTerritorio,
   puedeAbrir,
 } from "@/modules/territorio/ui/permisos";
-import {
-  lugaresDeNodos,
-  zonaDelFormulario,
-} from "@/modules/territorio/ui/vistaDeDomicilios";
+import { lugaresDeNodos } from "@/modules/territorio/ui/vistaDeDomicilios";
+import { zonaDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
 import { EnlaceDeAccion } from "@/shared/ui";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 

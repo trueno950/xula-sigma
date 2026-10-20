@@ -16,11 +16,8 @@ import { DatosDeDomicilio } from "./DatosDeDomicilio";
 import { HermanosDeDireccion } from "./HermanosDeDireccion";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
-import {
-  direccionDe,
-  lugaresDeNodos,
-  zonaConInicial,
-} from "./vistaDeDomicilios";
+import { direccionDe, lugaresDeNodos } from "./vistaDeDomicilios";
+import { zonaConInicial } from "./zonaDelFormulario";
 
 type Props = {
   raizId: LugarId;

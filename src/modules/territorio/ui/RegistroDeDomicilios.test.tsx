@@ -21,6 +21,7 @@ const domicilio: DomicilioDelRegistro = {
   numero: "5",
   lugar: "Centro",
   lugarId: coloniaId,
+  raizId: cabeceraId,
 };
 
 const raices: readonly OpcionDeLista[] = [

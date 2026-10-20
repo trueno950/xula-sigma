@@ -23,7 +23,7 @@ type EslabonDeZona = {
   nombre: string;
 };
 
-type Asentamiento = { id: LugarId; nombre: string };
+export type Asentamiento = { id: LugarId; nombre: string };
 
 export const lugaresDeNodos = (
   nodos: readonly NodoDeSubarbol[],
@@ -94,7 +94,7 @@ const nombreDeNivel = (eslabon: EslabonDeZona): string =>
  * el select es nativo y no vuelve a renderizar cuando el operador lo
  * cambia, asi que una frase sobre "lo elegido" mentiria apenas se toque.
  */
-const resumenDeGuardado = (
+export const resumenDeGuardado = (
   lugares: readonly LugarConPadre[],
   asentamiento: Asentamiento | undefined,
   zonaId: LugarId | "",
@@ -144,39 +144,3 @@ export const opcionesDeCallesDelMunicipio = (
     valor: calle.id,
     etiqueta: etiquetaDeCamino(calle.nombre, [calle.asentamiento]),
   }));
-
-export type NivelDelFormulario = {
-  opciones: readonly OpcionDeLista[];
-  /** El primer `<option>`: el asentamiento, o "Sin colonia" cuando no se conoce. */
-  marcador: string;
-  /** El nivel con el que abre el select: el nodo actual, o vacio. */
-  inicial: LugarId | "";
-  /** La frase completa que describe donde se guarda por defecto. */
-  resumen: string;
-};
-
-export const zonaConInicial = (
-  lugares: readonly LugarConPadre[],
-  asentamiento: Asentamiento | undefined,
-  inicial: LugarId | "",
-): NivelDelFormulario => ({
-  opciones: opcionesDeNivel(lugares, asentamiento),
-  marcador: asentamiento
-    ? `Sin colonia: ${asentamiento.nombre}`
-    : "Sin colonia",
-  inicial,
-  resumen: resumenDeGuardado(lugares, asentamiento, inicial),
-});
-
-export const zonaDelFormulario = (
-  lugares: readonly LugarConPadre[],
-  asentamiento: Asentamiento | undefined,
-  lugarActual: { id: LugarId; tipo: TipoDeLugar } | undefined,
-): NivelDelFormulario => {
-  const inicial =
-    lugarActual && !puedeTenerCatalogoDeCalles(lugarActual.tipo)
-      ? lugarActual.id
-      : "";
-
-  return zonaConInicial(lugares, asentamiento, inicial);
-};

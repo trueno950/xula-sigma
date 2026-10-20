@@ -66,25 +66,17 @@ export function hrefSinFiltroDeDomicilios(
 }
 
 /**
- * El panel del domicilio dentro de su lugar. El registro no trae el
- * asentamiento de cada fila, asi que la raiz sale de lo que la pantalla ya
- * sabe: el filtro de asentamiento (todo lo listado cuelga de el) o el
- * propio lugar cuando es un asentamiento. Sin ninguno de los dos devuelve
- * `undefined` y la fila no promete un enlace que no puede armar.
+ * El panel del domicilio dentro de su asentamiento. La raiz sale de la
+ * propia fila: el registro sin filtro no tiene `?raiz=` de donde sacarla, y
+ * esa es la pantalla desde la que se entra a buscar un domicilio. Hasta U5
+ * la raiz se deducia del filtro o del lugar, asi que sin filtro las filas
+ * de una colonia quedaban sin enlace.
  */
 export function hrefDeDomicilioDelRegistro(
-  domicilio: Pick<DomicilioDelRegistro, "id" | "lugarId">,
-  contexto: { filtros: FiltrosDeRegistro; raices: readonly string[] },
-): string | undefined {
-  const raizId =
-    contexto.filtros.raizId ??
-    (contexto.raices.includes(domicilio.lugarId)
-      ? domicilio.lugarId
-      : undefined);
-  if (!raizId) return undefined;
-
+  domicilio: Pick<DomicilioDelRegistro, "id" | "lugarId" | "raizId">,
+): string {
   return `${rutaDe({
-    raizId,
+    raizId: domicilio.raizId,
     nodoId: domicilio.lugarId,
     vista: "domicilios",
     domicilioId: domicilio.id,

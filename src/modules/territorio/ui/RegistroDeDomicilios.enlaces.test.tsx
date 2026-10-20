@@ -12,6 +12,7 @@ import { RegistroDeDomicilios } from "./RegistroDeDomicilios";
 const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const coloniaId = comoLugarId("22222222-2222-4222-8222-222222222222");
 const calleId = comoCalleId("33333333-3333-4333-8333-333333333333");
+const otraCabeceraId = comoLugarId("66666666-6666-4666-8666-666666666666");
 
 const domicilio: DomicilioDelRegistro = {
   id: comoDomicilioId("55555555-5555-4555-8555-555555555555"),
@@ -20,6 +21,7 @@ const domicilio: DomicilioDelRegistro = {
   numero: "5",
   lugar: "Centro",
   lugarId: coloniaId,
+  raizId: cabeceraId,
 };
 
 const raices: readonly OpcionDeLista[] = [
@@ -58,7 +60,35 @@ describe("RegistroDeDomicilios: enlaces, filtros y vacio", () => {
       expect(fila(html)).toContain("aria-label=");
     });
 
-    it("sin filtro enlaza cuando el lugar del domicilio es un asentamiento", () => {
+    /**
+     * El registro sin filtro es la pantalla donde el operador entra a buscar:
+     * ahi no hay `raiz` en la URL, y hasta U5 la fila solo enlazaba cuando el
+     * lugar del domicilio era el asentamiento. La raiz ahora viene en la fila.
+     */
+    it("sin filtro de asentamiento enlaza con la raiz de cada fila", () => {
+      const html = render({
+        domicilios: [
+          domicilio,
+          {
+            ...domicilio,
+            id: comoDomicilioId("77777777-7777-4777-8777-777777777777"),
+            calle: "Calle 30",
+            lugar: "Kanasin",
+            lugarId: otraCabeceraId,
+            raizId: otraCabeceraId,
+          },
+        ],
+      });
+
+      expect(fila(html)).toContain(
+        `href="/territorio?raiz=${cabeceraId}&amp;nodo=${coloniaId}&amp;vista=domicilios&amp;domicilio=${domicilio.id}#panel-de-domicilio"`,
+      );
+      expect(fila(html)).toContain(
+        `href="/territorio?raiz=${otraCabeceraId}&amp;nodo=${otraCabeceraId}&amp;vista=domicilios&amp;domicilio=77777777-7777-4777-8777-777777777777#panel-de-domicilio"`,
+      );
+    });
+
+    it("sin filtro cuando el lugar del domicilio es el asentamiento", () => {
       const html = render({
         domicilios: [{ ...domicilio, lugarId: cabeceraId }],
       });
@@ -68,11 +98,22 @@ describe("RegistroDeDomicilios: enlaces, filtros y vacio", () => {
       );
     });
 
-    it("sin forma de saber el asentamiento la fila no promete un enlace", () => {
-      const html = render();
+    it("ninguna fila del registro queda sin enlace", () => {
+      const html = render({
+        domicilios: [
+          domicilio,
+          {
+            ...domicilio,
+            id: comoDomicilioId("88888888-8888-4888-8888-888888888888"),
+            calle: "Calle 40",
+            lugarId: otraCabeceraId,
+            raizId: otraCabeceraId,
+          },
+        ],
+      });
 
       expect(fila(html)).toContain("Calle 21 5");
-      expect(fila(html)).not.toContain("<a");
+      expect(fila(html).match(/href="\/territorio\?raiz=/g)).toHaveLength(2);
     });
   });
 

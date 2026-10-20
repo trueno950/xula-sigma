@@ -1,6 +1,6 @@
 import { FormularioDeDomicilio } from "@/modules/territorio/ui";
 import { PanelDeAccion } from "@/modules/territorio/ui/PanelDeAccion";
-import type { NivelDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
+import type { NivelDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
 import type { OpcionDeLista } from "@/shared/ui";
 
 type Props = {

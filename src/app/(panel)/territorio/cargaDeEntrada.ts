@@ -1,6 +1,6 @@
 import { existeCabecera, listarCallesDelMunicipio } from "@/modules/territorio";
 import type { LugarConPadre } from "@/modules/territorio/ui/vistaDeDomicilios";
-import { zonaDelFormulario } from "@/modules/territorio/ui/vistaDeDomicilios";
+import { zonaDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import type { ParametrosDeTerritorio } from "./parametros";
 

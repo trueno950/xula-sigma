@@ -2,7 +2,7 @@ import { BarraDeAcciones, Boton, type OpcionDeLista } from "@/shared/ui";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import { corregirDomicilioAction } from "./actions/corregirDomicilioAction";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
-import type { NivelDelFormulario } from "./vistaDeDomicilios";
+import type { NivelDelFormulario } from "./zonaDelFormulario";
 
 type Props = {
   raiz: string;

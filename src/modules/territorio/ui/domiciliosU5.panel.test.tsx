@@ -3,6 +3,7 @@ import { clasesDeBoton } from "@/shared/ui";
 import type { PropsDeContenido } from "./contenido";
 import {
   cabeceraId,
+  calleId,
   coloniaId,
   detalles,
   nodos,
@@ -64,6 +65,18 @@ describe("tab de domicilios: panel", () => {
     expect(html.indexOf(abiertos[0] ?? "")).toBeLessThan(
       html.indexOf("Dar de baja"),
     );
+  });
+
+  /**
+   * PRESERVE: la calle paso a ser `SelectorDeCalleConBusqueda`, que agrega
+   * un buscador delante del `<select>`. La correccion tiene que seguir
+   * abriendo con la calle guardada ya elegida, no con el marcador.
+   */
+  it("la correccion abre con la calle guardada ya elegida", () => {
+    const html = seleccionado({ accion: "corregirDomicilio" });
+
+    expect(html).toContain('name="calleId"');
+    expect(html).toContain(`value="${calleId}" selected=""`);
   });
 
   it("nombra el lugar con enlace a su vista", () => {

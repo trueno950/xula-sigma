@@ -45,8 +45,8 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
  * El registro plano de domicilios del municipio: busqueda por calle y
  * numero, filtro por asentamiento y paginacion por `?limite=`, las tres
  * secciones de `design.md` seccion 1. Cada fila abre el panel del
- * domicilio en su lugar; ver `hrefDeDomicilioDelRegistro` para cuando no
- * puede armar el enlace.
+ * domicilio en su lugar; `hrefDeDomicilioDelRegistro` arma ese destino con
+ * la raiz que trae la fila.
  *
  * La fila no arma su direccion a mano: `direccionDe` es la misma que usa el
  * arbol, para que un domicilio se lea igual en las dos pantallas.
@@ -63,14 +63,6 @@ export function RegistroDeDomicilios({
   const nombreDeRaiz = (id: string) =>
     raices.find((raiz) => raiz.valor === id)?.etiqueta;
   const chips = filtrosVisiblesDeDomicilios(filtros, nombreDeRaiz);
-  const idsDeRaices = raices.map((raiz) => raiz.valor);
-  const conEnlace = (domicilio: DomicilioDelRegistro) => {
-    const href = hrefDeDomicilioDelRegistro(domicilio, {
-      filtros,
-      raices: idsDeRaices,
-    });
-    return href ? { href } : {};
-  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -131,7 +123,7 @@ export function RegistroDeDomicilios({
           {domicilios.map((domicilio) => (
             <FilaDeTabla
               key={domicilio.id}
-              {...conEnlace(domicilio)}
+              href={hrefDeDomicilioDelRegistro(domicilio)}
               etiquetaAccesible={`${direccionDe(
                 domicilio.calle,
                 domicilio.numero,

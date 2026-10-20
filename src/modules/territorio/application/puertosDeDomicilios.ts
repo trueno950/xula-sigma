@@ -72,6 +72,13 @@ export type DomicilioDelRegistro = {
   numero: string | null;
   lugar: string;
   lugarId: LugarId;
+  /**
+   * El asentamiento del que cuelga el lugar del domicilio. Viaja en la fila
+   * porque el registro sin filtro no tiene `?raiz=` de donde sacarlo, y es
+   * la pantalla desde la que se entra a buscar un domicilio: sin este dato
+   * la fila no podia ofrecer su enlace.
+   */
+  raizId: LugarId;
 };
 
 /**

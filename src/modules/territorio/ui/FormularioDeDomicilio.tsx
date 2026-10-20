@@ -2,7 +2,7 @@ import { Boton, type OpcionDeLista } from "@/shared/ui";
 import { altaDeDomicilioAction } from "./actions/altaDeDomicilioAction";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
 import { PieDeFormulario } from "./PieDeFormulario";
-import type { NivelDelFormulario } from "./vistaDeDomicilios";
+import type { NivelDelFormulario } from "./zonaDelFormulario";
 
 type Props = {
   /** Ya rotuladas por el borde: en el asentamiento, solo el nombre. */

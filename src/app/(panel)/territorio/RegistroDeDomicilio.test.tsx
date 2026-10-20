@@ -6,7 +6,13 @@ const pintar = (volverA?: string) =>
   renderToStaticMarkup(
     <RegistroDeDomicilio
       calles={[]}
-      zona={{ opciones: [], inicial: "", marcador: "Sin colonia", resumen: "" }}
+      zona={{
+        opciones: [],
+        inicial: "",
+        marcador: "Sin colonia",
+        resumen: "",
+        sinZonas: false,
+      }}
       {...(volverA ? { volverA } : {})}
     />,
   );
