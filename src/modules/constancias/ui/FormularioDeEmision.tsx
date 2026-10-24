@@ -1,3 +1,4 @@
+import { fechaCivilCorta } from "@/shared/lib/fecha";
 import {
   Aviso,
   BarraDeAcciones,
@@ -46,7 +47,7 @@ export function FormularioDeEmision({
           <>
             <FilaDeFicha etiqueta="Dirección">{direccion.texto}</FilaDeFicha>
             <FilaDeFicha etiqueta="Reside desde" dato>
-              {direccion.desdeEn}
+              {fechaCivilCorta(direccion.desdeEn)}
             </FilaDeFicha>
           </>
         ) : null}

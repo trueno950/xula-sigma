@@ -63,6 +63,82 @@ const formateadorDeFechaCivil = new Intl.DateTimeFormat("es-MX", {
 export const fechaCivilDeMedianocheUtc = (fecha: Date): string =>
   formateadorDeFechaCivil.format(fecha);
 
+const MESES = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+] as const;
+
+const MESES_CORTOS = [
+  "ene",
+  "feb",
+  "mar",
+  "abr",
+  "may",
+  "jun",
+  "jul",
+  "ago",
+  "sep",
+  "oct",
+  "nov",
+  "dic",
+] as const;
+
+type PartesDeFechaCivil = { dia: number; mes: number; anio: number };
+
+const esAnioBisiesto = (anio: number): boolean =>
+  anio % 4 === 0 && (anio % 100 !== 0 || anio % 400 === 0);
+
+const diasDelMes = (anio: number, mes: number): number => {
+  if (mes === 2) return esAnioBisiesto(anio) ? 29 : 28;
+  return [4, 6, 9, 11].includes(mes) ? 30 : 31;
+};
+
+// Los snapshots guardados aceptan cualquier texto en `desdeEn`
+// (`validacionDeSnapshot.ts` usa `z.string()`); un valor antiguo no debe
+// impedir emitir.
+const partesDeFechaCivil = (fecha: string): PartesDeFechaCivil | null => {
+  const coincidencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
+  if (!coincidencia) return null;
+
+  const [, anioTexto, mesTexto, diaTexto] = coincidencia;
+  const anio = Number(anioTexto);
+  const mes = Number(mesTexto);
+  const dia = Number(diaTexto);
+  if (
+    anio < 1 ||
+    mes < 1 ||
+    mes > 12 ||
+    dia < 1 ||
+    dia > diasDelMes(anio, mes)
+  ) {
+    return null;
+  }
+
+  return { dia, mes, anio };
+};
+
+export const fechaCivilLarga = (fecha: string): string => {
+  const partes = partesDeFechaCivil(fecha);
+  if (!partes) return fecha;
+  return `${partes.dia} de ${MESES[partes.mes - 1]} de ${partes.anio}`;
+};
+
+export const fechaCivilCorta = (fecha: string): string => {
+  const partes = partesDeFechaCivil(fecha);
+  if (!partes) return fecha;
+  return `${partes.dia} ${MESES_CORTOS[partes.mes - 1]} ${partes.anio}`;
+};
+
 const formateadorDeHora = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/Merida",
   hour: "numeric",

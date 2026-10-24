@@ -13,7 +13,7 @@ import {
 } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarDocumentos, puedeEscribir } from "@/shared/auth/roles";
-import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
+import { fechaCivilCorta, fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
   Aviso,
   AvisoDePermiso,
@@ -137,7 +137,7 @@ export default async function PaginaDeDetalleDeConstancia({
         </FilaDeFicha>
         <FilaDeFicha etiqueta="Dirección">{datos.direccion.texto}</FilaDeFicha>
         <FilaDeFicha etiqueta="Reside desde" dato>
-          {datos.direccion.desdeEn}
+          {fechaCivilCorta(datos.direccion.desdeEn)}
         </FilaDeFicha>
         <FilaDeFicha etiqueta="Emitida" dato>
           {fechaYHoraEnMerida(constancia.emitidaEn)}
