@@ -374,8 +374,8 @@ entorno de destino antes de aplicar allí el CHECK. La decisión de reanudación
 permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
 
 
-- [ ] B2-RED-01 (B2). Para el requisito exacto “Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2)”, actualizar primero tests de dominio/integración para cabecera/comisaria como raices, rechazo de comisaria bajo cabecera, colonia sin hijos y ciclo rechazado; conservar RED antes de editar TIPOS_DE_LUGAR. Test enfocado: pnpm test (suite completa, sin rtk; integración requiere pnpm db:local). Rollback: revertir tests B2 sin tocar B3d.
-- [ ] B2-RED-02 (B2). Para “Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2)” y “Direccion compuesta como texto imprimible”, actualizar tests de src/modules/territorio/domain/direccion.test.ts, alta/correccion y fixtures que aún usan sector/manzana; deben fallar por contrato vigente antes de cambiarlo. Test enfocado: pnpm test. Rollback: revertir únicamente fixtures/tests del contrato de domicilios.
+- [x] B2-RED-01 (B2). Para el requisito exacto “Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2)”, actualizar primero tests de dominio/integración para cabecera/comisaria como raices, rechazo de comisaria bajo cabecera, colonia sin hijos y ciclo rechazado; conservar RED antes de editar TIPOS_DE_LUGAR. Test enfocado: pnpm test (suite completa, sin rtk; integración requiere pnpm db:local). Rollback: revertir tests B2 sin tocar B3d.
+- [x] B2-RED-02 (B2). Para “Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2)” y “Direccion compuesta como texto imprimible”, actualizar tests de src/modules/territorio/domain/direccion.test.ts, alta/correccion y fixtures que aún usan sector/manzana; deben fallar por contrato vigente antes de cambiarlo. Test enfocado: pnpm test. Rollback: revertir únicamente fixtures/tests del contrato de domicilios.
 - [x] B2-GREEN-03 (B2). Requisito: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2). Cambiar src/modules/territorio/domain/tipoDeLugar.ts a TIPOS_DE_LUGAR = [cabecera, comisaria, colonia], derivar RANGO vigente, generar la siguiente migración libre, hoy drizzle/0020_corte_tipos_lugar.sql (0019 ya pertenece al payload del historial; preservar ese SQL y su snapshot) con CHECK tipo IN (cabecera, comisaria, colonia) y actualizar los aproximadamente 40 archivos de territorio/tests afectados; DELETE de B3d debe haber eliminado filas incompatibles antes de aplicar CHECK. Test enfocado: pnpm test y pnpm check. Rollback: migracion inversa que restituya ambos tipos al CHECK y revertir commit inseparable.
 - [x] B2-GREEN-04 (B2). Requisitos: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2); Direccion compuesta como texto imprimible. Actualizar cadenaHastaAsentamiento, direccion.ts, fixtures y validaciones para que lugarId acepte solo asentamiento/colonia; renombrar ZonaIncoherenteError a UbicacionIncoherenteError donde corresponda, y editar deltas de specs/jerarquia-territorial/spec.md y specs/domicilios/spec.md sin cambiar decisiones aprobadas. Test enfocado: pnpm test. Rollback: revertir codigo y deltas junto con B2-GREEN-03.
 - [x] B2-GREEN-05 (B2). Requisito: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Actualizar en AGENTS.md la referencia al error renombrado y conservar reglas de Server Actions sin agregar todavía las cinco filas de zonas (son B3u); verificar que no se enumeren salidas nuevas ni se contradiga el límite de unidades. Test enfocado: pnpm reglas && pnpm check. Rollback: revertir cambio de nomenclatura de AGENTS.md junto con B2 si el mantenedor rechaza la excepción.
@@ -407,6 +407,14 @@ permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
   committedOnly contra `1c38089` devuelve `reviewDue: false`; no se abre
   otra revisión. La verificación independiente exigida por item 1 ya pasó.
   B3u no iniciado; B3d-REFACTOR-06 sigue sin ejecutar en entornos reales.
+
+  **Cronologia RED no acreditable, por decision del dueno del proyecto el
+  2026-10-23.** El escritor que debia producir estos tests se interrumpio y su
+  rojo original no se puede reconstruir; escribir tests nuevos hoy no
+  reconstruye esa historia. La casilla se cierra declarando lo verificado -el
+  comportamiento esta cubierto por suite, E2E y differential, y el corte mide
+  lo que debia medir- y NO afirmando que se observo el RED en su momento.
+  Mismo criterio que la evidencia de B2 en L18 del documento ODD.
 
 ## Fase 8: B3u — UI y acciones de zonas
 
