@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   anioEnMerida,
+  fechaCivilCorta,
   fechaCivilDeMedianocheUtc,
+  fechaCivilLarga,
   fechaEnMerida,
   fechaYHoraEnMerida,
   horaEnMerida,
@@ -112,6 +114,28 @@ describe("fechaCivilDeMedianocheUtc", () => {
 
     expect(texto).toContain("1 ene 2026");
     expect(texto).not.toMatch(/\d:\d\d/);
+  });
+});
+
+describe("fechaCivilLarga", () => {
+  it("expresa el dia sin cero inicial y el mes completo en minusculas", () => {
+    expect(fechaCivilLarga("2026-10-24")).toBe("24 de octubre de 2026");
+    expect(fechaCivilLarga("2026-01-04")).toBe("4 de enero de 2026");
+  });
+
+  it("conserva el valor original cuando no es una fecha civil valida", () => {
+    expect(fechaCivilLarga("2026-02-30")).toBe("2026-02-30");
+  });
+});
+
+describe("fechaCivilCorta", () => {
+  it("usa el mismo formato corto espanol que la fecha de emision", () => {
+    expect(fechaCivilCorta("2026-10-24")).toBe("24 oct 2026");
+    expect(fechaCivilCorta("2026-01-04")).toBe("4 ene 2026");
+  });
+
+  it("conserva el valor original cuando no es una fecha civil valida", () => {
+    expect(fechaCivilCorta("no-es-fecha")).toBe("no-es-fecha");
   });
 });
 

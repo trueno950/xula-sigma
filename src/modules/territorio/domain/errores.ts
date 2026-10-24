@@ -7,7 +7,9 @@
 export class LugarConDependientesError extends Error {
   readonly codigo = "LUGAR_CON_DEPENDIENTES";
 
-  constructor(mensaje = "El lugar tiene hijos activos o domicilios colgados.") {
+  constructor(
+    mensaje = "El lugar tiene lugares o domicilios adentro. Dé de baja o mueva primero lo que contiene.",
+  ) {
     super(mensaje);
     this.name = "LugarConDependientesError";
   }

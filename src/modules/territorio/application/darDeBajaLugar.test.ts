@@ -98,6 +98,23 @@ describe("darDeBajaLugar", () => {
     expect(repositorio.actualizar).not.toHaveBeenCalled();
   });
 
+  it("rechaza con un mensaje que el operador puede accionar, no con jerga del esquema", async () => {
+    vi.mocked(repositorio.contarHijosActivos).mockResolvedValue(1);
+    const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
+
+    const error = await darDeBajaLugar(
+      coloniaId,
+      contextoCon("OPERADOR"),
+    ).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(LugarConDependientesError);
+    const mensaje = (error as LugarConDependientesError).message;
+    // "hijos activos" y "colgados" son vocabulario de esquema: la operadora
+    // municipal no tiene como saber que significan ni que hacer con ellos.
+    expect(mensaje).not.toContain("colgados");
+    expect(mensaje).toContain("adentro");
+  });
+
   it("sin hijos activos ni domicilios colgados, marca la baja", async () => {
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 

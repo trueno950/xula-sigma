@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
+import { fechaCivilLarga } from "@/shared/lib/fecha";
 import type { PropsDePlantilla } from "./tipos";
 
 /**
@@ -147,7 +148,7 @@ export function ConstanciaDeVecindadV1({
         <Text style={estilos.parrafo}>
           Quien suscribe hace constar que {datos.titular.nombreCompleto} es
           vecino(a) de este municipio, con domicilio en {datos.direccion.texto},
-          desde el {datos.direccion.desdeEn}.
+          desde el {fechaCivilLarga(datos.direccion.desdeEn)}.
         </Text>
 
         <Text style={estilos.parrafo}>

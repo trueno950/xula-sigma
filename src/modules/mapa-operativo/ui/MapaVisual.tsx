@@ -20,10 +20,9 @@ export function MapaVisual({ marcadores }: Props) {
   return (
     <div className="flex flex-col gap-2">
       {aviso ? <Aviso tono="aviso">{aviso}</Aviso> : null}
-      <div
+      <section
         ref={mapaRef}
         hidden={mapaFallido}
-        role="img"
         aria-label="Mapa con los marcadores del municipio, ubicación aproximada"
         className="h-96 w-full rounded-lg border border-caliza-divisor shadow-reposo"
         style={{ visibility: mapaVisible ? "visible" : "hidden" }}

@@ -62,6 +62,15 @@ describe("detalle de una constancia", () => {
     expect(await html()).toContain("Imprimir");
   });
 
+  it("muestra la fecha civil de residencia en formato corto", async () => {
+    constanciaPorIdMock.mockResolvedValue(vigente);
+
+    const pagina = await html();
+
+    expect(pagina).toContain("1 ene 2024");
+    expect(pagina).not.toContain("2024-01-01");
+  });
+
   it("una constancia cancelada no ofrece Imprimir y sigue mostrando el registro", async () => {
     constanciaPorIdMock.mockResolvedValue(cancelada);
 
