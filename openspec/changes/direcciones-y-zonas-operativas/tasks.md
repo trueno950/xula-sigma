@@ -330,7 +330,7 @@ Origen atipico: el runbook aparecio ya escrito en el disco (`scripts/README-migr
 | `pnpm check` / test enfocado | 0 errores propios (56 warnings preexistentes); 2/2 tests en verde, sin tocar script ni tests |
 
 Frontera de rollback: retirar unicamente el runbook; el script y su comportamiento no cambiaron.
-- [ ] B3d-REFACTOR-06 (B3d). Requisito: Migracion de domicilios preserva el lugarId anterior en bitacora (Rebanada B3). Ejecutar corrida controlada solo después de la precondicion, guardar salida, revisar pnpm reglas y confirmar segunda corrida idempotente; no alterar TypeScript ni CHECK. Test enfocado: pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts; sin rtk. Rollback: usar procedimiento del runbook, no DELETE manual.
+- [x] B3d-REFACTOR-06 (B3d). Requisito: Migracion de domicilios preserva el lugarId anterior en bitacora (Rebanada B3). Ejecutar corrida controlada solo después de la precondicion, guardar salida, revisar pnpm reglas y confirmar segunda corrida idempotente; no alterar TypeScript ni CHECK. Test enfocado: pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts; sin rtk. Rollback: usar procedimiento del runbook, no DELETE manual.
 
   **Corrida ejecutada el 2026-10-23 sobre el Docker local, con autorizacion
   explicita del usuario y respaldo previo (`pg_dump -Fc` de `xula_dev`,
@@ -354,13 +354,15 @@ Frontera de rollback: retirar unicamente el runbook; el script y su comportamien
      ninguno colgaba de sector/manzana. Segunda pasada idempotente.
      `pnpm reglas`: sin hallazgos.
 
-  **B3d-REFACTOR-06 sigue SIN marcar, y el motivo no es tecnico:** el unico
-  tenant alcanzable es `demo`, un ayuntamiento de desarrollo. La precondicion
-  escrita -ventana por municipio con datos municipales reales, responsables y
-  respaldo de produccion- no se cumple todavia, y marcar esta casilla
-  afirmaria una migracion de datos reales que no ocurrio. El runbook y el
-  rollback quedan probados; falta el piloto. El usuario confirmo el 2026-10-23
-  que `demo` es su base de prueba, no el municipio del piloto.
+  **Cumplida con el alcance que el dueno del proyecto fijo el 2026-10-23**
+  («no tengo datos reales es todo local podemos modificar eso para avanzaR?»):
+  no existe ningun municipio con datos reales, asi que esta casilla se cierra
+  con la evidencia del entorno disponible -ensayo en copia desechable, corrida
+  sobre `xula_dev`, idempotencia y `pnpm reglas`- y NO afirmando una migracion
+  de datos reales. Esa corrida no desaparece: queda como precondicion de
+  despliegue del CHECK de `0020` en el municipio piloto, ya escrita en la
+  Fase 7 de este archivo, y como tarea T7 del documento ODD. El usuario
+  confirmo que `demo` es su base de prueba, no el municipio del piloto.
 
 ## Fase 7: B2 — corte de tipos y contratos (size:exception)
 
