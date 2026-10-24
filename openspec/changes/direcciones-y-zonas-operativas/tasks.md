@@ -359,7 +359,8 @@ Frontera de rollback: retirar unicamente el runbook; el script y su comportamien
   escrita -ventana por municipio con datos municipales reales, responsables y
   respaldo de produccion- no se cumple todavia, y marcar esta casilla
   afirmaria una migracion de datos reales que no ocurrio. El runbook y el
-  rollback quedan probados; falta el piloto.
+  rollback quedan probados; falta el piloto. El usuario confirmo el 2026-10-23
+  que `demo` es su base de prueba, no el municipio del piloto.
 
 ## Fase 7: B2 — corte de tipos y contratos (size:exception)
 
