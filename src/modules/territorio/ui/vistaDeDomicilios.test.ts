@@ -12,26 +12,26 @@ import { zonaDelFormulario } from "./zonaDelFormulario";
 const motulId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const tepakanId = comoLugarId("22222222-2222-4222-8222-222222222222");
 const coloniaId = comoLugarId("33333333-3333-4333-8333-333333333333");
-const sectorId = comoLugarId("44444444-4444-4444-8444-444444444444");
-const manzanaId = comoLugarId("55555555-5555-4555-8555-555555555555");
+const otraColoniaId = comoLugarId("44444444-4444-4444-8444-444444444444");
 
 const lugares: readonly LugarConPadre[] = [
   { id: motulId, tipo: "cabecera", nombre: "Motul", padreId: null },
   { id: tepakanId, tipo: "comisaria", nombre: "Tepakan", padreId: null },
   { id: coloniaId, tipo: "colonia", nombre: "Pablo", padreId: tepakanId },
-  { id: sectorId, tipo: "sector", nombre: "2", padreId: coloniaId },
-  { id: manzanaId, tipo: "manzana", nombre: "San Pedro", padreId: sectorId },
+  {
+    id: otraColoniaId,
+    tipo: "colonia",
+    nombre: "San Pedro",
+    padreId: tepakanId,
+  },
 ];
 
 const tepakan = { id: tepakanId, nombre: "Tepakan" };
 
 describe("caminoDeLugar", () => {
   it("incluye el asentamiento y los ancestros, del mas alto al padre", () => {
-    expect(caminoDeLugar(lugares, manzanaId)).toEqual([
-      "Tepakan",
-      "Pablo",
-      "2",
-    ]);
+    // Con dos niveles, el unico ancestro de una colonia es su asentamiento.
+    expect(caminoDeLugar(lugares, otraColoniaId)).toEqual(["Tepakan"]);
     expect(caminoDeLugar(lugares, coloniaId)).toEqual(["Tepakan"]);
   });
 
@@ -51,8 +51,7 @@ describe("opcionesDeNivel", () => {
   it("lista solo niveles de zona, ordenados por camino", () => {
     expect(opcionesDeNivel(lugares).map(({ etiqueta }) => etiqueta)).toEqual([
       "Pablo — Tepakan",
-      "2 — Tepakan › Pablo",
-      "San Pedro — Tepakan › Pablo › 2",
+      "San Pedro — Tepakan",
     ]);
   });
 
@@ -61,11 +60,7 @@ describe("opcionesDeNivel", () => {
 
     expect(
       opcionesDeNivel(sinAsentamiento, tepakan).map(({ etiqueta }) => etiqueta),
-    ).toEqual([
-      "Pablo — Tepakan",
-      "2 — Tepakan › Pablo",
-      "San Pedro — Tepakan › Pablo › 2",
-    ]);
+    ).toEqual(["Pablo — Tepakan", "San Pedro — Tepakan"]);
   });
 });
 
@@ -108,13 +103,13 @@ describe("zonaDelFormulario", () => {
 
   it("con prefill el resumen nombra la cadena del default", () => {
     const zona = zonaDelFormulario(lugares, tepakan, {
-      id: manzanaId,
-      tipo: "manzana",
+      id: otraColoniaId,
+      tipo: "colonia",
     });
 
-    expect(zona.inicial).toBe(manzanaId);
+    expect(zona.inicial).toBe(otraColoniaId);
     expect(zona.resumen).toBe(
-      "Sin cambiar la colonia, se guarda en Manzana San Pedro · Sector 2 · Colonia Pablo · Tepakan.",
+      "Sin cambiar la colonia, se guarda en Colonia San Pedro · Tepakan.",
     );
   });
 
@@ -143,13 +138,13 @@ describe("zonaDelFormulario", () => {
     expect(zona.sinZonas).toBe(true);
     expect(zona.marcador).toBe("Sin colonias registradas");
     expect(zona.resumen).toBe(
-      "Todavía no hay colonias, sectores ni manzanas en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.",
+      "Todavía no hay colonias en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.",
     );
   });
 
   it("con una sola zona el campo vuelve a ofrecerse normal", () => {
     const zona = zonaDelFormulario(
-      lugares.filter((lugar) => lugar.tipo !== "manzana"),
+      lugares.filter((lugar) => lugar.id === otraColoniaId),
       undefined,
       undefined,
     );

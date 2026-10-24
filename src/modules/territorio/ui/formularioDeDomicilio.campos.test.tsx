@@ -115,7 +115,7 @@ describe("FormularioDeDomicilio: municipio sin zonas", () => {
     expect(html).toContain("Colonia (opcional)");
     expect(html).toContain("Sin colonias registradas");
     expect(html).toContain(
-      "Todavía no hay colonias, sectores ni manzanas en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.",
+      "Todavía no hay colonias en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.",
     );
     expect(html).toMatch(/id="domicilio-zona-id"[^>]*disabled/);
   });

@@ -4,7 +4,7 @@ import {
   comoCalleId,
   comoLugarId,
   type LugarId,
-  ZonaIncoherenteError,
+  UbicacionIncoherenteError,
 } from "../domain";
 import type {
   CalleGuardada,
@@ -105,7 +105,7 @@ describe("verificarZonaYCalles", () => {
         entreCalleAId: null,
         entreCalleBId: null,
       }),
-    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+    ).rejects.toBeInstanceOf(UbicacionIncoherenteError);
   });
 
   it("permite colgar la direccion de una colonia de la cadena de la calle", async () => {

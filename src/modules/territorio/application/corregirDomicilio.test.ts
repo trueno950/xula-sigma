@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import { TransversalRepetidaError, ZonaIncoherenteError } from "../domain";
+import { TransversalRepetidaError, UbicacionIncoherenteError } from "../domain";
 import {
   ajenoId,
   asentamientoGuardado,
@@ -109,7 +109,7 @@ describe("corregirDomicilio", () => {
         { ...datosValidos, nivelesDeclarados: [ajenoId] },
         contextoCon("OPERADOR"),
       ),
-    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+    ).rejects.toBeInstanceOf(UbicacionIncoherenteError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
   });
@@ -123,7 +123,7 @@ describe("corregirDomicilio", () => {
 
     await expect(
       corregir()({ ...datosValidos, entreCalleAId }, contextoCon("OPERADOR")),
-    ).rejects.toBeInstanceOf(ZonaIncoherenteError);
+    ).rejects.toBeInstanceOf(UbicacionIncoherenteError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
   });

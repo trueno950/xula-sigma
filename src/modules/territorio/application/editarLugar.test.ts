@@ -25,7 +25,7 @@ const contextoCon = (
   origen: "web",
 });
 
-const sectorId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const coloniaId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const comisariaId = comoLugarId("22222222-2222-4222-8222-222222222222");
 
 describe("editarLugar", () => {
@@ -53,7 +53,7 @@ describe("editarLugar", () => {
 
     await expect(
       editarLugar(
-        { id: sectorId, nombre: "Sector 3-A" },
+        { id: coloniaId, nombre: "Colonia 3-A" },
         contextoCon("CONSULTA"),
       ),
     ).rejects.toBeInstanceOf(NoAutorizadoError);
@@ -68,7 +68,7 @@ describe("editarLugar", () => {
 
     await expect(
       editarLugar(
-        { id: sectorId, nombre: "Sector 3-A" },
+        { id: coloniaId, nombre: "Colonia 3-A" },
         contextoCon("OPERADOR"),
       ),
     ).rejects.toBeInstanceOf(NoEncontradoError);
@@ -78,28 +78,28 @@ describe("editarLugar", () => {
 
   it("renombra sin tocar el padre existente", async () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue({
-      id: sectorId,
-      tipo: "sector",
-      nombre: "Sector 3",
+      id: coloniaId,
+      tipo: "colonia",
+      nombre: "Colonia 3",
       padreId: comisariaId,
       bajaEn: null,
     });
     const editarLugar = crearEditarLugar(repositorio);
 
     await editarLugar(
-      { id: sectorId, nombre: "Sector 3-A" },
+      { id: coloniaId, nombre: "Colonia 3-A" },
       contextoCon("OPERADOR"),
     );
 
     expect(repositorio.actualizar).toHaveBeenCalledWith(expect.anything(), {
-      id: sectorId,
-      nombre: "Sector 3-A",
+      id: coloniaId,
+      nombre: "Colonia 3-A",
       padreId: comisariaId,
       bajaEn: null,
     });
     expect(registrarMock).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ accion: "EDITAR_LUGAR", entidadId: sectorId }),
+      expect.objectContaining({ accion: "EDITAR_LUGAR", entidadId: coloniaId }),
     );
   });
 });
@@ -114,9 +114,9 @@ describe("editarLugar", () => {
  * `tsc --noEmit`.
  */
 const _conTipo: DatosDeEdicionDeLugar = {
-  id: sectorId,
-  nombre: "Sector 3-A",
+  id: coloniaId,
+  nombre: "Colonia 3-A",
   // @ts-expect-error tipo no existe en DatosDeEdicionDeLugar
-  tipo: "sector",
+  tipo: "colonia",
 };
 void _conTipo;

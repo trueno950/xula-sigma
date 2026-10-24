@@ -30,7 +30,7 @@ export const domicilios = pgTable(
     id: uuid().primaryKey().defaultRandom().$type<DomicilioId>(),
     ayuntamientoId: columnaTenant(),
     // Nivel de jerarquia conocido mas profundo (design.md decision 3):
-    // no todo domicilio conoce su manzana.
+    // no todo domicilio conoce su colonia.
     lugarId: uuid().notNull().$type<LugarId>(),
     calleId: uuid().notNull().$type<CalleId>(),
     // "S/N" es NULL, nunca la cadena literal (proposal.md decision 5).

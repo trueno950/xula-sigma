@@ -19,14 +19,14 @@ const contextoCon = (
   origen: "web",
 });
 
-const sectorId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const nodos: readonly NodoDeSubarbol[] = [
   {
     clase: "lugar",
     id: comoLugarId("22222222-2222-4222-8222-222222222222"),
-    tipo: "manzana",
-    nombre: "Manzana 1",
-    padreId: sectorId,
+    tipo: "colonia",
+    nombre: "Colonia Norte",
+    padreId: cabeceraId,
   },
 ];
 
@@ -54,12 +54,12 @@ describe("subarbol", () => {
     vi.mocked(repositorio.subarbol).mockResolvedValue(nodos);
     const subarbol = crearSubarbol(repositorio);
 
-    const resultado = await subarbol(sectorId, contextoCon("CONSULTA"));
+    const resultado = await subarbol(cabeceraId, contextoCon("CONSULTA"));
 
     expect(resultado).toEqual(nodos);
     expect(repositorio.subarbol).toHaveBeenCalledWith(
       expect.anything(),
-      sectorId,
+      cabeceraId,
     );
   });
 });

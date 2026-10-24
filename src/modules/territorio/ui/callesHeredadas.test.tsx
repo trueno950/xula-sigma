@@ -41,9 +41,9 @@ const renderDomicilios = (
   );
 
 describe("TabDeLugares en el ultimo nivel", () => {
-  it("no menciona calles en el mensaje de una manzana sin hijos", () => {
+  it("no menciona calles en el mensaje de una colonia sin hijos", () => {
     const html = renderToStaticMarkup(
-      <TabDeLugares {...base} lugar={{ ...base.lugar, tipo: "manzana" }} />,
+      <TabDeLugares {...base} lugar={{ ...base.lugar, tipo: "colonia" }} />,
     );
 
     expect(html).toContain("no lleva lugares adentro");

@@ -19,11 +19,11 @@ const contextoCon = (
   origen: "web",
 });
 
-const sectorId = comoLugarId("11111111-1111-4111-8111-111111111111");
+const coloniaId = comoLugarId("11111111-1111-4111-8111-111111111111");
 const lugarGuardado: LugarGuardado = {
-  id: sectorId,
-  tipo: "sector",
-  nombre: "Sector 3",
+  id: coloniaId,
+  tipo: "colonia",
+  nombre: "Colonia 3",
   padreId: null,
   bajaEn: null,
 };
@@ -52,7 +52,7 @@ describe("lugarPorId", () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(lugarGuardado);
     const lugarPorId = crearLugarPorId(repositorio);
 
-    const resultado = await lugarPorId(sectorId, contextoCon("CONSULTA"));
+    const resultado = await lugarPorId(coloniaId, contextoCon("CONSULTA"));
 
     expect(resultado).toEqual(lugarGuardado);
   });
@@ -61,7 +61,7 @@ describe("lugarPorId", () => {
     vi.mocked(repositorio.buscarPorId).mockResolvedValue(null);
     const lugarPorId = crearLugarPorId(repositorio);
 
-    const resultado = await lugarPorId(sectorId, contextoCon("CONSULTA"));
+    const resultado = await lugarPorId(coloniaId, contextoCon("CONSULTA"));
 
     expect(resultado).toBeNull();
   });

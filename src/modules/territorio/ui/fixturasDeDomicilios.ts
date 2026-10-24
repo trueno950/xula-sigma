@@ -6,7 +6,9 @@ import { permisosDeTerritorio } from "./permisos";
 
 export const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 export const coloniaId = comoLugarId("22222222-2222-4222-8222-222222222222");
-export const manzanaId = comoLugarId("88888888-8888-4888-8888-888888888888");
+export const otraColoniaId = comoLugarId(
+  "88888888-8888-4888-8888-888888888888",
+);
 export const calleId = comoCalleId("33333333-3333-4333-8333-333333333333");
 export const otraCalleId = comoCalleId("44444444-4444-4444-8444-444444444444");
 export const domicilioId = comoDomicilioId(
@@ -16,7 +18,7 @@ export const hermanaId = comoDomicilioId(
   "66666666-6666-4666-8666-666666666666",
 );
 export const vecinaId = comoDomicilioId("77777777-7777-4777-8777-777777777777");
-export const hermanaEnManzanaId = comoDomicilioId(
+export const hermanaEnOtraColoniaId = comoDomicilioId(
   "99999999-9999-4999-8999-999999999999",
 );
 
@@ -55,11 +57,11 @@ export const enElMismoNumeroDeOtraCalle: NodoDeSubarbol = {
   numero: "21",
 };
 
-/** Otro hermano, en una manzana distinta a la del panel abierto. */
-export const enOtraManzana: NodoDeSubarbol = {
+/** Otro hermano, en otra colonia del mismo asentamiento a la del panel abierto. */
+export const enOtraColonia: NodoDeSubarbol = {
   clase: "domicilio",
-  id: hermanaEnManzanaId,
-  lugarId: manzanaId,
+  id: hermanaEnOtraColoniaId,
+  lugarId: otraColoniaId,
   calleId,
   calle: "Calle 21",
   numero: "21",
@@ -75,10 +77,10 @@ export const nodos: readonly NodoDeSubarbol[] = [
   },
   {
     clase: "lugar",
-    id: manzanaId,
-    tipo: "manzana",
-    nombre: "Manzana 1",
-    padreId: coloniaId,
+    id: otraColoniaId,
+    tipo: "colonia",
+    nombre: "Norte",
+    padreId: cabeceraId,
   },
   {
     clase: "domicilio",

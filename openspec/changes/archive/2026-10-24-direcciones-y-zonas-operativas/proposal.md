@@ -168,18 +168,21 @@ Presupuesto fijo: **400 lineas cambiadas por PR**.
 | B2 | Corte de `TIPOS_DE_LUGAR`, deltas de spec y los tests que lo nombran | > 400 |
 | B3 | Migracion de datos de `sector`/`manzana` y UI de zonas | 300-400 |
 
-**Encadenado obligatorio: si.** Seis unidades, ninguna cabe junto a otra y B2
-probablemente no entre entera en 400 por si sola: `sdd-tasks` debe partirla o
-proponer `size:exception` con la cuenta a la vista. Cada unidad necesita
-inicio, fin, verificacion y rollback propios. No se crean tareas en esta fase.
+**Entrega vigente: un PR, un merge, sin ramas apiladas** (`CLAUDE.md`).
+El encadenado original queda sustituido; se conservan commits por unidad con
+inicio, fin, verificación y rollback propios. B2 sigue estimando 850–1,050
+líneas inseparables y su sobrecarga requiere aprobación antes de aplicarse.
+El plan detallado vive en `tasks.md`.
 
 ## Coordinacion con `mapa-operativo-territorial`
 
-Ese cambio esta en vuelo en este mismo repositorio: 11 tareas completas, 7
-pendientes, detenido esperando una decision de mantenimiento en el ledger
-nativo de intentos. Su tarea `2.1` (U3) agrega `eventos_de_calles` a
-`territorio` y su delta vive en
-`openspec/changes/mapa-operativo-territorial/specs/territorio/spec.md`.
+El mapa tiene las 35 tareas marcadas completas y evidencia de verificación en
+su `apply-progress.md`; falta su cierre documental. `eventos_de_calles` ya
+está en `main`, incluido el payload de historial de la migración 0019
+(`90164bb`). La dependencia de esquema quedó resuelta; la numeración de B2
+debe partir del journal actual, hoy con 0020 como siguiente número libre.
+Los puntos siguientes conservan el razonamiento histórico de coordinación,
+no un bloqueo vigente del mapa.
 
 Secuencia propuesta:
 

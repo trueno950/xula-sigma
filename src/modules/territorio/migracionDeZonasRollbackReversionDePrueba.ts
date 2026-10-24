@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
-import { withTenant } from "@/shared/tenancy/withTenant";
-import { lugares } from "./infrastructure/esquema";
+import {
+  insertarLugarAnterior,
+  withTenantAnterior,
+} from "./conexionAnteriorAlCorteDePrueba";
 import type { LugarBorradoDeSalida } from "./migracionDeZonasTiposDePrueba";
 
 const ordenarPadresPrimero = (filas: LugarBorradoDeSalida[]) => {
@@ -23,11 +25,10 @@ export const revertirMigracion = async (opciones: {
   ayuntamientoId: AyuntamientoId;
   lugaresBorrados: LugarBorradoDeSalida[];
 }) =>
-  withTenant(opciones.ayuntamientoId, async (tx) => {
+  withTenantAnterior(opciones.ayuntamientoId, async (tx) => {
     for (const lugar of ordenarPadresPrimero(opciones.lugaresBorrados)) {
-      await tx.insert(lugares).values({
+      await insertarLugarAnterior(tx, opciones.ayuntamientoId, {
         id: lugar.lugarId,
-        ayuntamientoId: opciones.ayuntamientoId,
         tipo: lugar.tipo,
         nombre: lugar.nombre,
         padreId: lugar.padreId,

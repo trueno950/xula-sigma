@@ -141,6 +141,13 @@
       "when": 1792464868270,
       "tag": "0019_narrow_fantastic_four",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792511629221,
+      "tag": "0020_corte_tipos_lugar",
+      "breakpoints": true
     }
   ]
 }

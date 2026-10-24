@@ -1,5 +1,9 @@
 import { NoEncontradoError } from "@/shared/lib/errores";
-import { type CalleId, type LugarId, ZonaIncoherenteError } from "../domain";
+import {
+  type CalleId,
+  type LugarId,
+  UbicacionIncoherenteError,
+} from "../domain";
 import { cadenaHastaAsentamiento } from "./asentamientoDeLugar";
 import type {
   CalleGuardada,
@@ -48,14 +52,14 @@ const exigirCallesActivas = (
 /**
  * Las tres calles salen del mismo asentamiento. La incoherencia es un dato
  * visible para el tenant -las dos filas estan a la vista- y por eso es
- * `ZonaIncoherenteError` y no un 404.
+ * `UbicacionIncoherenteError` y no un 404.
  */
 const exigirCallesDelAsentamiento = (
   callesBloqueadas: readonly CalleGuardada[],
   asentamientoId: LugarId,
 ): void => {
   if (callesBloqueadas.some(({ lugarId }) => lugarId !== asentamientoId)) {
-    throw new ZonaIncoherenteError();
+    throw new UbicacionIncoherenteError();
   }
 };
 
@@ -64,7 +68,7 @@ const exigirNivelesDeclarados = (
   cadena: readonly LugarGuardado[],
 ): void => {
   if (declarados.some((id) => !cadena.some((eslabon) => eslabon.id === id))) {
-    throw new ZonaIncoherenteError();
+    throw new UbicacionIncoherenteError();
   }
 };
 

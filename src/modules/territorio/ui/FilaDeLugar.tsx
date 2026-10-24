@@ -122,9 +122,9 @@ export function ContenidoDeFila({
         <PastillaDeTipo tipo={lugar.tipo} />
         {/*
           Un rango 0 es "raiz por construccion" (`tipoDeLugar.ts`). Lo
-          contrario -una colonia, un sector o una manzana arriba de todo- ya
-          no se puede crear: `altaDeLugar` y `reparentearLugar` lanzan
-          `RaizInvalidaError`. Lo que queda es dato anterior a esa regla, y
+          contrario -una colonia arriba de todo- ya no se puede crear:
+          `altaDeLugar` y `reparentearLugar` lanzan `RaizInvalidaError`. Lo
+          que queda es dato anterior a esa regla, y
           la pantalla lo senala en vez de esconderlo porque hay que moverlo
           a mano. `scripts/auditar-raices.sql` es el mismo barrido del lado
           de la base.

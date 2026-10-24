@@ -12,6 +12,12 @@ Secuencia obligatoria: **A1 -> A2 -> A3 -> B1 -> B3d -> B2 -> B3u**. El
 porque del `B3d` antes de `B2` esta en la decision D8: no es preferencia de
 orden, es que la migracion del CHECK revienta si corre antes.
 
+En la reanudación, el usuario autorizó desarrollar y verificar B2/B3u sobre
+una base aislada dejando pendiente la operación B3d. Esto no cambia el orden
+de despliegue: antes de aplicar el CHECK sobre datos reales se exige la
+ventana aprobada y la limpieza B3d en ese mismo entorno. El SDD no se declara
+cerrado ni se archiva con esa operación pendiente.
+
 ## Decisiones de arquitectura
 
 | # | Decision | Opciones | Eleccion |
@@ -351,8 +357,8 @@ lleva ningun secreto adentro.
 
 ## Preguntas abiertas
 
-- [ ] Nombre de la zona: unico por asentamiento (lo asume el `uniqueIndex`)
-      o unico por municipio. Se propone por asentamiento, mismo criterio que
+- [x] Nombre de la zona: unico por asentamiento, confirmado por el usuario
+      en ODD S6; conserva el `uniqueIndex`, mismo criterio que
       `calles_tenant_lugar_nombre_idx`.
 - [ ] Un `sector` cuyos domicilios no usaban ninguna calle se convierte en
       una zona vacia. Se propone crearla igual (decision 7 la permite) y

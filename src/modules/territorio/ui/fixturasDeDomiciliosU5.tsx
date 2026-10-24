@@ -8,12 +8,14 @@ import { TabDeDomicilios } from "./TabDeDomicilios";
 
 export const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
 export const coloniaId = comoLugarId("22222222-2222-4222-8222-222222222222");
-export const manzanaId = comoLugarId("88888888-8888-4888-8888-888888888888");
+export const otraColoniaId = comoLugarId(
+  "88888888-8888-4888-8888-888888888888",
+);
 export const calleId = comoCalleId("33333333-3333-4333-8333-333333333333");
 export const enColoniaId = comoDomicilioId(
   "55555555-5555-4555-8555-555555555555",
 );
-export const enManzanaId = comoDomicilioId(
+export const enOtraColoniaId = comoDomicilioId(
   "99999999-9999-4999-8999-999999999999",
 );
 
@@ -42,10 +44,10 @@ export const nodos: readonly NodoDeSubarbol[] = [
   },
   {
     clase: "lugar",
-    id: manzanaId,
-    tipo: "manzana",
-    nombre: "Manzana 1",
-    padreId: coloniaId,
+    id: otraColoniaId,
+    tipo: "colonia",
+    nombre: "Norte",
+    padreId: cabeceraId,
   },
   {
     clase: "domicilio",
@@ -57,8 +59,8 @@ export const nodos: readonly NodoDeSubarbol[] = [
   },
   {
     clase: "domicilio",
-    id: enManzanaId,
-    lugarId: manzanaId,
+    id: enOtraColoniaId,
+    lugarId: otraColoniaId,
     calleId,
     calle: "Calle 30",
     numero: null,

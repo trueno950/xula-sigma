@@ -119,10 +119,14 @@ describe("aislamiento de lugares", () => {
   });
 
   it("subarbol no filtra por tenant en su SQL crudo: RLS lo hace, y aca se prueba", async () => {
-    const [sectorMotul] = await withTenant(motul, (tx) =>
+    const [comisariaMotul] = await withTenant(motul, (tx) =>
       tx
         .insert(lugares)
-        .values({ ayuntamientoId: motul, tipo: "sector", nombre: "Sector M" })
+        .values({
+          ayuntamientoId: motul,
+          tipo: "comisaria",
+          nombre: "Comisaria M",
+        })
         .returning({ id: lugares.id }),
     );
     const [calleMotul] = await withTenant(motul, (tx) =>
@@ -131,14 +135,14 @@ describe("aislamiento de lugares", () => {
         .values({
           ayuntamientoId: motul,
           nombre: "Calle M",
-          lugarId: sectorMotul!.id,
+          lugarId: comisariaMotul!.id,
         })
         .returning({ id: calles.id }),
     );
     await withTenant(motul, (tx) =>
       tx.insert(domicilios).values({
         ayuntamientoId: motul,
-        lugarId: sectorMotul!.id,
+        lugarId: comisariaMotul!.id,
         calleId: calleMotul!.id,
       }),
     );
@@ -151,7 +155,7 @@ describe("aislamiento de lugares", () => {
      * la fila -RLS la esconde- y la recursion nunca arranca.
      */
     const nodosDesdeTicul = await withTenant(ticul, (tx) =>
-      repositorioDeLugaresSql.subarbol(tx, sectorMotul!.id),
+      repositorioDeLugaresSql.subarbol(tx, comisariaMotul!.id),
     );
 
     expect(nodosDesdeTicul).toHaveLength(0);

@@ -93,23 +93,21 @@ describe("componerDireccion", () => {
   });
 
   it("la cadena de ancestros completa aparece del mas profundo al mas superficial", () => {
+    // Dos niveles: la colonia y el asentamiento que la contiene. El arbol de
+    // direcciones ya no tiene escalones intermedios (design.md decision 5).
     const texto = componerDireccion({
       calle: "Calle 20",
       numero: "105",
       entreCalleA: null,
       entreCalleB: null,
       referencia: null,
-      ancestros: ["Manzana 5", "Sector 2", "Colonia Centro", "Comisaria X"],
+      ancestros: ["Colonia Centro", "Comisaria X"],
     });
 
-    const indiceManzana = texto.indexOf("Manzana 5");
-    const indiceSector = texto.indexOf("Sector 2");
     const indiceColonia = texto.indexOf("Colonia Centro");
     const indiceComisaria = texto.indexOf("Comisaria X");
 
-    expect(indiceManzana).toBeGreaterThanOrEqual(0);
-    expect(indiceSector).toBeGreaterThan(indiceManzana);
-    expect(indiceColonia).toBeGreaterThan(indiceSector);
+    expect(indiceColonia).toBeGreaterThanOrEqual(0);
     expect(indiceComisaria).toBeGreaterThan(indiceColonia);
   });
 });
@@ -125,22 +123,18 @@ describe("componerUbicacion", () => {
     expect(texto).not.toContain("S/N");
   });
 
-  it("con calle y cuatro ancestros, todos presentes del mas profundo al mas superficial", () => {
+  it("con calle y los dos ancestros, todos presentes del mas profundo al mas superficial", () => {
     const texto = componerUbicacion({
       calle: "Calle 20",
-      ancestros: ["Manzana 5", "Sector 2", "Colonia Centro", "Comisaria X"],
+      ancestros: ["Colonia Centro", "Comisaria X"],
     });
 
     const indiceCalle = texto.indexOf("Calle 20");
-    const indiceManzana = texto.indexOf("Manzana 5");
-    const indiceSector = texto.indexOf("Sector 2");
     const indiceColonia = texto.indexOf("Colonia Centro");
     const indiceComisaria = texto.indexOf("Comisaria X");
 
     expect(indiceCalle).toBe(0);
-    expect(indiceManzana).toBeGreaterThan(indiceCalle);
-    expect(indiceSector).toBeGreaterThan(indiceManzana);
-    expect(indiceColonia).toBeGreaterThan(indiceSector);
+    expect(indiceColonia).toBeGreaterThan(indiceCalle);
     expect(indiceComisaria).toBeGreaterThan(indiceColonia);
   });
 

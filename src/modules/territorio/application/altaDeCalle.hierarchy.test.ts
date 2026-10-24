@@ -66,7 +66,7 @@ describe("altaDeCalle hierarchy boundary", () => {
     );
   });
 
-  for (const tipo of ["colonia", "sector", "manzana"] as const) {
+  for (const tipo of ["colonia"] as const) {
     it(`rejects creating a street under ${tipo} before insert`, async () => {
       vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue({
         ...lugar,

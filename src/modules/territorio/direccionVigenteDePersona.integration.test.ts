@@ -103,14 +103,12 @@ describe("direccionVigenteDePersona: composicion del texto (spec domicilios)", (
   it("con todos los niveles presentes, el texto incluye la cadena completa de ancestros, calle, numero y ambas transversales", async () => {
     const comisaria = await crearLugar("comisaria", "Comisaria Completa");
     const colonia = await crearLugar("colonia", "Colonia Completa", comisaria);
-    const sector = await crearLugar("sector", "Sector Completo", colonia);
-    const manzana = await crearLugar("manzana", "Manzana Completa", sector);
     const calle = await crearCalle(comisaria, "Calle Principal");
     const entreA = await crearCalle(comisaria, "Entre Calle A");
     const entreB = await crearCalle(comisaria, "Entre Calle B");
     const { id: domicilioId } = await altaDeDomicilio(
       {
-        lugarId: manzana,
+        lugarId: colonia,
         calleId: calle,
         numero: "105",
         entreCalleAId: entreA,
@@ -128,29 +126,20 @@ describe("direccionVigenteDePersona: composicion del texto (spec domicilios)", (
     expect(direccion?.texto).toContain("105");
     expect(direccion?.texto).toContain("Entre Calle A");
     expect(direccion?.texto).toContain("Entre Calle B");
-    expect(direccion?.texto).toContain("Manzana Completa");
-    expect(direccion?.texto).toContain("Sector Completo");
     expect(direccion?.texto).toContain("Colonia Completa");
     expect(direccion?.texto).toContain("Comisaria Completa");
   });
 
   it("con niveles ausentes, el texto omite lo ausente sin fallar", async () => {
-    const comisaria = await crearLugar("comisaria", "Comisaria Sin Manzana");
-    const colonia = await crearLugar(
-      "colonia",
-      "Colonia Sin Manzana",
-      comisaria,
-    );
+    const comisaria = await crearLugar("comisaria", "Comisaria Sin Colonia");
     const calle = await crearCalle(comisaria, "Calle Suelta");
-    const { id: domicilioId } = await altaConNumero(colonia, calle, null);
+    const { id: domicilioId } = await altaConNumero(comisaria, calle, null);
     const { id: personaId } = await personaDePrueba("Daniela");
     await abrirResidencia(personaId, domicilioId, "2022-01-01");
 
     const direccion = await direccionVigenteDePersona(personaId, contextoDe());
 
-    expect(direccion?.texto).toContain("Calle Suelta");
-    expect(direccion?.texto).toContain("S/N");
-    expect(direccion?.texto).toContain("Colonia Sin Manzana");
+    expect(direccion?.texto).toBe("Calle Suelta S/N, Comisaria Sin Colonia");
   });
 
   it("reparentear la colonia del domicilio refleja la jerarquia actual, no una copia congelada", async () => {

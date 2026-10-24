@@ -9,16 +9,25 @@ import {
 
 /**
  * Recorrida entera contra `TIPOS_DE_LUGAR`, forma de `roles.test.ts:15`
- * (design.md seccion 7): un sexto tipo tiene que faltar en esta tabla para
+ * (design.md seccion 7): un tipo nuevo tiene que faltar en esta tabla para
  * que el test lo note, en vez de heredar un permiso por descarte.
+ *
+ * Dos niveles: `{cabecera, comisaria}` arriba, `colonia` abajo (design.md
+ * decision 5). `sector` y `manzana` no son tipos de este catalogo.
  */
 const RANGO: Record<(typeof TIPOS_DE_LUGAR)[number], number> = {
   cabecera: 0,
   comisaria: 0,
   colonia: 1,
-  sector: 2,
-  manzana: 3,
 };
+
+describe("TIPOS_DE_LUGAR", () => {
+  it("el arbol de direcciones baja a dos niveles: asentamiento y colonia", () => {
+    // El catalogo entero, no una muestra: es el contrato que el CHECK
+    // `lugares_tipo_valido` de la migracion 0020 repite en Postgres.
+    expect(TIPOS_DE_LUGAR).toEqual(["cabecera", "comisaria", "colonia"]);
+  });
+});
 
 describe("puedeContener", () => {
   it("cabecera y comisaria no se contienen entre si (mismo rango 0)", () => {
@@ -42,14 +51,13 @@ describe("puedeSerRaiz", () => {
    * El mismo comentario de `tipoDeLugar.ts` ya afirma que un nodo de rango
    * 0 es "raiz por construccion". Lo que faltaba era poder preguntarlo: sin
    * esta funcion, la afirmacion vivia en un comentario y nada la usaba, asi
-   * que una manzana suelta arriba de todo era una raiz perfectamente legal.
+   * que un lugar de rango hondo suelto arriba de todo era una raiz
+   * perfectamente legal.
    */
   it("solo los asentamientos de rango 0 son raiz del municipio", () => {
     expect(puedeSerRaiz("cabecera")).toBe(true);
     expect(puedeSerRaiz("comisaria")).toBe(true);
     expect(puedeSerRaiz("colonia")).toBe(false);
-    expect(puedeSerRaiz("sector")).toBe(false);
-    expect(puedeSerRaiz("manzana")).toBe(false);
   });
 
   it("es exactamente lo que nadie puede contener", () => {
@@ -71,24 +79,18 @@ describe("puedeTenerCatalogoDeCalles", () => {
     expect(puedeTenerCatalogoDeCalles("cabecera")).toBe(true);
     expect(puedeTenerCatalogoDeCalles("comisaria")).toBe(true);
     expect(puedeTenerCatalogoDeCalles("colonia")).toBe(false);
-    expect(puedeTenerCatalogoDeCalles("sector")).toBe(false);
-    expect(puedeTenerCatalogoDeCalles("manzana")).toBe(false);
   });
 });
 
 describe("tiposContenidosPor", () => {
   it("da los tipos que ese padre acepta, en el orden del catalogo", () => {
-    expect(tiposContenidosPor("cabecera")).toEqual([
-      "colonia",
-      "sector",
-      "manzana",
-    ]);
-    expect(tiposContenidosPor("sector")).toEqual(["manzana"]);
+    expect(tiposContenidosPor("cabecera")).toEqual(["colonia"]);
+    expect(tiposContenidosPor("comisaria")).toEqual(["colonia"]);
   });
 
-  it("una manzana no acepta nada adentro", () => {
+  it("una colonia no acepta nada adentro: es el tipo mas profundo", () => {
     // El formulario de alta la usa para decidir si ofrecer el boton: sin
     // esto, "Agregar lugar" abria un formulario sin un solo tipo valido.
-    expect(tiposContenidosPor("manzana")).toEqual([]);
+    expect(tiposContenidosPor("colonia")).toEqual([]);
   });
 });

@@ -9,13 +9,12 @@ import { CLAVE, CORREO, urlDe } from "./municipios";
  * que pinta el componente, y eso no alcanza: una fila puede volver a sumar la
  * sangria de sus ancestros por cualquier otro camino —un margen, un `padding`
  * del padre, un `transform`— y el marcado queda igual. Aca se comparan las
- * posiciones reales de tres niveles y se exige el mismo paso entre uno y otro,
- * que es el invariante que el arreglo de `R3-cumulative-tree-indentation`
- * protege. Con la tabla de posiciones acumuladas que habia antes los saltos
- * eran 16, 36 y 56 px, asi que este test se ponia rojo.
+ * posiciones reales del asentamiento y su colonia y se compara el paso con
+ * el padding propio de ambas filas. La tabla acumulada anterior usaba 16 px
+ * en la raiz y 36 px en su hija, por lo que tampoco pasa esta comparacion.
  *
- * El arbol se arma por la interfaz: comisaria, colonia y manzana, la jerarquia
- * que permite `puedeContener` (rango estrictamente creciente).
+ * B2 deja solo dos niveles de negocio; inventar una manzana para medir un
+ * tercer salto volveria a probar una jerarquia que el producto ya no admite.
  */
 /**
  * Nombres fijos, y a proposito: `e2e/preparar.ts` trunca `bitacora` y
@@ -26,7 +25,6 @@ import { CLAVE, CORREO, urlDe } from "./municipios";
  */
 const COMISARIA = "Comisaria Sangria E2E";
 const COLONIA = "Colonia Sangria E2E";
-const MANZANA = "Manzana Sangria E2E";
 
 test.beforeAll(async () => {
   const url = process.env.MIGRATION_DATABASE_URL;
@@ -150,25 +148,17 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
   await darDeAlta(page, { tipo: "colonia", nombre: COLONIA });
 
   await page.getByRole("link", { name: new RegExp(`^${COLONIA},`) }).click();
-  await darDeAlta(page, { tipo: "manzana", nombre: MANZANA });
+  await expect(
+    page.getByRole("link", { name: "Agregar lugar", exact: true }),
+  ).toHaveCount(0);
 
   await page.goto(urlDe("motul", "/territorio"));
-  // La rama del nivel 1 nace plegada: se abre para que la manzana se vea.
-  await page
-    .locator(
-      `summary[aria-label="Mostrar u ocultar el contenido de ${COLONIA}"]`,
-    )
-    .click();
 
   const comisaria = await izquierdaDe(page, COMISARIA);
   const colonia = await izquierdaDe(page, COLONIA);
-  const manzana = await izquierdaDe(page, MANZANA);
-
   const primerPaso = colonia - comisaria;
-  const segundoPaso = manzana - colonia;
 
   expect(primerPaso).toBeGreaterThan(0);
-  expect(Math.abs(primerPaso - segundoPaso)).toBeLessThanOrEqual(1);
   // El paso geometrico tiene que ser el mismo que pinta la clase de la fila:
   // asi el numero es la sangria real de un nivel y no un tope elegido a ojo.
   const sangria = await sangriaPintada(page, COMISARIA);
@@ -177,4 +167,7 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
     0,
   );
   expect(Math.round(primerPaso)).toBe(Math.round(sangria));
+  expect(Math.round(await sangriaPintada(page, COLONIA))).toBe(
+    Math.round(sangria),
+  );
 });

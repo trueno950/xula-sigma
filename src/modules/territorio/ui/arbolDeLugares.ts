@@ -84,7 +84,7 @@ const construir = (
 
 /**
  * Sin busqueda, el arbol se corta en `NIVELES_VISIBLES`: un municipio con
- * trescientas manzanas volveria la pantalla un scroll infinito. Con
+ * trescientas colonias volveria la pantalla un scroll infinito. Con
  * busqueda baja hasta el fondo, pero solo por las ramas que llevan a una
  * coincidencia: el operador ve el camino completo y nada mas.
  */

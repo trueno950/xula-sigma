@@ -84,15 +84,15 @@ describe("ubicacionDeLugar", () => {
 
   it("un lugar dado de baja se ve como si no existiera", async () => {
     const comisaria = await crearLugar("comisaria", "Con baja");
-    const sector = await crearLugar(
-      "sector",
-      "Sector para dar de baja",
+    const colonia = await crearLugar(
+      "colonia",
+      "Colonia para dar de baja",
       comisaria,
     );
-    await darDeBajaLugar(sector, contextoDe());
+    await darDeBajaLugar(colonia, contextoDe());
 
     const resultado = await ubicacionDeLugar(
-      { lugarId: sector, calleId: null },
+      { lugarId: colonia, calleId: null },
       contextoDe(),
     );
 

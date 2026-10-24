@@ -27,9 +27,9 @@ type Props = {
 
 /**
  * La entrada de `/territorio`: los asentamientos del municipio y lo que
- * cuelga de ellos, hasta tres niveles, cada rama colapsable; lo que queda
+ * cuelga de ellos, hasta dos niveles, cada rama colapsable; lo que queda
  * mas adentro es un enlace a la vista de ese lugar. Un municipio con
- * trescientas manzanas volveria esta pantalla un scroll infinito, y la
+ * trescientas colonias volveria esta pantalla un scroll infinito, y la
  * tarea de todos los dias es entrar a un asentamiento, no leer el censo.
  *
  * Se arma con los lugares y las cuentas que la pagina ya trajo: una

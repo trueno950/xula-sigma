@@ -30,32 +30,34 @@ afterAll(async () => {
 });
 
 describe("reparentearLugar", () => {
-  it("una colonia no puede reparentarse a su propio sector: el rango lo rechaza (ciclo de largo 2)", async () => {
+  it("un asentamiento no puede reparentarse bajo una colonia: el rango lo rechaza", async () => {
     const comisaria = await crearLugar("comisaria", "Yotholin");
     const colonia = await crearLugar("colonia", "Colonia X", comisaria);
-    const sector = await crearLugar("sector", "Sector Y", colonia);
 
     const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
 
     await expect(
-      reparentearLugar(colonia, sector, contextoDe()),
+      reparentearLugar(comisaria, colonia, contextoDe()),
     ).rejects.toBeInstanceOf(JerarquiaInvalidaError);
 
     const [lugarSinMover] = await withTenant(motul, (tx) =>
       tx
         .select({ padreId: lugares.padreId })
         .from(lugares)
-        .where(eq(lugares.id, colonia)),
+        .where(eq(lugares.id, comisaria)),
     );
-    expect(lugarSinMover?.padreId).toBe(comisaria);
+    expect(lugarSinMover?.padreId).toBeNull();
   });
 
   it("reparentear no toca conteo ni xmin de domicilios/residencias, y el subarbol del nuevo padre los incluye", async () => {
     const comisariaOrigen = await crearLugar("comisaria", "Comisaria origen");
     const comisariaDestino = await crearLugar("comisaria", "Comisaria destino");
-    const sector = await crearLugar("sector", "Sector movido", comisariaOrigen);
-    const manzana = await crearLugar("manzana", "Manzana movida", sector);
-    const domicilioId = await crearDomicilio(manzana, "Calle movida");
+    const colonia = await crearLugar(
+      "colonia",
+      "Colonia movida",
+      comisariaOrigen,
+    );
+    const domicilioId = await crearDomicilio(colonia, "Calle movida");
 
     const { id: personaId } = await altaDePersona(
       {
@@ -94,7 +96,7 @@ describe("reparentearLugar", () => {
 
     const conteoDomicilios = () =>
       withTenant(motul, (tx) =>
-        tx.select().from(domicilios).where(eq(domicilios.lugarId, manzana)),
+        tx.select().from(domicilios).where(eq(domicilios.lugarId, colonia)),
       );
     const conteoResidencias = () =>
       withTenant(motul, (tx) =>
@@ -110,7 +112,7 @@ describe("reparentearLugar", () => {
     const xminResidenciaAntes = await xminDeResidencia(residenciasAntes[0]!.id);
 
     const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
-    await reparentearLugar(sector, comisariaDestino, contextoDe());
+    await reparentearLugar(colonia, comisariaDestino, contextoDe());
 
     const domiciliosDespues = await conteoDomicilios();
     const residenciasDespues = await conteoResidencias();

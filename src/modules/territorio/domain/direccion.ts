@@ -24,8 +24,8 @@ export const transversalesValidas = (
 /**
  * Entrada de `componerDireccion`, ya resuelta a nombres -sin ids, sin
  * `padreId` que subir a mano-. `ancestros` viene del mas profundo al mas
- * superficial (manzana -> sector -> colonia -> comisaria, el orden de
- * rango de `tipoDeLugar.ts` invertido), el mismo orden en el que
+ * superficial (colonia -> asentamiento, el orden de rango de
+ * `tipoDeLugar.ts` invertido), el mismo orden en el que
  * `lectorDeDireccionesSql` recorre el `WITH RECURSIVE` (design.md seccion
  * 7).
  */

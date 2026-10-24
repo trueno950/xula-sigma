@@ -8,8 +8,9 @@ import type { RepositorioDeResidencias } from "./puertosDeResidencias";
  * Personas con residencia vigente en el subarbol de un lugar. Sin guarda de
  * rol -leer no es escribir-. Reusa el `WITH RECURSIVE` de
  * `RepositorioDeDomicilios.porLugarYSubarbol` -la unica pieza recursiva del
- * modulo- para resolver los domicilios del sector, y filtra `residencias`
- * sobre esos ids con el builder de Drizzle (design.md seccion 12).
+ * modulo- para resolver los domicilios del subarbol del lugar, y filtra
+ * `residencias` sobre esos ids con el builder de Drizzle (design.md
+ * seccion 12).
  */
 export function crearResidentesDe(
   repositorioDeDomicilios: RepositorioDeDomicilios,

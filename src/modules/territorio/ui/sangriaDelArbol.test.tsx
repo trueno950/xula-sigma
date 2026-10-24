@@ -54,13 +54,7 @@ describe("sangria del arbol de lugares", () => {
   const rama = nodo({
     nombre: "Buenavista",
     nivel: 0,
-    hijos: [
-      nodo({
-        nombre: "Colonia Centro",
-        nivel: 1,
-        hijos: [nodo({ nombre: "Manzana 001", nivel: 2, tipo: "manzana" })],
-      }),
-    ],
+    hijos: [nodo({ nombre: "Colonia Centro", nivel: 1 })],
   });
 
   it("el mismo paso en todas las filas", () => {
@@ -71,7 +65,7 @@ describe("sangria del arbol de lugares", () => {
     expect(new Set(pasos)).toEqual(new Set(["pl-4"]));
   });
 
-  it("un paso por fila, aunque la rama tenga tres niveles", () => {
-    expect([...pintar(rama).matchAll(/pl-4/g)]).toHaveLength(3);
+  it("un paso por fila, una por cada nivel del arbol", () => {
+    expect([...pintar(rama).matchAll(/pl-4/g)]).toHaveLength(2);
   });
 });

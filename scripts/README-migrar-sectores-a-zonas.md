@@ -17,6 +17,12 @@ estado que se está migrando.
 `B3d-REFACTOR-06` no se puede marcar ni ejecutar sin esa aprobación. Ningún
 valor por defecto ni automatización puede inferir la ventana.
 
+La reanudación de desarrollo autorizada permite preparar B2/B3u y probarlos
+en bases aisladas sin ejecutar esta operación sobre datos reales. No permite
+marcar B3d completa ni archivar el SDD: antes del despliegue del CHECK nuevo
+se requiere esta operación en el entorno de destino y su evidencia guardada.
+La decisión está registrada en `odd/tasks/cierre-direcciones-y-zonas.md`.
+
 ## Precondiciones
 
 Antes de abrir la ventana, la persona operadora debe confirmar:

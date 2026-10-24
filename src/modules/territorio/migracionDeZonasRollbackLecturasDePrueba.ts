@@ -1,6 +1,6 @@
-import { asc, inArray } from "drizzle-orm";
+import { asc, inArray, sql } from "drizzle-orm";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import { withTenantAnterior } from "./conexionAnteriorAlCorteDePrueba";
 import type { DomicilioId, LugarId } from "./domain";
 import { domicilios, lugares } from "./infrastructure/esquema";
 
@@ -9,11 +9,14 @@ export const leerRestauracion = (opciones: {
   lugarIds: LugarId[];
   domicilioIds: DomicilioId[];
 }) =>
-  withTenant(opciones.ayuntamientoId, async (tx) => ({
+  withTenantAnterior(opciones.ayuntamientoId, async (tx) => ({
     lugares: await tx
       .select({
         id: lugares.id,
-        tipo: lugares.tipo,
+        // El `tipo` de esta base todavia puede ser `sector` o `manzana`, que
+        // `TipoDeLugar` ya no admite: se lee como texto y se compara contra
+        // la salida guardada, que trae el tipo real.
+        tipo: sql<string>`${lugares.tipo}`,
         nombre: lugares.nombre,
         padreId: lugares.padreId,
         bajaEn: lugares.bajaEn,

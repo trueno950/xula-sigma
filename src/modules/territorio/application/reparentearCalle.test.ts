@@ -124,7 +124,7 @@ describe("reparentear calles", () => {
     expect(publicarMock).not.toHaveBeenCalled();
   });
 
-  for (const tipo of ["colonia", "sector", "manzana"] as const) {
+  for (const tipo of ["colonia"] as const) {
     it(`rechaza mover una calle bajo ${tipo} antes de actualizar`, async () => {
       const repositorio = repositorioDeCalles();
       vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);

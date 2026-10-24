@@ -24,9 +24,9 @@ export class LugarConDependientesError extends Error {
  * el problema es que no se eligio ninguno.
  *
  * No confundir con la raggedness (design.md decision 6), que es poder
- * saltear niveles —un sector colgado directo de una comisaria, sin colonia
- * intermedia—. Un `padreId NULL` en un tipo que no es rango 0 significa
- * "sin padre conocido", nunca "esto es la cabecera": lo dice el mismo spec.
+ * saltear niveles —un tipo del catalogo colgado directo del asentamiento—.
+ * Un `padreId NULL` en un tipo que no es rango 0 significa "sin padre
+ * conocido", nunca "esto es la cabecera": lo dice el mismo spec.
  */
 export class RaizInvalidaError extends Error {
   readonly codigo = "RAIZ_INVALIDA";
@@ -42,7 +42,7 @@ export class RaizInvalidaError extends Error {
 /**
  * `reparentearLugar` rechaza si `puedeContener(nuevoPadre.tipo, hijo.tipo)`
  * es falso (design.md seccion 9): una cabecera no puede colgar de una
- * comisaria, un sector no puede volverse padre de su propia colonia.
+ * comisaria, y una colonia no puede volverse padre de nada.
  */
 export class JerarquiaInvalidaError extends Error {
   readonly codigo = "JERARQUIA_INVALIDA";
@@ -82,18 +82,23 @@ export class CatalogoDeCallesSoloEnAsentamientosError extends Error {
 }
 
 /**
- * `altaDeDomicilio` rechaza si un nivel declarado en la cascada no es el
- * lugar guardado ni uno de sus ancestros: los niveles elegidos tienen que
- * salir de la misma cadena de contencion que el lugar mas profundo.
+ * `altaDeDomicilio` y `corregirDomicilio` rechazan si el lugar declarado no
+ * es el lugar guardado ni uno de sus ancestros: lo elegido tiene que salir
+ * de la misma cadena de contencion que el lugar mas profundo.
+ *
+ * Se llamaba `ZonaIncoherenteError` mientras el formulario rotulaba "Zona"
+ * al nivel de la direccion; con el vocabulario de A3 -"Colonia"- y con las
+ * zonas operativas de B1 como concepto aparte, el nombre decia "zona" donde
+ * el problema es la ubicacion entera.
  */
-export class ZonaIncoherenteError extends Error {
-  readonly codigo = "ZONA_INCOHERENTE";
+export class UbicacionIncoherenteError extends Error {
+  readonly codigo = "UBICACION_INCOHERENTE";
 
   constructor(
-    mensaje = "La zona elegida no coincide con el lugar donde se guardará el domicilio.",
+    mensaje = "La ubicación elegida no coincide con el lugar donde se guardará el domicilio.",
   ) {
     super(mensaje);
-    this.name = "ZonaIncoherenteError";
+    this.name = "UbicacionIncoherenteError";
   }
 }
 
