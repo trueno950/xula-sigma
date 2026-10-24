@@ -63,50 +63,24 @@ const formateadorDeFechaCivil = new Intl.DateTimeFormat("es-MX", {
 export const fechaCivilDeMedianocheUtc = (fecha: Date): string =>
   formateadorDeFechaCivil.format(fecha);
 
-const MESES = [
-  "enero",
-  "febrero",
-  "marzo",
-  "abril",
-  "mayo",
-  "junio",
-  "julio",
-  "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
-] as const;
+const formateadorDeFechaCivilLarga = new Intl.DateTimeFormat("es-MX", {
+  timeZone: "UTC",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 
-const MESES_CORTOS = [
-  "ene",
-  "feb",
-  "mar",
-  "abr",
-  "may",
-  "jun",
-  "jul",
-  "ago",
-  "sep",
-  "oct",
-  "nov",
-  "dic",
-] as const;
-
-type PartesDeFechaCivil = { dia: number; mes: number; anio: number };
-
-const esAnioBisiesto = (anio: number): boolean =>
-  anio % 4 === 0 && (anio % 100 !== 0 || anio % 400 === 0);
-
-const diasDelMes = (anio: number, mes: number): number => {
-  if (mes === 2) return esAnioBisiesto(anio) ? 29 : 28;
-  return [4, 6, 9, 11].includes(mes) ? 30 : 31;
-};
+const formateadorDeFechaCivilCorta = new Intl.DateTimeFormat("es-MX", {
+  timeZone: "UTC",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
 
 // Los snapshots guardados aceptan cualquier texto en `desdeEn`
 // (`validacionDeSnapshot.ts` usa `z.string()`); un valor antiguo no debe
 // impedir emitir.
-const partesDeFechaCivil = (fecha: string): PartesDeFechaCivil | null => {
+const fechaCivilComoDate = (fecha: string): Date | null => {
   const coincidencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
   if (!coincidencia) return null;
 
@@ -114,29 +88,29 @@ const partesDeFechaCivil = (fecha: string): PartesDeFechaCivil | null => {
   const anio = Number(anioTexto);
   const mes = Number(mesTexto);
   const dia = Number(diaTexto);
+  if (anio < 1) return null;
+
+  const fechaUtc = new Date(Date.UTC(anio, mes - 1, dia));
+  if (anio < 100) fechaUtc.setUTCFullYear(anio);
   if (
-    anio < 1 ||
-    mes < 1 ||
-    mes > 12 ||
-    dia < 1 ||
-    dia > diasDelMes(anio, mes)
+    fechaUtc.getUTCFullYear() !== anio ||
+    fechaUtc.getUTCMonth() !== mes - 1 ||
+    fechaUtc.getUTCDate() !== dia
   ) {
     return null;
   }
 
-  return { dia, mes, anio };
+  return fechaUtc;
 };
 
 export const fechaCivilLarga = (fecha: string): string => {
-  const partes = partesDeFechaCivil(fecha);
-  if (!partes) return fecha;
-  return `${partes.dia} de ${MESES[partes.mes - 1]} de ${partes.anio}`;
+  const fechaUtc = fechaCivilComoDate(fecha);
+  return fechaUtc ? formateadorDeFechaCivilLarga.format(fechaUtc) : fecha;
 };
 
 export const fechaCivilCorta = (fecha: string): string => {
-  const partes = partesDeFechaCivil(fecha);
-  if (!partes) return fecha;
-  return `${partes.dia} ${MESES_CORTOS[partes.mes - 1]} ${partes.anio}`;
+  const fechaUtc = fechaCivilComoDate(fecha);
+  return fechaUtc ? formateadorDeFechaCivilCorta.format(fechaUtc) : fecha;
 };
 
 const formateadorDeHora = new Intl.DateTimeFormat("en-US", {

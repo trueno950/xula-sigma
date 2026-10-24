@@ -123,6 +123,15 @@ describe("fechaCivilLarga", () => {
     expect(fechaCivilLarga("2026-01-04")).toBe("4 de enero de 2026");
   });
 
+  it("formatea el dia bisiesto", () => {
+    expect(fechaCivilLarga("2024-02-29")).toBe("29 de febrero de 2024");
+  });
+
+  it("conserva fechas imposibles sin cambiarlas", () => {
+    expect(fechaCivilLarga("2023-02-29")).toBe("2023-02-29");
+    expect(fechaCivilLarga("2026-04-31")).toBe("2026-04-31");
+  });
+
   it("conserva el valor original cuando no es una fecha civil valida", () => {
     expect(fechaCivilLarga("2026-02-30")).toBe("2026-02-30");
   });
@@ -132,6 +141,15 @@ describe("fechaCivilCorta", () => {
   it("usa el mismo formato corto espanol que la fecha de emision", () => {
     expect(fechaCivilCorta("2026-10-24")).toBe("24 oct 2026");
     expect(fechaCivilCorta("2026-01-04")).toBe("4 ene 2026");
+  });
+
+  it("formatea el dia bisiesto", () => {
+    expect(fechaCivilCorta("2024-02-29")).toBe("29 feb 2024");
+  });
+
+  it("conserva fechas imposibles sin cambiarlas", () => {
+    expect(fechaCivilCorta("2023-02-29")).toBe("2023-02-29");
+    expect(fechaCivilCorta("2026-04-31")).toBe("2026-04-31");
   });
 
   it("conserva el valor original cuando no es una fecha civil valida", () => {
