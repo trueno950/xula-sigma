@@ -47,6 +47,40 @@ de variable de entorno que corren al importar el módulo; cubrirlas pide
 reimportar con el entorno roto. Son caminos reales y el piso sube a 80 el
 día que se escriban.
 
+### Correr la suite en local
+
+`pnpm test` corre los dos proyectos de `vitest.config.ts`. `unit` se
+basta solo: sus variables de entorno son de prueba y viven en la
+configuración. `integration` no: lee `DATABASE_URL`,
+`MIGRATION_DATABASE_URL` y `SUPER_ADMIN_DATABASE_URL` del entorno, y
+`withTenant.ts` las exige **al importarse**, no al usarse. Sin ellas el
+archivo entero no arranca y el reporte dice `Falta DATABASE_URL` —no un
+fallo de la prueba—: son 124 archivos que ni siquiera llegan a correr.
+
+Por eso `pnpm test` pelado no es el comando local. Después de
+`pnpm db:local` (que deja el contenedor `xula-pg` migrado en el puerto
+55432):
+
+```bash
+export DATABASE_URL="postgresql://xula_app:postgres@localhost:55432/xula_test"
+export MIGRATION_DATABASE_URL="postgresql://xula_migrator:postgres@localhost:55432/xula_test"
+export SUPER_ADMIN_DATABASE_URL="postgresql://xula_super_admin:postgres@localhost:55432/xula_test"
+pnpm test
+```
+
+**`xula_test` y no `xula_dev`.** Los tests de integración y de aislamiento
+hacen `TRUNCATE` de `bitacora` y `ayuntamientos` con `CASCADE` para partir
+de cero, y varios `TRUNCATE` de `reportes` e `intervenciones`: apuntarlos a
+la base de trabajo borra los datos que estás mirando en el navegador.
+
+**La base tiene que estar migrada con `xula_migrator` como dueño.** Una
+copia creada desde la plantilla que pertenece a `postgres` deja los tests
+de esquema en `permission denied` y puede faltarle la última migración:
+`drizzle-kit migrate` con la URL del migrador lo resuelve.
+
+**En CI las tres salen del job**, no de un `.env`: los jobs de integración
+y de E2E levantan su propio Postgres con `scripts/bootstrap.sql`.
+
 ### Comportamiento, no implementación
 
 ```ts
