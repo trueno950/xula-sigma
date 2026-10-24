@@ -91,7 +91,6 @@ const fechaCivilComoDate = (fecha: string): Date | null => {
   if (anio < 1) return null;
 
   const fechaUtc = new Date(Date.UTC(anio, mes - 1, dia));
-  if (anio < 100) fechaUtc.setUTCFullYear(anio);
   if (
     fechaUtc.getUTCFullYear() !== anio ||
     fechaUtc.getUTCMonth() !== mes - 1 ||

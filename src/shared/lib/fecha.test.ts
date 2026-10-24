@@ -135,6 +135,16 @@ describe("fechaCivilLarga", () => {
   it("conserva el valor original cuando no es una fecha civil valida", () => {
     expect(fechaCivilLarga("2026-02-30")).toBe("2026-02-30");
   });
+
+  /**
+   * Un año de dos cifras solo llega escrito `00xx`, porque el formato exige
+   * cuatro dígitos. `Date.UTC` lo mapearia a 19xx y se imprimiria un año que
+   * la fila no dice; el round-trip lo detecta y se degrada al original.
+   */
+  it("conserva un año con ceros iniciales en vez de imprimir otro", () => {
+    expect(fechaCivilLarga("0026-10-24")).toBe("0026-10-24");
+    expect(fechaCivilCorta("0026-10-24")).toBe("0026-10-24");
+  });
 });
 
 describe("fechaCivilCorta", () => {

@@ -41,8 +41,12 @@ const esRol = (valor: unknown): valor is Rol =>
   typeof valor === "string" && (ROLES as readonly string[]).includes(valor);
 
 /**
- * `null` cuando no hay sesion. No lanza: quien decide si eso es 401, 404 o
- * una pantalla de acceso es el borde, no esta funcion.
+ * `null` cuando no hay sesion.
+ *
+ * **La unica excepcion a "no lanza" es el municipio inexistente**: con sesion
+ * valida y un subdominio que no existe no hay contexto que devolver, y
+ * `exigirAyuntamiento` corta en 404. Sin sesion no se toca tenancy, asi que
+ * ese caso sigue siendo `null` y lo decide el borde.
  */
 export async function contextoActual(): Promise<ContextoActual | null> {
   const sesion = await sesionActual();

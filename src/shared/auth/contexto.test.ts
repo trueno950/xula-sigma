@@ -48,4 +48,14 @@ describe("contextoActual", () => {
     expect(mocks.exigirAyuntamiento).not.toHaveBeenCalled();
     expect(mocks.ayuntamientoActual).not.toHaveBeenCalled();
   });
+
+  it("propaga el corte cuando el municipio del subdominio no existe", async () => {
+    mocks.exigirAyuntamiento.mockImplementation(() => {
+      throw new Error("NEXT_HTTP_ERROR_FALLBACK;404");
+    });
+
+    await expect(contextoActual()).rejects.toThrow(
+      "NEXT_HTTP_ERROR_FALLBACK;404",
+    );
+  });
 });
