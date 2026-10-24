@@ -332,6 +332,35 @@ Origen atipico: el runbook aparecio ya escrito en el disco (`scripts/README-migr
 Frontera de rollback: retirar unicamente el runbook; el script y su comportamiento no cambiaron.
 - [ ] B3d-REFACTOR-06 (B3d). Requisito: Migracion de domicilios preserva el lugarId anterior en bitacora (Rebanada B3). Ejecutar corrida controlada solo después de la precondicion, guardar salida, revisar pnpm reglas y confirmar segunda corrida idempotente; no alterar TypeScript ni CHECK. Test enfocado: pnpm db:local && pnpm vitest run --project integration src/modules/territorio/migrarSectoresAZonas.integration.test.ts; sin rtk. Rollback: usar procedimiento del runbook, no DELETE manual.
 
+  **Corrida ejecutada el 2026-10-23 sobre el Docker local, con autorizacion
+  explicita del usuario y respaldo previo (`pg_dump -Fc` de `xula_dev`,
+  guardado en `.playwright-cli/respaldos-b3d/xula_dev_pre-b3d-20261023222817.dump`,
+  fuera de git).** Dos escenarios, porque el entorno local no tiene un
+  municipio real:
+
+  1. `xula_b3d_ensayo_20261023222823` (copia de `xula_dev`, desechable):
+     se sembro el caso que `xula_dev` no tenia -un domicilio colgando de un
+     sector y otro de una manzana, ambos con calle del asentamiento- y se
+     corrio el script dos veces como `xula_app`. Resultado: 2 domicilios
+     movidos al asentamiento con bitacora `MIGRACION_DOMICILIO` y el
+     `lugarId` anterior en `bitacora.origen`; 3 zonas creadas (los dos
+     sectores existentes mas el sembrado); 1 pertenencia de calle; 0
+     sectores/manzanas restantes; 0 calles rechazadas, 0 zonas duplicadas,
+     0 registros dependientes. Segunda pasada: 0 en todo, sin zonas ni
+     bitacora nuevas (idempotente).
+  2. `xula_dev`: corrida real sobre la unica base del entorno local.
+     Crea 2 zonas (`Sector Norte`, `Sector Sur`), borra 4 manzanas y 2
+     sectores (`lugares` pasa de 11 a 5), 0 domicilios migrados porque
+     ninguno colgaba de sector/manzana. Segunda pasada idempotente.
+     `pnpm reglas`: sin hallazgos.
+
+  **B3d-REFACTOR-06 sigue SIN marcar, y el motivo no es tecnico:** el unico
+  tenant alcanzable es `demo`, un ayuntamiento de desarrollo. La precondicion
+  escrita -ventana por municipio con datos municipales reales, responsables y
+  respaldo de produccion- no se cumple todavia, y marcar esta casilla
+  afirmaria una migracion de datos reales que no ocurrio. El runbook y el
+  rollback quedan probados; falta el piloto.
+
 ## Fase 7: B2 — corte de tipos y contratos (size:exception)
 
 Frontera inseparable: medicion aprobada de 1503 lineas diff del corte y
@@ -340,6 +369,7 @@ se finge una costura entre CHECK, union de TypeScript y los aproximadamente 40
 archivos/tests que deben compilar juntos. B3d debe haber terminado en el
 entorno de destino antes de aplicar allí el CHECK. La decisión de reanudación
 permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
+
 
 - [ ] B2-RED-01 (B2). Para el requisito exacto “Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2)”, actualizar primero tests de dominio/integración para cabecera/comisaria como raices, rechazo de comisaria bajo cabecera, colonia sin hijos y ciclo rechazado; conservar RED antes de editar TIPOS_DE_LUGAR. Test enfocado: pnpm test (suite completa, sin rtk; integración requiere pnpm db:local). Rollback: revertir tests B2 sin tocar B3d.
 - [ ] B2-RED-02 (B2). Para “Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2)” y “Direccion compuesta como texto imprimible”, actualizar tests de src/modules/territorio/domain/direccion.test.ts, alta/correccion y fixtures que aún usan sector/manzana; deben fallar por contrato vigente antes de cambiarlo. Test enfocado: pnpm test. Rollback: revertir únicamente fixtures/tests del contrato de domicilios.
