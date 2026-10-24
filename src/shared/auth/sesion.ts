@@ -1,4 +1,6 @@
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { AyuntamientoInexistenteError } from "@/shared/lib/errores";
 import { conAuth } from "./instancia";
 import { origenDelRequest } from "./origen";
 
@@ -16,5 +18,13 @@ export async function sesionActual() {
   // Aca no hay `request.url`, solo cabeceras: de ahi el respaldo local.
   const origen = origenDelRequest(cabeceras);
 
-  return conAuth(origen, (auth) => auth.api.getSession({ headers: cabeceras }));
+  try {
+    return await conAuth(origen, (auth) =>
+      auth.api.getSession({ headers: cabeceras }),
+    );
+  } catch (error) {
+    if (error instanceof AyuntamientoInexistenteError) notFound();
+
+    throw error;
+  }
 }
