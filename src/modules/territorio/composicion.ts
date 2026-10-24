@@ -1,6 +1,7 @@
 import type { PorcionExportable } from "@/shared/exportacion/exportar";
 
 export * from "./composicionDeDomicilios";
+export * from "./composicionDeZonas";
 
 import {
   crearAltaDeCalle,

@@ -16,10 +16,12 @@ export {
   comoCalleId,
   comoDomicilioId,
   comoLugarId,
+  comoZonaId,
   type DomicilioId,
   type LugarId,
   puedeTenerCatalogoDeCalles,
   tipoDeLugarEnFrase,
+  type ZonaId,
 } from "./domain";
 export type * from "./types";
 export * from "./ui";
