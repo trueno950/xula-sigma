@@ -346,7 +346,7 @@ permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
 - [x] B2-GREEN-03 (B2). Requisito: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2). Cambiar src/modules/territorio/domain/tipoDeLugar.ts a TIPOS_DE_LUGAR = [cabecera, comisaria, colonia], derivar RANGO vigente, generar la siguiente migración libre, hoy drizzle/0020_corte_tipos_lugar.sql (0019 ya pertenece al payload del historial; preservar ese SQL y su snapshot) con CHECK tipo IN (cabecera, comisaria, colonia) y actualizar los aproximadamente 40 archivos de territorio/tests afectados; DELETE de B3d debe haber eliminado filas incompatibles antes de aplicar CHECK. Test enfocado: pnpm test y pnpm check. Rollback: migracion inversa que restituya ambos tipos al CHECK y revertir commit inseparable.
 - [x] B2-GREEN-04 (B2). Requisitos: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2); Direccion compuesta como texto imprimible. Actualizar cadenaHastaAsentamiento, direccion.ts, fixtures y validaciones para que lugarId acepte solo asentamiento/colonia; renombrar ZonaIncoherenteError a UbicacionIncoherenteError donde corresponda, y editar deltas de specs/jerarquia-territorial/spec.md y specs/domicilios/spec.md sin cambiar decisiones aprobadas. Test enfocado: pnpm test. Rollback: revertir codigo y deltas junto con B2-GREEN-03.
 - [x] B2-GREEN-05 (B2). Requisito: Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Actualizar en AGENTS.md la referencia al error renombrado y conservar reglas de Server Actions sin agregar todavía las cinco filas de zonas (son B3u); verificar que no se enumeren salidas nuevas ni se contradiga el límite de unidades. Test enfocado: pnpm reglas && pnpm check. Rollback: revertir cambio de nomenclatura de AGENTS.md junto con B2 si el mantenedor rechaza la excepción.
-- [ ] B2-REFACTOR-06 (B2). Requisitos: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2); Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Ejecutar suite completa con cobertura y confirmar pisos CI: 80% statements en shared/** y modules/**/{domain,application}, 75% branches, sin rtk en tests/psql; leer el diff completo antes de aceptar size:exception. Test enfocado: pnpm db:local && pnpm test:integration && pnpm check; cobertura con vitest run --coverage. Rollback: revertir commit completo B2 y ejecutar migracion inversa.
+- [x] B2-REFACTOR-06 (B2). Requisitos: Orden estricto y total de tipos, con dos tipos en el rango superior (Rebanada 2); Direccion compuesta cuelga del asentamiento o la colonia (Rebanada B2). Ejecutar suite completa con cobertura y confirmar pisos CI: 80% statements en shared/** y modules/**/{domain,application}, 75% branches, sin rtk en tests/psql; leer el diff completo antes de aceptar size:exception. Test enfocado: pnpm db:local && pnpm test:integration && pnpm check; cobertura con vitest run --coverage. Rollback: revertir commit completo B2 y ejecutar migracion inversa.
 
 ### Evidencia de recuperación B2
 
@@ -370,7 +370,9 @@ permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
 - Sí se observaron RED reales en integración durante la recuperación y GREEN
   posteriores (ODD L10); no equivalen a afirmar test-first del escritor.
 - Check final actualizado (job-63) exit 0: 54 warnings y 2 infos previos;
-  tipos, dependencias y reglas verdes. Revisión del commit del corte pendiente.
+  tipos, dependencias y reglas verdes. Corte guardado en `b252ce4`; ASSESS
+  committedOnly contra `1c38089` devuelve `reviewDue: false`; no se abre
+  otra revisión. La verificación independiente exigida por item 1 ya pasó.
   B3u no iniciado; B3d-REFACTOR-06 sigue sin ejecutar en entornos reales.
 
 ## Fase 8: B3u — UI y acciones de zonas
@@ -384,7 +386,7 @@ permite desarrollar y probar este corte en una base aislada sin cerrar B3d.
 
 ## Supuestos y bloqueadores que no se convierten en tareas
 
-- Supuesto propuesto (pendiente de confirmacion): nombre de zona unico por
+- Decisión confirmada por el usuario (ODD S6): nombre de zona unico por
   asentamiento, mediante uniqueIndex (ayuntamiento_id, lugar_id, nombre)
   WHERE baja_en IS NULL, no unico en todo el municipio.
 - Supuesto propuesto (pendiente de confirmacion): un sector sin calles usadas

@@ -357,8 +357,8 @@ lleva ningun secreto adentro.
 
 ## Preguntas abiertas
 
-- [ ] Nombre de la zona: unico por asentamiento (lo asume el `uniqueIndex`)
-      o unico por municipio. Se propone por asentamiento, mismo criterio que
+- [x] Nombre de la zona: unico por asentamiento, confirmado por el usuario
+      en ODD S6; conserva el `uniqueIndex`, mismo criterio que
       `calles_tenant_lugar_nombre_idx`.
 - [ ] Un `sector` cuyos domicilios no usaban ninguna calle se convierte en
       una zona vacia. Se propone crearla igual (decision 7 la permite) y
