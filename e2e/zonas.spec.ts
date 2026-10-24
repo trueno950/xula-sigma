@@ -1,10 +1,11 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { accederAMotul } from "./acceder";
 import {
   liberarVentanaDeRitmo,
   prepararEscenario,
   type Scenario,
 } from "./calles.fixture";
-import { CLAVE, CORREO, urlDe } from "./municipios";
+import { urlDe } from "./municipios";
 
 /**
  * B3u-REFACTOR-06: navegacion real de las tres rutas de zonas, formulario
@@ -20,27 +21,19 @@ test.beforeAll(async () => {
 });
 
 /**
- * El limitador de accesos vive en memoria del proceso y la corrida completa
- * gasta intentos del mismo correo antes de llegar aca: sin vaciar la
- * ventana, este spec falla por el orden alfabetico de los archivos y no por
- * lo que prueba. Mismo remedio que `marca.spec.ts`.
+ * El limitador de accesos vive en memoria del proceso -vaciarlo en la base
+ * no alcanza- y la corrida completa gasta intentos del mismo correo antes
+ * de llegar aca. `accederAMotul` reintenta por eso; el `TRUNCATE` de
+ * `liberarVentanaDeRitmo` sigue de apoyo, igual que en `marca.spec.ts`.
  */
 test.beforeEach(liberarVentanaDeRitmo);
-
-async function acceder(page: Page): Promise<void> {
-  await page.goto(urlDe("motul", "/acceso"));
-  await page.getByLabel("Correo").fill(CORREO);
-  await page.getByLabel("Contraseña").fill(CLAVE);
-  await page.getByRole("button", { name: "Entrar" }).click();
-  await page.waitForURL(urlDe("motul"));
-}
 
 const nombreDeZona = () => `Zona E2E ${escenario.origenId.slice(0, 8)}`;
 
 test("las tres rutas de zonas navegan: territorio, listado y detalle", async ({
   page,
 }) => {
-  await acceder(page);
+  await accederAMotul(page);
 
   await page.goto(urlDe("motul", "/territorio"));
   await page.getByRole("link", { name: "Zonas operativas" }).click();
@@ -57,7 +50,7 @@ test("el alta de zona funciona como POST nativo, sin JavaScript", async ({
   // sesion con JS y se reusa la cookie en un contexto sin JS. Lo que se
   // prueba es el POST del formulario de zonas, no el del acceso.
   const conJs = await browser.newContext();
-  await acceder(await conJs.newPage());
+  await accederAMotul(await conJs.newPage());
   const estado = await conJs.storageState();
   await conJs.close();
 
@@ -91,7 +84,7 @@ test("el alta de zona funciona como POST nativo, sin JavaScript", async ({
 test("una zona de otro municipio responde 404, nunca 403 ni lista vacia", async ({
   page,
 }) => {
-  await acceder(page);
+  await accederAMotul(page);
 
   const ajena = "60000000-0000-4000-8000-000000000001";
   const respuesta = await page.goto(
