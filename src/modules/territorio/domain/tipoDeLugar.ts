@@ -40,6 +40,15 @@ export const puedeTenerCatalogoDeCalles = (tipo: TipoDeLugar): boolean =>
   tipo === "cabecera" || tipo === "comisaria";
 
 /**
+ * Las zonas cuelgan de asentamientos, el mismo conjunto que el catalogo de
+ * calles (design.md de direcciones-y-zonas-operativas, Rebanada B1): una
+ * zona de una colonia no existe porque la colonia ya cuelga de su
+ * asentamiento. Alias explícito y no reuso del de calles para que las dos
+ * reglas puedan divergir sin editarse entre sí.
+ */
+export const puedeTenerZonas = puedeTenerCatalogoDeCalles;
+
+/**
  * Los tipos que ese padre acepta adentro, en el orden del catalogo.
  *
  * La usa el alta para ofrecer solo lo que va a pasar la validacion: antes

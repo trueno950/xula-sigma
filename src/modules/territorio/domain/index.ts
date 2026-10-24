@@ -1,6 +1,7 @@
 export * from "./destinosDeReparenteo";
 export * from "./direccion";
 export * from "./errores";
+export * from "./erroresDeZonas";
 export * from "./etiquetas";
 export * from "./eventoDeCalle";
 export * from "./identificadores";
