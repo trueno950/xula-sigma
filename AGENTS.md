@@ -342,6 +342,11 @@ que devuelva, y devolverlo sería código muerto.
 | `corregirDomicilioAction` | `territorio` | Server Component, `<form action={...}>` |
 | `darDeBajaDomicilioAction` | `territorio` | Server Component, `<form action={...}>` |
 | `registrarMudanzaAction` | `territorio` | Server Component, `<form action={...}>` |
+| `altaDeZonaAction` | `territorio` | Server Component, `<form action={...}>` |
+| `renombrarZonaAction` | `territorio` | Server Component, `<form action={...}>` |
+| `darDeBajaZonaAction` | `territorio` | Server Component, `<form action={...}>` |
+| `agregarCalleAZonaAction` | `territorio` | Server Component, `<form action={...}>` |
+| `quitarCalleDeZonaAction` | `territorio` | Server Component, `<form action={...}>` |
 | `configurarDocumentosAction` | `constancias` | Server Component, `<form action={...}>` |
 | `emitirConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
 | `reimprimirConstanciaAction` | `constancias` | Server Component, `<form action={...}>` |
@@ -420,6 +425,17 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `NoAutorizadoError`, `NoEncontradoError` y `DomicilioConResidentesError`
   -hay una residencia vigente y la direccion no se da de baja por debajo de
   ella-.
+- Las cinco de zonas (`territorio`, rebanada B3u):
+  `altaDeZonaAction`, `renombrarZonaAction`, `darDeBajaZonaAction`,
+  `agregarCalleAZonaAction` y `quitarCalleDeZonaAction`. Mismo motivo que
+  `altaDeLugarAction`, cada boton su `<form>` nativo y la zona sale de la
+  URL, nunca del cliente. Las cinco redactan `NoAutorizadoError` y
+  `NoEncontradoError`; el alta y el renombre tambien
+  `NombreDeZonaDuplicadoError` -dos zonas activas del mismo asentamiento no
+  comparten nombre, decision S6 del SDD-, y agregar calle tambien
+  `CalleFueraDelAsentamientoError` -la calle es de otro asentamiento-.
+  Quitar calle exige que la pertenencia exista: sin ella responde
+  `NoEncontradoError`, no un exito silencioso.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un

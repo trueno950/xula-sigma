@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ColumnaDeTabla } from "@/shared/ui";
 import {
+  Aviso,
   CeldaDeDato,
   CeldaPrincipal,
   EstadoVacio,
@@ -9,24 +10,39 @@ import {
   PaginaDePanel,
   Tabla,
 } from "@/shared/ui";
+import type { LugarGuardado } from "../application/puertos";
 import type { ZonaGuardada } from "../application/puertosDeLecturaDeZonas";
+import {
+  FormularioDeAltaDeZona,
+  FormularioDeBajaDeZonaEnFila,
+} from "./FormulariosDeZona";
 
 const COLUMNAS_DE_ZONAS: readonly ColumnaDeTabla[] = [
   { clave: "zona", etiqueta: "Zona" },
   { clave: "asentamiento", etiqueta: "Asentamiento" },
+  { clave: "baja", etiqueta: "Acciones" },
 ];
+
+type Props = {
+  zonas: readonly ZonaGuardada[];
+  asentamientos: readonly LugarGuardado[];
+  raizActiva: string | null;
+  error: string | undefined;
+  aviso: string | undefined;
+};
 
 /**
  * El listado de zonas del municipio (o de un asentamiento con `?raiz=`).
- * Cada fila es un enlace GET al detalle `?zona=`: cero estado de cliente.
+ * Cada fila enlaza al detalle `?zona=` y ofrece dar de baja la zona en su
+ * propio `<form>` nativo: cero estado de cliente.
  */
 export function ListaDeZonas({
   zonas,
+  asentamientos,
   raizActiva,
-}: {
-  zonas: readonly ZonaGuardada[];
-  raizActiva: string | null;
-}) {
+  error,
+  aviso,
+}: Props) {
   return (
     <PaginaDePanel
       titulo="Zonas"
@@ -41,6 +57,11 @@ export function ListaDeZonas({
         />
       }
     >
+      {error ? <Aviso tono="error">{error}</Aviso> : null}
+      {aviso ? <Aviso tono="exito">{aviso}</Aviso> : null}
+
+      <FormularioDeAltaDeZona asentamientos={asentamientos} />
+
       {zonas.length === 0 ? (
         <EstadoVacio
           estado={{ clase: "vacio-inicial" }}
@@ -61,6 +82,9 @@ export function ListaDeZonas({
             >
               <CeldaPrincipal>{zona.nombre}</CeldaPrincipal>
               <CeldaDeDato>{zona.asentamiento}</CeldaDeDato>
+              <CeldaDeDato>
+                <FormularioDeBajaDeZonaEnFila zonaId={zona.id} />
+              </CeldaDeDato>
             </FilaDeTabla>
           ))}
         </Tabla>

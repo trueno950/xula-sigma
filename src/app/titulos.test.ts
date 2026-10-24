@@ -37,6 +37,7 @@ const TITULOS: Record<string, string> = {
   "(panel)/reportes/page.tsx": "Reportes",
   "(panel)/territorio/domicilios/page.tsx": "Domicilios",
   "(panel)/territorio/page.tsx": "Territorio",
+  "(panel)/territorio/zonas/page.tsx": "Zonas",
   "reportes/[folio]/page.tsx": "Seguimiento de reporte",
   "validar/[folio]/page.tsx": "Validar constancia",
 };

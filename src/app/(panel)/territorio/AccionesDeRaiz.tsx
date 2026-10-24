@@ -1,4 +1,9 @@
-import { ListMagnifyingGlass, MapPin, Plus } from "@phosphor-icons/react/ssr";
+import {
+  ListMagnifyingGlass,
+  MapPin,
+  MapTrifold,
+  Plus,
+} from "@phosphor-icons/react/ssr";
 import { EnlaceDeAccion } from "@/shared/ui";
 
 /**
@@ -33,6 +38,10 @@ export const accionesDeRaiz = ({
       <EnlaceDeAccion href="/territorio/domicilios" variante="secundaria">
         <ListMagnifyingGlass size={18} weight="bold" aria-hidden="true" />
         Ver registro de domicilios
+      </EnlaceDeAccion>
+      <EnlaceDeAccion href="/territorio/zonas" variante="secundaria">
+        <MapTrifold size={18} weight="bold" aria-hidden="true" />
+        Zonas operativas
       </EnlaceDeAccion>
     </div>
   );
