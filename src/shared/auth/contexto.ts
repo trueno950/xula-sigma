@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
-import { ayuntamientoActual } from "@/shared/tenancy/contexto";
+import { exigirAyuntamiento } from "@/shared/tenancy/contexto";
 import { origenDelRequest } from "./origen";
 import { ROLES, type Rol } from "./roles";
 import { sesionActual } from "./sesion";
@@ -9,7 +9,7 @@ import { sesionActual } from "./sesion";
  * Quien pide y desde donde, resuelto del servidor.
  *
  * Es el `getTenantContext()` que nombran los documentos; este es el nombre
- * real. Compone las dos mitades que ya existen —`ayuntamientoActual()` de
+ * real. Compone las dos mitades que ya existen —`exigirAyuntamiento()` de
  * tenancy y `sesionActual()` de aca— porque un caso de uso las necesita
  * juntas y siempre en el mismo orden.
  *
@@ -60,7 +60,7 @@ export async function contextoActual(): Promise<ContextoActual | null> {
    */
   if (!esRol(rol)) return null;
 
-  const { id: ayuntamientoId } = await ayuntamientoActual();
+  const { id: ayuntamientoId } = await exigirAyuntamiento();
 
   return {
     ayuntamientoId,
