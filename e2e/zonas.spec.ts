@@ -1,5 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
-import { prepararEscenario, type Scenario } from "./calles.fixture";
+import {
+  liberarVentanaDeRitmo,
+  prepararEscenario,
+  type Scenario,
+} from "./calles.fixture";
 import { CLAVE, CORREO, urlDe } from "./municipios";
 
 /**
@@ -14,6 +18,14 @@ let escenario: Scenario;
 test.beforeAll(async () => {
   escenario = await prepararEscenario({ tipoDeRaiz: "comisaria" });
 });
+
+/**
+ * El limitador de accesos vive en memoria del proceso y la corrida completa
+ * gasta intentos del mismo correo antes de llegar aca: sin vaciar la
+ * ventana, este spec falla por el orden alfabetico de los archivos y no por
+ * lo que prueba. Mismo remedio que `marca.spec.ts`.
+ */
+test.beforeEach(liberarVentanaDeRitmo);
 
 async function acceder(page: Page): Promise<void> {
   await page.goto(urlDe("motul", "/acceso"));

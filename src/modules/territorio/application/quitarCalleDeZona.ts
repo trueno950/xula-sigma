@@ -39,7 +39,7 @@ export function crearQuitarCalleDeZona(
         origen: contexto.origen,
         accion: "QUITAR_CALLE_DE_ZONA",
         entidad: "calles_de_zonas",
-        entidadId: `${ids.zonaId}/${ids.calleId}`,
+        entidadId: zona.id,
       });
     });
   };

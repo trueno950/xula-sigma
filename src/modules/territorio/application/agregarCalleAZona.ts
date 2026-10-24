@@ -17,9 +17,14 @@ import type { RepositorioDeAdministracionDeZonas } from "./puertosDeAdministraci
  * bitacora: la PK compuesta de `calles_de_zonas` ya expresa esa regla y un
  * segundo POST del mismo boton no es un evento auditable.
  *
- * La bitacora usa `zonaId/calleId` como `entidadId` porque esa pareja ES
- * la clave primaria de la fila; una traza con solo uno de los dos no
- * identificaria nada.
+ * La bitacora ancla en la zona, no en la pareja: `bitacora.entidad_id` es
+ * una columna uuid y la clave de `calles_de_zonas` es un par, asi que un
+ * `zonaId/calleId` compuesto llega a Postgres como texto y revienta con
+ * 22P02 -paso en la corrida local del 2026-10-23, con los tests en verde
+ * porque el puerto iba mockeado-. Se elige la zona porque la operadora
+ * cura una zona: la traza responde quien toco esta zona y cuando. La calle
+ * concreta queda en la fila de `calles_de_zonas` que esta misma accion
+ * crea, con su `creado_en`.
  */
 export function crearAgregarCalleAZona(
   repositorio: RepositorioDeAdministracionDeZonas,
@@ -58,7 +63,7 @@ export function crearAgregarCalleAZona(
         origen: contexto.origen,
         accion: "AGREGAR_CALLE_A_ZONA",
         entidad: "calles_de_zonas",
-        entidadId: `${ids.zonaId}/${ids.calleId}`,
+        entidadId: ids.zonaId,
       });
     });
   };

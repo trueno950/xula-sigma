@@ -141,8 +141,15 @@ describe("agregar calle a zona", () => {
       expect.objectContaining({
         accion: "AGREGAR_CALLE_A_ZONA",
         entidad: "calles_de_zonas",
-        entidadId: `${zonaId}/${calleId}`,
+        entidadId: zonaId,
       }),
+    );
+    // `bitacora.entidad_id` es uuid: un id compuesto revienta en Postgres
+    // con 22P02, y el mock del puerto no lo habria visto.
+    const trazaDeLaAccion = registrarMock.mock.calls[0];
+    if (!trazaDeLaAccion) throw new Error("La accion no dejo bitacora.");
+    expect((trazaDeLaAccion[1] as { entidadId: string }).entidadId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
     );
   });
 });
