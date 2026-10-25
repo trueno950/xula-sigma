@@ -99,6 +99,7 @@ describe("Territorio streets empty state", () => {
       expect(html).not.toContain("Administrar el catálogo");
       expect(html).not.toContain("aún no tiene calles");
       expect(html).not.toContain("Agregar calle");
+      expect(html).toBe("");
     });
   }
 

@@ -1,5 +1,6 @@
 import { VistaDeRaices } from "@/modules/territorio";
 import type { LugarGuardado } from "@/modules/territorio/application/puertos";
+import { declaracionDeDestino } from "@/modules/territorio/ui/declaracionDeDestino";
 import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDomicilios";
 import type { ContextoActual } from "@/shared/auth/contexto";
@@ -66,6 +67,10 @@ export const TerritorioCargado = async ({
             <RegistroDeDomicilio
               calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
               zona={zonaDeLaEntrada}
+              declaracionDeDestino={declaracionDeDestino({
+                origen: "municipio",
+                tieneColonias: !zonaDeLaEntrada.sinZonas,
+              })}
             />
           ) : null}
 

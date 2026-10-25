@@ -104,6 +104,65 @@ describe("El alta de domicilio en el contexto del lugar", () => {
     expect(html).toContain(`name="raiz" value="${RAIZ}"`);
   });
 
+  it("declares the settlement destination before the fields when colonias exist", () => {
+    const base = props(permisosDeTerritorio("OPERADOR"), true);
+    const declaracion =
+      "Se guarda en el asentamiento solo si indica «Sin colonia»; de lo contrario, elija una colonia. Las calles son de su catálogo.";
+    const html = renderToStaticMarkup(
+      <VistaDeLugar
+        {...base}
+        nodos={[
+          ...base.nodos,
+          ...["Centro", "San Juan", "Santa Cruz"].map((nombre, indice) => ({
+            clase: "lugar" as const,
+            id: `${indice + 3}3333333-3333-4333-8333-333333333333` as LugarId,
+            tipo: "colonia" as const,
+            nombre,
+            padreId: RAIZ,
+          })),
+        ]}
+      />,
+    );
+
+    expect(html).toContain(declaracion);
+    expect(html).toContain("Elija una colonia o indique que no tiene");
+    expect(html).toContain('value="sin-colonia"');
+    expect(html).toContain(
+      "Sin colonia (la dirección no pertenece a una colonia)",
+    );
+    expect(html.indexOf(declaracion)).toBeLessThan(
+      html.indexOf('name="calleId"'),
+    );
+  });
+
+  it("declares the selected colonia and its settlement-owned catalog", () => {
+    const base = props(permisosDeTerritorio("OPERADOR"), true);
+    const coloniaId = "33333333-3333-4333-8333-333333333333" as LugarId;
+    const declaracion =
+      "Se guarda en Colonia Centro. Las calles son del catálogo de Tepakan.";
+    const html = renderToStaticMarkup(
+      <VistaDeLugar
+        {...base}
+        nodos={[
+          ...base.nodos,
+          {
+            clase: "lugar",
+            id: coloniaId,
+            tipo: "colonia",
+            nombre: "Centro",
+            padreId: RAIZ,
+          },
+        ]}
+        nodo={{ id: coloniaId, tipo: "colonia", nombre: "Centro" }}
+      />,
+    );
+
+    expect(html).toContain(declaracion);
+    expect(html.indexOf(declaracion)).toBeLessThan(
+      html.indexOf('name="calleId"'),
+    );
+  });
+
   it("el rol de solo lectura no ve el enlace ni el formulario", () => {
     const permisos = permisosDeTerritorio("CONSULTA");
 

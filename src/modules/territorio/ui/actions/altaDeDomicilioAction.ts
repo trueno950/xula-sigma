@@ -5,12 +5,13 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { altaDeDomicilio } from "../../composicion";
 import {
+  ColoniaRequeridaError,
   comoCalleId,
   comoLugarId,
-  type LugarId,
   TransversalRepetidaError,
   UbicacionIncoherenteError,
 } from "../../domain";
+import { VALOR_SIN_COLONIA } from "../declaracionDeDestino";
 import { ejecutarEnContexto } from "./ejecutarEnContexto";
 import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
@@ -18,7 +19,11 @@ import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const esquemaDeEntrada = z.object({
   calleId: z.string().trim().uuid(),
-  lugarId: z.union([z.literal(""), z.string().trim().uuid()]),
+  lugarId: z.union([
+    z.literal(""),
+    z.literal(VALOR_SIN_COLONIA),
+    z.string().trim().uuid(),
+  ]),
   numero: z.string().trim().optional(),
   entreCalleAId: z.union([z.literal(""), z.string().trim().uuid()]),
   entreCalleBId: z.union([z.literal(""), z.string().trim().uuid()]),
@@ -27,17 +32,15 @@ const esquemaDeEntrada = z.object({
 const MENSAJE_FORMULARIO_INVALIDO = "La calle es obligatoria.";
 const MENSAJE_GENERICO = "No se pudo completar el alta. Intente de nuevo.";
 
-/** Sin zona no se declara nada: el caso de uso la deriva de la calle. */
-const zonaDeclarada = (datos: { lugarId: string }): readonly LugarId[] =>
-  datos.lugarId ? [comoLugarId(datos.lugarId)] : [];
-
 const comandoDe = (datos: z.infer<typeof esquemaDeEntrada>) => {
-  const declarados = zonaDeclarada(datos);
-  const [zona] = declarados;
+  const sinColonia = datos.lugarId === VALOR_SIN_COLONIA;
+  const zona =
+    datos.lugarId && !sinColonia ? comoLugarId(datos.lugarId) : undefined;
 
   return {
     ...(zona ? { lugarId: zona } : {}),
-    nivelesDeclarados: declarados,
+    ...(sinColonia ? { sinColonia: true } : {}),
+    nivelesDeclarados: zona ? [zona] : [],
     calleId: comoCalleId(datos.calleId),
     numero: datos.numero || null,
     entreCalleAId: datos.entreCalleAId
@@ -57,6 +60,7 @@ const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof TransversalRepetidaError) return error.message;
   if (error instanceof UbicacionIncoherenteError) return error.message;
+  if (error instanceof ColoniaRequeridaError) return error.message;
 
   console.error(
     "[territorio] alta de domicilio fallo",
