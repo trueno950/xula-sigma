@@ -165,3 +165,13 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   slice: `f6da9ec`, 555 líneas sobre `main` (523 altas, 32 bajas) más el
   arreglo de este documento; va como PR propio, separado del de
   `62c8b2a`+`2fa598e`. T6 abre el tercero.
+
+- **L9** — Revisión nativa del paso 2 (2026-10-25), sobre el rango commiteado
+  (`--base-ref=main --committed-only`), no sobre el árbol de trabajo: eso es
+  lo que la dejó con target después de la de L6. Linaje nuevo
+  `review-a990c4c61ddb23fd`, riesgo medio, 23 rutas, 623 líneas, presupuesto
+  de corrección 200. Corrieron los tres lentes elegidos —`risk`,
+  `readability`, `reliability`— y cerró **`approved`** sin corrección
+  requerida; la autoridad quedó quemada al reconocerla. La revisión es una
+  vista externa: no autoriza entrega, que sigue siendo decisión del paso
+  siguiente.
