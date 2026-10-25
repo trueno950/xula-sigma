@@ -148,6 +148,13 @@
       "when": 1792511629221,
       "tag": "0020_corte_tipos_lugar",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792940490650,
+      "tag": "0021_reportes_domicilio",
+      "breakpoints": true
     }
   ]
 }

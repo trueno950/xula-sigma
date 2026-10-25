@@ -42,6 +42,13 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - **S6.** «Los tres pasos completos», decisión de alcance del 2026-10-24: se
   implementan los tres pasos, en PRs encadenados y no en uno solo.
 
+- **S7.** «El domicilio elegido (recomendado)», respuesta a «Cuando se elige
+  un domicilio en el alta de reporte, ¿qué debe conservar el reporte?».
+  Opción aceptada: «Conserva el vínculo a la dirección, incluido su número.
+  Mantiene lugar/calle como alternativa para incidentes en vía pública;
+  requiere ampliar el modelo.» El tenant se sigue resolviendo en servidor;
+  un domicilio ajeno no puede referenciarse ni consumir un folio.
+
 ## Tasks
 
 - [x] **T1** · S1,S4 · directo — La pestaña Lugares no se renderiza cuando el
@@ -67,9 +74,18 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   guardados en un asentamiento que tiene colonias, sin moverlos. Commit:
   `f6da9ec`. Verificado en navegador (L7): sin colonia elegida
   rechaza y no escribe; con «Sin colonia» escribe y confirma.
-- [ ] **T6** · S5 · delegado — `SelectorDeDireccion`: un buscador que
-  devuelve la dirección escrita, usado primero por el alta de reporte.
-  Commit:
+- [ ] **T6** · S5,S7 · delegado — En curso en `feat/reportes-selector-de-direccion`.
+  `SelectorDeDireccion`: buscador de direcciones registradas, usado primero
+  por el alta de reporte. Se completa con T6a y T6b. Commit:
+- [x] **T6a** · S7 · delegado — Vínculo opcional de reporte a domicilio,
+  migración aditiva 0021 y validación autoritativa bajo tenant antes del
+  folio; alternativa lugar/calle preservada. RED observado; GREEN: 18
+  unitarios y 8 integración/aislamiento. Verificación independiente S7 met,
+  sin bloqueantes; spot check del padre 18/18. Risk: item 1 (formato
+  persistido) y item 2 (validación de tenant). Commit: pendiente de registrar.
+- [ ] **T6b** · S5,S7 · delegado — Pendiente: selector reutilizable de
+  dirección escrita con búsqueda, conectado al formulario nativo de reporte
+  sin retirar la captura por lugar/calle. Commit:
 - [ ] **T7** · S5 · delegado — Constancias y Territorio usan el mismo
   selector; el árbol queda como administración. Commit:
 
@@ -175,3 +191,18 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   requerida; la autoridad quedó quemada al reconocerla. La revisión es una
   vista externa: no autoriza entrega, que sigue siendo decisión del paso
   siguiente.
+
+- **L10** — Pedido textual: «si dale con la 1 has el merge tu y continua con
+  el 2». Issue #105 creada con aprobación explícita posterior del usuario;
+  PR #106 mergeado en `3f57911058c12827aacbc3b853f6a312d3110911`, tras los
+  cinco jobs de CI en SUCCESS. El push previo agotó 30 s en hooks; el nuevo
+  intento autorizado en background completó 1890 tests y publicó la rama.
+- **L11** — Decisión de T6: ante «Cuando se elige un domicilio en el alta de
+  reporte, ¿qué debe conservar el reporte?», el usuario eligió «El domicilio
+  elegido (recomendado)». Se aceptó la descripción completa citada en S7.
+  Se preservan los reportes por lugar/calle sin domicilio; no se migra ni
+  asigna automáticamente un domicilio a reportes existentes. La búsqueda
+  reutilizará el registro de direcciones tenant-scoped; el dato seleccionado
+  se vuelve a validar en servidor, nunca se confía en IDs del navegador.
+  T6a precede a T6b para separar la migración de la UI. T7 sigue fuera de
+  este slice.

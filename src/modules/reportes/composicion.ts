@@ -22,6 +22,7 @@ import {
   repositorioDeReportesSql,
 } from "./infrastructure";
 import { movimientosDeReportes, reportes } from "./infrastructure/esquema";
+import { crearLectorDeDomiciliosPorTerritorio } from "./infrastructure/lectorDeDomiciliosPorTerritorio";
 
 export const registrarReporte = crearRegistrarReporte({
   repositorio: repositorioDeReportesSql,
@@ -29,6 +30,7 @@ export const registrarReporte = crearRegistrarReporte({
   movimientos: registroDeMovimientosSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
   crearLecturaDeReportantes: crearLectorDeReportantesPorPadron,
+  crearLecturaDeDomicilios: crearLectorDeDomiciliosPorTerritorio,
 });
 export const reportePorId = crearReportePorId(repositorioDeReportesSql);
 export const reporteExisteEnTransaccion = crearReporteExisteEnTransaccion(
