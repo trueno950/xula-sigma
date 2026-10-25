@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import {
+  ColoniaRequeridaError,
   comoCalleId,
   comoLugarId,
   type LugarId,
@@ -117,6 +118,7 @@ describe("altaDeDomicilio", () => {
     vi.mocked(repositorioDeCalles.bloquearPorId).mockResolvedValue(
       calleGuardada,
     );
+    vi.mocked(repositorioDeLugares.listarLugares).mockResolvedValue([]);
   });
 
   const datosValidos = {
@@ -217,6 +219,91 @@ describe("altaDeDomicilio", () => {
       expect.anything(),
       expect.objectContaining({ lugarId: asentamientoId }),
     );
+  });
+
+  it("requires a colonia decision before storing in an asentamiento with active colonias", async () => {
+    vi.mocked(repositorioDeLugares.listarLugares).mockResolvedValue([
+      lugarGuardado,
+    ]);
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+    const sinLugar = {
+      calleId,
+      numero: "21",
+      entreCalleAId: null,
+      entreCalleBId: null,
+      referencia: null,
+    };
+
+    const sinZona = altaDeDomicilio(sinLugar, contextoCon("OPERADOR"));
+    await expect(sinZona).rejects.toBeInstanceOf(ColoniaRequeridaError);
+    await expect(sinZona).rejects.toThrow(
+      "Elija una colonia o seleccione «Sin colonia» si la dirección no pertenece a una colonia.",
+    );
+
+    const asentamientoExplicito = altaDeDomicilio(
+      { ...sinLugar, lugarId: asentamientoId },
+      contextoCon("OPERADOR"),
+    );
+    await expect(asentamientoExplicito).rejects.toBeInstanceOf(
+      ColoniaRequeridaError,
+    );
+    await expect(asentamientoExplicito).rejects.toThrow(
+      "Elija una colonia o seleccione «Sin colonia» si la dirección no pertenece a una colonia.",
+    );
+
+    expect(repositorio.crear).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts a chosen colonia when the asentamiento has active colonias", async () => {
+    vi.mocked(repositorioDeLugares.listarLugares).mockResolvedValue([
+      lugarGuardado,
+    ]);
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    await altaDeDomicilio(datosValidos, contextoCon("OPERADOR"));
+
+    expect(repositorio.crear).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ lugarId }),
+    );
+    expect(registrarMock).toHaveBeenCalledOnce();
+  });
+
+  it("accepts an explicit sin-colonia declaration for an asentamiento with active colonias", async () => {
+    vi.mocked(repositorioDeLugares.listarLugares).mockResolvedValue([
+      lugarGuardado,
+    ]);
+    const altaDeDomicilio = crearAltaDeDomicilio(
+      repositorio,
+      repositorioDeLugares,
+      repositorioDeCalles,
+    );
+
+    const datosSinColonia = {
+      calleId,
+      numero: "21",
+      entreCalleAId: null,
+      entreCalleBId: null,
+      referencia: null,
+      sinColonia: true,
+    };
+
+    await altaDeDomicilio(datosSinColonia, contextoCon("OPERADOR"));
+
+    expect(repositorio.crear).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ lugarId: asentamientoId }),
+    );
+    expect(registrarMock).toHaveBeenCalledOnce();
   });
 
   it("rechaza una transversal de otro asentamiento aunque la calle principal coincida", async () => {

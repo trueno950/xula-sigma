@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import type { NodoDeSubarbol } from "../application/puertos";
 import { comoCalleId, comoLugarId } from "../domain";
+import { declaracionDeDestino } from "./declaracionDeDestino";
 import { FormularioDeDomicilio } from "./FormularioDeDomicilio";
 import { opcionesDeCalles } from "./opciones";
 import { lugaresDeNodos } from "./vistaDeDomicilios";
@@ -41,16 +42,26 @@ export const renderFormulario = (
     nombre: string;
   },
   contexto?: { raiz: string; nodo: string },
-) =>
-  renderToStaticMarkup(
+) => {
+  const zona = zonaDelFormulario(
+    lugaresDeNodos(nodos),
+    { id: cabeceraId, nombre: "Tepakan" },
+    lugar,
+  );
+
+  return renderToStaticMarkup(
     <FormularioDeDomicilio
       calles={opcionesDeCalles(calles)}
-      zona={zonaDelFormulario(
-        lugaresDeNodos(nodos),
-        { id: cabeceraId, nombre: "Tepakan" },
-        lugar,
-      )}
+      zona={zona}
+      declaracionDeDestino={declaracionDeDestino({
+        origen: "lugar",
+        tipo: lugar.tipo,
+        nombre: lugar.nombre,
+        asentamiento: "Tepakan",
+        tieneColonias: !zona.sinZonas,
+      })}
       raiz={contexto?.raiz}
       nodo={contexto?.nodo}
     />,
   );
+};

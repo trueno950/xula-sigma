@@ -17,6 +17,7 @@ import {
   cuentasDeLugar,
   type PropsDeContenido,
 } from "@/modules/territorio/ui/contenido";
+import { declaracionDeDestino } from "@/modules/territorio/ui/declaracionDeDestino";
 import { opcionesDeCalles } from "@/modules/territorio/ui/opciones";
 import { BarraDeAcciones } from "@/modules/territorio/ui/PanelDeAccion";
 import {
@@ -73,6 +74,13 @@ export function VistaDeLugar({
     nodo,
   );
   const opciones = opcionesDeCalles(calles);
+  const declaracion = declaracionDeDestino({
+    origen: "lugar",
+    tipo: nodo.tipo,
+    nombre: nodo.nombre,
+    asentamiento: raiz.nombre,
+    tieneColonias: !zona.sinZonas,
+  });
   const vistaVisible = vistaVisibleDeLugar(vista, nodo.tipo);
   return (
     <>
@@ -119,6 +127,7 @@ export function VistaDeLugar({
         <RegistroDeDomicilio
           calles={opciones}
           zona={zona}
+          declaracionDeDestino={declaracion}
           volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
           origenDeCalles={raiz.nombre}
           raiz={raiz.id}

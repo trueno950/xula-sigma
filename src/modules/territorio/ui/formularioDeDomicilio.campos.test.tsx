@@ -26,6 +26,7 @@ describe("FormularioDeDomicilio: grupos y calles", () => {
   const html = renderToStaticMarkup(
     <FormularioDeDomicilio
       calles={opcionesDeCalles(tres)}
+      declaracionDeDestino="Se guarda en el asentamiento. Las calles son de su catálogo."
       zona={zonaDelFormulario(
         lugaresDeNodos(nodos),
         { id: cabeceraId, nombre: "Tepakan" },
@@ -71,6 +72,7 @@ describe("FormularioDeDomicilio: origen del catalogo de calles", () => {
     const html = renderToStaticMarkup(
       <FormularioDeDomicilio
         calles={opcionesDeCalles(calles)}
+        declaracionDeDestino="Se guarda en el asentamiento. Las calles son de su catálogo."
         zona={zonaDelFormulario(
           lugaresDeNodos(nodos),
           { id: cabeceraId, nombre: "Tepakan" },
@@ -108,6 +110,7 @@ describe("FormularioDeDomicilio: municipio sin zonas", () => {
   const html = renderToStaticMarkup(
     <FormularioDeDomicilio
       calles={opcionesDeCalles(calles)}
+      declaracionDeDestino="Se guarda en el asentamiento de la calle."
       zona={zonaDelFormulario(
         lugaresDeNodos([
           {
@@ -147,5 +150,9 @@ describe("FormularioDeDomicilio: municipio sin zonas", () => {
 
     expect(conZonas).toContain("Colonia (opcional)");
     expect(conZonas).not.toMatch(/id="domicilio-zona-id"[^>]*disabled/);
+    expect(conZonas).toContain('value="sin-colonia"');
+    expect(conZonas).toContain(
+      "Sin colonia (la dirección no pertenece a una colonia)",
+    );
   });
 });

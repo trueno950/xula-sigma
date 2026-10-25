@@ -104,6 +104,18 @@ export class UbicacionIncoherenteError extends Error {
   }
 }
 
+/** Una colonia activa exige decision; «Sin colonia» viaja como `sinColonia`, nunca vacio. */
+export class ColoniaRequeridaError extends Error {
+  readonly codigo = "COLONIA_REQUERIDA";
+
+  constructor(
+    mensaje = "Elija una colonia o seleccione «Sin colonia» si la dirección no pertenece a una colonia.",
+  ) {
+    super(mensaje);
+    this.name = "ColoniaRequeridaError";
+  }
+}
+
 /**
  * `altaDeCalle` y `renombrarCalle` rechazan si el nombre choca contra
  * `calles_tenant_lugar_nombre_idx` (design.md seccion 9): dos calles

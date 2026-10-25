@@ -55,14 +55,13 @@ function Seccion({
  * donde esta, entre que calles queda y como encontrarlo. Los comparten el
  * alta y la correccion; solo cambian los `id` y los valores de arranque.
  *
- * La colonia es un campo con etiqueta y no un bloque plegado: es opcional,
- * pero esconderla hacia que la operadora no supiera que existia. Cuando el
- * municipio no tiene ninguna zona el campo se deshabilita y explica el
- * vacio (`NivelDelFormulario.sinZonas`): un `<select>` con el marcador solo
- * se lee como un control roto.
+ * La colonia es un campo con etiqueta y no un bloque plegado: esconderla
+ * hacia que la operadora no supiera que existia. Cuando el municipio no
+ * tiene ninguna zona el campo se deshabilita y explica el vacio
+ * (`NivelDelFormulario.sinZonas`): un `<select>` con el marcador solo se lee
+ * como un control roto.
  *
- * La calle es el unico campo obligatorio y el unico con buscador; ver
- * `SelectorDeCalleConBusqueda`.
+ * La calle es el unico campo con buscador; ver `SelectorDeCalleConBusqueda`.
  */
 export function CamposDeDomicilio({
   prefijo,

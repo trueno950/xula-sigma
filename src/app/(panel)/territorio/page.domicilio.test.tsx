@@ -147,6 +147,10 @@ describe("El alta de domicilio desde la entrada", () => {
     // el `<select>` de Colonia salia con el marcador solo, sin decir por que.
     expect(html).toContain("Sin colonias registradas");
     expect(html).toContain("Todavía no hay colonias en el municipio");
+    expect(html).toContain(
+      "Se guarda en el asentamiento de la calle porque todavía no hay colonias registradas. Cada calle pertenece al catálogo del asentamiento indicado junto a ella.",
+    );
+    expect(html).not.toContain('value="sin-colonia"');
   });
 });
 

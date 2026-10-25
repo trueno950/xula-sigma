@@ -24,7 +24,10 @@ export function TabDeCalles({
   permisos,
   calleId,
 }: PropsDeContenido) {
-  if (!puedeTenerCatalogoDeCalles(lugar.tipo)) return null;
+  if (!puedeTenerCatalogoDeCalles(lugar.tipo)) {
+    // `pestanasDePanel` ya filtra este tipo; el guard protege otras llamadas.
+    return null;
+  }
 
   const abierta =
     accion === "calle" ||

@@ -6,6 +6,7 @@ const pintar = (volverA?: string) =>
   renderToStaticMarkup(
     <RegistroDeDomicilio
       calles={[]}
+      declaracionDeDestino="Se guarda en el asentamiento de la calle."
       zona={{
         opciones: [],
         inicial: "",

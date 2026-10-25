@@ -19,7 +19,7 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
 
     expect(html).not.toContain("<details");
     expect(html).toContain(
-      "Sin elegir colonia, se guarda en el asentamiento de la calle.",
+      "Elija una colonia o «Sin colonia» si la dirección no pertenece a una colonia.",
     );
     expect(html).not.toContain("Se guardara en:");
     expect(html).toContain("Colonia (opcional)");
@@ -53,8 +53,21 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
       nombre: "Tepakan",
     });
 
-    expect(html).toContain("Sin colonia: Tepakan");
+    expect(html).toContain("Elija una colonia o indique que no tiene");
     expect(html).toContain("Calle 21");
+  });
+
+  it("offers an explicit no-colonia choice when a colonia exists", () => {
+    const html = renderFormulario({
+      id: cabeceraId,
+      tipo: "cabecera",
+      nombre: "Tepakan",
+    });
+
+    expect(html).toContain('value="sin-colonia"');
+    expect(html).toContain(
+      "Sin colonia (la dirección no pertenece a una colonia)",
+    );
   });
 
   it("en una colonia prefija el nodo y el resumen nombra la cadena", () => {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { UbicacionIncoherenteError } from "../../domain";
+import { ColoniaRequeridaError, UbicacionIncoherenteError } from "../../domain";
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const altaDeDomicilioMock = vi.hoisted(() => vi.fn());
@@ -81,9 +81,43 @@ describe("altaDeDomicilioAction: zona opcional", () => {
     const [datos] = altaDeDomicilioMock.mock.calls[0] ?? [];
 
     expect(datos).not.toHaveProperty("lugarId");
+    expect(datos).not.toHaveProperty("sinColonia");
     expect(datos).toEqual(
       expect.objectContaining({ calleId: CALLE, nivelesDeclarados: [] }),
     );
+  });
+
+  it("maps the explicit sin-colonia option to an explicit application declaration", async () => {
+    await expect(
+      altaDeDomicilioAction(
+        formulario({
+          ...navegacion,
+          calleId: CALLE,
+          lugarId: "sin-colonia",
+        }),
+      ),
+    ).rejects.toThrow("ok=domicilio-creado");
+
+    const [datos] = altaDeDomicilioMock.mock.calls[0] ?? [];
+
+    expect(datos).not.toHaveProperty("lugarId");
+    expect(datos).toEqual(
+      expect.objectContaining({
+        calleId: CALLE,
+        nivelesDeclarados: [],
+        sinColonia: true,
+      }),
+    );
+  });
+
+  it("redacta la decision de colonia para el operador y no el mensaje generico", async () => {
+    altaDeDomicilioMock.mockRejectedValue(new ColoniaRequeridaError());
+
+    await expect(
+      altaDeDomicilioAction(
+        formulario({ ...navegacion, calleId: CALLE, lugarId: "" }),
+      ),
+    ).rejects.toThrow(/error=Elija\+una\+colonia/);
   });
 
   it("redacta la ubicacion incoherente para el operador y no el mensaje generico", async () => {

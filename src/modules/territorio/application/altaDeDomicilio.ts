@@ -1,16 +1,19 @@
 import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
-import { NoAutorizadoError } from "@/shared/lib/errores";
+import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
   type CalleId,
+  ColoniaRequeridaError,
   comoDomicilioId,
   type DomicilioId,
   type LugarId,
+  puedeTenerCatalogoDeCalles,
   TransversalRepetidaError,
   transversalesValidas,
+  UbicacionIncoherenteError,
 } from "../domain";
 import type { RepositorioDeCalles, RepositorioDeLugares } from "./puertos";
 import type { RepositorioDeDomicilios } from "./puertosDeDomicilios";
@@ -21,6 +24,8 @@ export type NuevoDomicilio = {
   lugarId?: LugarId | undefined;
   /** Los niveles de zona que el operador declaro. */
   nivelesDeclarados?: readonly LugarId[] | undefined;
+  /** Confirma que el domicilio no pertenece a ninguna colonia. */
+  sinColonia?: boolean | undefined;
   calleId: CalleId;
   numero: string | null;
   entreCalleAId: CalleId | null;
@@ -81,12 +86,47 @@ const prepararAlta = (
   contexto,
 });
 
+const exigirDecisionDeColonia = async (
+  dependencias: DependenciasDeAlta,
+  destino: {
+    tx: Parameters<RepositorioDeDomicilios["crear"]>[0];
+    datos: NuevoDomicilio;
+    lugarId: LugarId;
+  },
+): Promise<void> => {
+  const lugar = await dependencias.repositorioDeLugares.buscarPorId(
+    destino.tx,
+    destino.lugarId,
+  );
+  if (!lugar) throw new NoEncontradoError();
+  if (destino.datos.sinColonia && !puedeTenerCatalogoDeCalles(lugar.tipo)) {
+    throw new UbicacionIncoherenteError();
+  }
+  if (!puedeTenerCatalogoDeCalles(lugar.tipo) || destino.datos.sinColonia) {
+    return;
+  }
+
+  const lugares = await dependencias.repositorioDeLugares.listarLugares(
+    destino.tx,
+  );
+  if (
+    lugares.some((hijo) => hijo.tipo === "colonia" && hijo.padreId === lugar.id)
+  ) {
+    throw new ColoniaRequeridaError();
+  }
+};
+
 const guardarDomicilio = async (
   dependencias: DependenciasDeAlta,
   alta: AltaPreparada,
 ): Promise<void> => {
   await withTenant(alta.contexto.ayuntamientoId, async (tx) => {
     const lugarId = await verificarZonaYCalles(dependencias, tx, alta.datos);
+    await exigirDecisionDeColonia(dependencias, {
+      tx,
+      datos: alta.datos,
+      lugarId,
+    });
 
     await dependencias.repositorio.crear(tx, {
       id: alta.id,
