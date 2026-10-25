@@ -1,5 +1,11 @@
 import type { PasoDeMigaja as EnlaceDeMigaja, Pestana } from "@/shared/ui";
-import type { LugarId } from "../domain";
+import {
+  type LugarId,
+  puedeContener,
+  puedeTenerCatalogoDeCalles,
+  TIPOS_DE_LUGAR,
+  type TipoDeLugar,
+} from "../domain";
 
 type PasoDeArbol = { readonly id: LugarId; readonly nombre: string };
 type TabDeLugar = "lugares" | "calles" | "domicilios" | "editar";
@@ -34,6 +40,7 @@ export const pasosDeMigaja = (
 type DatosDePestanas = {
   readonly raizId: LugarId;
   readonly nodoId: LugarId;
+  readonly tipo: TipoDeLugar;
   readonly vista: TabDeLugar;
   readonly cuentas: CuentasDeLugar;
   readonly abreLaEdicion: boolean;
@@ -62,13 +69,29 @@ const pestanaDeCuenta = (
 });
 
 /**
- * Las cuatro pestanas del panel, con su cuenta y su `href`. "Editar" no
- * lleva cuenta -no es una categoria de contenido, es lo que se le hace al
+ * Las pestanas disponibles del panel, con su cuenta y su `href`. "Editar"
+ * no lleva cuenta -no es una categoria de contenido, es lo que se le hace al
  * lugar- y solo aparece si el rol tiene algo que hacer ahi.
  */
+export const admiteLugares = (tipo: TipoDeLugar): boolean =>
+  TIPOS_DE_LUGAR.some((hijo) => puedeContener(tipo, hijo));
+
+export const vistaVisibleDeLugar = (
+  vista: TabDeLugar,
+  tipo: TipoDeLugar,
+): TabDeLugar =>
+  (vista === "lugares" && !admiteLugares(tipo)) ||
+  (vista === "calles" && !puedeTenerCatalogoDeCalles(tipo))
+    ? "domicilios"
+    : vista;
+
 export const pestanasDePanel = (datos: DatosDePestanas): readonly Pestana[] => [
-  pestanaDeCuenta(datos, "lugares", "Lugares"),
-  pestanaDeCuenta(datos, "calles", "Calles"),
+  ...(admiteLugares(datos.tipo)
+    ? [pestanaDeCuenta(datos, "lugares", "Lugares")]
+    : []),
+  ...(puedeTenerCatalogoDeCalles(datos.tipo)
+    ? [pestanaDeCuenta(datos, "calles", "Calles")]
+    : []),
   pestanaDeCuenta(datos, "domicilios", "Domicilios"),
   ...(datos.abreLaEdicion
     ? [

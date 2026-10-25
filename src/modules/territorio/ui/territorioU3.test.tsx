@@ -41,47 +41,34 @@ const conteo = (lugarId: typeof raizId, c: Partial<ConteoDeLugar>) => ({
 });
 
 describe("CatalogoHeredado", () => {
-  it("enlaza al asentamiento duenio del catalogo", () => {
+  it("ofrece un enlace secundario al catalogo del asentamiento", () => {
     const html = renderToStaticMarkup(
-      <CatalogoHeredado
-        raizId={raizId}
-        calles={[calle]}
-        lugares={lugares}
-        permisos={permisos}
-      />,
+      <CatalogoHeredado raizId={raizId} lugares={lugares} />,
     );
 
     expect(html).toContain(
       `href="/territorio?raiz=${raizId}&amp;nodo=${raizId}&amp;vista=calles"`,
     );
-    expect(html).toContain(">Buenavista</a>");
+    expect(html).toContain("Ver el catálogo de calles de Buenavista");
+    expect(html).not.toContain("Calle 21");
   });
 
-  it("el estado vacio nombra al asentamiento y lo enlaza", () => {
+  it("mantiene el enlace aunque el catalogo todavia no tenga calles", () => {
     const html = renderToStaticMarkup(
-      <CatalogoHeredado
-        raizId={raizId}
-        calles={[]}
-        lugares={lugares}
-        permisos={permisos}
-      />,
+      <CatalogoHeredado raizId={raizId} lugares={lugares} />,
     );
 
-    expect(html).toContain("El catálogo de");
-    expect(html).toContain("aún no tiene calles");
-    expect(html).toContain("<svg");
+    expect(html).toContain("Ver el catálogo de calles de Buenavista");
+    expect(html).not.toContain("aún no tiene calles");
   });
 
-  it("administrar el catalogo es secundario y no de ancho completo", () => {
+  it("el enlace no tiene presentacion de accion primaria", () => {
     const html = renderToStaticMarkup(
-      <CatalogoHeredado
-        raizId={raizId}
-        calles={[calle]}
-        lugares={lugares}
-        permisos={permisos}
-      />,
+      <CatalogoHeredado raizId={raizId} lugares={lugares} />,
     );
-    const enlace = html.match(/<a[^>]*>Administrar el catálogo<\/a>/)?.[0];
+    const enlace = html.match(
+      /<a[^>]*>Ver el catálogo de calles de Buenavista<\/a>/,
+    )?.[0];
 
     expect(enlace).toBeDefined();
     expect(enlace).not.toContain("bg-marca");
@@ -163,5 +150,20 @@ describe("TabDeDomicilios", () => {
     expect(html).toContain("Calle 21");
     expect(html).toContain(`nodo=${coloniaId}&amp;vista=domicilios`);
     expect(html).toContain("Centro");
+  });
+
+  it("ofrece fuera de las pestanas el catalogo del asentamiento dueño", () => {
+    const html = renderToStaticMarkup(
+      <TabDeDomicilios
+        {...base}
+        lugar={{ id: coloniaId, tipo: "colonia", nombre: "Centro" }}
+        lugares={lugares}
+      />,
+    );
+
+    expect(html).toContain("Ver el catálogo de calles de Buenavista");
+    expect(html).toContain(
+      `href="/territorio?raiz=${raizId}&amp;nodo=${raizId}&amp;vista=calles"`,
+    );
   });
 });

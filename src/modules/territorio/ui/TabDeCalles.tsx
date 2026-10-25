@@ -1,7 +1,6 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import { AvisoDePermiso, EnlaceDeAccion } from "@/shared/ui";
 import { puedeTenerCatalogoDeCalles } from "../domain";
-import { CatalogoHeredado } from "./CatalogoHeredado";
 import { type PropsDeContenido, rutaDe } from "./contenido";
 import { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 import { ListaDeCalles } from "./ListaDeCalles";
@@ -25,16 +24,7 @@ export function TabDeCalles({
   permisos,
   calleId,
 }: PropsDeContenido) {
-  if (!puedeTenerCatalogoDeCalles(lugar.tipo)) {
-    return (
-      <CatalogoHeredado
-        raizId={raizId}
-        calles={calles}
-        lugares={lugares}
-        permisos={permisos}
-      />
-    );
-  }
+  if (!puedeTenerCatalogoDeCalles(lugar.tipo)) return null;
 
   const abierta =
     accion === "calle" ||

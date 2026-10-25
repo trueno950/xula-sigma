@@ -8,6 +8,7 @@ type Props = {
   /** Ya rotuladas por el borde: en el asentamiento, solo el nombre. */
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
+  origenDeCalles?: string | undefined;
   volverA?: string;
   /** Navegacion de retorno; ver `actions/volverAlArbol.ts`. */
   raiz?: string | undefined;
@@ -24,6 +25,7 @@ type Props = {
 export function FormularioDeDomicilio({
   calles,
   zona,
+  origenDeCalles,
   raiz,
   nodo,
   volverA,
@@ -40,6 +42,7 @@ export function FormularioDeDomicilio({
         nombreDeZona="lugarId"
         calles={calles}
         zona={zona}
+        origenDeCalles={origenDeCalles}
         agrupar
       />
 

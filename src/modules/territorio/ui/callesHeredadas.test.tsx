@@ -41,14 +41,13 @@ const renderDomicilios = (
   );
 
 describe("TabDeLugares en el ultimo nivel", () => {
-  it("no menciona calles en el mensaje de una colonia sin hijos", () => {
+  it("no muestra el mensaje de ultimo nivel que ya no tiene pestana", () => {
     const html = renderToStaticMarkup(
       <TabDeLugares {...base} lugar={{ ...base.lugar, tipo: "colonia" }} />,
     );
 
-    expect(html).toContain("no lleva lugares adentro");
-    expect(html).toContain("solo domicilios");
-    expect(html).not.toContain("calles");
+    expect(html).not.toContain("no lleva lugares adentro");
+    expect(html).not.toContain("solo domicilios");
   });
 });
 

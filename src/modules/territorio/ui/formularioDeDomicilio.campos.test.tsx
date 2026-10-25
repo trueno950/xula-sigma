@@ -66,6 +66,24 @@ describe("FormularioDeDomicilio: grupos y calles", () => {
   });
 });
 
+describe("FormularioDeDomicilio: origen del catalogo de calles", () => {
+  it("nombra el asentamiento dueño en la ayuda del selector", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeDomicilio
+        calles={opcionesDeCalles(calles)}
+        zona={zonaDelFormulario(
+          lugaresDeNodos(nodos),
+          { id: cabeceraId, nombre: "Tepakan" },
+          { id: cabeceraId, tipo: "cabecera" },
+        )}
+        origenDeCalles="Buenavista"
+      />,
+    );
+
+    expect(html).toContain("Catálogo de Buenavista");
+  });
+});
+
 describe("FormularioDeDomicilio: la calle se elige buscando", () => {
   const html = renderFormulario({
     id: cabeceraId,

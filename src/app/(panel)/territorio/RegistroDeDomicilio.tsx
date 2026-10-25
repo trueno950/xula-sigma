@@ -6,6 +6,7 @@ import type { OpcionDeLista } from "@/shared/ui";
 type Props = {
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
+  origenDeCalles?: string | undefined;
   volverA?: string;
   /**
    * Navegacion de retorno; ver
@@ -18,6 +19,7 @@ type Props = {
 export function RegistroDeDomicilio({
   calles,
   zona,
+  origenDeCalles,
   volverA = "/territorio",
   raiz,
   nodo,
@@ -27,6 +29,7 @@ export function RegistroDeDomicilio({
       <FormularioDeDomicilio
         calles={calles}
         zona={zona}
+        origenDeCalles={origenDeCalles}
         volverA={volverA}
         raiz={raiz}
         nodo={nodo}

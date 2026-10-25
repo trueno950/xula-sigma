@@ -38,6 +38,7 @@ describe("pestanasDePanel", () => {
   const base = {
     raizId: idA,
     nodoId: idB,
+    tipo: "cabecera" as const,
     vista: "lugares" as const,
     cuentas: { lugares: 3, calles: 1, domicilios: 0 },
   };
@@ -50,6 +51,17 @@ describe("pestanasDePanel", () => {
       "calles",
       "domicilios",
     ]);
+  });
+
+  it("una colonia solo ofrece Domicilios y Editar", () => {
+    const pestanas = pestanasDePanel({
+      ...base,
+      tipo: "colonia",
+      vista: "domicilios",
+      abreLaEdicion: true,
+    });
+
+    expect(pestanas.map((p) => p.clave)).toEqual(["domicilios", "editar"]);
   });
 
   it("con abreLaEdicion agrega Editar sin cuenta", () => {
@@ -109,6 +121,7 @@ describe("los enlaces del panel no arrastran la confirmacion", () => {
     const pestanas = pestanasDePanel({
       raizId: idA,
       nodoId: idB,
+      tipo: "cabecera",
       vista: "lugares",
       cuentas: { lugares: 1, calles: 1, domicilios: 1 },
       abreLaEdicion: true,

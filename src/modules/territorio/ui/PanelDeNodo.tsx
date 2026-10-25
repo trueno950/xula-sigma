@@ -63,6 +63,7 @@ export function PanelDeNodo({
   const pestanas = pestanasDePanel({
     raizId,
     nodoId: nodo.id,
+    tipo: nodo.tipo,
     vista,
     cuentas,
     abreLaEdicion,

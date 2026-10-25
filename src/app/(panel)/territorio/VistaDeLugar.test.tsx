@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { CalleId, LugarId } from "@/modules/territorio";
@@ -9,8 +8,12 @@ import {
 
 // Los stubs de nodo y contenido: el motivo esta en `page.test.tsx`.
 vi.mock("@/modules/territorio", () => ({
-  PanelDeNodo: ({ children }: { children: ReactNode }) => children,
-  ContenidoDeLugar: ({ children }: { children: ReactNode }) => children,
+  PanelDeNodo: ({ vista }: { vista: string }) => (
+    <div data-panel-vista={vista} />
+  ),
+  ContenidoDeLugar: ({ vista }: { vista: string }) => (
+    <div data-contenido-vista={vista} />
+  ),
 }));
 
 const { VistaDeLugar } = await import("./VistaDeLugar");
@@ -49,6 +52,37 @@ const props = (permisos: PermisosDeTerritorio, domicilioAbierto: boolean) => ({
 
 const htmlDe = (permisos: PermisosDeTerritorio, domicilioAbierto: boolean) =>
   renderToStaticMarkup(<VistaDeLugar {...props(permisos, domicilioAbierto)} />);
+
+describe("La vista de lugar", () => {
+  it("vuelve a Domicilios si una colonia pide la vista Lugares", () => {
+    const base = props(permisosDeTerritorio("OPERADOR"), false);
+    const html = renderToStaticMarkup(
+      <VistaDeLugar
+        {...base}
+        vista="lugares"
+        nodo={{ ...base.nodo, tipo: "colonia" }}
+      />,
+    );
+
+    expect(html).toContain('data-panel-vista="domicilios"');
+    expect(html).toContain('data-contenido-vista="domicilios"');
+    expect(html).not.toContain("Una colonia es el último nivel");
+  });
+
+  it("vuelve a Domicilios si una colonia pide la vista Calles", () => {
+    const base = props(permisosDeTerritorio("OPERADOR"), false);
+    const html = renderToStaticMarkup(
+      <VistaDeLugar
+        {...base}
+        vista="calles"
+        nodo={{ ...base.nodo, tipo: "colonia" }}
+      />,
+    );
+
+    expect(html).toContain('data-panel-vista="domicilios"');
+    expect(html).toContain('data-contenido-vista="domicilios"');
+  });
+});
 
 describe("El alta de domicilio en el contexto del lugar", () => {
   it("se ofrece por el permiso de domicilio, no por la pestana Editar", () => {
