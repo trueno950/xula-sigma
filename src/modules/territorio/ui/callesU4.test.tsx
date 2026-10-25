@@ -75,6 +75,14 @@ describe("fila seleccionada de calles", () => {
     expect(renderTab()).not.toContain("aria-current");
   });
 
+  it("la tabla informa si cada calle esta ubicada sin imprimir coordenadas", () => {
+    const html = renderTab();
+
+    expect(html).toContain("Ubicada");
+    expect(html).toContain("Sin ubicar");
+    expect(html).not.toContain("20.900000, -89.600000");
+  });
+
   it("cada fila enlaza a su calle y aterriza en el panel", () => {
     const html = renderTab({ seleccionada: conPunto });
 
@@ -102,17 +110,20 @@ describe("panel de calle como detalle", () => {
     expect(html).toContain("Cerrar");
   });
 
-  it("muestra el nombre como titulo y las coordenadas como dato", () => {
+  it("muestra Ubicada como estado y conserva las coordenadas como dato secundario", () => {
     const html = renderTab({ seleccionada: conPunto });
+    const panel = html.slice(html.indexOf('id="panel-de-calle"'));
 
-    expect(html).toContain("20.900000, -89.600000");
-    expect(html).not.toContain("Sin punto");
+    expect(panel).toContain("Ubicada");
+    expect(panel).toContain("20.900000, -89.600000");
+    expect(panel).not.toContain("Sin ubicar");
   });
 
-  it("una calle sin punto lo dice con insignia de icono y texto", () => {
+  it("una calle sin punto muestra Sin ubicar como estado principal", () => {
     const html = renderTab({ seleccionada: sinPunto });
 
-    expect(html).toContain("Sin punto");
+    expect(html).toContain("Sin ubicar");
+    expect(html).not.toContain("Sin punto");
   });
 
   it("enlaza al historial y al mapa operativo con icono y palabras", () => {

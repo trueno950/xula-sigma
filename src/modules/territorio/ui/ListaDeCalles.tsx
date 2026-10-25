@@ -11,7 +11,7 @@ import type { NodoSeleccionado } from "./PanelDeNodo";
 import {
   type CalleParaPanel,
   COLUMNAS_DE_CALLES,
-  formatoDePunto,
+  estadoDeUbicacion,
 } from "./vistaDeCalles";
 
 type Props = {
@@ -44,11 +44,11 @@ export function ListaDeCalles({ raizId, lugar, calles, calleId }: Props) {
             vista: "calles",
             calleId: calle.id,
           })}#panel-de-calle`}
-          etiquetaAccesible={`${calle.nombre}, ${formatoDePunto(calle.punto)}`}
+          etiquetaAccesible={`${calle.nombre}, ${estadoDeUbicacion(calle.punto)}`}
           seleccionada={calle.id === calleId}
         >
           <CeldaPrincipal>{calle.nombre}</CeldaPrincipal>
-          <CeldaDeDato>{formatoDePunto(calle.punto)}</CeldaDeDato>
+          <CeldaDeDato>{estadoDeUbicacion(calle.punto)}</CeldaDeDato>
         </FilaDeTabla>
       ))}
     </Tabla>

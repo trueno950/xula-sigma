@@ -11,10 +11,9 @@ export const COLUMNAS_DE_CALLES: readonly ColumnaDeTabla[] = [
   { clave: "ubicacion", etiqueta: "Ubicación" },
 ];
 
-export const formatoDePunto = (punto: PuntoGeografico | null): string =>
-  punto
-    ? `${punto.latitud.toFixed(6)}, ${punto.longitud.toFixed(6)}`
-    : "sin punto";
+export const estadoDeUbicacion = (
+  punto: PuntoGeografico | null,
+): "Ubicada" | "Sin ubicar" => (punto ? "Ubicada" : "Sin ubicar");
 
 export const destinosDeMovimiento = (
   lugarActualId: LugarId,

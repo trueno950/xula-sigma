@@ -24,6 +24,7 @@ import {
   puedeAbrir,
 } from "@/modules/territorio/ui/permisos";
 import { lugaresDeNodos } from "@/modules/territorio/ui/vistaDeDomicilios";
+import { vistaVisibleDeLugar } from "@/modules/territorio/ui/vistaDePanel";
 import { zonaDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
 import { EnlaceDeAccion } from "@/shared/ui";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
@@ -72,17 +73,18 @@ export function VistaDeLugar({
     nodo,
   );
   const opciones = opcionesDeCalles(calles);
+  const vistaVisible = vistaVisibleDeLugar(vista, nodo.tipo);
   return (
     <>
       <PanelDeNodo
         raizId={raiz.id}
         nodo={nodo}
-        vista={vista}
+        vista={vistaVisible}
         cuentas={cuentasDeLugar({ nodos, calles, nodo })}
         abreLaEdicion={permisos.abreLaEdicion}
       />
 
-      {vista === "domicilios" &&
+      {vistaVisible === "domicilios" &&
       puedeAbrir("domicilio", permisos) &&
       !domicilioAbierto &&
       calles.length > 0 ? (
@@ -105,19 +107,20 @@ export function VistaDeLugar({
         calleId={calleId}
         domicilioId={domicilioId}
         domicilio={domicilio}
-        vista={vista}
+        vista={vistaVisible}
         accion={accion}
         permisos={permisos}
         conteos={conteos}
       />
 
-      {vista === "domicilios" &&
+      {vistaVisible === "domicilios" &&
       puedeAbrir("domicilio", permisos) &&
       domicilioAbierto ? (
         <RegistroDeDomicilio
           calles={opciones}
           zona={zona}
           volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
+          origenDeCalles={raiz.nombre}
           raiz={raiz.id}
           nodo={nodo.id}
         />

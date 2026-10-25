@@ -1,4 +1,6 @@
 import { AvisoDePermiso, CLASES_DE_ENLACE } from "@/shared/ui";
+import { puedeTenerCatalogoDeCalles } from "../domain";
+import { CatalogoHeredado } from "./CatalogoHeredado";
 import { domiciliosDelSubarbolDe, type PropsDeContenido } from "./contenido";
 import { ListaDeDomicilios } from "./ListaDeDomicilios";
 import { PanelDeDomicilio } from "./PanelDeDomicilio";
@@ -35,6 +37,10 @@ export function TabDeDomicilios({
           capacidad="registrar domicilios"
           requisito="un rol con permisos de escritura"
         />
+      ) : null}
+
+      {!puedeTenerCatalogoDeCalles(lugar.tipo) ? (
+        <CatalogoHeredado raizId={raizId} lugares={lugares} />
       ) : null}
 
       {colgados.length === 0 ? (

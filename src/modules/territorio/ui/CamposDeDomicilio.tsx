@@ -23,6 +23,7 @@ type Props = {
   nombreDeZona: string;
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
+  origenDeCalles?: string | undefined;
   valores?: Valores;
   /** Con grupos bajo un Headline (alta) o en una sola columna (panel). */
   agrupar: boolean;
@@ -68,6 +69,7 @@ export function CamposDeDomicilio({
   nombreDeZona,
   calles,
   zona,
+  origenDeCalles,
   valores,
   agrupar,
 }: Props) {
@@ -83,7 +85,11 @@ export function CamposDeDomicilio({
           name="calleId"
           opciones={opciones}
           marcador="Seleccione una calle"
-          ayuda="La calle donde está el domicilio."
+          ayuda={
+            origenDeCalles
+              ? `Catálogo de ${origenDeCalles}: la calle donde está el domicilio.`
+              : "La calle donde está el domicilio."
+          }
           valorInicial={valores?.calleId}
         />
         <Campo

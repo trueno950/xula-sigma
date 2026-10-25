@@ -52,7 +52,7 @@ describe("nombres accesibles de las filas y acciones", () => {
   it("la fila de una calle separa el nombre de la ubicacion", () => {
     const html = renderToStaticMarkup(<TabDeCalles {...base} />);
 
-    expect(html).toContain('aria-label="Calle 20, sin punto"');
+    expect(html).toContain('aria-label="Calle 20, Sin ubicar"');
   });
 
   it("cada accion de Editar lleva su descripcion", () => {

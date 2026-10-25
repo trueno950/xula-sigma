@@ -86,13 +86,11 @@ export function TabDeLugares({
             </FilaDeTabla>
           ))}
         </Tabla>
-      ) : (
+      ) : admiteLugares ? (
         <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
-          {admiteLugares
-            ? `${lugar.nombre} no tiene lugares adentro todavía.`
-            : `Una ${tipoDeLugarEnFrase(lugar.tipo)} es el último nivel: no lleva lugares adentro, solo domicilios.`}
+          {lugar.nombre} no tiene lugares adentro todavía.
         </p>
-      )}
+      ) : null}
 
       {puedeActuar && abierta ? (
         <PanelDeAccion titulo={`Agregar un lugar dentro de ${lugar.nombre}`}>

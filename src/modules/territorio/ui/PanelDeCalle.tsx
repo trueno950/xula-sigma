@@ -64,16 +64,18 @@ export function PanelDeCalle({
           <h2 className="break-words text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
             {calle.nombre}
           </h2>
+          <span className="self-start">
+            <InsigniaDeEstado
+              tono={calle.punto ? "exito" : "aviso"}
+              etiqueta={calle.punto ? "Ubicada" : "Sin ubicar"}
+            />
+          </span>
           {calle.punto ? (
             <p className={CLASES_DE_DATO}>
               {calle.punto.latitud.toFixed(6)},{" "}
               {calle.punto.longitud.toFixed(6)}
             </p>
-          ) : (
-            <span className="self-start">
-              <InsigniaDeEstado tono="aviso" etiqueta="Sin punto" />
-            </span>
-          )}
+          ) : null}
         </div>
         <EnlaceDeAccion href={volver} variante="fantasma">
           <X size={16} weight="bold" aria-hidden="true" />
