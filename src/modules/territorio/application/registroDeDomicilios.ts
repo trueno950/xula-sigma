@@ -57,16 +57,18 @@ export function crearRegistroDeDomicilios(
  * Recorta y descarta los filtros en blanco. No valida `raizId` -eso pasa en
  * el cuerpo del caso de uso, que es donde puede tirar-; y el descarte no es
  * cosmetico: `registroDeDomiciliosSql` lee un filtro vacio como ausente, asi
- * que un numero de solo espacios devolveria el municipio entero en vez de
- * nada.
+ * que un numero o una busqueda de solo espacios devolveria el municipio entero
+ * en vez de nada.
  */
 const normalizarFiltros = (filtros: FiltrosDeRegistro): FiltrosDeRegistro => {
   const calle = filtros.calle?.trim();
   const numero = filtros.numero?.trim();
+  const busqueda = filtros.busqueda?.trim();
 
   return {
     ...(filtros.raizId ? { raizId: filtros.raizId } : {}),
     ...(calle ? { calle } : {}),
     ...(numero ? { numero } : {}),
+    ...(busqueda ? { busqueda } : {}),
   };
 };
