@@ -31,4 +31,6 @@ export { opcionesEtiquetadas } from "./opcionesDeLista";
 export { PaginaDePanel, PantallaDeMensaje } from "./PaginaDePanel";
 export { Panel } from "./Panel";
 export { type Pestana, Pestanas } from "./Pestanas";
+export { SelectorDeDireccion } from "./SelectorDeDireccion";
+export type { OpcionDeDireccion } from "./seleccionDeDireccion";
 export { type ColumnaDeTabla, FilaDeTabla, Tabla } from "./Tabla";
