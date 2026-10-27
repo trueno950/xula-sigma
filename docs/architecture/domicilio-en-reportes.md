@@ -11,6 +11,12 @@ T6a conserva el domicilio elegido como vínculo vivo, no como copia de texto. El
 
 `ayuntamientoId` nunca forma parte de estos datos: se obtiene del `ContextoActual` autenticado. `ReporteGuardado` devuelve `domicilioId` como vínculo opcional; para mostrar el número, la interfaz consulta el domicilio con la API pública tenant-scoped de Territorio. No se duplica el número en `reportes`.
 
+## Captura en reportes (T6b)
+
+El formulario nativo de alta conserva «Lugar y calle» como modo inicial y ofrece «Domicilio registrado» como alternativa interactiva. La búsqueda envía el texto por una Server Action POST autenticada; no usa parámetros GET ni precarga el catálogo. El registro de Territorio limita la lectura al tenant y a domicilios activos, busca por calle, número, colonia o asentamiento, y entrega hasta 15 coincidencias con una indicación para refinar cuando hay más.
+
+La etiqueta muestra calle, número (o «sin número»), colonia cuando aplica y asentamiento. Al elegirla, solo `domicilioId` forma parte del POST de alta; lugar y calle dejan de ser campos exitosos. La alternativa lugar/calle permanece renderizada inicialmente para conservar el alta sin JavaScript y para incidentes en vía pública. Las sugerencias de reportes similares usan el lugar derivado de la dirección seleccionada, sin agregar campos de ubicación al POST.
+
 ## Validación y escritura
 
 1. El puerto de Reportes delega la lectura a `territorio.domicilioPorId`, que aplica el tenant del servidor y solo encuentra domicilios activos.
@@ -24,4 +30,4 @@ Por eso una dirección rechazada no crea reporte, no consume folio y no deja mov
 - `reportes.domicilio_id` admite `NULL`; las filas existentes permanecen sin vínculo y no se backfillean.
 - El FK compuesto apunta a `domicilios(id, ayuntamiento_id)`. Como `domicilios` pertenece a Territorio, el FK se conserva en la migración SQL y no importa su objeto de esquema al módulo Reportes.
 - El vínculo es vivo: una corrección del domicilio se refleja al consultarlo; no se congela una copia ni se altera el ciclo de vida del domicilio.
-- T6a no agrega selector, cambia pantallas, exportaciones ni consulta pública. T6b puede conectar el formulario nativo a este contrato; T7 permanece fuera de alcance.
+- T6a agregó el vínculo opcional sin backfill y no cambió exportaciones ni consulta pública. T6b agrega el selector al alta de reportes; T7 (Constancias/Territorio) permanece fuera de alcance.

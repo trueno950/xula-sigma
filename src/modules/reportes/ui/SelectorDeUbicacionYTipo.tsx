@@ -1,7 +1,15 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { CampoDeLista, type OpcionDeLista } from "@/shared/ui";
+import {
+  CampoDeLista,
+  type OpcionDeLista,
+  SelectorDeDireccion,
+} from "@/shared/ui";
+import {
+  buscarDireccionesAction,
+  type DireccionParaReporte,
+} from "./actions/buscarDireccionesAction";
 import {
   buscarSimilaresAction,
   type ReporteSimilarParaCliente,
@@ -9,6 +17,7 @@ import {
 import { ReportesSimilares } from "./ReportesSimilares";
 
 export type OpcionDeCalle = OpcionDeLista & { lugarId: string };
+type ModoDeUbicacion = "lugar" | "domicilio";
 
 type Props = {
   lugares: readonly OpcionDeLista[];
@@ -16,19 +25,11 @@ type Props = {
   tipos: readonly OpcionDeLista[];
 };
 
-/**
- * La unica isla `"use client"` del modulo (design.md seccion 15,
- * tasks.md 7.8): reacciona a lugar y tipo para disparar el buscador de
- * similares (decision 15 de `proposal.md`) sin recargar la pagina.
- * `descripcion` y `referencia` quedan fuera de esta isla, en el Server
- * Component -es la razon de ser una isla y no un `<form>` GET: un envio GET
- * pondria esos campos en `searchParams`, o sea en el log de acceso del
- * proveedor y en el `Referer`, exactamente lo que la decision 13 protege.
- * Los tres `<select>` conservan su `name` nativo: el envio del formulario
- * sigue siendo el POST nativo de `altaDeReporteAction`.
- */
+/** Isla de selección: las listas nativas siguen enviándose en el POST del formulario padre. */
 export function SelectorDeUbicacionYTipo({ lugares, calles, tipos }: Props) {
+  const [modo, setModo] = useState<ModoDeUbicacion>("lugar");
   const [lugarId, setLugarId] = useState("");
+  const [direccion, setDireccion] = useState<DireccionParaReporte | null>(null);
   const [tipo, setTipo] = useState("");
   const [similares, setSimilares] = useState<
     readonly ReporteSimilarParaCliente[]
@@ -36,20 +37,14 @@ export function SelectorDeUbicacionYTipo({ lugares, calles, tipos }: Props) {
   const [pendiente, iniciarTransicion] = useTransition();
   const idDeConsultaRef = useRef(0);
 
-  /**
-   * Descarta respuestas fuera de orden: una consulta anterior mas lenta
-   * (lugar/tipo ya reemplazados) puede resolver despues de la actual.
-   */
   const buscar = (lugarNuevo: string, tipoNuevo: string) => {
     idDeConsultaRef.current += 1;
-
     if (!lugarNuevo || !tipoNuevo) {
       setSimilares([]);
       return;
     }
 
     const idDeEstaConsulta = idDeConsultaRef.current;
-
     iniciarTransicion(async () => {
       const resultado = await buscarSimilaresAction({
         lugarId: lugarNuevo,
@@ -60,30 +55,85 @@ export function SelectorDeUbicacionYTipo({ lugares, calles, tipos }: Props) {
     });
   };
 
-  const callesDelLugar = calles.filter((calle) => calle.lugarId === lugarId);
+  const cambiarModo = (modoNuevo: ModoDeUbicacion) => {
+    setModo(modoNuevo);
+    setLugarId("");
+    setDireccion(null);
+    buscar("", tipo);
+  };
+
+  const nombresDeLugar = new Map(
+    lugares.map((lugar) => [lugar.valor, lugar.etiqueta]),
+  );
+  const callesDelLugar = lugarId
+    ? calles.filter((calle) => calle.lugarId === lugarId)
+    : calles.map((calle) => ({
+        ...calle,
+        etiqueta: `${calle.etiqueta} — ${nombresDeLugar.get(calle.lugarId) ?? "Su asentamiento"}`,
+      }));
 
   return (
     <div className="flex flex-col gap-4">
-      <CampoDeLista
-        id="reporte-lugar-id"
-        name="lugarId"
-        etiqueta="Lugar"
-        marcador="Seleccione un lugar"
-        opciones={lugares}
-        onChange={(evento) => {
-          setLugarId(evento.target.value);
-          buscar(evento.target.value, tipo);
-        }}
-      />
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-[13px] font-medium leading-tight text-caliza-apagada">
+          Forma de indicar la ubicación
+        </legend>
+        <label className="flex min-h-11 items-center gap-2 text-[15px] text-caliza-tinta">
+          <input
+            type="radio"
+            name="modoUbicacion"
+            value="lugar"
+            checked={modo === "lugar"}
+            onChange={() => cambiarModo("lugar")}
+          />
+          Lugar y calle
+        </label>
+        <label className="flex min-h-11 items-center gap-2 text-[15px] text-caliza-tinta">
+          <input
+            type="radio"
+            name="modoUbicacion"
+            value="domicilio"
+            checked={modo === "domicilio"}
+            onChange={() => cambiarModo("domicilio")}
+          />
+          Domicilio registrado
+        </label>
+      </fieldset>
 
-      <CampoDeLista
-        id="reporte-calle-id"
-        name="calleId"
-        etiqueta="Calle"
-        marcador="Ninguna"
-        opcional
-        opciones={callesDelLugar}
-      />
+      {modo === "lugar" ? (
+        <>
+          <CampoDeLista
+            id="reporte-lugar-id"
+            name="lugarId"
+            etiqueta="Lugar"
+            marcador="Seleccione un lugar"
+            opciones={lugares}
+            onChange={(evento) => {
+              setLugarId(evento.target.value);
+              buscar(evento.target.value, tipo);
+            }}
+          />
+          <CampoDeLista
+            key={lugarId}
+            id="reporte-calle-id"
+            name="calleId"
+            etiqueta="Calle"
+            marcador="Ninguna"
+            opcional
+            opciones={callesDelLugar}
+          />
+        </>
+      ) : (
+        <SelectorDeDireccion<DireccionParaReporte>
+          id="reporte-direccion"
+          nombre="domicilioId"
+          buscar={buscarDireccionesAction}
+          onSeleccionar={(seleccionada) => {
+            setDireccion(seleccionada);
+            buscar(seleccionada?.lugarId ?? "", tipo);
+          }}
+        />
+      )}
 
       <CampoDeLista
         id="reporte-tipo"
@@ -92,8 +142,12 @@ export function SelectorDeUbicacionYTipo({ lugares, calles, tipos }: Props) {
         marcador="Seleccione un tipo"
         opciones={tipos}
         onChange={(evento) => {
-          setTipo(evento.target.value);
-          buscar(lugarId, evento.target.value);
+          const tipoNuevo = evento.target.value;
+          setTipo(tipoNuevo);
+          buscar(
+            modo === "domicilio" ? (direccion?.lugarId ?? "") : lugarId,
+            tipoNuevo,
+          );
         }}
       />
 

@@ -74,18 +74,23 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   guardados en un asentamiento que tiene colonias, sin moverlos. Commit:
   `f6da9ec`. Verificado en navegador (L7): sin colonia elegida
   rechaza y no escribe; con «Sin colonia» escribe y confirma.
-- [ ] **T6** · S5,S7 · delegado — En curso en `feat/reportes-selector-de-direccion`.
-  `SelectorDeDireccion`: buscador de direcciones registradas, usado primero
-  por el alta de reporte. Se completa con T6a y T6b. Commit:
+- [x] **T6** · S5,S7 · delegado — Implementado y verificado en
+  `feat/reportes-selector-de-direccion`: buscador de direcciones registradas
+  para el alta de reporte. T6a: `0d34bec`; T6b: `12d6377`, `d32456a` y
+  el commit de integración identificado en L21. Sin publicar.
 - [x] **T6a** · S7 · delegado — Vínculo opcional de reporte a domicilio,
   migración aditiva 0021 y validación autoritativa bajo tenant antes del
   folio; alternativa lugar/calle preservada. RED observado; GREEN: 18
   unitarios y 8 integración/aislamiento. Verificación independiente S7 met,
   sin bloqueantes; spot check del padre 18/18. Risk: item 1 (formato
-  persistido) y item 2 (validación de tenant). Commit: pendiente de registrar.
-- [ ] **T6b** · S5,S7 · delegado — Pendiente: selector reutilizable de
-  dirección escrita con búsqueda, conectado al formulario nativo de reporte
-  sin retirar la captura por lugar/calle. Commit:
+  persistido) y item 2 (validación de tenant). Commit: `0d34bec`.
+- [x] **T6b** · S5,S7 · delegado — Selector reutilizable y búsqueda
+  integrados en el alta de reportes. Verificación independiente, suite
+  completa (2375 tests) y ambos E2E finales aprobados (L16/L18), incluyendo
+  vínculo/número, similares, respuestas obsoletas y alternativa sin JS.
+  Commits: `12d6377` (búsqueda), `d32456a` (selector) y el commit
+  `feat(reportes): integra direcciones en el alta nativa` que contiene
+  este cierre (L21). No publicado; T7 queda fuera de este cierre.
 - [ ] **T7** · S5 · delegado — Constancias y Territorio usan el mismo
   selector; el árbol queda como administración. Commit:
 
@@ -206,3 +211,135 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   se vuelve a validar en servidor, nunca se confía en IDs del navegador.
   T6a precede a T6b para separar la migración de la UI. T7 sigue fuera de
   este slice.
+- **L12** — T6a: commit `0d34bec`. RED observado por el escritor: 6 fallos
+  de domicilio ignorado/no validado. GREEN: 18 unitarios y 8 tests de
+  integración/aislamiento contra `xula_test`; typecheck y reglas aprobados.
+  Verificador independiente: S7 met, sin bloqueantes; spot check del padre
+  18/18. Migración 0021 aplicada solo al entorno de prueba. El hook halló
+  formato e imports sin uso, corregidos sin cambiar comportamiento; el
+  commit-msg exigió partir el cuerpo a 100 caracteres. Ambos hooks pasaron
+  finalmente. ASSESS: nativeRisk medium, reviewDue false; escalado por item 2
+  para exigir la verificación independiente ya completada. Snapshot Drizzle
+  generado (~3880 líneas); el cambio manual ocupa aproximadamente 700 líneas
+  entre producción, pruebas y documentación. Esta es la frontera de la unidad
+  persistida; T6b va en su propio commit sin modificar la migración.
+- **L13** — T6b parcial, sin commit. Primer retorno del escritor pidió
+  restituir la lista de superficies pese a estar incluida en la delegación
+  original; se restableció ese contexto sin ampliar permisos. Continuación
+  acotada: `pnpm check` exit 0; unitarios enfocados 6 archivos/23 tests;
+  integración e aislamiento de búsqueda 2 archivos/13 tests en verde contra
+  `xula_test`. RED histórico de T6b no recuperable tras compactación, no se
+  considera evidencia observada. Playwright con build nuevo y puerto 3106
+  ejecutó 2 tests y ambos fallaron: (1) la fixture inserta un reporte similar
+  sin avanzar el contador, por lo que el alta colisiona con
+  `reportes_serie_idx` (SQLSTATE `23505`); (2) `getByLabel("Calle")` coincide
+  con radio «Lugar y calle» y select «Calle». Faltan guardar/leer el vínculo
+  y número desde navegador y completar el camino sin JavaScript. No se
+  declara error productivo demostrado ni éxito del recorrido. Se solicita
+  decisión sobre otra corrección limitada a la fixture y al locator más la
+  repetición del E2E. No se ejecuta otra verificación como sustituto de esa
+  prueba fallida. `next-env.d.ts` regenerado por Next se devolvió a sus dos
+  imports originales; no cambia como parte de T6. T6a sigue en `0d34bec`,
+  sin publicar; T6b y estas notas quedan en el árbol de trabajo. T7 no se
+  inició. El diagnóstico de servidor viejo de L7 es una hipótesis histórica,
+  no causalidad probada por el nuevo resultado exitoso de aquel test.
+- **L14** — El usuario respondió «si» a la corrección adicional limitada a
+  fixture de folio y locator. Se cambió la fixture para registrar el reporte
+  similar mediante `registrarReporte` y obtener su folio, y el locator a
+  `getByLabel("Calle", { exact: true })`. Biome sobre ambos archivos pasó.
+  La única ejecución de Playwright autorizada salió con exit 1: build y
+  servidor arrancaron, pero importar el caso de uso desde la fixture arrastra
+  UI y Node no resuelve `next/link`, vía `src/shared/ui/Boton.tsx`.
+  Después informó «No tests found»: cero pruebas de navegador ejecutadas.
+  Es un defecto nuevo introducido por la corrección del andamiaje, no un
+  fallo productivo demostrado. Sin reintentos ni ampliación de superficies.
+  Pendiente decisión para reemplazar esa importación por una preparación
+  compatible con el runner (manteniendo contador y folio sincronizados) y
+  repetir los dos tests. `next-env.d.ts` restaurado por el padre; T6b sigue
+  sin commit. T6a y T7 sin cambios.
+- **L15** — El usuario autorizó «si» a reemplazar la importación incompatible
+  de la fixture y repetir E2E. El padre usó SQL transaccional de andamiaje
+  con rol de aplicación y tenant fijado, sincronizando contador/reporte;
+  sin imports de composición ni cambios productivos de persistencia. Biome
+  pasó. Job-6: exit 1, un test aprobado (vínculo/número real guardado,
+  sugerencias y búsquedas obsoletas) y otro con timeout de 30 s, no aprobado.
+  Snapshot del segundo muestra colonia seleccionada y select de calle con
+  solo «Ninguna». La versión base `3f57911` también filtraba las calles por
+  estado JS inicial vacío: fallo previo, no regresión atribuida al selector
+  nuevo. El usuario pidió «Review the delivered subagent output and
+  continue.». Se fijó la regla no-JS mediante un test de HTML inicial: RED
+  observado (no existía `value="calle-1"`), luego GREEN 3/3. El selector
+  inicial ofrece calles rotuladas con su lugar; con JS y lugar elegido
+  mantiene el filtro existente. No agrega estado ni dependencias, y la
+  validación autoritativa del servidor no cambia. Job-7 ejecuta E2E sobre
+  este nuevo candidato y terminó exit 0: ambos tests aprobaron. Se corrigió
+  también el formato del test reportado por Biome. El servidor emitió
+  `The destination stream closed early` durante el primer test; se conserva
+  como diagnóstico no fatal, sin afirmar resuelto su origen. Verificación
+  independiente y suite completa todavía pendientes.
+- **L16** — Verificación independiente T6b: 24 unitarios y 13 de integración/
+  aislamiento aprobados; S7 cumplido. Pidió probar explícitamente límites
+  120/121 y ausencia de nombres del otro tenant en etiquetas (sin bug
+  productivo reproducido). Se agregaron esas aserciones. Reverificación
+  acotada: 5/5 del action aprobados; S5 queda condicionado a la suite final
+  del padre. El `pnpm check` del verificador llegó a tipos/dependencias, pero
+  `reglas` no corrió por faltar `.git` en su copia aislada; no fue aprobación
+  del check completo. Su reporte inicial de limpieza `TRUNCATE` se corrigió:
+  era teardown existente de fixtures desechables de `xula_test`, no datos
+  vivos ni bloqueo del producto; no se intentó restauración.
+- **L17** — Job-8: `pnpm check` falló por dos métricas reales; no llegó a
+  ejecutar la suite completa. Archivo de aislamiento de 206 líneas tras
+  agregar aserciones y helper de búsqueda con 4 argumentos. Se extrajo la
+  fixture de colonia a `direccionConColoniaDePrueba.ts` y se agruparon los
+  argumentos del helper en un objeto. Separar programación de búsqueda y
+  construcción de errores mantiene también funciones acotadas sin cambiar
+  debounce, cancelación o respuestas obsoletas. Job-9 ejecuta check y suite
+  completa con cobertura sobre `xula_test`; pendiente. Debe comprobarse
+  nuevamente el E2E tras este refactor mecánico. El diff T6b tiene mucho
+  andamiaje de prueba: se registrará en unidades separadas de búsqueda,
+  selector reutilizable y conexión al formulario, no un solo commit grande.
+  No se publica T6 ni se inicia T7.
+- **L18** — Job-9 exit 0: `pnpm check` completo aprobado (Biome conserva 54
+  warnings y 2 infos), 463 archivos/2375 tests aprobados con cobertura:
+  statements 95.95%, branches 91.3%, functions 97.43%, lines 97.13%.
+  Cierra la condición pendiente de S5 del verificador; S7 ya cumplía.
+  Job-10 exit 0: ambos E2E finales aprobaron tras el refactor del hook,
+  incluyendo descarte de respuestas obsoletas y alta sin JS. Persiste el
+  diagnóstico no fatal `The destination stream closed early`; no se afirma
+  resuelto. No hubo pruebas ni migraciones en producción o `xula_dev`.
+  Se restauró exclusivamente el cambio generado de `next-env.d.ts`.
+  Tras una partición honesta, T6b requiere tres unidades cohesionadas:
+  búsqueda tenant-scoped (594 líneas de diff), selector reutilizable (358)
+  e integración con formulario/E2E/documentación (775 antes de esta nota).
+  No se recortan pruebas ni comentarios para ajustar el presupuesto de ~400.
+  Se pide decisión explícita para aceptar el exceso antes de registrar los
+  commits; no se publica ni se inicia T7. El último pedido fue «Review the
+  delivered subagent output and continue.».
+
+- **L19** — El usuario autorizó «dale con la recomendacion»: cerrar T6b
+  en tres unidades cohesionadas de búsqueda tenant-scoped, selector compartido
+  e integración/formulario/E2E/documentación, aceptando el tamaño indicado en
+  L18. Se conservan los hooks activos y la evidencia funcional de L18; no se
+  repite la suite completa sin cambios de comportamiento. No se publica ni
+  se inicia T7 en este cierre. Commits y evaluación de cada unidad: en curso.
+- **L20** — Primera unidad registrada en `12d6377`: búsqueda autenticada
+  tenant-scoped, 594 líneas de diff. Hooks de Biome, tipos, reglas y mensaje
+  aprobados; `vitest related` no seleccionó tests. El primer intento falló
+  únicamente por un salto de línea literal en el mensaje; se corrigió sin
+  tocar código ni omitir hooks. ASSESS de esta unidad contra `0d34bec`
+  no disponible (`nativeRisk: unassessable`): exige declarar los archivos
+  nuevos de las otras unidades, que quedaron sin staging al partirlas.
+  No es un veredicto ni aprobación nativa; se conserva la verificación
+  independiente y funcional de L16/L18. Selector e integración pendientes
+  en ese momento; el cierre posterior se registra en L21.
+- **L21** — Selector compartido registrado en `d32456a`, 358 líneas:
+  hooks aprobados (sin tests seleccionados por `vitest related`), ASSESS
+  contra `12d6377`: riesgo medio, `reviewDue: false` (`under_budget`).
+  La tercera unidad se identifica por su asunto Git exacto
+  `feat(reportes): integra direcciones en el alta nativa`; contiene formulario,
+  Server Action de alta, pruebas de unidad/E2E, documentación y este cierre.
+  La evidencia funcional es L18; esta continuación solo registra los mismos
+  bytes productivos, sin repetir ni inventar RED/GREEN o pruebas de navegador.
+  Risk: item 2 (búsqueda autenticada y aislamiento de tenant); verificación
+  independiente completada en L16 y suite/E2E finales en L18. T7 no se inicia,
+  no se publica y no se aplican migraciones en este cierre.
