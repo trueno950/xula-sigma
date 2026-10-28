@@ -41,8 +41,9 @@ export async function altaDeReporteAction(formData: FormData): Promise<void> {
     descripcion: formData.get("descripcion"),
     referencia: formData.get("referencia") || undefined,
     tipo: formData.get("tipo"),
-    lugarId: formData.get("lugarId"),
+    lugarId: formData.get("lugarId") || undefined,
     calleId: formData.get("calleId") || undefined,
+    domicilioId: formData.get("domicilioId") || undefined,
     personaId: formData.get("personaId") || undefined,
   });
 
@@ -61,8 +62,15 @@ export async function altaDeReporteAction(formData: FormData): Promise<void> {
     id = await registrarReporte(
       {
         tipo: analisis.data.tipo,
-        lugarId: analisis.data.lugarId,
-        calleId: analisis.data.calleId ?? null,
+        ...(analisis.data.lugarId ? { lugarId: analisis.data.lugarId } : {}),
+        ...(analisis.data.calleId
+          ? { calleId: analisis.data.calleId }
+          : analisis.data.domicilioId
+            ? {}
+            : { calleId: null }),
+        ...(analisis.data.domicilioId
+          ? { domicilioId: analisis.data.domicilioId }
+          : {}),
         referencia: analisis.data.referencia ?? null,
         descripcion: analisis.data.descripcion,
         personaId: analisis.data.personaId ?? null,

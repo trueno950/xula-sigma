@@ -58,6 +58,7 @@ export type FiltrosDeRegistro = {
   readonly raizId?: LugarId;
   readonly calle?: string;
   readonly numero?: string;
+  readonly busqueda?: string;
 };
 
 export type OpcionesDeRegistro = {
@@ -79,6 +80,8 @@ export type DomicilioDelRegistro = {
    * la fila no podia ofrecer su enlace.
    */
   raizId: LugarId;
+  /** Nombre de la raiz, presente en el registro del selector de reportes. */
+  raiz?: string;
 };
 
 /**

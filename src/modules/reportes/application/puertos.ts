@@ -36,6 +36,7 @@ export type DatosDeRegistroDeReporte = {
   areaResponsable: AreaResponsable | null;
   lugarId: string;
   calleId: string | null;
+  domicilioId: string | null;
   referencia: string | null;
   descripcion: string;
   personaId: string | null;
@@ -51,6 +52,7 @@ export type ReporteGuardado = {
   areaResponsable: AreaResponsable | null;
   lugarId: string;
   calleId: string | null;
+  domicilioId?: string | null;
   referencia: string | null;
   descripcion: string;
   personaId: string | null;

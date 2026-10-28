@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+import { accederAMotul } from "./acceder";
+import { liberarVentanaDeRitmo } from "./calles.fixture";
 import { CLAVE, CORREO, MUNICIPIOS, urlDe, urlDeLaRaiz } from "./municipios";
 
 /**
@@ -103,6 +105,65 @@ test("un rechazo anterior no convive con el error de validacion nuevo", async ({
  */
 const filtraLaClave = (url: string) =>
   url.includes(CLAVE) || url.includes(encodeURIComponent(CORREO));
+
+const esSolicitudDeAcceso = (
+  solicitud: { url(): string; method(): string },
+  endpoint: string,
+) => solicitud.method() === "POST" && solicitud.url() === endpoint;
+
+const esperarAcceso = (page: Page, endpoint: string) =>
+  page.waitForResponse((respuesta) =>
+    esSolicitudDeAcceso(respuesta.request(), endpoint),
+  );
+
+async function agotarVentanaDeRitmo(
+  page: Page,
+  endpoint: string,
+): Promise<void> {
+  await liberarVentanaDeRitmo();
+  await page.goto(urlDe("motul", "/acceso"));
+
+  let ventanaAgotada = false;
+  for (let intento = 0; intento < 10 && !ventanaAgotada; intento++) {
+    const respuesta = esperarAcceso(page, endpoint);
+    await page.getByLabel("Correo").fill(CORREO);
+    await page.getByLabel("Contraseña").fill("clave-larga-y-equivocada");
+    await page.getByRole("button", { name: "Entrar" }).click();
+    const estado = (await respuesta).status();
+    if (estado === 429) {
+      ventanaAgotada = true;
+      break;
+    }
+    expect(estado).toBe(401);
+  }
+  expect(ventanaAgotada).toBe(true);
+}
+
+async function verificarAccesoUnico(
+  page: Page,
+  endpoint: string,
+): Promise<void> {
+  let solicitudesDeAcceso = 0;
+  page.on("request", (solicitud) => {
+    if (esSolicitudDeAcceso(solicitud, endpoint)) solicitudesDeAcceso++;
+  });
+
+  const acceso = accederAMotul(page).then(
+    () => null,
+    (error: unknown) => error,
+  );
+  try {
+    const respuesta = await esperarAcceso(page, endpoint);
+    expect(respuesta.status()).toBe(200);
+    const error = await acceso;
+    if (error) throw error;
+    expect(solicitudesDeAcceso).toBe(1);
+    expect(page.url()).toBe(urlDe("motul"));
+  } finally {
+    if (!page.isClosed()) await page.close();
+    await acceso;
+  }
+}
 
 test("sin JavaScript, Enter no envia el formulario de acceso", async ({
   browser,
@@ -223,4 +284,12 @@ test("las cookies quedan acotadas a su subdominio", async ({ page }) => {
   for (const cookie of cookies) {
     expect(cookie.domain).toContain(MUNICIPIOS.motul.subdominio);
   }
+});
+
+test("el helper accede con una ventana de ritmo de pruebas ya agotada", async ({
+  page,
+}) => {
+  const endpoint = urlDe("motul", "/api/auth/sign-in/email");
+  await agotarVentanaDeRitmo(page, endpoint);
+  await verificarAccesoUnico(page, endpoint);
 });

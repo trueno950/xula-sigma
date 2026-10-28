@@ -17,6 +17,7 @@ export const aReporteGuardado = (
   areaResponsable: fila.areaResponsable,
   lugarId: fila.lugarId,
   calleId: fila.calleId,
+  domicilioId: fila.domicilioId,
   referencia: fila.referencia,
   descripcion: fila.descripcion,
   personaId: fila.personaId,

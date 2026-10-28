@@ -14,6 +14,7 @@ export const reporteDe = (opciones: {
   ayuntamientoId: typeof motul;
   lugarId: string;
   calleId?: string | null;
+  domicilioId?: string | null;
   personaId?: string | null;
   registradoPorUsuarioId: string;
   folio: string;
@@ -34,6 +35,7 @@ export const reporteDe = (opciones: {
   estado: opciones.estado ?? "RECIBIDO",
   lugarId: opciones.lugarId,
   calleId: opciones.calleId ?? null,
+  domicilioId: opciones.domicilioId ?? null,
   referencia: null,
   descripcion: "Bache grande frente al parque principal",
   personaId: opciones.personaId ?? null,

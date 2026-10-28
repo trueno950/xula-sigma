@@ -49,6 +49,38 @@ describe("esquemaDeReporte", () => {
     expect(resultado.success).toBe(false);
   });
 
+  it("acepta un domicilio con lugar y calle derivados por el servidor", () => {
+    const domicilioId = "22222222-2222-4222-8222-222222222222";
+    const resultado = esquemaDeReporte.safeParse({
+      descripcion: valido.descripcion,
+      tipo: valido.tipo,
+      domicilioId,
+    });
+
+    expect(resultado).toMatchObject({
+      success: true,
+      data: { domicilioId },
+    });
+  });
+
+  it("rechaza el alta sin domicilio ni lugar", () => {
+    const resultado = esquemaDeReporte.safeParse({
+      descripcion: valido.descripcion,
+      tipo: valido.tipo,
+    });
+
+    expect(resultado.success).toBe(false);
+  });
+
+  it("rechaza un domicilioId que no es UUID", () => {
+    const resultado = esquemaDeReporte.safeParse({
+      ...valido,
+      domicilioId: "no-es-un-uuid",
+    });
+
+    expect(resultado.success).toBe(false);
+  });
+
   it("acepta calleId, personaId y referencia corta como opcionales", () => {
     const resultado = esquemaDeReporte.safeParse({
       ...valido,

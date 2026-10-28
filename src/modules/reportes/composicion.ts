@@ -13,6 +13,7 @@ import {
   crearReporteExisteEnTransaccion,
   crearReportePorId,
 } from "./application";
+import { crearBuscarDireccionesParaReporte } from "./application/buscarDireccionesParaReporte";
 import {
   contadorDeFoliosSql,
   crearLectorDeReportantesPorPadron,
@@ -21,7 +22,13 @@ import {
   registroDeMovimientosSql,
   repositorioDeReportesSql,
 } from "./infrastructure";
+import { buscadorDeDireccionesPorTerritorio } from "./infrastructure/buscadorDeDireccionesPorTerritorio";
 import { movimientosDeReportes, reportes } from "./infrastructure/esquema";
+import { crearLectorDeDomiciliosPorTerritorio } from "./infrastructure/lectorDeDomiciliosPorTerritorio";
+
+export const buscarDireccionesParaReporte = crearBuscarDireccionesParaReporte(
+  buscadorDeDireccionesPorTerritorio,
+);
 
 export const registrarReporte = crearRegistrarReporte({
   repositorio: repositorioDeReportesSql,
@@ -29,6 +36,7 @@ export const registrarReporte = crearRegistrarReporte({
   movimientos: registroDeMovimientosSql,
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
   crearLecturaDeReportantes: crearLectorDeReportantesPorPadron,
+  crearLecturaDeDomicilios: crearLectorDeDomiciliosPorTerritorio,
 });
 export const reportePorId = crearReportePorId(repositorioDeReportesSql);
 export const reporteExisteEnTransaccion = crearReporteExisteEnTransaccion(
