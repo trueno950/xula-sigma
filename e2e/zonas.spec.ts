@@ -20,12 +20,6 @@ test.beforeAll(async () => {
   escenario = await prepararEscenario({ tipoDeRaiz: "comisaria" });
 });
 
-/**
- * El limitador de accesos vive en memoria del proceso -vaciarlo en la base
- * no alcanza- y la corrida completa gasta intentos del mismo correo antes
- * de llegar aca. `accederAMotul` reintenta por eso; el `TRUNCATE` de
- * `liberarVentanaDeRitmo` sigue de apoyo, igual que en `marca.spec.ts`.
- */
 test.beforeEach(liberarVentanaDeRitmo);
 
 const nombreDeZona = () => `Zona E2E ${escenario.origenId.slice(0, 8)}`;
