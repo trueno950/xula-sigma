@@ -79,7 +79,7 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - [x] **T6** · S5,S7 · delegado — Implementado y verificado en
   `feat/reportes-selector-de-direccion`: buscador de direcciones registradas
   para el alta de reporte. T6a: `0d34bec`; T6b: `12d6377`, `d32456a` y
-  el commit de integración identificado en L21. Sin publicar.
+  el commit de integración `2db9ef0`. Publicado en PR #108; corrección del arnés en T6c.
 - [x] **T6a** · S7 · delegado — Vínculo opcional de reporte a domicilio,
   migración aditiva 0021 y validación autoritativa bajo tenant antes del
   folio; alternativa lugar/calle preservada. RED observado; GREEN: 18
@@ -92,8 +92,8 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   vínculo/número, similares, respuestas obsoletas y alternativa sin JS.
   Commits: `12d6377` (búsqueda), `d32456a` (selector) y el commit
   `feat(reportes): integra direcciones en el alta nativa` que contiene
-  este cierre (L21). No publicado; T7 queda fuera de este cierre.
-- [x] **T6c** · S8 · delegado — Acceso E2E corregido: bucket de prueba aislado y un POST coordinado con respuesta/navegación; regresión permanente del waiter conserva error original y cero POST ante fill fallido. RED/GREEN observados; independiente 18 aprobados previos más reverificación limitada 1/1 y spot check final del padre exit 0 (L27-L30). Risk: item 4. Commit: pendiente de registro, asunto `fix(auth): coordina un solo acceso sin esperas huerfanas`.
+  este cierre (L21). Publicado en PR #108; T7 queda fuera de este cierre.
+- [x] **T6c** · S8 · delegado — Acceso E2E corregido: bucket de prueba aislado y un POST coordinado con respuesta/navegación; regresión permanente del waiter conserva error original y cero POST ante fill fallido. RED/GREEN observados; independiente 18 aprobados previos más reverificación limitada 1/1 y spot check final del padre exit 0 (L27-L30). Risk: item 4. Commit: `ae11d9eab4b1bd548328105b1f50c00086a127ff`.
 - [ ] **T7** · S5 · delegado — Constancias y Territorio usan el mismo
   selector; el árbol queda como administración. Commit:
 
@@ -364,3 +364,5 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - **L30** — Spot check final del padre job-12 exit 0: pnpm check completo, 54 warnings y 2 infos existentes, typecheck/capas/reglas aprobados. T6c/S8 verificado y marcado completo como implementación; el registro/publicación pasa a la tarea de entrega del PR #108. La nueva unidad incluye arnés, regresiones y estas notas; asunto de commit `fix(auth): coordina un solo acceso sin esperas huerfanas`, sin reescribir los cuatro commits revisados. SHA se registra después del commit. ASSESS de la unidad: nativeRisk medium, reviewDue false/under_budget, item 4 con independiente completada; no se inició otra revisión nativa. Publicación/CI pendientes, sin merge ni T7.
 
 - **L31** — Primer intento de registro job-13 rechazado únicamente por commitlint: `e2e` no es un scope permitido. Los hooks previos llegaron a reglas sin hallazgos; no hubo commit ni push. Se corrige el scope del mensaje a `auth`, permitido por la política del repositorio, sin modificar los bytes del arnés/pruebas ni omitir hooks. No es un fallo funcional ni invalida la verificación de T6c.
+
+- **L32** — T6c registrado en `ae11d9eab4b1bd548328105b1f50c00086a127ff` (`fix(auth): coordina un solo acceso sin esperas huerfanas`): 6 archivos, 294 líneas de diff; hooks de Biome, tipos, reglas y commitlint aprobados. La selección relacionada de Vitest no constituye una nueva suite completa. Árbol limpio al terminar job-15; se actualiza ahora únicamente esta evidencia para registrar el SHA antes de publicar. No se modifica código ni se reescribe historial. Push y CI del nuevo head pendientes; las aprobaciones nativas previas siguen ligadas a sus cuatro commits originales.
