@@ -5,8 +5,8 @@ import { comoLugarId, NombreDeZonaDuplicadoError } from "../domain";
 import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
 import type { RepositorioDeAdministracionDeZonas } from "./puertosDeAdministracionDeZonas";
 
-/** Solo `buscarPorId`: el caso de uso no necesita el resto del puerto. */
-type RepositorioDeZonasPorId = Pick<RepositorioDeLugares, "buscarPorId">;
+/** Solo `bloquearPorId`: el caso de uso no necesita el resto del puerto. */
+type RepositorioDeZonasPorId = Pick<RepositorioDeLugares, "bloquearPorId">;
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -62,7 +62,7 @@ describe("alta de zona", () => {
   it("rechaza a quien no administra territorio", async () => {
     const repositorio = repositorioDeZonas();
     const repositorioDeLugares = (): RepositorioDeZonasPorId => ({
-      buscarPorId: vi.fn(),
+      bloquearPorId: vi.fn(),
     });
 
     await expect(
@@ -78,7 +78,7 @@ describe("alta de zona", () => {
   it("rechaza un lugarId inexistente o de otro tenant", async () => {
     const repositorio = repositorioDeZonas();
     const repositorioDeLugares = (): RepositorioDeZonasPorId => ({
-      buscarPorId: vi.fn().mockResolvedValue(null),
+      bloquearPorId: vi.fn().mockResolvedValue(null),
     });
 
     await expect(
@@ -93,7 +93,7 @@ describe("alta de zona", () => {
   it("rechaza un lugar que no es asentamiento", async () => {
     const repositorio = repositorioDeZonas();
     const repositorioDeLugares = (): RepositorioDeZonasPorId => ({
-      buscarPorId: vi.fn().mockResolvedValue({
+      bloquearPorId: vi.fn().mockResolvedValue({
         ...asentamiento,
         tipo: "colonia",
       }),
@@ -116,7 +116,7 @@ describe("alta de zona", () => {
       lugarId,
     });
     const repositorioDeLugares = (): RepositorioDeZonasPorId => ({
-      buscarPorId: vi.fn().mockResolvedValue(asentamiento),
+      bloquearPorId: vi.fn().mockResolvedValue(asentamiento),
     });
 
     await expect(
@@ -131,7 +131,7 @@ describe("alta de zona", () => {
   it("crea la zona y deja bitacora de ids", async () => {
     const repositorio = repositorioDeZonas();
     const repositorioDeLugares = (): RepositorioDeZonasPorId => ({
-      buscarPorId: vi.fn().mockResolvedValue(asentamiento),
+      bloquearPorId: vi.fn().mockResolvedValue(asentamiento),
     });
 
     const { id } = await crearAltaDeZona(repositorio, repositorioDeLugares())(

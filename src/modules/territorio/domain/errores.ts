@@ -1,6 +1,6 @@
 /**
- * `darDeBajaLugar` rechaza si el lugar tiene hijos activos o domicilios
- * colgados (design.md seccion 8). No es un FK: la baja es logica y
+ * `darDeBajaLugar` rechaza si el lugar tiene hijos, domicilios, calles o
+ * zonas activas (design.md seccion 8). No es un FK: la baja es logica y
  * Postgres no la ve como un DELETE, asi que `ON DELETE RESTRICT` no
  * aplica — la regla vive aca, no en el esquema.
  */
@@ -58,8 +58,8 @@ export class JerarquiaInvalidaError extends Error {
 /**
  * `altaDeLugar` rechaza una segunda cabecera: `lugares_una_cabecera` es un
  * indice unico parcial por municipio (`ayuntamiento_id` con `tipo =
- * 'cabecera'`), y `repositorioDeLugaresSql.crear` traduce su violacion
- * (SQLSTATE `23505`). El indice cuenta tambien la cabecera dada de baja.
+ * 'cabecera'` y `baja_en IS NULL`), y `repositorioDeLugaresSql.crear`
+ * traduce su violacion (SQLSTATE `23505`). Una dada de baja no cuenta.
  */
 export class CabeceraDuplicadaError extends Error {
   readonly codigo = "CABECERA_DUPLICADA";

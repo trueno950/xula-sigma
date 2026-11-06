@@ -4,16 +4,21 @@ import {
   CatalogoDeCallesSoloEnAsentamientosError,
   comoLugarId,
 } from "../domain";
-import type {
-  LugarGuardado,
-  RepositorioDeCalles,
-  RepositorioDeLugares,
-} from "./puertos";
+import type { LugarGuardado, RepositorioDeCalles } from "./puertos";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/tenancy/withTenant", () => ({
   withTenant: withTenantMock,
+}));
+
+vi.mock("@/shared/notificaciones/notificar", () => ({
+  publicarActualizacion: vi.fn(),
+}));
+
+vi.mock("@/shared/tenancy/bitacora", () => ({
+  registrar: vi.fn(),
 }));
 
 const { crearAltaDeCalle } = await import("./altaDeCalle");
@@ -47,17 +52,7 @@ describe("altaDeCalle hierarchy boundary", () => {
     registrarEventoDeReparenteo: vi.fn(),
     registrarEventoDeUbicacion: vi.fn(),
   };
-  const repositorioDeLugares: RepositorioDeLugares = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    actualizar: vi.fn(),
-    contarHijosActivos: vi.fn(),
-    contarDomiciliosColgados: vi.fn(),
-    subarbol: vi.fn(),
-    listarRaices: vi.fn(),
-    listarLugares: vi.fn(),
-    existeCabecera: vi.fn(),
-  };
+  const repositorioDeLugares = crearRepositorioDeLugaresFalso();
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -83,4 +78,18 @@ describe("altaDeCalle hierarchy boundary", () => {
       expect(repositorio.crear).not.toHaveBeenCalled();
     });
   }
+
+  it("bloquea la fila del asentamiento, para serializarse con su baja", async () => {
+    vi.mocked(repositorioDeLugares.buscarPorId).mockResolvedValue(lugar);
+
+    await crearAltaDeCalle(repositorio, repositorioDeLugares)(
+      { nombre: "Calle 21", lugarId },
+      contexto,
+    );
+
+    expect(repositorioDeLugares.bloquearPorId).toHaveBeenCalledWith(
+      expect.anything(),
+      lugarId,
+    );
+  });
 });

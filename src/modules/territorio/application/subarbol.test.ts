@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { comoLugarId } from "../domain";
-import type { NodoDeSubarbol, RepositorioDeLugares } from "./puertos";
+import type { NodoDeSubarbol } from "./puertos";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 
@@ -31,17 +32,7 @@ const nodos: readonly NodoDeSubarbol[] = [
 ];
 
 describe("subarbol", () => {
-  const repositorio: RepositorioDeLugares = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    actualizar: vi.fn(),
-    contarHijosActivos: vi.fn(),
-    contarDomiciliosColgados: vi.fn(),
-    subarbol: vi.fn(),
-    listarRaices: vi.fn(),
-    listarLugares: vi.fn(),
-    existeCabecera: vi.fn(),
-  };
+  const repositorio = crearRepositorioDeLugaresFalso();
 
   beforeEach(() => {
     vi.clearAllMocks();

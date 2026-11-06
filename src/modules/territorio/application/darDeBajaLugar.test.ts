@@ -3,7 +3,11 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoLugarId } from "../domain";
 import { LugarConDependientesError } from "../domain/errores";
-import type { RepositorioDeLugares } from "./puertos";
+import {
+  LugarConCallesError,
+  LugarConZonasError,
+} from "../domain/erroresDeLugares";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -29,24 +33,14 @@ const contextoCon = (
 const coloniaId = comoLugarId("11111111-1111-4111-8111-111111111111");
 
 describe("darDeBajaLugar", () => {
-  const repositorio: RepositorioDeLugares = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    actualizar: vi.fn(),
-    contarHijosActivos: vi.fn(),
-    contarDomiciliosColgados: vi.fn(),
-    subarbol: vi.fn(),
-    listarRaices: vi.fn(),
-    listarLugares: vi.fn(),
-    existeCabecera: vi.fn(),
-  };
+  const repositorio = crearRepositorioDeLugaresFalso();
 
   beforeEach(() => {
     vi.clearAllMocks();
     withTenantMock.mockImplementation(
       (_id: unknown, trabajo: (tx: unknown) => unknown) => trabajo({}),
     );
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue({
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue({
       id: coloniaId,
       tipo: "colonia",
       nombre: "Colonia 3",
@@ -55,6 +49,8 @@ describe("darDeBajaLugar", () => {
     });
     vi.mocked(repositorio.contarHijosActivos).mockResolvedValue(0);
     vi.mocked(repositorio.contarDomiciliosColgados).mockResolvedValue(0);
+    vi.mocked(repositorio.contarCallesActivas).mockResolvedValue(0);
+    vi.mocked(repositorio.contarZonasActivas).mockResolvedValue(0);
   });
 
   it("rechaza sin puedeEscribir y no abre transaccion ni escribe", async () => {
@@ -68,7 +64,7 @@ describe("darDeBajaLugar", () => {
   });
 
   it("rechaza si el lugar no existe", async () => {
-    vi.mocked(repositorio.buscarPorId).mockResolvedValue(null);
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(null);
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 
     await expect(
@@ -98,6 +94,46 @@ describe("darDeBajaLugar", () => {
     expect(repositorio.actualizar).not.toHaveBeenCalled();
   });
 
+  it("bloquea la fila del lugar para serializarse con un alta concurrente", async () => {
+    const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
+
+    await darDeBajaLugar(coloniaId, contextoCon("OPERADOR"));
+
+    expect(repositorio.bloquearPorId).toHaveBeenCalledWith(
+      expect.anything(),
+      coloniaId,
+    );
+    expect(repositorio.buscarPorId).not.toHaveBeenCalled();
+  });
+
+  it("rechaza si tiene calles activas, con un mensaje que nombra las calles", async () => {
+    vi.mocked(repositorio.contarCallesActivas).mockResolvedValue(2);
+    const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
+
+    const error = await darDeBajaLugar(
+      coloniaId,
+      contextoCon("OPERADOR"),
+    ).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(LugarConCallesError);
+    expect((error as Error).message).toContain("calles");
+    expect(repositorio.actualizar).not.toHaveBeenCalled();
+  });
+
+  it("rechaza si tiene zonas activas, con un mensaje que nombra las zonas", async () => {
+    vi.mocked(repositorio.contarZonasActivas).mockResolvedValue(1);
+    const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
+
+    const error = await darDeBajaLugar(
+      coloniaId,
+      contextoCon("OPERADOR"),
+    ).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(LugarConZonasError);
+    expect((error as Error).message).toContain("zonas");
+    expect(repositorio.actualizar).not.toHaveBeenCalled();
+  });
+
   it("rechaza con un mensaje que el operador puede accionar, no con jerga del esquema", async () => {
     vi.mocked(repositorio.contarHijosActivos).mockResolvedValue(1);
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
@@ -115,7 +151,7 @@ describe("darDeBajaLugar", () => {
     expect(mensaje).toContain("adentro");
   });
 
-  it("sin hijos activos ni domicilios colgados, marca la baja", async () => {
+  it("sin hijos, domicilios, calles ni zonas activas, marca la baja", async () => {
     const darDeBajaLugar = crearDarDeBajaLugar(repositorio);
 
     await darDeBajaLugar(coloniaId, contextoCon("OPERADOR"));

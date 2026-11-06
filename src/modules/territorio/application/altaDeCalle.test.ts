@@ -2,11 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoLugarId, NombreDeCalleDuplicadoError } from "../domain";
-import type {
-  LugarGuardado,
-  RepositorioDeCalles,
-  RepositorioDeLugares,
-} from "./puertos";
+import type { LugarGuardado, RepositorioDeCalles } from "./puertos";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -62,17 +59,7 @@ describe("altaDeCalle", () => {
     registrarEventoDeReparenteo: vi.fn(),
     registrarEventoDeUbicacion: vi.fn(),
   };
-  const repositorioDeLugares: RepositorioDeLugares = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    actualizar: vi.fn(),
-    contarHijosActivos: vi.fn(),
-    contarDomiciliosColgados: vi.fn(),
-    subarbol: vi.fn(),
-    listarRaices: vi.fn(),
-    listarLugares: vi.fn(),
-    existeCabecera: vi.fn(),
-  };
+  const repositorioDeLugares = crearRepositorioDeLugaresFalso();
 
   beforeEach(() => {
     vi.resetAllMocks();

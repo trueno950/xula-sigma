@@ -4,9 +4,10 @@ import {
   enTransaccionParalela,
   motul,
 } from "@/shared/tenancy/municipiosDePrueba";
-import type { CalleId } from "./domain";
+import type { CalleId, LugarId } from "./domain";
 
 export type CambioDeCalle = (tx: TransactionSql, id: CalleId) => Promise<void>;
+export type CambioDeLugar = (tx: TransactionSql, id: LugarId) => Promise<void>;
 
 export type CarreraDeCalle = {
   lista: Promise<void>;

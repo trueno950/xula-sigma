@@ -8,11 +8,8 @@ import {
   comoLugarId,
   type PuntoGeografico,
 } from "../domain";
-import type {
-  CalleGuardada,
-  RepositorioDeCalles,
-  RepositorioDeLugares,
-} from "./puertos";
+import type { CalleGuardada, RepositorioDeCalles } from "./puertos";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -55,17 +52,7 @@ const repositorioDeCalles = (): RepositorioDeCalles => ({
   registrarEventoDeUbicacion: vi.fn(),
 });
 
-const repositorioDeLugares: RepositorioDeLugares = {
-  crear: vi.fn(),
-  buscarPorId: vi.fn(),
-  actualizar: vi.fn(),
-  contarHijosActivos: vi.fn(),
-  contarDomiciliosColgados: vi.fn(),
-  subarbol: vi.fn(),
-  listarRaices: vi.fn(),
-  listarLugares: vi.fn(),
-  existeCabecera: vi.fn(),
-};
+const repositorioDeLugares = crearRepositorioDeLugaresFalso();
 const lugarPorDefecto = {
   id: destinoId,
   tipo: "cabecera" as const,

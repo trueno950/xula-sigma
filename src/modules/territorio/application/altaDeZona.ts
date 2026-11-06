@@ -14,8 +14,11 @@ import {
 import type { RepositorioDeLugares } from "./puertos";
 import type { RepositorioDeAdministracionDeZonas } from "./puertosDeAdministracionDeZonas";
 
-/** Solo `buscarPorId`: el alta no necesita el resto del puerto de lugares. */
-type RepositorioDeLugaresPorId = Pick<RepositorioDeLugares, "buscarPorId">;
+/**
+ * Solo `bloquearPorId`: el alta no necesita el resto del puerto de lugares.
+ * Bloquea por lo mismo que `altaDeLugar`: serializarse con la baja.
+ */
+type RepositorioDeLugaresPorId = Pick<RepositorioDeLugares, "bloquearPorId">;
 
 export type NuevaZona = {
   nombre: string;
@@ -48,7 +51,7 @@ export function crearAltaDeZona(
     const id = comoZonaId(randomUUID());
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
-      const lugar = await repositorioDeLugares.buscarPorId(tx, datos.lugarId);
+      const lugar = await repositorioDeLugares.bloquearPorId(tx, datos.lugarId);
       if (!lugar || lugar.bajaEn !== null || !puedeTenerZonas(lugar.tipo)) {
         throw new NoEncontradoError();
       }

@@ -6,7 +6,8 @@ import {
   JerarquiaInvalidaError,
   RaizInvalidaError,
 } from "../domain";
-import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
+import type { LugarGuardado } from "./puertos";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -41,17 +42,7 @@ const comisariaGuardada: LugarGuardado = {
 };
 
 describe("altaDeLugar", () => {
-  const repositorio: RepositorioDeLugares = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    actualizar: vi.fn(),
-    contarHijosActivos: vi.fn(),
-    contarDomiciliosColgados: vi.fn(),
-    subarbol: vi.fn(),
-    listarRaices: vi.fn(),
-    listarLugares: vi.fn(),
-    existeCabecera: vi.fn(),
-  };
+  const repositorio = crearRepositorioDeLugaresFalso();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -102,6 +93,21 @@ describe("altaDeLugar", () => {
         entidad: "lugares",
         entidadId: resultado.id,
       }),
+    );
+  });
+
+  it("bloquea la fila del padre, para serializarse con su baja", async () => {
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue(comisariaGuardada);
+    const altaDeLugar = crearAltaDeLugar(repositorio);
+
+    await altaDeLugar(
+      { tipo: "colonia", nombre: "Colonia 3", padreId: comisariaId },
+      contextoCon("OPERADOR"),
+    );
+
+    expect(repositorio.bloquearPorId).toHaveBeenCalledWith(
+      expect.anything(),
+      comisariaId,
     );
   });
 
