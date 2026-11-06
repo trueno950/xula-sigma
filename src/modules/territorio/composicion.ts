@@ -92,6 +92,7 @@ export const registrarMudanza = crearRegistrarMudanza(
 );
 export const historialDeResidencias = crearHistorialDeResidencias(
   repositorioDeResidenciasSql,
+  lectorDeDireccionesSql,
   crearLectorDePersonasPorPadron,
 );
 export const direccionVigenteDePersona = crearDireccionVigenteDePersona(
