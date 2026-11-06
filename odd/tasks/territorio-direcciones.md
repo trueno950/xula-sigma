@@ -406,3 +406,5 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 
 - **L39** — 2026-11-05. Pedido del usuario: «Crear issue aprobado (Recomendado)», para enlazar el PR de T7. Issue #109 creado con `enhancement,status:approved`. Rama publicada; PR #110 hacia `main` con `Closes #109` y `type:feature`. Sin merge.
 
+- **L40** — 2026-11-05. El hook de cierre pidió la revisión del rango `651af11..ae69a12` (6 archivos, 172 líneas). Con consentimiento del usuario («Revisar este cambio»), revisión nativa `review-c6a300755f68c36e` (lente confiabilidad) **aprobada**, autoridad quemada por acknowledgement exacto. Advertencias informativas para trabajo aparte: R3-e2e-sin-senal-de-hidratacion y R3-efecto-de-modo-sin-prueba-unitaria. CI del PR #110 en `ae69a12`: 5/5 aprobados (lint/tipos/capas, unitarios, integración y aislamiento, E2E, links). Sin merge.
+
