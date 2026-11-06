@@ -11,8 +11,7 @@ type Props = {
 /**
  * Server Component, `<form action={...}>` nativo sin `"use client"`
  * (tasks.md 6.22, mismo reparto que `FormularioDeDomicilio`). `domicilioId`
- * sale del buscador compartido de direcciones; el catalogo completo del
- * municipio (`listarDomicilios`) viaja solo como respaldo sin JavaScript.
+ * lo escribe `SelectorDeDomicilioDeMudanza`, que explica su respaldo.
  * El ID crudo no aparece en ningun lado de la UI, asi que pedirlo escrito
  * era un callejon sin salida.
  */
