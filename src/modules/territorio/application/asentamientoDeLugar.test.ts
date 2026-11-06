@@ -37,6 +37,9 @@ const repositorioCon = (
   listarRaices: vi.fn(),
   listarLugares: vi.fn(),
   existeCabecera: vi.fn(),
+  bloquearPorId: vi.fn(),
+  contarCallesActivas: vi.fn(),
+  contarZonasActivas: vi.fn(),
 });
 
 const tx = {} as Parameters<RepositorioDeLugares["buscarPorId"]>[0];

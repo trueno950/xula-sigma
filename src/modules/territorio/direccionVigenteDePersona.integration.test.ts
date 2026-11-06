@@ -9,7 +9,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAltaDeDomicilio } from "./application/altaDeDomicilio";
 import { crearDireccionVigenteDePersona } from "./application/direccionVigenteDePersona";
-import { crearReparentearLugar } from "./application/reparentearLugar";
+import { crearEditarLugar } from "./application/editarLugar";
 import type { CalleId, DomicilioId, LugarId } from "./domain";
 import { residencias } from "./infrastructure/esquema";
 import { lectorDeDireccionesSql } from "./infrastructure/lectorDeDireccionesSql";
@@ -42,7 +42,7 @@ const altaDeDomicilio = crearAltaDeDomicilio(
   repositorioDeCallesSql,
 );
 
-const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
+const editarLugar = crearEditarLugar(repositorioDeLugaresSql);
 
 const altaConNumero = (
   lugarId: LugarId,
@@ -142,15 +142,13 @@ describe("direccionVigenteDePersona: composicion del texto (spec domicilios)", (
     expect(direccion?.texto).toBe("Calle Suelta S/N, Comisaria Sin Colonia");
   });
 
-  it("reparentear la colonia del domicilio refleja la jerarquia actual, no una copia congelada", async () => {
-    const comisariaOrigen = await crearLugar("comisaria", "Comisaria Origen");
-    const comisariaDestino = await crearLugar("comisaria", "Comisaria Destino");
-    const colonia = await crearLugar(
-      "colonia",
-      "Colonia Movil",
-      comisariaOrigen,
-    );
-    const calle = await crearCalle(comisariaOrigen, "Calle Movil");
+  // Antes se probaba moviendo la colonia a otro asentamiento; con
+  // domicilios adentro ese movimiento ya no se permite (`reparentearLugar`),
+  // asi que la jerarquia viva se prueba renombrando el asentamiento.
+  it("renombrar el asentamiento del domicilio refleja la jerarquia actual, no una copia congelada", async () => {
+    const comisaria = await crearLugar("comisaria", "Comisaria Origen");
+    const colonia = await crearLugar("colonia", "Colonia Movil", comisaria);
+    const calle = await crearCalle(comisaria, "Calle Movil");
     const { id: domicilioId } = await altaConNumero(colonia, calle, "50");
     const { id: personaId } = await personaDePrueba("Elisa");
     await abrirResidencia(personaId, domicilioId, "2022-01-01");
@@ -158,10 +156,13 @@ describe("direccionVigenteDePersona: composicion del texto (spec domicilios)", (
     const antes = await direccionVigenteDePersona(personaId, contextoDe());
     expect(antes?.texto).toContain("Comisaria Origen");
 
-    await reparentearLugar(colonia, comisariaDestino, contextoDe());
+    await editarLugar(
+      { id: comisaria, nombre: "Comisaria Renombrada" },
+      contextoDe(),
+    );
 
     const despues = await direccionVigenteDePersona(personaId, contextoDe());
-    expect(despues?.texto).toContain("Comisaria Destino");
+    expect(despues?.texto).toContain("Comisaria Renombrada");
     expect(despues?.texto).not.toContain("Comisaria Origen");
   });
 });

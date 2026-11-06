@@ -1,0 +1,2 @@
+DROP INDEX "lugares_una_cabecera";--> statement-breakpoint
+CREATE UNIQUE INDEX "lugares_una_cabecera" ON "lugares" USING btree ("ayuntamiento_id") WHERE "lugares"."tipo" = 'cabecera' AND "lugares"."baja_en" IS NULL;

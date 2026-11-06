@@ -4,11 +4,7 @@ import {
   comoPersonaId,
   fusionarPersonas,
 } from "@/modules/padron";
-import {
-  altaDeLugar,
-  comoLugarId,
-  reparentearLugar,
-} from "@/modules/territorio";
+import { comoLugarId, editarLugar } from "@/modules/territorio";
 import {
   contextoDe,
   type GentePorMunicipio,
@@ -65,7 +61,7 @@ afterAll(async () => {
 });
 
 describe("el snapshot no se re-deriva en ninguna lectura posterior", () => {
-  it("reparentear la colonia del titular no cambia el texto de la constancia, ni el de una reimpresion futura", async () => {
+  it("renombrar la colonia del titular no cambia el texto de la constancia, ni el de una reimpresion futura", async () => {
     const admin = actor("ADMIN_MUNICIPAL");
     const { personaId, lugarId } = await titularConResidenciaVigente(
       "Reparenteo",
@@ -74,8 +70,8 @@ describe("el snapshot no se re-deriva en ninguna lectura posterior", () => {
     await configurarFirmaDePrueba(admin);
 
     const id = await emitirConstancia(personaId, actor("OPERADOR"));
-    const antesDelReparenteo = await constanciaPorId(id, admin);
-    expect(antesDelReparenteo?.datos).toEqual(
+    const antesDelCambio = await constanciaPorId(id, admin);
+    expect(antesDelCambio?.datos).toEqual(
       expect.objectContaining({
         direccion: expect.objectContaining({
           texto: expect.stringContaining("Colonia de Reparenteo"),
@@ -83,19 +79,20 @@ describe("el snapshot no se re-deriva en ninguna lectura posterior", () => {
       }),
     );
 
-    const { id: comisariaId } = await altaDeLugar(
-      { tipo: "comisaria", nombre: "Comisaria destino", padreId: null },
+    // Mover la colonia a otro asentamiento ya no se permite con domicilios
+    // adentro (`reparentearLugar`): el territorio vivo cambia renombrandola.
+    await editarLugar(
+      { id: comoLugarId(lugarId), nombre: "Colonia renombrada" },
       admin,
     );
-    await reparentearLugar(comoLugarId(lugarId), comisariaId, admin);
 
-    const despuesDelReparenteo = await constanciaPorId(id, admin);
+    const despuesDelCambio = await constanciaPorId(id, admin);
 
     // "Y su reimpresion futura": `constanciaPorId` es exactamente lo que
     // alimenta el render de una reimpresion (design.md seccion 11) -no hay
     // una segunda lectura que probar, el snapshot es el mismo objeto en
     // los dos caminos.
-    expect(despuesDelReparenteo?.datos).toEqual(antesDelReparenteo?.datos);
+    expect(despuesDelCambio?.datos).toEqual(antesDelCambio?.datos);
   });
 
   it("fusionar la identidad del titular en padron no cambia el nombre impreso en la constancia ya emitida", async () => {

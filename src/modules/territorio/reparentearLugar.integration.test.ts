@@ -14,7 +14,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearReparentearLugar } from "./application/reparentearLugar";
-import { JerarquiaInvalidaError } from "./domain";
+import { JerarquiaInvalidaError, LugarConDomiciliosError } from "./domain";
 import { domicilios, lugares, residencias } from "./infrastructure/esquema";
 import { repositorioDeLugaresSql } from "./infrastructure/repositorioDeLugaresSql";
 import { contextoDe, crearDomicilio, crearLugar } from "./lugarDePrueba";
@@ -29,12 +29,30 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
+const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
+
+const padreDe = (id: typeof lugares.$inferSelect.id) =>
+  withTenant(motul, async (tx) => {
+    const [fila] = await tx
+      .select({ padreId: lugares.padreId })
+      .from(lugares)
+      .where(eq(lugares.id, id));
+    return fila?.padreId;
+  });
+
+const xminDe = (tabla: typeof domicilios | typeof residencias, id: string) =>
+  withTenant(motul, async (tx) => {
+    const [fila] = await tx
+      .select({ xmin: sql<string>`xmin::text` })
+      .from(tabla)
+      .where(sql`${tabla.id} = ${id}`);
+    return fila?.xmin;
+  });
+
 describe("reparentearLugar", () => {
   it("un asentamiento no puede reparentarse bajo una colonia: el rango lo rechaza", async () => {
     const comisaria = await crearLugar("comisaria", "Yotholin");
     const colonia = await crearLugar("colonia", "Colonia X", comisaria);
-
-    const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
 
     await expect(
       reparentearLugar(comisaria, colonia, contextoDe()),
@@ -49,7 +67,7 @@ describe("reparentearLugar", () => {
     expect(lugarSinMover?.padreId).toBeNull();
   });
 
-  it("reparentear no toca conteo ni xmin de domicilios/residencias, y el subarbol del nuevo padre los incluye", async () => {
+  it("rechaza mover a otro asentamiento una colonia con domicilios, sin tocar la colonia, sus domicilios ni sus residencias", async () => {
     const comisariaOrigen = await crearLugar("comisaria", "Comisaria origen");
     const comisariaDestino = await crearLugar("comisaria", "Comisaria destino");
     const colonia = await crearLugar(
@@ -68,71 +86,53 @@ describe("reparentearLugar", () => {
       },
       contextoDe(),
     );
-    await withTenant(motul, (tx) =>
-      tx.insert(residencias).values({
-        ayuntamientoId: motul,
-        personaId,
-        domicilioId,
-        desdeEn: "2024-01-01",
-      }),
+    const [residenciaCreada] = await withTenant(motul, (tx) =>
+      tx
+        .insert(residencias)
+        .values({
+          ayuntamientoId: motul,
+          personaId,
+          domicilioId,
+          desdeEn: "2024-01-01",
+        })
+        .returning({ id: residencias.id }),
+    );
+    if (!residenciaCreada) throw new Error("La residencia no fue creada.");
+    const residencia = residenciaCreada.id;
+
+    const xminDomicilioAntes = await xminDe(domicilios, domicilioId);
+    const xminResidenciaAntes = await xminDe(residencias, residencia);
+
+    await expect(
+      reparentearLugar(colonia, comisariaDestino, contextoDe()),
+    ).rejects.toBeInstanceOf(LugarConDomiciliosError);
+
+    expect(await padreDe(colonia)).toBe(comisariaOrigen);
+    expect(await xminDe(domicilios, domicilioId)).toBe(xminDomicilioAntes);
+    expect(await xminDe(residencias, residencia)).toBe(xminResidenciaAntes);
+  });
+
+  it("una colonia sin domicilios si se mueve a otro asentamiento", async () => {
+    const comisariaOrigen = await crearLugar("comisaria", "Origen vacio");
+    const comisariaDestino = await crearLugar("comisaria", "Destino vacio");
+    const colonia = await crearLugar(
+      "colonia",
+      "Colonia vacia",
+      comisariaOrigen,
     );
 
-    const xminDeDomicilio = (id: typeof domicilios.$inferSelect.id) =>
-      withTenant(motul, async (tx) => {
-        const [fila] = await tx
-          .select({ xmin: sql<string>`xmin::text` })
-          .from(domicilios)
-          .where(eq(domicilios.id, id));
-        return fila?.xmin;
-      });
-    const xminDeResidencia = (id: typeof residencias.$inferSelect.id) =>
-      withTenant(motul, async (tx) => {
-        const [fila] = await tx
-          .select({ xmin: sql<string>`xmin::text` })
-          .from(residencias)
-          .where(eq(residencias.id, id));
-        return fila?.xmin;
-      });
-
-    const conteoDomicilios = () =>
-      withTenant(motul, (tx) =>
-        tx.select().from(domicilios).where(eq(domicilios.lugarId, colonia)),
-      );
-    const conteoResidencias = () =>
-      withTenant(motul, (tx) =>
-        tx
-          .select()
-          .from(residencias)
-          .where(eq(residencias.domicilioId, domicilioId)),
-      );
-
-    const domiciliosAntes = await conteoDomicilios();
-    const residenciasAntes = await conteoResidencias();
-    const xminDomicilioAntes = await xminDeDomicilio(domicilioId);
-    const xminResidenciaAntes = await xminDeResidencia(residenciasAntes[0]!.id);
-
-    const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
     await reparentearLugar(colonia, comisariaDestino, contextoDe());
 
-    const domiciliosDespues = await conteoDomicilios();
-    const residenciasDespues = await conteoResidencias();
-    const xminDomicilioDespues = await xminDeDomicilio(domicilioId);
-    const xminResidenciaDespues = await xminDeResidencia(
-      residenciasAntes[0]!.id,
-    );
+    expect(await padreDe(colonia)).toBe(comisariaDestino);
+  });
 
-    expect(domiciliosDespues).toHaveLength(domiciliosAntes.length);
-    expect(residenciasDespues).toHaveLength(residenciasAntes.length);
-    expect(xminDomicilioDespues).toBe(xminDomicilioAntes);
-    expect(xminResidenciaDespues).toBe(xminResidenciaAntes);
+  it("dentro del mismo asentamiento una colonia con domicilios se puede volver a colgar", async () => {
+    const comisaria = await crearLugar("comisaria", "Mismo asentamiento");
+    const colonia = await crearLugar("colonia", "Colonia quieta", comisaria);
+    await crearDomicilio(colonia, "Calle quieta");
 
-    const subarbolNuevoPadre = await withTenant(motul, (tx) =>
-      repositorioDeLugaresSql.subarbol(tx, comisariaDestino),
-    );
-    expect(
-      subarbolNuevoPadre.some(
-        (nodo) => nodo.clase === "domicilio" && nodo.id === domicilioId,
-      ),
-    ).toBe(true);
+    await reparentearLugar(colonia, comisaria, contextoDe());
+
+    expect(await padreDe(colonia)).toBe(comisaria);
   });
 });

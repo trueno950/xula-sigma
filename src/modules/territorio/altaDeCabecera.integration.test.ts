@@ -20,8 +20,9 @@ import { contextoDe } from "./lugarDePrueba";
 
 /**
  * `lugares_una_cabecera` es un indice unico parcial POR municipio
- * (`ayuntamiento_id` + `tipo = 'cabecera'`): la cabecera de uno no ocupa el
- * lugar de la de otro.
+ * (`ayuntamiento_id` + `tipo = 'cabecera'` + `baja_en IS NULL`): la cabecera
+ * de uno no ocupa el lugar de la de otro, y una dada de baja no ocupa el de
+ * ninguna.
  */
 
 const enMotul = contextoDe();
@@ -34,6 +35,14 @@ const nuevaCabecera = (nombre: string) => ({
   nombre,
   padreId: null,
 });
+
+const darDeBajaCabecerasDe = (ayuntamientoId: typeof ticul) =>
+  withTenant(ayuntamientoId, (tx) =>
+    tx
+      .update(lugares)
+      .set({ bajaEn: new Date() })
+      .where(eq(lugares.tipo, "cabecera")),
+  );
 
 beforeAll(async () => {
   await sembrar();
@@ -72,7 +81,7 @@ describe("alta de la cabecera municipal", () => {
     expect(id).toBeTruthy();
   });
 
-  it("una cabecera dada de baja sigue ocupando el lugar de la unica", async () => {
+  it("una cabecera dada de baja deja de ocupar el lugar de la unica", async () => {
     const ticulSegunda = await altaDeLugar(
       nuevaCabecera("Ticul bis"),
       enTicul,
@@ -80,29 +89,19 @@ describe("alta de la cabecera municipal", () => {
 
     expect(ticulSegunda).toBeInstanceOf(CabeceraDuplicadaError);
 
-    await withTenant(ticul, (tx) =>
-      tx
-        .update(lugares)
-        .set({ bajaEn: new Date() })
-        .where(eq(lugares.tipo, "cabecera")),
-    );
+    await darDeBajaCabecerasDe(ticul);
+    expect(await existeCabecera(enTicul)).toBe(false);
 
     await expect(
       altaDeLugar(nuevaCabecera("Ticul de nuevo"), enTicul),
-    ).rejects.toBeInstanceOf(CabeceraDuplicadaError);
+    ).resolves.toEqual({ id: expect.any(String) });
+    expect(await existeCabecera(enTicul)).toBe(true);
   });
 
-  it("una cabecera dada de baja sigue contando para el alta", async () => {
-    // El indice parcial no tiene clausula de baja: la fila sigue ahi y una
-    // cabecera nueva la rechazaria. La lectura del alta tiene que verla.
-    await withTenant(ticul, (tx) =>
-      tx
-        .update(lugares)
-        .set({ bajaEn: new Date() })
-        .where(eq(lugares.tipo, "cabecera")),
-    );
-
-    expect(await existeCabecera(enTicul)).toBe(true);
+  it("la cabecera nueva vuelve a ser la unica activa", async () => {
+    await expect(
+      altaDeLugar(nuevaCabecera("Ticul tercera"), enTicul),
+    ).rejects.toBeInstanceOf(CabeceraDuplicadaError);
   });
 
   it("un municipio sin ninguna cabecera no la reporta", async () => {

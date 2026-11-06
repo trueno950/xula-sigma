@@ -155,6 +155,13 @@
       "when": 1792940490650,
       "tag": "0021_reportes_domicilio",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793970048585,
+      "tag": "0022_cabecera_activa_unica",
+      "breakpoints": true
     }
   ]
 }

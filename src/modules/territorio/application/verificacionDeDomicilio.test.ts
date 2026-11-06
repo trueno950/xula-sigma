@@ -74,6 +74,11 @@ const crearDependencias = () => {
     listarRaices: vi.fn(),
     listarLugares: vi.fn(),
     existeCabecera: vi.fn(),
+    bloquearPorId: vi
+      .fn()
+      .mockImplementation(async (_tx, id) => lugares.get(id) ?? null),
+    contarCallesActivas: vi.fn(),
+    contarZonasActivas: vi.fn(),
   };
 
   return { repositorioDeCalles, repositorioDeLugares };
@@ -120,6 +125,21 @@ describe("verificarZonaYCalles", () => {
         entreCalleBId: null,
       }),
     ).resolves.toBe(coloniaId);
+  });
+
+  it("bloquea el lugar de la direccion, para serializarse con su baja", async () => {
+    const { repositorioDeCalles, repositorioDeLugares } = crearDependencias();
+
+    await verificarZonaYCalles(
+      { repositorioDeCalles, repositorioDeLugares },
+      tx,
+      { lugarId: coloniaId, calleId, entreCalleAId: null, entreCalleBId: null },
+    );
+
+    expect(repositorioDeLugares.bloquearPorId).toHaveBeenCalledWith(
+      tx,
+      coloniaId,
+    );
   });
 
   it("rechaza una calle principal inexistente", async () => {

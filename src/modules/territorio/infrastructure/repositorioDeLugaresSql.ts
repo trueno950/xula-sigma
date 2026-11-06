@@ -1,17 +1,15 @@
-import { and, count, eq, isNull, sql } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import type {
   LugarGuardado,
-  NodoDeSubarbol,
   RepositorioDeLugares,
 } from "../application/puertos";
 import {
   CabeceraDuplicadaError,
-  comoCalleId,
-  comoDomicilioId,
   comoLugarId,
   type TipoDeLugar,
 } from "../domain";
-import { domicilios, lugares } from "./esquema";
+import { calles, domicilios, lugares, zonas } from "./esquema";
+import { subarbolDeLugares } from "./subarbolDeLugaresSql";
 import { violaRestriccionUnica } from "./violacionDeRestriccion";
 
 const columnasDeLectura = {
@@ -33,36 +31,6 @@ const aLugarGuardado = (fila: {
   id: comoLugarId(fila.id),
   padreId: fila.padreId ? comoLugarId(fila.padreId) : null,
 });
-
-type FilaDeSubarbol = {
-  clase: "lugar" | "domicilio";
-  id: string;
-  tipo: TipoDeLugar | null;
-  nombre: string | null;
-  padreId: string | null;
-  lugarId: string | null;
-  calleId: string | null;
-  calle: string | null;
-  numero: string | null;
-};
-
-const aNodoDeSubarbol = (fila: FilaDeSubarbol): NodoDeSubarbol =>
-  fila.clase === "lugar"
-    ? {
-        clase: "lugar",
-        id: comoLugarId(fila.id),
-        tipo: fila.tipo as TipoDeLugar,
-        nombre: fila.nombre as string,
-        padreId: fila.padreId ? comoLugarId(fila.padreId) : null,
-      }
-    : {
-        clase: "domicilio",
-        id: comoDomicilioId(fila.id),
-        lugarId: comoLugarId(fila.lugarId as string),
-        calleId: comoCalleId(fila.calleId as string),
-        calle: fila.calle as string,
-        numero: fila.numero,
-      };
 
 /**
  * Implementacion real de `RepositorioDeLugares` contra `lugares` y
@@ -100,6 +68,22 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
     return fila ? aLugarGuardado(fila) : null;
   },
 
+  /**
+   * Mismo filtro de baja que `buscarPorId`. Bajo `READ COMMITTED`, si otra
+   * transaccion dio de baja la fila mientras esta esperaba el lock, Postgres
+   * vuelve a evaluar el `WHERE` sobre la version confirmada y la fila ya no
+   * sale: quien llega segundo ve el lugar como inexistente.
+   */
+  async bloquearPorId(tx, id) {
+    const [fila] = await tx
+      .select(columnasDeLectura)
+      .from(lugares)
+      .where(and(eq(lugares.id, id), isNull(lugares.bajaEn)))
+      .for("update");
+
+    return fila ? aLugarGuardado(fila) : null;
+  },
+
   async actualizar(tx, { id, nombre, padreId, bajaEn }) {
     await tx
       .update(lugares)
@@ -125,45 +109,25 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
     return fila?.total ?? 0;
   },
 
-  /**
-   * `WITH RECURSIVE` en `sql` crudo y no con el builder de Drizzle: la
-   * version instalada (0.45.2, verificado — no exporta `withRecursive` ni
-   * nada equivalente) no tiene forma de expresar un CTE que se referencia
-   * a si mismo. Es la unica consulta del archivo que lo necesita; el resto
-   * usa el builder. Solo `raizId` es parametro; el resto es identificador
-   * fijo, sin texto de usuario que concatenar (design.md seccion 12,
-   * "SUBARBOL"). RLS acota las dos ramas y el `UNION ALL` final, porque
-   * las tres corren bajo el mismo `tx` con `app.tenant` ya fijado.
-   */
-  async subarbol(tx, raizId) {
-    const filas = await tx.execute<FilaDeSubarbol>(sql`
-      WITH RECURSIVE descendientes AS (
-        SELECT id, 0 AS profundidad FROM lugares
-         WHERE id = ${raizId} AND baja_en IS NULL
-        UNION ALL
-        SELECT l.id, d.profundidad + 1
-          FROM lugares l
-          JOIN descendientes d ON l.padre_id = d.id
-         WHERE d.profundidad < 8 AND l.baja_en IS NULL
-      )
-      SELECT 'lugar' AS clase, l.id, l.tipo, l.nombre,
-             l.padre_id AS "padreId", NULL::uuid AS "lugarId",
-             NULL::uuid AS "calleId", NULL::text AS calle, NULL::text AS numero
-        FROM lugares l
-        JOIN descendientes d ON d.id = l.id
-       WHERE l.id <> ${raizId} AND l.baja_en IS NULL
-      UNION ALL
-      SELECT 'domicilio' AS clase, dom.id, NULL, NULL,
-             NULL, dom.lugar_id AS "lugarId",
-             dom.calle_id AS "calleId", cal.nombre AS calle, dom.numero
-        FROM domicilios dom
-        JOIN descendientes d ON d.id = dom.lugar_id
-        JOIN calles cal ON cal.id = dom.calle_id
-       WHERE dom.baja_en IS NULL
-    `);
+  async contarCallesActivas(tx, lugarId) {
+    const [fila] = await tx
+      .select({ total: count() })
+      .from(calles)
+      .where(and(eq(calles.lugarId, lugarId), isNull(calles.bajaEn)));
 
-    return filas.map(aNodoDeSubarbol);
+    return fila?.total ?? 0;
   },
+
+  async contarZonasActivas(tx, lugarId) {
+    const [fila] = await tx
+      .select({ total: count() })
+      .from(zonas)
+      .where(and(eq(zonas.lugarId, lugarId), isNull(zonas.bajaEn)));
+
+    return fila?.total ?? 0;
+  },
+
+  subarbol: subarbolDeLugares,
 
   async listarRaices(tx) {
     const filas = await tx
@@ -194,7 +158,7 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
     const filas = await tx
       .select({ id: lugares.id })
       .from(lugares)
-      .where(eq(lugares.tipo, "cabecera"));
+      .where(and(eq(lugares.tipo, "cabecera"), isNull(lugares.bajaEn)));
     return filas.length > 0;
   },
 };

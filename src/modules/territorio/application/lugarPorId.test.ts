@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { comoLugarId } from "../domain";
-import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
+import type { LugarGuardado } from "./puertos";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 
@@ -29,17 +30,7 @@ const lugarGuardado: LugarGuardado = {
 };
 
 describe("lugarPorId", () => {
-  const repositorio: RepositorioDeLugares = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    actualizar: vi.fn(),
-    contarHijosActivos: vi.fn(),
-    contarDomiciliosColgados: vi.fn(),
-    subarbol: vi.fn(),
-    listarRaices: vi.fn(),
-    listarLugares: vi.fn(),
-    existeCabecera: vi.fn(),
-  };
+  const repositorio = crearRepositorioDeLugaresFalso();
 
   beforeEach(() => {
     vi.clearAllMocks();

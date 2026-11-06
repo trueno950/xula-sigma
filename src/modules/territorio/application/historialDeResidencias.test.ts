@@ -49,7 +49,7 @@ const residenciaGuardada: ResidenciaGuardada = {
 
 describe("historialDeResidencias", () => {
   const repositorio: RepositorioDeResidencias = {
-    cerrarAbierta: vi.fn(),
+    cerrarAbiertas: vi.fn(),
     abrir: vi.fn(),
     historialDe: vi.fn(),
     residentesDe: vi.fn(),

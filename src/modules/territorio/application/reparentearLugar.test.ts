@@ -3,7 +3,8 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { comoLugarId } from "../domain";
 import { JerarquiaInvalidaError, RaizInvalidaError } from "../domain/errores";
-import type { LugarGuardado, RepositorioDeLugares } from "./puertos";
+import type { LugarGuardado } from "./puertos";
+import { crearRepositorioDeLugaresFalso } from "./repositorioDeLugaresDePrueba";
 
 const withTenantMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
@@ -41,17 +42,7 @@ const lugarGuardado = (
 });
 
 describe("reparentearLugar", () => {
-  const repositorio: RepositorioDeLugares = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    actualizar: vi.fn(),
-    contarHijosActivos: vi.fn(),
-    contarDomiciliosColgados: vi.fn(),
-    subarbol: vi.fn(),
-    listarRaices: vi.fn(),
-    listarLugares: vi.fn(),
-    existeCabecera: vi.fn(),
-  };
+  const repositorio = crearRepositorioDeLugaresFalso();
 
   beforeEach(() => {
     vi.clearAllMocks();

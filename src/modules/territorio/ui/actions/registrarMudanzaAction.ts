@@ -7,7 +7,7 @@ import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { registrarMudanza } from "../../composicion";
-import { comoDomicilioId } from "../../domain";
+import { comoDomicilioId, MudanzaConcurrenteError } from "../../domain";
 
 /** Mismo reparto que `altaDeDomicilioAction`. Formulario nativo sin `use client`. */
 
@@ -33,6 +33,7 @@ const mensajeDeError = (error: unknown): string => {
   // terminalDe null (persona inexistente/de otro tenant) o domicilioId de
   // otro tenant/inexistente: los dos 404, nunca 403 (registrarMudanza.ts).
   if (error instanceof NoEncontradoError) return error.message;
+  if (error instanceof MudanzaConcurrenteError) return error.message;
 
   console.error("[territorio] mudanza fallo", datosSegurosDeError(error));
 

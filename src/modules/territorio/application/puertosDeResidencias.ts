@@ -41,11 +41,16 @@ export type ResidenciaGuardada = {
 };
 
 /**
- * `cerrarAbierta`/`abrir` son las dos mitades de `registrarMudanza`
- * (design.md seccion 8): una transaccion, dos escrituras, dos trazas.
- * `cerrarAbierta` devuelve `null` cuando la persona no tenia ninguna
- * residencia abierta -su primera mudanza registrada-, y ahi
- * `registrarMudanza` omite la traza `CERRAR_RESIDENCIA`.
+ * `cerrarAbiertas`/`abrir` son las dos mitades de `registrarMudanza`
+ * (design.md seccion 8): una transaccion, una traza por escritura.
+ * `cerrarAbiertas` recibe todas las identidades que colapsan en la persona
+ * (`LecturaDePersonas.identidadesDe`): `fusionarPersonas` no toca
+ * `residencias`, asi que la perdedora puede conservar una residencia
+ * abierta que solo una mudanza posterior cierra. Devuelve los ids cerrados,
+ * vacio en la primera mudanza registrada.
+ *
+ * `abrir` traduce el choque con `residencias_una_abierta_idx` a
+ * `MudanzaConcurrenteError` (`domain/erroresDeResidencias.ts`).
  *
  * `historialDe` recibe la lista completa de ids que colapsan en una
  * identidad fusionada (`LecturaDePersonas.identidadesDe`) y hace un solo
@@ -62,11 +67,11 @@ export type ResidenciaGuardada = {
  * (design.md seccion 5), y esta consulta necesita las dos cosas.
  */
 export type RepositorioDeResidencias = {
-  cerrarAbierta(
+  cerrarAbiertas(
     tx: TransaccionTenant,
-    personaId: string,
+    identidades: readonly string[],
     hastaEn: string,
-  ): Promise<ResidenciaId | null>;
+  ): Promise<readonly ResidenciaId[]>;
   abrir(
     tx: TransaccionTenant,
     datos: DatosDeAperturaDeResidencia,

@@ -17,6 +17,7 @@ type DatosDeEscrituraDeMudanza = {
   repositorio: RepositorioDeResidencias;
   repositorioDeDomicilios: RepositorioDeDomicilios;
   terminal: string;
+  identidades: readonly string[];
   domicilioId: DomicilioId;
   hoy: string;
   contexto: ContextoActual;
@@ -24,9 +25,9 @@ type DatosDeEscrituraDeMudanza = {
 
 /**
  * Cuerpo de la transaccion, separado de `registrarMudanza` (limite de
- * `AGENTS.md`, lineas por funcion): domicilio invalido, cierre de la
- * residencia previa si habia una, y apertura de la nueva, cada escritura
- * con su propia traza.
+ * `AGENTS.md`, lineas por funcion): domicilio invalido, cierre de las
+ * residencias abiertas de todas las identidades, y apertura de la nueva,
+ * cada escritura con su propia traza.
  */
 async function escribirMudanza(
   tx: TransaccionTenant,
@@ -36,6 +37,7 @@ async function escribirMudanza(
     repositorio,
     repositorioDeDomicilios,
     terminal,
+    identidades,
     domicilioId,
     hoy,
     contexto,
@@ -65,8 +67,8 @@ async function escribirMudanza(
       entidadId,
     });
 
-  const cerrada = await repositorio.cerrarAbierta(tx, terminal, hoy);
-  if (cerrada) await trazar("CERRAR_RESIDENCIA", cerrada);
+  const cerradas = await repositorio.cerrarAbiertas(tx, identidades, hoy);
+  for (const cerrada of cerradas) await trazar("CERRAR_RESIDENCIA", cerrada);
 
   // Se guarda el terminal, no lo que mando la UI -mismo criterio que
   // `fusionarPersonas` (design.md seccion 8): mudar a alguien que ya es
@@ -108,6 +110,7 @@ export function crearRegistrarMudanza(
     const lecturaDePersonas = crearLecturaDePersonas(contexto);
     const terminal = await lecturaDePersonas.terminalDe(personaId);
     if (!terminal) throw new NoEncontradoError();
+    const identidades = await lecturaDePersonas.identidadesDe(terminal);
 
     const hoy = hoyEnMerida();
 
@@ -116,6 +119,7 @@ export function crearRegistrarMudanza(
         repositorio,
         repositorioDeDomicilios,
         terminal,
+        identidades,
         domicilioId,
         hoy,
         contexto,

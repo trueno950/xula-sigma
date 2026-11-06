@@ -42,6 +42,10 @@ export type NuevoLugar = {
  * FK compuesto de Postgres ya impide un `padreId` inexistente o de otro
  * municipio; lo que el FK no puede ver -esta el `tipo` del padre en otra
  * fila- es exactamente lo que `puedeContener` cierra aca.
+ *
+ * El padre se lee con `bloquearPorId`: una baja concurrente del padre
+ * espera a esta alta y cuenta el hijo nuevo, o esta alta espera a la baja
+ * y ve el padre como inexistente.
  */
 export function crearAltaDeLugar(repositorio: RepositorioDeLugares) {
   return async function altaDeLugar(
@@ -54,7 +58,7 @@ export function crearAltaDeLugar(repositorio: RepositorioDeLugares) {
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
       if (datos.padreId !== null) {
-        const padre = await repositorio.buscarPorId(tx, datos.padreId);
+        const padre = await repositorio.bloquearPorId(tx, datos.padreId);
         if (!padre) throw new NoEncontradoError();
         if (!puedeContener(padre.tipo, datos.tipo)) {
           throw new JerarquiaInvalidaError();

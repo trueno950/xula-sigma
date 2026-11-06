@@ -8,10 +8,20 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearDarDeBajaLugar } from "./application/darDeBajaLugar";
-import { LugarConDependientesError } from "./domain";
-import { lugares } from "./infrastructure/esquema";
+import {
+  LugarConCallesError,
+  LugarConDependientesError,
+  LugarConZonasError,
+} from "./domain";
+import { calles, lugares } from "./infrastructure/esquema";
+import { zonas } from "./infrastructure/esquemaDeZonas";
 import { repositorioDeLugaresSql } from "./infrastructure/repositorioDeLugaresSql";
-import { contextoDe, crearDomicilio, crearLugar } from "./lugarDePrueba";
+import {
+  contextoDe,
+  crearCalle,
+  crearDomicilio,
+  crearLugar,
+} from "./lugarDePrueba";
 
 beforeAll(async () => {
   await sembrar();
@@ -24,6 +34,15 @@ afterAll(async () => {
 });
 
 const darDeBajaLugar = crearDarDeBajaLugar(repositorioDeLugaresSql);
+
+const bajaDe = (id: typeof lugares.$inferSelect.id) =>
+  withTenant(motul, async (tx) => {
+    const [fila] = await tx
+      .select({ bajaEn: lugares.bajaEn })
+      .from(lugares)
+      .where(eq(lugares.id, id));
+    return fila?.bajaEn;
+  });
 
 describe("darDeBajaLugar", () => {
   it("rechaza dar de baja un lugar con hijos activos", async () => {
@@ -71,5 +90,44 @@ describe("darDeBajaLugar", () => {
         .where(eq(lugares.id, colonia)),
     );
     expect(fila?.bajaEn).toBeInstanceOf(Date);
+  });
+
+  it("rechaza dar de baja un asentamiento con calles activas", async () => {
+    const comisaria = await crearLugar("comisaria", "Con calle activa");
+    await crearCalle(comisaria, "Calle viva");
+
+    await expect(
+      darDeBajaLugar(comisaria, contextoDe()),
+    ).rejects.toBeInstanceOf(LugarConCallesError);
+    expect(await bajaDe(comisaria)).toBeNull();
+  });
+
+  it("una calle dada de baja no impide la baja del asentamiento", async () => {
+    const comisaria = await crearLugar("comisaria", "Con calle de baja");
+    const calleId = await crearCalle(comisaria, "Calle cerrada");
+    await withTenant(motul, (tx) =>
+      tx
+        .update(calles)
+        .set({ bajaEn: new Date() })
+        .where(eq(calles.id, calleId)),
+    );
+
+    await darDeBajaLugar(comisaria, contextoDe());
+
+    expect(await bajaDe(comisaria)).toBeInstanceOf(Date);
+  });
+
+  it("rechaza dar de baja un asentamiento con zonas activas", async () => {
+    const comisaria = await crearLugar("comisaria", "Con zona activa");
+    await withTenant(motul, (tx) =>
+      tx
+        .insert(zonas)
+        .values({ ayuntamientoId: motul, lugarId: comisaria, nombre: "Zona" }),
+    );
+
+    await expect(
+      darDeBajaLugar(comisaria, contextoDe()),
+    ).rejects.toBeInstanceOf(LugarConZonasError);
+    expect(await bajaDe(comisaria)).toBeNull();
   });
 });

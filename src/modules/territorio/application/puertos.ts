@@ -8,6 +8,7 @@ import type {
   EventoDeUbicacion,
 } from "./eventosDeCalles";
 import type { NodoDeSubarbol } from "./nodoDeSubarbol";
+import type { DependenciasDeLugar } from "./puertosDeDependenciasDeLugares";
 
 export type DatosDeAltaDeLugar = {
   id: LugarId;
@@ -29,10 +30,10 @@ export type LugarGuardado = {
  * Entrada de `actualizar`: siempre las cuatro columnas mutables, nunca
  * `tipo`. Un solo metodo de escritura para `editarLugar` (cambia `nombre`),
  * `darDeBajaLugar` (cambia `bajaEn`) y `reparentearLugar` (cambia
- * `padreId`) — cada uno relee el resto de la fila con `buscarPorId` antes
- * de llamar y lo reenvia sin tocarlo. Evita tres metodos de escritura en
- * el puerto para tres `UPDATE` de una sola fila que ya cubre el mismo
- * camino.
+ * `padreId`) — cada uno relee el resto de la fila antes de llamar
+ * (`buscarPorId` o `bloquearPorId`) y lo reenvia sin tocarlo. Evita tres
+ * metodos de escritura en el puerto para tres `UPDATE` de una sola fila que
+ * ya cubre el mismo camino.
  */
 export type DatosDeActualizacionDeLugar = {
   id: LugarId;
@@ -61,9 +62,14 @@ export type { NodoDeSubarbol } from "./nodoDeSubarbol";
  * transaccion de `withTenant` por parametro: la escritura y el `registrar`
  * de bitacora del caso de uso confirman juntos o fallan juntos.
  */
-export type RepositorioDeLugares = {
+export type RepositorioDeLugares = DependenciasDeLugar & {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeLugar): Promise<void>;
   buscarPorId(
+    tx: TransaccionTenant,
+    id: LugarId,
+  ): Promise<LugarGuardado | null>;
+  /** Igual que `buscarPorId`, pero con `SELECT ... FOR UPDATE`: serializa la baja con las escrituras que cuelgan algo de este lugar. */
+  bloquearPorId(
     tx: TransaccionTenant,
     id: LugarId,
   ): Promise<LugarGuardado | null>;
@@ -86,13 +92,7 @@ export type RepositorioDeLugares = {
   listarRaices(tx: TransaccionTenant): Promise<readonly LugarGuardado[]>;
   /** Todos los lugares activos (`bajaEn IS NULL`), raices y anidados, para el catalogo de "lugar padre" del alta. */
   listarLugares(tx: TransaccionTenant): Promise<readonly LugarGuardado[]>;
-  /**
-   * Si existe **alguna** fila con `tipo = 'cabecera'`, con baja o sin ella.
-   * `lugares_una_cabecera` es un indice unico parcial sin clausula de baja
-   * (`drizzle/0007_territorio.sql`), asi que una cabecera dada de baja
-   * sigue ocupando el lugar de la unica y `listarLugares` -que filtra
-   * `bajaEn`- no puede responderlo.
-   */
+  /** Si existe una cabecera activa: el mismo criterio que `lugares_una_cabecera`. */
   existeCabecera(tx: TransaccionTenant): Promise<boolean>;
 };
 

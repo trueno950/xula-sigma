@@ -8,8 +8,10 @@ import {
   comoDomicilioId,
   comoLugarId,
   comoResidenciaId,
+  MudanzaConcurrenteError,
 } from "../domain";
 import { domicilios, residencias } from "./esquema";
+import { violaRestriccionUnica } from "./violacionDeRestriccion";
 
 type FilaDeHistorial = {
   id: string;
@@ -45,25 +47,37 @@ const aResidenciaGuardada = (fila: FilaDeHistorial): ResidenciaGuardada => ({
  * `identidadPorPuerto.test.ts`).
  */
 export const repositorioDeResidenciasSql: RepositorioDeResidencias = {
-  async cerrarAbierta(tx, personaId, hastaEn) {
-    const [fila] = await tx
+  async cerrarAbiertas(tx, identidades, hastaEn) {
+    if (identidades.length === 0) return [];
+
+    const filas = await tx
       .update(residencias)
       .set({ hastaEn })
       .where(
-        and(eq(residencias.personaId, personaId), isNull(residencias.hastaEn)),
+        and(
+          inArray(residencias.personaId, identidades),
+          isNull(residencias.hastaEn),
+        ),
       )
       .returning({ id: residencias.id });
 
-    return fila ? comoResidenciaId(fila.id) : null;
+    return filas.map((fila) => comoResidenciaId(fila.id));
   },
 
   async abrir(tx, { ayuntamientoId, personaId, domicilioId, desdeEn }) {
-    const [fila] = await tx
-      .insert(residencias)
-      .values({ ayuntamientoId, personaId, domicilioId, desdeEn })
-      .returning({ id: residencias.id });
+    try {
+      const [fila] = await tx
+        .insert(residencias)
+        .values({ ayuntamientoId, personaId, domicilioId, desdeEn })
+        .returning({ id: residencias.id });
 
-    return comoResidenciaId(fila!.id);
+      return comoResidenciaId(fila!.id);
+    } catch (error) {
+      if (violaRestriccionUnica(error, "residencias_una_abierta_idx")) {
+        throw new MudanzaConcurrenteError();
+      }
+      throw error;
+    }
   },
 
   /**

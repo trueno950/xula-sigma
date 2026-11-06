@@ -375,10 +375,14 @@ Notas que no caben en la tabla, una por fila que las necesita:
   árbol. Redactan con `NoAutorizadoError`/`NoEncontradoError`; la de alta
   también `JerarquiaInvalidaError` -el rechazo de dominio cuando
   `puedeContener` da falso- y `CabeceraDuplicadaError` -una segunda
-  cabecera en el municipio, `lugares_una_cabecera`-, y la de baja,
-  `LugarConDependientesError`.
+  cabecera activa en el municipio, `lugares_una_cabecera`-, y la de baja,
+  `LugarConDependientesError` y sus subclases `LugarConCallesError` y
+  `LugarConZonasError` -el asentamiento todavía tiene calles o zonas
+  activas-, cada una con su propio mensaje.
 - `reparentearLugarAction` (`capa-territorial`, rebanada 3): mismo motivo,
-  y también redacta `JerarquiaInvalidaError`.
+  y también redacta `JerarquiaInvalidaError`, `RaizInvalidaError` y
+  `LugarConDomiciliosError` -mover a otro asentamiento un lugar con
+  domicilios activos en su subárbol-.
 - `altaDeCalleAction`/`renombrarCalleAction` (`capa-territorial`, rebanada
   4): mismo motivo exacto que `altaDeLugarAction`. Las dos redactan
   `NoEncontradoError` y `NombreDeCalleDuplicadoError` -el choque contra
@@ -399,7 +403,9 @@ Notas que no caben en la tabla, una por fila que las necesita:
   accion por defecto de `ActionResult<T>`, no una excepcion de esta tabla- y
   solo escribe el `domicilioId`; el envio sigue siendo el POST nativo. Sin
   JavaScript queda el `<select>` del municipio del HTML inicial. Redacta
-  `NoAutorizadoError` y `NoEncontradoError`.
+  `NoAutorizadoError`, `NoEncontradoError` y `MudanzaConcurrenteError` -dos
+  mudanzas simultaneas de la misma persona chocan con
+  `residencias_una_abierta_idx`-.
 - `altaDeReporteAction` (`reportes`, rebanada 7): mismo motivo exacto que
   `altaDePersonaAction`. `FormularioDeAlta` renderiza la isla
   `SelectorDeUbicacionYTipo` + `ReportesSimilares` (`"use client"`), pero

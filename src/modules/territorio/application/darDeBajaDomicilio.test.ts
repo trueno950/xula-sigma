@@ -58,7 +58,7 @@ describe("darDeBajaDomicilio", () => {
     listar: vi.fn(),
   };
   const repositorioDeResidencias: RepositorioDeResidencias = {
-    cerrarAbierta: vi.fn(),
+    cerrarAbiertas: vi.fn(),
     abrir: vi.fn(),
     historialDe: vi.fn(),
     residentesDe: vi.fn(),
@@ -140,7 +140,7 @@ describe("darDeBajaDomicilio", () => {
         bajaEn: expect.any(Date),
       }),
     );
-    expect(repositorioDeResidencias.cerrarAbierta).not.toHaveBeenCalled();
+    expect(repositorioDeResidencias.cerrarAbiertas).not.toHaveBeenCalled();
     expect(registrarMock).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({

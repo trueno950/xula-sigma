@@ -91,7 +91,8 @@ type DependenciasDeVerificacion = {
  * resuelto: sin nivel declarado sale de la calle, que es la unica parte de
  * la zona que quien captura ya eligio. Lo comparten el alta y la
  * correccion, para que una direccion no pueda quedar en un estado que el
- * alta nunca habria aceptado.
+ * alta nunca habria aceptado. El lugar tambien queda bloqueado: su baja o
+ * su reparenteo esperan a que este domicilio confirme, y lo cuentan.
  */
 export const verificarZonaYCalles = async (
   dependencias: DependenciasDeVerificacion,
@@ -111,7 +112,7 @@ export const verificarZonaYCalles = async (
   const lugarId = datos.lugarId ?? callePrincipal?.lugarId;
   if (!lugarId) throw new NoEncontradoError();
 
-  const lugar = await dependencias.repositorioDeLugares.buscarPorId(
+  const lugar = await dependencias.repositorioDeLugares.bloquearPorId(
     tx,
     lugarId,
   );

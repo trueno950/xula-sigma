@@ -38,7 +38,15 @@ const personaDePrueba = (nombres: string) =>
   );
 
 const domicilioDePrueba = async (nombreCalle: string) => {
-  const lugar = await crearLugar("colonia", `Colonia de ${nombreCalle}`);
+  const asentamiento = await crearLugar(
+    "comisaria",
+    `Comisaria de ${nombreCalle}`,
+  );
+  const lugar = await crearLugar(
+    "colonia",
+    `Colonia de ${nombreCalle}`,
+    asentamiento,
+  );
   return crearDomicilio(lugar, nombreCalle);
 };
 

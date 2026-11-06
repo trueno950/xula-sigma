@@ -24,8 +24,9 @@ export type NuevaCalle = {
  * (tasks.md 4.2): el catalogo de calles es estructura territorial, no
  * trabajo de mostrador.
  *
- * Lee `lugarId` bajo RLS con `repositorioDeLugares.buscarPorId` antes de
- * insertar -mismo precedente que `altaDeLugar.ts` con `padreId`: sin esto,
+ * Lee `lugarId` bajo RLS con `repositorioDeLugares.bloquearPorId` antes de
+ * insertar -mismo precedente que `altaDeLugar.ts` con `padreId`, lock
+ * incluido, y por la misma razon: sin esto,
  * un `lugarId` de otro tenant o inexistente llegaba crudo al FK compuesto
  * de Postgres en vez de un `NoEncontradoError` limpio.
  *
@@ -47,7 +48,7 @@ export function crearAltaDeCalle(
     const id = comoCalleId(randomUUID());
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
-      const lugar = await repositorioDeLugares.buscarPorId(tx, datos.lugarId);
+      const lugar = await repositorioDeLugares.bloquearPorId(tx, datos.lugarId);
       if (!lugar) throw new NoEncontradoError();
       if (!puedeTenerCatalogoDeCalles(lugar.tipo)) {
         throw new CatalogoDeCallesSoloEnAsentamientosError();
