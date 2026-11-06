@@ -7,10 +7,9 @@ import type { RepositorioDeLugares } from "./puertos";
  * ofrecerla. Sin guarda de rol a proposito, mismo criterio que
  * `listarLugares`: leer el territorio no es escribirlo.
  *
- * Cuenta tambien las dadas de baja: el indice parcial `lugares_una_cabecera`
- * no tiene clausula de baja, asi que una cabecera vieja sigue ocupando el
- * lugar de la unica y ofrecer otra terminaria en `CabeceraDuplicadaError`
- * despues de enviar. El porque esta en `puertos.ts`.
+ * Solo cuenta cabeceras activas, igual que `lugares_una_cabecera`: si
+ * divergieran, el alta ofreceria una cabecera que el indice rechaza, o
+ * esconderia una que el indice acepta.
  */
 export function crearExisteCabecera(repositorio: RepositorioDeLugares) {
   return function existeCabecera(contexto: ContextoActual): Promise<boolean> {

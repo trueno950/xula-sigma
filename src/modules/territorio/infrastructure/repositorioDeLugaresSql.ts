@@ -194,7 +194,7 @@ export const repositorioDeLugaresSql: RepositorioDeLugares = {
     const filas = await tx
       .select({ id: lugares.id })
       .from(lugares)
-      .where(eq(lugares.tipo, "cabecera"));
+      .where(and(eq(lugares.tipo, "cabecera"), isNull(lugares.bajaEn)));
     return filas.length > 0;
   },
 };

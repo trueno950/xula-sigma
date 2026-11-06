@@ -55,12 +55,12 @@ export const lugares = pgTable(
     // seccion 7): un ciclo de largo >= 2 queda fuera de este CHECK, ver
     // el limite declarado ahi mismo.
     check("lugares_sin_autopadre", sql`${t.padreId} <> ${t.id}`),
-    // A lo sumo una cabecera por municipio, mismo patron de indice unico
-    // parcial que `ayuntamientos_una_plataforma`
-    // (`shared/tenancy/esquema.ts:77`).
+    // A lo sumo una cabecera activa por municipio, mismo patron de indice
+    // unico parcial que `ayuntamientos_una_plataforma`
+    // (`shared/tenancy/esquema.ts:77`). Una dada de baja no ocupa el lugar.
     uniqueIndex("lugares_una_cabecera")
       .on(t.ayuntamientoId)
-      .where(sql`${t.tipo} = 'cabecera'`),
+      .where(sql`${t.tipo} = 'cabecera' AND ${t.bajaEn} IS NULL`),
     index("lugares_padre_idx").on(t.ayuntamientoId, t.padreId),
     politicaTenant("lugares"),
   ],

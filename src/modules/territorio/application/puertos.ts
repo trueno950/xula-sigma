@@ -86,13 +86,7 @@ export type RepositorioDeLugares = {
   listarRaices(tx: TransaccionTenant): Promise<readonly LugarGuardado[]>;
   /** Todos los lugares activos (`bajaEn IS NULL`), raices y anidados, para el catalogo de "lugar padre" del alta. */
   listarLugares(tx: TransaccionTenant): Promise<readonly LugarGuardado[]>;
-  /**
-   * Si existe **alguna** fila con `tipo = 'cabecera'`, con baja o sin ella.
-   * `lugares_una_cabecera` es un indice unico parcial sin clausula de baja
-   * (`drizzle/0007_territorio.sql`), asi que una cabecera dada de baja
-   * sigue ocupando el lugar de la unica y `listarLugares` -que filtra
-   * `bajaEn`- no puede responderlo.
-   */
+  /** Si existe una cabecera activa: el mismo criterio que `lugares_una_cabecera`. */
   existeCabecera(tx: TransaccionTenant): Promise<boolean>;
 };
 
