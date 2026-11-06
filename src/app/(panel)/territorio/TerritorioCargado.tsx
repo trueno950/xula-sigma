@@ -1,5 +1,6 @@
 import { VistaDeRaices } from "@/modules/territorio";
 import type { LugarGuardado } from "@/modules/territorio/application/puertos";
+import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
 import { declaracionDeDestino } from "@/modules/territorio/ui/declaracionDeDestino";
 import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDomicilios";
@@ -21,6 +22,8 @@ type Props = {
   parametros: ParametrosDeTerritorio;
   raiz: LugarGuardado | null;
   seleccion: SeleccionDeTerritorio;
+  /** Lo capturado en un formulario de domicilio rechazado. */
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 /**
@@ -33,12 +36,14 @@ export const TerritorioCargado = async ({
   parametros,
   raiz,
   seleccion,
+  borrador,
 }: Props) => {
   const {
     nodos,
     nodo,
     calles,
     domicilio,
+    residentes,
     lugares,
     cuentas,
     hayCabecera,
@@ -71,6 +76,10 @@ export const TerritorioCargado = async ({
                 origen: "municipio",
                 tieneColonias: !zonaDeLaEntrada.sinZonas,
               })}
+              {...(parametros.regreso
+                ? { volverA: parametros.regreso, regreso: parametros.regreso }
+                : {})}
+              borrador={borrador}
             />
           ) : null}
 
@@ -96,9 +105,11 @@ export const TerritorioCargado = async ({
           calleId={calleId}
           domicilioId={domicilioId}
           domicilio={domicilio ?? undefined}
+          residentes={residentes}
           permisos={permisos}
           conteos={cuentas}
           domicilioAbierto={domicilioAbierto}
+          borrador={borrador}
         />
       ) : null}
     </PaginaDePanel>

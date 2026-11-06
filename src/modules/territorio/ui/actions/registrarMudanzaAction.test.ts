@@ -61,4 +61,26 @@ describe("registrarMudanzaAction", () => {
       alDetalleCon("No se pudo completar la mudanza. Intente de nuevo."),
     );
   });
+
+  it("un domicilio sin elegir con una persona valida vuelve a su ficha, no al padron", async () => {
+    const formData = new FormData();
+    formData.set("personaId", PERSONA);
+    formData.set("domicilioId", "");
+
+    await expect(registrarMudanzaAction(formData)).rejects.toThrow(
+      alDetalleCon("Persona y domicilio son obligatorios."),
+    );
+    expect(registrarMudanzaMock).not.toHaveBeenCalled();
+  });
+
+  it("sin una persona reconocible no hay ficha a la cual volver y cae al padron", async () => {
+    const formData = new FormData();
+    formData.set("personaId", "../territorio");
+    formData.set("domicilioId", DOMICILIO);
+
+    await expect(registrarMudanzaAction(formData)).rejects.toThrow(
+      `REDIRECT:/padron?error=${encodeURIComponent("Persona y domicilio son obligatorios.")}`,
+    );
+    expect(registrarMudanzaMock).not.toHaveBeenCalled();
+  });
 });

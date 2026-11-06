@@ -4,7 +4,10 @@ import {
   personaPorId,
 } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import type { LecturaDePersonas } from "../application/puertosDeResidencias";
+import type {
+  LecturaDePersonas,
+  LecturaDeResidentes,
+} from "../application/puertosDeResidencias";
 
 /**
  * Implementacion real de `LecturaDePersonas` contra los casos de uso de
@@ -26,4 +29,27 @@ export const crearLectorDePersonasPorPadron = (
     return persona?.id ?? null;
   },
   identidadesDe: (id) => identidadesDePersona(comoPersonaId(id), contexto),
+});
+
+/**
+ * `personaPorId` ya sigue la fusion hasta la terminal: su `id` es el de la
+ * ganadora aunque se pregunte por la perdedora.
+ */
+export const crearLectorDeResidentesPorPadron = (
+  contexto: ContextoActual,
+): LecturaDeResidentes => ({
+  async residenteDe(id) {
+    const persona = await personaPorId(comoPersonaId(id), contexto);
+    if (!persona) return null;
+
+    const nombreCompleto = [
+      persona.nombres,
+      persona.primerApellido,
+      persona.segundoApellido,
+    ]
+      .filter((parte): parte is string => Boolean(parte))
+      .join(" ");
+
+    return { personaId: persona.id, nombreCompleto };
+  },
 });

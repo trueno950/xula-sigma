@@ -2,7 +2,9 @@ import { PencilSimple, Prohibit } from "@phosphor-icons/react/ssr";
 import { ItemDeAccion } from "@/shared/ui";
 import type { CalleGuardada } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
+import type { ResidenteDeDomicilio } from "../application/puertosDeResidencias";
 import type { LugarId } from "../domain";
+import type { BorradorDeDomicilio } from "./borradorDeDomicilio";
 import { FormularioDeBajaDeDomicilio } from "./FormularioDeBajaDeDomicilio";
 import { FormularioDeCorreccionDeDomicilio } from "./FormularioDeCorreccionDeDomicilio";
 import { opcionesDeCalles } from "./opciones";
@@ -20,6 +22,8 @@ type Props = {
   zona: NivelDelFormulario;
   permisos: PermisosDeTerritorio;
   accionAbierta: AccionDeDomicilio | undefined;
+  residentes: readonly ResidenteDeDomicilio[];
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 /**
@@ -36,6 +40,8 @@ export function AccionesDeDomicilio({
   zona,
   permisos,
   accionAbierta,
+  residentes,
+  borrador,
 }: Props) {
   const puedeCorregir = puedeAbrir("corregirDomicilio", permisos);
   const puedeDarDeBaja = puedeAbrir("bajaDomicilio", permisos);
@@ -56,6 +62,7 @@ export function AccionesDeDomicilio({
             domicilio={domicilio}
             calles={opcionesDeCalles(calles)}
             zona={zona}
+            borrador={borrador}
           />
         </ItemDeAccion>
       ) : null}
@@ -73,6 +80,7 @@ export function AccionesDeDomicilio({
               nodo={nodoId}
               domicilio={domicilio.id}
               direccion={direccion}
+              residentes={residentes}
             />
           </ItemDeAccion>
         </div>

@@ -41,6 +41,7 @@ export * from "./renombrarZona";
 export * from "./reparentearCalle";
 export * from "./reparentearLugar";
 export * from "./residentesDe";
+export * from "./residentesDeDomicilio";
 export * from "./subarbol";
 export * from "./ubicacionDeLugar";
 export * from "./ubicarCalle";

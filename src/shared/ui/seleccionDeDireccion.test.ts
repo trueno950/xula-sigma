@@ -3,6 +3,7 @@ import {
   cambiarConsultaDeDireccion,
   crearEstadoInicialDeDireccion,
   limpiarSeleccionDeDireccion,
+  mensajeDeValidezDeDireccion,
   seleccionarDireccion,
 } from "./seleccionDeDireccion";
 
@@ -38,5 +39,31 @@ describe("seleccionDeDireccion", () => {
       consulta: "",
       seleccionada: null,
     });
+  });
+});
+
+describe("mensajeDeValidezDeDireccion", () => {
+  const vacio = crearEstadoInicialDeDireccion<Direccion>();
+
+  it("un selector requerido sin direccion elegida no deja enviar, aunque haya consulta", () => {
+    expect(mensajeDeValidezDeDireccion(vacio, true)).toBe(
+      "Elija una dirección de la lista.",
+    );
+    expect(
+      mensajeDeValidezDeDireccion(
+        cambiarConsultaDeDireccion(vacio, "Calle 20"),
+        true,
+      ),
+    ).toBe("Elija una dirección de la lista.");
+  });
+
+  it("con una direccion elegida el selector requerido es valido", () => {
+    expect(
+      mensajeDeValidezDeDireccion(seleccionarDireccion(vacio, domicilio), true),
+    ).toBe("");
+  });
+
+  it("un selector opcional deja enviar sin direccion, como en reportes", () => {
+    expect(mensajeDeValidezDeDireccion(vacio, false)).toBe("");
   });
 });

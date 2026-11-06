@@ -27,5 +27,6 @@ export {
   type TabDeLugar,
 } from "./PanelDeNodo";
 export { RegistroDeDomicilios } from "./RegistroDeDomicilios";
+export { RegistroDeMudanza } from "./RegistroDeMudanza";
 export { SelectorDePunto } from "./SelectorDePunto";
 export { VistaDeRaices } from "./VistaDeRaices";

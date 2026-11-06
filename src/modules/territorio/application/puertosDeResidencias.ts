@@ -103,3 +103,18 @@ export type LecturaDePersonas = {
   terminalDe(id: string): Promise<string | null>;
   identidadesDe(id: string): Promise<readonly string[]>;
 };
+
+export type ResidenteDeDomicilio = {
+  personaId: string;
+  nombreCompleto: string;
+};
+
+/**
+ * Hermano de `LecturaDePersonas`, con la misma restriccion: sin `tx`, se
+ * llama fuera de `withTenant`. `personaId` es la identidad terminal -la
+ * ganadora de una fusion-, asi que dos ids que colapsan devuelven el mismo.
+ * `null` cuando el padron no resuelve el id.
+ */
+export type LecturaDeResidentes = {
+  residenteDe(id: string): Promise<ResidenteDeDomicilio | null>;
+};

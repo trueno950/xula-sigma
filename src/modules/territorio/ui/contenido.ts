@@ -5,12 +5,14 @@ import type {
 } from "../application/puertos";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
+import type { ResidenteDeDomicilio } from "../application/puertosDeResidencias";
 import {
   type CalleId,
   type DomicilioId,
   type LugarId,
   puedeTenerCatalogoDeCalles,
 } from "../domain";
+import type { BorradorDeDomicilio } from "./borradorDeDomicilio";
 import { descendientesDe } from "./conteo";
 import type {
   AccionDeNodo,
@@ -47,6 +49,10 @@ export type PropsDeContenido = {
   permisos: PermisosDeTerritorio;
   /** Las cuentas por lugar del municipio: las filas de la pestana Lugares. */
   conteos?: readonly ConteoDeLugar[] | undefined;
+  /** Quien vive en `domicilio`; se lee solo cuando hay uno abierto. */
+  residentes?: readonly ResidenteDeDomicilio[] | undefined;
+  /** Lo capturado en un formulario rechazado; ver `borradorEnCookie.ts`. */
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 /** La ruta del lugar actual con pestana y accion opcionales. */

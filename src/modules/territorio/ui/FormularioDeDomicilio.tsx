@@ -1,5 +1,6 @@
 import { Boton, type OpcionDeLista } from "@/shared/ui";
 import { altaDeDomicilioAction } from "./actions/altaDeDomicilioAction";
+import { type BorradorDeDomicilio, camposPara } from "./borradorDeDomicilio";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
 import { VALOR_SIN_COLONIA } from "./declaracionDeDestino";
 import { PieDeFormulario } from "./PieDeFormulario";
@@ -15,6 +16,9 @@ type Props = {
   /** Navegacion de retorno; ver `actions/volverAlArbol.ts`. */
   raiz?: string | undefined;
   nodo?: string | undefined;
+  regreso?: string | undefined;
+  /** Lo capturado en un alta rechazada; ver `borradorEnCookie.ts`. */
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 /**
@@ -49,9 +53,12 @@ export function FormularioDeDomicilio({
   origenDeCalles,
   raiz,
   nodo,
+  regreso,
   volverA,
+  borrador,
 }: Props) {
   const zonaDeAlta = zonaParaAlta(zona);
+  const capturado = camposPara(borrador, { formulario: "alta" });
 
   return (
     <form action={altaDeDomicilioAction} className="flex flex-col gap-6">
@@ -59,6 +66,7 @@ export function FormularioDeDomicilio({
       <input type="hidden" name="accion" value="domicilio" />
       {raiz ? <input type="hidden" name="raiz" value={raiz} /> : null}
       {nodo ? <input type="hidden" name="nodo" value={nodo} /> : null}
+      {regreso ? <input type="hidden" name="regreso" value={regreso} /> : null}
 
       <p className="text-[15px] text-caliza-apagada">{declaracionDeDestino}</p>
 
@@ -68,6 +76,7 @@ export function FormularioDeDomicilio({
         calles={calles}
         zona={zonaDeAlta}
         origenDeCalles={origenDeCalles}
+        {...(capturado ? { valores: capturado } : {})}
         agrupar
       />
 

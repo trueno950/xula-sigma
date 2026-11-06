@@ -1,11 +1,19 @@
-import { BarraDeAcciones, Boton, CLASES_DE_FORMULARIO } from "@/shared/ui";
+import { MapPin } from "@phosphor-icons/react/ssr";
+import {
+  BarraDeAcciones,
+  Boton,
+  CLASES_DE_FORMULARIO,
+  EnlaceDeAccion,
+} from "@/shared/ui";
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
 import { registrarMudanzaAction } from "./actions/registrarMudanzaAction";
+import { enlaceDeAltaDesdeFicha } from "./regresoAFicha";
 import { SelectorDeDomicilioDeMudanza } from "./SelectorDeDomicilioDeMudanza";
 
 type Props = {
   personaId: string;
   domicilios: readonly DomicilioParaListado[];
+  textoDeEnvio: string;
 };
 
 /**
@@ -15,7 +23,11 @@ type Props = {
  * El ID crudo no aparece en ningun lado de la UI, asi que pedirlo escrito
  * era un callejon sin salida.
  */
-export function FormularioDeMudanza({ personaId, domicilios }: Props) {
+export function FormularioDeMudanza({
+  personaId,
+  domicilios,
+  textoDeEnvio,
+}: Props) {
   return (
     <form action={registrarMudanzaAction} className={CLASES_DE_FORMULARIO}>
       <input type="hidden" name="personaId" value={personaId} />
@@ -27,8 +39,15 @@ export function FormularioDeMudanza({ personaId, domicilios }: Props) {
       />
       <BarraDeAcciones>
         <Boton type="submit" variante="primaria">
-          Registrar mudanza
+          {textoDeEnvio}
         </Boton>
+        <EnlaceDeAccion
+          href={enlaceDeAltaDesdeFicha(personaId)}
+          variante="secundaria"
+        >
+          <MapPin size={18} weight="bold" aria-hidden="true" />
+          Registrar un domicilio nuevo
+        </EnlaceDeAccion>
       </BarraDeAcciones>
     </form>
   );

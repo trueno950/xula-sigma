@@ -1,6 +1,7 @@
 import { BarraDeAcciones, Boton, type OpcionDeLista } from "@/shared/ui";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import { corregirDomicilioAction } from "./actions/corregirDomicilioAction";
+import { type BorradorDeDomicilio, camposPara } from "./borradorDeDomicilio";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
 import type { NivelDelFormulario } from "./zonaDelFormulario";
 
@@ -10,7 +11,17 @@ type Props = {
   domicilio: DomicilioGuardado;
   calles: readonly OpcionDeLista[];
   zona: NivelDelFormulario;
+  /** Lo capturado en una correccion rechazada; ver `borradorEnCookie.ts`. */
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
+
+const guardados = (domicilio: DomicilioGuardado) => ({
+  calleId: domicilio.calleId,
+  numero: domicilio.numero ?? "",
+  entreCalleAId: domicilio.entreCalleAId ?? "",
+  entreCalleBId: domicilio.entreCalleBId ?? "",
+  referencia: domicilio.referencia ?? "",
+});
 
 /** Server Component, `<form action={...}>` nativo: los mismos campos que el alta, sin grupos y prefijados. */
 export function FormularioDeCorreccionDeDomicilio({
@@ -19,7 +30,13 @@ export function FormularioDeCorreccionDeDomicilio({
   domicilio,
   calles,
   zona,
+  borrador,
 }: Props) {
+  const capturado = camposPara(borrador, {
+    formulario: "correccion",
+    domicilioId: domicilio.id,
+  });
+
   return (
     <form action={corregirDomicilioAction} className="flex flex-col gap-4">
       <input type="hidden" name="raiz" value={raiz} />
@@ -34,13 +51,7 @@ export function FormularioDeCorreccionDeDomicilio({
         calles={calles}
         zona={zona}
         agrupar={false}
-        valores={{
-          calleId: domicilio.calleId,
-          numero: domicilio.numero ?? "",
-          entreCalleAId: domicilio.entreCalleAId ?? "",
-          entreCalleBId: domicilio.entreCalleBId ?? "",
-          referencia: domicilio.referencia ?? "",
-        }}
+        valores={capturado ?? guardados(domicilio)}
       />
 
       <BarraDeAcciones>

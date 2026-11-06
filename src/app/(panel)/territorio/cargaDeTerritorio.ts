@@ -7,6 +7,7 @@ import {
   listarLugares,
   listarRaices,
   type NodoSeleccionado,
+  residentesDeDomicilio,
   subarbol,
 } from "@/modules/territorio";
 import type { ContextoActual } from "@/shared/auth/contexto";
@@ -109,9 +110,12 @@ export const cargarTerritorio = async ({
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
   // Las cuentas alimentan el arbol de la entrada y las filas de la pestana
   // Lugares: una consulta agrupada para todo el municipio.
-  const [lugares, cuentas] = await Promise.all([
+  const [lugares, cuentas, residentes] = await Promise.all([
     listarLugares(contexto),
     contarSinRomper(contexto),
+    seleccion.domicilio
+      ? residentesDeDomicilio(seleccion.domicilio.id, contexto)
+      : [],
   ]);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
   const entrada = await cargarEntrada({
@@ -127,6 +131,7 @@ export const cargarTerritorio = async ({
     raices,
     lugares,
     cuentas,
+    residentes,
     puedeCrearLugar,
     ...entrada,
   };

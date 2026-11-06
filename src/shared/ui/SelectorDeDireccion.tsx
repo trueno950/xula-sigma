@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Boton } from "./Boton";
 import { Campo } from "./Campo";
 import { CampoDeLista, type OpcionDeLista } from "./CampoDeLista";
 import {
   cambiarConsultaDeDireccion,
   crearEstadoInicialDeDireccion,
+  type EstadoDeSeleccionDeDireccion,
   limpiarSeleccionDeDireccion,
+  mensajeDeValidezDeDireccion,
   type OpcionDeDireccion,
   seleccionarDireccion,
 } from "./seleccionDeDireccion";
@@ -23,6 +25,27 @@ type Props<T extends OpcionDeDireccion> = ConfiguracionDeTextos & {
   nombre: string;
   buscar: AccionDeBusqueda<T>;
   onSeleccionar?: (direccion: T | null) => void;
+  /** Sin direccion elegida, el navegador no envia el formulario. */
+  requerido?: boolean;
+};
+
+/**
+ * El campo oculto con el id solo existe con una direccion elegida, y un
+ * `hidden` no admite `required`: la validez se cuelga del buscador, que es
+ * donde el navegador puede enfocar y mostrar el mensaje.
+ */
+const useValidezDeDireccion = <T extends OpcionDeDireccion>(
+  estado: EstadoDeSeleccionDeDireccion<T>,
+  requerido: boolean,
+) => {
+  const buscador = useRef<HTMLInputElement>(null);
+  const mensaje = mensajeDeValidezDeDireccion(estado, requerido);
+
+  useEffect(() => {
+    buscador.current?.setCustomValidity(mensaje);
+  }, [mensaje]);
+
+  return buscador;
 };
 
 /** Buscador de direcciones por texto, sin conocer de qué módulo vienen. */
@@ -33,10 +56,12 @@ export function SelectorDeDireccion<T extends OpcionDeDireccion>({
   onSeleccionar,
   etiquetaDeLista,
   alternativa,
+  requerido = false,
 }: Props<T>) {
   const [estado, setEstado] = useState(() =>
     crearEstadoInicialDeDireccion<T>(),
   );
+  const buscador = useValidezDeDireccion(estado, requerido);
   const textos = textosDeSeleccionDeDireccion({
     etiquetaDeLista,
     ...(alternativa ? { alternativa } : {}),
@@ -70,8 +95,10 @@ export function SelectorDeDireccion<T extends OpcionDeDireccion>({
   return (
     <div className="flex flex-col gap-4">
       <Campo
+        ref={buscador}
         id={`${id}-consulta`}
         type="search"
+        required={requerido}
         etiqueta="Buscar una dirección registrada"
         maxLength={120}
         autoComplete="off"

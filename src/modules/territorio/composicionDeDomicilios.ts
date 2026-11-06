@@ -7,10 +7,12 @@ import {
   crearDomicilioPorId,
   crearListarDomicilios,
   crearRegistroDeDomicilios,
+  crearResidentesDeDomicilio,
   type FiltrosDeRegistro,
 } from "./application";
 import { crearDomiciliosDeZona } from "./application/crearDomiciliosDeZona";
 import {
+  crearLectorDeResidentesPorPadron,
   repositorioDeCallesDeZonasSql,
   repositorioDeCallesSql,
   repositorioDeDomiciliosSql,
@@ -67,4 +69,9 @@ export const corregirDomicilio = crearCorregirDomicilio(
 export const darDeBajaDomicilio = crearDarDeBajaDomicilio(
   repositorioDeDomiciliosSql,
   repositorioDeResidenciasSql,
+);
+
+export const residentesDeDomicilio = crearResidentesDeDomicilio(
+  repositorioDeResidenciasSql,
+  crearLectorDeResidentesPorPadron,
 );

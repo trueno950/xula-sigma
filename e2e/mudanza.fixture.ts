@@ -6,11 +6,17 @@ type IdRow = { id: string };
 
 export type EscenarioDeMudanza = {
   domicilioId: string;
+  calleId: string;
+  coloniaId: string;
+  /** La etiqueta del buscador para un domicilio de esta calle y colonia. */
+  etiquetaCon: (numero: string) => string;
   consulta: string;
   etiqueta: string;
   personaConJavaScriptId: string;
   personaSinJavaScriptId: string;
   personaAntesDeHidratarId: string;
+  personaSinElegirId: string;
+  personaIdaYVueltaId: string;
 };
 
 const exigirId = (fila: IdRow | undefined, concepto: string): string => {
@@ -60,25 +66,34 @@ export async function prepararEscenarioDeMudanza(): Promise<EscenarioDeMudanza> 
         VALUES (${MUNICIPIOS.motul.id}, ${nombreCalle}, ${asentamientoId})
         RETURNING id
       `;
+      const coloniaId = exigirId(colonia, "colonia");
+      const calleId = exigirId(calle, "calle");
       const [domicilio] = await tx<IdRow[]>`
         INSERT INTO domicilios (ayuntamiento_id, lugar_id, calle_id, numero)
-        VALUES (${MUNICIPIOS.motul.id}, ${exigirId(colonia, "colonia")},
-          ${exigirId(calle, "calle")}, '17-A')
+        VALUES (${MUNICIPIOS.motul.id}, ${coloniaId}, ${calleId}, '17-A')
         RETURNING id
       `;
 
       return {
         domicilioId: exigirId(domicilio, "domicilio"),
+        calleId,
+        coloniaId,
         personaConJavaScriptId: await insertarPersona(tx, `Conjs${marca}`),
         personaSinJavaScriptId: await insertarPersona(tx, `Sinjs${marca}`),
         personaAntesDeHidratarId: await insertarPersona(tx, `Prehid${marca}`),
+        personaSinElegirId: await insertarPersona(tx, `Sinelegir${marca}`),
+        personaIdaYVueltaId: await insertarPersona(tx, `Idayvuelta${marca}`),
       };
     });
 
+    const etiquetaCon = (numero: string) =>
+      `${nombreCalle} #${numero}, ${nombreColonia}, ${nombreAsentamiento}`;
+
     return {
       ...semilla,
+      etiquetaCon,
       consulta: nombreCalle,
-      etiqueta: `${nombreCalle} #17-A, ${nombreColonia}, ${nombreAsentamiento}`,
+      etiqueta: etiquetaCon("17-A"),
     };
   } finally {
     await app.end();
@@ -101,6 +116,29 @@ export async function leerDomicilioVigente(
          WHERE persona_id = ${personaId} AND hasta_en IS NULL
       `;
       return fila?.domicilioId ?? null;
+    });
+  } finally {
+    await app.end();
+  }
+}
+
+/** El domicilio activo de una calle con ese número, leído de la base. */
+export async function leerDomicilioPorNumero(
+  calleId: string,
+  numero: string,
+): Promise<string | null> {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("Falta DATABASE_URL para el E2E de mudanza.");
+
+  const app = postgres(url, { max: 1 });
+  try {
+    return await app.begin(async (tx) => {
+      await tx`SELECT set_config('app.tenant', ${MUNICIPIOS.motul.id}, true)`;
+      const [fila] = await tx<IdRow[]>`
+        SELECT id FROM domicilios
+         WHERE calle_id = ${calleId} AND numero = ${numero} AND baja_en IS NULL
+      `;
+      return fila?.id ?? null;
     });
   } finally {
     await app.end();
