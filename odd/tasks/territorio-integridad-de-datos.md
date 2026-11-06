@@ -44,7 +44,7 @@ Runner: Vitest (`pnpm test`, integración sobre `xula_test`) y `pnpm check`.
   Risk: item 1 (migración), item 4 (bloqueos). Commit: `3c96ef6`.
 - [x] **T2** · S3,S5 · delegado (mismo motivo) — Residencias: mudanza que
   cierra todas las identidades y error tipado de mudanza concurrente.
-  Risk: item 1 (datos de residencias), item 4. Commit:
+  Risk: item 1 (datos de residencias), item 4. Commit: `9a76722`.
 - [ ] **T3** · S1-S5 · verificador independiente al final de la feature,
   `pnpm check` y suite completa, PR con issue aprobado.
 
@@ -64,4 +64,6 @@ Runner: Vitest (`pnpm test`, integración sobre `xula_test`) y `pnpm check`.
 - **L3** — 2026-11-06. Primer intento de commit de T1 frenado por `pnpm reglas` (antipatrón 2): `lugares.concurrencia.integration.test.ts` importaba el tipo `TransactionSql` de `postgres`. Corregido con el patrón existente: el tipo `CambioDeLugar` vive en el andamiaje `carrerasDeCalleDePrueba.ts`, junto a `CambioDeCalle`. Reglas sin hallazgos, typecheck limpio y el test de concurrencia 2/2.
 
 - **L4** — 2026-11-06. T2 del escritor: S3 y S5 cubiertos. `registrarMudanza` lee `identidadesDe(terminal)` fuera de `withTenant` y cierra con `cerrarAbiertas(tx, identidades, hastaEn)` todas las residencias abiertas, con una traza `CERRAR_RESIDENCIA` por cada una. El choque con `residencias_una_abierta_idx` se traduce en `abrir` a `MudanzaConcurrenteError` («Ya se registró otra mudanza para esta persona al mismo tiempo. Revise el historial.»), redactado en `registrarMudanzaAction` y anotado en AGENTS.md. Sin lock adicional: `FOR UPDATE` no serializa una primera mudanza (no hay fila) y con residencia abierta el `UPDATE` ya bloquea; el índice único es el mecanismo y el error tipado su resultado. RED en 8 casos (unitarios, acción, fusión real y carrera real con `enTransaccionParalela`) y GREEN; módulo 150 archivos y 760 tests; reglas sin hallazgos; suite completa 473 archivos y 2418 tests. Comprobación del padre: `pnpm check` exit 0. Risk: item 1 (datos de residencias), item 4 (concurrencia).
+
+- **L5** — 2026-11-06. Verificador independiente de la feature completa (`0caa85c..9a76722`): S1-S5 cumplen, sin bloqueantes. Orden de locks sin riesgo de deadlock. `pnpm db:migrate` exit 0 (0022 ya aplicada), `drizzle-kit check` «Everything's fine», módulos territorio/constancias/padron 231 archivos y 1093 tests, suite completa 473 archivos y 2418 tests. Diferencial unitario contra la base: 578 tests comunes, ninguno falla solo en el candidato. Advertencias, sin corrección: (1) reparentear una colonia activa cuyo padre está dado de baja (dato huérfano heredado) ahora da `NoEncontradoError` aunque no tenga domicilios; (2) `reparentearLugar` no bloquea el nuevo padre, igual que antes; (3) `identidadesDe` se lee fuera de la transacción, intercambio aceptado; (4) ningún test fija que un 23505 de otro índice no se convierta en `MudanzaConcurrenteError`. Directorio temporal del verificador borrado por el padre.
 
