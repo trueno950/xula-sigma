@@ -43,6 +43,7 @@ type Props = {
   domicilio: DomicilioGuardado | undefined;
   permisos: PermisosDeTerritorio;
   conteos?: PropsDeContenido["conteos"];
+  residentes?: PropsDeContenido["residentes"];
   /** El alta de domicilio esta abierta en la pestana Domicilios. */
   domicilioAbierto: boolean;
 };
@@ -66,6 +67,7 @@ export function VistaDeLugar({
   domicilio,
   permisos,
   conteos,
+  residentes,
   domicilioAbierto,
 }: Props) {
   const zona = zonaDelFormulario(
@@ -119,6 +121,7 @@ export function VistaDeLugar({
         accion={accion}
         permisos={permisos}
         conteos={conteos}
+        residentes={residentes}
       />
 
       {vistaVisible === "domicilios" &&

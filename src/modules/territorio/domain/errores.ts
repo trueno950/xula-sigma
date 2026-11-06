@@ -168,7 +168,7 @@ export class DomicilioConResidentesError extends Error {
   readonly codigo = "DOMICILIO_CON_RESIDENTES";
 
   constructor(
-    mensaje = "El domicilio tiene residentes vigentes y no se puede dar de baja.",
+    mensaje = "Esta dirección tiene residentes vigentes. Registre primero la mudanza de cada uno desde su ficha del padrón y vuelva a dar de baja la dirección.",
   ) {
     super(mensaje);
     this.name = "DomicilioConResidentesError";

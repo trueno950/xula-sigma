@@ -39,6 +39,7 @@ export const TerritorioCargado = async ({
     nodo,
     calles,
     domicilio,
+    residentes,
     lugares,
     cuentas,
     hayCabecera,
@@ -99,6 +100,7 @@ export const TerritorioCargado = async ({
           calleId={calleId}
           domicilioId={domicilioId}
           domicilio={domicilio ?? undefined}
+          residentes={residentes}
           permisos={permisos}
           conteos={cuentas}
           domicilioAbierto={domicilioAbierto}

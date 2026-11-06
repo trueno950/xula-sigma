@@ -21,6 +21,7 @@ export function TabDeDomicilios({
   domicilio,
   accion,
   permisos,
+  residentes,
 }: PropsDeContenido) {
   const puedeActuar = puedeAbrir("domicilio", permisos);
   const colgados = domiciliosDelSubarbolDe(nodos, lugar.id);
@@ -75,6 +76,7 @@ export function TabDeDomicilios({
               nodos={nodos}
               accion={accion}
               permisos={permisos}
+              residentes={residentes ?? []}
             />
           ) : null}
         </div>

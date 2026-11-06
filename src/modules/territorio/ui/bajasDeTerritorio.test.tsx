@@ -60,6 +60,7 @@ describe("la baja en territorio", () => {
         nodo={nodo}
         domicilio="44444444-4444-4444-8444-444444444444"
         direccion="Calle 15 #12"
+        residentes={[]}
       />,
     );
 

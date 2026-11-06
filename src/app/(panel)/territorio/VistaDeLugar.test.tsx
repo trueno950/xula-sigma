@@ -11,8 +11,17 @@ vi.mock("@/modules/territorio", () => ({
   PanelDeNodo: ({ vista }: { vista: string }) => (
     <div data-panel-vista={vista} />
   ),
-  ContenidoDeLugar: ({ vista }: { vista: string }) => (
-    <div data-contenido-vista={vista} />
+  ContenidoDeLugar: ({
+    vista,
+    residentes,
+  }: {
+    vista: string;
+    residentes?: readonly unknown[];
+  }) => (
+    <div
+      data-contenido-vista={vista}
+      data-residentes={residentes?.length ?? "ninguno"}
+    />
   ),
 }));
 
@@ -168,5 +177,24 @@ describe("El alta de domicilio en el contexto del lugar", () => {
 
     expect(htmlDe(permisos, false)).not.toContain("Registrar domicilio");
     expect(htmlDe(permisos, true)).not.toContain('name="calleId"');
+  });
+});
+
+describe("La vista de lugar con un domicilio abierto", () => {
+  it("pasa los residentes del domicilio abierto al contenido", () => {
+    const base = props(permisosDeTerritorio("CONSULTA"), false);
+    const html = renderToStaticMarkup(
+      <VistaDeLugar
+        {...base}
+        residentes={[
+          {
+            personaId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            nombreCompleto: "Rosa Pech",
+          },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('data-residentes="1"');
   });
 });

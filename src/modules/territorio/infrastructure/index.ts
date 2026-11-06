@@ -1,7 +1,10 @@
 export { lectorDeCallesDeMapaSql } from "./lectorDeCallesDeMapaSql";
 export { lectorDeContenidoDeLugaresSql } from "./lectorDeContenidoDeLugaresSql";
 export { lectorDeDireccionesSql } from "./lectorDeDireccionesSql";
-export { crearLectorDePersonasPorPadron } from "./lectorDePersonasPorPadron";
+export {
+  crearLectorDePersonasPorPadron,
+  crearLectorDeResidentesPorPadron,
+} from "./lectorDePersonasPorPadron";
 export { lectorDeUbicacionesSql } from "./lectorDeUbicacionesSql";
 export { repositorioDeCallesDeZonasSql } from "./repositorioDeCallesDeZonasSql";
 export { repositorioDeCallesSql } from "./repositorioDeCallesSql";

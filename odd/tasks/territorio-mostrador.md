@@ -33,8 +33,8 @@ flujos de navegador, y `pnpm check`.
 ## Tasks
 
 - [x] **T1** · S1,S2 · delegado (respaldo de contexto de la sesión
-  principal) — Mudanza y vuelta desde el alta de domicilio. Commit:
-- [ ] **T2** · S3 · delegado (mismo motivo) — Residentes en el panel del
+  principal) — Mudanza y vuelta desde el alta de domicilio. Commit: `b2de9d6`.
+- [x] **T2** · S3 · delegado (mismo motivo) — Residentes en el panel del
   domicilio. Commit:
 - [ ] **T3** · S4 · delegado — Cookie temporal con lo capturado en el alta y
   la corrección de domicilio. Commit:
@@ -58,4 +58,8 @@ flujos de navegador, y `pnpm check`.
   dejarlo para después.
 
 - **L3** — 2026-11-06. T1 del escritor: S1 y S2 cubiertos. `registrarMudanzaAction` vuelve a `/padron/<id>?error=` cuando el `personaId` es un uuid válido. `SelectorDeDireccion` gana la prop opcional `requerido` (por defecto falso; reportes no cambia): con ella el buscador usa `required` y `setCustomValidity` hasta que se elige una dirección. `regresoAFicha.ts` valida el retorno como `/padron/<uuid>` exacto (rechaza URLs absolutas, `//`, `..`, query y otras rutas); el alta de domicilio lo lleva como campo oculto y, si es válido, redirige a la ficha con `?ok=domicilio-creado`. `RegistroDeMudanza.tsx` titula «Registrar domicilio actual» con historial vacío y ofrece «Registrar un domicilio nuevo». RED/GREEN observados por regla; E2E (a) RED sin `requerido`, (b) ida y vuelta completa en verde. Módulo, shared/ui y rutas 189 archivos y 983 tests; suite completa 477 archivos y 2455 tests; E2E de mudanza y reportes 7/7. Comprobación del padre: `pnpm check` exit 0. Risk: item 2 (destino de redirección tomado del cliente, con esquema estricto y tests), item 3 menor (prop opcional nueva en el selector compartido).
+
+- **L4** — 2026-11-06. Revisión nativa de T1 (`4c65dee..b2de9d6`, riesgo alto por item 2): `review-ce6d33fdb3cda2e5` aprobada y reconocida; advertencia informativa: falta un test del `required` sin JavaScript.
+
+- **L5** — 2026-11-06. T2 del escritor: S3 cubierto. Nuevo caso de uso `residentesDeDomicilio` (residencias abiertas bajo `withTenant` y nombres por el puerto hermano `LecturaDeResidentes`, adaptador sobre `personaPorId` de padrón, agrupados por identidad terminal y ordenados por nombre); sección «Residentes» con enlaces a la ficha y estado vacío en el panel; la baja avisa «Antes de dar de baja esta dirección, registre la mudanza de: …» y `DomicilioConResidentesError` dice qué hacer. Sin guarda de rol, igual que la lectura de la ficha. El formulario de baja manda el `domicilio` oculto para que un rechazo vuelva al panel abierto. RED/GREEN por regla; el test de integración se escribió después del GREEN y se probó que puede fallar quitando la agrupación. Módulo y rutas 169 archivos y 876 tests; reglas sin hallazgos; suite completa 482 archivos y 2473 tests. Pendiente aparte: la unión del nombre completo ya está en tres adaptadores (reportes, constancias, territorio); conviene un ayudante en padrón. Comprobación del padre: `pnpm check` exit 0. Risk: item 3 menor (mensaje de `DomicilioConResidentesError` y prop opcional en `PropsDeContenido`).
 

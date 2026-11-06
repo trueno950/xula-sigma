@@ -5,6 +5,7 @@ import type {
 } from "../application/puertos";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
+import type { ResidenteDeDomicilio } from "../application/puertosDeResidencias";
 import {
   type CalleId,
   type DomicilioId,
@@ -47,6 +48,8 @@ export type PropsDeContenido = {
   permisos: PermisosDeTerritorio;
   /** Las cuentas por lugar del municipio: las filas de la pestana Lugares. */
   conteos?: readonly ConteoDeLugar[] | undefined;
+  /** Quien vive en `domicilio`; se lee solo cuando hay uno abierto. */
+  residentes?: readonly ResidenteDeDomicilio[] | undefined;
 };
 
 /** La ruta del lugar actual con pestana y accion opcionales. */
