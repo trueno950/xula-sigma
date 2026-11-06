@@ -403,3 +403,6 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - **L37** — 2026-11-05. Pedido textual: «Si» (ver S10). Plan T7b: quitar `<noscript>` y `useSyncExternalStore`; el `<select>` se renderiza siempre en el HTML inicial y, al montar, un efecto lee si ya tiene valor: con valor se queda la lista, sin valor aparece el buscador. E2E que retiene los chunks de JavaScript para elegir antes de hidratar y comprueba que la elección se conserva y se guarda.
 
 - **L38** — 2026-11-05. T7b: RED unitario (el HTML inicial no traía el `<select>` fuera de `<noscript>`) y RED E2E reproduciendo R3-mudanza-sin-hidratar (con los chunks de JavaScript retenidos, `getByLabel('Domicilio')` agotó 30 s). GREEN: unitario 4/4, E2E de mudanza 3/3 (con JS, sin JS y elección antes de hidratar conservada y guardada). `pnpm check` exit 0 (54 warnings y 2 infos existentes), suite 2386/2386. Risk: none (solo la isla de mudanza, sin código compartido).
+
+- **L39** — 2026-11-05. Pedido del usuario: «Crear issue aprobado (Recomendado)», para enlazar el PR de T7. Issue #109 creado con `enhancement,status:approved`. Rama publicada; PR #110 hacia `main` con `Closes #109` y `type:feature`. Sin merge.
+
