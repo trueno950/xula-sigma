@@ -12,6 +12,7 @@ import {
   cargarTerritorio,
   type SeleccionDeTerritorio,
 } from "./cargaDeTerritorio";
+import { EnlacesDeLaEntrada } from "./EnlacesDeLaEntrada";
 import { MENSAJE_DE_CONFIRMACION } from "./mensajeDeConfirmacion";
 import type { ParametrosDeTerritorio } from "./parametros";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
@@ -63,6 +64,7 @@ export const TerritorioCargado = async ({
       {...cabecera}
       accion={raiz ? undefined : accionesDeRaiz({ puedeCrearLugar, accion })}
     >
+      {raiz ? null : <EnlacesDeLaEntrada />}
       {error ? <Aviso tono="error">{error}</Aviso> : null}
       {ok ? <Aviso tono="exito">{MENSAJE_DE_CONFIRMACION[ok]}</Aviso> : null}
 

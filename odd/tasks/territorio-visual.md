@@ -55,8 +55,8 @@ Cada S cita el hallazgo de la auditoría visual; el arreglo sale de su texto.
 
 - [x] **T1** · S2,S5,S6 · delegado (respaldo de contexto) — Ajustes rápidos.
   Commit: `0e01d8b`.
-- [x] **T2** · S3 · delegado — Zonas al sistema. Commit:
-- [ ] **T3** · S1,S4 · delegado — Lo que se abre, a la vista; cabecera de la
+- [x] **T2** · S3 · delegado — Zonas al sistema. Commit: `7d89977`.
+- [x] **T3** · S1,S4 · delegado — Lo que se abre, a la vista; cabecera de la
   entrada. Commit:
 - [ ] **T4** · S1-S6 · capturas antes/después, suite completa, E2E, PR con
   issue aprobado.
@@ -77,4 +77,6 @@ Cada S cita el hallazgo de la auditoría visual; el arreglo sale de su texto.
 - **L3** — 2026-11-06. Revisiones de T1: `review-80a4afddc34c490a` (`1f3e488..0e01d8b`) y `review-b2614b0837d5a7f1` (`0c9844f..0e01d8b`, pedida por el hook), aprobadas y reconocidas, con sugerencias informativas.
 
 - **L4** — 2026-11-06. T2 del escritor: S3 cubierto. Las filas de Zonas solo navegan (sin `<form>` dentro del enlace, sin columna «Acciones»); alta en un `Panel` «Nueva zona» con `CampoDeLista` y `Campo`; «Volver a Territorio»; `AccionesDeZona.tsx` con «Renombrar» y «Dar de baja» en `<details>` vía `ItemDeAccion`, la baja en rojo, al final y con su consecuencia; «Quitar {calle} de la zona» como botón fantasma de 44 px; «Agregar a la zona» con el select del sistema. Las cinco acciones nativas no cambian. RED/GREEN 6 tests nuevos; E2E de zonas con el ciclo completo 4/4; módulos 203 archivos y 1050 tests; reglas sin hallazgos; suite completa 491 archivos y 2522 tests. Efecto: el alta de zona ahora exige elegir el asentamiento aunque haya uno solo; «Renombrar» queda un clic más adentro. Comprobación del padre: `pnpm check` exit 0. Risk: none.
+
+- **L5** — 2026-11-06. T3 del escritor: S1 y S4 cubiertos. Las altas de domicilio, calle, lugar y asentamiento se renderizan antes de su lista, con ancla `#panel-de-alta` (`anclaDeAlta.ts`) y `scroll-mt-4` en `Panel`; el panel de calle va primero en el HTML (primero en móvil) y fijo en la columna derecha desde 1024 px. Decisión del escritor: en escritorio el alta va arriba de la lista y no en la columna derecha, misma disposición en escritorio y móvil, sin JavaScript. La entrada tiene un solo primario, «Registrar domicilio», a ancho completo bajo 640 px; «Ver registro de domicilios» y «Zonas operativas» son enlaces de contexto de 44 px; «Agregar asentamiento» al pie del árbol. `PaginaDePanel` (compartido) pone la acción de cabecera en su propia línea en móvil. RED unitario observado; E2E nuevo `loQueSeAbre.spec.ts` a 1366×768 y 390×844 con `toBeInViewport()` sin RED observado contra el código anterior. Suite completa 493 archivos y 2537 tests; E2E 23/23. Comprobación del padre: `pnpm check` exit 0. Abierto: el panel de domicilio sigue después de la lista en móvil. Risk: item 3 (`Panel` y `PaginaDePanel` compartidos).
 

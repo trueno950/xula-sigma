@@ -34,9 +34,10 @@ type Props = {
 const ENLACE_DE_CONTEXTO = `inline-flex items-center gap-2 self-start rounded-sm text-[15px] ${CLASES_DE_ENLACE}`;
 
 /**
- * El detalle de la calle elegida. Con `lg` se sienta junto a la tabla y se
- * pega a la ventana; debajo de 1024px queda tras la lista y la fila enlaza a
- * `#panel-de-calle` para que el panel entre a la vista sin JavaScript.
+ * El detalle de la calle elegida. Con `lg` se sienta en la segunda columna,
+ * junto a la tabla, y se pega a la ventana; debajo de 1024px va antes de la
+ * lista y la fila enlaza a `#panel-de-calle` para que entre a la vista sin
+ * JavaScript.
  *
  * `/mapa-operativo` no acepta una calle ni un lugar (solo tipo, estado y
  * area), por eso el enlace va sin parametros.
@@ -60,7 +61,7 @@ export function PanelDeCalle({
     <section
       id="panel-de-calle"
       aria-label={calle.nombre}
-      className={`flex scroll-mt-4 flex-col gap-4 ${CLASES_DE_TARJETA} lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto`}
+      className={`flex scroll-mt-4 flex-col gap-4 ${CLASES_DE_TARJETA} lg:col-start-2 lg:row-start-1 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-1">

@@ -1,4 +1,5 @@
 import { FormularioDeDomicilio } from "@/modules/territorio/ui";
+import { ANCLA_DE_ALTA } from "@/modules/territorio/ui/anclaDeAlta";
 import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
 import { PanelDeAccion } from "@/modules/territorio/ui/PanelDeAccion";
 import type { NivelDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
@@ -33,7 +34,7 @@ export function RegistroDeDomicilio({
   borrador,
 }: Props) {
   return (
-    <PanelDeAccion titulo="Registrar domicilio">
+    <PanelDeAccion titulo="Registrar domicilio" id={ANCLA_DE_ALTA}>
       <FormularioDeDomicilio
         calles={calles}
         zona={zona}

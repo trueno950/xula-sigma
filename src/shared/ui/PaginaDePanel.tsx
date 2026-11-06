@@ -38,6 +38,9 @@ type Props = {
  * `min-h-dvh` se fue con la copia: el layout del panel ya ocupa la ventana
  * entera, y estirar tambien el `<main>` sumaba 64px de scroll vacio abajo
  * de cada pantalla.
+ *
+ * Bajo 640px la accion baja a su propia linea a todo el ancho: quien la
+ * pinta decide si su boton se estira (`AccionesDeRaiz` lo hace).
  */
 export function PaginaDePanel({
   titulo,
@@ -71,7 +74,9 @@ export function PaginaDePanel({
             </p>
           ) : null}
         </div>
-        {accion ? <div className="min-w-0 max-w-full">{accion}</div> : null}
+        {accion ? (
+          <div className="min-w-0 max-w-full max-sm:w-full">{accion}</div>
+        ) : null}
       </div>
       {children}
     </main>

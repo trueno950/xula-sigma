@@ -1,5 +1,13 @@
-import { AvisoDePermiso, EstadoVacio, estadoDeLista, Panel } from "@/shared/ui";
+import { Plus } from "@phosphor-icons/react/ssr";
+import {
+  AvisoDePermiso,
+  EnlaceDeAccion,
+  EstadoVacio,
+  estadoDeLista,
+  Panel,
+} from "@/shared/ui";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
+import { ANCLA_DE_ALTA, conAnclaDeAlta } from "./anclaDeAlta";
 import { armarArbol, type LugarDelArbol } from "./arbolDeLugares";
 import { BuscadorDeLugares } from "./BuscadorDeLugares";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
@@ -36,7 +44,9 @@ type Props = {
  * consulta agrupada, nunca una por fila.
  *
  * El alta ya no vive en un panel lateral permanente. Ocupaba 320px fijos
- * estuviera o no en uso, y competia con la tarea de todos los dias.
+ * estuviera o no en uso, y competia con la tarea de todos los dias. Se
+ * ofrece al pie del arbol, como secundaria -la primaria de la cabecera es
+ * registrar un domicilio-, y abierta va arriba del arbol, a la vista.
  */
 export function VistaDeRaices({
   raices,
@@ -52,12 +62,21 @@ export function VistaDeRaices({
   const cuentasPorLugar = new Map(cuentas.map((c) => [c.lugarId, c]));
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 [&>a]:self-start max-sm:[&>a]:self-stretch">
       {!puedeEscribir ? (
         <AvisoDePermiso
           capacidad="agregar asentamientos al territorio"
           requisito="un rol con permisos de escritura"
         />
+      ) : null}
+
+      {puedeEscribir && altaAbierta ? (
+        <Panel titulo="Agregar asentamiento" id={ANCLA_DE_ALTA}>
+          <FormularioDeAltaDeLugar
+            hayCabecera={hayCabecera}
+            volverA="/territorio"
+          />
+        </Panel>
       ) : null}
 
       {raices.length > 0 || busqueda ? (
@@ -86,13 +105,14 @@ export function VistaDeRaices({
         />
       )}
 
-      {puedeEscribir && altaAbierta ? (
-        <Panel titulo="Agregar asentamiento">
-          <FormularioDeAltaDeLugar
-            hayCabecera={hayCabecera}
-            volverA="/territorio"
-          />
-        </Panel>
+      {puedeEscribir && !altaAbierta ? (
+        <EnlaceDeAccion
+          href={conAnclaDeAlta("/territorio?accion=lugar")}
+          variante="secundaria"
+        >
+          <Plus size={18} weight="bold" aria-hidden="true" />
+          Agregar asentamiento
+        </EnlaceDeAccion>
       ) : null}
     </div>
   );

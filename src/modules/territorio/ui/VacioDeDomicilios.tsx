@@ -2,6 +2,7 @@ import { Plus } from "@phosphor-icons/react/ssr";
 import { EnlaceDeAccion, EstadoVacio } from "@/shared/ui";
 import type { LugarId } from "../domain";
 import { puedeTenerCatalogoDeCalles } from "../domain";
+import { conAnclaDeAlta } from "./anclaDeAlta";
 import { rutaDe } from "./contenido";
 import type { NodoSeleccionado } from "./PanelDeNodo";
 
@@ -22,12 +23,14 @@ export function salidaSinCalles(
     texto: poseeCatalogo
       ? `Antes de cargar un domicilio hace falta al menos una calle en ${lugar.nombre}.`
       : "Antes de cargar un domicilio hace falta al menos una calle en el asentamiento que lo contiene.",
-    href: rutaDe({
-      raizId,
-      nodoId: poseeCatalogo ? lugar.id : raizId,
-      vista: "calles",
-      accion: "calle",
-    }),
+    href: conAnclaDeAlta(
+      rutaDe({
+        raizId,
+        nodoId: poseeCatalogo ? lugar.id : raizId,
+        vista: "calles",
+        accion: "calle",
+      }),
+    ),
   };
 }
 

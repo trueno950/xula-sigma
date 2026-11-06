@@ -31,15 +31,18 @@ export function BarraDeAcciones({ children }: { children: ReactNode }) {
  */
 export function PanelDeAccion({
   titulo,
+  id,
   volverA,
   children,
 }: {
   titulo: string;
+  /** El ancla del enlace que lo abrio; ver `anclaDeAlta.ts`. */
+  id?: string;
   volverA?: string;
   children: ReactNode;
 }) {
   return (
-    <Panel titulo={titulo}>
+    <Panel titulo={titulo} id={id}>
       {children}
       {volverA ? (
         <EnlaceDeAccion href={volverA} variante="fantasma">
