@@ -51,6 +51,22 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 
 - **S8.** «si», respuesta a «¿Autorizás ese arreglo y su publicación en el mismo PR #108, sin merge ni T7?». Se acepta la recomendación: «una corrección acotada al **arnés de acceso E2E y su prueba**: reproducir el fallo, corregir la coordinación entre respuesta y navegación, y conservar la exigencia de un único POST. Sin relajar aserciones ni aumentar timeouts a ciegas.»
 
+- **S9.** «dale con la recomendacion», respuesta a «¿Avanzo con esa
+  interpretación: buscador en la mudanza y la emisión de constancias sin
+  cambios?». Recomendación aceptada: «que «lo mismo para las constancias» se
+  aplique al **formulario de mudanza**. Sería reemplazar ese `<select>` por
+  el mismo `SelectorDeDireccion` que usa el alta de reportes, buscable por
+  texto. La emisión de la constancia seguiría como está.» Con sus tres
+  implicaciones: textos del selector por prop, búsqueda propia de
+  Territorio y el `<select>` actual como respaldo sin JavaScript.
+
+- **S10.** «Si», respuesta a «Te recomiendo corregir esa advertencia antes
+  del PR: es un arreglo chico con su test. ¿Lo hago y después publico el
+  PR?». Advertencia aceptada (R3-mudanza-sin-hidratar): «con JavaScript
+  activo, mientras la página todavía no termina de cargar el formulario no
+  muestra cómo elegir domicilio». Autoriza el arreglo, su test, y después
+  push de la rama y PR; no merge.
+
 ## Tasks
 
 - [x] **T1** · S1,S4 · directo — La pestaña Lugares no se renderiza cuando el
@@ -94,8 +110,17 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   `feat(reportes): integra direcciones en el alta nativa` que contiene
   este cierre (L21). Publicado en PR #108; T7 queda fuera de este cierre.
 - [x] **T6c** · S8 · delegado — Acceso E2E corregido: bucket de prueba aislado y un POST coordinado con respuesta/navegación; regresión permanente del waiter conserva error original y cero POST ante fill fallido. RED/GREEN observados; independiente 18 aprobados previos más reverificación limitada 1/1 y spot check final del padre exit 0 (L27-L30). Risk: item 4. Commit: `ae11d9eab4b1bd548328105b1f50c00086a127ff`.
-- [ ] **T7** · S5 · delegado — Constancias y Territorio usan el mismo
-  selector; el árbol queda como administración. Commit:
+- [x] **T7** · S5,S9 · inline (sin razón de escritor delegado) — El
+  formulario de mudanza usa el mismo `SelectorDeDireccion` buscable que el
+  alta de reportes, con el `<select>` completo como respaldo sin JavaScript;
+  el selector compartido deja de traer textos fijos de reportes y reportes
+  conserva los suyos exactos. La emisión de constancias no cambia. Rama
+  `feat/territorio-mudanza-con-buscador`. Verificación independiente S5/S9
+  met y revisión nativa aprobada (L35-L36). Risk: item 3. Commits: `41488ff`,
+  `651af11`.
+- [x] **T7b** · S10 · inline — El HTML inicial trae el `<select>` visible
+  (sin JavaScript y antes de hidratar); al hidratar se cambia al buscador
+  solo si nadie eligió un domicilio. Después, push y PR. Commit:
 
 ## Log
 
@@ -366,3 +391,20 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - **L31** — Primer intento de registro job-13 rechazado únicamente por commitlint: `e2e` no es un scope permitido. Los hooks previos llegaron a reglas sin hallazgos; no hubo commit ni push. Se corrige el scope del mensaje a `auth`, permitido por la política del repositorio, sin modificar los bytes del arnés/pruebas ni omitir hooks. No es un fallo funcional ni invalida la verificación de T6c.
 
 - **L32** — T6c registrado en `ae11d9eab4b1bd548328105b1f50c00086a127ff` (`fix(auth): coordina un solo acceso sin esperas huerfanas`): 6 archivos, 294 líneas de diff; hooks de Biome, tipos, reglas y commitlint aprobados. La selección relacionada de Vitest no constituye una nueva suite completa. Árbol limpio al terminar job-15; se actualiza ahora únicamente esta evidencia para registrar el SHA antes de publicar. No se modifica código ni se reescribe historial. Push y CI del nuevo head pendientes; las aprobaciones nativas previas siguen ligadas a sus cuatro commits originales.
+
+- **L33** — 2026-11-05. Pedido textual: «haz el merge si todo bien y continua». PR #108 verificado OPEN, CLEAN, MERGEABLE, 5/5 checks SUCCESS y head `c9d070a` igual al local; merge commit `b7622dd` (método merge commit, el del repo). Issue #107 cerrado. Se inicia T7 desde `main` en `feat/territorio-mudanza-con-buscador`.
+
+- **L34** — 2026-11-05. Análisis previo a T7: `emitirConstanciaAction` solo recibe `personaId` y la dirección impresa sale de la residencia vigente; la dirección de una persona se elige en `FormularioDeMudanza`, un `<select>` con todos los domicilios del municipio. Pregunta y respuesta registradas en S9. Plan: textos del selector por prop con prueba que fija los de reportes, `buscarDomiciliosAction` de Territorio sobre `registroDeDomicilios({ busqueda })`, isla cliente en la mudanza con `<noscript>` de respaldo y E2E propio.
+
+- **L35** — 2026-11-05. T7 implementado en `41488ff`: RED/GREEN observados en `textosDeSeleccionDeDireccion` (módulo ausente), `buscarDomiciliosAction` (6 casos) y `FormularioDeMudanza` (caso `<noscript>`). `pnpm check` exit 0 (54 warnings y 2 infos existentes), suite completa 2386/2386 sobre `xula_test`, E2E 4/4 (mudanza con/sin JS y reportes con/sin JS). El primer E2E de mudanza falló por la espera del test (`waitForURL` a la misma URL resuelve antes del POST); se corrigió con `waitForResponse` y `expect.poll` a la base. ASSESS `--base-ref b7622dd --committed-only`: risk high, review_due true (item 3 escalado: selector y hook compartidos con reportes). Verificador independiente: S5 y S9 met, sin bloqueantes; advertencia de comentario duplicado entre `FormularioDeMudanza` y la isla corregida apuntando a la isla. Risk: item 3.
+
+- **L36** — 2026-11-05. Revisión nativa de `b7622dd..651af11` (14 archivos, 643 líneas; lentes riesgo, legibilidad y confiabilidad), con consentimiento del usuario («Revisar este cambio»), tras un `gentle-ai sync` pedido por el stop `managed_assets_outdated`: **aprobada**, lineage `review-137233c87077818f`, autoridad quemada por acknowledgement exacto. Hallazgos informativos, no bloqueantes, quedan como trabajo aparte: R3-mudanza-sin-hidratar (WARNING: con JavaScript, antes de hidratar el formulario no ofrece cómo elegir domicilio), R2-dup-ayuda-sin-domicilios, R2-minimo-hardcoded-en-mensaje, R3-fixture-sin-limpieza y R3-sin-domicilios-hidratado-sin-prueba. T7 cerrada; push y PR son decisión del usuario.
+
+- **L37** — 2026-11-05. Pedido textual: «Si» (ver S10). Plan T7b: quitar `<noscript>` y `useSyncExternalStore`; el `<select>` se renderiza siempre en el HTML inicial y, al montar, un efecto lee si ya tiene valor: con valor se queda la lista, sin valor aparece el buscador. E2E que retiene los chunks de JavaScript para elegir antes de hidratar y comprueba que la elección se conserva y se guarda.
+
+- **L38** — 2026-11-05. T7b: RED unitario (el HTML inicial no traía el `<select>` fuera de `<noscript>`) y RED E2E reproduciendo R3-mudanza-sin-hidratar (con los chunks de JavaScript retenidos, `getByLabel('Domicilio')` agotó 30 s). GREEN: unitario 4/4, E2E de mudanza 3/3 (con JS, sin JS y elección antes de hidratar conservada y guardada). `pnpm check` exit 0 (54 warnings y 2 infos existentes), suite 2386/2386. Risk: none (solo la isla de mudanza, sin código compartido).
+
+- **L39** — 2026-11-05. Pedido del usuario: «Crear issue aprobado (Recomendado)», para enlazar el PR de T7. Issue #109 creado con `enhancement,status:approved`. Rama publicada; PR #110 hacia `main` con `Closes #109` y `type:feature`. Sin merge.
+
+- **L40** — 2026-11-05. El hook de cierre pidió la revisión del rango `651af11..ae69a12` (6 archivos, 172 líneas). Con consentimiento del usuario («Revisar este cambio»), revisión nativa `review-c6a300755f68c36e` (lente confiabilidad) **aprobada**, autoridad quemada por acknowledgement exacto. Advertencias informativas para trabajo aparte: R3-e2e-sin-senal-de-hidratacion y R3-efecto-de-modo-sin-prueba-unitaria. CI del PR #110 en `ae69a12`: 5/5 aprobados (lint/tipos/capas, unitarios, integración y aislamiento, E2E, links). Sin merge.
+

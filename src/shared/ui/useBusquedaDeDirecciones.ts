@@ -64,6 +64,7 @@ type ConsultaPendiente<T extends OpcionDeDireccion> = {
   buscar: AccionDeBusqueda<T>;
   sigueVigente: () => boolean;
   actualizar: ActualizarEstado<T>;
+  mensajeDeFallo: string;
 };
 
 const resolverBusqueda = async <T extends OpcionDeDireccion>({
@@ -71,6 +72,7 @@ const resolverBusqueda = async <T extends OpcionDeDireccion>({
   buscar,
   sigueVigente,
   actualizar,
+  mensajeDeFallo,
 }: ConsultaPendiente<T>): Promise<void> => {
   try {
     const resultado = await buscar({ consulta });
@@ -89,12 +91,7 @@ const resolverBusqueda = async <T extends OpcionDeDireccion>({
     });
   } catch {
     if (!sigueVigente()) return;
-    actualizar(
-      estadoDeError<T>(
-        consulta,
-        "No se pudo buscar direcciones. Puede indicar lugar y calle.",
-      ),
-    );
+    actualizar(estadoDeError<T>(consulta, mensajeDeFallo));
   }
 };
 
@@ -108,6 +105,7 @@ function programarBusqueda<T extends OpcionDeDireccion>({
   buscar,
   actualizar,
   secuencia,
+  mensajeDeFallo,
 }: ConsultaProgramada<T>) {
   const idDeSolicitud = ++secuencia.current;
   const sigueVigente = () => secuencia.current === idDeSolicitud;
@@ -119,7 +117,14 @@ function programarBusqueda<T extends OpcionDeDireccion>({
   }
   actualizar(estadoDeCarga<T>(consulta));
   const temporizador = window.setTimeout(
-    () => void resolverBusqueda({ consulta, buscar, sigueVigente, actualizar }),
+    () =>
+      void resolverBusqueda({
+        consulta,
+        buscar,
+        sigueVigente,
+        actualizar,
+        mensajeDeFallo,
+      }),
     RETARDO_DE_BUSQUEDA_MS,
   );
   return () => {
@@ -131,6 +136,7 @@ function programarBusqueda<T extends OpcionDeDireccion>({
 export function useBusquedaDeDirecciones<T extends OpcionDeDireccion>(
   consulta: string,
   buscar: AccionDeBusqueda<T>,
+  mensajeDeFallo: string,
 ): EstadoDeBusqueda<T> {
   const normalizada = consulta.trim();
   const secuencia = useRef(0);
@@ -145,8 +151,9 @@ export function useBusquedaDeDirecciones<T extends OpcionDeDireccion>(
         buscar,
         actualizar: setEstado,
         secuencia,
+        mensajeDeFallo,
       }),
-    [normalizada, buscar],
+    [normalizada, buscar, mensajeDeFallo],
   );
 
   if (estado.consulta === normalizada) return estado;

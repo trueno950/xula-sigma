@@ -11,10 +11,14 @@ import {
   type OpcionDeDireccion,
   seleccionarDireccion,
 } from "./seleccionDeDireccion";
+import {
+  type ConfiguracionDeTextos,
+  textosDeSeleccionDeDireccion,
+} from "./textosDeSeleccionDeDireccion";
 import type { AccionDeBusqueda } from "./useBusquedaDeDirecciones";
 import { useBusquedaDeDirecciones } from "./useBusquedaDeDirecciones";
 
-type Props<T extends OpcionDeDireccion> = {
+type Props<T extends OpcionDeDireccion> = ConfiguracionDeTextos & {
   id: string;
   nombre: string;
   buscar: AccionDeBusqueda<T>;
@@ -27,11 +31,21 @@ export function SelectorDeDireccion<T extends OpcionDeDireccion>({
   nombre,
   buscar,
   onSeleccionar,
+  etiquetaDeLista,
+  alternativa,
 }: Props<T>) {
   const [estado, setEstado] = useState(() =>
     crearEstadoInicialDeDireccion<T>(),
   );
-  const busqueda = useBusquedaDeDirecciones(estado.consulta, buscar);
+  const textos = textosDeSeleccionDeDireccion({
+    etiquetaDeLista,
+    ...(alternativa ? { alternativa } : {}),
+  });
+  const busqueda = useBusquedaDeDirecciones(
+    estado.consulta,
+    buscar,
+    textos.fallo,
+  );
   const opciones: readonly OpcionDeLista[] = busqueda.opciones.map(
     (direccion) => ({ valor: direccion.id, etiqueta: direccion.etiqueta }),
   );
@@ -73,13 +87,12 @@ export function SelectorDeDireccion<T extends OpcionDeDireccion>({
       ) : null}
       {busqueda.estado === "sin-resultados" ? (
         <p role="status" className="text-[13px] text-caliza-apagada">
-          No se encontraron direcciones. Puede indicar lugar y calle.
+          {textos.sinResultados}
         </p>
       ) : null}
       {busqueda.estado === "error" ? (
         <p role="alert" className="text-[13px] text-senial-error">
-          {busqueda.mensaje ??
-            "No se pudo buscar direcciones. Puede indicar lugar y calle."}
+          {busqueda.mensaje ?? textos.fallo}
         </p>
       ) : null}
 
@@ -87,7 +100,7 @@ export function SelectorDeDireccion<T extends OpcionDeDireccion>({
         <CampoDeLista
           key={`${estado.consulta}:${estado.seleccionada?.id ?? ""}`}
           id={`${id}-opcion`}
-          etiqueta="Dirección para el reporte"
+          etiqueta={textos.etiquetaDeLista}
           marcador="Seleccione una dirección"
           opcional
           opciones={opciones}
