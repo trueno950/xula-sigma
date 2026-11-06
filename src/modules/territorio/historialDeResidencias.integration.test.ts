@@ -10,6 +10,7 @@ import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearHistorialDeResidencias } from "./application/historialDeResidencias";
 import type { DomicilioId } from "./domain";
 import { residencias } from "./infrastructure/esquema";
+import { lectorDeDireccionesSql } from "./infrastructure/lectorDeDireccionesSql";
 import { crearLectorDePersonasPorPadron } from "./infrastructure/lectorDePersonasPorPadron";
 import { repositorioDeResidenciasSql } from "./infrastructure/repositorioDeResidenciasSql";
 import { contextoDe, crearDomicilio, crearLugar } from "./lugarDePrueba";
@@ -26,6 +27,7 @@ afterAll(async () => {
 
 const historialDeResidencias = crearHistorialDeResidencias(
   repositorioDeResidenciasSql,
+  lectorDeDireccionesSql,
   crearLectorDePersonasPorPadron,
 );
 
@@ -110,5 +112,16 @@ describe("historialDeResidencias: colapso de una identidad fusionada", () => {
 
     expect(vigente?.domicilioId).toBe(domicilioNuevo);
     expect(historial.map((r) => r.domicilioId)).toContain(domicilioViejo);
+  });
+
+  it("cada residencia trae su direccion escrita con la calle y la colonia", async () => {
+    const { id: personaG } = await personaDePrueba("Gloria");
+    const domicilio = await domicilioDePrueba("Calle 7 de junio");
+    await abrirResidencia(personaG, domicilio, "2021-06-07");
+
+    const [residencia] = await historialDeResidencias(personaG, contextoDe());
+
+    expect(residencia?.texto).toContain("Calle 7 de junio");
+    expect(residencia?.texto).toContain("Colonia de Calle 7 de junio");
   });
 });

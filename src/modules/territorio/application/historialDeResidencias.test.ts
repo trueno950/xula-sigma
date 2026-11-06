@@ -7,6 +7,7 @@ import {
   comoLugarId,
   comoResidenciaId,
 } from "../domain";
+import type { LectorDeDirecciones } from "./puertosDeDirecciones";
 import type {
   LecturaDePersonas,
   RepositorioDeResidencias,
@@ -53,6 +54,7 @@ describe("historialDeResidencias", () => {
     historialDe: vi.fn(),
     residentesDe: vi.fn(),
   };
+  const lectorDeDirecciones: LectorDeDirecciones = { partesDe: vi.fn() };
   let lecturaDePersonas: LecturaDePersonas;
   let crearLecturaDePersonas: (contexto: ContextoActual) => LecturaDePersonas;
 
@@ -69,7 +71,11 @@ describe("historialDeResidencias", () => {
   });
 
   const historialDeResidencias = () =>
-    crearHistorialDeResidencias(repositorio, crearLecturaDePersonas);
+    crearHistorialDeResidencias(
+      repositorio,
+      lectorDeDirecciones,
+      crearLecturaDePersonas,
+    );
 
   it("identidadesDe vacio rechaza como NoEncontradoError sin abrir withTenant", async () => {
     vi.mocked(lecturaDePersonas.identidadesDe).mockResolvedValue([]);
@@ -88,6 +94,7 @@ describe("historialDeResidencias", () => {
       otraIdentidad,
     ]);
     vi.mocked(repositorio.historialDe).mockResolvedValue([residenciaGuardada]);
+    vi.mocked(lectorDeDirecciones.partesDe).mockResolvedValue(null);
 
     const resultado = await historialDeResidencias()(personaId, contexto);
 
@@ -95,7 +102,40 @@ describe("historialDeResidencias", () => {
       personaId,
       otraIdentidad,
     ]);
-    expect(resultado).toEqual([residenciaGuardada]);
+    expect(resultado.map(({ id }) => id)).toEqual([residenciaGuardada.id]);
+  });
+
+  it("cada residencia trae la direccion escrita, el mismo texto que imprime la constancia", async () => {
+    vi.mocked(lecturaDePersonas.identidadesDe).mockResolvedValue([personaId]);
+    vi.mocked(repositorio.historialDe).mockResolvedValue([residenciaGuardada]);
+    vi.mocked(lectorDeDirecciones.partesDe).mockResolvedValue({
+      calle: "Calle 20",
+      numero: "10",
+      entreCalleA: null,
+      entreCalleB: null,
+      referencia: null,
+      ancestros: ["Colonia Centro", "Motul"],
+    });
+
+    const resultado = await historialDeResidencias()(personaId, contexto);
+
+    expect(lectorDeDirecciones.partesDe).toHaveBeenCalledWith(
+      expect.anything(),
+      residenciaGuardada.domicilioId,
+    );
+    expect(resultado).toEqual([
+      { ...residenciaGuardada, texto: "Calle 20 10, Colonia Centro, Motul" },
+    ]);
+  });
+
+  it("un domicilio que ya no se puede leer deja la residencia sin texto, sin perderla", async () => {
+    vi.mocked(lecturaDePersonas.identidadesDe).mockResolvedValue([personaId]);
+    vi.mocked(repositorio.historialDe).mockResolvedValue([residenciaGuardada]);
+    vi.mocked(lectorDeDirecciones.partesDe).mockResolvedValue(null);
+
+    const resultado = await historialDeResidencias()(personaId, contexto);
+
+    expect(resultado).toEqual([{ ...residenciaGuardada, texto: null }]);
   });
 
   it("no exige rol: CONSULTA puede leer el historial", async () => {

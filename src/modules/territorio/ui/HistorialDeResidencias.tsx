@@ -1,9 +1,9 @@
 import { CLASES_DE_DATO } from "@/shared/ui";
-import type { ResidenciaGuardada } from "../application/puertosDeResidencias";
+import type { ResidenciaConDireccion } from "../application/historialDeResidencias";
 import { vigenteDe } from "../domain";
 
 type Props = {
-  historial: readonly ResidenciaGuardada[];
+  historial: readonly ResidenciaConDireccion[];
 };
 
 /**
@@ -33,9 +33,7 @@ export function HistorialDeResidencias({ historial }: Props) {
       {historial.map((residencia) => (
         <li key={residencia.id} className="flex flex-col gap-0.5 px-5 py-3">
           <span className="text-[15px] text-caliza-tinta">
-            {residencia.domicilio.numero
-              ? `Número ${residencia.domicilio.numero}`
-              : "Sin número"}
+            {residencia.texto ?? "Dirección no disponible"}
             {residencia === vigente ? " · Vigente" : ""}
           </span>
           <span className={CLASES_DE_DATO}>
