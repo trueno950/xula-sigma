@@ -49,3 +49,29 @@ describe("Pestanas en movil", () => {
     expect(html).toContain("focus-visible:outline");
   });
 });
+
+describe("Pestanas: la cuenta", () => {
+  const html = renderToStaticMarkup(
+    <Pestanas
+      etiqueta="Contenido"
+      pestanas={[
+        {
+          clave: "d",
+          etiqueta: "Domicilios",
+          href: "/x",
+          activa: true,
+          cuenta: 60,
+        },
+      ]}
+    />,
+  );
+  const cuenta = html.match(/<span class="([^"]*)">60<\/span>/)?.[1] ?? "";
+
+  // Una cuenta no es CURP ni folio: va en Label apagada, no en Dato (mono).
+  it("va en Label apagada con cifras tabulares, no en monoespaciada", () => {
+    expect(cuenta).toContain("text-[13px]");
+    expect(cuenta).toContain("text-caliza-apagada");
+    expect(cuenta).toContain("tabular-nums");
+    expect(cuenta).not.toContain("font-mono");
+  });
+});

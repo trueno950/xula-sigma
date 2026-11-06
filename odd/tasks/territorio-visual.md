@@ -53,8 +53,8 @@ Cada S cita el hallazgo de la auditoría visual; el arreglo sale de su texto.
 
 ## Tasks
 
-- [ ] **T1** · S2,S5,S6 · delegado (respaldo de contexto) — Ajustes rápidos.
-  Commit:
+- [x] **T1** · S2,S5,S6 · delegado (respaldo de contexto) — Ajustes rápidos.
+  Commit: ver L2.
 - [ ] **T2** · S3 · delegado — Zonas al sistema. Commit:
 - [ ] **T3** · S1,S4 · delegado — Lo que se abre, a la vista; cabecera de la
   entrada. Commit:
@@ -71,3 +71,6 @@ Cada S cita el hallazgo de la auditoría visual; el arreglo sale de su texto.
   y que `/territorio` funcione sin JavaScript (decisión pendiente, L6 de
   `territorio-mostrador.md`). Las tareas van en serie: comparten componentes
   de `territorio/ui`.
+
+- **L2** — 2026-11-06. T1 del escritor: S2, S5 y S6 cubiertos. «Ubicada/Sin ubicar» con `InsigniaDeUbicacion` compartida por la lista y el panel de calle; asentamiento de Zonas en `CeldaDeApoyo`; contadores de pestaña en Inter con `tabular-nums`. `Panel` titula en Headline (componente compartido: cambia también en reportes, intervenciones, constancias y acceso, como pide DESIGN.md); `GrupoDeCampos` gana `nivel` (por defecto igual que antes) y DESIGN.md anota la regla. «Dar de alta»/«Agregar domicilio» → «Registrar domicilio» con ícono MapPin. `/calles` marca Territorio (`tambienEn`); filtros del registro a ancho completo bajo 640 px; historial con insignia «Vigente» y `fechaCivilCorta`; el mapa de calle abre en el punto de la calle, si no en el promedio de las calles con punto del lugar (los lugares no guardan coordenadas), si no en Yucatán. RED/GREEN por regla salvo un test endurecido después. Módulos 221 archivos y 1156 tests; reglas sin hallazgos; suite completa 490 archivos y 2516 tests; E2E mudanza, calles, zonas y borrador 12/12. Comprobación del padre: `pnpm check` exit 0. Risk: item 3 (`Panel` compartido cambia de aspecto en otros módulos).
+

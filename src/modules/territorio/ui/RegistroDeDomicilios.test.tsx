@@ -138,16 +138,16 @@ describe("RegistroDeDomicilios", () => {
     expect(html).toContain(`value="${cabeceraId}" selected=""`);
   });
 
-  it("ofrece agregar un domicilio al registro plano cuando puedeCrear", () => {
+  it("ofrece registrar un domicilio desde el registro plano cuando puedeCrear", () => {
     const html = render({ puedeCrear: true });
 
     expect(html).toContain('href="/territorio?accion=domicilio"');
-    expect(html).toContain("Agregar domicilio");
+    expect(html).toContain("Registrar domicilio");
   });
 
-  it("no ofrece agregar sin permiso de escritura", () => {
+  it("no ofrece registrar sin permiso de escritura", () => {
     const html = render({ puedeCrear: false });
 
-    expect(html).not.toContain("Agregar domicilio");
+    expect(html).not.toContain("Registrar domicilio");
   });
 });

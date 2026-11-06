@@ -1,5 +1,5 @@
 import type { LugarGuardado } from "../application/puertos";
-import type { LugarId } from "../domain";
+import type { LugarId, PuntoGeografico } from "../domain";
 import { FormularioDeBajaDeCalle } from "./FormularioDeBajaDeCalle";
 import { FormularioDeMovimientoDeCalle } from "./FormularioDeMovimientoDeCalle";
 import { FormularioDeRenombreDeCalle } from "./FormularioDeRenombreDeCalle";
@@ -12,6 +12,8 @@ export type DatosDeFormularioDeCalle = {
   nodoId: LugarId;
   calle: CalleParaPanel;
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
+  /** Donde abre el mapa de ubicar; ver `centroDeCalles`. */
+  centro?: PuntoGeografico | null | undefined;
 };
 
 /** El formulario de una accion, para pintarlo dentro de su propio detalle. */
@@ -22,10 +24,17 @@ export function FormularioDeAccionDeCalle({
   accion: AccionDeCalle;
   datos: DatosDeFormularioDeCalle;
 }) {
-  const { raizId, nodoId, calle, lugares } = datos;
+  const { raizId, nodoId, calle, lugares, centro } = datos;
 
   if (accion === "ubicarCalle") {
-    return <FormularioDeUbicacion raiz={raizId} nodo={nodoId} calle={calle} />;
+    return (
+      <FormularioDeUbicacion
+        raiz={raizId}
+        nodo={nodoId}
+        calle={calle}
+        centro={centro}
+      />
+    );
   }
   if (accion === "renombrarCalle") {
     return (

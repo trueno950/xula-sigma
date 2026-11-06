@@ -1,4 +1,4 @@
-import { Plus } from "@phosphor-icons/react/ssr";
+import { MapPin } from "@phosphor-icons/react/ssr";
 import {
   CeldaDeApoyo,
   CeldaPrincipal,
@@ -72,8 +72,8 @@ export function RegistroDeDomicilios({
             href="/territorio?accion=domicilio"
             variante="primaria"
           >
-            <Plus size={18} weight="bold" aria-hidden="true" />
-            Agregar domicilio
+            <MapPin size={18} weight="bold" aria-hidden="true" />
+            Registrar domicilio
           </EnlaceDeAccion>
         </BarraDeAcciones>
       ) : null}
@@ -104,8 +104,8 @@ export function RegistroDeDomicilios({
                     href="/territorio?accion=domicilio"
                     variante="primaria"
                   >
-                    <Plus size={18} weight="bold" aria-hidden="true" />
-                    Agregar domicilio
+                    <MapPin size={18} weight="bold" aria-hidden="true" />
+                    Registrar domicilio
                   </EnlaceDeAccion>
                 ),
               }

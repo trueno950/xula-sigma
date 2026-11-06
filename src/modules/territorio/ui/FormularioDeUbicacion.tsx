@@ -1,4 +1,5 @@
 import { Boton } from "@/shared/ui";
+import type { PuntoGeografico } from "../domain";
 import { ubicarCalleAction } from "./actions/ubicarCalleAction";
 import { SelectorDePunto } from "./SelectorDePunto";
 import type { CalleParaPanel } from "./vistaDeCalles";
@@ -7,9 +8,10 @@ type Props = {
   raiz: string;
   nodo: string;
   calle: CalleParaPanel;
+  centro?: PuntoGeografico | null | undefined;
 };
 
-export function FormularioDeUbicacion({ raiz, nodo, calle }: Props) {
+export function FormularioDeUbicacion({ raiz, nodo, calle, centro }: Props) {
   return (
     <form
       action={ubicarCalleAction}
@@ -24,7 +26,7 @@ export function FormularioDeUbicacion({ raiz, nodo, calle }: Props) {
       <p className="text-[13px] text-caliza-apagada">
         Toque el mapa o escriba las coordenadas.
       </p>
-      <SelectorDePunto punto={calle.punto} />
+      <SelectorDePunto punto={calle.punto} centro={centro ?? null} />
       <Boton type="submit" variante="primaria">
         Guardar ubicación
       </Boton>

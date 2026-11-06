@@ -10,12 +10,12 @@ import {
   CLASES_DE_ENLACE,
   CLASES_DE_TARJETA,
   EnlaceDeAccion,
-  InsigniaDeEstado,
 } from "@/shared/ui";
 import type { LugarGuardado } from "../application/puertos";
-import type { LugarId } from "../domain";
+import type { LugarId, PuntoGeografico } from "../domain";
 import { AccionesDeCalle, esAccionDeCalle } from "./AccionesDeCalle";
 import { rutaDe } from "./contenido";
+import { InsigniaDeUbicacion } from "./InsigniaDeUbicacion";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
 import type { CalleParaPanel } from "./vistaDeCalles";
@@ -27,6 +27,8 @@ type Props = {
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[];
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
+  /** Donde abre el mapa si la calle no tiene punto; ver `centroDeCalles`. */
+  centro?: PuntoGeografico | null | undefined;
 };
 
 const ENLACE_DE_CONTEXTO = `inline-flex items-center gap-2 self-start rounded-sm text-[15px] ${CLASES_DE_ENLACE}`;
@@ -46,6 +48,7 @@ export function PanelDeCalle({
   lugares,
   accion,
   permisos,
+  centro,
 }: Props) {
   const accionAbierta =
     esAccionDeCalle(accion) && puedeAbrir(accion, permisos)
@@ -65,10 +68,7 @@ export function PanelDeCalle({
             {calle.nombre}
           </h2>
           <span className="self-start">
-            <InsigniaDeEstado
-              tono={calle.punto ? "exito" : "aviso"}
-              etiqueta={calle.punto ? "Ubicada" : "Sin ubicar"}
-            />
+            <InsigniaDeUbicacion punto={calle.punto} />
           </span>
           {calle.punto ? (
             <p className={CLASES_DE_DATO}>
@@ -85,7 +85,7 @@ export function PanelDeCalle({
 
       {puedeAbrir("ubicarCalle", permisos) ? (
         <AccionesDeCalle
-          datos={{ raizId, nodoId, calle, lugares }}
+          datos={{ raizId, nodoId, calle, lugares, centro }}
           permisos={permisos}
           accionAbierta={accionAbierta}
         />

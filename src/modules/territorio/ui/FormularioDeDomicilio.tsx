@@ -82,7 +82,7 @@ export function FormularioDeDomicilio({
 
       <PieDeFormulario volverA={volverA}>
         <Boton type="submit" variante="primaria">
-          Dar de alta
+          Registrar domicilio
         </Boton>
       </PieDeFormulario>
     </form>

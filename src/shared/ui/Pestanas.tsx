@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CLASES_DE_DATO } from "./estilos";
+import { CLASES_DE_ETIQUETA } from "./estilos";
 
 export type Pestana = {
   clave: string;
@@ -54,7 +54,9 @@ export function Pestanas({
         >
           {pestana.etiqueta}
           {pestana.cuenta === undefined ? null : (
-            <span className={CLASES_DE_DATO}>{pestana.cuenta}</span>
+            <span className={`${CLASES_DE_ETIQUETA} tabular-nums`}>
+              {pestana.cuenta}
+            </span>
           )}
         </Link>
       ))}

@@ -1,3 +1,4 @@
+import { MapPin } from "@phosphor-icons/react/ssr";
 import {
   type AccionDeNodo,
   type CalleId,
@@ -107,6 +108,7 @@ export function VistaDeLugar({
             href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
             variante="primaria"
           >
+            <MapPin size={18} weight="bold" aria-hidden="true" />
             Registrar domicilio
           </EnlaceDeAccion>
         </BarraDeAcciones>

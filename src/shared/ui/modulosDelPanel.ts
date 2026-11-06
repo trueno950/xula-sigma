@@ -27,6 +27,8 @@ export type ModuloDelPanel = {
   primario?: boolean;
   /** Sin esto el modulo lo ve todo rol; la ruta sigue autorizando aparte. */
   permite?: (rol: Rol) => boolean;
+  /** Rutas fuera de `ruta` que tambien son de este modulo. */
+  tambienEn?: readonly string[];
   Icono: ComponentType<{ size?: number; weight?: "regular" | "fill" }>;
 };
 
@@ -65,6 +67,8 @@ export const MODULOS_DEL_PANEL: readonly ModuloDelPanel[] = [
     descripcion: "Lugares, calles y domicilios.",
     grupo: "Territorio",
     primario: true,
+    // El historial de una calle se abre desde Territorio y vive en `/calles`.
+    tambienEn: ["/calles"],
     Icono: MapTrifold,
   },
   {
@@ -119,5 +123,13 @@ export const modulosDeBarraInferior = (rol: Rol) => {
   };
 };
 
-export const estaActivo = (ruta: string, destino: string): boolean =>
-  ruta === destino || ruta.startsWith(`${destino}/`);
+const dentroDe = (ruta: string, prefijo: string): boolean =>
+  ruta === prefijo || ruta.startsWith(`${prefijo}/`);
+
+export const estaActivo = (ruta: string, destino: string): boolean => {
+  const otras =
+    MODULOS_DEL_PANEL.find((modulo) => modulo.ruta === destino)?.tambienEn ??
+    [];
+
+  return [destino, ...otras].some((prefijo) => dentroDe(ruta, prefijo));
+};

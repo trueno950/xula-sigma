@@ -14,6 +14,7 @@ export {
 
 type Props = {
   punto: PuntoGeografico | null;
+  centro?: PuntoGeografico | null | undefined;
   onSelect: (punto: PuntoGeografico) => void;
 };
 
@@ -27,7 +28,7 @@ type Resultado = {
 type EstadoDeMapa = {
   mapaRef: RefObject<HTMLDivElement | null>;
   mapa: RefObject<LeafletMap | null>;
-  puntoInicial: RefObject<PuntoGeografico | null>;
+  inicio: RefObject<Pick<Props, "punto" | "centro">>;
   seleccionRef: RefObject<(punto: PuntoGeografico) => void>;
   setMapaVisible: (visible: boolean) => void;
   setMapaFallido: (fallido: boolean) => void;
@@ -54,7 +55,7 @@ const inicializarMapa = async ({
   elemento,
   mapaRef,
   mapa,
-  puntoInicial,
+  inicio,
   seleccionRef,
   setMapaVisible,
   setMapaFallido,
@@ -68,7 +69,8 @@ const inicializarMapa = async ({
     mapa.current = prepararMapa({
       leaflet,
       elemento,
-      punto: puntoInicial.current,
+      punto: inicio.current.punto,
+      centro: inicio.current.centro ?? null,
       onSelect: (seleccion) => seleccionRef.current(seleccion),
       onTileError: () => setAviso(mensajeDeFalloDeTiles()),
     });
@@ -82,7 +84,7 @@ const inicializarMapa = async ({
 const useInicializacionDeMapa = ({
   mapaRef,
   mapa,
-  puntoInicial,
+  inicio,
   seleccionRef,
   setMapaVisible,
   setMapaFallido,
@@ -96,7 +98,7 @@ const useInicializacionDeMapa = ({
     void inicializarMapa({
       mapaRef,
       mapa,
-      puntoInicial,
+      inicio,
       seleccionRef,
       setMapaVisible,
       setMapaFallido,
@@ -113,7 +115,7 @@ const useInicializacionDeMapa = ({
   }, [
     mapaRef,
     mapa,
-    puntoInicial,
+    inicio,
     seleccionRef,
     setMapaVisible,
     setMapaFallido,
@@ -167,12 +169,12 @@ const useMarcadorDeMapa = ({
   }, [mapaVisible, punto, mapa, marcador]);
 };
 
-export function useMapaDePunto({ punto, onSelect }: Props): Resultado {
+export function useMapaDePunto({ punto, centro, onSelect }: Props): Resultado {
   const mapaRef = useRef<HTMLDivElement | null>(null);
   const mapa = useRef<LeafletMap | null>(null);
   const marcador = useRef<CircleMarker | null>(null);
   const seleccionRef = useSeleccionRef(onSelect);
-  const puntoInicial = useRef(punto);
+  const inicio = useRef({ punto, centro });
   const [mapaVisible, setMapaVisible] = useState(false);
   const [mapaFallido, setMapaFallido] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -180,7 +182,7 @@ export function useMapaDePunto({ punto, onSelect }: Props): Resultado {
   useInicializacionDeMapa({
     mapaRef,
     mapa,
-    puntoInicial,
+    inicio,
     seleccionRef,
     setMapaVisible,
     setMapaFallido,

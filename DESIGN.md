@@ -567,9 +567,13 @@ disparador lleva ícono y texto. El giro de la flecha es instantáneo.
 ### Formularios y fichas
 
 - **`Panel`:** la tarjeta de lo que se abre (un formulario dentro de una
-  pestaña), de 720px de ancho máximo, con su título en Title.
+  pestaña), de 720px de ancho máximo, con su título en Headline: es una
+  sección de la pantalla.
 - **`GrupoDeCampos`:** campos relacionados en un `<fieldset>` con `<legend>`
-  en Headline. La agrupación la dan tipografía y espacio, no cajas anidadas.
+  en Headline cuando el formulario es la pantalla, y en Title
+  (`nivel="subseccion"`) dentro de un `Panel`, para no quedar por encima de
+  su título. Un formulario de un solo grupo no lleva leyenda: el título ya
+  lo nombra. La agrupación la dan tipografía y espacio, no cajas anidadas.
 - **`BarraDeAcciones`:** pie del formulario con un divisor. En escritorio
   los botones miden lo que su texto y van a la derecha, con la primaria al
   extremo; en móvil ocupan el ancho y la primaria queda arriba.

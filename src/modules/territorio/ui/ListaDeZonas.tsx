@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ColumnaDeTabla } from "@/shared/ui";
 import {
   Aviso,
-  CeldaDeDato,
+  CeldaDeApoyo,
   CeldaPrincipal,
   EstadoVacio,
   FilaDeTabla,
@@ -81,10 +81,8 @@ export function ListaDeZonas({
               etiquetaAccesible={`${zona.nombre}, ${zona.asentamiento}`}
             >
               <CeldaPrincipal>{zona.nombre}</CeldaPrincipal>
-              <CeldaDeDato>{zona.asentamiento}</CeldaDeDato>
-              <CeldaDeDato>
-                <FormularioDeBajaDeZonaEnFila zonaId={zona.id} />
-              </CeldaDeDato>
+              <CeldaDeApoyo>{zona.asentamiento}</CeldaDeApoyo>
+              <FormularioDeBajaDeZonaEnFila zonaId={zona.id} />
             </FilaDeTabla>
           ))}
         </Tabla>

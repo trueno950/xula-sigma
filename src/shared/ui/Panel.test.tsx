@@ -16,9 +16,9 @@ const pintar = () =>
  * `heading-order` de axe.
  */
 describe("Panel", () => {
-  it("pone el titulo en el segundo nivel, debajo del h1 de la pagina", () => {
+  it("pone el titulo en Headline y en el segundo nivel, debajo del h1", () => {
     expect(pintar()).toMatch(
-      /^<section[^>]*><h2 class="text-\[15px\] font-semibold text-caliza-tinta">Vista previa<\/h2><p>contenido<\/p><\/section>$/,
+      /^<section[^>]*><h2 class="[^"]*text-\[1\.25rem\][^"]*">Vista previa<\/h2><p>contenido<\/p><\/section>$/,
     );
   });
 

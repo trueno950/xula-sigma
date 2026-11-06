@@ -1,4 +1,4 @@
-import { Boton, Campo, GrupoDeCampos } from "@/shared/ui";
+import { Boton, Campo } from "@/shared/ui";
 import { altaDeCalleAction } from "./actions/altaDeCalleAction";
 import { PieDeFormulario } from "./PieDeFormulario";
 
@@ -20,15 +20,13 @@ export function FormularioDeAltaDeCalle({ raiz, nodo, volverA }: Props) {
       <input type="hidden" name="accion" value="calle" />
       <input type="hidden" name="lugarId" value={nodo} />
 
-      <GrupoDeCampos titulo="Datos de la calle">
-        <Campo
-          id="calle-nombre"
-          name="nombre"
-          etiqueta="Nombre"
-          required
-          ayuda="Como la conoce el municipio: Calle 20, Camino a Sisal."
-        />
-      </GrupoDeCampos>
+      <Campo
+        id="calle-nombre"
+        name="nombre"
+        etiqueta="Nombre"
+        required
+        ayuda="Como la conoce el municipio: Calle 20, Camino a Sisal."
+      />
 
       <PieDeFormulario volverA={volverA}>
         <Boton type="submit" variante="primaria">

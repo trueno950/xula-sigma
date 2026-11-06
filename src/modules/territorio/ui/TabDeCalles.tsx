@@ -7,6 +7,7 @@ import { ListaDeCalles } from "./ListaDeCalles";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
 import { PanelDeCalle } from "./PanelDeCalle";
 import { puedeAbrir } from "./permisos";
+import { centroDeCalles } from "./vistaDeCalles";
 
 /**
  * Pestana Calles: el catalogo del asentamiento, el alta de una nueva calle
@@ -87,6 +88,7 @@ export function TabDeCalles({
             lugares={lugares}
             accion={accion}
             permisos={permisos}
+            centro={centroDeCalles(calles)}
           />
         ) : null}
       </div>

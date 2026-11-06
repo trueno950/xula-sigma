@@ -192,7 +192,9 @@ test("desde la ficha se registra un domicilio nuevo y se vuelve a ella para asig
     .selectOption(escenario.calleId);
   await page.getByLabel("Número", { exact: true }).fill(numero);
   await page.getByLabel("Colonia (opcional)").selectOption(escenario.coloniaId);
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page
+    .getByRole("button", { name: "Registrar domicilio", exact: true })
+    .click();
 
   // El alta exitosa vuelve a la ficha, no al árbol de territorio.
   await expect(page).toHaveURL(
