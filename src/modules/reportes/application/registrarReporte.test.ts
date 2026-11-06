@@ -174,6 +174,7 @@ describe("registrarReporte", () => {
     expect(guardado?.tipo).toBe("BACHE");
     expect(guardado?.folio).toMatch(/^REP-\d{4}-000001$/);
     expect(guardado?.personaId).toBe("11111111-1111-4111-8111-111111111111");
+    expect(guardado?.domicilioId).toBeNull();
 
     const movimiento = vi.mocked(movimientos.agregar).mock.calls[0]?.[1];
     expect(movimiento?.estadoAnterior).toBeNull();
@@ -188,8 +189,7 @@ describe("registrarReporte", () => {
       }),
     );
 
-    // Lo que protege el invariante 2: las lecturas que pueden rechazar
-    // corren antes que el contador, aunque las dos terminen aceptando.
+    // Las dos lecturas que pueden rechazar ocurren antes del contador.
     expect(
       vi.mocked(lecturaDeUbicaciones.de).mock.invocationCallOrder[0],
     ).toBeLessThan(vi.mocked(contador.siguiente).mock.invocationCallOrder[0]!);

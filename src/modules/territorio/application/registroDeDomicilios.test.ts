@@ -84,6 +84,32 @@ describe("registroDeDomicilios", () => {
     });
   });
 
+  it("recorta la busqueda por texto antes de reenviarla", async () => {
+    await crearRegistroDeDomicilios(repositorio)({
+      tx,
+      filtros: { busqueda: "  Calle 20  " },
+      limite: 20,
+    });
+
+    expect(repositorio.registro).toHaveBeenCalledWith(tx, {
+      limite: 21,
+      filtros: { busqueda: "Calle 20" },
+    });
+  });
+
+  it("combina la busqueda por texto con los filtros previos", async () => {
+    await crearRegistroDeDomicilios(repositorio)({
+      tx,
+      filtros: { raizId, calle: "Calle 20", numero: "5", busqueda: "Centro" },
+      limite: 20,
+    });
+
+    expect(repositorio.registro).toHaveBeenCalledWith(tx, {
+      limite: 21,
+      filtros: { raizId, calle: "Calle 20", numero: "5", busqueda: "Centro" },
+    });
+  });
+
   it("recorta el numero antes de reenviarlo como igualdad exacta", async () => {
     await crearRegistroDeDomicilios(repositorio)({
       tx,

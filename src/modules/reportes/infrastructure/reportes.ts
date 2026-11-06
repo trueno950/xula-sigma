@@ -51,6 +51,9 @@ export const reportes = pgTable(
     lugarId: uuid().notNull(),
     // idem: `calles` es inalcanzable fuera de `territorio`.
     calleId: uuid(),
+    // `domicilios` es privado de `territorio`; su FK compuesto se escribe
+    // en la migración.
+    domicilioId: uuid(),
     referencia: text(),
     descripcion: text().notNull(),
     // idem: `personas` es inalcanzable fuera de `padron` (decision 11).

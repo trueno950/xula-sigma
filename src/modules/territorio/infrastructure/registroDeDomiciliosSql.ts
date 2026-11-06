@@ -14,6 +14,7 @@ type FilaDeRegistro = {
   lugar: string;
   lugarId: string;
   raizId: string;
+  raiz: string;
 };
 
 const aDomicilioDelRegistro = (fila: FilaDeRegistro): DomicilioDelRegistro => ({
@@ -50,6 +51,18 @@ export const registroDeDomiciliosSql: Pick<
     const condicionDeNumero = filtros.numero
       ? sql`AND dom.numero = ${filtros.numero}`
       : sql.empty();
+    const patronDeBusqueda = filtros.busqueda
+      ? `%${escaparComodinesDeLike(filtros.busqueda)}%`
+      : undefined;
+    const nombreDeRaiz = sql`COALESCE(padre3.nombre, padre2.nombre, padre1.nombre, lug.nombre)`;
+    const condicionDeBusqueda = patronDeBusqueda
+      ? sql`AND (
+          cal.nombre ILIKE ${patronDeBusqueda}
+          OR dom.numero ILIKE ${patronDeBusqueda}
+          OR lug.nombre ILIKE ${patronDeBusqueda}
+          OR ${nombreDeRaiz} ILIKE ${patronDeBusqueda}
+        )`
+      : sql.empty();
     const filas = await tx.execute<FilaDeRegistro>(sql`
       WITH RECURSIVE descendientes AS (
         SELECT id, 0 AS profundidad FROM lugares
@@ -66,7 +79,8 @@ export const registroDeDomiciliosSql: Pick<
       )
       SELECT dom.id, cal.nombre AS calle, dom.calle_id AS "calleId",
              dom.numero, lug.nombre AS lugar, dom.lugar_id AS "lugarId",
-             COALESCE(padre3.id, padre2.id, padre1.id, lug.id) AS "raizId"
+             COALESCE(padre3.id, padre2.id, padre1.id, lug.id) AS "raizId",
+             ${nombreDeRaiz} AS raiz
         FROM domicilios dom
         JOIN calles cal ON cal.id = dom.calle_id
         JOIN lugares lug ON lug.id = dom.lugar_id
@@ -77,6 +91,7 @@ export const registroDeDomiciliosSql: Pick<
              ${condicionDeRaiz}
              ${condicionDeCalle}
              ${condicionDeNumero}
+             ${condicionDeBusqueda}
        ORDER BY lug.nombre, cal.nombre, dom.numero, dom.id
        LIMIT ${limite}
     `);

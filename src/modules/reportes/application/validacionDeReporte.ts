@@ -13,13 +13,22 @@ import { TIPOS_DE_INCIDENCIA } from "../domain";
  * (decision 13) y ningun tipo valida que un operador no escriba un nombre
  * (propuesta, tabla de riesgos). Se declaran como limite, no como garantia.
  */
-export const esquemaDeReporte = z.object({
-  descripcion: z.string().trim().min(10).max(1000),
-  referencia: z.string().trim().max(200).optional(),
-  tipo: z.enum(TIPOS_DE_INCIDENCIA),
-  lugarId: z.string().trim().uuid(),
-  calleId: z.string().trim().uuid().optional(),
-  personaId: z.string().trim().uuid().optional(),
-});
+export const esquemaDeReporte = z
+  .object({
+    descripcion: z.string().trim().min(10).max(1000),
+    referencia: z.string().trim().max(200).optional(),
+    tipo: z.enum(TIPOS_DE_INCIDENCIA),
+    lugarId: z.string().trim().uuid().optional(),
+    calleId: z.string().trim().uuid().optional(),
+    domicilioId: z.string().trim().uuid().optional(),
+    personaId: z.string().trim().uuid().optional(),
+  })
+  .refine(
+    (datos) => datos.domicilioId !== undefined || datos.lugarId !== undefined,
+    {
+      path: ["lugarId"],
+      message: "Indique un lugar o un domicilio.",
+    },
+  );
 
 export type DatosDeReporte = z.infer<typeof esquemaDeReporte>;

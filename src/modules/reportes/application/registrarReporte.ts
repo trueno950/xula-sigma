@@ -12,9 +12,13 @@ import {
   ReportanteDadoDeBajaError,
   type ReporteId,
   type TipoDeIncidencia,
-  UbicacionInvalidaError,
 } from "../domain";
+import {
+  type DatosDeUbicacionDeReporte,
+  prepararUbicacionDeReporte,
+} from "./prepararUbicacionDeReporte";
 import type { RepositorioDeReportes } from "./puertos";
+import type { LecturaDeDomicilios } from "./puertosDeDomicilios";
 import type {
   LecturaDeReportantes,
   LecturaDeUbicaciones,
@@ -27,12 +31,10 @@ import type {
 /** Lo que el mostrador captura. Ya paso por el Zod del borde (design.md seccion 11). */
 export type EntradaDeRegistroDeReporte = {
   tipo: TipoDeIncidencia;
-  lugarId: string;
-  calleId: string | null;
   referencia: string | null;
   descripcion: string;
   personaId: string | null;
-};
+} & DatosDeUbicacionDeReporte;
 
 /**
  * `registrarReporte`: el orden exacto de design.md seccion 11.
@@ -54,12 +56,14 @@ export function crearRegistrarReporte({
   movimientos,
   crearLecturaDeUbicaciones,
   crearLecturaDeReportantes,
+  crearLecturaDeDomicilios,
 }: {
   repositorio: Pick<RepositorioDeReportes, "guardar">;
   contador: ContadorDeFolios;
   movimientos: RegistroDeMovimientos;
   crearLecturaDeUbicaciones: (contexto: ContextoActual) => LecturaDeUbicaciones;
   crearLecturaDeReportantes: (contexto: ContextoActual) => LecturaDeReportantes;
+  crearLecturaDeDomicilios?: (contexto: ContextoActual) => LecturaDeDomicilios;
 }) {
   return async function registrarReporte(
     datos: EntradaDeRegistroDeReporte,
@@ -67,14 +71,14 @@ export function crearRegistrarReporte({
   ): Promise<ReporteId> {
     if (!puedeEscribir(contexto.usuario.rol)) throw new NoAutorizadoError();
 
-    // Paso 2: valida la ubicacion. `ubicacion.texto` se descarta -no hay
-    // columna donde escribirlo, y esa es la garantia de que no se congela
-    // (design.md seccion 11)-. El efecto es el rechazo, no el valor.
-    const ubicacion = await crearLecturaDeUbicaciones(contexto).de(
-      datos.lugarId,
-      datos.calleId,
-    );
-    if (!ubicacion) throw new UbicacionInvalidaError();
+    // Paso 2: resuelve y valida la direccion bajo tenant antes de tocar
+    // el contador.
+    const ubicacion = await prepararUbicacionDeReporte({
+      datos,
+      contexto,
+      crearLecturaDeUbicaciones,
+      crearLecturaDeDomicilios,
+    });
 
     // Paso 3: valida al reportante solo si hay vinculo. Con `personaId` nulo
     // no se lee nada y no se guarda ningun contacto suelto (decision 11).
@@ -105,8 +109,9 @@ export function crearRegistrarReporte({
         tipo: datos.tipo,
         estado: "RECIBIDO",
         areaResponsable: null,
-        lugarId: datos.lugarId,
-        calleId: datos.calleId,
+        lugarId: ubicacion.lugarId,
+        calleId: ubicacion.calleId,
+        domicilioId: ubicacion.domicilioId,
         referencia: datos.referencia,
         descripcion: datos.descripcion,
         personaId: datos.personaId,
