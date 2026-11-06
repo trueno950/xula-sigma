@@ -103,12 +103,14 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   `feat(reportes): integra direcciones en el alta nativa` que contiene
   este cierre (L21). Publicado en PR #108; T7 queda fuera de este cierre.
 - [x] **T6c** · S8 · delegado — Acceso E2E corregido: bucket de prueba aislado y un POST coordinado con respuesta/navegación; regresión permanente del waiter conserva error original y cero POST ante fill fallido. RED/GREEN observados; independiente 18 aprobados previos más reverificación limitada 1/1 y spot check final del padre exit 0 (L27-L30). Risk: item 4. Commit: `ae11d9eab4b1bd548328105b1f50c00086a127ff`.
-- [ ] **T7** · S5,S9 · inline (sin razón de escritor delegado) — El
+- [x] **T7** · S5,S9 · inline (sin razón de escritor delegado) — El
   formulario de mudanza usa el mismo `SelectorDeDireccion` buscable que el
   alta de reportes, con el `<select>` completo como respaldo sin JavaScript;
   el selector compartido deja de traer textos fijos de reportes y reportes
   conserva los suyos exactos. La emisión de constancias no cambia. Rama
-  `feat/territorio-mudanza-con-buscador`. Commit:
+  `feat/territorio-mudanza-con-buscador`. Verificación independiente S5/S9
+  met y revisión nativa aprobada (L35-L36). Risk: item 3. Commits: `41488ff`,
+  `651af11`.
 
 ## Log
 
@@ -385,3 +387,5 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - **L34** — 2026-11-05. Análisis previo a T7: `emitirConstanciaAction` solo recibe `personaId` y la dirección impresa sale de la residencia vigente; la dirección de una persona se elige en `FormularioDeMudanza`, un `<select>` con todos los domicilios del municipio. Pregunta y respuesta registradas en S9. Plan: textos del selector por prop con prueba que fija los de reportes, `buscarDomiciliosAction` de Territorio sobre `registroDeDomicilios({ busqueda })`, isla cliente en la mudanza con `<noscript>` de respaldo y E2E propio.
 
 - **L35** — 2026-11-05. T7 implementado en `41488ff`: RED/GREEN observados en `textosDeSeleccionDeDireccion` (módulo ausente), `buscarDomiciliosAction` (6 casos) y `FormularioDeMudanza` (caso `<noscript>`). `pnpm check` exit 0 (54 warnings y 2 infos existentes), suite completa 2386/2386 sobre `xula_test`, E2E 4/4 (mudanza con/sin JS y reportes con/sin JS). El primer E2E de mudanza falló por la espera del test (`waitForURL` a la misma URL resuelve antes del POST); se corrigió con `waitForResponse` y `expect.poll` a la base. ASSESS `--base-ref b7622dd --committed-only`: risk high, review_due true (item 3 escalado: selector y hook compartidos con reportes). Verificador independiente: S5 y S9 met, sin bloqueantes; advertencia de comentario duplicado entre `FormularioDeMudanza` y la isla corregida apuntando a la isla. Risk: item 3.
+
+- **L36** — 2026-11-05. Revisión nativa de `b7622dd..651af11` (14 archivos, 643 líneas; lentes riesgo, legibilidad y confiabilidad), con consentimiento del usuario («Revisar este cambio»), tras un `gentle-ai sync` pedido por el stop `managed_assets_outdated`: **aprobada**, lineage `review-137233c87077818f`, autoridad quemada por acknowledgement exacto. Hallazgos informativos, no bloqueantes, quedan como trabajo aparte: R3-mudanza-sin-hidratar (WARNING: con JavaScript, antes de hidratar el formulario no ofrece cómo elegir domicilio), R2-dup-ayuda-sin-domicilios, R2-minimo-hardcoded-en-mensaje, R3-fixture-sin-limpieza y R3-sin-domicilios-hidratado-sin-prueba. T7 cerrada; push y PR son decisión del usuario.
