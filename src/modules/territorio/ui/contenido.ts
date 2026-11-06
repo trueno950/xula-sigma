@@ -12,6 +12,7 @@ import {
   type LugarId,
   puedeTenerCatalogoDeCalles,
 } from "../domain";
+import type { BorradorDeDomicilio } from "./borradorDeDomicilio";
 import { descendientesDe } from "./conteo";
 import type {
   AccionDeNodo,
@@ -50,6 +51,8 @@ export type PropsDeContenido = {
   conteos?: readonly ConteoDeLugar[] | undefined;
   /** Quien vive en `domicilio`; se lee solo cuando hay uno abierto. */
   residentes?: readonly ResidenteDeDomicilio[] | undefined;
+  /** Lo capturado en un formulario rechazado; ver `borradorEnCookie.ts`. */
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 /** La ruta del lugar actual con pestana y accion opcionales. */

@@ -12,7 +12,13 @@ import {
   TransversalRepetidaError,
   UbicacionIncoherenteError,
 } from "../../domain";
+import { borradorDeCorreccion, descartarBorrador } from "../borradorEnCookie";
 import { ejecutarEnContexto } from "./ejecutarEnContexto";
+import {
+  conToken,
+  guardandoBorrador,
+  volverConBorrador,
+} from "./rechazoConBorrador";
 import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const esquemaDeEntrada = z.object({
@@ -65,30 +71,42 @@ const mensajeDeError = (error: unknown): string => {
   return MENSAJE_GENERICO;
 };
 
+const entradaDe = (formData: FormData) => ({
+  domicilioId: formData.get("domicilioId"),
+  calleId: formData.get("calleId"),
+  zonaId: formData.get("zonaId") ?? "",
+  numero: formData.get("numero") ?? undefined,
+  entreCalleAId: formData.get("entreCalleAId") ?? "",
+  entreCalleBId: formData.get("entreCalleBId") ?? "",
+  referencia: formData.get("referencia") ?? undefined,
+});
+
 export async function corregirDomicilioAction(
   formData: FormData,
 ): Promise<void> {
-  const analisis = esquemaDeEntrada.safeParse({
-    domicilioId: formData.get("domicilioId"),
-    calleId: formData.get("calleId"),
-    zonaId: formData.get("zonaId") ?? "",
-    numero: formData.get("numero") ?? undefined,
-    entreCalleAId: formData.get("entreCalleAId") ?? "",
-    entreCalleBId: formData.get("entreCalleBId") ?? "",
-    referencia: formData.get("referencia") ?? undefined,
-  });
+  const analisis = esquemaDeEntrada.safeParse(entradaDe(formData));
 
   const navegacion = navegacionDe(formData);
 
-  if (!analisis.success) {
+  // Sin un `domicilioId` valido no hay formulario al que volver a llenar,
+  // y el esquema de arriba ya fallo: el rechazo vuelve sin borrador.
+  if (!navegacion.domicilio) {
     volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
+  const borrador = borradorDeCorreccion(formData, navegacion.domicilio);
+
+  if (!analisis.success) {
+    await volverConBorrador(navegacion, borrador, MENSAJE_FORMULARIO_INVALIDO);
+    return;
+  }
+
   await ejecutarEnContexto(
-    navegacion,
+    conToken(navegacion, borrador),
     (contexto) => corregirDomicilio(comandoDe(analisis.data), contexto),
-    mensajeDeError,
+    guardandoBorrador(borrador, mensajeDeError),
   );
+  await descartarBorrador();
   confirmarEnArbol(navegacion, "domicilio-corregido");
 }

@@ -36,6 +36,8 @@ export type ParametrosDeTerritorio = {
   ok: ClaveDeConfirmacion | undefined;
   vista: TabDeLugar;
   regreso?: string | undefined;
+  /** El token opaco de lo capturado en un rechazo; ver `borradorEnCookie.ts`. */
+  borrador?: string | undefined;
 };
 
 const LARGO_MAXIMO_DE_BUSQUEDA = 100;
@@ -68,6 +70,7 @@ const esquemaDeParametros = z.object({
   error: z.string().optional().catch(undefined),
   ok: z.enum(CLAVES_DE_CONFIRMACION).optional().catch(undefined),
   regreso: esquemaDeRegreso.optional().catch(undefined),
+  borrador: z.uuid().optional().catch(undefined),
 });
 
 /** A que pestana pertenece cada accion, para no perder el contexto. */
@@ -107,6 +110,7 @@ export const leerParametros = (
     // La accion fija su pestana; sin accion vale la elegida (o Lugares).
     vista: accion ? pestanaDeAccion[accion] : (datos.vista ?? "lugares"),
     regreso: datos.regreso,
+    borrador: datos.borrador,
   };
 };
 

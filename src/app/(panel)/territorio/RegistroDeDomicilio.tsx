@@ -1,4 +1,5 @@
 import { FormularioDeDomicilio } from "@/modules/territorio/ui";
+import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
 import { PanelDeAccion } from "@/modules/territorio/ui/PanelDeAccion";
 import type { NivelDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
 import type { OpcionDeLista } from "@/shared/ui";
@@ -17,6 +18,7 @@ type Props = {
   nodo?: string | undefined;
   /** La ficha a la que vuelve el alta; ver `regresoAFicha.ts`. */
   regreso?: string | undefined;
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 export function RegistroDeDomicilio({
@@ -28,6 +30,7 @@ export function RegistroDeDomicilio({
   raiz,
   nodo,
   regreso,
+  borrador,
 }: Props) {
   return (
     <PanelDeAccion titulo="Registrar domicilio">
@@ -40,6 +43,7 @@ export function RegistroDeDomicilio({
         raiz={raiz}
         nodo={nodo}
         regreso={regreso}
+        borrador={borrador}
       />
     </PanelDeAccion>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { lugarPorId } from "@/modules/territorio";
+import { borradorDeLaPeticion } from "@/modules/territorio/ui/borradorEnCookie";
 import { contextoActual } from "@/shared/auth";
 import { PantallaDeMensaje } from "@/shared/ui";
 import { resolverSeleccionDeTerritorio } from "./cargaDeTerritorio";
@@ -45,6 +46,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
     parametros,
     raiz,
   );
+  const borrador = await borradorDeLaPeticion(parametros.borrador);
 
   return (
     <Suspense fallback={<EsqueletoDeTerritorio />}>
@@ -53,6 +55,7 @@ export default async function PaginaDeTerritorio({ searchParams }: Props) {
         parametros={parametros}
         raiz={raiz}
         seleccion={seleccion}
+        borrador={borrador}
       />
     </Suspense>
   );

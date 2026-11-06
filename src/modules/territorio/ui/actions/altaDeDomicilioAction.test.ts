@@ -12,6 +12,10 @@ vi.mock("../../composicion", () => ({
   altaDeDomicilio: altaDeDomicilioMock,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
+// Las acciones de domicilio guardan o borran el borrador; ver `borradorEnAcciones.test.ts`.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ set: vi.fn(), delete: vi.fn(), has: () => false }),
+}));
 vi.mock("next/navigation", () => ({
   redirect: redirectMock.mockImplementation((destino: string) => {
     throw new Error(`REDIRECT:${destino}`);

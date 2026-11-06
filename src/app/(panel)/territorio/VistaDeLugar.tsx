@@ -13,6 +13,7 @@ import type {
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
+import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
 import {
   cuentasDeLugar,
   type PropsDeContenido,
@@ -46,6 +47,8 @@ type Props = {
   residentes?: PropsDeContenido["residentes"];
   /** El alta de domicilio esta abierta en la pestana Domicilios. */
   domicilioAbierto: boolean;
+  /** Lo capturado en un alta o una correccion rechazada. */
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 /**
@@ -69,6 +72,7 @@ export function VistaDeLugar({
   conteos,
   residentes,
   domicilioAbierto,
+  borrador,
 }: Props) {
   const zona = zonaDelFormulario(
     lugaresDeNodos(nodos),
@@ -122,6 +126,7 @@ export function VistaDeLugar({
         permisos={permisos}
         conteos={conteos}
         residentes={residentes}
+        borrador={borrador}
       />
 
       {vistaVisible === "domicilios" &&
@@ -135,6 +140,7 @@ export function VistaDeLugar({
           origenDeCalles={raiz.nombre}
           raiz={raiz.id}
           nodo={nodo.id}
+          borrador={borrador}
         />
       ) : null}
     </>

@@ -14,6 +14,8 @@ type Valores = {
   entreCalleAId: string;
   entreCalleBId: string;
   referencia: string;
+  /** Solo el borrador la trae; sin ella abre con `zona.inicial`. */
+  zonaId?: string;
 };
 
 type Props = {
@@ -107,7 +109,7 @@ export function CamposDeDomicilio({
           opcional
           opciones={zona.opciones}
           ayuda={zona.resumen}
-          defaultValue={zona.inicial}
+          defaultValue={valores?.zonaId ?? zona.inicial}
           disabled={zona.sinZonas}
         />
       </Seccion>

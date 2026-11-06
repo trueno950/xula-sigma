@@ -12,6 +12,7 @@ import {
   type AccionDeDomicilio,
   AccionesDeDomicilio,
 } from "./AccionesDeDomicilio";
+import type { BorradorDeDomicilio } from "./borradorDeDomicilio";
 import { hermanosDeDireccion, rutaDe } from "./contenido";
 import { DatosDeDomicilio } from "./DatosDeDomicilio";
 import { HermanosDeDireccion } from "./HermanosDeDireccion";
@@ -31,6 +32,7 @@ type Props = {
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
   residentes: readonly ResidenteDeDomicilio[];
+  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 const esAccionDeDomicilio = (
@@ -53,6 +55,7 @@ export function PanelDeDomicilio({
   accion,
   permisos,
   residentes,
+  borrador,
 }: Props) {
   const asentamiento = lugares.find((posible) => posible.id === raizId);
   const calle =
@@ -105,6 +108,7 @@ export function PanelDeDomicilio({
         permisos={permisos}
         accionAbierta={accionAbierta}
         residentes={residentes}
+        borrador={borrador}
       />
 
       <HermanosDeDireccion

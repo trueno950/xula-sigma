@@ -438,6 +438,13 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `NoAutorizadoError`, `NoEncontradoError` y `DomicilioConResidentesError`
   -hay una residencia vigente y la direccion no se da de baja por debajo de
   ella-.
+- `altaDeDomicilioAction`/`corregirDomicilioAction` (`territorio`, bloque de
+  mostrador): el error sigue viajando por `redirect` + `?error=` con la
+  misma lista blanca, y además, en el camino de error, la acción guarda lo
+  capturado en una cookie httpOnly de vida corta y agrega a la URL solo un
+  token opaco (`?borrador=`) -nunca la dirección, que no puede ir a los logs-.
+  La página rellena el formulario sin JavaScript; el éxito borra la cookie.
+  Ver `src/modules/territorio/ui/borradorEnCookie.ts`.
 - Las cinco de zonas (`territorio`, rebanada B3u):
   `altaDeZonaAction`, `renombrarZonaAction`, `darDeBajaZonaAction`,
   `agregarCalleAZonaAction` y `quitarCalleDeZonaAction`. Mismo motivo que

@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type ContextoActual, contextoActual } from "@/shared/auth";
-import { type navegacionDe, volverAlArbol } from "./volverAlArbol";
+import { type NavegacionDeError, volverAlArbol } from "./volverAlArbol";
 
 /**
  * El tramo comun de las acciones de territorio una vez validado el formulario:
@@ -9,9 +9,9 @@ import { type navegacionDe, volverAlArbol } from "./volverAlArbol";
  * el exito lo redirige quien llama, porque el destino difiere por accion.
  */
 export const ejecutarEnContexto = async (
-  navegacion: ReturnType<typeof navegacionDe>,
+  navegacion: NavegacionDeError,
   caso: (contexto: ContextoActual) => Promise<unknown>,
-  mensajeDeError: (error: unknown) => string,
+  mensajeDeError: (error: unknown) => string | Promise<string>,
 ): Promise<void> => {
   const contexto = await contextoActual();
 
@@ -20,7 +20,7 @@ export const ejecutarEnContexto = async (
   try {
     await caso(contexto);
   } catch (error) {
-    volverAlArbol(navegacion, mensajeDeError(error));
+    volverAlArbol(navegacion, await mensajeDeError(error));
   }
 
   revalidatePath("/territorio");

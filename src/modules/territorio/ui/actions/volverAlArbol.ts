@@ -13,6 +13,7 @@ type ParametrosDelArbol = {
   regreso?: string | undefined;
   error?: string | undefined;
   ok?: ClaveDeConfirmacion | undefined;
+  borrador?: string | undefined;
 };
 
 const CLAVES_DE_CONSULTA = [
@@ -25,6 +26,7 @@ const CLAVES_DE_CONSULTA = [
   "regreso",
   "error",
   "ok",
+  "borrador",
 ] as const;
 
 /**
@@ -59,7 +61,7 @@ export const rutaDelArbol = (datos: ParametrosDelArbol): string => {
  * `irAlArbol`-.
  */
 export const volverAlArbol = (
-  navegacion: ReturnType<typeof navegacionDe>,
+  navegacion: NavegacionDeError,
   error: string,
 ): never => redirect(rutaDelArbol({ ...navegacion, error }));
 
@@ -147,3 +149,12 @@ export const navegacionDe = (formData: FormData) =>
     domicilio: formData.get("domicilioId")?.toString() || undefined,
     regreso: formData.get("regreso")?.toString() || undefined,
   });
+
+/**
+ * La navegacion de un rechazo puede llevar el token del borrador con lo
+ * capturado (`borradorEnCookie.ts`). Lo pone la accion, nunca el formulario:
+ * `navegacionDe` no lo lee.
+ */
+export type NavegacionDeError = ReturnType<typeof navegacionDe> & {
+  borrador?: string | undefined;
+};

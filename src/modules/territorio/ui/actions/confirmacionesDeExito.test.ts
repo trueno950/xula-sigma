@@ -30,9 +30,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const { altaDeCalleAction } = await import("./altaDeCalleAction");
-const { altaDeDomicilioAction } = await import("./altaDeDomicilioAction");
 const { altaDeLugarAction } = await import("./altaDeLugarAction");
-const { corregirDomicilioAction } = await import("./corregirDomicilioAction");
 const { darDeBajaCalleAction } = await import("./darDeBajaCalleAction");
 const { darDeBajaDomicilioAction } = await import("./darDeBajaDomicilioAction");
 const { darDeBajaLugarAction } = await import("./darDeBajaLugarAction");
@@ -62,7 +60,8 @@ const contextoDeUrl = { raiz: UUID, nodo: OTRO, vista: "lugares" };
  * Cada accion que termina bien dice con que clave. Las que dejan la
  * pantalla donde estaba -las altas y las ediciones- conservan la accion
  * abierta para seguir capturando; las bajas y los movimientos suben, porque
- * el nodo de la URL ya no es el mismo.
+ * el nodo de la URL ya no es el mismo. Las dos de domicilio que guardan
+ * borrador se prueban en `borradorEnAcciones.test.ts`, que mockea la cookie.
  */
 const CASOS = [
   [
@@ -76,18 +75,6 @@ const CASOS = [
     altaDeCalleAction,
     { nombre: "Calle 1", lugarId: UUID, ...contextoDeUrl },
     "calle-creada",
-  ],
-  [
-    "altaDeDomicilio",
-    altaDeDomicilioAction,
-    { calleId: UUID, numero: "1", ...contextoDeUrl },
-    "domicilio-creado",
-  ],
-  [
-    "corregirDomicilio",
-    corregirDomicilioAction,
-    { domicilioId: UUID, calleId: OTRO, ...contextoDeUrl },
-    "domicilio-corregido",
   ],
   [
     "editarLugar",

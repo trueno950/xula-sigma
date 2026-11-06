@@ -12,9 +12,15 @@ import {
   TransversalRepetidaError,
   UbicacionIncoherenteError,
 } from "../../domain";
+import { borradorDeAlta, descartarBorrador } from "../borradorEnCookie";
 import { VALOR_SIN_COLONIA } from "../declaracionDeDestino";
 import { ejecutarEnContexto } from "./ejecutarEnContexto";
-import { confirmarEnArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
+import {
+  conToken,
+  guardandoBorrador,
+  volverConBorrador,
+} from "./rechazoConBorrador";
+import { confirmarEnArbol, navegacionDe } from "./volverAlArbol";
 
 /** Mismo reparto que `altaDeCalleAction`. Formulario nativo sin `use client`. */
 
@@ -82,17 +88,19 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
   });
 
   const navegacion = navegacionDe(formData);
+  const borrador = borradorDeAlta(formData);
 
   if (!analisis.success) {
-    volverAlArbol(navegacion, MENSAJE_FORMULARIO_INVALIDO);
+    await volverConBorrador(navegacion, borrador, MENSAJE_FORMULARIO_INVALIDO);
     return;
   }
 
   await ejecutarEnContexto(
-    navegacion,
+    conToken(navegacion, borrador),
     (contexto) => altaDeDomicilio(comandoDe(analisis.data), contexto),
-    mensajeDeError,
+    guardandoBorrador(borrador, mensajeDeError),
   );
+  await descartarBorrador();
   // Pedida desde la ficha de una persona, el alta vuelve ahi para seguir
   // con la mudanza; `navegacionDe` ya descarto cualquier otro destino.
   if (navegacion.regreso) redirect(`${navegacion.regreso}?ok=domicilio-creado`);

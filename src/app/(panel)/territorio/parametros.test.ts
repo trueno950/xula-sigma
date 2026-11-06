@@ -22,6 +22,11 @@ describe("leerParametros", () => {
     },
   );
 
+  it("lee el token del borrador y descarta lo que no sea un uuid", () => {
+    expect(leerParametros({ borrador: RAIZ_AJENA }).borrador).toBe(RAIZ_AJENA);
+    expect(leerParametros({ borrador: "17-A" }).borrador).toBeUndefined();
+  });
+
   it("lee raiz y nodo validos", () => {
     const parametros = leerParametros({ raiz: RAIZ_AJENA, nodo: RAIZ_AJENA });
 
