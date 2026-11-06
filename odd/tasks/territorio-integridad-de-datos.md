@@ -41,11 +41,11 @@ Runner: Vitest (`pnpm test`, integración sobre `xula_test`) y `pnpm check`.
 - [x] **T1** · S1,S2,S4 · delegado (respaldo de contexto de la sesión
   principal) — Lugares: reparenteo entre asentamientos, baja con bloqueo y
   dependientes, altas con bloqueo, cabecera única activa con migración.
-  Risk: item 1 (migración), item 4 (bloqueos). Commit: `3c96ef6`.
+  Risk: item 1 (migración), item 4 (bloqueos). Commits: `7f3e5c4` (S4), `cf8a3fb` (S2), `bf7f708` (S1).
 - [x] **T2** · S3,S5 · delegado (mismo motivo) — Residencias: mudanza que
   cierra todas las identidades y error tipado de mudanza concurrente.
-  Risk: item 1 (datos de residencias), item 4. Commit: `9a76722`.
-- [ ] **T3** · S1-S5 · verificador independiente al final de la feature,
+  Risk: item 1 (datos de residencias), item 4. Commit: `42ddd6b`.
+- [x] **T3** · S1-S5 · verificador independiente al final de la feature,
   `pnpm check` y suite completa, PR con issue aprobado.
 
 ## Log
@@ -66,4 +66,6 @@ Runner: Vitest (`pnpm test`, integración sobre `xula_test`) y `pnpm check`.
 - **L4** — 2026-11-06. T2 del escritor: S3 y S5 cubiertos. `registrarMudanza` lee `identidadesDe(terminal)` fuera de `withTenant` y cierra con `cerrarAbiertas(tx, identidades, hastaEn)` todas las residencias abiertas, con una traza `CERRAR_RESIDENCIA` por cada una. El choque con `residencias_una_abierta_idx` se traduce en `abrir` a `MudanzaConcurrenteError` («Ya se registró otra mudanza para esta persona al mismo tiempo. Revise el historial.»), redactado en `registrarMudanzaAction` y anotado en AGENTS.md. Sin lock adicional: `FOR UPDATE` no serializa una primera mudanza (no hay fila) y con residencia abierta el `UPDATE` ya bloquea; el índice único es el mecanismo y el error tipado su resultado. RED en 8 casos (unitarios, acción, fusión real y carrera real con `enTransaccionParalela`) y GREEN; módulo 150 archivos y 760 tests; reglas sin hallazgos; suite completa 473 archivos y 2418 tests. Comprobación del padre: `pnpm check` exit 0. Risk: item 1 (datos de residencias), item 4 (concurrencia).
 
 - **L5** — 2026-11-06. Verificador independiente de la feature completa (`0caa85c..9a76722`): S1-S5 cumplen, sin bloqueantes. Orden de locks sin riesgo de deadlock. `pnpm db:migrate` exit 0 (0022 ya aplicada), `drizzle-kit check` «Everything's fine», módulos territorio/constancias/padron 231 archivos y 1093 tests, suite completa 473 archivos y 2418 tests. Diferencial unitario contra la base: 578 tests comunes, ninguno falla solo en el candidato. Advertencias, sin corrección: (1) reparentear una colonia activa cuyo padre está dado de baja (dato huérfano heredado) ahora da `NoEncontradoError` aunque no tenga domicilios; (2) `reparentearLugar` no bloquea el nuevo padre, igual que antes; (3) `identidadesDe` se lee fuera de la transacción, intercambio aceptado; (4) ningún test fija que un 23505 de otro índice no se convierta en `MudanzaConcurrenteError`. Directorio temporal del verificador borrado por el padre.
+
+- **L6** — 2026-11-06. La revisión nativa del candidato completo `0caa85c..6910c1a` (68 archivos, 6095 líneas) se detuvo con `lens_context_budget_exceeded`, sin crear autoridad. T2 se revisó sola (`review-15d4fa1e3309b170`, aprobada). Para T1 el usuario eligió «Partir T1 y revisarlo (Recomendado)»: la historia local, sin publicar, se rehízo en tres commits con su comportamiento y sus tests: `7f3e5c4` S4 (migración 0022, snapshot de drizzle de ~3900 líneas, esquema, `existeCabecera`), `cf8a3fb` S2 (bloqueos y dependientes; módulos territorio y constancias 189 archivos y 920 tests en ese estado) y `bf7f708` S1 (reparenteo y helper). El árbol tras `bf7f708` es idéntico al `3c96ef6` original y el final idéntico a la rama de respaldo `respaldo/integridad-sin-partir`; T2 y estas notas se reaplicaron como `42ddd6b` y `6c83002`, y su revisión sigue reconocida (`target_already_acknowledged`). Revisiones: S2 `review-c372b34fa016659b` y S1 `review-3635ee6b55c520a1`, aprobadas y reconocidas. S4 no cabe por el snapshot generado y queda cubierta solo por el verificador (L5). Advertencias informativas de las revisiones: destino del reparenteo sin bloqueo, serialización en una fila caliente de `lugares`, acoplamiento del fake de pruebas, y lo de L5. Antes de cada preflight hubo que correr `gentle-ai sync` por `managed_assets_outdated`.
 
