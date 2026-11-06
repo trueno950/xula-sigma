@@ -393,6 +393,13 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `longitud`; si Leaflet o sus tiles fallan, el operador conserva el camino
   sin JavaScript. Redacta `NoAutorizadoError`, `NoEncontradoError` y
   `PuntoFueraDeYucatanError`.
+- `registrarMudanzaAction` (`territorio`, T7 de `territorio-direcciones`):
+  `FormularioDeMudanza` renderiza la isla `SelectorDeDomicilioDeMudanza`
+  (`"use client"`), pero esa isla llama a `buscarDomiciliosAction` -la
+  accion por defecto de `ActionResult<T>`, no una excepcion de esta tabla- y
+  solo escribe el `domicilioId` oculto; el envio sigue siendo el POST nativo.
+  Sin JavaScript queda el `<select>` del municipio dentro de `<noscript>`.
+  Redacta `NoAutorizadoError` y `NoEncontradoError`.
 - `altaDeReporteAction` (`reportes`, rebanada 7): mismo motivo exacto que
   `altaDePersonaAction`. `FormularioDeAlta` renderiza la isla
   `SelectorDeUbicacionYTipo` + `ReportesSimilares` (`"use client"`), pero

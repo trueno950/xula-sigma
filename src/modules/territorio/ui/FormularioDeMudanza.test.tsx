@@ -7,6 +7,9 @@ import { comoCalleId, comoDomicilioId } from "../domain";
 vi.mock("./actions/registrarMudanzaAction", () => ({
   registrarMudanzaAction: "mudanza-action",
 }));
+vi.mock("./actions/buscarDomiciliosAction", () => ({
+  buscarDomiciliosAction: vi.fn(),
+}));
 
 const { FormularioDeMudanza } = await import("./FormularioDeMudanza");
 
@@ -34,5 +37,32 @@ describe("FormularioDeMudanza", () => {
       expect(select).toContain(ANILLO_DE_FOCO);
       expect(select).not.toContain("outline-none");
     }
+  });
+
+  it("sin JavaScript conserva el select completo del municipio, dentro de <noscript>", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeMudanza personaId={personaId} domicilios={domicilios} />,
+    );
+    const respaldo = html.match(/<noscript>([\s\S]*)<\/noscript>/)?.[1] ?? "";
+
+    expect(respaldo).toContain('name="domicilioId"');
+    expect(respaldo).toContain("Tepakan — Calle 21 12");
+  });
+
+  it("el HTML del servidor no muestra un buscador que sin JavaScript no responde", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeMudanza personaId={personaId} domicilios={domicilios} />,
+    );
+
+    expect(html).not.toContain('type="search"');
+    expect(html.match(/name="domicilioId"/g)).toHaveLength(1);
+  });
+
+  it("sin domicilios en el municipio dice dónde crearlos, con o sin JavaScript", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeMudanza personaId={personaId} domicilios={[]} />,
+    );
+
+    expect(html).toContain("Primero cree un domicilio desde Territorio.");
   });
 });

@@ -51,6 +51,15 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 
 - **S8.** «si», respuesta a «¿Autorizás ese arreglo y su publicación en el mismo PR #108, sin merge ni T7?». Se acepta la recomendación: «una corrección acotada al **arnés de acceso E2E y su prueba**: reproducir el fallo, corregir la coordinación entre respuesta y navegación, y conservar la exigencia de un único POST. Sin relajar aserciones ni aumentar timeouts a ciegas.»
 
+- **S9.** «dale con la recomendacion», respuesta a «¿Avanzo con esa
+  interpretación: buscador en la mudanza y la emisión de constancias sin
+  cambios?». Recomendación aceptada: «que «lo mismo para las constancias» se
+  aplique al **formulario de mudanza**. Sería reemplazar ese `<select>` por
+  el mismo `SelectorDeDireccion` que usa el alta de reportes, buscable por
+  texto. La emisión de la constancia seguiría como está.» Con sus tres
+  implicaciones: textos del selector por prop, búsqueda propia de
+  Territorio y el `<select>` actual como respaldo sin JavaScript.
+
 ## Tasks
 
 - [x] **T1** · S1,S4 · directo — La pestaña Lugares no se renderiza cuando el
@@ -94,8 +103,12 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   `feat(reportes): integra direcciones en el alta nativa` que contiene
   este cierre (L21). Publicado en PR #108; T7 queda fuera de este cierre.
 - [x] **T6c** · S8 · delegado — Acceso E2E corregido: bucket de prueba aislado y un POST coordinado con respuesta/navegación; regresión permanente del waiter conserva error original y cero POST ante fill fallido. RED/GREEN observados; independiente 18 aprobados previos más reverificación limitada 1/1 y spot check final del padre exit 0 (L27-L30). Risk: item 4. Commit: `ae11d9eab4b1bd548328105b1f50c00086a127ff`.
-- [ ] **T7** · S5 · delegado — Constancias y Territorio usan el mismo
-  selector; el árbol queda como administración. Commit:
+- [ ] **T7** · S5,S9 · inline (sin razón de escritor delegado) — El
+  formulario de mudanza usa el mismo `SelectorDeDireccion` buscable que el
+  alta de reportes, con el `<select>` completo como respaldo sin JavaScript;
+  el selector compartido deja de traer textos fijos de reportes y reportes
+  conserva los suyos exactos. La emisión de constancias no cambia. Rama
+  `feat/territorio-mudanza-con-buscador`. Commit:
 
 ## Log
 
@@ -366,3 +379,7 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - **L31** — Primer intento de registro job-13 rechazado únicamente por commitlint: `e2e` no es un scope permitido. Los hooks previos llegaron a reglas sin hallazgos; no hubo commit ni push. Se corrige el scope del mensaje a `auth`, permitido por la política del repositorio, sin modificar los bytes del arnés/pruebas ni omitir hooks. No es un fallo funcional ni invalida la verificación de T6c.
 
 - **L32** — T6c registrado en `ae11d9eab4b1bd548328105b1f50c00086a127ff` (`fix(auth): coordina un solo acceso sin esperas huerfanas`): 6 archivos, 294 líneas de diff; hooks de Biome, tipos, reglas y commitlint aprobados. La selección relacionada de Vitest no constituye una nueva suite completa. Árbol limpio al terminar job-15; se actualiza ahora únicamente esta evidencia para registrar el SHA antes de publicar. No se modifica código ni se reescribe historial. Push y CI del nuevo head pendientes; las aprobaciones nativas previas siguen ligadas a sus cuatro commits originales.
+
+- **L33** — 2026-11-05. Pedido textual: «haz el merge si todo bien y continua». PR #108 verificado OPEN, CLEAN, MERGEABLE, 5/5 checks SUCCESS y head `c9d070a` igual al local; merge commit `b7622dd` (método merge commit, el del repo). Issue #107 cerrado. Se inicia T7 desde `main` en `feat/territorio-mudanza-con-buscador`.
+
+- **L34** — 2026-11-05. Análisis previo a T7: `emitirConstanciaAction` solo recibe `personaId` y la dirección impresa sale de la residencia vigente; la dirección de una persona se elige en `FormularioDeMudanza`, un `<select>` con todos los domicilios del municipio. Pregunta y respuesta registradas en S9. Plan: textos del selector por prop con prueba que fija los de reportes, `buscarDomiciliosAction` de Territorio sobre `registroDeDomicilios({ busqueda })`, isla cliente en la mudanza con `<noscript>` de respaldo y E2E propio.

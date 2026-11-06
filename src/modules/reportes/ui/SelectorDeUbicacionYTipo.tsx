@@ -127,6 +127,8 @@ export function SelectorDeUbicacionYTipo({ lugares, calles, tipos }: Props) {
         <SelectorDeDireccion<DireccionParaReporte>
           id="reporte-direccion"
           nombre="domicilioId"
+          etiquetaDeLista="Dirección para el reporte"
+          alternativa="Puede indicar lugar y calle."
           buscar={buscarDireccionesAction}
           onSeleccionar={(seleccionada) => {
             setDireccion(seleccionada);
