@@ -403,7 +403,9 @@ Notas que no caben en la tabla, una por fila que las necesita:
   accion por defecto de `ActionResult<T>`, no una excepcion de esta tabla- y
   solo escribe el `domicilioId`; el envio sigue siendo el POST nativo. Sin
   JavaScript queda el `<select>` del municipio del HTML inicial. Redacta
-  `NoAutorizadoError` y `NoEncontradoError`.
+  `NoAutorizadoError`, `NoEncontradoError` y `MudanzaConcurrenteError` -dos
+  mudanzas simultaneas de la misma persona chocan con
+  `residencias_una_abierta_idx`-.
 - `altaDeReporteAction` (`reportes`, rebanada 7): mismo motivo exacto que
   `altaDePersonaAction`. `FormularioDeAlta` renderiza la isla
   `SelectorDeUbicacionYTipo` + `ReportesSimilares` (`"use client"`), pero

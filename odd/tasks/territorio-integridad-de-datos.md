@@ -41,8 +41,8 @@ Runner: Vitest (`pnpm test`, integración sobre `xula_test`) y `pnpm check`.
 - [x] **T1** · S1,S2,S4 · delegado (respaldo de contexto de la sesión
   principal) — Lugares: reparenteo entre asentamientos, baja con bloqueo y
   dependientes, altas con bloqueo, cabecera única activa con migración.
-  Risk: item 1 (migración), item 4 (bloqueos). Commit:
-- [ ] **T2** · S3,S5 · delegado (mismo motivo) — Residencias: mudanza que
+  Risk: item 1 (migración), item 4 (bloqueos). Commit: `3c96ef6`.
+- [x] **T2** · S3,S5 · delegado (mismo motivo) — Residencias: mudanza que
   cierra todas las identidades y error tipado de mudanza concurrente.
   Risk: item 1 (datos de residencias), item 4. Commit:
 - [ ] **T3** · S1-S5 · verificador independiente al final de la feature,
@@ -62,4 +62,6 @@ Runner: Vitest (`pnpm test`, integración sobre `xula_test`) y `pnpm check`.
 - **L2** — 2026-11-06. T1 del escritor: S1, S2 y S4 cubiertos. RED observado: 16 unitarios, 8 de integración (incluidas dos carreras reales con `enTransaccionParalela`: alta de calle contra baja concurrente y baja contra domicilio concurrente) y la redacción en `reparentearLugarAction`. GREEN: módulo 146 archivos y 751 tests. Migración `drizzle/0022_cabecera_activa_unica.sql`: solo DROP y CREATE del índice parcial `WHERE tipo='cabecera' AND baja_en IS NULL`. Nuevos `LugarConDomiciliosError`, `LugarConCallesError`, `LugarConZonasError` (los dos últimos heredan de `LugarConDependientesError`) y `bloquearPorId` con `FOR UPDATE` en baja, reparenteo, altas de lugar, calle y zona, y verificación de domicilio. `subarbol` se movió a `subarbolDeLugaresSql.ts` para el límite de 200 líneas. El único fallo de suite era `constancias/emision.integration.test.ts:68`, que movía una colonia con domicilios, justo lo que S1 prohíbe; el padre lo cambió por un renombre con `editarLugar`, que sigue probando que el snapshot de la constancia no cambia. Comprobación del padre: `pnpm check` exit 0 y suite completa 469 archivos y 2409 tests. Risk: item 1 (migración), item 4 (bloqueos), item 3 (`reparentearLugar` rechaza un movimiento que antes aceptaba).
 
 - **L3** — 2026-11-06. Primer intento de commit de T1 frenado por `pnpm reglas` (antipatrón 2): `lugares.concurrencia.integration.test.ts` importaba el tipo `TransactionSql` de `postgres`. Corregido con el patrón existente: el tipo `CambioDeLugar` vive en el andamiaje `carrerasDeCalleDePrueba.ts`, junto a `CambioDeCalle`. Reglas sin hallazgos, typecheck limpio y el test de concurrencia 2/2.
+
+- **L4** — 2026-11-06. T2 del escritor: S3 y S5 cubiertos. `registrarMudanza` lee `identidadesDe(terminal)` fuera de `withTenant` y cierra con `cerrarAbiertas(tx, identidades, hastaEn)` todas las residencias abiertas, con una traza `CERRAR_RESIDENCIA` por cada una. El choque con `residencias_una_abierta_idx` se traduce en `abrir` a `MudanzaConcurrenteError` («Ya se registró otra mudanza para esta persona al mismo tiempo. Revise el historial.»), redactado en `registrarMudanzaAction` y anotado en AGENTS.md. Sin lock adicional: `FOR UPDATE` no serializa una primera mudanza (no hay fila) y con residencia abierta el `UPDATE` ya bloquea; el índice único es el mecanismo y el error tipado su resultado. RED en 8 casos (unitarios, acción, fusión real y carrera real con `enTransaccionParalela`) y GREEN; módulo 150 archivos y 760 tests; reglas sin hallazgos; suite completa 473 archivos y 2418 tests. Comprobación del padre: `pnpm check` exit 0. Risk: item 1 (datos de residencias), item 4 (concurrencia).
 

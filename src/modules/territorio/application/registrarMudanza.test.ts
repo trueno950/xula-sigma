@@ -54,7 +54,7 @@ const domicilioGuardado = {
 
 describe("registrarMudanza", () => {
   const repositorio: RepositorioDeResidencias = {
-    cerrarAbierta: vi.fn(),
+    cerrarAbiertas: vi.fn(),
     abrir: vi.fn(),
     historialDe: vi.fn(),
     residentesDe: vi.fn(),
@@ -92,7 +92,7 @@ describe("registrarMudanza", () => {
         ordenDeLlamadas.push("terminalDe");
         return id === personaId ? terminal : null;
       }),
-      identidadesDe: vi.fn(),
+      identidadesDe: vi.fn(async () => [terminal]),
     };
     crearLecturaDePersonas = vi.fn(() => lecturaDePersonas);
   });
@@ -134,7 +134,7 @@ describe("registrarMudanza", () => {
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(repositorio.abrir).not.toHaveBeenCalled();
-    expect(repositorio.cerrarAbierta).not.toHaveBeenCalled();
+    expect(repositorio.cerrarAbiertas).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
@@ -149,12 +149,12 @@ describe("registrarMudanza", () => {
     ).rejects.toBeInstanceOf(NoEncontradoError);
 
     expect(repositorio.abrir).not.toHaveBeenCalled();
-    expect(repositorio.cerrarAbierta).not.toHaveBeenCalled();
+    expect(repositorio.cerrarAbiertas).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
   });
 
   it("el orden de llamada es: primero terminalDe, despues withTenant", async () => {
-    vi.mocked(repositorio.cerrarAbierta).mockResolvedValue(null);
+    vi.mocked(repositorio.cerrarAbiertas).mockResolvedValue([]);
     vi.mocked(repositorio.abrir).mockResolvedValue(residenciaAbiertaId);
 
     await registrarMudanza()(personaId, domicilioId, contextoCon("OPERADOR"));
@@ -163,7 +163,7 @@ describe("registrarMudanza", () => {
   });
 
   it("mudanza sin residencia previa abierta: una sola traza ABRIR_RESIDENCIA", async () => {
-    vi.mocked(repositorio.cerrarAbierta).mockResolvedValue(null);
+    vi.mocked(repositorio.cerrarAbiertas).mockResolvedValue([]);
     vi.mocked(repositorio.abrir).mockResolvedValue(residenciaAbiertaId);
 
     const { id } = await registrarMudanza()(
@@ -191,14 +191,16 @@ describe("registrarMudanza", () => {
   });
 
   it("mudanza con residencia previa abierta: cierra y abre, se opera sobre el terminal y no sobre lo que mando la UI", async () => {
-    vi.mocked(repositorio.cerrarAbierta).mockResolvedValue(residenciaCerradaId);
+    vi.mocked(repositorio.cerrarAbiertas).mockResolvedValue([
+      residenciaCerradaId,
+    ]);
     vi.mocked(repositorio.abrir).mockResolvedValue(residenciaAbiertaId);
 
     await registrarMudanza()(personaId, domicilioId, contextoCon("OPERADOR"));
 
-    expect(repositorio.cerrarAbierta).toHaveBeenCalledWith(
+    expect(repositorio.cerrarAbiertas).toHaveBeenCalledWith(
       expect.anything(),
-      terminal,
+      [terminal],
       "2020-06-15",
     );
     expect(repositorio.abrir).toHaveBeenCalledWith(expect.anything(), {

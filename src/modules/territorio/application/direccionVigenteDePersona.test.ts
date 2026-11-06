@@ -54,7 +54,7 @@ const residenciaCerrada: ResidenciaGuardada = {
 
 describe("direccionVigenteDePersona", () => {
   const repositorio: RepositorioDeResidencias = {
-    cerrarAbierta: vi.fn(),
+    cerrarAbiertas: vi.fn(),
     abrir: vi.fn(),
     historialDe: vi.fn(),
     residentesDe: vi.fn(),
