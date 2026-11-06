@@ -61,7 +61,7 @@ describe("FormularioDeDomicilio: grupos y calles", () => {
 
   it("el envio va en la barra de acciones", () => {
     expect(html).toContain("border-t border-caliza-divisor");
-    expect(html.lastIndexOf("Dar de alta")).toBeGreaterThan(
+    expect(html.lastIndexOf("Registrar domicilio")).toBeGreaterThan(
       html.indexOf('name="referencia"'),
     );
   });

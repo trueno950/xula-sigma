@@ -1,3 +1,4 @@
+import { MapPin } from "@phosphor-icons/react/ssr";
 import {
   type AccionDeNodo,
   type CalleId,
@@ -13,6 +14,7 @@ import type {
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
+import { conAnclaDeAlta } from "@/modules/territorio/ui/anclaDeAlta";
 import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
 import {
   cuentasDeLugar,
@@ -54,7 +56,8 @@ type Props = {
 /**
  * La vista con `?raiz=` fijada: las pestanas del lugar y
  * el contenido de la pestana activa, una categoria a la vez. Navegar es
- * entrar: cada hijo fija `?nodo=`; la migaja de la cabecera sube de nivel. Vive aparte
+ * entrar: cada hijo fija `?nodo=`; la migaja de la cabecera sube de nivel.
+ * El alta de domicilio abierta va antes del contenido, a la vista. Vive aparte
  * de la pagina para que ninguna pase las 200 lineas de la metrica.
  */
 export function VistaDeLugar({
@@ -104,12 +107,30 @@ export function VistaDeLugar({
       calles.length > 0 ? (
         <BarraDeAcciones>
           <EnlaceDeAccion
-            href={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`}
+            href={conAnclaDeAlta(
+              `/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios&accion=domicilio`,
+            )}
             variante="primaria"
           >
+            <MapPin size={18} weight="bold" aria-hidden="true" />
             Registrar domicilio
           </EnlaceDeAccion>
         </BarraDeAcciones>
+      ) : null}
+
+      {vistaVisible === "domicilios" &&
+      puedeAbrir("domicilio", permisos) &&
+      domicilioAbierto ? (
+        <RegistroDeDomicilio
+          calles={opciones}
+          zona={zona}
+          declaracionDeDestino={declaracion}
+          volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
+          origenDeCalles={raiz.nombre}
+          raiz={raiz.id}
+          nodo={nodo.id}
+          borrador={borrador}
+        />
       ) : null}
 
       <ContenidoDeLugar
@@ -128,21 +149,6 @@ export function VistaDeLugar({
         residentes={residentes}
         borrador={borrador}
       />
-
-      {vistaVisible === "domicilios" &&
-      puedeAbrir("domicilio", permisos) &&
-      domicilioAbierto ? (
-        <RegistroDeDomicilio
-          calles={opciones}
-          zona={zona}
-          declaracionDeDestino={declaracion}
-          volverA={`/territorio?raiz=${raiz.id}&nodo=${nodo.id}&vista=domicilios`}
-          origenDeCalles={raiz.nombre}
-          raiz={raiz.id}
-          nodo={nodo.id}
-          borrador={borrador}
-        />
-      ) : null}
     </>
   );
 }

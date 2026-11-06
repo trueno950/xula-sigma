@@ -19,6 +19,18 @@ describe("PaginaDePanel", () => {
     expect(html).toContain("Alta");
   });
 
+  it("en movil la accion baja a su propia linea a todo el ancho", () => {
+    const html = renderToStaticMarkup(
+      <PaginaDePanel titulo="Padrón" accion={<a href="/padron/alta">Alta</a>}>
+        <p>contenido</p>
+      </PaginaDePanel>,
+    );
+
+    expect(html).toMatch(
+      /<div class="[^"]*max-sm:w-full[^"]*"><a href="\/padron\/alta">/,
+    );
+  });
+
   it("la etiqueta va junto al titulo como pastilla, no como dato monoespaciado", () => {
     const html = renderToStaticMarkup(
       <PaginaDePanel titulo="Colonia Centro" etiqueta="Colonia">

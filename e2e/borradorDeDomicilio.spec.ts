@@ -31,7 +31,9 @@ const capturarAltaRechazada = async (page: Page, numero: string) => {
     .getByLabel("Entre calle", { exact: true })
     .selectOption(escenario.calleId);
   await page.getByLabel("Referencia", { exact: true }).fill(REFERENCIA);
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page
+    .getByRole("button", { name: "Registrar domicilio", exact: true })
+    .click();
   await expect(page.getByText(RECHAZO)).toBeVisible();
 };
 
@@ -67,7 +69,9 @@ test("un alta rechazada vuelve con lo capturado y el borrador no sobrevive al ex
   await page
     .getByLabel("Entre calle", { exact: true })
     .selectOption({ label: "Ninguna" });
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page
+    .getByRole("button", { name: "Registrar domicilio", exact: true })
+    .click();
   await expect(page).toHaveURL(/ok=domicilio-creado/);
   await expect
     .poll(() => leerDomicilioPorNumero(escenario.calleId, numero))

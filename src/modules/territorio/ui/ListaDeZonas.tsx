@@ -2,25 +2,22 @@ import Link from "next/link";
 import type { ColumnaDeTabla } from "@/shared/ui";
 import {
   Aviso,
-  CeldaDeDato,
+  CeldaDeApoyo,
   CeldaPrincipal,
   EstadoVacio,
   FilaDeTabla,
   Migaja,
   PaginaDePanel,
+  Panel,
   Tabla,
 } from "@/shared/ui";
 import type { LugarGuardado } from "../application/puertos";
 import type { ZonaGuardada } from "../application/puertosDeLecturaDeZonas";
-import {
-  FormularioDeAltaDeZona,
-  FormularioDeBajaDeZonaEnFila,
-} from "./FormulariosDeZona";
+import { FormularioDeAltaDeZona } from "./FormulariosDeZona";
 
 const COLUMNAS_DE_ZONAS: readonly ColumnaDeTabla[] = [
   { clave: "zona", etiqueta: "Zona" },
   { clave: "asentamiento", etiqueta: "Asentamiento" },
-  { clave: "baja", etiqueta: "Acciones" },
 ];
 
 type Props = {
@@ -33,8 +30,8 @@ type Props = {
 
 /**
  * El listado de zonas del municipio (o de un asentamiento con `?raiz=`).
- * Cada fila enlaza al detalle `?zona=` y ofrece dar de baja la zona en su
- * propio `<form>` nativo: cero estado de cliente.
+ * Cada fila solo enlaza al detalle `?zona=`: la baja vive alli, detras de
+ * un `<details>`, y no dentro del enlace de la fila.
  */
 export function ListaDeZonas({
   zonas,
@@ -60,7 +57,9 @@ export function ListaDeZonas({
       {error ? <Aviso tono="error">{error}</Aviso> : null}
       {aviso ? <Aviso tono="exito">{aviso}</Aviso> : null}
 
-      <FormularioDeAltaDeZona asentamientos={asentamientos} />
+      <Panel titulo="Nueva zona">
+        <FormularioDeAltaDeZona asentamientos={asentamientos} />
+      </Panel>
 
       {zonas.length === 0 ? (
         <EstadoVacio
@@ -81,17 +80,14 @@ export function ListaDeZonas({
               etiquetaAccesible={`${zona.nombre}, ${zona.asentamiento}`}
             >
               <CeldaPrincipal>{zona.nombre}</CeldaPrincipal>
-              <CeldaDeDato>{zona.asentamiento}</CeldaDeDato>
-              <CeldaDeDato>
-                <FormularioDeBajaDeZonaEnFila zonaId={zona.id} />
-              </CeldaDeDato>
+              <CeldaDeApoyo>{zona.asentamiento}</CeldaDeApoyo>
             </FilaDeTabla>
           ))}
         </Tabla>
       )}
       <p className="text-[15px] text-caliza-apagada">
         <Link href="/territorio" className="underline">
-          Volver al mapa de territorio
+          Volver a Territorio
         </Link>
       </p>
     </PaginaDePanel>

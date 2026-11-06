@@ -52,9 +52,11 @@ describe("HistorialDeResidencias", () => {
       />,
     );
 
-    expect(html).toContain("Calle 20 10, Colonia Centro, Motul · Vigente");
-    expect(html).toContain("Calle 31 S/N, Motul");
-    expect(html).not.toContain("Calle 31 S/N, Motul · Vigente");
+    expect(html.match(/>Vigente</g)).toHaveLength(1);
+    expect(html).toMatch(
+      /Calle 20 10, Colonia Centro, Motul<span[\s\S]*?Vigente/,
+    );
+    expect(html.indexOf("Vigente")).toBeLessThan(html.indexOf("Calle 31"));
   });
 
   it("si la direccion ya no se puede leer lo dice, en vez de mostrar solo el numero", () => {
@@ -72,7 +74,7 @@ describe("HistorialDeResidencias", () => {
       />,
     );
 
-    expect(html).toContain("Dirección no disponible · Vigente");
+    expect(html).toMatch(/Dirección no disponible<span[\s\S]*?Vigente/);
     expect(html).not.toContain("Número 10");
   });
 });

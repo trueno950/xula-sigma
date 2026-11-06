@@ -27,6 +27,8 @@ type OpcionesDeInicializacion = {
   leaflet: typeof import("leaflet");
   elemento: HTMLDivElement;
   punto: PuntoGeografico | null;
+  /** Donde abrir sin punto; ver `centroDeCalles`. */
+  centro?: PuntoGeografico | null | undefined;
   onSelect: (punto: PuntoGeografico) => void;
   onTileError: () => void;
 };
@@ -34,9 +36,11 @@ type OpcionesDeInicializacion = {
 type DatosDeMapa = {
   leaflet: typeof import("leaflet");
   elemento: HTMLDivElement;
-  punto: PuntoGeografico | null;
+  vista: VistaInicial;
   configuracion: ConfiguracionDeMapa;
 };
+
+type VistaInicial = [[number, number], number];
 
 type DatosDeTiles = {
   leaflet: typeof import("leaflet");
@@ -55,10 +59,23 @@ const centroDe = (limites: LatLngBoundsExpression): [number, number] => {
   ];
 };
 
+/** El punto de la calle; si no tiene, su lugar; si no, todo Yucatan. */
+export const vistaInicialDelMapa = ({
+  punto,
+  centro,
+}: {
+  punto: PuntoGeografico | null;
+  centro: PuntoGeografico | null;
+}): VistaInicial => {
+  if (punto) return [[punto.latitud, punto.longitud], 15];
+  if (centro) return [[centro.latitud, centro.longitud], 14];
+  return [centroDe(configuracionDeMapa().maxBounds), 8];
+};
+
 const crearInstanciaDeMapa = ({
   leaflet,
   elemento,
-  punto,
+  vista,
   configuracion,
 }: DatosDeMapa): LeafletMap =>
   leaflet
@@ -67,12 +84,7 @@ const crearInstanciaDeMapa = ({
       maxBoundsViscosity: 1,
       attributionControl: true,
     })
-    .setView(
-      punto
-        ? [punto.latitud, punto.longitud]
-        : centroDe(configuracion.maxBounds),
-      punto ? 15 : 8,
-    );
+    .setView(...vista);
 
 const agregarCapaDeTiles = ({
   leaflet,
@@ -104,6 +116,7 @@ export const prepararMapa = ({
   leaflet,
   elemento,
   punto,
+  centro = null,
   onSelect,
   onTileError,
 }: OpcionesDeInicializacion): LeafletMap => {
@@ -111,7 +124,7 @@ export const prepararMapa = ({
   const mapa = crearInstanciaDeMapa({
     leaflet,
     elemento,
-    punto,
+    vista: vistaInicialDelMapa({ punto, centro }),
     configuracion,
   });
   agregarCapaDeTiles({ leaflet, mapa, configuracion, onTileError });

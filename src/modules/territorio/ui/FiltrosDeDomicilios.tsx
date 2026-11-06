@@ -23,7 +23,10 @@ type Props = {
  */
 export function FiltrosDeDomicilios({ filtros, raices }: Props) {
   return (
-    <form method="get" className="flex flex-wrap items-end gap-3">
+    <form
+      method="get"
+      className="flex flex-wrap items-end gap-3 max-sm:flex-col max-sm:items-stretch"
+    >
       <div className="flex flex-col gap-1">
         <label htmlFor="q" className={CLASES_DE_ETIQUETA}>
           Buscar calle
@@ -39,7 +42,7 @@ export function FiltrosDeDomicilios({ filtros, raices }: Props) {
             name="q"
             type="search"
             defaultValue={filtros.calle}
-            className={`${clasesDeCampo()} w-64 pl-9`}
+            className={`${clasesDeCampo()} w-full sm:w-64 pl-9`}
           />
         </div>
       </div>
@@ -52,7 +55,7 @@ export function FiltrosDeDomicilios({ filtros, raices }: Props) {
           name="numero"
           type="search"
           defaultValue={filtros.numero}
-          className={`${clasesDeCampo()} w-32`}
+          className={`${clasesDeCampo()} w-full sm:w-32`}
         />
       </div>
       <CampoDeLista

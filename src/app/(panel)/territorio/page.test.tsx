@@ -84,7 +84,7 @@ describe("Territorio root entry", () => {
 
     expect(html.match(/Registrar domicilio/g) ?? []).toHaveLength(1);
     expect(html.match(/Agregar asentamiento/g) ?? []).toHaveLength(1);
-    expect(html).toContain('href="/territorio?accion=domicilio"');
+    expect(html).toContain('href="/territorio?accion=domicilio#panel-de-alta"');
   });
 });
 

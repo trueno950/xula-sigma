@@ -12,12 +12,11 @@ import {
 } from "@/shared/ui";
 import type { DomicilioDelRegistro } from "../application/puertosDeDomicilios";
 import type { ZonaGuardada } from "../application/puertosDeLecturaDeZonas";
+import { AccionesDeZona } from "./AccionesDeZona";
 import {
   type CalleParaZona,
-  FormularioDeBajaDeZona,
   FormularioDePertenenciaDeCalle,
   FormularioDeQuitarCalleDeZona,
-  FormularioDeRenombreDeZona,
 } from "./FormulariosDeZona";
 
 const COLUMNAS_DE_CALLES: readonly ColumnaDeTabla[] = [
@@ -46,6 +45,8 @@ type Props = {
  * que la componen y los domicilios derivados de esas calles, nunca
  * declarados aparte (Rebanada B1). Renombre, baja y pertenencias son
  * formularios nativos; la zona no se elige por cliente, ya esta en la URL.
+ * Las filas de calles no llevan `href`, asi que "Quitar" puede vivir en la
+ * fila sin quedar dentro de un enlace.
  */
 export function DetalleDeZona({
   zona,
@@ -95,10 +96,7 @@ export function DetalleDeZona({
       {error ? <Aviso tono="error">{error}</Aviso> : null}
       {aviso ? <Aviso tono="exito">{aviso}</Aviso> : null}
 
-      <div className="flex flex-wrap items-end gap-4">
-        <FormularioDeRenombreDeZona zonaId={zona.id} nombre={zona.nombre} />
-        <FormularioDeBajaDeZona zonaId={zona.id} />
-      </div>
+      <AccionesDeZona zona={zona} />
 
       <Pestanas pestanas={pestanas} etiqueta="Vistas de la zona" />
       {vista === "calles" ? (
@@ -143,12 +141,7 @@ function CallesDeLaZona({
           {calles.map((calle) => (
             <FilaDeTabla key={calle.id} etiquetaAccesible={calle.nombre}>
               <CeldaPrincipal>{calle.nombre}</CeldaPrincipal>
-              <CeldaPrincipal>
-                <FormularioDeQuitarCalleDeZona
-                  zonaId={zonaId}
-                  calleId={calle.id}
-                />
-              </CeldaPrincipal>
+              <FormularioDeQuitarCalleDeZona zonaId={zonaId} calle={calle} />
             </FilaDeTabla>
           ))}
         </Tabla>

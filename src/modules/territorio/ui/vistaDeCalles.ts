@@ -15,6 +15,21 @@ export const estadoDeUbicacion = (
   punto: PuntoGeografico | null,
 ): "Ubicada" | "Sin ubicar" => (punto ? "Ubicada" : "Sin ubicar");
 
+/**
+ * Donde abre el mapa de una calle sin punto: el promedio de las calles del
+ * mismo lugar que ya lo tienen. Los lugares no guardan coordenadas propias.
+ */
+export const centroDeCalles = (
+  calles: readonly Pick<CalleGuardada, "punto">[],
+): PuntoGeografico | null => {
+  const puntos = calles.flatMap((calle) => (calle.punto ? [calle.punto] : []));
+  if (puntos.length === 0) return null;
+
+  const suma = (eje: keyof PuntoGeografico) =>
+    puntos.reduce((total, punto) => total + punto[eje], 0) / puntos.length;
+  return { latitud: suma("latitud"), longitud: suma("longitud") };
+};
+
 export const destinosDeMovimiento = (
   lugarActualId: LugarId,
   lugares: readonly Pick<LugarGuardado, "id" | "nombre" | "tipo">[],

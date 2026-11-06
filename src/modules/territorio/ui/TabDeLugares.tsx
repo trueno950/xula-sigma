@@ -9,6 +9,7 @@ import {
   Tabla,
 } from "@/shared/ui";
 import { tipoDeLugarEnFrase, tiposContenidosPor } from "../domain";
+import { ANCLA_DE_ALTA, conAnclaDeAlta } from "./anclaDeAlta";
 import { hijosDirectosDe, type PropsDeContenido, rutaDe } from "./contenido";
 import { Cuentas, PastillaDeTipo } from "./FilaDeLugar";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
@@ -21,7 +22,10 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "contenido", etiqueta: "Contenido", ancho: "minmax(0,2fr)" },
 ];
 
-/** Pestana Lugares: los hijos directos para entrar, y el alta de uno nuevo. */
+/**
+ * Pestana Lugares: los hijos directos para entrar, y el alta de uno nuevo,
+ * arriba de la lista para que se vea al abrirla.
+ */
 export function TabDeLugares({
   raizId,
   lugar,
@@ -49,18 +53,39 @@ export function TabDeLugares({
       {puedeActuar && admiteLugares && !abierta ? (
         <BarraDeAcciones>
           <EnlaceDeAccion
-            href={rutaDe({
-              raizId: raizId,
-              nodoId: lugar.id,
-              vista: "lugares",
-              accion: "lugar",
-            })}
+            href={conAnclaDeAlta(
+              rutaDe({
+                raizId: raizId,
+                nodoId: lugar.id,
+                vista: "lugares",
+                accion: "lugar",
+              }),
+            )}
             variante="primaria"
           >
             <Plus size={18} weight="bold" aria-hidden="true" />
             Agregar lugar
           </EnlaceDeAccion>
         </BarraDeAcciones>
+      ) : null}
+
+      {puedeActuar && abierta ? (
+        <PanelDeAccion
+          titulo={`Agregar un lugar dentro de ${lugar.nombre}`}
+          id={ANCLA_DE_ALTA}
+        >
+          <FormularioDeAltaDeLugar
+            raiz={raizId}
+            nodo={lugar.id}
+            padreId={lugar.id}
+            tipoDelPadre={lugar.tipo}
+            volverA={rutaDe({
+              raizId: raizId,
+              nodoId: lugar.id,
+              vista: "lugares",
+            })}
+          />
+        </PanelDeAccion>
       ) : null}
 
       {hijos.length > 0 ? (
@@ -90,22 +115,6 @@ export function TabDeLugares({
         <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
           {lugar.nombre} no tiene lugares adentro todavía.
         </p>
-      ) : null}
-
-      {puedeActuar && abierta ? (
-        <PanelDeAccion titulo={`Agregar un lugar dentro de ${lugar.nombre}`}>
-          <FormularioDeAltaDeLugar
-            raiz={raizId}
-            nodo={lugar.id}
-            padreId={lugar.id}
-            tipoDelPadre={lugar.tipo}
-            volverA={rutaDe({
-              raizId: raizId,
-              nodoId: lugar.id,
-              vista: "lugares",
-            })}
-          />
-        </PanelDeAccion>
       ) : null}
     </div>
   );

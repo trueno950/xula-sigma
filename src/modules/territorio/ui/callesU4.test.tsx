@@ -60,6 +60,8 @@ const renderTab = ({
   return renderToStaticMarkup(<TabDeCalles {...props} />);
 };
 
+const panelDe = (h: string) =>
+  h.slice(h.indexOf('id="panel-de-calle"'), h.indexOf("</nav>"));
 const detalles = (html: string) =>
   html.match(/<details[^>]*>/g) ?? ([] as string[]);
 
@@ -98,7 +100,7 @@ describe("panel de calle como detalle", () => {
     expect(html).toContain('id="panel-de-calle"');
     expect(html).toContain("scroll-mt-");
     expect(html).toContain("lg:grid-cols-");
-    expect(html).toContain("lg:sticky");
+    expect(html).toContain("lg:col-start-2 lg:row-start-1 lg:sticky");
   });
 
   it("Cerrar vuelve a la lista sin calle", () => {
@@ -111,8 +113,7 @@ describe("panel de calle como detalle", () => {
   });
 
   it("muestra Ubicada como estado y conserva las coordenadas como dato secundario", () => {
-    const html = renderTab({ seleccionada: conPunto });
-    const panel = html.slice(html.indexOf('id="panel-de-calle"'));
+    const panel = panelDe(renderTab({ seleccionada: conPunto }));
 
     expect(panel).toContain("Ubicada");
     expect(panel).toContain("20.900000, -89.600000");
@@ -183,7 +184,7 @@ describe("acciones de calle con divulgacion progresiva", () => {
 
   it("la baja usa la variante de peligro y ninguna accion es un boton de marca", () => {
     const completo = renderTab({ seleccionada: conPunto });
-    const html = completo.slice(completo.indexOf('id="panel-de-calle"'));
+    const html = panelDe(completo);
 
     expect(html).toContain("border-senial-error");
     expect(html).not.toMatch(/<(a|summary)[^>]*bg-marca/);

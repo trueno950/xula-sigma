@@ -1,0 +1,84 @@
+# Territorio: ajustes visuales
+
+Llevar las pantallas de Territorio al sistema de `DESIGN.md` según la
+auditoría visual del 2026-11-05 (30 capturas, escritorio 1440 px y móvil
+390 px). Rama `feat/territorio-visual`, un PR. Runner: Vitest, Playwright y
+`pnpm check`; verificación final con capturas antes y después.
+
+## Specs
+
+Cada S cita el hallazgo de la auditoría visual; el arreglo sale de su texto.
+
+- **S1.** A1: «los formularios y paneles se abren **debajo de la lista
+  completa**: en una pantalla de 1366×768 o en el celular, la operadora toca
+  "Registrar domicilio" o una calle y no ve que pasó nada». Arreglo de la
+  auditoría: «en escritorio, poner el alta en la columna derecha como ya hace
+  el panel de domicilio, o arriba de la lista. En móvil, renderizar el
+  `Panel` antes de la lista y darle `id`/ancla con `scroll-margin` para que la
+  URL `?accion=` lleve hasta él.»
+
+- **S2.** A2 y B1: monoespaciada para estados y nombres. «"Sin ubicar",
+  "Motul" y el enlace "Dar de baja" salen en mono». Arreglo: «`ListaDeCalles.tsx:51`
+  debe pintar `InsigniaDeEstado` (aviso para Sin ubicar, éxito para
+  Ubicada). En `ListaDeZonas.tsx:84-87`, el asentamiento va en
+  `CeldaDeApoyo` y la acción no va dentro de `CeldaDeDato`.» Contadores de
+  pestaña en Inter con `tabular-nums`, no en mono.
+
+- **S3.** A3, M1 y el A6 de la auditoría de experiencia: Zonas fuera del
+  sistema. «Dar de baja» y «Quitar» son texto subrayado de unos 24 px dentro
+  de una fila que navega; el `<select>` es nativo; el alta va en línea; «Dar
+  de baja la zona» queda al nivel de «Renombrar». Arreglo: acciones de 44 px,
+  nunca dentro del enlace de la fila; select con el envoltorio del sistema;
+  la baja en `<details>` o en una pestaña «Editar» como en Lugar; «Volver al
+  mapa de territorio» dice «Volver a Territorio».
+
+- **S4.** M2: la entrada de Territorio tiene cuatro botones de cabecera; en
+  móvil se apilan en cuatro anchos distintos. Arreglo: un solo primario; «Ver
+  registro» y «Zonas» como enlaces de contexto; en móvil, botones a ancho
+  completo.
+
+- **S5.** M4 y M5: jerarquía tipográfica invertida en los formularios (el
+  título del `Panel` más chico que las secciones internas) y cabeceras
+  inconsistentes (íconos, verbos «Registrar»/«Agregar domicilio»). Arreglo:
+  título del `Panel` en Headline, legend menor y omitido con un solo grupo;
+  un verbo, «Registrar domicilio», con ícono siempre.
+
+- **S6.** M6, M7, B2 y B4: la navegación no marca Territorio en
+  `/calles/[id]/historial`; los filtros del registro en móvil tienen anchos
+  desiguales; en el historial de residencias «Vigente» va como texto y las
+  fechas en ISO; el mapa del panel de calle abre con todo Yucatán. Arreglo:
+  `/calles` cuenta como Territorio; campos a ancho completo bajo 640 px;
+  «Vigente» como insignia y fechas civiles con `shared/lib/fecha`; el mapa
+  centrado en el asentamiento.
+
+## Tasks
+
+- [x] **T1** · S2,S5,S6 · delegado (respaldo de contexto) — Ajustes rápidos.
+  Commit: `0e01d8b`.
+- [x] **T2** · S3 · delegado — Zonas al sistema. Commit: `7d89977`.
+- [x] **T3** · S1,S4 · delegado — Lo que se abre, a la vista; cabecera de la
+  entrada. Commit: `9dd5498`.
+- [x] **T4** · S1-S6 · capturas antes/después, suite completa, E2E, PR con
+  issue aprobado.
+
+## Log
+
+- **L1** — 2026-11-06. Pedido textual: «Su», respuesta a «¿Hago el merge del
+  #116 y sigo con el bloque visual?», leído como «Si». Bloque visual del plan
+  de la auditoría: «**Visual:** altas y paneles a la vista, insignias en vez
+  de letra de código, Zonas alineado al sistema, cabecera de la entrada y
+  navegación activa.» Fuera de alcance: M3 (tabla de domicilios en columnas)
+  y que `/territorio` funcione sin JavaScript (decisión pendiente, L6 de
+  `territorio-mostrador.md`). Las tareas van en serie: comparten componentes
+  de `territorio/ui`.
+
+- **L2** — 2026-11-06. T1 del escritor: S2, S5 y S6 cubiertos. «Ubicada/Sin ubicar» con `InsigniaDeUbicacion` compartida por la lista y el panel de calle; asentamiento de Zonas en `CeldaDeApoyo`; contadores de pestaña en Inter con `tabular-nums`. `Panel` titula en Headline (componente compartido: cambia también en reportes, intervenciones, constancias y acceso, como pide DESIGN.md); `GrupoDeCampos` gana `nivel` (por defecto igual que antes) y DESIGN.md anota la regla. «Dar de alta»/«Agregar domicilio» → «Registrar domicilio» con ícono MapPin. `/calles` marca Territorio (`tambienEn`); filtros del registro a ancho completo bajo 640 px; historial con insignia «Vigente» y `fechaCivilCorta`; el mapa de calle abre en el punto de la calle, si no en el promedio de las calles con punto del lugar (los lugares no guardan coordenadas), si no en Yucatán. RED/GREEN por regla salvo un test endurecido después. Módulos 221 archivos y 1156 tests; reglas sin hallazgos; suite completa 490 archivos y 2516 tests; E2E mudanza, calles, zonas y borrador 12/12. Comprobación del padre: `pnpm check` exit 0. Risk: item 3 (`Panel` compartido cambia de aspecto en otros módulos).
+
+- **L3** — 2026-11-06. Revisiones de T1: `review-80a4afddc34c490a` (`1f3e488..0e01d8b`) y `review-b2614b0837d5a7f1` (`0c9844f..0e01d8b`, pedida por el hook), aprobadas y reconocidas, con sugerencias informativas.
+
+- **L4** — 2026-11-06. T2 del escritor: S3 cubierto. Las filas de Zonas solo navegan (sin `<form>` dentro del enlace, sin columna «Acciones»); alta en un `Panel` «Nueva zona» con `CampoDeLista` y `Campo`; «Volver a Territorio»; `AccionesDeZona.tsx` con «Renombrar» y «Dar de baja» en `<details>` vía `ItemDeAccion`, la baja en rojo, al final y con su consecuencia; «Quitar {calle} de la zona» como botón fantasma de 44 px; «Agregar a la zona» con el select del sistema. Las cinco acciones nativas no cambian. RED/GREEN 6 tests nuevos; E2E de zonas con el ciclo completo 4/4; módulos 203 archivos y 1050 tests; reglas sin hallazgos; suite completa 491 archivos y 2522 tests. Efecto: el alta de zona ahora exige elegir el asentamiento aunque haya uno solo; «Renombrar» queda un clic más adentro. Comprobación del padre: `pnpm check` exit 0. Risk: none.
+
+- **L5** — 2026-11-06. T3 del escritor: S1 y S4 cubiertos. Las altas de domicilio, calle, lugar y asentamiento se renderizan antes de su lista, con ancla `#panel-de-alta` (`anclaDeAlta.ts`) y `scroll-mt-4` en `Panel`; el panel de calle va primero en el HTML (primero en móvil) y fijo en la columna derecha desde 1024 px. Decisión del escritor: en escritorio el alta va arriba de la lista y no en la columna derecha, misma disposición en escritorio y móvil, sin JavaScript. La entrada tiene un solo primario, «Registrar domicilio», a ancho completo bajo 640 px; «Ver registro de domicilios» y «Zonas operativas» son enlaces de contexto de 44 px; «Agregar asentamiento» al pie del árbol. `PaginaDePanel` (compartido) pone la acción de cabecera en su propia línea en móvil. RED unitario observado; E2E nuevo `loQueSeAbre.spec.ts` a 1366×768 y 390×844 con `toBeInViewport()` sin RED observado contra el código anterior. Suite completa 493 archivos y 2537 tests; E2E 23/23. Comprobación del padre: `pnpm check` exit 0. Abierto: el panel de domicilio sigue después de la lista en móvil. Risk: item 3 (`Panel` y `PaginaDePanel` compartidos).
+
+- **L6** — 2026-11-06. Cierre: capturas después de las mismas 15 vistas en escritorio y móvil con datos realistas; el alta de domicilio aparece bajo las pestañas, la entrada móvil tiene un solo primario y dos enlaces de contexto, «Sin calles» es insignia y «Agregar asentamiento» queda al pie. Revisión nativa de T2 y T3 (`0e01d8b..9dd5498`): `review-0702e49dd32f2a97` aprobada y reconocida; advertencias informativas: el select de asentamiento de Zonas sin `required` explícito, un recorte frágil en `callesU4.test.tsx` y el E2E de vista que no discrimina el caso de la fila de calle.
+

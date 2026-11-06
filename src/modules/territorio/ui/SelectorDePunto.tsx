@@ -7,17 +7,20 @@ import { useMapaDePunto } from "./useMapaDePunto";
 
 type Props = {
   punto: PuntoGeografico | null;
+  /** Donde abre el mapa si la calle no tiene punto; ver `centroDeCalles`. */
+  centro?: PuntoGeografico | null | undefined;
 };
 
 const valorDe = (valor: number | undefined) =>
   valor === undefined ? "" : String(valor);
 
-export function SelectorDePunto({ punto: puntoInicial }: Props) {
+export function SelectorDePunto({ punto: puntoInicial, centro }: Props) {
   const [latitud, setLatitud] = useState(valorDe(puntoInicial?.latitud));
   const [longitud, setLongitud] = useState(valorDe(puntoInicial?.longitud));
   const [punto, setPunto] = useState<PuntoGeografico | null>(puntoInicial);
   const { mapaRef, mapaVisible, mapaFallido, aviso } = useMapaDePunto({
     punto,
+    centro,
     onSelect: (seleccion) => {
       setPunto(seleccion);
       setLatitud(String(seleccion.latitud.toFixed(6)));

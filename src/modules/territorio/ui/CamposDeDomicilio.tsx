@@ -27,7 +27,7 @@ type Props = {
   zona: NivelDelFormulario;
   origenDeCalles?: string | undefined;
   valores?: Valores;
-  /** Con grupos bajo un Headline (alta) o en una sola columna (panel). */
+  /** Con grupos bajo un titulo (alta) o en una sola columna (panel). */
   agrupar: boolean;
 };
 
@@ -46,7 +46,9 @@ function Seccion({
   children: ReactNode;
 }) {
   return agrupar ? (
-    <GrupoDeCampos titulo={titulo}>{children}</GrupoDeCampos>
+    <GrupoDeCampos titulo={titulo} nivel="subseccion">
+      {children}
+    </GrupoDeCampos>
   ) : (
     children
   );

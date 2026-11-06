@@ -1,4 +1,5 @@
-import { CLASES_DE_DATO } from "@/shared/ui";
+import { fechaCivilCorta } from "@/shared/lib/fecha";
+import { CLASES_DE_DATO, InsigniaDeEstado } from "@/shared/ui";
 import type { ResidenciaConDireccion } from "../application/historialDeResidencias";
 import { vigenteDe } from "../domain";
 
@@ -31,14 +32,18 @@ export function HistorialDeResidencias({ historial }: Props) {
   return (
     <ul className="divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo">
       {historial.map((residencia) => (
-        <li key={residencia.id} className="flex flex-col gap-0.5 px-5 py-3">
-          <span className="text-[15px] text-caliza-tinta">
+        <li key={residencia.id} className="flex flex-col gap-1 px-5 py-3">
+          <span className="flex flex-wrap items-center gap-2 text-[15px] text-caliza-tinta">
             {residencia.texto ?? "Dirección no disponible"}
-            {residencia === vigente ? " · Vigente" : ""}
+            {residencia === vigente ? (
+              <InsigniaDeEstado tono="exito" etiqueta="Vigente" />
+            ) : null}
           </span>
           <span className={CLASES_DE_DATO}>
-            Desde {residencia.desdeEn}
-            {residencia.hastaEn ? ` hasta ${residencia.hastaEn}` : ""}
+            Desde {fechaCivilCorta(residencia.desdeEn)}
+            {residencia.hastaEn
+              ? ` hasta ${fechaCivilCorta(residencia.hastaEn)}`
+              : ""}
           </span>
         </li>
       ))}

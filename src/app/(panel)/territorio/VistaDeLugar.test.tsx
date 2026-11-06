@@ -103,7 +103,7 @@ describe("El alta de domicilio en el contexto del lugar", () => {
       abreLaEdicion: false,
     };
 
-    expect(htmlDe(permisos, false)).toContain("Registrar domicilio");
+    expect(htmlDe(permisos, false)).toMatch(/<\/svg>Registrar domicilio/);
   });
 
   it("con la accion abierta sirve el formulario dentro del lugar", () => {

@@ -14,23 +14,34 @@ import { CLASES_DE_TARJETA } from "./estilos";
  * que la jerarquia se resolvio con cajas en vez de con tipografia. No hay
  * nada en el codigo que lo impida; el que lo hace es el que revisa.
  *
+ * El titulo va en Headline: es la seccion que se abrio dentro de la
+ * pantalla, y los `GrupoDeCampos` de adentro bajan a `nivel="subseccion"`.
+ *
  * El titulo va en `h2` y no en `h3`: el panel siempre cuelga del `h1` de
  * `PaginaDePanel` y ninguna de sus pantallas pone un `h2` antes, asi que el
  * segundo nivel es el suyo. Con `h3` la jerarquia saltaba de uno a tres
  * —`heading-order` de axe, moderado, en `/territorio?accion=domicilio`—.
+ *
+ * `id` es el ancla del enlace que abrio el panel (`?accion=...#id`): sin
+ * JavaScript, el navegador baja hasta el, y `scroll-mt-4` deja aire arriba.
  */
 export function Panel({
   titulo,
+  id,
   children,
 }: {
   titulo: string;
+  id?: string | undefined;
   children: ReactNode;
 }) {
   return (
     <section
-      className={`flex w-full max-w-[720px] flex-col gap-4 ${CLASES_DE_TARJETA} md:p-6 [&>a]:self-start [&_form>button]:self-start max-sm:[&>a]:self-stretch max-sm:[&_form>button]:self-stretch`}
+      id={id}
+      className={`flex w-full scroll-mt-4 max-w-[720px] flex-col gap-4 ${CLASES_DE_TARJETA} md:p-6 [&>a]:self-start [&_form>button]:self-start max-sm:[&>a]:self-stretch max-sm:[&_form>button]:self-stretch`}
     >
-      <h2 className="text-[15px] font-semibold text-caliza-tinta">{titulo}</h2>
+      <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
+        {titulo}
+      </h2>
       {children}
     </section>
   );

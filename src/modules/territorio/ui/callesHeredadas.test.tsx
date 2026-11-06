@@ -55,7 +55,7 @@ describe("TabDeDomicilios: alta desacoplada del nodo", () => {
   it("no ancla un alta de domicilio al nodo", () => {
     const html = renderDomicilios("colonia");
 
-    expect(html).not.toContain("Agregar domicilio");
+    expect(html).not.toContain("Registrar domicilio");
     expect(html).not.toContain("<form");
   });
 });

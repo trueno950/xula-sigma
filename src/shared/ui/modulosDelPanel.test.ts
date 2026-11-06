@@ -68,4 +68,11 @@ describe("modulosDelPanel", () => {
     expect(estaActivo("/territorio/x", "/territorio")).toBe(true);
     expect(estaActivo("/territorio2", "/territorio")).toBe(false);
   });
+
+  it("una calle cuenta como Territorio: su historial vive en /calles", () => {
+    expect(estaActivo("/calles/x/historial", "/territorio")).toBe(true);
+    expect(estaActivo("/calles", "/territorio")).toBe(true);
+    expect(estaActivo("/callesx", "/territorio")).toBe(false);
+    expect(estaActivo("/calles/x/historial", "/padron")).toBe(false);
+  });
 });

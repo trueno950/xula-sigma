@@ -1,12 +1,7 @@
-import {
-  CeldaDeDato,
-  CeldaPrincipal,
-  EstadoVacio,
-  FilaDeTabla,
-  Tabla,
-} from "@/shared/ui";
+import { CeldaPrincipal, EstadoVacio, FilaDeTabla, Tabla } from "@/shared/ui";
 import type { CalleId, LugarId } from "../domain";
 import { rutaDe } from "./contenido";
+import { InsigniaDeUbicacion } from "./InsigniaDeUbicacion";
 import type { NodoSeleccionado } from "./PanelDeNodo";
 import {
   type CalleParaPanel,
@@ -48,7 +43,9 @@ export function ListaDeCalles({ raizId, lugar, calles, calleId }: Props) {
           seleccionada={calle.id === calleId}
         >
           <CeldaPrincipal>{calle.nombre}</CeldaPrincipal>
-          <CeldaDeDato>{estadoDeUbicacion(calle.punto)}</CeldaDeDato>
+          <span>
+            <InsigniaDeUbicacion punto={calle.punto} />
+          </span>
         </FilaDeTabla>
       ))}
     </Tabla>
