@@ -54,8 +54,8 @@ Cada S cita el hallazgo de la auditoría visual; el arreglo sale de su texto.
 ## Tasks
 
 - [x] **T1** · S2,S5,S6 · delegado (respaldo de contexto) — Ajustes rápidos.
-  Commit: ver L2.
-- [ ] **T2** · S3 · delegado — Zonas al sistema. Commit:
+  Commit: `0e01d8b`.
+- [x] **T2** · S3 · delegado — Zonas al sistema. Commit:
 - [ ] **T3** · S1,S4 · delegado — Lo que se abre, a la vista; cabecera de la
   entrada. Commit:
 - [ ] **T4** · S1-S6 · capturas antes/después, suite completa, E2E, PR con
@@ -73,4 +73,8 @@ Cada S cita el hallazgo de la auditoría visual; el arreglo sale de su texto.
   de `territorio/ui`.
 
 - **L2** — 2026-11-06. T1 del escritor: S2, S5 y S6 cubiertos. «Ubicada/Sin ubicar» con `InsigniaDeUbicacion` compartida por la lista y el panel de calle; asentamiento de Zonas en `CeldaDeApoyo`; contadores de pestaña en Inter con `tabular-nums`. `Panel` titula en Headline (componente compartido: cambia también en reportes, intervenciones, constancias y acceso, como pide DESIGN.md); `GrupoDeCampos` gana `nivel` (por defecto igual que antes) y DESIGN.md anota la regla. «Dar de alta»/«Agregar domicilio» → «Registrar domicilio» con ícono MapPin. `/calles` marca Territorio (`tambienEn`); filtros del registro a ancho completo bajo 640 px; historial con insignia «Vigente» y `fechaCivilCorta`; el mapa de calle abre en el punto de la calle, si no en el promedio de las calles con punto del lugar (los lugares no guardan coordenadas), si no en Yucatán. RED/GREEN por regla salvo un test endurecido después. Módulos 221 archivos y 1156 tests; reglas sin hallazgos; suite completa 490 archivos y 2516 tests; E2E mudanza, calles, zonas y borrador 12/12. Comprobación del padre: `pnpm check` exit 0. Risk: item 3 (`Panel` compartido cambia de aspecto en otros módulos).
+
+- **L3** — 2026-11-06. Revisiones de T1: `review-80a4afddc34c490a` (`1f3e488..0e01d8b`) y `review-b2614b0837d5a7f1` (`0c9844f..0e01d8b`, pedida por el hook), aprobadas y reconocidas, con sugerencias informativas.
+
+- **L4** — 2026-11-06. T2 del escritor: S3 cubierto. Las filas de Zonas solo navegan (sin `<form>` dentro del enlace, sin columna «Acciones»); alta en un `Panel` «Nueva zona» con `CampoDeLista` y `Campo`; «Volver a Territorio»; `AccionesDeZona.tsx` con «Renombrar» y «Dar de baja» en `<details>` vía `ItemDeAccion`, la baja en rojo, al final y con su consecuencia; «Quitar {calle} de la zona» como botón fantasma de 44 px; «Agregar a la zona» con el select del sistema. Las cinco acciones nativas no cambian. RED/GREEN 6 tests nuevos; E2E de zonas con el ciclo completo 4/4; módulos 203 archivos y 1050 tests; reglas sin hallazgos; suite completa 491 archivos y 2522 tests. Efecto: el alta de zona ahora exige elegir el asentamiento aunque haya uno solo; «Renombrar» queda un clic más adentro. Comprobación del padre: `pnpm check` exit 0. Risk: none.
 

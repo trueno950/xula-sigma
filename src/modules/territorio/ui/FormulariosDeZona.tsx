@@ -1,5 +1,5 @@
-import { Boton } from "@/shared/ui";
-import { clasesDeCampo } from "@/shared/ui/estilos";
+import { MinusCircle, Plus, Prohibit } from "@phosphor-icons/react/ssr";
+import { Boton, Campo, CampoDeLista } from "@/shared/ui";
 import type { LugarGuardado } from "../application/puertos";
 import type { CalleId, ZonaId } from "../domain";
 import { agregarCalleAZonaAction } from "./actions/agregarCalleAZonaAction";
@@ -22,27 +22,26 @@ export function FormularioDeAltaDeZona({
   asentamientos: readonly LugarGuardado[];
 }) {
   return (
-    <form action={altaDeZonaAction} className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1 text-[13px] text-caliza-apagada">
-        Asentamiento
-        <select name="lugarId" required className={clasesDeCampo()}>
-          {asentamientos.map((lugar) => (
-            <option key={lugar.id} value={lugar.id}>
-              {lugar.nombre}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-[13px] text-caliza-apagada">
-        Nombre de la zona
-        <input
-          name="nombre"
-          required
-          maxLength={80}
-          className={clasesDeCampo()}
-        />
-      </label>
+    <form action={altaDeZonaAction} className="flex flex-col gap-6">
+      <CampoDeLista
+        id="zona-asentamiento"
+        name="lugarId"
+        etiqueta="Asentamiento"
+        marcador="Elija el asentamiento"
+        opciones={asentamientos.map((lugar) => ({
+          valor: lugar.id,
+          etiqueta: lugar.nombre,
+        }))}
+      />
+      <Campo
+        id="zona-nombre"
+        name="nombre"
+        etiqueta="Nombre de la zona"
+        required
+        maxLength={80}
+      />
       <Boton type="submit" variante="primaria">
+        <Plus size={18} aria-hidden />
         Crear zona
       </Boton>
     </form>
@@ -59,47 +58,45 @@ export function FormularioDeRenombreDeZona({
   return (
     <form
       action={renombrarZonaAction}
-      className="flex flex-wrap items-end gap-3"
+      className="flex flex-col gap-4 sm:items-start"
     >
       <input type="hidden" name="zonaId" value={zonaId} />
-      <label className="flex flex-col gap-1 text-[13px] text-caliza-apagada">
-        Nombre de la zona
-        <input
-          name="nombre"
-          required
-          maxLength={80}
-          defaultValue={nombre}
-          className={clasesDeCampo()}
-        />
-      </label>
+      <Campo
+        id="zona-renombre"
+        name="nombre"
+        etiqueta="Nombre de la zona"
+        required
+        maxLength={80}
+        defaultValue={nombre}
+      />
       <Boton type="submit" variante="secundaria">
-        Renombrar
+        Guardar nombre
       </Boton>
     </form>
   );
 }
 
-export function FormularioDeBajaDeZona({ zonaId }: { zonaId: ZonaId }) {
+export function FormularioDeBajaDeZona({
+  zonaId,
+  nombre,
+}: {
+  zonaId: ZonaId;
+  nombre: string;
+}) {
   return (
-    <form action={darDeBajaZonaAction}>
+    <form
+      action={darDeBajaZonaAction}
+      className="flex flex-col gap-4 sm:items-start"
+    >
       <input type="hidden" name="zonaId" value={zonaId} />
+      <p className="text-[15px] text-caliza-tinta">
+        La zona deja de aparecer en el listado y su nombre queda libre en el
+        asentamiento. Las calles y sus domicilios no cambian.
+      </p>
       <Boton type="submit" variante="peligro">
-        Dar de baja la zona
+        <Prohibit size={18} aria-hidden />
+        Dar de baja {nombre}
       </Boton>
-    </form>
-  );
-}
-
-export function FormularioDeBajaDeZonaEnFila({ zonaId }: { zonaId: ZonaId }) {
-  return (
-    <form action={darDeBajaZonaAction}>
-      <input type="hidden" name="zonaId" value={zonaId} />
-      <button
-        type="submit"
-        className="text-[15px] text-caliza-apagada underline"
-      >
-        Dar de baja
-      </button>
     </form>
   );
 }
@@ -114,20 +111,23 @@ export function FormularioDePertenenciaDeCalle({
   return (
     <form
       action={agregarCalleAZonaAction}
-      className="flex flex-wrap items-end gap-3"
+      className="flex flex-col gap-3 sm:flex-row sm:items-end"
     >
       <input type="hidden" name="zonaId" value={zonaId} />
-      <label className="flex flex-col gap-1 text-[13px] text-caliza-apagada">
-        Calle del asentamiento
-        <select name="calleId" required className={clasesDeCampo()}>
-          {calles.map((calle) => (
-            <option key={calle.id} value={calle.id}>
-              {calle.nombre}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="sm:w-80">
+        <CampoDeLista
+          id="zona-calle"
+          name="calleId"
+          etiqueta="Calle del asentamiento"
+          marcador="Elija una calle"
+          opciones={calles.map((calle) => ({
+            valor: calle.id,
+            etiqueta: calle.nombre,
+          }))}
+        />
+      </div>
       <Boton type="submit" variante="secundaria">
+        <Plus size={18} aria-hidden />
         Agregar a la zona
       </Boton>
     </form>
@@ -136,21 +136,23 @@ export function FormularioDePertenenciaDeCalle({
 
 export function FormularioDeQuitarCalleDeZona({
   zonaId,
-  calleId,
+  calle,
 }: {
   zonaId: ZonaId;
-  calleId: CalleId;
+  calle: CalleParaZona;
 }) {
   return (
-    <form action={quitarCalleDeZonaAction}>
+    <form action={quitarCalleDeZonaAction} className="sm:justify-self-end">
       <input type="hidden" name="zonaId" value={zonaId} />
-      <input type="hidden" name="calleId" value={calleId} />
-      <button
+      <input type="hidden" name="calleId" value={calle.id} />
+      <Boton
         type="submit"
-        className="text-[15px] text-caliza-apagada underline"
+        variante="fantasma"
+        aria-label={`Quitar ${calle.nombre} de la zona`}
       >
+        <MinusCircle size={18} aria-hidden />
         Quitar
-      </button>
+      </Boton>
     </form>
   );
 }
