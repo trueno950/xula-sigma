@@ -23,15 +23,21 @@ flujos de navegador, y `pnpm check`.
   vigentes con enlace a su ficha, y el rechazo de la baja dice qué hacer.
 
 - **S4.** Hallazgo A4: «Un error al guardar borra todo lo capturado».
-  Pendiente de la decisión de diseño del usuario (ver L1).
+  Decisión del usuario (L2): «Cookie temporal (Recomendado)» — «Ante un
+  error, el servidor guarda lo capturado en una cookie httpOnly de un solo
+  uso, de vida corta, y la página la usa para rellenar el formulario.
+  Funciona igual sin JavaScript y conserva los formularios nativos y su
+  excepción en AGENTS.md. El error sigue saliendo arriba, no junto al
+  campo.» Empieza por el alta y la corrección de domicilio.
 
 ## Tasks
 
-- [ ] **T1** · S1,S2 · delegado (respaldo de contexto de la sesión
+- [x] **T1** · S1,S2 · delegado (respaldo de contexto de la sesión
   principal) — Mudanza y vuelta desde el alta de domicilio. Commit:
 - [ ] **T2** · S3 · delegado (mismo motivo) — Residentes en el panel del
   domicilio. Commit:
-- [ ] **T3** · S4 · pendiente de decisión.
+- [ ] **T3** · S4 · delegado — Cookie temporal con lo capturado en el alta y
+  la corrección de domicilio. Commit:
 - [ ] **T4** · S1-S4 · `pnpm check`, suite completa, E2E de los flujos, PR
   con issue aprobado.
 
@@ -46,3 +52,10 @@ flujos de navegador, y `pnpm check`.
   `?error=`, y llevar los valores en la URL pondría domicilios en los logs
   del servidor, que `AGENTS.md` prohíbe. T1 y T2 van en serie porque
   comparten la base de pruebas.
+
+- **L2** — 2026-11-06. Decisión del usuario sobre S4: «Cookie temporal
+  (Recomendado)», sobre las opciones cookie temporal, `useActionState` o
+  dejarlo para después.
+
+- **L3** — 2026-11-06. T1 del escritor: S1 y S2 cubiertos. `registrarMudanzaAction` vuelve a `/padron/<id>?error=` cuando el `personaId` es un uuid válido. `SelectorDeDireccion` gana la prop opcional `requerido` (por defecto falso; reportes no cambia): con ella el buscador usa `required` y `setCustomValidity` hasta que se elige una dirección. `regresoAFicha.ts` valida el retorno como `/padron/<uuid>` exacto (rechaza URLs absolutas, `//`, `..`, query y otras rutas); el alta de domicilio lo lleva como campo oculto y, si es válido, redirige a la ficha con `?ok=domicilio-creado`. `RegistroDeMudanza.tsx` titula «Registrar domicilio actual» con historial vacío y ofrece «Registrar un domicilio nuevo». RED/GREEN observados por regla; E2E (a) RED sin `requerido`, (b) ida y vuelta completa en verde. Módulo, shared/ui y rutas 189 archivos y 983 tests; suite completa 477 archivos y 2455 tests; E2E de mudanza y reportes 7/7. Comprobación del padre: `pnpm check` exit 0. Risk: item 2 (destino de redirección tomado del cliente, con esquema estricto y tests), item 3 menor (prop opcional nueva en el selector compartido).
+

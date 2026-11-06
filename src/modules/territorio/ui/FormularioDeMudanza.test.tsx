@@ -27,7 +27,11 @@ const domicilios: readonly DomicilioParaListado[] = [
 describe("FormularioDeMudanza", () => {
   it("el select de domicilio lleva el anillo de foco compartido, sin `outline-none`", () => {
     const html = renderToStaticMarkup(
-      <FormularioDeMudanza personaId={personaId} domicilios={domicilios} />,
+      <FormularioDeMudanza
+        personaId={personaId}
+        domicilios={domicilios}
+        textoDeEnvio="Registrar mudanza"
+      />,
     );
 
     const selects = html.match(/<select[^>]*>/g) ?? [];
@@ -41,7 +45,11 @@ describe("FormularioDeMudanza", () => {
 
   it("el HTML inicial trae el select del municipio fuera de <noscript>, para elegir antes de que cargue JavaScript", () => {
     const html = renderToStaticMarkup(
-      <FormularioDeMudanza personaId={personaId} domicilios={domicilios} />,
+      <FormularioDeMudanza
+        personaId={personaId}
+        domicilios={domicilios}
+        textoDeEnvio="Registrar mudanza"
+      />,
     );
 
     expect(html).not.toContain("<noscript>");
@@ -51,7 +59,11 @@ describe("FormularioDeMudanza", () => {
 
   it("el HTML del servidor no muestra un buscador que sin JavaScript no responde", () => {
     const html = renderToStaticMarkup(
-      <FormularioDeMudanza personaId={personaId} domicilios={domicilios} />,
+      <FormularioDeMudanza
+        personaId={personaId}
+        domicilios={domicilios}
+        textoDeEnvio="Registrar mudanza"
+      />,
     );
 
     expect(html).not.toContain('type="search"');
@@ -60,7 +72,11 @@ describe("FormularioDeMudanza", () => {
 
   it("sin domicilios en el municipio dice dónde crearlos, con o sin JavaScript", () => {
     const html = renderToStaticMarkup(
-      <FormularioDeMudanza personaId={personaId} domicilios={[]} />,
+      <FormularioDeMudanza
+        personaId={personaId}
+        domicilios={[]}
+        textoDeEnvio="Registrar mudanza"
+      />,
     );
 
     expect(html).toContain("Primero cree un domicilio desde Territorio.");

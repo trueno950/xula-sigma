@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { ACCIONES_DE_NODO, type ClaveDeConfirmacion } from "../acciones";
+import { esquemaDeRegreso } from "../regresoAFicha";
 
 type ParametrosDelArbol = {
   raiz?: string | undefined;
@@ -9,6 +10,7 @@ type ParametrosDelArbol = {
   accion?: string | undefined;
   calle?: string | undefined;
   domicilio?: string | undefined;
+  regreso?: string | undefined;
   error?: string | undefined;
   ok?: ClaveDeConfirmacion | undefined;
 };
@@ -20,6 +22,7 @@ const CLAVES_DE_CONSULTA = [
   "accion",
   "calle",
   "domicilio",
+  "regreso",
   "error",
   "ok",
 ] as const;
@@ -127,6 +130,8 @@ const esquemaDeNavegacion = z.object({
   accion: z.enum(ACCIONES_DE_NODO).optional().catch(undefined),
   calle: z.string().uuid().optional().catch(undefined),
   domicilio: z.string().uuid().optional().catch(undefined),
+  // A donde vuelve un alta pedida desde otra pantalla; ver `regresoAFicha.ts`.
+  regreso: esquemaDeRegreso.optional().catch(undefined),
 });
 
 export const navegacionDe = (formData: FormData) =>
@@ -140,4 +145,5 @@ export const navegacionDe = (formData: FormData) =>
     // El formulario lo manda como `domicilioId` y la URL lo nombra
     // `domicilio`: `parametros.ts` lee ese nombre al volver.
     domicilio: formData.get("domicilioId")?.toString() || undefined,
+    regreso: formData.get("regreso")?.toString() || undefined,
   });

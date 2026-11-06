@@ -15,6 +15,8 @@ type Props = {
    */
   raiz?: string | undefined;
   nodo?: string | undefined;
+  /** La ficha a la que vuelve el alta; ver `regresoAFicha.ts`. */
+  regreso?: string | undefined;
 };
 
 export function RegistroDeDomicilio({
@@ -25,6 +27,7 @@ export function RegistroDeDomicilio({
   volverA = "/territorio",
   raiz,
   nodo,
+  regreso,
 }: Props) {
   return (
     <PanelDeAccion titulo="Registrar domicilio">
@@ -36,6 +39,7 @@ export function RegistroDeDomicilio({
         volverA={volverA}
         raiz={raiz}
         nodo={nodo}
+        regreso={regreso}
       />
     </PanelDeAccion>
   );

@@ -40,6 +40,7 @@ export function SelectorDeDomicilioDeMudanza({ domicilios }: Props) {
           nombre="domicilioId"
           etiquetaDeLista="Domicilio"
           buscar={buscarDomiciliosAction}
+          requerido
         />
         {domicilios.length === 0 ? (
           <p className="text-[13px] text-caliza-apagada">

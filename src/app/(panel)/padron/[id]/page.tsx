@@ -4,10 +4,10 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { comoPersonaId, personaPorId } from "@/modules/padron";
 import {
-  FormularioDeMudanza,
   HistorialDeResidencias,
   historialDeResidencias,
   listarDomicilios,
+  RegistroDeMudanza,
 } from "@/modules/territorio";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
@@ -28,7 +28,11 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const esquemaDeParametros = z.object({ error: z.string().optional() });
+// `ok` solo lo pone el alta de domicilio abierta desde esta ficha.
+const esquemaDeParametros = z.object({
+  error: z.string().optional().catch(undefined),
+  ok: z.literal("domicilio-creado").optional().catch(undefined),
+});
 const esquemaDeId = z.string().uuid();
 
 /**
@@ -55,6 +59,8 @@ export default async function PaginaDeDetalleDePersona({
   const { id } = await params;
   const analisis = esquemaDeParametros.safeParse(await searchParams);
   const error = analisis.success ? analisis.data.error : undefined;
+  const domicilioRecienCreado =
+    analisis.success && !error && analisis.data.ok === "domicilio-creado";
 
   /**
    * El formato se valida con Zod, no con un `try/catch` alrededor de
@@ -129,12 +135,12 @@ export default async function PaginaDeDetalleDePersona({
       </section>
 
       {puedeActuar ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
-            Registrar mudanza
-          </h2>
-          <FormularioDeMudanza personaId={persona.id} domicilios={domicilios} />
-        </section>
+        <RegistroDeMudanza
+          personaId={persona.id}
+          domicilios={domicilios}
+          sinHistorial={historial.length === 0}
+          domicilioRecienCreado={domicilioRecienCreado}
+        />
       ) : null}
     </PaginaDePanel>
   );

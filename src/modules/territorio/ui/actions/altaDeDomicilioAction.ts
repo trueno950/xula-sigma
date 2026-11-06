@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
@@ -92,5 +93,8 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
     (contexto) => altaDeDomicilio(comandoDe(analisis.data), contexto),
     mensajeDeError,
   );
+  // Pedida desde la ficha de una persona, el alta vuelve ahi para seguir
+  // con la mudanza; `navegacionDe` ya descarto cualquier otro destino.
+  if (navegacion.regreso) redirect(`${navegacion.regreso}?ok=domicilio-creado`);
   confirmarEnArbol(navegacion, "domicilio-creado");
 }

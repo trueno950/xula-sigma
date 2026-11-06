@@ -28,6 +28,19 @@ const redirigirAlDetalleConError = (
 ): never =>
   redirect(`/padron/${personaId}?error=${encodeURIComponent(mensaje)}`);
 
+/**
+ * Con una persona reconocible el operador vuelve a su ficha, donde estaba
+ * capturando; solo un `personaId` que no es uuid deja sin ficha a donde
+ * volver.
+ */
+const volverConFormularioInvalido = (personaId: unknown): never => {
+  const persona = esquemaDeEntrada.shape.personaId.safeParse(personaId);
+
+  return persona.success
+    ? redirigirAlDetalleConError(persona.data, MENSAJE_FORMULARIO_INVALIDO)
+    : redirigirAlPadronConError(MENSAJE_FORMULARIO_INVALIDO);
+};
+
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
   // terminalDe null (persona inexistente/de otro tenant) o domicilioId de
@@ -49,7 +62,7 @@ export async function registrarMudanzaAction(
   });
 
   if (!analisis.success) {
-    redirigirAlPadronConError(MENSAJE_FORMULARIO_INVALIDO);
+    volverConFormularioInvalido(formData.get("personaId"));
     return;
   }
 

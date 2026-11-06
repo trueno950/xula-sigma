@@ -6,6 +6,22 @@ const RAIZ_AJENA = "11111111-1111-4111-8111-111111111111";
 const LUGAR_ID = comoLugarId(RAIZ_AJENA);
 
 describe("leerParametros", () => {
+  it("lee el regreso a la ficha de una persona", () => {
+    const parametros = leerParametros({ regreso: `/padron/${RAIZ_AJENA}` });
+
+    expect(parametros.regreso).toBe(`/padron/${RAIZ_AJENA}`);
+  });
+
+  it.each(["https://evil.example/", "//evil.example", "/territorio"])(
+    "descarta el regreso %s sin tirar el resto",
+    (regreso) => {
+      const parametros = leerParametros({ regreso, accion: "domicilio" });
+
+      expect(parametros.regreso).toBeUndefined();
+      expect(parametros.accion).toBe("domicilio");
+    },
+  );
+
   it("lee raiz y nodo validos", () => {
     const parametros = leerParametros({ raiz: RAIZ_AJENA, nodo: RAIZ_AJENA });
 

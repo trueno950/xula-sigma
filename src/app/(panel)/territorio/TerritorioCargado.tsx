@@ -71,6 +71,9 @@ export const TerritorioCargado = async ({
                 origen: "municipio",
                 tieneColonias: !zonaDeLaEntrada.sinZonas,
               })}
+              {...(parametros.regreso
+                ? { volverA: parametros.regreso, regreso: parametros.regreso }
+                : {})}
             />
           ) : null}
 

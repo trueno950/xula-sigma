@@ -39,3 +39,14 @@ export const limpiarSeleccionDeDireccion = <T extends OpcionDeDireccion>(
   consulta: "",
   seleccionada: null,
 });
+
+/**
+ * Lo que el navegador dice al enviar sin direccion elegida. Escribir en el
+ * buscador no basta: el formulario recibe el id de la opcion elegida, no el
+ * texto de la consulta. Vacio cuando es valido, como `setCustomValidity`.
+ */
+export const mensajeDeValidezDeDireccion = <T extends OpcionDeDireccion>(
+  estado: EstadoDeSeleccionDeDireccion<T>,
+  requerido: boolean,
+): string =>
+  requerido && !estado.seleccionada ? "Elija una dirección de la lista." : "";

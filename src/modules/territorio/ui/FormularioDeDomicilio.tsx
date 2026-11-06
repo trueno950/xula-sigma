@@ -15,6 +15,7 @@ type Props = {
   /** Navegacion de retorno; ver `actions/volverAlArbol.ts`. */
   raiz?: string | undefined;
   nodo?: string | undefined;
+  regreso?: string | undefined;
 };
 
 /**
@@ -49,6 +50,7 @@ export function FormularioDeDomicilio({
   origenDeCalles,
   raiz,
   nodo,
+  regreso,
   volverA,
 }: Props) {
   const zonaDeAlta = zonaParaAlta(zona);
@@ -59,6 +61,7 @@ export function FormularioDeDomicilio({
       <input type="hidden" name="accion" value="domicilio" />
       {raiz ? <input type="hidden" name="raiz" value={raiz} /> : null}
       {nodo ? <input type="hidden" name="nodo" value={nodo} /> : null}
+      {regreso ? <input type="hidden" name="regreso" value={regreso} /> : null}
 
       <p className="text-[15px] text-caliza-apagada">{declaracionDeDestino}</p>
 
