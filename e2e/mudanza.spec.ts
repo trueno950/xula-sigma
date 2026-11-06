@@ -81,3 +81,51 @@ test("sin JavaScript la mudanza se registra con el select del municipio", async 
     await contexto.close();
   }
 });
+
+test("con JavaScript lento, el domicilio elegido antes de hidratar se conserva y se guarda", async ({
+  page,
+}) => {
+  const personaId = escenario.personaAntesDeHidratarId;
+  await accederAMotul(page);
+
+  let liberarScripts: () => void = () => {};
+  const scriptsLiberados = new Promise<void>((resolve) => {
+    liberarScripts = resolve;
+  });
+  await page.route("**/_next/static/chunks/**", async (ruta) => {
+    await scriptsLiberados;
+    await ruta.continue();
+  });
+
+  try {
+    await page.goto(urlDe("motul", `/padron/${personaId}`), {
+      waitUntil: "commit",
+    });
+    // Sin hidratar todavia: la lista del HTML inicial ya permite elegir.
+    await page
+      .getByLabel("Domicilio", { exact: true })
+      .selectOption(escenario.domicilioId);
+  } finally {
+    liberarScripts();
+  }
+  await page.waitForLoadState("load");
+
+  await expect(page.getByLabel("Domicilio", { exact: true })).toHaveValue(
+    escenario.domicilioId,
+  );
+  await expect(page.getByLabel("Buscar una dirección registrada")).toHaveCount(
+    0,
+  );
+  await Promise.all([
+    page.waitForResponse(
+      (respuesta) =>
+        respuesta.request().method() === "POST" &&
+        new URL(respuesta.url()).pathname === `/padron/${personaId}`,
+    ),
+    page.getByRole("button", { name: "Registrar mudanza" }).click(),
+  ]);
+
+  await expect
+    .poll(() => leerDomicilioVigente(personaId))
+    .toBe(escenario.domicilioId);
+});

@@ -10,6 +10,7 @@ export type EscenarioDeMudanza = {
   etiqueta: string;
   personaConJavaScriptId: string;
   personaSinJavaScriptId: string;
+  personaAntesDeHidratarId: string;
 };
 
 const exigirId = (fila: IdRow | undefined, concepto: string): string => {
@@ -70,6 +71,7 @@ export async function prepararEscenarioDeMudanza(): Promise<EscenarioDeMudanza> 
         domicilioId: exigirId(domicilio, "domicilio"),
         personaConJavaScriptId: await insertarPersona(tx, `Conjs${marca}`),
         personaSinJavaScriptId: await insertarPersona(tx, `Sinjs${marca}`),
+        personaAntesDeHidratarId: await insertarPersona(tx, `Prehid${marca}`),
       };
     });
 

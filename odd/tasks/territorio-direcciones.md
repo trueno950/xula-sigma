@@ -60,6 +60,13 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   implicaciones: textos del selector por prop, búsqueda propia de
   Territorio y el `<select>` actual como respaldo sin JavaScript.
 
+- **S10.** «Si», respuesta a «Te recomiendo corregir esa advertencia antes
+  del PR: es un arreglo chico con su test. ¿Lo hago y después publico el
+  PR?». Advertencia aceptada (R3-mudanza-sin-hidratar): «con JavaScript
+  activo, mientras la página todavía no termina de cargar el formulario no
+  muestra cómo elegir domicilio». Autoriza el arreglo, su test, y después
+  push de la rama y PR; no merge.
+
 ## Tasks
 
 - [x] **T1** · S1,S4 · directo — La pestaña Lugares no se renderiza cuando el
@@ -111,6 +118,9 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
   `feat/territorio-mudanza-con-buscador`. Verificación independiente S5/S9
   met y revisión nativa aprobada (L35-L36). Risk: item 3. Commits: `41488ff`,
   `651af11`.
+- [x] **T7b** · S10 · inline — El HTML inicial trae el `<select>` visible
+  (sin JavaScript y antes de hidratar); al hidratar se cambia al buscador
+  solo si nadie eligió un domicilio. Después, push y PR. Commit:
 
 ## Log
 
@@ -389,3 +399,7 @@ seleccionan. Rama: `feat/territorio-direcciones`, un PR por paso.
 - **L35** — 2026-11-05. T7 implementado en `41488ff`: RED/GREEN observados en `textosDeSeleccionDeDireccion` (módulo ausente), `buscarDomiciliosAction` (6 casos) y `FormularioDeMudanza` (caso `<noscript>`). `pnpm check` exit 0 (54 warnings y 2 infos existentes), suite completa 2386/2386 sobre `xula_test`, E2E 4/4 (mudanza con/sin JS y reportes con/sin JS). El primer E2E de mudanza falló por la espera del test (`waitForURL` a la misma URL resuelve antes del POST); se corrigió con `waitForResponse` y `expect.poll` a la base. ASSESS `--base-ref b7622dd --committed-only`: risk high, review_due true (item 3 escalado: selector y hook compartidos con reportes). Verificador independiente: S5 y S9 met, sin bloqueantes; advertencia de comentario duplicado entre `FormularioDeMudanza` y la isla corregida apuntando a la isla. Risk: item 3.
 
 - **L36** — 2026-11-05. Revisión nativa de `b7622dd..651af11` (14 archivos, 643 líneas; lentes riesgo, legibilidad y confiabilidad), con consentimiento del usuario («Revisar este cambio»), tras un `gentle-ai sync` pedido por el stop `managed_assets_outdated`: **aprobada**, lineage `review-137233c87077818f`, autoridad quemada por acknowledgement exacto. Hallazgos informativos, no bloqueantes, quedan como trabajo aparte: R3-mudanza-sin-hidratar (WARNING: con JavaScript, antes de hidratar el formulario no ofrece cómo elegir domicilio), R2-dup-ayuda-sin-domicilios, R2-minimo-hardcoded-en-mensaje, R3-fixture-sin-limpieza y R3-sin-domicilios-hidratado-sin-prueba. T7 cerrada; push y PR son decisión del usuario.
+
+- **L37** — 2026-11-05. Pedido textual: «Si» (ver S10). Plan T7b: quitar `<noscript>` y `useSyncExternalStore`; el `<select>` se renderiza siempre en el HTML inicial y, al montar, un efecto lee si ya tiene valor: con valor se queda la lista, sin valor aparece el buscador. E2E que retiene los chunks de JavaScript para elegir antes de hidratar y comprueba que la elección se conserva y se guarda.
+
+- **L38** — 2026-11-05. T7b: RED unitario (el HTML inicial no traía el `<select>` fuera de `<noscript>`) y RED E2E reproduciendo R3-mudanza-sin-hidratar (con los chunks de JavaScript retenidos, `getByLabel('Domicilio')` agotó 30 s). GREEN: unitario 4/4, E2E de mudanza 3/3 (con JS, sin JS y elección antes de hidratar conservada y guardada). `pnpm check` exit 0 (54 warnings y 2 infos existentes), suite 2386/2386. Risk: none (solo la isla de mudanza, sin código compartido).

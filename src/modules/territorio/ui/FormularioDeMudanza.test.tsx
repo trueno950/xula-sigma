@@ -39,14 +39,14 @@ describe("FormularioDeMudanza", () => {
     }
   });
 
-  it("sin JavaScript conserva el select completo del municipio, dentro de <noscript>", () => {
+  it("el HTML inicial trae el select del municipio fuera de <noscript>, para elegir antes de que cargue JavaScript", () => {
     const html = renderToStaticMarkup(
       <FormularioDeMudanza personaId={personaId} domicilios={domicilios} />,
     );
-    const respaldo = html.match(/<noscript>([\s\S]*)<\/noscript>/)?.[1] ?? "";
 
-    expect(respaldo).toContain('name="domicilioId"');
-    expect(respaldo).toContain("Tepakan — Calle 21 12");
+    expect(html).not.toContain("<noscript>");
+    expect(html).toMatch(/<select[^>]*name="domicilioId"/);
+    expect(html).toContain("Tepakan — Calle 21 12");
   });
 
   it("el HTML del servidor no muestra un buscador que sin JavaScript no responde", () => {
