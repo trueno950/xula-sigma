@@ -7,6 +7,7 @@ import { reparentearLugar } from "../../composicion";
 import {
   comoLugarId,
   JerarquiaInvalidaError,
+  LugarConDomiciliosError,
   RaizInvalidaError,
 } from "../../domain";
 import { destinoDeReparenteo } from "../reparenteo";
@@ -28,6 +29,7 @@ const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof JerarquiaInvalidaError) return error.message;
   if (error instanceof RaizInvalidaError) return error.message;
+  if (error instanceof LugarConDomiciliosError) return error.message;
 
   console.error("[territorio] reparenteo fallo", datosSegurosDeError(error));
 

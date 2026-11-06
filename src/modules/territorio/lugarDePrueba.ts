@@ -1,7 +1,11 @@
+import { eq } from "drizzle-orm";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { motul } from "@/shared/tenancy/municipiosDePrueba";
-import { withTenant } from "@/shared/tenancy/withTenant";
+import {
+  type TransaccionTenant,
+  withTenant,
+} from "@/shared/tenancy/withTenant";
 import {
   type CalleId,
   comoCalleId,
@@ -83,11 +87,35 @@ export const crearCalleEn = (
     return comoCalleId(exigirFila(fila).id);
   });
 
+/**
+ * Sube por `padreId` hasta la raiz, que es el asentamiento: las calles
+ * cuelgan del asentamiento aunque el domicilio cuelgue de una colonia
+ * (`verificacionDeDomicilio.ts`). Colgar la calle de la colonia sembraba una
+ * forma que el dominio prohibe y escondia el hallazgo A1 de la auditoria.
+ */
+const raizDe = async (tx: TransaccionTenant, lugarId: LugarId) => {
+  let actual = lugarId;
+  for (let saltos = 0; saltos < 8; saltos += 1) {
+    const [fila] = await tx
+      .select({ padreId: lugares.padreId })
+      .from(lugares)
+      .where(eq(lugares.id, actual));
+    if (!fila?.padreId) return actual;
+    actual = comoLugarId(fila.padreId);
+  }
+  throw new Error("La cadena de lugares de prueba tiene un ciclo");
+};
+
 export const crearDomicilio = (lugarId: LugarId, nombreCalle: string) =>
   withTenant(motul, async (tx) => {
+    const asentamientoId = await raizDe(tx, lugarId);
     const [calle] = await tx
       .insert(calles)
-      .values({ ayuntamientoId: motul, nombre: nombreCalle, lugarId })
+      .values({
+        ayuntamientoId: motul,
+        nombre: nombreCalle,
+        lugarId: asentamientoId,
+      })
       .returning({ id: calles.id });
     const calleCreada = exigirFila(calle);
     const [domicilio] = await tx
