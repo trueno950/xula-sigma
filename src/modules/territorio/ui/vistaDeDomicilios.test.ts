@@ -109,7 +109,28 @@ describe("zonaDelFormulario", () => {
 
     expect(zona.inicial).toBe(otraColoniaId);
     expect(zona.resumen).toBe(
-      "Sin cambiar la colonia, se guarda en Colonia San Pedro · Tepakan.",
+      "Sin cambiar la colonia, se guarda en la colonia San Pedro (Tepakan).",
+    );
+  });
+
+  it("un nombre que ya empieza con el tipo no lo repite", () => {
+    const conPrefijo = comoLugarId("55555555-5555-4555-8555-555555555555");
+    const zona = zonaDelFormulario(
+      [
+        ...lugares,
+        {
+          id: conPrefijo,
+          tipo: "colonia",
+          nombre: "COLÓNIA Prueba UX",
+          padreId: tepakanId,
+        },
+      ],
+      tepakan,
+      { id: conPrefijo, tipo: "colonia" },
+    );
+
+    expect(zona.resumen).toBe(
+      "Sin cambiar la colonia, se guarda en la COLÓNIA Prueba UX (Tepakan).",
     );
   });
 

@@ -36,7 +36,8 @@ describe("domicilios: fila y panel", () => {
     expect(html).toContain("Porton azul");
     expect(html).toContain("Corregir");
     expect(html).toContain("Dar de baja");
-    expect(html).toContain('name="accion" value="corregirDomicilio"');
+    // Corregir navega a su propia vista; ver `vistaDeCorreccionDeDomicilio.test.tsx`.
+    expect(html).toContain("accion=corregirDomicilio");
     expect(html).toContain('name="accion" value="bajaDomicilio"');
   });
 
@@ -54,7 +55,7 @@ describe("domicilios: fila y panel", () => {
     const html = render({ domicilio, domicilioId });
     const abiertos = html.match(/<details[^>]* open/g);
 
-    expect(html.match(/<details/g)).toHaveLength(2);
+    expect(html.match(/<details/g)).toHaveLength(1);
     expect(abiertos).toBeNull();
     expect(html.indexOf("Corregir")).toBeLessThan(html.indexOf("Dar de baja"));
   });

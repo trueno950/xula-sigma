@@ -148,7 +148,7 @@ describe("El alta de domicilio en el contexto del lugar", () => {
     const base = props(permisosDeTerritorio("OPERADOR"), true);
     const coloniaId = "33333333-3333-4333-8333-333333333333" as LugarId;
     const declaracion =
-      "Se guarda en Colonia Centro. Las calles son del catálogo de Tepakan.";
+      "Se guarda en la colonia Centro. Las calles son del catálogo de Tepakan.";
     const html = renderToStaticMarkup(
       <VistaDeLugar
         {...base}

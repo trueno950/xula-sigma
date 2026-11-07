@@ -1,8 +1,5 @@
-import {
-  ETIQUETA_DE_TIPO_DE_LUGAR,
-  puedeTenerCatalogoDeCalles,
-  type TipoDeLugar,
-} from "../domain";
+import { puedeTenerCatalogoDeCalles, type TipoDeLugar } from "../domain";
+import { lugarEnFrase } from "./vistaDeDomicilios";
 
 export const VALOR_SIN_COLONIA = "sin-colonia";
 
@@ -29,5 +26,5 @@ export const declaracionDeDestino = (contexto: ContextoDeDestino): string => {
       : "Se guarda en el asentamiento. Las calles son de su catálogo.";
   }
 
-  return `Se guarda en ${ETIQUETA_DE_TIPO_DE_LUGAR[contexto.tipo]} ${contexto.nombre}. Las calles son del catálogo de ${contexto.asentamiento}.`;
+  return `Se guarda en ${lugarEnFrase(contexto)}. Las calles son del catálogo de ${contexto.asentamiento}.`;
 };

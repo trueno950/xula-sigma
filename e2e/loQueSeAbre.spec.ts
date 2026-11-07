@@ -138,5 +138,121 @@ for (const { nombre, viewport } of pantallas) {
         panel.getByRole("heading", { name: /Calle larga \d+/ }),
       ).toBeInViewport();
     });
+    // S2 de `territorio-formularios`: dentro del panel angosto los campos
+    // de la correccion median 340 px; la correccion es su propia vista.
+    test("Corregir abre la correccion a lo ancho y a la vista", async ({
+      page,
+    }) => {
+      await accederAMotul(page);
+      await page.goto(urlDe("motul", lugar("domicilios")));
+      await page
+        .getByRole("link", { name: /Calle larga \d+/ })
+        .last()
+        .click();
+
+      await page
+        .locator("#panel-de-domicilio")
+        .getByRole("link", { name: "Corregir" })
+        .click();
+
+      await expect(page).toHaveURL(
+        /accion=corregirDomicilio.*#panel-de-correccion$/,
+      );
+      const correccion = page.locator("#panel-de-correccion");
+      await expect(correccion).toBeInViewport();
+      await expect(
+        correccion.getByRole("heading", { name: /^Corregir Calle larga \d+/ }),
+      ).toBeInViewport();
+      await expect(page.locator("#panel-de-domicilio")).toHaveCount(0);
+
+      const calle = await page.locator("#correccion-calle-id").boundingBox();
+      if (!calle) throw new Error("La calle de la correccion no se pinto.");
+      expect(calle.width).toBeGreaterThanOrEqual(
+        viewport.width >= 1024 ? 600 : 300,
+      );
+    });
+
+    test("una correccion rechazada vuelve a su vista con lo capturado", async ({
+      page,
+    }) => {
+      await accederAMotul(page);
+      await page.goto(urlDe("motul", lugar("domicilios")));
+      await page
+        .getByRole("link", { name: /Calle larga \d+/ })
+        .last()
+        .click();
+      await page
+        .locator("#panel-de-domicilio")
+        .getByRole("link", { name: "Corregir" })
+        .click();
+
+      // La misma calle como transversal de si misma pasa el formulario y
+      // la frena `TransversalRepetidaError` en el servidor.
+      const calleId = await page.locator("#correccion-calle-id").inputValue();
+      await page.getByLabel("Número", { exact: true }).fill("C-17");
+      await page
+        .getByLabel("Entre calle", { exact: true })
+        .selectOption(calleId);
+      await page.getByLabel("Referencia", { exact: true }).fill("Portón verde");
+      await page.getByRole("button", { name: "Guardar cambios" }).click();
+
+      await expect(
+        page.getByText(
+          "Las calles del domicilio deben ser distintas entre sí.",
+        ),
+      ).toBeVisible();
+      await expect(page).toHaveURL(/accion=corregirDomicilio/);
+      expect(page.url()).toMatch(/[?&]borrador=[0-9a-f-]{36}/);
+      await expect(page.locator("#panel-de-correccion")).toBeVisible();
+      await expect(page.getByLabel("Número", { exact: true })).toHaveValue(
+        "C-17",
+      );
+      await expect(page.getByLabel("Entre calle", { exact: true })).toHaveValue(
+        calleId,
+      );
+      await expect(page.getByLabel("Referencia", { exact: true })).toHaveValue(
+        "Portón verde",
+      );
+    });
   });
 }
+
+test("sin JavaScript, la correccion abre desde el panel y vuelve con lo capturado", async ({
+  browser,
+}) => {
+  const conJs = await browser.newContext();
+  await accederAMotul(await conJs.newPage());
+  const estado = await conJs.storageState();
+  await conJs.close();
+  const contexto = await browser.newContext({
+    javaScriptEnabled: false,
+    storageState: estado,
+  });
+
+  try {
+    const page = await contexto.newPage();
+    await page.goto(urlDe("motul", lugar("domicilios")));
+    await page
+      .getByRole("link", { name: /Calle larga \d+/ })
+      .last()
+      .click();
+    await page
+      .locator("#panel-de-domicilio")
+      .getByRole("link", { name: "Corregir" })
+      .click();
+    await expect(page.locator("#panel-de-correccion")).toBeVisible();
+
+    const calleId = await page.locator("#correccion-calle-id").inputValue();
+    await page.getByLabel("Entre calle", { exact: true }).selectOption(calleId);
+    await page.getByLabel("Referencia", { exact: true }).fill("Sin script");
+    await page.getByRole("button", { name: "Guardar cambios" }).click();
+
+    await expect(page).toHaveURL(/accion=corregirDomicilio/);
+    await expect(page.locator("#panel-de-correccion")).toBeVisible();
+    await expect(page.getByLabel("Referencia", { exact: true })).toHaveValue(
+      "Sin script",
+    );
+  } finally {
+    await contexto.close();
+  }
+});

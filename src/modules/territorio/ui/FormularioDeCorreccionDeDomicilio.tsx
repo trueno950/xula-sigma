@@ -1,4 +1,4 @@
-import { Aviso, BarraDeAcciones, Boton, type OpcionDeLista } from "@/shared/ui";
+import { Aviso, Boton, type OpcionDeLista } from "@/shared/ui";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import { corregirDomicilioAction } from "./actions/corregirDomicilioAction";
 import {
@@ -8,6 +8,7 @@ import {
   MENSAJE_DE_RECORTE,
 } from "./borradorDeDomicilio";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
+import { PieDeFormulario } from "./PieDeFormulario";
 import type { NivelDelFormulario } from "./zonaDelFormulario";
 
 type Props = {
@@ -18,6 +19,8 @@ type Props = {
   zona: NivelDelFormulario;
   /** Lo capturado en una correccion rechazada; ver `borradorEnCookie.ts`. */
   borrador?: BorradorDeDomicilio | null | undefined;
+  /** El panel del domicilio, al que vuelve «Cancelar». */
+  volverA: string;
 };
 
 const guardados = (domicilio: DomicilioGuardado) => ({
@@ -28,7 +31,7 @@ const guardados = (domicilio: DomicilioGuardado) => ({
   referencia: domicilio.referencia ?? "",
 });
 
-/** Server Component, `<form action={...}>` nativo: los mismos campos que el alta, sin grupos y prefijados. */
+/** Server Component, `<form action={...}>` nativo: los mismos campos que el alta, en rejilla y prefijados. */
 export function FormularioDeCorreccionDeDomicilio({
   raiz,
   nodo,
@@ -36,6 +39,7 @@ export function FormularioDeCorreccionDeDomicilio({
   calles,
   zona,
   borrador,
+  volverA,
 }: Props) {
   const destino = {
     formulario: "correccion",
@@ -61,14 +65,15 @@ export function FormularioDeCorreccionDeDomicilio({
         calles={calles}
         zona={zona}
         agrupar={false}
+        rejilla
         valores={capturado ?? guardados(domicilio)}
       />
 
-      <BarraDeAcciones>
+      <PieDeFormulario volverA={volverA}>
         <Boton type="submit" variante="primaria">
           Guardar cambios
         </Boton>
-      </BarraDeAcciones>
+      </PieDeFormulario>
     </form>
   );
 }

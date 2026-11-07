@@ -27,6 +27,7 @@ import {
   type PermisosDeTerritorio,
   puedeAbrir,
 } from "@/modules/territorio/ui/permisos";
+import { abreLaCorreccion } from "@/modules/territorio/ui/vistaDeCorreccion";
 import { lugaresDeNodos } from "@/modules/territorio/ui/vistaDeDomicilios";
 import { vistaVisibleDeLugar } from "@/modules/territorio/ui/vistaDePanel";
 import { zonaDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
@@ -116,6 +117,7 @@ export function VistaDeLugar({
       {vistaVisible === "domicilios" &&
       puedeAbrir("domicilio", permisos) &&
       !domicilioAbierto &&
+      !abreLaCorreccion(accion, domicilio, permisos) &&
       calles.length > 0 ? (
         <BarraDeAcciones>
           <EnlaceDeAccion

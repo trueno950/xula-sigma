@@ -114,8 +114,14 @@ export async function corregirDomicilioAction(
   // Agregar, quitar o cambiar la colonia mueve la direccion de lugar, y el
   // arbol responde 404 a `?domicilio=` pedido desde un `?nodo=` que ya no
   // es el suyo. El rechazo, en cambio, vuelve al nodo del formulario.
+  // Sin `accion`: la correccion ocupa su propia vista y, guardada, se
+  // vuelve al panel del domicilio en vez de reabrir el formulario.
   confirmarEnArbol(
-    { ...navegacion, nodo: correccion?.lugarId ?? navegacion.nodo },
+    {
+      ...navegacion,
+      nodo: correccion?.lugarId ?? navegacion.nodo,
+      accion: undefined,
+    },
     "domicilio-corregido",
   );
 }

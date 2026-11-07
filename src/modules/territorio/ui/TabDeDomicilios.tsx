@@ -2,20 +2,42 @@ import { AvisoDePermiso, CLASES_DE_ENLACE, estadoDeLista } from "@/shared/ui";
 import { puedeTenerCatalogoDeCalles } from "../domain";
 import { BuscadorDeLaPestana } from "./BuscadorDeLaPestana";
 import { CatalogoHeredado } from "./CatalogoHeredado";
+import { CorreccionDeDomicilio } from "./CorreccionDeDomicilio";
 import type { PropsDeContenido } from "./contenido";
 import { PaginaOVacioPorFiltro } from "./ListaDeDomicilios";
 import { PanelDeDomicilio } from "./PanelDeDomicilio";
 import { puedeAbrir } from "./permisos";
 import { salidaSinCalles, VacioDeDomicilios } from "./VacioDeDomicilios";
+import { abreLaCorreccion } from "./vistaDeCorreccion";
 
 /**
  * Pestana Domicilios: los domicilios colgados del lugar, en maestro-detalle
  * como Calles. Cada fila abre el panel de su domicilio al lado (`lg`) o
  * encima de la lista, sin estado de cliente. Llega una pagina (`?q=`, `?limite=`); el
  * domicilio abierto llega aparte, por id, y su panel no depende de que su
- * fila este en la pagina.
+ * fila este en la pagina. Con `?accion=corregirDomicilio` la correccion
+ * ocupa el lugar de la lista y del panel.
  */
-export function TabDeDomicilios({
+export function TabDeDomicilios(props: PropsDeContenido) {
+  const { accion, domicilio, permisos } = props;
+  if (!abreLaCorreccion(accion, domicilio, permisos)) {
+    return <ListaYPanel {...props} />;
+  }
+
+  return (
+    <CorreccionDeDomicilio
+      raizId={props.raizId}
+      nodoId={props.lugar.id}
+      domicilio={domicilio}
+      calles={props.calles}
+      lugares={props.lugares}
+      nodos={props.nodos}
+      borrador={props.borrador}
+    />
+  );
+}
+
+function ListaYPanel({
   raizId,
   lugar,
   nodos,
@@ -25,7 +47,6 @@ export function TabDeDomicilios({
   accion,
   permisos,
   residentes,
-  borrador,
   domicilios,
   mismaDireccion,
   busqueda,
@@ -88,7 +109,6 @@ export function TabDeDomicilios({
               permisos={permisos}
               residentes={residentes === undefined ? [] : residentes}
               mismaDireccion={mismaDireccion ?? []}
-              borrador={borrador}
             />
           ) : null}
           <PaginaOVacioPorFiltro

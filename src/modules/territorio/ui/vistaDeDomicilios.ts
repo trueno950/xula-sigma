@@ -1,3 +1,4 @@
+import { normalizarParaBusqueda } from "@/shared/lib/textoDeBusqueda";
 import type { OpcionDeLista } from "@/shared/ui";
 import type { CalleDelMunicipio } from "../application/listarCallesDelMunicipio";
 import type { NodoDeSubarbol } from "../application/puertos";
@@ -6,6 +7,7 @@ import {
   type LugarId,
   puedeTenerCatalogoDeCalles,
   type TipoDeLugar,
+  tipoDeLugarEnFrase,
 } from "../domain";
 
 /** Lo minimo para armar caminos: lo tienen `LugarGuardado` y el subarbol. */
@@ -82,8 +84,23 @@ export const caminoDeLugar = (
   return asentamiento ? [asentamiento.nombre, ...camino] : camino;
 };
 
-const nombreDeNivel = (eslabon: EslabonDeZona): string =>
-  `${ETIQUETA_DE_TIPO_DE_LUGAR[eslabon.tipo]} ${eslabon.nombre}`;
+/**
+ * El lugar dentro de una frase: "la colonia Centro". Hay colonias dadas de
+ * alta como "Colonia Centro"; a esas no se les antepone el tipo otra vez.
+ * Los tres tipos son femeninos, de ahi el articulo fijo.
+ */
+export const lugarEnFrase = (lugar: {
+  tipo: TipoDeLugar;
+  nombre: string;
+}): string => {
+  const tipo = normalizarParaBusqueda(ETIQUETA_DE_TIPO_DE_LUGAR[lugar.tipo]);
+  const nombre = normalizarParaBusqueda(lugar.nombre);
+  const yaLoDice = nombre === tipo || nombre.startsWith(`${tipo} `);
+
+  return yaLoDice
+    ? `la ${lugar.nombre}`
+    : `la ${tipoDeLugarEnFrase(lugar.tipo)} ${lugar.nombre}`;
+};
 
 /**
  * La frase que describe el guardado por defecto, no la seleccion actual:
@@ -108,7 +125,10 @@ export const resumenDeGuardado = (
     cadena.find((eslabon) => puedeTenerCatalogoDeCalles(eslabon.tipo))
       ?.nombre ??
     "su asentamiento";
-  const guardado = [...niveles.map(nombreDeNivel), cima].join(" · ");
+  const [zona, ...superiores] = niveles;
+  const guardado = zona
+    ? `${lugarEnFrase(zona)} (${[...superiores.map((nivel) => nivel.nombre), cima].join(" · ")})`
+    : cima;
 
   return `Sin cambiar la colonia, se guarda en ${guardado}.`;
 };

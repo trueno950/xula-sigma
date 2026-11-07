@@ -35,10 +35,11 @@ describe("tab de domicilios: panel", () => {
     expect(render()).not.toContain("lg:grid-cols-");
   });
 
-  it("Corregir y Dar de baja son detalles exclusivos del mismo grupo", () => {
+  it("Dar de baja es un detalle cerrado y Corregir un enlace", () => {
     const html = seleccionado();
 
-    expect(detalles(html)).toHaveLength(2);
+    expect(detalles(html)).toHaveLength(1);
+    expect(html).toContain("accion=corregirDomicilio");
     for (const etiqueta of detalles(html)) {
       expect(etiqueta).toContain('name="acciones-de-domicilio"');
       expect(etiqueta).not.toContain(" open");
@@ -56,13 +57,13 @@ describe("tab de domicilios: panel", () => {
     expect(html).toMatch(/border-t border-caliza-divisor pt-2">\s*<details/);
   });
 
-  it("abre solo el detalle de la accion pedida", () => {
-    const html = seleccionado({ accion: "corregirDomicilio" });
+  it("abre el detalle de la baja cuando se pide", () => {
+    const html = seleccionado({ accion: "bajaDomicilio" });
     const abiertos = detalles(html).filter((d) => d.includes(" open"));
 
     expect(abiertos).toHaveLength(1);
-    expect(html.indexOf(abiertos[0] ?? "")).toBeLessThan(
-      html.indexOf("Dar de baja"),
+    expect(html.indexOf(abiertos[0] ?? "")).toBeGreaterThan(
+      html.indexOf("Corregir"),
     );
   });
 

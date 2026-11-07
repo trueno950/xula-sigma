@@ -28,8 +28,13 @@ type Props = {
   zona: NivelDelFormulario;
   origenDeCalles?: string | undefined;
   valores?: Valores;
-  /** Con grupos bajo un titulo (alta) o en una sola columna (panel). */
+  /** Con grupos bajo un titulo (alta) o sin titulos (correccion). */
   agrupar: boolean;
+  /**
+   * Desde `md`, los campos cortos de cada seccion en dos columnas. La de
+   * Donde da dos tercios a la calle: su nombre es el dato largo.
+   */
+  rejilla?: boolean;
   /** Acorta la colonia a la calle elegida; ver `SelectorDeCalleConBusqueda`. */
   asentamientoDeCalle?: AsentamientoDeCalle | undefined;
 };
@@ -42,20 +47,33 @@ const alfabeticas = (calles: readonly OpcionDeLista[]) =>
 function Seccion({
   titulo,
   agrupar,
+  columnas,
   children,
 }: {
   titulo: string;
   agrupar: boolean;
+  /** Las clases de la rejilla; sin ellas, una columna. */
+  columnas?: string | undefined;
   children: ReactNode;
 }) {
-  return agrupar ? (
-    <GrupoDeCampos titulo={titulo} nivel="subseccion">
-      {children}
-    </GrupoDeCampos>
+  const campos = columnas ? (
+    <div className={`grid gap-4 ${columnas}`}>{children}</div>
   ) : (
     children
   );
+
+  return agrupar ? (
+    <GrupoDeCampos titulo={titulo} nivel="subseccion">
+      {campos}
+    </GrupoDeCampos>
+  ) : (
+    campos
+  );
 }
+
+const COLUMNAS_DE_DONDE =
+  "md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] md:items-start";
+const COLUMNAS_PAREJAS = "md:grid-cols-2 md:items-start";
 
 /**
  * Los campos del domicilio, en el orden en que se piensa una direccion:
@@ -77,6 +95,7 @@ export function CamposDeDomicilio({
   origenDeCalles,
   valores,
   agrupar,
+  rejilla = false,
   asentamientoDeCalle,
 }: Props) {
   const opciones = alfabeticas(calles);
@@ -85,7 +104,11 @@ export function CamposDeDomicilio({
 
   return (
     <>
-      <Seccion titulo="Dónde" agrupar={agrupar}>
+      <Seccion
+        titulo="Dónde"
+        agrupar={agrupar}
+        columnas={rejilla ? COLUMNAS_DE_DONDE : undefined}
+      >
         <SelectorDeCalleConBusqueda
           id={`${prefijo}-calle-id`}
           name="calleId"
@@ -116,7 +139,11 @@ export function CamposDeDomicilio({
         </SelectorDeCalleConBusqueda>
       </Seccion>
 
-      <Seccion titulo="Entre qué calles" agrupar={agrupar}>
+      <Seccion
+        titulo="Entre qué calles"
+        agrupar={agrupar}
+        columnas={rejilla ? COLUMNAS_PAREJAS : undefined}
+      >
         <CampoDeLista
           id={`${prefijo}-entre-a-id`}
           name="entreCalleAId"
