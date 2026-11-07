@@ -54,7 +54,7 @@ describe("FormularioDeMudanza", () => {
 
     expect(html).not.toContain("<noscript>");
     expect(html).toMatch(/<select[^>]*name="domicilioId"/);
-    expect(html).toContain("Tepakan — Calle 21 12");
+    expect(html).toContain("Calle 21 #12, Tepakan");
   });
 
   it("el HTML del servidor no muestra un buscador que sin JavaScript no responde", () => {

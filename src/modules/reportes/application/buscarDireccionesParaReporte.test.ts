@@ -19,10 +19,11 @@ const domicilio = {
   lugar: "Colonia Centro",
   raiz: "Buenavista",
   lugarId: "22222222-2222-4222-8222-222222222222",
+  etiqueta: "Calle 20 #42-B, Colonia Centro, Buenavista",
 };
 
 describe("buscarDireccionesParaReporte", () => {
-  it("normaliza la consulta, limita resultados y compone una etiqueta con numero y jerarquia", async () => {
+  it("normaliza la consulta, limita resultados y usa la etiqueta que arma el adaptador", async () => {
     const buscador: BuscadorDeDirecciones = {
       buscar: vi
         .fn()

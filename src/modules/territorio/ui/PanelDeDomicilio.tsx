@@ -7,7 +7,7 @@ import type {
 } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import type { ResidenteDeDomicilio } from "../application/puertosDeResidencias";
-import type { LugarId } from "../domain";
+import { calleYNumero, type LugarId } from "../domain";
 import {
   type AccionDeDomicilio,
   AccionesDeDomicilio,
@@ -19,7 +19,7 @@ import { HermanosDeDireccion } from "./HermanosDeDireccion";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
 import { ResidentesDeDomicilio } from "./ResidentesDeDomicilio";
-import { direccionDe, lugaresDeNodos } from "./vistaDeDomicilios";
+import { lugaresDeNodos } from "./vistaDeDomicilios";
 import { zonaConInicial } from "./zonaDelFormulario";
 
 type Props = {
@@ -61,7 +61,7 @@ export function PanelDeDomicilio({
   const calle =
     calles.find((posible) => posible.id === domicilio.calleId)?.nombre ??
     "Calle desconocida";
-  const direccion = direccionDe(calle, domicilio.numero);
+  const direccion = calleYNumero({ calle, numero: domicilio.numero });
   const accionAbierta =
     esAccionDeDomicilio(accion) && puedeAbrir(accion, permisos)
       ? accion

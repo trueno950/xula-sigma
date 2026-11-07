@@ -8,6 +8,8 @@ export type DomicilioEncontradoParaReporte = {
   lugar: string;
   raiz: string;
   lugarId: string;
+  /** La direccion escrita, armada por el adaptador con el formato de Territorio. */
+  etiqueta: string;
 };
 
 export type ResultadoDeBusquedaDeDirecciones = {

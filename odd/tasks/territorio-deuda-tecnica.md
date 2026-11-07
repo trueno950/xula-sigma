@@ -42,8 +42,8 @@ integración sobre `xula_test`), Playwright y `pnpm check`.
 ## Tasks
 
 - [x] **T1** · S1,S6 · delegado (respaldo de contexto) — CTE compartido y
-  código muerto. Commit:
-- [ ] **T2** · S2 · delegado — Etiqueta única de domicilio. Commit:
+  código muerto. Commit: `121de89`.
+- [x] **T2** · S2 · delegado — Etiqueta única de domicilio. Commit:
 - [ ] **T3** · S3,S4 · delegado — Carga condicional y índices de
   residencias. Risk: item 1 (migración). Commit:
 - [ ] **T4** · S5 · delegado — Búsqueda y paginación en pestañas. Commit:
@@ -61,4 +61,6 @@ integración sobre `xula_test`), Playwright y `pnpm check`.
   cambio, y el buscador GET sin JavaScript para la mudanza.
 
 - **L2** — 2026-11-06. T1 del escritor: S1 y S6 cubiertos. `jerarquiaDeLugaresSql.ts` con `cteDescendientes`, `cteDescendientesDeCadaLugar` y `cteAscendientes`, usados por las seis consultas, con la única copia de la nota de Drizzle 0.45.2. SQL generado de las 7 consultas comparado antes y después con `PgDialect.sqlToQuery()`: mismos límites de profundidad, filtros de baja y columnas; diferencias solo en el encabezado del CTE (columna `ancestro` sin uso y un `WHERE TRUE AND`). Test nuevo de jerarquía (ciclo de `padre_id`, baja que corta la cadena, domicilio inexistente) verde sobre el código anterior. `asentamientoDeLugar` conserva su bucle porque el CTE cambiaría su comportamiento; `asentamientoDeCadena` compartido con `verificacionDeDomicilio`. Borrados `opcionesDeDomicilios`, `domiciliosDirectosDe`, el método `porCalle` (tests reescritos sobre lecturas de producción) y `callesFoundation.todo.test.ts` (su caso único fusionado en `ubicarCalle.test.ts`). Módulo 165 archivos, 851 → 850 tests; suite completa 493 archivos y 2536 tests. Comprobación del padre: `pnpm check` exit 0. Risk: item 6 parcial, cubierto por las integraciones.
+
+- **L3** — 2026-11-06. T2 del escritor: S2 cubierto. `domain/etiquetaDeDomicilio.ts` con `calleYNumero` («Calle 20 #42-B» / «Calle 20 sin número») y `etiquetaDeDomicilio` (agrega lugar y raíz, sin repetir el lugar si es la raíz), exportada por el barrel. Buscadores de mudanza y reportes: misma salida, sin copias. Select sin JavaScript de la mudanza: «Tepakan — Calle 21 12» → «Calle 21 #12, Tepakan» (sin raíz: `listar` no la trae). Registro, lista del árbol y panel del domicilio: `calleYNumero` en la celda o el título, porque el lugar ya está en su columna o en el contexto; etiqueta completa en el nombre accesible. Corrección del padre: el escritor había importado `@/modules/territorio` desde `reportes/application`, contra la regla de capas de AGENTS.md; la etiqueta ahora la arma el adaptador `buscadorDeDireccionesPorTerritorio` (infraestructura) y viaja por el puerto propio de reportes, con un test del adaptador. Suite completa del escritor 494 archivos y 2541 tests; E2E de mudanza, reportes, borrador y vista 17/17; reportes con base 65 archivos y 266 tests tras la corrección. Comprobación del padre: `pnpm check` exit 0. Risk: item 3 (texto visible de domicilios en varias pantallas).
 

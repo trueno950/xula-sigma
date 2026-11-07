@@ -5,10 +5,14 @@ import {
   FilaDeTabla,
   Tabla,
 } from "@/shared/ui";
-import type { DomicilioId, LugarId } from "../domain";
+import {
+  calleYNumero,
+  type DomicilioId,
+  etiquetaDeDomicilio,
+  type LugarId,
+} from "../domain";
 import { type NodoDomicilio, rutaDe } from "./contenido";
 import type { NodoSeleccionado } from "./PanelDeNodo";
-import { direccionDe } from "./vistaDeDomicilios";
 
 type Props = {
   raizId: LugarId;
@@ -39,7 +43,7 @@ export function ListaDeDomicilios({
   return (
     <Tabla etiqueta={`Domicilios de ${lugar.nombre}`} columnas={COLUMNAS}>
       {filas.map((fila) => {
-        const direccion = direccionDe(fila.calle, fila.numero);
+        const direccion = calleYNumero(fila);
         const enOtroLugar = fila.lugarId !== lugar.id;
 
         return (
@@ -53,7 +57,11 @@ export function ListaDeDomicilios({
             })}#panel-de-domicilio`}
             etiquetaAccesible={
               enOtroLugar
-                ? `${direccion}, ${nombreDeLugar(fila.lugarId)}`
+                ? etiquetaDeDomicilio({
+                    calle: fila.calle,
+                    numero: fila.numero,
+                    lugar: nombreDeLugar(fila.lugarId),
+                  })
                 : direccion
             }
             seleccionada={fila.id === domicilioId}

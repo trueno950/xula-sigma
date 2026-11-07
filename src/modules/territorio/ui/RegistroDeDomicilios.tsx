@@ -15,6 +15,7 @@ import type {
   DomicilioDelRegistro,
   FiltrosDeRegistro,
 } from "../application/puertosDeDomicilios";
+import { calleYNumero, etiquetaDeDomicilio } from "../domain";
 import { FiltrosDeDomicilios } from "./FiltrosDeDomicilios";
 import { filtrosVisiblesDeDomicilios } from "./filtrosVisiblesDeDomicilios";
 import {
@@ -23,7 +24,6 @@ import {
   hrefSinFiltroDeDomicilios,
 } from "./hrefsDeDomicilios";
 import { BarraDeAcciones } from "./PanelDeAccion";
-import { direccionDe } from "./vistaDeDomicilios";
 
 type Props = {
   domicilios: readonly DomicilioDelRegistro[];
@@ -48,8 +48,9 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
  * domicilio en su lugar; `hrefDeDomicilioDelRegistro` arma ese destino con
  * la raiz que trae la fila.
  *
- * La fila no arma su direccion a mano: `direccionDe` es la misma que usa el
- * arbol, para que un domicilio se lea igual en las dos pantallas.
+ * La fila no arma su direccion a mano: `calleYNumero` es la misma que usa el
+ * arbol, para que un domicilio se lea igual en las dos pantallas. La raiz
+ * queda fuera porque la columna Lugar es lo unico que la fila muestra.
  */
 export function RegistroDeDomicilios({
   domicilios,
@@ -124,14 +125,13 @@ export function RegistroDeDomicilios({
             <FilaDeTabla
               key={domicilio.id}
               href={hrefDeDomicilioDelRegistro(domicilio)}
-              etiquetaAccesible={`${direccionDe(
-                domicilio.calle,
-                domicilio.numero,
-              )}, ${domicilio.lugar}`}
+              etiquetaAccesible={etiquetaDeDomicilio({
+                calle: domicilio.calle,
+                numero: domicilio.numero,
+                lugar: domicilio.lugar,
+              })}
             >
-              <CeldaPrincipal>
-                {direccionDe(domicilio.calle, domicilio.numero)}
-              </CeldaPrincipal>
+              <CeldaPrincipal>{calleYNumero(domicilio)}</CeldaPrincipal>
               <CeldaDeApoyo>{domicilio.lugar}</CeldaDeApoyo>
             </FilaDeTabla>
           ))}
