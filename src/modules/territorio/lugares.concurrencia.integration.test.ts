@@ -11,6 +11,7 @@ import {
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearAltaDeCalle } from "./application/altaDeCalle";
 import { crearDarDeBajaLugar } from "./application/darDeBajaLugar";
+import { crearReparentearLugar } from "./application/reparentearLugar";
 import {
   type CambioDeLugar,
   esperarOperacionBloqueada,
@@ -115,5 +116,29 @@ describe("altas y bajas de lugares bajo concurrencia", () => {
         .where(eq(lugares.id, comisaria)),
     );
     expect(fila?.bajaEn).toBeNull();
+  });
+
+  it("mover un lugar espera a la baja concurrente del destino y no lo deja bajo un lugar dado de baja", async () => {
+    const origen = await crearLugar("comisaria", "Origen de la mudanza");
+    const destino = await crearLugar("comisaria", "Destino dado de baja");
+    const colonia = await crearLugar("colonia", "Colonia que se muda", origen);
+    const reparentearLugar = crearReparentearLugar(repositorioDeLugaresSql);
+
+    const resultado = await correrContra(
+      destino,
+      async (tx, id) => {
+        await tx`UPDATE lugares SET baja_en = now() WHERE id = ${id}`;
+      },
+      () => reparentearLugar(colonia, destino, contextoDe()),
+    );
+
+    expect(resultado).toBeInstanceOf(NoEncontradoError);
+    const [fila] = await withTenant(motul, (tx) =>
+      tx
+        .select({ padreId: lugares.padreId })
+        .from(lugares)
+        .where(eq(lugares.id, colonia)),
+    );
+    expect(fila?.padreId).toBe(origen);
   });
 });

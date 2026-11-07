@@ -24,6 +24,27 @@ type Movimiento = {
 };
 
 /**
+ * Bloquea el lugar y su destino en orden de id, el mismo criterio que
+ * `idsDeCalles` (`verificacionDeDomicilio.ts`): dos movimientos cruzados
+ * piden los dos locks en el mismo orden y uno espera al otro en vez de
+ * trabarse. Bloquear el destino serializa el movimiento con su baja, como
+ * `altaDeLugar` con el padre; quien llega segundo ve el destino dado de
+ * baja como inexistente (`repositorioDeLugaresSql.bloquearPorId`).
+ */
+async function bloquearMovimiento(
+  repositorio: RepositorioDeLugares,
+  tx: TransaccionTenant,
+  ids: readonly (LugarId | null)[],
+): Promise<ReadonlyMap<LugarId, LugarGuardado | null>> {
+  const ordenados = ids.filter((id): id is LugarId => id !== null).sort();
+  const bloqueados = new Map<LugarId, LugarGuardado | null>();
+  for (const id of ordenados) {
+    bloqueados.set(id, await repositorio.bloquearPorId(tx, id));
+  }
+  return bloqueados;
+}
+
+/**
  * Que el destino sea valido para ese lugar: sin padre, el tipo tiene que
  * poder ser raiz; con padre, el padre tiene que poder contenerlo.
  *
@@ -31,20 +52,17 @@ type Movimiento = {
  * pasaban la metrica de complejidad cognitiva de Biome (17 sobre 15), y el
  * corte cae solo: aca se decide si el movimiento es legal, alla se escribe.
  */
-async function validarDestino({
-  repositorio,
-  tx,
-  lugar,
-  nuevoPadreId,
-}: Movimiento & {
-  nuevoPadreId: LugarId | null;
-}): Promise<LugarGuardado | null> {
+function validarDestino(
+  lugar: LugarGuardado,
+  nuevoPadreId: LugarId | null,
+  bloqueados: ReadonlyMap<LugarId, LugarGuardado | null>,
+): LugarGuardado | null {
   if (nuevoPadreId === null) {
     if (!puedeSerRaiz(lugar.tipo)) throw new RaizInvalidaError();
     return null;
   }
 
-  const nuevoPadre = await repositorio.buscarPorId(tx, nuevoPadreId);
+  const nuevoPadre = bloqueados.get(nuevoPadreId);
   if (!nuevoPadre) throw new NoEncontradoError();
   if (!puedeContener(nuevoPadre.tipo, lugar.tipo)) {
     throw new JerarquiaInvalidaError();
@@ -79,6 +97,30 @@ async function exigirDomiciliosEnSuAsentamiento({
   }
 }
 
+/** Bloquea, valida y devuelve el lugar listo para escribir su nuevo padre. */
+async function prepararMovimiento(
+  repositorio: RepositorioDeLugares,
+  tx: TransaccionTenant,
+  pedido: { lugarId: LugarId; nuevoPadreId: LugarId | null },
+): Promise<LugarGuardado> {
+  const { lugarId, nuevoPadreId } = pedido;
+  const bloqueados = await bloquearMovimiento(repositorio, tx, [
+    lugarId,
+    nuevoPadreId,
+  ]);
+  const lugar = bloqueados.get(lugarId);
+  if (!lugar) throw new NoEncontradoError();
+
+  const nuevoPadre = validarDestino(lugar, nuevoPadreId, bloqueados);
+  await exigirDomiciliosEnSuAsentamiento({
+    repositorio,
+    tx,
+    lugar,
+    nuevoPadre,
+  });
+  return lugar;
+}
+
 /**
  * Mueve un lugar a otro padre. `puedeAdministrarTerritorio`, no
  * `puedeEscribir` (criterio en `shared/auth/roles.ts`).
@@ -100,7 +142,8 @@ async function exigirDomiciliosEnSuAsentamiento({
  *
  * Bloquea el lugar antes de mirar sus domicilios: el alta y la correccion
  * de domicilio bloquean el mismo lugar, asi que un domicilio no puede
- * entrar entre el chequeo y el `UPDATE`.
+ * entrar entre el chequeo y el `UPDATE`. El destino se bloquea junto con el
+ * lugar (`bloquearMovimiento`).
  */
 export function crearReparentearLugar(repositorio: RepositorioDeLugares) {
   return async function reparentearLugar(
@@ -113,12 +156,10 @@ export function crearReparentearLugar(repositorio: RepositorioDeLugares) {
     }
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
-      const lugar = await repositorio.bloquearPorId(tx, lugarId);
-      if (!lugar) throw new NoEncontradoError();
-
-      const movimiento = { repositorio, tx, lugar };
-      const nuevoPadre = await validarDestino({ ...movimiento, nuevoPadreId });
-      await exigirDomiciliosEnSuAsentamiento({ ...movimiento, nuevoPadre });
+      const lugar = await prepararMovimiento(repositorio, tx, {
+        lugarId,
+        nuevoPadreId,
+      });
 
       await repositorio.actualizar(tx, {
         id: lugar.id,
