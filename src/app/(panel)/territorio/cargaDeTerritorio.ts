@@ -37,9 +37,7 @@ const domicilioDelNodo = async (
 };
 
 /**
- * Las lecturas que pueden producir 404, y que por eso corren antes del
- * Suspense de `page.tsx`: un `notFound()` dentro de un limite ya en curso
- * no puede cambiar el estado, que sale 200. Todas pasan por sus puertos
+ * Las lecturas que pueden producir 404. Todas pasan por sus puertos
  * tenant-scoped; la raiz ya llego resuelta desde la pagina.
  */
 export const resolverSeleccionDeTerritorio = async (
@@ -98,9 +96,29 @@ const contarSinRomper = async (contexto: ContextoActual) => {
 };
 
 /**
- * Las lecturas restantes de la pantalla, ya con la seleccion validada.
- * Corren dentro del Suspense de `page.tsx` y el esqueleto cubre su espera.
+ * Mismo criterio que las cuentas: si quien vive en el domicilio no se puede
+ * leer, el panel sale igual con su aviso (`null`) en vez de tumbar la
+ * pantalla. El registro lleva el id y nunca el error crudo, que puede traer
+ * un nombre o una direccion en su texto.
  */
+const residentesSinRomper = async (
+  domicilioId: DomicilioId,
+  contexto: ContextoActual,
+) => {
+  try {
+    return await residentesDeDomicilio(domicilioId, contexto);
+  } catch (error) {
+    if (error instanceof NoAutorizadoError) throw error;
+    console.error(
+      "[territorio] no se pudieron leer los residentes del domicilio",
+      { domicilioId, ...datosSegurosDeError(error) },
+    );
+
+    return null;
+  }
+};
+
+/** Las lecturas restantes de la pantalla, ya con la seleccion validada. */
 export const cargarTerritorio = async ({
   contexto,
   parametros,
@@ -119,7 +137,7 @@ export const cargarTerritorio = async ({
     listarLugares(contexto),
     contarSinRomper(contexto),
     seleccion.domicilio
-      ? residentesDeDomicilio(seleccion.domicilio.id, contexto)
+      ? residentesSinRomper(seleccion.domicilio.id, contexto)
       : [],
     cargarDomiciliosDeLaVista({ contexto, parametros, raiz, seleccion }),
   ]);
@@ -143,3 +161,5 @@ export const cargarTerritorio = async ({
     ...entrada,
   };
 };
+
+export type CargaDeTerritorio = Awaited<ReturnType<typeof cargarTerritorio>>;

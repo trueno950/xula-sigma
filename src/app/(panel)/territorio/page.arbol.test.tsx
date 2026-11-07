@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VistaDeRaices } from "@/modules/territorio/ui/VistaDeRaices";
@@ -41,18 +41,9 @@ vi.mock("@/modules/territorio", async () => ({
 }));
 
 const { default: PaginaDeTerritorio } = await import("./page");
-const { TerritorioCargado } = await import("./TerritorioCargado");
 
-type CuerpoDeLaPagina = ReactElement<{ children: ReactElement<Props> }>;
-type Props = Parameters<typeof TerritorioCargado>[0];
-
-const paginaCompleta = async (searchParams: Record<string, string>) => {
-  const pagina = (await PaginaDeTerritorio({
-    searchParams: Promise.resolve(searchParams),
-  })) as CuerpoDeLaPagina;
-
-  return TerritorioCargado(pagina.props.children.props);
-};
+const paginaCompleta = (searchParams: Record<string, string>) =>
+  PaginaDeTerritorio({ searchParams: Promise.resolve(searchParams) });
 
 const CABECERA = "33333333-3333-4333-8333-333333333333";
 const COLONIA = "44444444-4444-4444-8444-444444444444";

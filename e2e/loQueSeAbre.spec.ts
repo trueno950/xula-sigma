@@ -117,5 +117,26 @@ for (const { nombre, viewport } of pantallas) {
         panel.getByRole("heading", { name: "Calle larga 25" }),
       ).toBeInViewport();
     });
+
+    // S2 de `territorio-pendientes`: en el celular el panel del domicilio
+    // salia despues de la lista. La ultima fila obliga a bajar para tocarla.
+    test("un domicilio de la lista abre su panel a la vista", async ({
+      page,
+    }) => {
+      await accederAMotul(page);
+      await page.goto(urlDe("motul", lugar("domicilios")));
+
+      await page
+        .getByRole("link", { name: /Calle larga \d+/ })
+        .last()
+        .click();
+
+      await expect(page).toHaveURL(/#panel-de-domicilio$/);
+      const panel = page.locator("#panel-de-domicilio");
+      await expect(panel).toBeInViewport();
+      await expect(
+        panel.getByRole("heading", { name: /Calle larga \d+/ }),
+      ).toBeInViewport();
+    });
   });
 }

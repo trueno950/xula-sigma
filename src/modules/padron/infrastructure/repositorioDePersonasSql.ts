@@ -3,11 +3,14 @@ import type {
   OpcionesDeBusqueda,
   OpcionesDeListado,
   PersonaGuardada,
-  PersonaParaGuardar,
   RepositorioDePersonas,
 } from "../application/puertos";
 import type { PersonaId } from "../domain";
-import { comoPersonaId, normalizarParaBusqueda } from "../domain";
+import {
+  comoPersonaId,
+  nombreCompletoDe,
+  normalizarParaBusqueda,
+} from "../domain";
 import { consultaDeBusqueda } from "./coincidenciasDeBusquedaSql";
 import { personas } from "./esquema";
 import { fusionarSql } from "./fusionDePersonasSql";
@@ -27,11 +30,6 @@ import {
  * nunca la reciben del caso de uso.
  */
 
-const cadenaDeNombre = (persona: PersonaParaGuardar): string =>
-  [persona.nombres, persona.primerApellido, persona.segundoApellido]
-    .filter((parte): parte is string => Boolean(parte))
-    .join(" ");
-
 /**
  * `id` cualquiera -ganador o perdedor- resuelto a su terminal (design.md
  * decision 3, invariante: `fusionadaEn` ya llega colapsado, un solo
@@ -50,7 +48,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
       primerApellido: persona.primerApellido,
       segundoApellido: persona.segundoApellido,
       nombreNormalizado: normalizarParaBusqueda(
-        cadenaDeNombre(persona),
+        nombreCompletoDe(persona),
         expansiones,
       ),
       curp: persona.curp,
@@ -65,7 +63,7 @@ export const repositorioDePersonasSql: RepositorioDePersonas = {
         primerApellido: persona.primerApellido,
         segundoApellido: persona.segundoApellido,
         nombreNormalizado: normalizarParaBusqueda(
-          cadenaDeNombre(persona),
+          nombreCompletoDe(persona),
           expansiones,
         ),
         curp: persona.curp,

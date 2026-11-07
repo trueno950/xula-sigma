@@ -1,4 +1,8 @@
-import { comoPersonaId, personaPorId } from "@/modules/padron";
+import {
+  comoPersonaId,
+  nombreCompletoDe,
+  personaPorId,
+} from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import type { LecturaDeTitulares } from "../application/puertosDeLectura";
 
@@ -20,14 +24,9 @@ export const crearLectorDeTitularesPorPadron = (
     const persona = await personaPorId(comoPersonaId(personaId), contexto);
     if (!persona) return null;
 
-    const nombreCompleto = [
-      persona.nombres,
-      persona.primerApellido,
-      persona.segundoApellido,
-    ]
-      .filter((parte): parte is string => Boolean(parte))
-      .join(" ");
-
-    return { nombreCompleto, bajaEn: persona.bajaEn };
+    return {
+      nombreCompleto: nombreCompletoDe(persona),
+      bajaEn: persona.bajaEn,
+    };
   },
 });

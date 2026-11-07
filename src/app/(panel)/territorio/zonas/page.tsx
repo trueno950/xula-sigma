@@ -29,8 +29,7 @@ type Props = {
  *
  * La resolucion de parametros ocurre antes de cualquier lectura: un
  * `?zona` o `?raiz` invalido o de otro tenant es 404 aqui, no dentro de un
- * limite de Suspense que ya no puede cambiar el estado (mismo precedente
- * que `territorio/page.tsx`).
+ * limite de Suspense que ya no puede cambiar el estado.
  */
 export default async function PaginaDeZonas({ searchParams }: Props) {
   const contexto = await contextoActual();

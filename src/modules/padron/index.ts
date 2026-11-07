@@ -15,6 +15,11 @@
  */
 export * from "./application";
 export * from "./composicion";
-export { comoPersonaId, esPersonaId, type PersonaId } from "./domain";
+export {
+  comoPersonaId,
+  esPersonaId,
+  nombreCompletoDe,
+  type PersonaId,
+} from "./domain";
 export type * from "./types";
 export * from "./ui";

@@ -1,6 +1,7 @@
 import {
   comoPersonaId,
   identidadesDePersona,
+  nombreCompletoDe,
   personaPorId,
 } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
@@ -42,14 +43,9 @@ export const crearLectorDeResidentesPorPadron = (
     const persona = await personaPorId(comoPersonaId(id), contexto);
     if (!persona) return null;
 
-    const nombreCompleto = [
-      persona.nombres,
-      persona.primerApellido,
-      persona.segundoApellido,
-    ]
-      .filter((parte): parte is string => Boolean(parte))
-      .join(" ");
-
-    return { personaId: persona.id, nombreCompleto };
+    return {
+      personaId: persona.id,
+      nombreCompleto: nombreCompletoDe(persona),
+    };
   },
 });

@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FormularioDeDomicilio } from "@/modules/territorio/ui/FormularioDeDomicilio";
@@ -49,21 +49,9 @@ vi.mock("@/modules/territorio", async () => ({
 }));
 
 const { default: PaginaDeTerritorio } = await import("./page");
-const { TerritorioCargado } = await import("./TerritorioCargado");
 
-type CuerpoDeLaPagina = ReactElement<{ children: ReactElement<Props> }>;
-type Props = Parameters<typeof TerritorioCargado>[0];
-
-/**
- * Misma tecnica que page.test.tsx: el hijo del Suspense se resuelve a mano.
- */
-const paginaCompleta = async (searchParams: Record<string, string>) => {
-  const pagina = (await PaginaDeTerritorio({
-    searchParams: Promise.resolve(searchParams),
-  })) as CuerpoDeLaPagina;
-
-  return TerritorioCargado(pagina.props.children.props);
-};
+const paginaCompleta = (searchParams: Record<string, string>) =>
+  PaginaDeTerritorio({ searchParams: Promise.resolve(searchParams) });
 
 beforeEach(() => {
   vi.clearAllMocks();

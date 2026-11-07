@@ -11,7 +11,7 @@ import { salidaSinCalles, VacioDeDomicilios } from "./VacioDeDomicilios";
 /**
  * Pestana Domicilios: los domicilios colgados del lugar, en maestro-detalle
  * como Calles. Cada fila abre el panel de su domicilio al lado (`lg`) o
- * debajo, sin estado de cliente. Llega una pagina (`?q=`, `?limite=`); el
+ * encima de la lista, sin estado de cliente. Llega una pagina (`?q=`, `?limite=`); el
  * domicilio abierto llega aparte, por id, y su panel no depende de que su
  * fila este en la pagina.
  */
@@ -75,14 +75,6 @@ export function TabDeDomicilios({
               : "flex flex-col gap-4"
           }
         >
-          <PaginaOVacioPorFiltro
-            raizId={raizId}
-            lugar={lugar}
-            domicilios={domicilios}
-            domicilioId={domicilio?.id}
-            busqueda={busqueda}
-            limite={limite}
-          />
           {domicilio ? (
             <PanelDeDomicilio
               raizId={raizId}
@@ -93,11 +85,19 @@ export function TabDeDomicilios({
               nodos={nodos}
               accion={accion}
               permisos={permisos}
-              residentes={residentes ?? []}
+              residentes={residentes === undefined ? [] : residentes}
               mismaDireccion={mismaDireccion ?? []}
               borrador={borrador}
             />
           ) : null}
+          <PaginaOVacioPorFiltro
+            raizId={raizId}
+            lugar={lugar}
+            domicilios={domicilios}
+            domicilioId={domicilio?.id}
+            busqueda={busqueda}
+            limite={limite}
+          />
         </div>
       )}
 

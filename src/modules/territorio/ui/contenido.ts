@@ -51,7 +51,8 @@ export type PropsDeContenido = {
   /** Las cuentas por lugar del municipio: las filas de la pestana Lugares. */
   conteos?: readonly ConteoDeLugar[] | undefined;
   /** Quien vive en `domicilio`; se lee solo cuando hay uno abierto. */
-  residentes?: readonly ResidenteDeDomicilio[] | undefined;
+  /** `null`: la lectura fallo y el panel lo avisa. */
+  residentes?: readonly ResidenteDeDomicilio[] | null | undefined;
   /** Lo capturado en un formulario rechazado; ver `borradorEnCookie.ts`. */
   borrador?: BorradorDeDomicilio | null | undefined;
   /** La pagina de la pestana Domicilios, leida solo cuando se muestra. */

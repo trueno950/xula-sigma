@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VistaDeRaices } from "@/modules/territorio/ui/VistaDeRaices";
@@ -46,23 +46,14 @@ vi.mock("@/modules/territorio", async () => ({
 }));
 
 const { default: PaginaDeTerritorio } = await import("./page");
-const { TerritorioCargado } = await import("./TerritorioCargado");
-
-type CuerpoDeLaPagina = ReactElement<{ children: ReactElement<Props> }>;
-type Props = Parameters<typeof TerritorioCargado>[0];
 
 /**
- * La pagina deja lo lento dentro de un Suspense y `renderToStaticMarkup` no
- * espera componentes asincronos: se resuelve el hijo a mano, con las mismas
- * propiedades que la pagina le dio.
+ * La pagina espera sus datos antes de responder (S1 de
+ * `odd/tasks/territorio-pendientes.md`): lo que devuelve ya es la pantalla
+ * entera, sin un limite de Suspense que resolver a mano.
  */
-const paginaCompleta = async (searchParams: Record<string, string>) => {
-  const pagina = (await PaginaDeTerritorio({
-    searchParams: Promise.resolve(searchParams),
-  })) as CuerpoDeLaPagina;
-
-  return TerritorioCargado(pagina.props.children.props);
-};
+const paginaCompleta = (searchParams: Record<string, string>) =>
+  PaginaDeTerritorio({ searchParams: Promise.resolve(searchParams) });
 
 beforeEach(() => {
   vi.clearAllMocks();
