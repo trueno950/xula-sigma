@@ -58,6 +58,16 @@ describe("la busqueda de domicilios ignora mayusculas y acentos", () => {
     expect(idsDe(resultado.domicilios)).toEqual([domicilio]);
   });
 
+  it("el filtro de calle de /territorio/domicilios tambien ignora acentos", async () => {
+    const colonia = await crearLugar("colonia", "Filtro de calle", cabecera);
+    const calle = await crearCalle(colonia, "Calle José María Iturralde");
+    const domicilio = await crearDomicilioEnCalle(colonia, calle, "415");
+
+    const resultado = await pedir({ raizId: colonia, calle: "jose maria" });
+
+    expect(idsDe(resultado.domicilios)).toEqual([domicilio]);
+  });
+
   it("«jose» encuentra la calle «JOSÉ»", async () => {
     const colonia = await crearLugar("colonia", "Mayusculas", cabecera);
     const calle = await crearCalle(colonia, "AVENIDA JOSÉ");

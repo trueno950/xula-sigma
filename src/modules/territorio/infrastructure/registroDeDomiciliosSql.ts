@@ -51,7 +51,9 @@ export const registroDeDomiciliosSql: Pick<
       ? sql`AND dom.calle_id = ${filtros.calleId}`
       : sql.empty();
     const condicionDeCalle = filtros.calle
-      ? sql`AND cal.nombre ILIKE ${`%${escaparComodinesDeLike(filtros.calle)}%`}`
+      ? sql`AND ${textoDeBusquedaSql(sql`cal.nombre`)} LIKE ${textoDeBusquedaSql(
+          sql`${`%${escaparComodinesDeLike(filtros.calle)}%`}::text`,
+        )}`
       : sql.empty();
     const condicionDeNumero = filtros.numero
       ? sql`AND dom.numero = ${filtros.numero}`
