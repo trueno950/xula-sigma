@@ -18,6 +18,7 @@ export {
   comoLugarId,
   comoZonaId,
   type DomicilioId,
+  etiquetaDeDomicilio,
   type LugarId,
   puedeTenerCatalogoDeCalles,
   tipoDeLugarEnFrase,

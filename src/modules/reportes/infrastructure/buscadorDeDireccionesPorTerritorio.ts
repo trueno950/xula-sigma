@@ -1,4 +1,7 @@
-import { registroDeDomicilios } from "@/modules/territorio";
+import {
+  etiquetaDeDomicilio,
+  registroDeDomicilios,
+} from "@/modules/territorio";
 import type { BuscadorDeDirecciones } from "../application/puertosDeDirecciones";
 
 /** Traduce el contrato de reportes al registro tenant-scoped de Territorio. */
@@ -11,14 +14,18 @@ export const buscadorDeDireccionesPorTerritorio: BuscadorDeDirecciones = {
     );
 
     return {
-      domicilios: resultado.domicilios.map((domicilio) => ({
-        id: domicilio.id,
-        calle: domicilio.calle,
-        numero: domicilio.numero,
-        lugar: domicilio.lugar,
-        raiz: domicilio.raiz ?? domicilio.lugar,
-        lugarId: domicilio.lugarId,
-      })),
+      domicilios: resultado.domicilios.map((domicilio) => {
+        const raiz = domicilio.raiz ?? domicilio.lugar;
+        return {
+          id: domicilio.id,
+          calle: domicilio.calle,
+          numero: domicilio.numero,
+          lugar: domicilio.lugar,
+          raiz,
+          lugarId: domicilio.lugarId,
+          etiqueta: etiquetaDeDomicilio({ ...domicilio, raiz }),
+        };
+      }),
       hayMas: resultado.hayMas,
     };
   },

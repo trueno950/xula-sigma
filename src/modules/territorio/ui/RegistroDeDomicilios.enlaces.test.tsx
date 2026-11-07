@@ -112,7 +112,7 @@ describe("RegistroDeDomicilios: enlaces, filtros y vacio", () => {
         ],
       });
 
-      expect(fila(html)).toContain("Calle 21 5");
+      expect(fila(html)).toContain("Calle 21 #5");
       expect(fila(html).match(/href="\/territorio\?raiz=/g)).toHaveLength(2);
     });
   });

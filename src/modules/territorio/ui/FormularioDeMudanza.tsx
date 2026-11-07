@@ -6,6 +6,7 @@ import {
   EnlaceDeAccion,
 } from "@/shared/ui";
 import type { DomicilioParaListado } from "../application/puertosDeDomicilios";
+import { etiquetaDeDomicilio } from "../domain";
 import { registrarMudanzaAction } from "./actions/registrarMudanzaAction";
 import { enlaceDeAltaDesdeFicha } from "./regresoAFicha";
 import { SelectorDeDomicilioDeMudanza } from "./SelectorDeDomicilioDeMudanza";
@@ -34,7 +35,7 @@ export function FormularioDeMudanza({
       <SelectorDeDomicilioDeMudanza
         domicilios={domicilios.map((domicilio) => ({
           valor: domicilio.id,
-          etiqueta: `${domicilio.lugar} — ${domicilio.calle} ${domicilio.numero ?? "S/N"}`,
+          etiqueta: etiquetaDeDomicilio(domicilio),
         }))}
       />
       <BarraDeAcciones>

@@ -67,6 +67,7 @@ const normalizarFiltros = (filtros: FiltrosDeRegistro): FiltrosDeRegistro => {
 
   return {
     ...(filtros.raizId ? { raizId: filtros.raizId } : {}),
+    ...(filtros.calleId ? { calleId: filtros.calleId } : {}),
     ...(calle ? { calle } : {}),
     ...(numero ? { numero } : {}),
     ...(busqueda ? { busqueda } : {}),

@@ -133,18 +133,21 @@ describe("TabDeLugares sin cuentas", () => {
 });
 
 describe("TabDeDomicilios", () => {
-  const enManzana = {
-    clase: "domicilio" as const,
+  const enColonia = {
     id: comoDomicilioId("55555555-5555-4555-8555-555555555555"),
     lugarId: coloniaId,
+    lugar: "Centro",
     calleId: calle.id,
     calle: "Calle 21",
     numero: "5",
   };
 
-  it("lista los del subarbol, igual que su contador, con su lugar real", () => {
+  it("lista los del subarbol con su lugar real", () => {
     const html = renderToStaticMarkup(
-      <TabDeDomicilios {...base} nodos={[...base.nodos, enManzana]} />,
+      <TabDeDomicilios
+        {...base}
+        domicilios={{ filas: [enColonia], hayMas: false }}
+      />,
     );
 
     expect(html).toContain("Calle 21");

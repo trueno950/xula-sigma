@@ -103,7 +103,7 @@ describe("PaginaDeDomicilios", () => {
   it("compone el registro con la migaja de vuelta a /territorio", async () => {
     const html = await render();
 
-    expect(html).toContain("Calle 21 5");
+    expect(html).toContain("Calle 21 #5");
     expect(html).toContain('href="/territorio"');
     expect(html).toContain('aria-current="page"');
   });

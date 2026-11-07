@@ -164,29 +164,3 @@ describe("porLugarYSubarbol", () => {
     expect(domicilios.map((d) => d.id)).toContain(domicilio);
   });
 });
-
-describe("porCalle", () => {
-  it("los domicilios de la Calle 21 incluyen los de todas las colonias que atraviesa", async () => {
-    const comisaria = await crearLugar("comisaria", "Comisaria atravesada");
-    const coloniaA = await crearLugar(
-      "colonia",
-      "Colonia A de Calle 21",
-      comisaria,
-    );
-    const coloniaB = await crearLugar(
-      "colonia",
-      "Colonia B de Calle 21",
-      comisaria,
-    );
-    const calle21 = await crearCalle(comisaria, "Calle 21");
-
-    const enA = await crearDomicilioEnCalle(coloniaA, calle21);
-    const enB = await crearDomicilioEnCalle(coloniaB, calle21);
-
-    const domicilios = await withTenant(contextoDe().ayuntamientoId, (tx) =>
-      repositorioDeDomiciliosSql.porCalle(tx, calle21),
-    );
-
-    expect(domicilios.map((d) => d.id).sort()).toEqual([enA, enB].sort());
-  });
-});

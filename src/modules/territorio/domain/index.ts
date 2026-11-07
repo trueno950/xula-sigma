@@ -4,6 +4,7 @@ export * from "./errores";
 export * from "./erroresDeLugares";
 export * from "./erroresDeResidencias";
 export * from "./erroresDeZonas";
+export * from "./etiquetaDeDomicilio";
 export * from "./etiquetas";
 export * from "./eventoDeCalle";
 export * from "./identificadores";

@@ -33,7 +33,7 @@ describe("altaDeDomicilio contra Postgres", () => {
     await crearLugar("colonia", "Colonia activa", cabecera);
     const calle = await crearCalle(cabecera, "Calle 77");
     const antes = await withTenant(contextoDe().ayuntamientoId, (tx) =>
-      repositorioDeDomiciliosSql.porCalle(tx, calle),
+      repositorioDeDomiciliosSql.porLugarYSubarbol(tx, cabecera),
     );
 
     expect(antes).toEqual([]);
@@ -51,7 +51,7 @@ describe("altaDeDomicilio contra Postgres", () => {
     ).rejects.toBeInstanceOf(ColoniaRequeridaError);
 
     const despues = await withTenant(contextoDe().ayuntamientoId, (tx) =>
-      repositorioDeDomiciliosSql.porCalle(tx, calle),
+      repositorioDeDomiciliosSql.porLugarYSubarbol(tx, cabecera),
     );
     expect(despues).toEqual(antes);
   });

@@ -85,7 +85,6 @@ export const repositoriosFalsos = () => {
     bloquearPorId: vi.fn(),
     actualizar: vi.fn(),
     porLugarYSubarbol: vi.fn(),
-    porCalle: vi.fn(),
     registro: vi.fn(),
     listar: vi.fn(),
   };

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { NodoDeSubarbol } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
-import type { PropsDeContenido } from "./contenido";
+import type { DomicilioDeLaPestana, PropsDeContenido } from "./contenido";
 import { permisosDeTerritorio } from "./permisos";
 import { TabDeDomicilios } from "./TabDeDomicilios";
 
@@ -49,23 +49,31 @@ export const nodos: readonly NodoDeSubarbol[] = [
     nombre: "Norte",
     padreId: cabeceraId,
   },
-  {
-    clase: "domicilio",
-    id: enColoniaId,
-    lugarId: coloniaId,
-    calleId,
-    calle: "Calle 21",
-    numero: "21",
-  },
-  {
-    clase: "domicilio",
-    id: enOtraColoniaId,
-    lugarId: otraColoniaId,
-    calleId,
-    calle: "Calle 30",
-    numero: null,
-  },
 ];
+
+export const filaEnColonia: DomicilioDeLaPestana = {
+  id: enColoniaId,
+  lugarId: coloniaId,
+  lugar: "Centro",
+  calleId,
+  calle: "Calle 21",
+  numero: "21",
+};
+
+export const filaEnOtraColonia: DomicilioDeLaPestana = {
+  id: enOtraColoniaId,
+  lugarId: otraColoniaId,
+  lugar: "Norte",
+  calleId,
+  calle: "Calle 30",
+  numero: null,
+};
+
+/** La pagina del asentamiento: alcanza a las dos colonias. */
+export const paginaDelAsentamiento = {
+  filas: [filaEnColonia, filaEnOtraColonia],
+  hayMas: false,
+};
 
 export const base: PropsDeContenido = {
   raizId: cabeceraId,
@@ -80,6 +88,7 @@ export const base: PropsDeContenido = {
   domicilioId: undefined,
   accion: undefined,
   permisos: permisosDeTerritorio("ADMIN_MUNICIPAL"),
+  domicilios: { filas: [filaEnColonia], hayMas: false },
 };
 
 export const render = (resto: Partial<PropsDeContenido> = {}) =>

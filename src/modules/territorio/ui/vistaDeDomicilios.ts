@@ -35,10 +35,6 @@ export const lugaresDeNodos = (
     )
     .map(({ id, tipo, nombre, padreId }) => ({ id, tipo, nombre, padreId }));
 
-/** "Calle 20 5" o "Calle 20 sin número": sin `#`, que ningun spec pide. */
-export const direccionDe = (calle: string, numero: string | null) =>
-  `${calle} ${numero ?? "sin número"}`;
-
 /** `San Pedro — Tepakan › Pablo › 2`; sin camino queda solo el nombre. */
 export const etiquetaDeCamino = (
   nombre: string,

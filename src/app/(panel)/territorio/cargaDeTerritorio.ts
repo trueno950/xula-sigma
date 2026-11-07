@@ -14,6 +14,7 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
+import { cargarDomiciliosDeLaVista } from "./cargaDeDomicilios";
 import { cargarEntrada } from "./cargaDeEntrada";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
 
@@ -46,7 +47,11 @@ export const resolverSeleccionDeTerritorio = async (
   { nodoId, calleId, domicilioId }: ParametrosDeTerritorio,
   raiz: NodoSeleccionado | null,
 ) => {
-  const nodos = raiz ? await subarbol(raiz.id, contexto) : [];
+  // Solo lugares: los domicilios los lee `cargaDeDomicilios.ts`, paginados
+  // y solo cuando su pestana se muestra.
+  const nodos = raiz
+    ? await subarbol(raiz.id, contexto, { soloLugares: true })
+    : [];
   const nodo = nodoResuelto({ raiz, nodos, nodoId });
 
   // Con raiz propia pero `?nodo=` que no cuelga de ella -ajeno, o dado de
@@ -110,12 +115,13 @@ export const cargarTerritorio = async ({
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
   // Las cuentas alimentan el arbol de la entrada y las filas de la pestana
   // Lugares: una consulta agrupada para todo el municipio.
-  const [lugares, cuentas, residentes] = await Promise.all([
+  const [lugares, cuentas, residentes, deLaVista] = await Promise.all([
     listarLugares(contexto),
     contarSinRomper(contexto),
     seleccion.domicilio
       ? residentesDeDomicilio(seleccion.domicilio.id, contexto)
       : [],
+    cargarDomiciliosDeLaVista({ contexto, parametros, raiz, seleccion }),
   ]);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
   const entrada = await cargarEntrada({
@@ -132,6 +138,7 @@ export const cargarTerritorio = async ({
     lugares,
     cuentas,
     residentes,
+    ...deLaVista,
     puedeCrearLugar,
     ...entrada,
   };

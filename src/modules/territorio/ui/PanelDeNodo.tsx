@@ -25,7 +25,8 @@ export type TabDeLugar = "lugares" | "calles" | "domicilios" | "editar";
 export type CuentasDeLugar = {
   lugares: number;
   calles: number;
-  domicilios: number;
+  /** `undefined` cuando la consulta de cuentas fallo: la pestana va sin numero. */
+  domicilios: number | undefined;
 };
 
 type Props = {

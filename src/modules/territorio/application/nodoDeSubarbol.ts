@@ -39,3 +39,10 @@ export type NodoDeSubarbol =
       calle: string;
       numero: string | null;
     };
+
+/**
+ * `soloLugares` deja fuera la mitad de domicilios: la vista de un lugar
+ * resuelve el nodo, la migaja y las zonas con los lugares, y pagina los
+ * domicilios por su cuenta solo cuando su pestana se muestra.
+ */
+export type OpcionesDeSubarbol = { readonly soloLugares?: boolean };

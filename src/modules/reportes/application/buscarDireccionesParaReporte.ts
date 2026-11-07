@@ -17,23 +17,6 @@ export type ResultadoDeBusquedaParaSelector = {
   hayMas: boolean;
 };
 
-const etiquetaDe = (domicilio: {
-  calle: string;
-  numero: string | null;
-  lugar: string;
-  raiz: string;
-}): string => {
-  const direccion = domicilio.numero
-    ? `${domicilio.calle} #${domicilio.numero}`
-    : `${domicilio.calle} sin número`;
-  const lugar =
-    domicilio.lugar === domicilio.raiz
-      ? domicilio.lugar
-      : `${domicilio.lugar}, ${domicilio.raiz}`;
-
-  return `${direccion}, ${lugar}`;
-};
-
 export function crearBuscarDireccionesParaReporte(
   buscador: BuscadorDeDirecciones,
 ) {
@@ -61,7 +44,7 @@ export function crearBuscarDireccionesParaReporte(
     return {
       opciones: resultado.domicilios.map((domicilio) => ({
         id: domicilio.id,
-        etiqueta: etiquetaDe(domicilio),
+        etiqueta: domicilio.etiqueta,
         lugarId: domicilio.lugarId,
       })),
       hayMas: resultado.hayMas,

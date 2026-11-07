@@ -45,7 +45,7 @@ describe("RegistroDeDomicilios", () => {
   it("pinta una fila por domicilio con su direccion y su lugar", () => {
     const html = render();
 
-    expect(html).toContain("Calle 21 5");
+    expect(html).toContain("Calle 21 #5");
     expect(html).toContain("Centro");
   });
 

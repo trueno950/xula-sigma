@@ -25,14 +25,14 @@ describe("domicilios: fila y panel", () => {
   it("la fila se arma con la calle y el numero del nodo del subarbol", () => {
     const html = render();
 
-    expect(html).toContain("Calle 21 21");
+    expect(html).toContain("Calle 21 #21");
     expect(html).toContain("Centro");
   });
 
   it("el panel muestra los datos y las dos acciones", () => {
     const html = render({ domicilio, domicilioId });
 
-    expect(html).toContain("Calle 21 21");
+    expect(html).toContain("Calle 21 #21");
     expect(html).toContain("Porton azul");
     expect(html).toContain("Corregir");
     expect(html).toContain("Dar de baja");
@@ -56,7 +56,7 @@ describe("domicilios: fila y panel", () => {
       permisos: permisosDeTerritorio("CONSULTA"),
     });
 
-    expect(html).toContain("Calle 21 21");
+    expect(html).toContain("Calle 21 #21");
     expect(html).not.toContain("Corregir");
     expect(html).not.toContain("Dar de baja");
   });

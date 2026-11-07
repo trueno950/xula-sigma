@@ -34,7 +34,6 @@ describe("registroDeDomicilios", () => {
     bloquearPorId: vi.fn(),
     actualizar: vi.fn(),
     porLugarYSubarbol: vi.fn(),
-    porCalle: vi.fn(),
     listar: vi.fn(),
     registro: vi.fn(),
   };

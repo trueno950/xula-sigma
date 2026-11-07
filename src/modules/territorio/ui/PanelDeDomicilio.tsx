@@ -7,19 +7,23 @@ import type {
 } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import type { ResidenteDeDomicilio } from "../application/puertosDeResidencias";
-import type { LugarId } from "../domain";
+import { calleYNumero, type LugarId } from "../domain";
 import {
   type AccionDeDomicilio,
   AccionesDeDomicilio,
 } from "./AccionesDeDomicilio";
 import type { BorradorDeDomicilio } from "./borradorDeDomicilio";
-import { hermanosDeDireccion, rutaDe } from "./contenido";
+import {
+  type DomicilioDeLaPestana,
+  hermanosDeDireccion,
+  rutaDe,
+} from "./contenido";
 import { DatosDeDomicilio } from "./DatosDeDomicilio";
 import { HermanosDeDireccion } from "./HermanosDeDireccion";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
 import { ResidentesDeDomicilio } from "./ResidentesDeDomicilio";
-import { direccionDe, lugaresDeNodos } from "./vistaDeDomicilios";
+import { lugaresDeNodos } from "./vistaDeDomicilios";
 import { zonaConInicial } from "./zonaDelFormulario";
 
 type Props = {
@@ -32,6 +36,8 @@ type Props = {
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
   residentes: readonly ResidenteDeDomicilio[];
+  /** Los vivos con su calle y su numero, leidos en el subarbol del asentamiento. */
+  mismaDireccion: readonly DomicilioDeLaPestana[];
   borrador?: BorradorDeDomicilio | null | undefined;
 };
 
@@ -55,13 +61,14 @@ export function PanelDeDomicilio({
   accion,
   permisos,
   residentes,
+  mismaDireccion,
   borrador,
 }: Props) {
   const asentamiento = lugares.find((posible) => posible.id === raizId);
   const calle =
     calles.find((posible) => posible.id === domicilio.calleId)?.nombre ??
     "Calle desconocida";
-  const direccion = direccionDe(calle, domicilio.numero);
+  const direccion = calleYNumero({ calle, numero: domicilio.numero });
   const accionAbierta =
     esAccionDeDomicilio(accion) && puedeAbrir(accion, permisos)
       ? accion
@@ -113,7 +120,7 @@ export function PanelDeDomicilio({
 
       <HermanosDeDireccion
         raizId={raizId}
-        hermanos={hermanosDeDireccion(nodos, domicilio)}
+        hermanos={hermanosDeDireccion(mismaDireccion, domicilio)}
       />
     </section>
   );

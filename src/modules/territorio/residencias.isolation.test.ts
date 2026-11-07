@@ -145,3 +145,25 @@ describe("aislamiento de residencias", () => {
     expect(motivo).toMatch(/residencias_persona_tenant_fk/i);
   });
 });
+
+describe("indices de residencias", () => {
+  /**
+   * `residentesDe` filtra por domicilio e `historialDe` por persona sin
+   * `hasta_en`, asi que el indice parcial `residencias_una_abierta_idx` no
+   * le sirve. Se pregunta a Postgres, no al esquema de Drizzle: lo que
+   * cuenta es que la migracion haya corrido.
+   */
+  it("tiene un indice por domicilio y otro por persona, los dos con tenant", async () => {
+    const indices = await owner<{ indexname: string; indexdef: string }[]>`
+      SELECT indexname, indexdef FROM pg_indexes
+      WHERE schemaname = 'public' AND tablename = 'residencias'
+        AND indexname IN ('residencias_domicilio_idx', 'residencias_persona_idx')
+      ORDER BY indexname
+    `;
+
+    expect(indices.map((i) => i.indexdef.replace(/^.* USING /, ""))).toEqual([
+      "btree (ayuntamiento_id, domicilio_id)",
+      "btree (ayuntamiento_id, persona_id)",
+    ]);
+  });
+});

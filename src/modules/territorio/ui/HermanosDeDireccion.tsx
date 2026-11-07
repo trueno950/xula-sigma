@@ -1,6 +1,5 @@
-import type { DomicilioId, LugarId } from "../domain";
+import { calleYNumero, type DomicilioId, type LugarId } from "../domain";
 import { rutaDe } from "./contenido";
-import { direccionDe } from "./vistaDeDomicilios";
 
 type Props = {
   raizId: LugarId;
@@ -41,7 +40,7 @@ export function HermanosDeDireccion({ raizId, hermanos }: Props) {
               })}
               className="text-[15px] text-marca underline underline-offset-2"
             >
-              {direccionDe(hermano.calle, hermano.numero)}
+              {calleYNumero(hermano)}
             </a>
           </li>
         ))}

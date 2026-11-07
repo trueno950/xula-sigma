@@ -86,6 +86,6 @@ describe("panel del domicilio: residentes", () => {
 
     expect(baja).toContain("deja de listarse");
     expect(baja).not.toContain("registre la mudanza");
-    expect(baja).toContain("Dar de baja Calle 21 21");
+    expect(baja).toContain("Dar de baja Calle 21 #21");
   });
 });

@@ -6,7 +6,6 @@ import {
   calleId,
   coloniaId,
   detalles,
-  nodos,
   render,
   seleccionado,
 } from "./fixturasDeDomiciliosU5";
@@ -24,7 +23,7 @@ describe("tab de domicilios: panel", () => {
     const html = seleccionado();
 
     expect(html).toContain('id="panel-de-domicilio"');
-    expect(html).toContain('aria-label="Calle 21 21"');
+    expect(html).toContain('aria-label="Calle 21 #21"');
     expect(html).toContain(
       `href="/territorio?raiz=${cabeceraId}&amp;nodo=${coloniaId}&amp;vista=domicilios"`,
     );
@@ -90,7 +89,7 @@ describe("tab de domicilios: panel", () => {
   it("un rol de solo lectura ve el panel sin acciones ni detalles", () => {
     const html = seleccionado({ permisos: permisosDeTerritorio("CONSULTA") });
 
-    expect(html).toContain("Calle 21 21");
+    expect(html).toContain("Calle 21 #21");
     expect(detalles(html)).toHaveLength(0);
     expect(html).not.toContain("Corregir");
     expect(html).not.toContain("Dar de baja");
@@ -99,7 +98,7 @@ describe("tab de domicilios: panel", () => {
 
 describe("tab de domicilios: vacio", () => {
   const vacia = (resto: Partial<PropsDeContenido> = {}) =>
-    render({ nodos: nodos.filter((n) => n.clase === "lugar"), ...resto });
+    render({ domicilios: { filas: [], hayMas: false }, ...resto });
 
   it("dice que no hay domicilios y deja el alta a la barra de la pestana", () => {
     const html = vacia();

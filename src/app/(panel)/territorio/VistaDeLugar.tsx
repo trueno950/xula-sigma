@@ -51,6 +51,10 @@ type Props = {
   domicilioAbierto: boolean;
   /** Lo capturado en un alta o una correccion rechazada. */
   borrador?: BorradorDeDomicilio | null | undefined;
+  domicilios?: PropsDeContenido["domicilios"];
+  mismaDireccion?: PropsDeContenido["mismaDireccion"];
+  busqueda?: string | undefined;
+  limite?: number | undefined;
 };
 
 /**
@@ -76,6 +80,10 @@ export function VistaDeLugar({
   residentes,
   domicilioAbierto,
   borrador,
+  domicilios,
+  mismaDireccion,
+  busqueda,
+  limite,
 }: Props) {
   const zona = zonaDelFormulario(
     lugaresDeNodos(nodos),
@@ -97,7 +105,7 @@ export function VistaDeLugar({
         raizId={raiz.id}
         nodo={nodo}
         vista={vistaVisible}
-        cuentas={cuentasDeLugar({ nodos, calles, nodo })}
+        cuentas={cuentasDeLugar({ nodos, calles, nodo, conteos })}
         abreLaEdicion={permisos.abreLaEdicion}
       />
 
@@ -148,6 +156,10 @@ export function VistaDeLugar({
         conteos={conteos}
         residentes={residentes}
         borrador={borrador}
+        domicilios={domicilios}
+        mismaDireccion={mismaDireccion}
+        busqueda={busqueda}
+        limite={limite}
       />
     </>
   );

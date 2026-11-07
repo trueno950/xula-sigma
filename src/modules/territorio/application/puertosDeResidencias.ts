@@ -60,9 +60,8 @@ export type ResidenciaGuardada = {
  * camino de lectura del colapso").
  *
  * `residentesDe` recibe ids de `domicilios` ya resueltos por el subarbol de
- * `RepositorioDeDomicilios.porLugarYSubarbol` -esa es la unica pieza
- * recursiva- y filtra `residencias` por `domicilioId IN (…) AND hastaEn IS
- * NULL` con el builder de Drizzle. Nunca `sql\`…\``: una plantilla que
+ * `RepositorioDeDomicilios.porLugarYSubarbol` y filtra `residencias` por
+ * `domicilioId IN (…) AND hastaEn IS NULL` con el builder de Drizzle. Nunca `sql\`…\``: una plantilla que
  * mencione `persona_id` o `residencias` dispara `identidadPorPuerto.test.ts`
  * (design.md seccion 5), y esta consulta necesita las dos cosas.
  */

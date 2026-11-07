@@ -4,6 +4,7 @@ import type {
   LectorDeContenidoDeLugares,
 } from "../application/puertosDeContenidoDeLugares";
 import { comoLugarId, type TipoDeLugar } from "../domain";
+import { cteDescendientesDeCadaLugar } from "./jerarquiaDeLugaresSql";
 
 type FilaDeContenido = {
   lugarId: string;
@@ -13,33 +14,21 @@ type FilaDeContenido = {
 };
 
 /**
- * Una sola consulta para todo el arbol. El `WITH RECURSIVE` baja desde cada
- * lugar activo por `padre_id` -mismo cinturon `profundidad < 8` y
- * `baja_en IS NULL` que `subarbol`, asi que un lugar dado de baja corta su
- * rama y sus domicilios no suman-; despues se agrupan los domicilios activos
- * por ancestro, con `DISTINCT` porque un ciclo de `padre_id` repite el
- * lugar en la bajada (el tope de profundidad corta el bucle, no la
- * repeticion) e inflaria la cuenta. Las calles son las propias del lugar, sin bajar. Todo es
- * identificador fijo: no hay parametro ni texto de usuario. RLS acota cada
- * tabla porque corre bajo el `tx` de `withTenant`.
+ * Una sola consulta para todo el arbol: baja desde cada lugar activo
+ * (`jerarquiaDeLugaresSql.ts`) y agrupa los domicilios activos por
+ * ancestro, con `DISTINCT` porque un ciclo de `padre_id` repite el lugar en
+ * la bajada (el tope de profundidad corta el bucle, no la repeticion) e
+ * inflaria la cuenta. Las calles son las propias del lugar, sin bajar. RLS
+ * acota cada tabla porque corre bajo el `tx` de `withTenant`.
  */
 const CONSULTA_DE_CONTENIDO = sql`
-  WITH RECURSIVE bajada AS (
-    SELECT id AS ancestro, id AS lugar, 0 AS profundidad
-      FROM lugares
-     WHERE baja_en IS NULL
-    UNION ALL
-    SELECT b.ancestro, l.id, b.profundidad + 1
-      FROM lugares l
-      JOIN bajada b ON l.padre_id = b.lugar
-     WHERE b.profundidad < 8 AND l.baja_en IS NULL
-  ),
+  ${cteDescendientesDeCadaLugar},
   de_domicilios AS (
-    SELECT b.ancestro, count(DISTINCT dom.id)::int AS total
-      FROM bajada b
-      JOIN domicilios dom ON dom.lugar_id = b.lugar
+    SELECT d.ancestro, count(DISTINCT dom.id)::int AS total
+      FROM descendientes d
+      JOIN domicilios dom ON dom.lugar_id = d.id
      WHERE dom.baja_en IS NULL
-     GROUP BY b.ancestro
+     GROUP BY d.ancestro
   ),
   de_calles AS (
     SELECT lugar_id, count(*)::int AS total

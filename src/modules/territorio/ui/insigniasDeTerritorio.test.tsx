@@ -47,6 +47,7 @@ describe("ListaDeCalles: la ubicacion es un estado", () => {
         calle("a", null),
         calle("b", { latitud: 21.1, longitud: -89.3 }),
       ]}
+      hayMas={false}
       calleId={undefined}
     />,
   );

@@ -8,8 +8,8 @@ import {
   NoAutorizadoError,
   ValidacionError,
 } from "@/shared/lib/errores";
-import type { DomicilioDelRegistro } from "../../application/puertosDeDomicilios";
 import { registroDeDomicilios } from "../../composicion";
+import { etiquetaDeDomicilio } from "../../domain";
 
 const MINIMO_DE_CARACTERES = 2;
 const MAXIMO_DE_CARACTERES = 120;
@@ -28,17 +28,6 @@ export type DomicilioParaSelector = { id: string; etiqueta: string };
 export type ResultadoDeBusquedaDeDomicilios = {
   opciones: readonly DomicilioParaSelector[];
   hayMas: boolean;
-};
-
-const etiquetaDe = (domicilio: DomicilioDelRegistro): string => {
-  const direccion = domicilio.numero
-    ? `${domicilio.calle} #${domicilio.numero}`
-    : `${domicilio.calle} sin número`;
-  const raiz = domicilio.raiz ?? domicilio.lugar;
-  const lugar =
-    domicilio.lugar === raiz ? domicilio.lugar : `${domicilio.lugar}, ${raiz}`;
-
-  return `${direccion}, ${lugar}`;
 };
 
 /**
@@ -74,7 +63,7 @@ export async function buscarDomiciliosAction(
       data: {
         opciones: resultado.domicilios.map((domicilio) => ({
           id: domicilio.id,
-          etiqueta: etiquetaDe(domicilio),
+          etiqueta: etiquetaDeDomicilio(domicilio),
         })),
         hayMas: resultado.hayMas,
       },

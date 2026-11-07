@@ -1,6 +1,17 @@
-import { CeldaPrincipal, EstadoVacio, FilaDeTabla, Tabla } from "@/shared/ui";
+import {
+  CeldaPrincipal,
+  EstadoVacio,
+  estadoDeLista,
+  FilaDeTabla,
+  Tabla,
+} from "@/shared/ui";
 import type { CalleId, LugarId } from "../domain";
 import { rutaDe } from "./contenido";
+import {
+  conFiltrosDeLaPestana,
+  type FiltrosDeLaPestana,
+  hrefDeVerMasDeLaPestana,
+} from "./hrefsDeLaPestana";
 import { InsigniaDeUbicacion } from "./InsigniaDeUbicacion";
 import type { NodoSeleccionado } from "./PanelDeNodo";
 import {
@@ -9,36 +20,70 @@ import {
   estadoDeUbicacion,
 } from "./vistaDeCalles";
 
-type Props = {
+type Props = FiltrosDeLaPestana & {
   raizId: LugarId;
   lugar: NodoSeleccionado;
+  /** La pagina visible, ya filtrada por la busqueda (`paginaDeCalles`). */
   calles: readonly CalleParaPanel[];
+  hayMas: boolean;
   calleId: CalleId | undefined;
 };
 
-/** Cada fila es un enlace GET: elegir una calle no guarda estado de cliente. */
-export function ListaDeCalles({ raizId, lugar, calles, calleId }: Props) {
-  if (calles.length === 0) {
+/**
+ * Cada fila es un enlace GET: elegir una calle no guarda estado de cliente.
+ * La fila conserva `?q=` y `?limite=` para que la lista no vuelva a la
+ * primera pagina al abrir una calle de la segunda.
+ */
+export function ListaDeCalles({
+  raizId,
+  lugar,
+  calles,
+  hayMas,
+  calleId,
+  busqueda,
+  limite,
+}: Props) {
+  const estado = estadoDeLista({ total: calles.length, filtro: busqueda });
+  const ruta = rutaDe({ raizId, nodoId: lugar.id, vista: "calles" });
+
+  if (estado.clase !== "con-filas") {
     return (
       <EstadoVacio
-        estado={{ clase: "vacio-inicial" }}
+        estado={estado}
         mensajeInicial={`${lugar.nombre} no tiene calles todavía. Un domicilio necesita una.`}
-        hrefSinFiltro={rutaDe({ raizId, nodoId: lugar.id, vista: "calles" })}
+        hrefSinFiltro={ruta}
       />
     );
   }
 
   return (
-    <Tabla etiqueta={`Calles de ${lugar.nombre}`} columnas={COLUMNAS_DE_CALLES}>
+    <Tabla
+      etiqueta={`Calles de ${lugar.nombre}`}
+      columnas={COLUMNAS_DE_CALLES}
+      {...(hayMas
+        ? {
+            verMas: hrefDeVerMasDeLaPestana({
+              raizId,
+              nodoId: lugar.id,
+              vista: "calles",
+              busqueda,
+              limite,
+            }),
+          }
+        : {})}
+    >
       {calles.map((calle) => (
         <FilaDeTabla
           key={calle.id}
-          href={`${rutaDe({
-            raizId,
-            nodoId: lugar.id,
-            vista: "calles",
-            calleId: calle.id,
-          })}#panel-de-calle`}
+          href={`${conFiltrosDeLaPestana(
+            rutaDe({
+              raizId,
+              nodoId: lugar.id,
+              vista: "calles",
+              calleId: calle.id,
+            }),
+            { busqueda, limite },
+          )}#panel-de-calle`}
           etiquetaAccesible={`${calle.nombre}, ${estadoDeUbicacion(calle.punto)}`}
           seleccionada={calle.id === calleId}
         >

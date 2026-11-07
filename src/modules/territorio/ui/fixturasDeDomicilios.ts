@@ -1,7 +1,7 @@
 import type { NodoDeSubarbol } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
-import type { PropsDeContenido } from "./contenido";
+import type { DomicilioDeLaPestana, PropsDeContenido } from "./contenido";
 import { permisosDeTerritorio } from "./permisos";
 
 export const cabeceraId = comoLugarId("11111111-1111-4111-8111-111111111111");
@@ -33,9 +33,18 @@ export const domicilio: DomicilioGuardado = {
   bajaEn: null,
 };
 
-export const enLaMismaDireccion: NodoDeSubarbol = {
-  clase: "domicilio",
+export const elMismo: DomicilioDeLaPestana = {
+  id: domicilioId,
+  lugarId: coloniaId,
+  lugar: "Centro",
+  calleId,
+  calle: "Calle 21",
+  numero: "21",
+};
+
+export const enLaMismaDireccion: DomicilioDeLaPestana = {
   id: hermanaId,
+  lugar: "Centro",
   lugarId: coloniaId,
   calleId,
   calle: "Calle 21",
@@ -48,9 +57,9 @@ export const enLaMismaDireccion: NodoDeSubarbol = {
  * `calles_tenant_lugar_nombre_idx` es un unico parcial sobre
  * `baja_en IS NULL`. La identidad la da el id, no el nombre.
  */
-export const enElMismoNumeroDeOtraCalle: NodoDeSubarbol = {
-  clase: "domicilio",
+export const enElMismoNumeroDeOtraCalle: DomicilioDeLaPestana = {
   id: vecinaId,
+  lugar: "Centro",
   lugarId: coloniaId,
   calleId: otraCalleId,
   calle: "Calle 21",
@@ -58,9 +67,9 @@ export const enElMismoNumeroDeOtraCalle: NodoDeSubarbol = {
 };
 
 /** Otro hermano, en otra colonia del mismo asentamiento a la del panel abierto. */
-export const enOtraColonia: NodoDeSubarbol = {
-  clase: "domicilio",
+export const enOtraColonia: DomicilioDeLaPestana = {
   id: hermanaEnOtraColoniaId,
+  lugar: "Norte",
   lugarId: otraColoniaId,
   calleId,
   calle: "Calle 21",
@@ -82,14 +91,11 @@ export const nodos: readonly NodoDeSubarbol[] = [
     nombre: "Norte",
     padreId: cabeceraId,
   },
-  {
-    clase: "domicilio",
-    id: domicilioId,
-    lugarId: coloniaId,
-    calleId,
-    calle: "Calle 21",
-    numero: "21",
-  },
+];
+
+/** Lo que la pagina leeria por calle y numero, sin el filtro de `calleId`. */
+export const mismaDireccion: readonly DomicilioDeLaPestana[] = [
+  elMismo,
   enLaMismaDireccion,
   enElMismoNumeroDeOtraCalle,
 ];
@@ -108,4 +114,6 @@ export const base: PropsDeContenido = {
   domicilioId: undefined,
   accion: undefined,
   permisos: permisosDeTerritorio("ADMIN_MUNICIPAL"),
+  domicilios: { filas: mismaDireccion, hayMas: false },
+  mismaDireccion,
 };

@@ -4,6 +4,7 @@ import {
   cabeceraId,
   enOtraColoniaId,
   otraColoniaId,
+  paginaDelAsentamiento,
   render,
   seleccionado,
 } from "./fixturasDeDomiciliosU5";
@@ -16,6 +17,7 @@ import {
 const conAsentamientoAbierto = (resto: Partial<PropsDeContenido> = {}) =>
   render({
     lugar: { id: cabeceraId, tipo: "cabecera", nombre: "Tepakan" },
+    domicilios: paginaDelAsentamiento,
     ...resto,
   });
 
@@ -25,7 +27,7 @@ describe("tab de domicilios: fila seleccionada", () => {
 
     expect(html.match(/aria-current="true"/g)).toHaveLength(1);
     expect(html).toMatch(
-      /aria-label="Calle 21 21[^"]*"[^>]*aria-current="true"/,
+      /aria-label="Calle 21 #21[^"]*"[^>]*aria-current="true"/,
     );
   });
 
@@ -49,14 +51,14 @@ describe("tab de domicilios: el lugar de cada fila", () => {
 
   it("no repite el nombre de la colonia abierta en sus propias filas", () => {
     const filas = render().split("<li");
-    const deLaColonia = filas.find((fila) => fila.includes("Calle 21 21"));
+    const deLaColonia = filas.find((fila) => fila.includes("Calle 21 #21"));
 
     expect(deLaColonia).not.toContain("Centro");
   });
 
   it("nombra la colonia de cada domicilio cuando el nodo abierto es el asentamiento", () => {
     const filas = conAsentamientoAbierto().split("<li");
-    const deCentro = filas.find((fila) => fila.includes("Calle 21 21"));
+    const deCentro = filas.find((fila) => fila.includes("Calle 21 #21"));
     const deNorte = filas.find((fila) => fila.includes("Calle 30"));
 
     expect(deCentro).toContain("Centro");
