@@ -56,6 +56,8 @@ export type DomicilioParaListado = {
 
 export type FiltrosDeRegistro = {
   readonly raizId?: LugarId;
+  /** La calle por id, para los domicilios en la misma direccion del panel. */
+  readonly calleId?: CalleId;
   readonly calle?: string;
   readonly numero?: string;
   readonly busqueda?: string;

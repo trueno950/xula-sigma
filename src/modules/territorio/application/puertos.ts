@@ -7,7 +7,7 @@ import type {
   EventoDeReparenteo,
   EventoDeUbicacion,
 } from "./eventosDeCalles";
-import type { NodoDeSubarbol } from "./nodoDeSubarbol";
+import type { NodoDeSubarbol, OpcionesDeSubarbol } from "./nodoDeSubarbol";
 import type { DependenciasDeLugar } from "./puertosDeDependenciasDeLugares";
 
 export type DatosDeAltaDeLugar = {
@@ -54,7 +54,10 @@ export type DatosDeEdicionDeLugar = {
 };
 
 /** El nodo del arbol vive en `nodoDeSubarbol.ts`; aca se reexporta. */
-export type { NodoDeSubarbol } from "./nodoDeSubarbol";
+export type {
+  NodoDeSubarbol,
+  OpcionesDeSubarbol,
+} from "./nodoDeSubarbol";
 
 /**
  * Lo que los casos de uso de lugares necesitan de `infrastructure`, sin
@@ -87,6 +90,7 @@ export type RepositorioDeLugares = DependenciasDeLugar & {
   subarbol(
     tx: TransaccionTenant,
     raizId: LugarId,
+    opciones?: OpcionesDeSubarbol,
   ): Promise<readonly NodoDeSubarbol[]>;
   /** Lugares de nivel superior activos (`padreId IS NULL`, `bajaEn IS NULL`), para la entrada de `/territorio`. */
   listarRaices(tx: TransaccionTenant): Promise<readonly LugarGuardado[]>;

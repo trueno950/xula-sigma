@@ -8,7 +8,7 @@ import {
   enOtraColonia,
   hermanaEnOtraColoniaId,
   hermanaId,
-  nodos,
+  mismaDireccion,
   otraColoniaId,
   vecinaId,
 } from "./fixturasDeDomicilios";
@@ -25,13 +25,7 @@ const render = (resto: Partial<PropsDeContenido> = {}) =>
   renderToStaticMarkup(<TabDeDomicilios {...base} {...resto} />);
 
 describe("domicilios: hermanos de direccion", () => {
-  /**
-   * Los hermanos salen del subarbol que la pantalla ya trae, no del listado
-   * plano del municipio (A1b-GREEN-03). Todo domicilio de una calle cuelga
-   * del subarbol del asentamiento de esa calle
-   * (`verificacionDeDomicilio.ts`, `exigirCallesDelAsentamiento`).
-   */
-  it("nombra los domicilios hermanos que estan en el subarbol", () => {
+  it("nombra los domicilios hermanos que estan en la misma direccion", () => {
     expect(render({ domicilio, domicilioId })).toContain(
       "Hay 1 domicilio más en esta dirección",
     );
@@ -48,7 +42,7 @@ describe("domicilios: hermanos de direccion", () => {
     const html = render({
       domicilio,
       domicilioId,
-      nodos: [...nodos, enOtraColonia],
+      mismaDireccion: [...mismaDireccion, enOtraColonia],
     });
     const inicioDelLink = html.indexOf(`domicilio=${hermanaEnOtraColoniaId}`);
     const href = html.slice(Math.max(0, inicioDelLink - 100), inicioDelLink);
@@ -60,7 +54,7 @@ describe("domicilios: hermanos de direccion", () => {
     const html = render({
       domicilio,
       domicilioId,
-      nodos: nodos.filter((nodo) => nodo.id !== hermanaId),
+      mismaDireccion: mismaDireccion.filter((fila) => fila.id !== hermanaId),
     });
 
     expect(html).not.toContain("domicilio más en esta dirección");

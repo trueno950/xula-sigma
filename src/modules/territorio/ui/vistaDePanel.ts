@@ -12,7 +12,7 @@ type TabDeLugar = "lugares" | "calles" | "domicilios" | "editar";
 type CuentasDeLugar = {
   readonly lugares: number;
   readonly calles: number;
-  readonly domicilios: number;
+  readonly domicilios: number | undefined;
 };
 
 /**
@@ -59,14 +59,22 @@ const pestanaDeCuenta = (
   datos: DatosDePestanas,
   clave: keyof CuentasDeLugar,
   etiqueta: string,
-): Pestana => ({
-  clave,
-  etiqueta,
-  cuenta: datos.cuentas[clave],
-  href: hrefDePanel(datos, clave),
-  activa: datos.vista === clave,
-  etiquetaAccesible: `${ETIQUETA_ACCESIBLE[clave]}: ${datos.cuentas[clave]}`,
-});
+): Pestana => {
+  const cuenta = datos.cuentas[clave];
+
+  return {
+    clave,
+    etiqueta,
+    href: hrefDePanel(datos, clave),
+    activa: datos.vista === clave,
+    ...(cuenta === undefined
+      ? { etiquetaAccesible: ETIQUETA_ACCESIBLE[clave] }
+      : {
+          cuenta,
+          etiquetaAccesible: `${ETIQUETA_ACCESIBLE[clave]}: ${cuenta}`,
+        }),
+  };
+};
 
 /**
  * Las pestanas disponibles del panel, con su cuenta y su `href`. "Editar"

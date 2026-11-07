@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   listarLugares: vi.fn(),
   listarRaices: vi.fn(),
   lugarPorId: vi.fn(),
+  registroDeDomicilios: vi.fn(async () => ({ domicilios: [], hayMas: false })),
   subarbol: vi.fn(),
 }));
 
@@ -42,6 +43,7 @@ vi.mock("@/modules/territorio", async () => ({
   listarLugares: mocks.listarLugares,
   listarRaices: mocks.listarRaices,
   lugarPorId: mocks.lugarPorId,
+  registroDeDomicilios: mocks.registroDeDomicilios,
   subarbol: mocks.subarbol,
   VistaDeRaices,
 }));

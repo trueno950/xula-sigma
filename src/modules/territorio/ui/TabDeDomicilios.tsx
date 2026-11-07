@@ -1,8 +1,9 @@
-import { AvisoDePermiso, CLASES_DE_ENLACE } from "@/shared/ui";
+import { AvisoDePermiso, CLASES_DE_ENLACE, estadoDeLista } from "@/shared/ui";
 import { puedeTenerCatalogoDeCalles } from "../domain";
+import { BuscadorDeLaPestana } from "./BuscadorDeLaPestana";
 import { CatalogoHeredado } from "./CatalogoHeredado";
-import { domiciliosDelSubarbolDe, type PropsDeContenido } from "./contenido";
-import { ListaDeDomicilios } from "./ListaDeDomicilios";
+import type { PropsDeContenido } from "./contenido";
+import { PaginaOVacioPorFiltro } from "./ListaDeDomicilios";
 import { PanelDeDomicilio } from "./PanelDeDomicilio";
 import { puedeAbrir } from "./permisos";
 import { salidaSinCalles, VacioDeDomicilios } from "./VacioDeDomicilios";
@@ -10,7 +11,9 @@ import { salidaSinCalles, VacioDeDomicilios } from "./VacioDeDomicilios";
 /**
  * Pestana Domicilios: los domicilios colgados del lugar, en maestro-detalle
  * como Calles. Cada fila abre el panel de su domicilio al lado (`lg`) o
- * debajo, sin estado de cliente.
+ * debajo, sin estado de cliente. Llega una pagina (`?q=`, `?limite=`); el
+ * domicilio abierto llega aparte, por id, y su panel no depende de que su
+ * fila este en la pagina.
  */
 export function TabDeDomicilios({
   raizId,
@@ -23,12 +26,14 @@ export function TabDeDomicilios({
   permisos,
   residentes,
   borrador,
+  domicilios,
+  mismaDireccion,
+  busqueda,
+  limite,
 }: PropsDeContenido) {
   const puedeActuar = puedeAbrir("domicilio", permisos);
-  const colgados = domiciliosDelSubarbolDe(nodos, lugar.id);
-  const nombres = new Map<string, string>(
-    nodos.flatMap((n) => (n.clase === "lugar" ? [[n.id, n.nombre]] : [])),
-  );
+  const filas = domicilios?.filas ?? [];
+  const estado = estadoDeLista({ total: filas.length, filtro: busqueda });
   const sinCalles = calles.length === 0;
   const salida = salidaSinCalles(raizId, lugar);
 
@@ -45,7 +50,17 @@ export function TabDeDomicilios({
         <CatalogoHeredado raizId={raizId} lugares={lugares} />
       ) : null}
 
-      {colgados.length === 0 ? (
+      {estado.clase !== "vacio-inicial" ? (
+        <BuscadorDeLaPestana
+          raizId={raizId}
+          nodoId={lugar.id}
+          vista="domicilios"
+          etiqueta="Buscar domicilio"
+          busqueda={busqueda}
+        />
+      ) : null}
+
+      {estado.clase === "vacio-inicial" ? (
         <VacioDeDomicilios
           raizId={raizId}
           lugar={lugar}
@@ -60,12 +75,13 @@ export function TabDeDomicilios({
               : "flex flex-col gap-4"
           }
         >
-          <ListaDeDomicilios
+          <PaginaOVacioPorFiltro
             raizId={raizId}
             lugar={lugar}
-            filas={colgados}
-            nombreDeLugar={(lugarId) => nombres.get(lugarId) ?? lugar.nombre}
+            domicilios={domicilios}
             domicilioId={domicilio?.id}
+            busqueda={busqueda}
+            limite={limite}
           />
           {domicilio ? (
             <PanelDeDomicilio
@@ -78,13 +94,14 @@ export function TabDeDomicilios({
               accion={accion}
               permisos={permisos}
               residentes={residentes ?? []}
+              mismaDireccion={mismaDireccion ?? []}
               borrador={borrador}
             />
           ) : null}
         </div>
       )}
 
-      {puedeActuar && sinCalles && colgados.length > 0 ? (
+      {puedeActuar && sinCalles && filas.length > 0 ? (
         <p className="text-[15px] text-caliza-apagada">
           {salida.texto}{" "}
           <a href={salida.href} className={CLASES_DE_ENLACE}>

@@ -45,8 +45,9 @@ integración sobre `xula_test`), Playwright y `pnpm check`.
   código muerto. Commit: `121de89`.
 - [x] **T2** · S2 · delegado — Etiqueta única de domicilio. Commit: `34c3ebd`.
 - [x] **T3** · S3,S4 · delegado — Carga condicional y índices de
-  residencias. Risk: item 1 (migración). Commit:
-- [ ] **T4** · S5 · delegado — Búsqueda y paginación en pestañas. Commit:
+  residencias. Risk: item 1 (migración). Commit: `277000f`.
+- [x] **T4** · S5 · delegado — Búsqueda y paginación en pestañas. Commit:
+  ver L5.
 - [ ] **T5** · S1-S6 · verificador independiente por la migración, suite,
   E2E, PR con issue aprobado.
 
@@ -66,3 +67,4 @@ integración sobre `xula_test`), Playwright y `pnpm check`.
 
 - **L4** — 2026-11-06. T3 del escritor: S3 y S4 cubiertos. La ficha calcula `puedeActuar` antes de cargar y solo entonces llama a `listarDomicilios`; test de página con RED observado («expected not to be called, but called 1 times»). Índices `residencias_domicilio_idx (ayuntamiento_id, domicilio_id)` y `residencias_persona_idx (ayuntamiento_id, persona_id)` con la migración `drizzle/0023_indices_de_residencias.sql`, que solo crea los dos índices; sin `CONCURRENTLY` porque drizzle migra dentro de una transacción y el repo no lo usa. Test de esquema contra `pg_indexes`, RED con la base en 0022 y GREEN tras migrar. `drizzle-kit check` sin problemas; módulos 167 archivos y 858 tests; suite completa 496 archivos y 2546 tests. Comprobación del padre: `pnpm check` exit 0. Risk: item 1 (migración aditiva).
 
+- **L5** — 2026-11-06. T4 del escritor: S5 cubierto. `?q=` y `?limite=` (entero positivo hasta `LIMITE_MAXIMO`, con su `.catch()`) en las pestañas Calles y Domicilios; «Ver más» suma 50 y conserva `q`; buscador GET `BuscadorDeLaPestana` con etiqueta visible y chip para quitar la búsqueda; «Sin resultados para…». El subárbol de cada vista ya no trae domicilios (`soloLugares`); las filas de domicilio se cargan solo con la pestaña Domicilios visible (`cargaDeDomicilios.ts`, `registroDeDomicilios` con `raizId`), el conteo de la pestaña sale de `contarContenidoDeLugares` (sin número si falla, no un 0 falso) y la lista de la misma dirección usa un filtro nuevo por `calleId` y número. El domicilio o la calle abiertos se cargan por id aunque no estén en la página. Desvío aceptado: las calles se paginan en memoria, porque el catálogo completo del asentamiento lo necesitan los selectores del alta, el panel de calle y el 404 de una `?calle=` ajena. RED/GREEN por regla (la carga solo con RED de módulo inexistente); módulo y rutas 185 archivos y 978 tests; reglas sin hallazgos; suite completa 501 archivos y 2584 tests; E2E 23/23. Comprobación del padre: `pnpm check` exit 0. Risk: item 3 (`subarbol` y el registro ganan parámetros opcionales; el conteo de la pestaña cambia de fuente).

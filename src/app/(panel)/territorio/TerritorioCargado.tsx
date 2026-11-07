@@ -45,6 +45,8 @@ export const TerritorioCargado = async ({
     calles,
     domicilio,
     residentes,
+    domicilios,
+    mismaDireccion,
     lugares,
     cuentas,
     hayCabecera,
@@ -108,6 +110,10 @@ export const TerritorioCargado = async ({
           domicilioId={domicilioId}
           domicilio={domicilio ?? undefined}
           residentes={residentes}
+          domicilios={domicilios}
+          mismaDireccion={mismaDireccion}
+          busqueda={parametros.busqueda}
+          limite={parametros.limite}
           permisos={permisos}
           conteos={cuentas}
           domicilioAbierto={domicilioAbierto}

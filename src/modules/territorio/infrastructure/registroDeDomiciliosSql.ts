@@ -46,6 +46,9 @@ export const registroDeDomiciliosSql: Pick<
     const condicionDeRaiz = filtros.raizId
       ? sql`AND dom.lugar_id IN (SELECT id FROM descendientes)`
       : sql.empty();
+    const condicionDeCalleId = filtros.calleId
+      ? sql`AND dom.calle_id = ${filtros.calleId}`
+      : sql.empty();
     const condicionDeCalle = filtros.calle
       ? sql`AND cal.nombre ILIKE ${`%${escaparComodinesDeLike(filtros.calle)}%`}`
       : sql.empty();
@@ -78,6 +81,7 @@ export const registroDeDomiciliosSql: Pick<
         LEFT JOIN lugares padre3 ON padre3.id = padre2.padre_id
        WHERE dom.baja_en IS NULL
              ${condicionDeRaiz}
+             ${condicionDeCalleId}
              ${condicionDeCalle}
              ${condicionDeNumero}
              ${condicionDeBusqueda}

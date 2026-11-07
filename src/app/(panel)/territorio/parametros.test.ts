@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CLAVES_DE_CONFIRMACION, comoLugarId } from "@/modules/territorio";
+import {
+  CLAVES_DE_CONFIRMACION,
+  comoLugarId,
+  LIMITE_MAXIMO,
+} from "@/modules/territorio";
 import { leerParametros, nodoResuelto } from "./parametros";
 
 const RAIZ_AJENA = "11111111-1111-4111-8111-111111111111";
@@ -164,4 +168,24 @@ describe("leerParametros: q", () => {
   it("varios valores de q caen a undefined", () => {
     expect(leerParametros({ q: ["a", "b"] }).busqueda).toBeUndefined();
   });
+});
+
+describe("leerParametros: limite", () => {
+  it("lee un limite entero dentro del tope", () => {
+    expect(leerParametros({ limite: "100" }).limite).toBe(100);
+    expect(leerParametros({ limite: String(LIMITE_MAXIMO) }).limite).toBe(
+      LIMITE_MAXIMO,
+    );
+  });
+
+  it.each(["0", "-50", "12.5", "abc", String(LIMITE_MAXIMO + 1)])(
+    "descarta el limite %s sin tirar la busqueda ni la raiz",
+    (limite) => {
+      const parametros = leerParametros({ limite, q: "20", raiz: RAIZ_AJENA });
+
+      expect(parametros.limite).toBeUndefined();
+      expect(parametros.busqueda).toBe("20");
+      expect(parametros.raizId).toBe(RAIZ_AJENA);
+    },
+  );
 });

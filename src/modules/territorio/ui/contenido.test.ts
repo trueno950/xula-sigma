@@ -4,21 +4,24 @@ import {
   calleId,
   coloniaId,
   enColonia,
+  enOtraColonia,
   hermano,
   nodoDomicilio,
-  nodos,
   otraCalleId,
 } from "./contenidoDePrueba";
+
+/** Los candidatos que la pagina lee por calle y numero, sin recortar. */
+const candidatos = [enColonia, hermano, enOtraColonia];
 
 describe("hermanosDeDireccion", () => {
   const seleccionado = { id: enColonia.id, calleId, numero: "5" };
 
   it("encuentra los otros domicilios con la misma calle y el mismo numero", () => {
-    expect(hermanosDeDireccion(nodos, seleccionado)).toEqual([hermano]);
+    expect(hermanosDeDireccion(candidatos, seleccionado)).toEqual([hermano]);
   });
 
   it("no se cuenta a si mismo", () => {
-    expect(hermanosDeDireccion(nodos, seleccionado)).not.toContainEqual(
+    expect(hermanosDeDireccion(candidatos, seleccionado)).not.toContainEqual(
       enColonia,
     );
   });
@@ -31,7 +34,7 @@ describe("hermanosDeDireccion", () => {
     );
 
     expect(
-      hermanosDeDireccion([...nodos, conOtroNumero], seleccionado),
+      hermanosDeDireccion([...candidatos, conOtroNumero], seleccionado),
     ).toEqual([hermano]);
   });
 
@@ -42,24 +45,18 @@ describe("hermanosDeDireccion", () => {
       { calleId: otraCalleId },
     );
 
-    expect(hermanosDeDireccion([...nodos, enOtraCalle], seleccionado)).toEqual([
-      hermano,
-    ]);
+    expect(
+      hermanosDeDireccion([...candidatos, enOtraCalle], seleccionado),
+    ).toEqual([hermano]);
   });
 
   it("sin numero no hay direccion que comparar", () => {
     expect(
-      hermanosDeDireccion(nodos, { ...seleccionado, numero: null }),
+      hermanosDeDireccion(candidatos, { ...seleccionado, numero: null }),
     ).toEqual([]);
   });
 
-  /**
-   * Los hermanos salen del subarbol que la pagina ya trae. Todo domicilio
-   * de una calle cuelga del subarbol del asentamiento de esa calle
-   * (`verificacionDeDomicilio.ts`, `exigirCallesDelAsentamiento`), que es
-   * el subarbol que la pantalla carga.
-   */
-  it("no alcanza a un domicilio fuera del subarbol cargado", () => {
+  it("solo compara contra los candidatos que recibe", () => {
     expect(hermanosDeDireccion([enColonia], seleccionado)).toEqual([]);
   });
 });

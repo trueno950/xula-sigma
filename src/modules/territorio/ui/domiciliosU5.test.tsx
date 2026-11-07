@@ -4,6 +4,7 @@ import {
   cabeceraId,
   enOtraColoniaId,
   otraColoniaId,
+  paginaDelAsentamiento,
   render,
   seleccionado,
 } from "./fixturasDeDomiciliosU5";
@@ -16,6 +17,7 @@ import {
 const conAsentamientoAbierto = (resto: Partial<PropsDeContenido> = {}) =>
   render({
     lugar: { id: cabeceraId, tipo: "cabecera", nombre: "Tepakan" },
+    domicilios: paginaDelAsentamiento,
     ...resto,
   });
 

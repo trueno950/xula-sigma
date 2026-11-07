@@ -48,7 +48,19 @@ const aNodoDeSubarbol = (fila: FilaDeSubarbol): NodoDeSubarbol =>
 export const subarbolDeLugares: RepositorioDeLugares["subarbol"] = async (
   tx,
   raizId,
+  opciones,
 ) => {
+  const domicilios = opciones?.soloLugares
+    ? sql.empty()
+    : sql`
+    UNION ALL
+    SELECT 'domicilio' AS clase, dom.id, NULL, NULL,
+           NULL, dom.lugar_id AS "lugarId",
+           dom.calle_id AS "calleId", cal.nombre AS calle, dom.numero
+      FROM domicilios dom
+      JOIN descendientes d ON d.id = dom.lugar_id
+      JOIN calles cal ON cal.id = dom.calle_id
+     WHERE dom.baja_en IS NULL`;
   const filas = await tx.execute<FilaDeSubarbol>(sql`
     ${cteDescendientes(raizId)}
     SELECT 'lugar' AS clase, l.id, l.tipo, l.nombre,
@@ -57,14 +69,7 @@ export const subarbolDeLugares: RepositorioDeLugares["subarbol"] = async (
       FROM lugares l
       JOIN descendientes d ON d.id = l.id
      WHERE l.id <> ${raizId} AND l.baja_en IS NULL
-    UNION ALL
-    SELECT 'domicilio' AS clase, dom.id, NULL, NULL,
-           NULL, dom.lugar_id AS "lugarId",
-           dom.calle_id AS "calleId", cal.nombre AS calle, dom.numero
-      FROM domicilios dom
-      JOIN descendientes d ON d.id = dom.lugar_id
-      JOIN calles cal ON cal.id = dom.calle_id
-     WHERE dom.baja_en IS NULL
+    ${domicilios}
   `);
 
   return filas.map(aNodoDeSubarbol);

@@ -6,7 +6,6 @@ import {
   calleId,
   coloniaId,
   detalles,
-  nodos,
   render,
   seleccionado,
 } from "./fixturasDeDomiciliosU5";
@@ -99,7 +98,7 @@ describe("tab de domicilios: panel", () => {
 
 describe("tab de domicilios: vacio", () => {
   const vacia = (resto: Partial<PropsDeContenido> = {}) =>
-    render({ nodos: nodos.filter((n) => n.clase === "lugar"), ...resto });
+    render({ domicilios: { filas: [], hayMas: false }, ...resto });
 
   it("dice que no hay domicilios y deja el alta a la barra de la pestana", () => {
     const html = vacia();

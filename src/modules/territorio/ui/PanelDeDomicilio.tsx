@@ -13,7 +13,11 @@ import {
   AccionesDeDomicilio,
 } from "./AccionesDeDomicilio";
 import type { BorradorDeDomicilio } from "./borradorDeDomicilio";
-import { hermanosDeDireccion, rutaDe } from "./contenido";
+import {
+  type DomicilioDeLaPestana,
+  hermanosDeDireccion,
+  rutaDe,
+} from "./contenido";
 import { DatosDeDomicilio } from "./DatosDeDomicilio";
 import { HermanosDeDireccion } from "./HermanosDeDireccion";
 import type { AccionDeNodo } from "./PanelDeNodo";
@@ -32,6 +36,8 @@ type Props = {
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
   residentes: readonly ResidenteDeDomicilio[];
+  /** Los vivos con su calle y su numero, leidos en el subarbol del asentamiento. */
+  mismaDireccion: readonly DomicilioDeLaPestana[];
   borrador?: BorradorDeDomicilio | null | undefined;
 };
 
@@ -55,6 +61,7 @@ export function PanelDeDomicilio({
   accion,
   permisos,
   residentes,
+  mismaDireccion,
   borrador,
 }: Props) {
   const asentamiento = lugares.find((posible) => posible.id === raizId);
@@ -113,7 +120,7 @@ export function PanelDeDomicilio({
 
       <HermanosDeDireccion
         raizId={raizId}
-        hermanos={hermanosDeDireccion(nodos, domicilio)}
+        hermanos={hermanosDeDireccion(mismaDireccion, domicilio)}
       />
     </section>
   );

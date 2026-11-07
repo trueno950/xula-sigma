@@ -51,6 +51,20 @@ describe("subarbol", () => {
     expect(repositorio.subarbol).toHaveBeenCalledWith(
       expect.anything(),
       cabeceraId,
+      undefined,
+    );
+  });
+
+  it("pasa las opciones al repositorio para pedir solo lugares", async () => {
+    vi.mocked(repositorio.subarbol).mockResolvedValue(nodos);
+    const subarbol = crearSubarbol(repositorio);
+
+    await subarbol(cabeceraId, contextoCon("CONSULTA"), { soloLugares: true });
+
+    expect(repositorio.subarbol).toHaveBeenCalledWith(
+      expect.anything(),
+      cabeceraId,
+      { soloLugares: true },
     );
   });
 });

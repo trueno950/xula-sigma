@@ -2,11 +2,13 @@ import { Plus } from "@phosphor-icons/react/ssr";
 import { AvisoDePermiso, EnlaceDeAccion } from "@/shared/ui";
 import { puedeTenerCatalogoDeCalles } from "../domain";
 import { ANCLA_DE_ALTA, conAnclaDeAlta } from "./anclaDeAlta";
+import { BuscadorDeLaPestana } from "./BuscadorDeLaPestana";
 import { type PropsDeContenido, rutaDe } from "./contenido";
 import { FormularioDeAltaDeCalle } from "./FormularioDeAltaDeCalle";
 import { ListaDeCalles } from "./ListaDeCalles";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
 import { PanelDeCalle } from "./PanelDeCalle";
+import { paginaDeCalles } from "./paginaDeCalles";
 import { puedeAbrir } from "./permisos";
 import { centroDeCalles } from "./vistaDeCalles";
 
@@ -30,6 +32,8 @@ export function TabDeCalles({
   accion,
   permisos,
   calleId,
+  busqueda,
+  limite,
 }: PropsDeContenido) {
   if (!puedeTenerCatalogoDeCalles(lugar.tipo)) {
     // `pestanasDePanel` ya filtra este tipo; el guard protege otras llamadas.
@@ -43,9 +47,12 @@ export function TabDeCalles({
     accion === "reparentearCalle" ||
     accion === "bajaCalle";
   const puedeAgregar = puedeAbrir("calle", permisos);
+  // El panel busca en el catalogo entero y no en la pagina: una calle
+  // abierta desde la segunda pagina o fuera de la busqueda sigue abriendo.
   const calleSeleccionada = calleId
     ? calles.find((calle) => calle.id === calleId)
     : undefined;
+  const pagina = paginaDeCalles(calles, { busqueda, limite });
 
   return (
     <div className="flex flex-col gap-4">
@@ -92,6 +99,16 @@ export function TabDeCalles({
         </PanelDeAccion>
       ) : null}
 
+      {calles.length > 0 ? (
+        <BuscadorDeLaPestana
+          raizId={raizId}
+          nodoId={lugar.id}
+          vista="calles"
+          etiqueta="Buscar calle"
+          busqueda={busqueda}
+        />
+      ) : null}
+
       <div
         className={
           calleSeleccionada
@@ -113,8 +130,11 @@ export function TabDeCalles({
         <ListaDeCalles
           raizId={raizId}
           lugar={lugar}
-          calles={calles}
+          calles={pagina.filas}
+          hayMas={pagina.hayMas}
           calleId={calleSeleccionada?.id}
+          busqueda={busqueda}
+          limite={limite}
         />
       </div>
     </div>

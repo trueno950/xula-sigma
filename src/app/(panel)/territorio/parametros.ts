@@ -14,10 +14,13 @@ import {
   type TabDeLugar,
 } from "@/modules/territorio";
 import type { NodoDeSubarbol } from "@/modules/territorio/application/puertos";
+// Por la ruta y no por el barril: los tests de la pagina simulan el barril y
+// este tope se lee al cargar el modulo, antes de que el doble exista.
+import { LIMITE_MAXIMO } from "@/modules/territorio/application/registroDeDomicilios";
 import { esquemaDeRegreso } from "@/modules/territorio/ui/regresoAFicha";
 
 /**
- * La lectura de `?raiz=&nodo=&vista=&accion=` y la resolucion del nodo
+ * La lectura de `?raiz=&nodo=&vista=&accion=&q=&limite=` y la resolucion del nodo
  * actual dentro del subarbol.
  *
  * Vive aparte de `page.tsx` por la metrica de 200 lineas de `AGENTS.md`, y
@@ -30,6 +33,8 @@ export type ParametrosDeTerritorio = {
   domicilioId: DomicilioId | undefined;
   raizId: LugarId | undefined;
   busqueda: string | undefined;
+  /** El `?limite=` de Calles y Domicilios; `undefined` es la primera pagina. */
+  limite?: number | undefined;
   nodoId: LugarId | undefined;
   accion: AccionDeNodo | undefined;
   error: string | undefined;
@@ -67,6 +72,13 @@ const esquemaDeParametros = z.object({
     .transform((texto) => texto || undefined)
     .optional()
     .catch(undefined),
+  limite: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(LIMITE_MAXIMO)
+    .optional()
+    .catch(undefined),
   error: z.string().optional().catch(undefined),
   ok: z.enum(CLAVES_DE_CONFIRMACION).optional().catch(undefined),
   regreso: esquemaDeRegreso.optional().catch(undefined),
@@ -101,6 +113,7 @@ export const leerParametros = (
     domicilioId: datos.domicilio ? comoDomicilioId(datos.domicilio) : undefined,
     raizId: datos.raiz ? comoLugarId(datos.raiz) : undefined,
     busqueda: datos.q,
+    limite: datos.limite,
     nodoId: datos.nodo ? comoLugarId(datos.nodo) : undefined,
     accion,
     error: datos.error,
