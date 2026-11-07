@@ -1,6 +1,7 @@
 import { VistaDeRaices } from "@/modules/territorio";
 import type { LugarGuardado } from "@/modules/territorio/application/puertos";
 import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
+import { asentamientosDeCalles } from "@/modules/territorio/ui/coloniasDelAlta";
 import { declaracionDeDestino } from "@/modules/territorio/ui/declaracionDeDestino";
 import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDomicilios";
@@ -49,6 +50,8 @@ export const TerritorioCargado = ({
     registroAbierto,
     callesDelMunicipio,
     zonaDeLaEntrada,
+    usoDeCalle,
+    zonasDelLugar,
   } = carga;
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, ok, vista } = parametros;
@@ -68,6 +71,7 @@ export const TerritorioCargado = ({
           {registroAbierto && zonaDeLaEntrada ? (
             <RegistroDeDomicilio
               calles={opcionesDeCallesDelMunicipio(callesDelMunicipio)}
+              asentamientoDeCalle={asentamientosDeCalles(callesDelMunicipio)}
               zona={zonaDeLaEntrada}
               declaracionDeDestino={declaracionDeDestino({
                 origen: "municipio",
@@ -111,6 +115,8 @@ export const TerritorioCargado = ({
           conteos={cuentas}
           domicilioAbierto={domicilioAbierto}
           borrador={borrador}
+          usoDeCalle={usoDeCalle}
+          zonasDelLugar={zonasDelLugar}
         />
       ) : null}
     </PaginaDePanel>

@@ -97,7 +97,10 @@ describe("Cancelar agrupado con el envio", () => {
   });
 
   it("la baja del lugar agrupa el peligro y el cancelar", () => {
-    const html = renderToStaticMarkup(<TabDeEdicion {...base} accion="baja" />);
+    // Sin hijos: con uno la baja ya no se ofrece (`edicionQueNoAplica.test.tsx`).
+    const html = renderToStaticMarkup(
+      <TabDeEdicion {...base} nodos={[]} accion="baja" />,
+    );
     const form = formularioDe(html);
 
     expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeEditar));

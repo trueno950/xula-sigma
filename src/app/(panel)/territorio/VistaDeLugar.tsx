@@ -55,6 +55,8 @@ type Props = {
   mismaDireccion?: PropsDeContenido["mismaDireccion"];
   busqueda?: string | undefined;
   limite?: number | undefined;
+  usoDeCalle?: PropsDeContenido["usoDeCalle"];
+  zonasDelLugar?: PropsDeContenido["zonasDelLugar"];
 };
 
 /**
@@ -84,6 +86,8 @@ export function VistaDeLugar({
   mismaDireccion,
   busqueda,
   limite,
+  usoDeCalle,
+  zonasDelLugar,
 }: Props) {
   const zona = zonaDelFormulario(
     lugaresDeNodos(nodos),
@@ -160,6 +164,8 @@ export function VistaDeLugar({
         mismaDireccion={mismaDireccion}
         busqueda={busqueda}
         limite={limite}
+        usoDeCalle={usoDeCalle}
+        zonasDelLugar={zonasDelLugar}
       />
     </>
   );

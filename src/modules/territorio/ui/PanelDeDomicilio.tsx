@@ -116,7 +116,7 @@ export function PanelDeDomicilio({
         )}
         permisos={permisos}
         accionAbierta={accionAbierta}
-        residentes={residentes ?? []}
+        residentes={residentes}
         borrador={borrador}
       />
 

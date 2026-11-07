@@ -22,7 +22,8 @@ type Props = {
   zona: NivelDelFormulario;
   permisos: PermisosDeTerritorio;
   accionAbierta: AccionDeDomicilio | undefined;
-  residentes: readonly ResidenteDeDomicilio[];
+  /** `null`: la lectura fallo; ver `FormularioDeBajaDeDomicilio`. */
+  residentes: readonly ResidenteDeDomicilio[] | null;
   borrador?: BorradorDeDomicilio | null | undefined;
 };
 

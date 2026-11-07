@@ -26,6 +26,8 @@ type Props = {
   raizActiva: string | null;
   error: string | undefined;
   aviso: string | undefined;
+  /** `permisosDeTerritorio(rol).administraZonas`: sin el, no hay alta. */
+  puedeAdministrar: boolean;
 };
 
 /**
@@ -39,6 +41,7 @@ export function ListaDeZonas({
   raizActiva,
   error,
   aviso,
+  puedeAdministrar,
 }: Props) {
   return (
     <PaginaDePanel
@@ -57,9 +60,11 @@ export function ListaDeZonas({
       {error ? <Aviso tono="error">{error}</Aviso> : null}
       {aviso ? <Aviso tono="exito">{aviso}</Aviso> : null}
 
-      <Panel titulo="Nueva zona">
-        <FormularioDeAltaDeZona asentamientos={asentamientos} />
-      </Panel>
+      {puedeAdministrar ? (
+        <Panel titulo="Nueva zona">
+          <FormularioDeAltaDeZona asentamientos={asentamientos} />
+        </Panel>
+      ) : null}
 
       {zonas.length === 0 ? (
         <EstadoVacio

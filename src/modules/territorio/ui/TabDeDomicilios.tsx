@@ -32,6 +32,7 @@ export function TabDeDomicilios({
   limite,
 }: PropsDeContenido) {
   const puedeActuar = puedeAbrir("domicilio", permisos);
+  const puedeAgregarCalle = puedeAbrir("calle", permisos);
   const filas = domicilios?.filas ?? [];
   const estado = estadoDeLista({ total: filas.length, filtro: busqueda });
   const sinCalles = calles.length === 0;
@@ -65,7 +66,7 @@ export function TabDeDomicilios({
           raizId={raizId}
           lugar={lugar}
           sinCalles={sinCalles}
-          puedeActuar={puedeActuar}
+          puedeActuar={puedeAgregarCalle}
         />
       ) : (
         <div
@@ -101,7 +102,7 @@ export function TabDeDomicilios({
         </div>
       )}
 
-      {puedeActuar && sinCalles && filas.length > 0 ? (
+      {puedeAgregarCalle && sinCalles && filas.length > 0 ? (
         <p className="text-[15px] text-caliza-apagada">
           {salida.texto}{" "}
           <a href={salida.href} className={CLASES_DE_ENLACE}>

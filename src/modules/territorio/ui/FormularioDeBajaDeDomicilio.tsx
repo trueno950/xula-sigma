@@ -9,13 +9,16 @@ type Props = {
   nodo: string;
   domicilio: string;
   direccion: string;
-  residentes: readonly ResidenteDeDomicilio[];
+  /** `null`: la lectura fallo; el envio queda y decide el servidor. */
+  residentes: readonly ResidenteDeDomicilio[] | null;
 };
 
 /**
- * Server Component, `<form action={...}>` nativo sin `"use client"`. El
- * aviso de residentes no reemplaza al rechazo de `darDeBajaDomicilio`: lo
- * anticipa con lo que el panel leyo, que puede haber cambiado al enviar.
+ * Server Component, `<form action={...}>` nativo sin `"use client"`. Con
+ * residentes no hay envio: `darDeBajaDomicilio` lo rechazaria, y en su
+ * lugar va a quien vive ahi con el enlace a su ficha, donde se registra la
+ * mudanza. El rechazo del caso de uso sigue siendo la regla: lo leido
+ * puede haber cambiado al enviar.
  */
 export function FormularioDeBajaDeDomicilio({
   raiz,
@@ -24,6 +27,16 @@ export function FormularioDeBajaDeDomicilio({
   direccion,
   residentes,
 }: Props) {
+  if (residentes && residentes.length > 0) {
+    return (
+      <p className="text-[15px] text-senial-error">
+        {"Antes de dar de baja esta dirección hay que mudar a: "}
+        <EnlacesDeResidentes residentes={residentes} />. Registre la mudanza
+        desde su ficha.
+      </p>
+    );
+  }
+
   return (
     <form
       action={darDeBajaDomicilioAction}
@@ -36,16 +49,9 @@ export function FormularioDeBajaDeDomicilio({
       <input type="hidden" name="domicilio" value={domicilio} />
       <input type="hidden" name="domicilioId" value={domicilio} />
 
-      {residentes.length > 0 ? (
-        <p className="text-[15px] text-senial-error">
-          {"Antes de dar de baja esta dirección, registre la mudanza de: "}
-          <EnlacesDeResidentes residentes={residentes} />.
-        </p>
-      ) : (
-        <p className="text-[15px] text-caliza-apagada">
-          {`${direccion} deja de listarse y no se puede asignar en una mudanza.`}
-        </p>
-      )}
+      <p className="text-[15px] text-caliza-apagada">
+        {`${direccion} deja de listarse y no se puede asignar en una mudanza.`}
+      </p>
 
       <Boton type="submit" variante="peligro">
         <Prohibit size={18} aria-hidden />

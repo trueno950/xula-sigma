@@ -51,6 +51,7 @@ const renderLista = () =>
       raizActiva={null}
       error={undefined}
       aviso={undefined}
+      puedeAdministrar
     />,
   );
 
@@ -64,6 +65,7 @@ const renderDetalle = () =>
       callesDelAsentamiento={[calle20, calle22]}
       error={undefined}
       aviso={undefined}
+      puedeAdministrar
     />,
   );
 

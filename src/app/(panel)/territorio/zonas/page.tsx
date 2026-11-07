@@ -8,6 +8,7 @@ import {
 } from "@/modules/territorio";
 import { DetalleDeZona } from "@/modules/territorio/ui/DetalleDeZona";
 import { ListaDeZonas } from "@/modules/territorio/ui/ListaDeZonas";
+import { permisosDeTerritorio } from "@/modules/territorio/ui/permisos";
 import { contextoActual } from "@/shared/auth";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import { PantallaDeMensaje } from "@/shared/ui";
@@ -41,6 +42,7 @@ export default async function PaginaDeZonas({ searchParams }: Props) {
   const parametros = leerParametros(await searchParams);
   if (parametros.invalido) notFound();
 
+  const { administraZonas } = permisosDeTerritorio(contexto.usuario.rol);
   const aviso = parametros.ok
     ? MENSAJE_DE_CONFIRMACION_DE_ZONAS[parametros.ok]
     : undefined;
@@ -67,6 +69,7 @@ export default async function PaginaDeZonas({ searchParams }: Props) {
           }))}
           error={parametros.error}
           aviso={aviso}
+          puedeAdministrar={administraZonas}
         />
       );
     }
@@ -82,6 +85,7 @@ export default async function PaginaDeZonas({ searchParams }: Props) {
         raizActiva={zonas[0]?.asentamiento ?? null}
         error={parametros.error}
         aviso={aviso}
+        puedeAdministrar={administraZonas}
       />
     );
   } catch (error) {

@@ -53,6 +53,7 @@ type Props = {
   raizId: LugarId;
   lugar: NodoSeleccionado;
   sinCalles: boolean;
+  /** Si puede crear la calle que falta: `puedeAbrir("calle", ...)`. */
   puedeActuar: boolean;
 };
 

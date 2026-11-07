@@ -1,13 +1,13 @@
 import { Boton, CampoDeLista } from "@/shared/ui";
 import type { LugarGuardado } from "../application/puertos";
 import {
-  destinosDeReparenteo,
   type LugarId,
   puedeSerRaiz,
   type TipoDeLugar,
   tipoDeLugarEnFrase,
 } from "../domain";
 import { reparentearLugarAction } from "./actions/reparentearLugarAction";
+import { destinosUtilesDeReparenteo } from "./bloqueosDeLugar";
 import { opcionesDeLugares } from "./opciones";
 import { PieDeFormulario } from "./PieDeFormulario";
 import { ofertaDeReparenteo } from "./reparenteo";
@@ -24,12 +24,14 @@ type Props = {
   padre?: LugarId | undefined;
   /** Navegacion de retorno del cancelar; ver `PieDeFormulario`. */
   volverA?: string | undefined;
+  /** Los del subarbol, si se pudieron contar; ver `destinosUtilesDeReparenteo`. */
+  domicilios?: number | undefined;
 };
 
 /**
  * Server Component, `<form action={...}>` nativo sin `"use client"`.
  *
- * El catalogo llega entero y se filtra aca con `destinosDeReparenteo`.
+ * El catalogo llega entero y se filtra aca con `destinosUtilesDeReparenteo`.
  * Antes llegaba ya recortado al subarbol de la raiz abierta, y eso hacia
  * dos cosas mal: mover un lugar a otra rama del municipio era imposible
  * -su destino nunca estaba en la lista-, y una raiz sin hijos daba un
@@ -46,15 +48,18 @@ export function FormularioDeReparenteo({
   lugares,
   padre,
   volverA,
+  domicilios,
 }: Props) {
-  const destinos = destinosDeReparenteo(
-    { id: nodo, tipo: tipoDelLugar },
+  const destinos = destinosUtilesDeReparenteo({
+    lugar: { id: nodo, tipo: tipoDelLugar },
     lugares,
-  );
+    padre,
+    domicilios,
+  });
 
   const oferta = ofertaDeReparenteo({
     destinos: destinos.length,
-    puedeSerRaiz: puedeSerRaiz(tipoDelLugar),
+    puedeSerRaiz: puedeSerRaiz(tipoDelLugar) && !domicilios,
     tienePadre: padre !== undefined,
   });
 
