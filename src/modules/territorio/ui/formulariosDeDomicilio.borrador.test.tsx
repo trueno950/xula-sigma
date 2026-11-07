@@ -118,3 +118,34 @@ describe("correccion de domicilio: vuelve con lo capturado", () => {
     }
   });
 });
+
+const RECORTE =
+  "Parte de lo capturado era demasiado largo y se recortó; revise los campos.";
+
+/** S4 de `territorio-pendientes`: el borrador se recortaba sin avisar. */
+describe("borrador recortado: el formulario lo avisa", () => {
+  const recortado = (destino: BorradorDeDomicilio["destino"]) => ({
+    ...borradorDe(destino),
+    recortado: true,
+  });
+
+  it("el alta avisa que se recorto lo capturado", () => {
+    expect(alta(recortado({ formulario: "alta" }))).toContain(RECORTE);
+  });
+
+  it("la correccion de ese domicilio tambien avisa", () => {
+    expect(
+      correccion(recortado({ formulario: "correccion", domicilioId })),
+    ).toContain(RECORTE);
+  });
+
+  it("sin recorte, o con el borrador de otro formulario, no avisa", () => {
+    expect(alta(borradorDe({ formulario: "alta" }))).not.toContain(RECORTE);
+    expect(
+      alta(recortado({ formulario: "correccion", domicilioId })),
+    ).not.toContain(RECORTE);
+    expect(correccion(recortado({ formulario: "alta" }))).not.toContain(
+      RECORTE,
+    );
+  });
+});

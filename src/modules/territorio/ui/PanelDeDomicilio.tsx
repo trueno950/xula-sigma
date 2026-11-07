@@ -35,7 +35,8 @@ type Props = {
   nodos: readonly NodoDeSubarbol[];
   accion: AccionDeNodo | undefined;
   permisos: PermisosDeTerritorio;
-  residentes: readonly ResidenteDeDomicilio[];
+  /** `null`: no se pudieron leer; ver `ResidentesDeDomicilio`. */
+  residentes: readonly ResidenteDeDomicilio[] | null;
   /** Los vivos con su calle y su numero, leidos en el subarbol del asentamiento. */
   mismaDireccion: readonly DomicilioDeLaPestana[];
   borrador?: BorradorDeDomicilio | null | undefined;
@@ -47,9 +48,10 @@ const esAccionDeDomicilio = (
   accion === "corregirDomicilio" || accion === "bajaDomicilio";
 
 /**
- * El detalle del domicilio elegido. Con `lg` se sienta junto a la tabla y
- * se pega a la ventana; debajo de 1024px queda tras la lista y la fila
- * enlaza a `#panel-de-domicilio` para que entre a la vista sin JavaScript.
+ * El detalle del domicilio elegido. Con `lg` se sienta en la segunda
+ * columna, junto a la tabla, y se pega a la ventana; debajo de 1024px va
+ * antes de la lista y la fila enlaza a `#panel-de-domicilio` para que entre
+ * a la vista sin JavaScript.
  */
 export function PanelDeDomicilio({
   raizId,
@@ -78,7 +80,7 @@ export function PanelDeDomicilio({
     <section
       id="panel-de-domicilio"
       aria-label={direccion}
-      className={`flex scroll-mt-4 flex-col gap-4 ${CLASES_DE_TARJETA} lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto`}
+      className={`flex scroll-mt-4 flex-col gap-4 ${CLASES_DE_TARJETA} lg:col-start-2 lg:row-start-1 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto`}
     >
       <div className="flex items-start justify-between gap-2">
         <DatosDeDomicilio
@@ -114,7 +116,7 @@ export function PanelDeDomicilio({
         )}
         permisos={permisos}
         accionAbierta={accionAbierta}
-        residentes={residentes}
+        residentes={residentes ?? []}
         borrador={borrador}
       />
 

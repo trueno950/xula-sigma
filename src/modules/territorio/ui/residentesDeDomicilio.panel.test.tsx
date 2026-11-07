@@ -51,6 +51,16 @@ describe("panel del domicilio: residentes", () => {
     );
   });
 
+  it("si no se pudieron leer, lo dice y el panel sigue con sus acciones", () => {
+    const html = render({ domicilioId, residentes: null });
+
+    expect(seccionDeResidentes(html)).toContain(
+      "No se pudo cargar quién vive aquí. Recargue la página.",
+    );
+    expect(seccionDeResidentes(html)).not.toContain("Nadie tiene registrada");
+    expect(html).toContain('name="accion" value="bajaDomicilio"');
+  });
+
   it("un rol de consulta tambien ve a los residentes", () => {
     const html = render({
       domicilioId,

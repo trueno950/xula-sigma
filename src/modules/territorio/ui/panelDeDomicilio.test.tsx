@@ -40,6 +40,16 @@ describe("domicilios: fila y panel", () => {
     expect(html).toContain('name="accion" value="bajaDomicilio"');
   });
 
+  /** S2 de `territorio-pendientes`: en movil el panel salia tras la lista. */
+  it("el panel va antes de la lista y a la derecha desde 1024px", () => {
+    const html = render({ domicilio, domicilioId });
+    const panel = html.indexOf('id="panel-de-domicilio"');
+
+    expect(panel).toBeGreaterThan(-1);
+    expect(panel).toBeLessThan(html.indexOf('aria-label="Domicilios de'));
+    expect(html).toContain("lg:col-start-2 lg:row-start-1 lg:sticky");
+  });
+
   it("la baja vive dentro de un details cerrado, despues de Corregir", () => {
     const html = render({ domicilio, domicilioId });
     const abiertos = html.match(/<details[^>]* open/g);

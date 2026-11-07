@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { codificarBorrador } from "@/modules/territorio/ui/borradorDeDomicilio";
@@ -42,26 +42,18 @@ vi.mock("@/modules/territorio", async () => ({
 }));
 
 const { default: PaginaDeTerritorio } = await import("./page");
-const { TerritorioCargado } = await import("./TerritorioCargado");
-
-type Props = Parameters<typeof TerritorioCargado>[0];
-type CuerpoDeLaPagina = ReactElement<{ children: ReactElement<Props> }>;
 
 const TOKEN = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const OTRO_TOKEN = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const CALLE = "33333333-3333-4333-8333-333333333333";
 const RAIZ = "11111111-1111-4111-8111-111111111111";
 
-/** Mismo montaje que page.test.tsx: el hijo del Suspense se resuelve a mano. */
-const altaDeLaEntrada = async (searchParams: Record<string, string>) => {
-  const pagina = (await PaginaDeTerritorio({
-    searchParams: Promise.resolve({ accion: "domicilio", ...searchParams }),
-  })) as CuerpoDeLaPagina;
-
-  return renderToStaticMarkup(
-    await TerritorioCargado(pagina.props.children.props),
+const altaDeLaEntrada = async (searchParams: Record<string, string>) =>
+  renderToStaticMarkup(
+    await PaginaDeTerritorio({
+      searchParams: Promise.resolve({ accion: "domicilio", ...searchParams }),
+    }),
   );
-};
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -8,10 +8,7 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { Aviso, PaginaDePanel } from "@/shared/ui";
 import { accionesDeRaiz } from "./AccionesDeRaiz";
 import { cabeceraDeLugar } from "./cabeceraDeLugar";
-import {
-  cargarTerritorio,
-  type SeleccionDeTerritorio,
-} from "./cargaDeTerritorio";
+import type { CargaDeTerritorio } from "./cargaDeTerritorio";
 import { EnlacesDeLaEntrada } from "./EnlacesDeLaEntrada";
 import { MENSAJE_DE_CONFIRMACION } from "./mensajeDeConfirmacion";
 import type { ParametrosDeTerritorio } from "./parametros";
@@ -22,21 +19,17 @@ type Props = {
   contexto: ContextoActual;
   parametros: ParametrosDeTerritorio;
   raiz: LugarGuardado | null;
-  seleccion: SeleccionDeTerritorio;
+  carga: CargaDeTerritorio;
   /** Lo capturado en un formulario de domicilio rechazado. */
   borrador?: BorradorDeDomicilio | null | undefined;
 };
 
-/**
- * La pantalla con los datos ya cargados, dentro del Suspense de `page.tsx`.
- * La raiz y la seleccion que pueden producir 404 llegan resueltas desde la
- * pagina; aqui corren las lecturas restantes, que cubre el esqueleto.
- */
-export const TerritorioCargado = async ({
+/** La pantalla con todo lo que `page.tsx` ya leyo. */
+export const TerritorioCargado = ({
   contexto,
   parametros,
   raiz,
-  seleccion,
+  carga,
   borrador,
 }: Props) => {
   const {
@@ -56,7 +49,7 @@ export const TerritorioCargado = async ({
     registroAbierto,
     callesDelMunicipio,
     zonaDeLaEntrada,
-  } = await cargarTerritorio({ contexto, parametros, raiz, seleccion });
+  } = carga;
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, ok, vista } = parametros;
   const cabecera = cabeceraDeLugar(raiz, nodos, nodo);

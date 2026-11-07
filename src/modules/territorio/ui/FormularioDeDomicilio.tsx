@@ -1,6 +1,11 @@
-import { Boton, type OpcionDeLista } from "@/shared/ui";
+import { Aviso, Boton, type OpcionDeLista } from "@/shared/ui";
 import { altaDeDomicilioAction } from "./actions/altaDeDomicilioAction";
-import { type BorradorDeDomicilio, camposPara } from "./borradorDeDomicilio";
+import {
+  avisaRecorte,
+  type BorradorDeDomicilio,
+  camposPara,
+  MENSAJE_DE_RECORTE,
+} from "./borradorDeDomicilio";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
 import { VALOR_SIN_COLONIA } from "./declaracionDeDestino";
 import { PieDeFormulario } from "./PieDeFormulario";
@@ -58,7 +63,8 @@ export function FormularioDeDomicilio({
   borrador,
 }: Props) {
   const zonaDeAlta = zonaParaAlta(zona);
-  const capturado = camposPara(borrador, { formulario: "alta" });
+  const destino = { formulario: "alta" } as const;
+  const capturado = camposPara(borrador, destino);
 
   return (
     <form action={altaDeDomicilioAction} className="flex flex-col gap-6">
@@ -69,6 +75,10 @@ export function FormularioDeDomicilio({
       {regreso ? <input type="hidden" name="regreso" value={regreso} /> : null}
 
       <p className="text-[15px] text-caliza-apagada">{declaracionDeDestino}</p>
+
+      {avisaRecorte(borrador, destino) ? (
+        <Aviso tono="aviso">{MENSAJE_DE_RECORTE}</Aviso>
+      ) : null}
 
       <CamposDeDomicilio
         prefijo="domicilio"

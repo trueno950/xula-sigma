@@ -1,7 +1,12 @@
-import { BarraDeAcciones, Boton, type OpcionDeLista } from "@/shared/ui";
+import { Aviso, BarraDeAcciones, Boton, type OpcionDeLista } from "@/shared/ui";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import { corregirDomicilioAction } from "./actions/corregirDomicilioAction";
-import { type BorradorDeDomicilio, camposPara } from "./borradorDeDomicilio";
+import {
+  avisaRecorte,
+  type BorradorDeDomicilio,
+  camposPara,
+  MENSAJE_DE_RECORTE,
+} from "./borradorDeDomicilio";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
 import type { NivelDelFormulario } from "./zonaDelFormulario";
 
@@ -32,10 +37,11 @@ export function FormularioDeCorreccionDeDomicilio({
   zona,
   borrador,
 }: Props) {
-  const capturado = camposPara(borrador, {
+  const destino = {
     formulario: "correccion",
     domicilioId: domicilio.id,
-  });
+  } as const;
+  const capturado = camposPara(borrador, destino);
 
   return (
     <form action={corregirDomicilioAction} className="flex flex-col gap-4">
@@ -44,6 +50,10 @@ export function FormularioDeCorreccionDeDomicilio({
       <input type="hidden" name="vista" value="domicilios" />
       <input type="hidden" name="accion" value="corregirDomicilio" />
       <input type="hidden" name="domicilioId" value={domicilio.id} />
+
+      {avisaRecorte(borrador, destino) ? (
+        <Aviso tono="aviso">{MENSAJE_DE_RECORTE}</Aviso>
+      ) : null}
 
       <CamposDeDomicilio
         prefijo="correccion"

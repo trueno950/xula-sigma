@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import { NoAutorizadoError } from "@/shared/lib/errores";
 
 const mocks = vi.hoisted(() => ({
   contarContenidoDeLugares: vi.fn(),
@@ -67,5 +68,50 @@ describe("cargarTerritorio: residentes del domicilio abierto", () => {
 
     expect(mocks.residentesDeDomicilio).not.toHaveBeenCalled();
     expect(carga.residentes).toEqual([]);
+  });
+});
+
+/** S4 de `territorio-pendientes`: un fallo aqui tumbaba el panel entero. */
+describe("cargarTerritorio: si la lectura de residentes falla", () => {
+  const registro = vi.spyOn(console, "error").mockImplementation(() => {});
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.contarContenidoDeLugares.mockResolvedValue([]);
+    mocks.listarLugares.mockResolvedValue([]);
+    mocks.listarRaices.mockResolvedValue([]);
+  });
+
+  afterEach(() => registro.mockClear());
+
+  it("la pantalla carga igual y marca los residentes como no leidos", async () => {
+    mocks.residentesDeDomicilio.mockRejectedValue(new Error("se cayo"));
+
+    const carga = await cargar({ id: DOMICILIO });
+
+    expect(carga.residentes).toBeNull();
+  });
+
+  it("lo registra con el id del domicilio y sin el texto del error", async () => {
+    // Un error de Postgres trae valores de la fila en su mensaje.
+    mocks.residentesDeDomicilio.mockRejectedValue(
+      new Error("Key (nombre)=(Rosa Pech) Calle 21 #4"),
+    );
+
+    await cargar({ id: DOMICILIO });
+
+    expect(registro).toHaveBeenCalledTimes(1);
+    const registrado = JSON.stringify(registro.mock.calls[0]);
+    expect(registrado).toContain(DOMICILIO);
+    expect(registrado).not.toContain("Rosa Pech");
+    expect(registrado).not.toContain("Calle 21");
+  });
+
+  it("un rechazo por permiso no se disfraza: sigue propagando", async () => {
+    mocks.residentesDeDomicilio.mockRejectedValue(new NoAutorizadoError());
+
+    await expect(cargar({ id: DOMICILIO })).rejects.toBeInstanceOf(
+      NoAutorizadoError,
+    );
   });
 });

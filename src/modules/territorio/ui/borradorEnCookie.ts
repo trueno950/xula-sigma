@@ -2,11 +2,11 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import {
   type BorradorDeDomicilio,
-  type CamposDeBorrador,
   camposDelFormulario,
   codificarBorrador,
   type DestinoDeBorrador,
   decodificarBorrador,
+  seRecortaAlGuardar,
 } from "./borradorDeDomicilio";
 
 /**
@@ -31,23 +31,23 @@ const RUTA = "/territorio";
 
 const nuevoBorrador = (
   destino: DestinoDeBorrador,
-  campos: CamposDeBorrador,
-): BorradorDeDomicilio => ({ token: randomUUID(), destino, campos });
+  formData: FormData,
+  nombreDeZona: "lugarId" | "zonaId",
+): BorradorDeDomicilio => ({
+  token: randomUUID(),
+  destino,
+  campos: camposDelFormulario(formData, nombreDeZona),
+  ...(seRecortaAlGuardar(formData, nombreDeZona) ? { recortado: true } : {}),
+});
 
 export const borradorDeAlta = (formData: FormData): BorradorDeDomicilio =>
-  nuevoBorrador(
-    { formulario: "alta" },
-    camposDelFormulario(formData, "lugarId"),
-  );
+  nuevoBorrador({ formulario: "alta" }, formData, "lugarId");
 
 export const borradorDeCorreccion = (
   formData: FormData,
   domicilioId: string,
 ): BorradorDeDomicilio =>
-  nuevoBorrador(
-    { formulario: "correccion", domicilioId },
-    camposDelFormulario(formData, "zonaId"),
-  );
+  nuevoBorrador({ formulario: "correccion", domicilioId }, formData, "zonaId");
 
 export const guardarBorrador = async (
   borrador: BorradorDeDomicilio,

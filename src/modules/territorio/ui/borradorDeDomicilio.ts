@@ -9,7 +9,10 @@ import { z } from "zod";
  * Los largos maximos no son reglas del domicilio: son el techo para que la
  * cookie, ya escapada con `encodeURIComponent`, quede debajo de los 4096
  * bytes que un navegador acepta. Un id legitimo mide 36; lo que pase se
- * recorta al guardar y se rechaza al leer.
+ * recorta al guardar y se rechaza al leer. El numero y la referencia no
+ * tienen largo maximo en el formulario ni en la accion, asi que el recorte
+ * puede cortar algo valido: el borrador lo marca (`recortado`) y el
+ * formulario rellenado se lo dice al operador.
  */
 const LARGO_DE_ID = 36;
 const LARGO_DE_NUMERO = 40;
@@ -33,6 +36,7 @@ const esquemaDeBorrador = z.object({
   token: z.uuid(),
   destino: esquemaDeDestino,
   campos: esquemaDeCampos,
+  recortado: z.boolean().optional(),
 });
 
 export type CamposDeBorrador = z.infer<typeof esquemaDeCampos>;
@@ -63,6 +67,24 @@ export const camposDelFormulario = (
   entreCalleBId: textoDe(formData.get("entreCalleBId"), LARGOS.entreCalleBId),
   referencia: textoDe(formData.get("referencia"), LARGOS.referencia),
 });
+
+const nombreEnElFormulario = (
+  campo: keyof CamposDeBorrador,
+  nombreDeZona: "lugarId" | "zonaId",
+) => (campo === "zonaId" ? nombreDeZona : campo);
+
+/** Si algun valor capturado pasa su techo y `camposDelFormulario` lo corta. */
+export const seRecortaAlGuardar = (
+  formData: FormData,
+  nombreDeZona: "lugarId" | "zonaId",
+): boolean =>
+  Object.entries(LARGOS).some(([campo, largo]) => {
+    const valor = formData.get(
+      nombreEnElFormulario(campo as keyof CamposDeBorrador, nombreDeZona),
+    );
+
+    return typeof valor === "string" && valor.length > largo;
+  });
 
 export const codificarBorrador = (borrador: BorradorDeDomicilio): string =>
   JSON.stringify(borrador);
@@ -99,3 +121,13 @@ export const camposPara = (
   borrador && mismoDestino(borrador.destino, destino)
     ? borrador.campos
     : undefined;
+
+/** El borrador de este formulario perdio parte de lo capturado. */
+export const avisaRecorte = (
+  borrador: BorradorDeDomicilio | null | undefined,
+  destino: DestinoDeBorrador,
+): boolean =>
+  Boolean(borrador?.recortado) && camposPara(borrador, destino) !== undefined;
+
+export const MENSAJE_DE_RECORTE =
+  "Parte de lo capturado era demasiado largo y se recortó; revise los campos.";

@@ -83,11 +83,9 @@ test("un alta rechazada vuelve con lo capturado y el borrador no sobrevive al ex
 });
 
 /**
- * `/territorio` no se puede recorrer sin JavaScript: `page.tsx` pinta el
- * contenido dentro de un `<Suspense>` y el HTML transmitido queda oculto
- * hasta que un script lo inserta, asi que el formulario no es visible. Lo
- * que se prueba aca es la parte del borrador: la pagina que rellena el
- * formulario la arma el servidor con la cookie, sin ejecutar un script.
+ * La pagina que rellena el formulario la arma el servidor con la cookie,
+ * sin ejecutar un script, y el formulario se ve: antes solo existia en el
+ * HTML, oculto dentro de un `<Suspense>` (S1 de `territorio-pendientes`).
  */
 test("sin JavaScript, el servidor arma el alta con lo capturado", async ({
   browser,
@@ -108,10 +106,13 @@ test("sin JavaScript, el servidor arma el alta con lo capturado", async ({
   try {
     const sinJs = await contexto.newPage();
     await sinJs.goto(conBorrador);
-    const html = await sinJs.content();
 
-    expect(html).toContain(`value="${numero}"`);
-    expect(html).toContain(`value="${REFERENCIA}"`);
+    const campoDeNumero = sinJs.getByLabel("Número", { exact: true });
+    await expect(campoDeNumero).toBeVisible();
+    await expect(campoDeNumero).toHaveValue(numero);
+    await expect(sinJs.getByLabel("Referencia", { exact: true })).toHaveValue(
+      REFERENCIA,
+    );
     expect(await leerDomicilioPorNumero(escenario.calleId, numero)).toBeNull();
   } finally {
     await contexto.close();

@@ -33,7 +33,11 @@ describe("domicilios: hermanos de direccion", () => {
 
   it("no llama hermano al mismo numero de otra calle con el mismo nombre", () => {
     const html = render({ domicilio, domicilioId });
-    const hermanos = html.slice(html.indexOf("en esta dirección"));
+    // El panel va antes de la lista, cuyas filas tambien enlazan a la vecina.
+    const hermanos = html.slice(
+      html.indexOf("en esta dirección"),
+      html.indexOf('aria-label="Domicilios de'),
+    );
 
     expect(hermanos).not.toContain(`domicilio=${vecinaId}`);
   });
