@@ -86,11 +86,7 @@ describe("el alta de lugar se abre a la vista", () => {
   it("va antes de la lista de lugares, con el ancla", () => {
     const html = renderToStaticMarkup(<TabDeLugares {...props("lugar")} />);
 
-    antesDe(
-      html,
-      "Agregar un lugar dentro de Motul",
-      "Lugares dentro de Motul",
-    );
+    antesDe(html, "Nueva colonia en Motul", "Lugares dentro de Motul");
     expect(html).toContain(ANCLA);
   });
 
@@ -134,6 +130,28 @@ describe("el alta de asentamiento en la entrada", () => {
       "Asentamientos del municipio",
       'href="/territorio?accion=lugar#panel-de-alta"',
     );
+    expect(html.match(/Agregar comisaría/g) ?? []).toHaveLength(1);
+    expect(html).not.toContain("Agregar asentamiento");
+  });
+
+  it("con cabecera, el panel abierto se titula Nueva comisaría", () => {
+    const html = entrada(true);
+
+    expect(html).toContain("Nueva comisaría");
+    expect(html).not.toContain("Agregar asentamiento");
+  });
+
+  it("sin cabecera, la entrada sigue diciendo Agregar asentamiento", () => {
+    const html = renderToStaticMarkup(
+      <VistaDeRaices
+        raices={[]}
+        lugares={[]}
+        hayCabecera={false}
+        puedeEscribir
+        altaAbierta={false}
+      />,
+    );
+
     expect(html.match(/Agregar asentamiento/g) ?? []).toHaveLength(1);
   });
 

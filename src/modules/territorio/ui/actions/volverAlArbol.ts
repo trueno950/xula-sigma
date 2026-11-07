@@ -13,6 +13,8 @@ type ParametrosDelArbol = {
   regreso?: string | undefined;
   error?: string | undefined;
   ok?: ClaveDeConfirmacion | undefined;
+  /** El lugar que el alta acaba de crear; solo lo pone `altaDeLugarAction`. */
+  nuevo?: string | undefined;
   borrador?: string | undefined;
 };
 
@@ -26,6 +28,7 @@ const CLAVES_DE_CONSULTA = [
   "regreso",
   "error",
   "ok",
+  "nuevo",
   "borrador",
 ] as const;
 
@@ -97,7 +100,8 @@ export const irAlArbol = (
 export const confirmarEnArbol = (
   navegacion: ReturnType<typeof navegacionDe>,
   ok: ClaveDeConfirmacion,
-): never => redirect(rutaDelArbol({ ...navegacion, ok }));
+  nuevo?: string,
+): never => redirect(rutaDelArbol({ ...navegacion, ok, nuevo }));
 
 /**
  * El contexto abierto del arbol, para poder volver donde estaba quien envio

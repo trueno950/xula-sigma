@@ -66,19 +66,31 @@ async function acceder(page: Page) {
   throw new Error("No se pudo acceder: la ventana de ritmo no se libero.");
 }
 
+/**
+ * Con un solo tipo posible el alta no muestra el select: manda el tipo
+ * oculto y el boton lo nombra. En la raiz depende de si el municipio ya
+ * tiene cabecera, que esta spec no controla.
+ */
+const ENVIO_DEL_ALTA = /^(Dar de alta|Agregar (cabecera|comisaría|colonia))$/;
+
+async function elegirTipo(page: Page, tipo: string) {
+  const selector = page.getByLabel("Tipo");
+  if ((await selector.count()) > 0) await selector.selectOption(tipo);
+}
+
 /** Da de alta un lugar con el formulario nativo y espera el re-render. */
 async function darDeAlta(
   page: Page,
   { tipo, nombre }: { tipo: string; nombre: string },
 ) {
-  await page.getByRole("link", { name: "Agregar lugar" }).click();
-  await page.getByLabel("Tipo").selectOption(tipo);
+  await page.getByRole("link", { name: `Agregar ${tipo}` }).click();
+  await elegirTipo(page, tipo);
   // Por rol y exacto: `getByLabel("Nombre")` tambien matchea el buscador del
   // arbol ("Buscar lugar por **nombre**"), que aparece cuando el municipio ya
   // tiene lugares —o sea, cuando otra spec sembro antes— y volvia el
   // localizador ambiguo.
   await page.getByRole("textbox", { name: "Nombre", exact: true }).fill(nombre);
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page.getByRole("button", { name: ENVIO_DEL_ALTA }).click();
   // El POST nativo redirige a la vista del padre, donde el lugar nuevo ya
   // aparece. Esperarlo es determinista; `waitForLoadState("networkidle")` no
   // lo es —Playwright lo desaconseja—: mide que la red quede quieta, no que el
@@ -135,11 +147,11 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
   await acceder(page);
 
   await page.goto(urlDe("motul", "/territorio?accion=lugar"));
-  await page.getByLabel("Tipo").selectOption("comisaria");
+  await elegirTipo(page, "comisaria");
   await page
     .getByRole("textbox", { name: "Nombre", exact: true })
     .fill(COMISARIA);
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page.getByRole("button", { name: ENVIO_DEL_ALTA }).click();
   await expect(
     page.getByRole("link", { name: new RegExp(`^${COMISARIA},`) }),
   ).toBeVisible();
@@ -149,7 +161,7 @@ test("la sangria del arbol es el mismo paso en cada nivel", async ({
 
   await page.getByRole("link", { name: new RegExp(`^${COLONIA},`) }).click();
   await expect(
-    page.getByRole("link", { name: "Agregar lugar", exact: true }),
+    page.getByRole("link", { name: /^Agregar (lugar|colonia)$/ }),
   ).toHaveCount(0);
 
   await page.goto(urlDe("motul", "/territorio"));

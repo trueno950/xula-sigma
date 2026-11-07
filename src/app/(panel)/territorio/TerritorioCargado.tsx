@@ -8,10 +8,10 @@ import { opcionesDeCallesDelMunicipio } from "@/modules/territorio/ui/vistaDeDom
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { Aviso, PaginaDePanel } from "@/shared/ui";
 import { accionesDeRaiz } from "./AccionesDeRaiz";
+import { ConfirmacionDeExito } from "./ConfirmacionDeExito";
 import { cabeceraDeLugar } from "./cabeceraDeLugar";
 import type { CargaDeTerritorio } from "./cargaDeTerritorio";
 import { EnlacesDeLaEntrada } from "./EnlacesDeLaEntrada";
-import { MENSAJE_DE_CONFIRMACION } from "./mensajeDeConfirmacion";
 import type { ParametrosDeTerritorio } from "./parametros";
 import { RegistroDeDomicilio } from "./RegistroDeDomicilio";
 import { VistaDeLugar } from "./VistaDeLugar";
@@ -64,7 +64,13 @@ export const TerritorioCargado = ({
     >
       {raiz ? null : <EnlacesDeLaEntrada />}
       {error ? <Aviso tono="error">{error}</Aviso> : null}
-      {ok ? <Aviso tono="exito">{MENSAJE_DE_CONFIRMACION[ok]}</Aviso> : null}
+      {ok ? (
+        <ConfirmacionDeExito
+          ok={ok}
+          nuevo={parametros.nuevo}
+          lugares={lugares}
+        />
+      ) : null}
 
       {!raiz ? (
         <>

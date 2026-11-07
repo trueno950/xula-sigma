@@ -54,4 +54,25 @@ describe("altaDeLugarAction", () => {
       altaDeLugarAction(formulario({ tipo: "comisaria", nombre: "X" })),
     ).rejects.toThrow("No+se+pudo+completar+el+alta.+Intente+de+nuevo.");
   });
+
+  it("el exito lleva al lugar recien creado en `nuevo`, solo su id", async () => {
+    const NUEVO = "55555555-5555-4555-8555-555555555555";
+    const RAIZ = "11111111-1111-4111-8111-111111111111";
+    altaDeLugarMock.mockResolvedValue({ id: NUEVO });
+
+    await expect(
+      altaDeLugarAction(
+        formulario({
+          tipo: "colonia",
+          nombre: "Colonia Prueba",
+          padreId: RAIZ,
+          raiz: RAIZ,
+          vista: "lugares",
+          accion: "lugar",
+        }),
+      ),
+    ).rejects.toThrow(
+      `REDIRECT:/territorio?raiz=${RAIZ}&vista=lugares&accion=lugar&ok=lugar-creado&nuevo=${NUEVO}`,
+    );
+  });
 });

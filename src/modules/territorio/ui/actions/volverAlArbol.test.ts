@@ -44,6 +44,19 @@ describe("rutaDelArbol", () => {
     );
   });
 
+  it("escribe el lugar recien creado despues de la clave", () => {
+    expect(rutaDelArbol({ raiz: "r1", ok: "lugar-creado", nuevo: "n1" })).toBe(
+      "/territorio?raiz=r1&ok=lugar-creado&nuevo=n1",
+    );
+  });
+
+  it("navegacionDe no lee `nuevo`: solo el alta de lugar lo pone", () => {
+    const formulario = new FormData();
+    formulario.set("nuevo", "11111111-1111-4111-8111-111111111111");
+
+    expect(navegacionDe(formulario)).not.toHaveProperty("nuevo");
+  });
+
   /**
    * El borde de entrada de una clave: `ok` sale de la URL y vuelve a ella.
    */
