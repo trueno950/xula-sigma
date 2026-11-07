@@ -70,6 +70,23 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
     );
   });
 
+  /**
+   * El marcador decia «Sin colonia: Tepakan» con valor vacio, junto a la
+   * opcion explicita: dos «Sin colonia», y la vacia termina en
+   * `ColoniaRequeridaError` cuando el asentamiento tiene colonias.
+   */
+  it("dentro de una colonia ofrece un solo «Sin colonia»", () => {
+    const html = renderFormulario({
+      id: coloniaId,
+      tipo: "colonia",
+      nombre: "Pablo",
+    });
+
+    expect(html.match(/<option[^>]*>Sin colonia/g)).toHaveLength(1);
+    expect(html).toContain('value="sin-colonia"');
+    expect(html).not.toContain("Sin colonia: Tepakan");
+  });
+
   it("en una colonia prefija el nodo y el resumen nombra la cadena", () => {
     const html = renderFormulario({
       id: coloniaId,

@@ -136,9 +136,21 @@ describe("zonaDelFormulario", () => {
 
     expect(zona.opciones).toEqual([]);
     expect(zona.sinZonas).toBe(true);
-    expect(zona.marcador).toBe("Sin colonias registradas");
     expect(zona.resumen).toBe(
       "Todavía no hay colonias en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.",
+    );
+  });
+
+  it("un asentamiento sin colonias lo nombra a el, no al municipio", () => {
+    const zona = zonaDelFormulario(
+      lugares.filter((lugar) => lugar.id === motulId),
+      { id: motulId, nombre: "Motul" },
+      { id: motulId, tipo: "cabecera" },
+    );
+
+    expect(zona.sinZonas).toBe(true);
+    expect(zona.resumen).toBe(
+      "Motul no tiene colonias; el domicilio queda en Motul.",
     );
   });
 

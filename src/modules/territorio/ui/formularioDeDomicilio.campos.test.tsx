@@ -128,17 +128,17 @@ describe("FormularioDeDomicilio: municipio sin zonas", () => {
   );
 
   /**
-   * Sin zonas el `<select>` de Colonia salia con el marcador solo, y eso se
-   * lee como un campo roto. Ahora lo dice y el campo se deshabilita en vez
-   * de ofrecer una lista que no existe.
+   * Un `<select>` deshabilitado con una sola opcion muerta se lee como un
+   * control roto: sin colonias que elegir no hay select, hay una linea, y
+   * el campo viaja vacio, que el alta lee como "el asentamiento de la calle".
    */
-  it("explica por que no hay colonias que elegir y deshabilita el campo", () => {
-    expect(html).toContain("Colonia (opcional)");
-    expect(html).toContain("Sin colonias registradas");
+  it("explica por que no hay colonias que elegir sin un select muerto", () => {
     expect(html).toContain(
       "Todavía no hay colonias en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.",
     );
-    expect(html).toMatch(/id="domicilio-zona-id"[^>]*disabled/);
+    expect(html).not.toContain("Sin colonias registradas");
+    expect(html).not.toMatch(/<select[^>]*name="lugarId"/);
+    expect(html).toContain('type="hidden" name="lugarId" value=""');
   });
 
   it("con zonas el campo de Colonia sigue habilitado", () => {

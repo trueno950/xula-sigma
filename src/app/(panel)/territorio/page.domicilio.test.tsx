@@ -134,8 +134,9 @@ describe("El alta de domicilio desde la entrada", () => {
     );
     expect(html).not.toContain('href="/territorio?accion=domicilio"');
     // Un municipio recien creado tiene una cabecera y ninguna colonia: ahi
-    // el `<select>` de Colonia salia con el marcador solo, sin decir por que.
-    expect(html).toContain("Sin colonias registradas");
+    // no hay `<select>` de Colonia, hay una linea que dice por que.
+    expect(html).not.toContain("Sin colonias registradas");
+    expect(html).not.toMatch(/<select[^>]*name="lugarId"/);
     expect(html).toContain("Todavía no hay colonias en el municipio");
     expect(html).toContain(
       "Se guarda en el asentamiento de la calle porque todavía no hay colonias registradas. Cada calle pertenece al catálogo del asentamiento indicado junto a ella.",

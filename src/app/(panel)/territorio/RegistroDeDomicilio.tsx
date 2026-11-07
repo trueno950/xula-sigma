@@ -1,6 +1,7 @@
 import { FormularioDeDomicilio } from "@/modules/territorio/ui";
 import { ANCLA_DE_ALTA } from "@/modules/territorio/ui/anclaDeAlta";
 import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
+import type { AsentamientoDeCalle } from "@/modules/territorio/ui/coloniasDelAlta";
 import { PanelDeAccion } from "@/modules/territorio/ui/PanelDeAccion";
 import type { NivelDelFormulario } from "@/modules/territorio/ui/zonaDelFormulario";
 import type { OpcionDeLista } from "@/shared/ui";
@@ -20,6 +21,8 @@ type Props = {
   /** La ficha a la que vuelve el alta; ver `regresoAFicha.ts`. */
   regreso?: string | undefined;
   borrador?: BorradorDeDomicilio | null | undefined;
+  /** Ver `asentamientosDeCalles`: sin el, la colonia no se acorta. */
+  asentamientoDeCalle?: AsentamientoDeCalle | undefined;
 };
 
 export function RegistroDeDomicilio({
@@ -32,6 +35,7 @@ export function RegistroDeDomicilio({
   nodo,
   regreso,
   borrador,
+  asentamientoDeCalle,
 }: Props) {
   return (
     <PanelDeAccion titulo="Registrar domicilio" id={ANCLA_DE_ALTA}>
@@ -45,6 +49,7 @@ export function RegistroDeDomicilio({
         nodo={nodo}
         regreso={regreso}
         borrador={borrador}
+        asentamientoDeCalle={asentamientoDeCalle}
       />
     </PanelDeAccion>
   );
