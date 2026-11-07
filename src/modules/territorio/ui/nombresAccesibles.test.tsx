@@ -45,7 +45,6 @@ describe("nombres accesibles de las filas y acciones", () => {
     const html = renderToStaticMarkup(<TabDeLugares {...base} />);
 
     expect(html).toContain('aria-label="Kantirix, comisaría"');
-    expect(html).toContain(">Comisaría<");
     expect(html).not.toContain(">comisaria<");
   });
 

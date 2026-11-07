@@ -95,7 +95,7 @@ describe("FormularioDeDomicilio: orden de campos y zona", () => {
     });
 
     expect(html).toContain(
-      "Sin cambiar la colonia, se guarda en Colonia Pablo · Tepakan.",
+      "Sin cambiar la colonia, se guarda en la colonia Pablo (Tepakan).",
     );
     expect(html).not.toContain("Se guardara en:");
     expect(html).toContain(`value="${coloniaId}" selected=""`);

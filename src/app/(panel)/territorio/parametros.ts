@@ -39,6 +39,8 @@ export type ParametrosDeTerritorio = {
   accion: AccionDeNodo | undefined;
   error: string | undefined;
   ok: ClaveDeConfirmacion | undefined;
+  /** `?nuevo=`: el lugar que el alta acaba de crear, para enlazarlo. */
+  nuevo?: LugarId | undefined;
   vista: TabDeLugar;
   regreso?: string | undefined;
   /** El token opaco de lo capturado en un rechazo; ver `borradorEnCookie.ts`. */
@@ -81,6 +83,7 @@ const esquemaDeParametros = z.object({
     .catch(undefined),
   error: z.string().optional().catch(undefined),
   ok: z.enum(CLAVES_DE_CONFIRMACION).optional().catch(undefined),
+  nuevo: z.uuid().optional().catch(undefined),
   regreso: esquemaDeRegreso.optional().catch(undefined),
   borrador: z.uuid().optional().catch(undefined),
 });
@@ -120,6 +123,7 @@ export const leerParametros = (
     // Un fallo y un exito juntos no pasan solos: el error gana, y la
     // pantalla no celebra una accion que el mismo URL dice que fallo.
     ok: datos.error ? undefined : datos.ok,
+    nuevo: datos.nuevo ? comoLugarId(datos.nuevo) : undefined,
     // La accion fija su pestana; sin accion vale la elegida (o Lugares).
     vista: accion ? pestanaDeAccion[accion] : (datos.vista ?? "lugares"),
     regreso: datos.regreso,

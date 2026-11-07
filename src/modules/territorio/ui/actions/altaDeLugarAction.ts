@@ -61,15 +61,19 @@ export async function altaDeLugarAction(formData: FormData): Promise<void> {
   }
 
   const { tipo, nombre, padreId } = analisis.data;
+  // El id viaja a la URL para que la confirmacion enlace al lugar nuevo; el
+  // nombre no, y la pagina lo busca en lo que ya leyo bajo RLS.
+  let creado: { id: string } | undefined;
 
   await ejecutarEnContexto(
     navegacion,
-    (contexto) =>
-      altaDeLugar(
+    async (contexto) => {
+      creado = await altaDeLugar(
         { tipo, nombre, padreId: padreId ? comoLugarId(padreId) : null },
         contexto,
-      ),
+      );
+    },
     mensajeDeError,
   );
-  confirmarEnArbol(navegacion, "lugar-creado");
+  confirmarEnArbol(navegacion, "lugar-creado", creado?.id);
 }

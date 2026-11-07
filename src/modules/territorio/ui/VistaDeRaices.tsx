@@ -12,6 +12,7 @@ import { armarArbol, type LugarDelArbol } from "./arbolDeLugares";
 import { BuscadorDeLugares } from "./BuscadorDeLugares";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 import { NodoDelArbol } from "./NodoDelArbol";
+import { tiposParaElAlta, tituloDelAlta, verboDelAlta } from "./tiposDelAlta";
 
 export type { LugarDelArbol } from "./arbolDeLugares";
 
@@ -60,6 +61,7 @@ export function VistaDeRaices({
   const arbol = armarArbol({ raices, lugares, busqueda });
   const estado = estadoDeLista({ total: arbol.length, filtro: busqueda });
   const cuentasPorLugar = new Map(cuentas.map((c) => [c.lugarId, c]));
+  const tipos = tiposParaElAlta({ hayCabecera });
 
   return (
     <div className="flex flex-col gap-4 [&>a]:self-start max-sm:[&>a]:self-stretch">
@@ -71,7 +73,7 @@ export function VistaDeRaices({
       ) : null}
 
       {puedeEscribir && altaAbierta ? (
-        <Panel titulo="Agregar asentamiento" id={ANCLA_DE_ALTA}>
+        <Panel titulo={tituloDelAlta({ tipos })} id={ANCLA_DE_ALTA}>
           <FormularioDeAltaDeLugar
             hayCabecera={hayCabecera}
             volverA="/territorio"
@@ -111,7 +113,7 @@ export function VistaDeRaices({
           variante="secundaria"
         >
           <Plus size={18} weight="bold" aria-hidden="true" />
-          Agregar asentamiento
+          {verboDelAlta(tipos) ?? "Agregar asentamiento"}
         </EnlaceDeAccion>
       ) : null}
     </div>

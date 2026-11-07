@@ -3,7 +3,11 @@ import type { TipoDeLugar } from "../domain";
 import { altaDeLugarAction } from "./actions/altaDeLugarAction";
 import { opcionesDeTipos } from "./opciones";
 import { PieDeFormulario } from "./PieDeFormulario";
-import { tiposParaElAlta } from "./tiposDelAlta";
+import {
+  tiposParaElAlta,
+  tipoUnicoDelAlta,
+  verboDelAlta,
+} from "./tiposDelAlta";
 
 type Props = {
   /**
@@ -40,7 +44,11 @@ type Props = {
  * todos modos: esconder una opcion no es una regla (`05-seguridad.md`
  * seccion 6, mismo criterio que los botones por rol).
  *
- * Sin titulo propio: lo pone el `Panel` que lo envuelve.
+ * Con un solo tipo posible no pregunta: lo manda oculto y el envio lo
+ * nombra. Un select de una sola opcion era un paso de mas que, enviado
+ * vacio, frenaba el navegador.
+ *
+ * Sin titulo propio: lo pone el `Panel` que lo envuelve (`tituloDelAlta`).
  */
 export function FormularioDeAltaDeLugar({
   raiz,
@@ -54,6 +62,7 @@ export function FormularioDeAltaDeLugar({
     hayCabecera,
     ...(tipoDelPadre ? { tipoDelPadre } : {}),
   });
+  const tipoUnico = tipoUnicoDelAlta(tipos);
 
   return (
     <form action={altaDeLugarAction} className="flex flex-col gap-4">
@@ -63,25 +72,29 @@ export function FormularioDeAltaDeLugar({
       <input type="hidden" name="accion" value="lugar" />
       {padreId ? <input type="hidden" name="padreId" value={padreId} /> : null}
 
-      <CampoDeLista
-        id="lugar-tipo"
-        name="tipo"
-        etiqueta="Tipo"
-        marcador="Seleccione un tipo"
-        opciones={opcionesDeTipos(tipos)}
-        {...(tipoDelPadre
-          ? {}
-          : {
-              ayuda:
-                "Cabecera es el pueblo; comisaría, cada asentamiento rural. Lo de adentro se agrega entrando al lugar.",
-            })}
-      />
+      {tipoUnico ? (
+        <input type="hidden" name="tipo" value={tipoUnico} />
+      ) : (
+        <CampoDeLista
+          id="lugar-tipo"
+          name="tipo"
+          etiqueta="Tipo"
+          marcador="Seleccione un tipo"
+          opciones={opcionesDeTipos(tipos)}
+          {...(tipoDelPadre
+            ? {}
+            : {
+                ayuda:
+                  "Cabecera es el pueblo; comisaría, cada asentamiento rural. Lo de adentro se agrega entrando al lugar.",
+              })}
+        />
+      )}
 
       <Campo id="lugar-nombre" name="nombre" etiqueta="Nombre" required />
 
       <PieDeFormulario volverA={volverA}>
         <Boton type="submit" variante="primaria">
-          Dar de alta
+          {verboDelAlta(tipos) ?? "Dar de alta"}
         </Boton>
       </PieDeFormulario>
     </form>

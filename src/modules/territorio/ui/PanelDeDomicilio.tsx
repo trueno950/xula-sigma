@@ -7,12 +7,11 @@ import type {
 } from "../application/puertos";
 import type { DomicilioGuardado } from "../application/puertosDeDomicilios";
 import type { ResidenteDeDomicilio } from "../application/puertosDeResidencias";
-import { calleYNumero, type LugarId } from "../domain";
+import type { LugarId } from "../domain";
 import {
   type AccionDeDomicilio,
   AccionesDeDomicilio,
 } from "./AccionesDeDomicilio";
-import type { BorradorDeDomicilio } from "./borradorDeDomicilio";
 import {
   type DomicilioDeLaPestana,
   hermanosDeDireccion,
@@ -23,8 +22,7 @@ import { HermanosDeDireccion } from "./HermanosDeDireccion";
 import type { AccionDeNodo } from "./PanelDeNodo";
 import { type PermisosDeTerritorio, puedeAbrir } from "./permisos";
 import { ResidentesDeDomicilio } from "./ResidentesDeDomicilio";
-import { lugaresDeNodos } from "./vistaDeDomicilios";
-import { zonaConInicial } from "./zonaDelFormulario";
+import { direccionDeDomicilio } from "./vistaDeCorreccion";
 
 type Props = {
   raizId: LugarId;
@@ -39,7 +37,6 @@ type Props = {
   residentes: readonly ResidenteDeDomicilio[] | null;
   /** Los vivos con su calle y su numero, leidos en el subarbol del asentamiento. */
   mismaDireccion: readonly DomicilioDeLaPestana[];
-  borrador?: BorradorDeDomicilio | null | undefined;
 };
 
 const esAccionDeDomicilio = (
@@ -64,13 +61,8 @@ export function PanelDeDomicilio({
   permisos,
   residentes,
   mismaDireccion,
-  borrador,
 }: Props) {
-  const asentamiento = lugares.find((posible) => posible.id === raizId);
-  const calle =
-    calles.find((posible) => posible.id === domicilio.calleId)?.nombre ??
-    "Calle desconocida";
-  const direccion = calleYNumero({ calle, numero: domicilio.numero });
+  const direccion = direccionDeDomicilio(domicilio, calles);
   const accionAbierta =
     esAccionDeDomicilio(accion) && puedeAbrir(accion, permisos)
       ? accion
@@ -106,18 +98,9 @@ export function PanelDeDomicilio({
         nodoId={nodoId}
         domicilio={domicilio}
         direccion={direccion}
-        calles={calles}
-        zona={zonaConInicial(
-          lugaresDeNodos(nodos),
-          asentamiento
-            ? { id: raizId, nombre: asentamiento.nombre }
-            : undefined,
-          domicilio.lugarId,
-        )}
         permisos={permisos}
         accionAbierta={accionAbierta}
         residentes={residentes}
-        borrador={borrador}
       />
 
       <HermanosDeDireccion

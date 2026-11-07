@@ -116,6 +116,8 @@ describe("corregirDomicilioAction vuelve al lugar donde quedo la direccion", () 
       expect(destino.searchParams.get("domicilio")).toBe(DOMICILIO);
       expect(destino.searchParams.get("ok")).toBe("domicilio-corregido");
       expect(destino.searchParams.has("error")).toBe(false);
+      // La correccion es su propia vista: guardada, se vuelve al panel.
+      expect(destino.searchParams.has("accion")).toBe(false);
     },
   );
 
@@ -132,6 +134,8 @@ describe("corregirDomicilioAction vuelve al lugar donde quedo la direccion", () 
       new UbicacionIncoherenteError().message,
     );
     expect(destino.searchParams.get("borrador")).toBeTruthy();
+    // El rechazo reabre la vista de correccion, no el panel.
+    expect(destino.searchParams.get("accion")).toBe("corregirDomicilio");
     expect(destino.searchParams.has("ok")).toBe(false);
     expect(mocks.set).toHaveBeenCalledOnce();
   });

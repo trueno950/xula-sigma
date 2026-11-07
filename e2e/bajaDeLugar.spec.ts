@@ -117,13 +117,20 @@ async function altaDeLugar(
   tipo: string,
   nombre: string,
 ) {
-  await page.getByLabel("Tipo").selectOption(tipo);
+  // Con un solo tipo posible el alta no muestra el select: lo manda oculto
+  // y el boton lo nombra. En la raiz depende de si ya hay cabecera.
+  const selector = page.getByLabel("Tipo");
+  if ((await selector.count()) > 0) await selector.selectOption(tipo);
   // Por rol y exacto: `getByLabel("Nombre")` tambien matchea el buscador del
   // arbol ("Buscar lugar por **nombre**"), que aparece apenas el municipio
   // tiene lugares. Hoy esta spec corre antes de la que los siembra y no lo
   // nota; con otro orden, el localizador se vuelve ambiguo.
   await page.getByRole("textbox", { name: "Nombre", exact: true }).fill(nombre);
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page
+    .getByRole("button", {
+      name: /^(Dar de alta|Agregar (cabecera|comisaría|colonia))$/,
+    })
+    .click();
   await page.waitForLoadState("networkidle");
 }
 
