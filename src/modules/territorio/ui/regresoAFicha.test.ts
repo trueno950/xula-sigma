@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { enlaceDeAltaDesdeFicha, esquemaDeRegreso } from "./regresoAFicha";
+import {
+  enlaceDeAltaDesdeFicha,
+  esquemaDeRegreso,
+  regresoConDomicilioCreado,
+} from "./regresoAFicha";
 
 const PERSONA = "11111111-1111-4111-8111-111111111111";
 
@@ -29,5 +33,15 @@ describe("enlaceDeAltaDesdeFicha", () => {
     expect(enlace.pathname).toBe("/territorio");
     expect(enlace.searchParams.get("accion")).toBe("domicilio");
     expect(enlace.searchParams.get("regreso")).toBe(`/padron/${PERSONA}`);
+  });
+});
+
+describe("regresoConDomicilioCreado", () => {
+  it("vuelve a la ficha con el aviso y solo el id del domicilio, nunca la direccion", () => {
+    const DOMICILIO = "22222222-2222-4222-8222-222222222222";
+
+    expect(regresoConDomicilioCreado(`/padron/${PERSONA}`, DOMICILIO)).toBe(
+      `/padron/${PERSONA}?ok=domicilio-creado&domicilio=${DOMICILIO}`,
+    );
   });
 });

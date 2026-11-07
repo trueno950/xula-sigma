@@ -14,6 +14,7 @@ import {
 } from "../../domain";
 import { borradorDeAlta, descartarBorrador } from "../borradorEnCookie";
 import { VALOR_SIN_COLONIA } from "../declaracionDeDestino";
+import { regresoConDomicilioCreado } from "../regresoAFicha";
 import { ejecutarEnContexto } from "./ejecutarEnContexto";
 import {
   conToken,
@@ -95,14 +96,20 @@ export async function altaDeDomicilioAction(formData: FormData): Promise<void> {
     return;
   }
 
+  // `ejecutarEnContexto` descarta lo que devuelve el caso de uso.
+  let domicilioCreado = "";
   await ejecutarEnContexto(
     conToken(navegacion, borrador),
-    (contexto) => altaDeDomicilio(comandoDe(analisis.data), contexto),
+    async (contexto) => {
+      const { id } = await altaDeDomicilio(comandoDe(analisis.data), contexto);
+      domicilioCreado = id;
+    },
     guardandoBorrador(borrador, mensajeDeError),
   );
   await descartarBorrador();
   // Pedida desde la ficha de una persona, el alta vuelve ahi para seguir
   // con la mudanza; `navegacionDe` ya descarto cualquier otro destino.
-  if (navegacion.regreso) redirect(`${navegacion.regreso}?ok=domicilio-creado`);
+  if (navegacion.regreso)
+    redirect(regresoConDomicilioCreado(navegacion.regreso, domicilioCreado));
   confirmarEnArbol(navegacion, "domicilio-creado");
 }

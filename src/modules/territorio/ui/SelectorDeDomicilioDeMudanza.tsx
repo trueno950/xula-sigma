@@ -10,6 +10,8 @@ import { buscarDomiciliosAction } from "./actions/buscarDomiciliosAction";
 
 type Props = {
   domicilios: readonly OpcionDeLista[];
+  /** Ya elegido al pintar; con valor, la isla se queda en la lista. */
+  preseleccionado?: string | undefined;
 };
 
 type Modo = "lista" | "buscador";
@@ -24,7 +26,10 @@ type Modo = "lista" | "buscador";
  * todavía: lo que se eligió antes de hidratar vive en el DOM, no en React,
  * y cambiar de control lo borraría.
  */
-export function SelectorDeDomicilioDeMudanza({ domicilios }: Props) {
+export function SelectorDeDomicilioDeMudanza({
+  domicilios,
+  preseleccionado,
+}: Props) {
   const lista = useRef<HTMLSelectElement>(null);
   const [modo, setModo] = useState<Modo>("lista");
 
@@ -65,6 +70,7 @@ export function SelectorDeDomicilioDeMudanza({ domicilios }: Props) {
           : "Elija un domicilio..."
       }
       opciones={domicilios}
+      defaultValue={preseleccionado ?? ""}
       {...(sinDomicilios
         ? { ayuda: "Primero cree un domicilio desde Territorio." }
         : {})}

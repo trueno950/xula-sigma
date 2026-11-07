@@ -20,6 +20,19 @@ export const esquemaDeRegreso = z
 export const fichaDePersona = (personaId: string): string =>
   `${PREFIJO_DE_FICHA}${personaId}`;
 
+/**
+ * La vuelta del alta a la ficha. Viaja el id del domicilio nuevo, que la
+ * ficha vuelve a validar contra su municipio; la direccion no va en la URL.
+ */
+export const regresoConDomicilioCreado = (
+  regreso: string,
+  domicilioId: string,
+): string =>
+  `${regreso}?${new URLSearchParams({
+    ok: "domicilio-creado",
+    domicilio: domicilioId,
+  }).toString()}`;
+
 /** El alta de domicilio de territorio, con la ficha de la persona como regreso. */
 export const enlaceDeAltaDesdeFicha = (personaId: string): string =>
   `/territorio?${new URLSearchParams({

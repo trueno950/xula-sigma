@@ -28,10 +28,11 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-// `ok` solo lo pone el alta de domicilio abierta desde esta ficha.
+// `ok` y `domicilio` solo los pone el alta de domicilio abierta desde esta ficha.
 const esquemaDeParametros = z.object({
   error: z.string().optional().catch(undefined),
   ok: z.literal("domicilio-creado").optional().catch(undefined),
+  domicilio: z.uuid().optional().catch(undefined),
 });
 const esquemaDeId = z.string().uuid();
 
@@ -83,6 +84,12 @@ export default async function PaginaDeDetalleDePersona({
   const historial = await historialDeResidencias(persona.id, contexto);
   // `listar` no tiene LIMIT: solo se paga cuando la mudanza se muestra.
   const domicilios = puedeActuar ? await listarDomicilios(contexto) : [];
+  // El id llega en la URL: solo se preselecciona si es un domicilio que el
+  // municipio ya devolvio bajo su tenant. Otro id se ignora sin error.
+  const pedido = analisis.success ? analisis.data.domicilio : undefined;
+  const domicilioPreseleccionado = domicilios.find(
+    (domicilio) => domicilio.id === pedido,
+  )?.id;
   const nombre = `${persona.nombres} ${persona.primerApellido}${
     persona.segundoApellido ? ` ${persona.segundoApellido}` : ""
   }`;
@@ -141,6 +148,7 @@ export default async function PaginaDeDetalleDePersona({
           domicilios={domicilios}
           sinHistorial={historial.length === 0}
           domicilioRecienCreado={domicilioRecienCreado}
+          {...(domicilioPreseleccionado ? { domicilioPreseleccionado } : {})}
         />
       ) : null}
     </PaginaDePanel>

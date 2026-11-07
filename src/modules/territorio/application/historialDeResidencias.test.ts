@@ -105,15 +105,15 @@ describe("historialDeResidencias", () => {
     expect(resultado.map(({ id }) => id)).toEqual([residenciaGuardada.id]);
   });
 
-  it("cada residencia trae la direccion escrita, el mismo texto que imprime la constancia", async () => {
+  it("cada residencia trae la etiqueta de domicilio de las listas, con «#» y sin transversales ni referencia", async () => {
     vi.mocked(lecturaDePersonas.identidadesDe).mockResolvedValue([personaId]);
     vi.mocked(repositorio.historialDe).mockResolvedValue([residenciaGuardada]);
     vi.mocked(lectorDeDirecciones.partesDe).mockResolvedValue({
-      calle: "Calle 20",
-      numero: "10",
-      entreCalleA: null,
-      entreCalleB: null,
-      referencia: null,
+      calle: "Calle 38",
+      numero: "157",
+      entreCalleA: "Calle 21",
+      entreCalleB: "Calle 23",
+      referencia: "Porton verde",
       ancestros: ["Colonia Centro", "Motul"],
     });
 
@@ -124,7 +124,26 @@ describe("historialDeResidencias", () => {
       residenciaGuardada.domicilioId,
     );
     expect(resultado).toEqual([
-      { ...residenciaGuardada, texto: "Calle 20 10, Colonia Centro, Motul" },
+      { ...residenciaGuardada, texto: "Calle 38 #157, Colonia Centro, Motul" },
+    ]);
+  });
+
+  it("sin numero ni colonia la etiqueta dice «sin número» y el asentamiento una sola vez", async () => {
+    vi.mocked(lecturaDePersonas.identidadesDe).mockResolvedValue([personaId]);
+    vi.mocked(repositorio.historialDe).mockResolvedValue([residenciaGuardada]);
+    vi.mocked(lectorDeDirecciones.partesDe).mockResolvedValue({
+      calle: "Calle 31",
+      numero: null,
+      entreCalleA: null,
+      entreCalleB: null,
+      referencia: null,
+      ancestros: ["Motul"],
+    });
+
+    const resultado = await historialDeResidencias()(personaId, contexto);
+
+    expect(resultado.map(({ texto }) => texto)).toEqual([
+      "Calle 31 sin número, Motul",
     ]);
   });
 
