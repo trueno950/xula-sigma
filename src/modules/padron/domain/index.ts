@@ -1,5 +1,6 @@
 export * from "./criteriosDeBusqueda";
 export * from "./curp";
+export * from "./nombreCompleto";
 export * from "./normalizarParaBusqueda";
 export * from "./ordenDePersonas";
 export * from "./paginacion";

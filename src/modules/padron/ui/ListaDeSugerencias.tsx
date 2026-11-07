@@ -1,14 +1,10 @@
 import { Warning } from "@phosphor-icons/react";
 import { CLASES_DE_ETIQUETA } from "@/shared/ui";
+import { nombreCompletoDe } from "../domain";
 import type { SugerenciaDeDuplicado } from "./actions/sugerirDuplicados.action";
 
 export const ID_DE_LISTA = "sugerencias-de-duplicado";
 export const idDeOpcion = (indice: number) => `${ID_DE_LISTA}-${indice}`;
-
-const nombreCompleto = (persona: SugerenciaDeDuplicado) =>
-  [persona.nombres, persona.primerApellido, persona.segundoApellido]
-    .filter(Boolean)
-    .join(" ");
 
 type Props = {
   sugerencias: readonly SugerenciaDeDuplicado[];
@@ -67,7 +63,7 @@ export function ListaDeSugerencias({ sugerencias, activa }: Props) {
             }`}
           >
             <span className="text-[15px] font-medium text-caliza-tinta">
-              {nombreCompleto(persona)}
+              {nombreCompletoDe(persona)}
             </span>
             <a
               href={`/padron/${persona.id}`}
