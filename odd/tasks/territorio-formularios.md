@@ -38,9 +38,9 @@ PR B de la auditoría de flujos del 2026-11-07. Rama
 
 ## Tasks
 
-- [ ] **T1** · S1,S3 · delegado (paralelo) — Alta de lugar sin select de un solo tipo; lista y confirmación.
-- [ ] **T2** · S2,S4 · delegado (paralelo) — Corrección de domicilio a ancho completo; textos del destino.
-- [ ] **T3** · S1-S4 · suite, E2E, capturas, revisión, PR con issue aprobado.
+- [x] **T1** · S1,S3 · delegado (paralelo) — Alta de lugar sin select de un solo tipo; lista y confirmación. Commit: `a520889`.
+- [x] **T2** · S2,S4 · delegado (paralelo) — Corrección de domicilio a ancho completo; textos del destino. Commit: `5b9fce7`.
+- [x] **T3** · S1-S4 · suite, E2E, capturas, revisión, PR con issue aprobado.
 
 ## Log
 
@@ -49,3 +49,5 @@ PR B de la auditoría de flujos del 2026-11-07. Rama
   formulario de lugar sin selector y la corrección a ancho completo» y los
   detalles menores «donde toquen esos mismos archivos». Pedido original en
   L1 de `odd/tasks/territorio-acciones.md`.
+
+- **L2** — 2026-11-07. T1: con un solo tipo posible el formulario manda `tipo` oculto y dice «Nueva colonia en Kiní» / «Agregar colonia» (en la raíz con cabecera, «Nueva comisaría» / «Agregar comisaría»; con dos tipos sigue el select y «Agregar asentamiento»); la lista de lugares se ordena con `localeCompare("es")` y omite «Tipo» cuando todas las filas son del mismo tipo; el alta redirige con `?ok=lugar-creado&nuevo=<uuid>` y `ConfirmacionDeExito` enlaza al lugar con el nombre tomado de los lugares cargados, nunca de la URL. T2: la corrección abre su propia vista (`?accion=corregirDomicilio`) a ancho completo, con dos columnas desde `md` (la calle supera 600 px a 1366×768), «Cancelar» y el panel solo con el enlace «Corregir»; un rechazo vuelve a esa vista con el borrador; el éxito vuelve al panel; el destino dice «Se guarda en la colonia Centro.» sin repetir el prefijo. Desvío: el enlace va junto al `Aviso`, que solo acepta texto. `pnpm check` exit 0; suite completa 522 archivos y 2693 tests; E2E 34/34. Revisiones nativas aprobadas y reconocidas: T1 `review-6c9615ce5a41c452`, T2 `review-a981eb75b07a7113`, rama completa `review-392732d1b461e9a4`. Advertencias: E2E con selección de tipo condicional; «Corregir» no conserva `regreso`.
