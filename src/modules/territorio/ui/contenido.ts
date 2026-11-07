@@ -89,15 +89,6 @@ export const hijosDirectosDe = (
 /** El nodo de un domicilio: el subarbol le da la direccion ya resuelta. */
 export type NodoDomicilio = Extract<NodoDeSubarbol, { clase: "domicilio" }>;
 
-export const domiciliosDirectosDe = (
-  nodos: readonly NodoDeSubarbol[],
-  lugarId: LugarId,
-): readonly NodoDomicilio[] =>
-  nodos.filter(
-    (nodo): nodo is NodoDomicilio =>
-      nodo.clase === "domicilio" && nodo.lugarId === lugarId,
-  );
-
 /**
  * Los domicilios de todo el subarbol del lugar: lo que cuenta la pestana
  * Domicilios, para que el numero y la lista no se contradigan.

@@ -85,11 +85,9 @@ export type DomicilioDelRegistro = {
 };
 
 /**
- * `porLugarYSubarbol` reusa el mismo `WITH RECURSIVE` que
+ * `porLugarYSubarbol` baja por la misma jerarquia que
  * `RepositorioDeLugares.subarbol` (tasks.md 3.12), pero devuelve el detalle
- * completo del domicilio en vez del nodo minimo del arbol. `porCalle` no
- * necesita CTE: `calleId` ya identifica la fila sin bajar por jerarquia
- * (design.md seccion 12, "POR CALLE").
+ * completo del domicilio en vez del nodo minimo del arbol.
  */
 export type RepositorioDeDomicilios = {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeDomicilio): Promise<void>;
@@ -119,10 +117,6 @@ export type RepositorioDeDomicilios = {
   porLugarYSubarbol(
     tx: TransaccionTenant,
     lugarId: LugarId,
-  ): Promise<readonly DomicilioGuardado[]>;
-  porCalle(
-    tx: TransaccionTenant,
-    calleId: CalleId,
   ): Promise<readonly DomicilioGuardado[]>;
   registro(
     tx: TransaccionTenant,

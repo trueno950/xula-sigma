@@ -109,12 +109,7 @@ export const repositorioDeResidenciasSql: RepositorioDeResidencias = {
     return filas.map(aResidenciaGuardada);
   },
 
-  /**
-   * `domicilioIds` ya viene resuelto por el subarbol de
-   * `RepositorioDeDomicilios.porLugarYSubarbol` -la unica pieza recursiva-;
-   * aca solo queda filtrar `residencias` por esos ids con `hastaEn IS
-   * NULL` (design.md seccion 12, mismo motivo que 2.6).
-   */
+  /** Por que `domicilioIds` ya viene resuelto: `puertosDeResidencias.ts`. */
   async residentesDe(tx, domicilioIds) {
     if (domicilioIds.length === 0) return [];
 

@@ -1,6 +1,7 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import type { LectorDeUbicaciones } from "../application/puertosDeDirecciones";
 import { calles } from "./esquema";
+import { cteAscendientes } from "./jerarquiaDeLugaresSql";
 
 type FilaDeAncestro = {
   nombreAncestro: string;
@@ -13,10 +14,8 @@ type FilaDeAncestro = {
  * producen el mismo `NULL`, y es exactamente la diferencia que decide
  * `UbicacionInvalidaError` en `reportes` (Fase 4).
  *
- * 1. `WITH RECURSIVE` hacia arriba por `padre_id` desde `lugarId`, calcado
- *    de `lectorDeDireccionesSql.ts` con el mismo cinturon
- *    `profundidad < 8` y `baja_en IS NULL` -el arranque cambia: `lugares`
- *    directo en vez de `domicilios JOIN lugares`-. Cero filas -> `null`.
+ * 1. Hacia arriba por `padre_id` desde `lugarId`
+ *    (`jerarquiaDeLugaresSql.ts`). Cero filas -> `null`.
  * 2. Solo si `calleId !== null`: `SELECT nombre FROM calles WHERE id = $1`
  *    con el builder de Drizzle, activa (`baja_en IS NULL`). Cero filas ->
  *    `null` entero -mismo invariante que el punto 1, no un `calle: null`
@@ -26,16 +25,7 @@ type FilaDeAncestro = {
 export const lectorDeUbicacionesSql: LectorDeUbicaciones = {
   async partesDe(tx, lugarId, calleId) {
     const filasDeLugares = await tx.execute<FilaDeAncestro>(sql`
-      WITH RECURSIVE ascendientes AS (
-        SELECT l.id, l.nombre, l.padre_id, 0 AS profundidad
-          FROM lugares l
-         WHERE l.id = ${lugarId} AND l.baja_en IS NULL
-        UNION ALL
-        SELECT l.id, l.nombre, l.padre_id, a.profundidad + 1
-          FROM lugares l
-          JOIN ascendientes a ON l.id = a.padre_id
-         WHERE a.profundidad < 8 AND l.baja_en IS NULL
-      )
+      ${cteAscendientes(sql`${lugarId}`)}
       SELECT nombre AS "nombreAncestro"
         FROM ascendientes
        ORDER BY profundidad ASC

@@ -66,7 +66,7 @@ const crearDomicilioDePrueba = async () => {
 
 describe("baja y correccion de domicilios", () => {
   it("la baja logica esconde la fila de las cinco lecturas", async () => {
-    const { comisaria, calle, id } = await crearDomicilioDePrueba();
+    const { comisaria, id } = await crearDomicilioDePrueba();
 
     await darDeBajaDomicilio(id, contextoDe());
 
@@ -76,8 +76,11 @@ describe("baja y correccion de domicilios", () => {
     const porLugar = await enTenant((tx) =>
       repositorioDeDomiciliosSql.porLugarYSubarbol(tx, comisaria),
     );
-    const porCalle = await enTenant((tx) =>
-      repositorioDeDomiciliosSql.porCalle(tx, calle),
+    const registro = await enTenant((tx) =>
+      repositorioDeDomiciliosSql.registro(tx, {
+        limite: 50,
+        filtros: { raizId: comisaria },
+      }),
     );
     const listado = await enTenant((tx) =>
       repositorioDeDomiciliosSql.listar(tx),
@@ -92,7 +95,7 @@ describe("baja y correccion de domicilios", () => {
 
     expect(porId).toBeNull();
     expect(porLugar.map((d) => d.id)).not.toContain(id);
-    expect(porCalle.map((d) => d.id)).not.toContain(id);
+    expect(registro.map((d) => d.id)).not.toContain(id);
     expect(listado.map((d) => d.id)).not.toContain(id);
     expect(nodos.map((nodo) => nodo.id)).not.toContain(id);
   });

@@ -74,29 +74,42 @@ describe("ubicarCalle", () => {
     );
   });
 
-  it("el evento de ubicación guarda el punto anterior y el nuevo", async () => {
-    vi.mocked(repositorio.actualizar).mockResolvedValue({
-      ...calleConPunto,
-      punto: puntoNuevo,
-    });
+  it("redondea el punto y deja evento, aviso y bitacora en la misma transaccion", async () => {
+    vi.mocked(repositorio.actualizar).mockResolvedValue(calleConPunto);
 
     await crearUbicarCalle(repositorio)(
       calleId,
-      puntoNuevo,
+      { latitud: 20.9400004, longitud: -89.6300004 },
       contextoCon("ADMIN_MUNICIPAL"),
     );
 
     const tx = vi.mocked(repositorio.actualizar).mock.calls[0]?.[0];
+    expect(repositorio.actualizar).toHaveBeenCalledWith(tx, {
+      ...calleConPunto,
+      punto: puntoNuevo,
+    });
     expect(repositorio.registrarEventoDeUbicacion).toHaveBeenCalledWith(tx, {
       ayuntamientoId: "motul",
       calleId,
       puntoAnterior: puntoPrevio,
       puntoNuevo,
     });
-    expect(registrarMock).toHaveBeenCalledWith(
-      tx,
-      expect.objectContaining({ accion: "UBICAR_CALLE", entidadId: calleId }),
-    );
+    expect(publicarMock).toHaveBeenCalledWith(tx, "motul", {
+      tipo: "calle",
+      id: calleId,
+      cambio: "estructura",
+    });
+    expect(registrarMock).toHaveBeenCalledWith(tx, {
+      ayuntamientoId: "motul",
+      actor: "usuario-1",
+      origen: "web",
+      accion: "UBICAR_CALLE",
+      entidad: "calles",
+      entidadId: calleId,
+    });
+    expect(repositorio.registrarEventoDeAlta).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeRenombre).not.toHaveBeenCalled();
+    expect(repositorio.registrarEventoDeReparenteo).not.toHaveBeenCalled();
   });
 
   it("una calle sin punto deja el anterior nulo en vez de inventarlo", async () => {

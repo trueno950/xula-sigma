@@ -1,38 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { domiciliosDirectosDe, hermanosDeDireccion } from "./contenido";
+import { hermanosDeDireccion } from "./contenido";
 import {
-  cabeceraId,
   calleId,
   coloniaId,
   enColonia,
-  enOtraColonia,
   hermano,
   nodoDomicilio,
   nodos,
   otraCalleId,
 } from "./contenidoDePrueba";
-
-describe("domiciliosDirectosDe", () => {
-  it("devuelve solo los domicilios colgados de ese lugar", () => {
-    expect(domiciliosDirectosDe(nodos, coloniaId)).toEqual([
-      enColonia,
-      hermano,
-    ]);
-    expect(domiciliosDirectosDe(nodos, coloniaId)).not.toContainEqual(
-      enOtraColonia,
-    );
-  });
-
-  it("trae la calle y el numero de cada nodo, sin el listado del municipio", () => {
-    const [primero] = domiciliosDirectosDe(nodos, coloniaId);
-
-    expect(primero).toMatchObject({ calle: "Calle 21", calleId, numero: "5" });
-  });
-
-  it("sin domicilios colgados devuelve vacio", () => {
-    expect(domiciliosDirectosDe(nodos, cabeceraId)).toEqual([]);
-  });
-});
 
 describe("hermanosDeDireccion", () => {
   const seleccionado = { id: enColonia.id, calleId, numero: "5" };

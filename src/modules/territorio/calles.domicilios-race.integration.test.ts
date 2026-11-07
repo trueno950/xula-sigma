@@ -128,7 +128,7 @@ describe("serializacion entre calles y domicilios", () => {
 
     await expect(
       withTenant(motul, (tx) =>
-        repositorioDeDomiciliosSql.porCalle(tx, calleId),
+        repositorioDeDomiciliosSql.porLugarYSubarbol(tx, lugarId),
       ),
     ).resolves.toEqual([]);
   });

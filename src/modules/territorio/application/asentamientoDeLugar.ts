@@ -30,15 +30,19 @@ export const cadenaHastaAsentamiento = async (
   throw new NoEncontradoError();
 };
 
-export const asentamientoContenedorDe = async (
-  repositorio: RepositorioDeLugares,
-  tx: Transaccion,
-  lugar: LugarGuardado,
-): Promise<LugarGuardado> => {
-  const cadena = await cadenaHastaAsentamiento(repositorio, tx, lugar);
+export const asentamientoDeCadena = (
+  cadena: readonly LugarGuardado[],
+): LugarGuardado => {
   const asentamiento = cadena[cadena.length - 1];
 
   if (!asentamiento) throw new NoEncontradoError();
 
   return asentamiento;
 };
+
+export const asentamientoContenedorDe = async (
+  repositorio: RepositorioDeLugares,
+  tx: Transaccion,
+  lugar: LugarGuardado,
+): Promise<LugarGuardado> =>
+  asentamientoDeCadena(await cadenaHastaAsentamiento(repositorio, tx, lugar));

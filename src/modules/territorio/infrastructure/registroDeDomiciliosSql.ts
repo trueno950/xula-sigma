@@ -5,6 +5,7 @@ import type {
 } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
 import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
+import { cteDescendientes } from "./jerarquiaDeLugaresSql";
 
 type FilaDeRegistro = {
   id: string;
@@ -27,8 +28,8 @@ const aDomicilioDelRegistro = (fila: FilaDeRegistro): DomicilioDelRegistro => ({
 
 /**
  * Si `raizId` no existe, el CTE no tiene filas y el filtro conserva el
- * resultado vacio; no se degrada a consultar todo el tenant. RLS acota ambas
- * ramas y el SELECT final dentro de la misma transaccion de tenant.
+ * resultado vacio; no se degrada a consultar todo el tenant. RLS acota
+ * tambien el SELECT final, dentro de la misma transaccion de tenant.
  *
  * La raiz de cada fila sale de subir por `padre_id`, no del filtro: sin
  * filtro no hay `?raiz=` en la URL. `tipoDeLugar.ts` modela la jerarquia
@@ -64,19 +65,7 @@ export const registroDeDomiciliosSql: Pick<
         )`
       : sql.empty();
     const filas = await tx.execute<FilaDeRegistro>(sql`
-      WITH RECURSIVE descendientes AS (
-        SELECT id, 0 AS profundidad FROM lugares
-         WHERE id = ${filtros.raizId ?? null} AND baja_en IS NULL
-        UNION ALL
-        SELECT l.id, d.profundidad + 1
-          FROM lugares l
-          JOIN descendientes d ON l.padre_id = d.id
-         -- tipoDeLugar.ts modela la jerarquia como rango 0..1 y puedeContener
-         -- exige rango(padre) < rango(hijo): una cadena tiene a lo sumo 2 niveles,
-         -- asi que ningun test alcanza el 8, que es una guarda contra un ciclo por
-         -- datos malos y no un limite de negocio.
-         WHERE d.profundidad < 8 AND l.baja_en IS NULL
-      )
+      ${cteDescendientes(filtros.raizId ?? null)}
       SELECT dom.id, cal.nombre AS calle, dom.calle_id AS "calleId",
              dom.numero, lug.nombre AS lugar, dom.lugar_id AS "lugarId",
              COALESCE(padre3.id, padre2.id, padre1.id, lug.id) AS "raizId",

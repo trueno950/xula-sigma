@@ -4,7 +4,10 @@ import {
   type LugarId,
   UbicacionIncoherenteError,
 } from "../domain";
-import { cadenaHastaAsentamiento } from "./asentamientoDeLugar";
+import {
+  asentamientoDeCadena,
+  cadenaHastaAsentamiento,
+} from "./asentamientoDeLugar";
 import type {
   CalleGuardada,
   LugarGuardado,
@@ -123,8 +126,7 @@ export const verificarZonaYCalles = async (
     tx,
     lugar,
   );
-  const asentamiento = cadena[cadena.length - 1];
-  if (!asentamiento) throw new NoEncontradoError();
+  const asentamiento = asentamientoDeCadena(cadena);
 
   exigirNivelesDeclarados(datos.nivelesDeclarados ?? [], cadena);
   exigirCallesDelAsentamiento(callesBloqueadas, asentamiento.id);

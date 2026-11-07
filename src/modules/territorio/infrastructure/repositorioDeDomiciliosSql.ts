@@ -5,6 +5,7 @@ import type {
 } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
 import { calles, domicilios, lugares } from "./esquema";
+import { cteDescendientes } from "./jerarquiaDeLugaresSql";
 import { registroDeDomiciliosSql } from "./registroDeDomiciliosSql";
 
 const columnasDeLectura = {
@@ -42,7 +43,8 @@ const aDomicilioGuardado = (fila: FilaDeDomicilio): DomicilioGuardado => ({
  * Implementacion real de `RepositorioDeDomicilios` contra `domicilios`.
  * Objeto literal, no clase (precedente `repositorioDeLugaresSql`).
  *
- * "Activo = `bajaEn IS NULL`" en las cuatro lecturas, mismo criterio que
+ * "Activo = `bajaEn IS NULL`" en `buscarPorId`, `porLugarYSubarbol`,
+ * `registro` y `listar`, mismo criterio que
  * `lugares` y `calles`: una direccion dada de baja no se lista, no se
  * asigna en una mudanza y no se puede corregir.
  */
@@ -91,23 +93,12 @@ export const repositorioDeDomiciliosSql: RepositorioDeDomicilios = {
   },
 
   /**
-   * Mismo `WITH RECURSIVE` que `repositorioDeLugaresSql.subarbol`
-   * (tasks.md 3.12), con el mismo cinturon de profundidad — no la garantia
-   * de aislamiento, que la da RLS sobre las dos ramas del CTE (design.md
-   * seccion 12, "SUBARBOL"). Reune el domicilio colgado del lugar raiz
-   * mismo y los de todos sus descendientes en una sola consulta.
+   * Reune el domicilio colgado del lugar raiz mismo y los de todos sus
+   * descendientes en una sola consulta (tasks.md 3.12).
    */
   async porLugarYSubarbol(tx, lugarId) {
     const filas = await tx.execute<FilaDeDomicilio>(sql`
-      WITH RECURSIVE descendientes AS (
-        SELECT id, 0 AS profundidad FROM lugares
-         WHERE id = ${lugarId} AND baja_en IS NULL
-        UNION ALL
-        SELECT l.id, d.profundidad + 1
-          FROM lugares l
-          JOIN descendientes d ON l.padre_id = d.id
-         WHERE d.profundidad < 8 AND l.baja_en IS NULL
-      )
+      ${cteDescendientes(lugarId)}
       SELECT dom.id, dom.lugar_id AS "lugarId", dom.calle_id AS "calleId",
              dom.numero, dom.entre_calle_a_id AS "entreCalleAId",
              dom.entre_calle_b_id AS "entreCalleBId", dom.referencia,
@@ -116,15 +107,6 @@ export const repositorioDeDomiciliosSql: RepositorioDeDomicilios = {
         JOIN descendientes d ON d.id = dom.lugar_id
        WHERE dom.baja_en IS NULL
     `);
-
-    return filas.map(aDomicilioGuardado);
-  },
-
-  async porCalle(tx, calleId) {
-    const filas = await tx
-      .select(columnasDeLectura)
-      .from(domicilios)
-      .where(and(eq(domicilios.calleId, calleId), isNull(domicilios.bajaEn)));
 
     return filas.map(aDomicilioGuardado);
   },

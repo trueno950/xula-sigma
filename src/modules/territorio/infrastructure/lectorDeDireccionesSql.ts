@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import type { LectorDeDirecciones } from "../application/puertosDeDirecciones";
+import { cteAscendientes } from "./jerarquiaDeLugaresSql";
 
 type FilaDeDireccion = {
   calle: string;
@@ -12,10 +13,8 @@ type FilaDeDireccion = {
 
 /**
  * Implementacion real de `LectorDeDirecciones` contra `domicilios`,
- * `calles` y `lugares`. Un solo `WITH RECURSIVE` hacia arriba por
- * `padreId`, mismo patron que `repositorioDeLugaresSql.subarbol` -Drizzle
- * 0.45.2 no expresa un CTE auto-referente-, con el mismo cinturon
- * `profundidad < 8` (design.md seccion 7).
+ * `calles` y `lugares`. Una sola consulta que sube por `padreId` desde el
+ * lugar del domicilio (`jerarquiaDeLugaresSql.ts`, design.md seccion 7).
  *
  * Una fila por nivel de ancestro, ordenada del mas profundo al mas
  * superficial (`profundidad ASC`, donde 0 es el propio `lugarId` del
@@ -30,17 +29,9 @@ type FilaDeDireccion = {
 export const lectorDeDireccionesSql: LectorDeDirecciones = {
   async partesDe(tx, domicilioId) {
     const filas = await tx.execute<FilaDeDireccion>(sql`
-      WITH RECURSIVE ascendientes AS (
-        SELECT l.id, l.nombre, l.padre_id, 0 AS profundidad
-          FROM domicilios dom
-          JOIN lugares l ON l.id = dom.lugar_id
-         WHERE dom.id = ${domicilioId} AND l.baja_en IS NULL
-        UNION ALL
-        SELECT l.id, l.nombre, l.padre_id, a.profundidad + 1
-          FROM lugares l
-          JOIN ascendientes a ON l.id = a.padre_id
-         WHERE a.profundidad < 8 AND l.baja_en IS NULL
-      )
+      ${cteAscendientes(
+        sql`(SELECT lugar_id FROM domicilios WHERE id = ${domicilioId})`,
+      )}
       SELECT
         calle.nombre AS calle,
         dom.numero,
