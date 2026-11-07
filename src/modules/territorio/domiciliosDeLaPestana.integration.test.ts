@@ -74,6 +74,24 @@ describe("la pagina de la pestana Domicilios", () => {
   });
 });
 
+describe("la busqueda por palabras de la pestana", () => {
+  it("«Calle 14 88» y «14 88» encuentran el domicilio dentro del subarbol", async () => {
+    const colonia = await crearLugar("colonia", "Pestana Palabras", cabecera);
+    const calle14 = await crearCalle(colonia, "Calle 14");
+    const buscado = await crearDomicilioEnCalle(colonia, calle14, "88");
+    await crearDomicilioEnCalle(colonia, calle14, "12");
+
+    const conCalle = await pedir(
+      { raizId: colonia, busqueda: "Calle 14 88" },
+      50,
+    );
+    const sinCalle = await pedir({ raizId: colonia, busqueda: "14 88" }, 50);
+
+    expect(idsDe(conCalle.domicilios)).toEqual([buscado]);
+    expect(idsDe(sinCalle.domicilios)).toEqual([buscado]);
+  });
+});
+
 describe("los domicilios en la misma direccion", () => {
   it("filtra por calleId: el mismo numero en otra calle del mismo nombre queda fuera", async () => {
     const colonia = await crearLugar("colonia", "Gemelas", cabecera);

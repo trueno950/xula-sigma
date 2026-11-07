@@ -118,12 +118,12 @@ describe("RegistroDeDomicilios: enlaces, filtros y vacio", () => {
   });
 
   describe("filtros puestos", () => {
-    const filtros = { raizId: cabeceraId, calle: "Calle 21", numero: "5" };
+    const filtros = { raizId: cabeceraId, busqueda: "Calle 21", numero: "5" };
 
     it("cada filtro es un chip que lo quita y conserva los otros", () => {
       const html = render({ filtros });
 
-      expect(html).toContain("Quitar filtro: Calle: Calle 21");
+      expect(html).toContain("Quitar filtro: Búsqueda: Calle 21");
       expect(html).toContain("Quitar filtro: Número: 5");
       expect(html).toContain("Quitar filtro: Asentamiento: Tepakan (cabecera)");
       expect(html).toContain(
@@ -147,12 +147,12 @@ describe("RegistroDeDomicilios: enlaces, filtros y vacio", () => {
         filtros,
         estadoDeLista: {
           clase: "vacio-por-filtro",
-          filtro: "Calle: Calle 21, Número: 5",
+          filtro: "Búsqueda: Calle 21, Número: 5",
         },
       });
 
       expect(html).toContain("Sin resultados para");
-      expect(html).toContain("Calle: Calle 21, Número: 5");
+      expect(html).toContain("Búsqueda: Calle 21, Número: 5");
       expect(html).toContain("Quitar filtro: Número: 5");
     });
   });

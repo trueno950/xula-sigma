@@ -26,7 +26,7 @@ export function construirHrefDeDomicilios(
 ): string {
   const query = new URLSearchParams();
 
-  if (parametros.filtros?.calle) query.set("q", parametros.filtros.calle);
+  if (parametros.filtros?.busqueda) query.set("q", parametros.filtros.busqueda);
   if (parametros.filtros?.numero)
     query.set("numero", parametros.filtros.numero);
   if (parametros.filtros?.raizId) query.set("raiz", parametros.filtros.raizId);

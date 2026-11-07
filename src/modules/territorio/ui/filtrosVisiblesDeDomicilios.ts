@@ -17,8 +17,13 @@ export function filtrosVisiblesDeDomicilios(
   nombreDeRaiz: (id: string) => string | undefined,
 ): readonly FiltroVisible[] {
   return [
-    ...(filtros.calle
-      ? [{ clave: "calle" as const, etiqueta: `Calle: ${filtros.calle}` }]
+    ...(filtros.busqueda
+      ? [
+          {
+            clave: "busqueda" as const,
+            etiqueta: `Búsqueda: ${filtros.busqueda}`,
+          },
+        ]
       : []),
     ...(filtros.numero
       ? [{ clave: "numero" as const, etiqueta: `Número: ${filtros.numero}` }]

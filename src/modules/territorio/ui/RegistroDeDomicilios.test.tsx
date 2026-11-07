@@ -90,7 +90,7 @@ describe("RegistroDeDomicilios", () => {
   it("el Ver mas lleva los filtros puestos y un limite mayor, nunca reiniciado", () => {
     const html = render({
       hayMas: true,
-      filtros: { raizId: cabeceraId, calle: "Calle 21", numero: "5" },
+      filtros: { raizId: cabeceraId, busqueda: "Calle 21", numero: "5" },
     });
 
     expect(html).toContain(
@@ -130,7 +130,7 @@ describe("RegistroDeDomicilios", () => {
 
   it("los filtros puestos vuelven a aparecer en el formulario", () => {
     const html = render({
-      filtros: { raizId: cabeceraId, calle: "Calle 21", numero: "5" },
+      filtros: { raizId: cabeceraId, busqueda: "Calle 21", numero: "5" },
     });
 
     expect(html).toContain('value="Calle 21"');
