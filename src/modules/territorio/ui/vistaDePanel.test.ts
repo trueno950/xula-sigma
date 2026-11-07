@@ -43,6 +43,18 @@ describe("pestanasDePanel", () => {
     cuentas: { lugares: 3, calles: 1, domicilios: 0 },
   };
 
+  it("una cabecera o comisaria nombra su pestana por lo unico que contiene", () => {
+    const deCabecera = pestanasDePanel({ ...base, abreLaEdicion: false });
+    const deComisaria = pestanasDePanel({
+      ...base,
+      tipo: "comisaria",
+      abreLaEdicion: false,
+    });
+
+    expect(deCabecera[0]?.etiqueta).toBe("Colonias");
+    expect(deComisaria[0]?.etiqueta).toBe("Colonias");
+  });
+
   it("sin abreLaEdicion no ofrece la pestana Editar", () => {
     const pestanas = pestanasDePanel({ ...base, abreLaEdicion: false });
 
@@ -99,7 +111,7 @@ describe("pestanasDePanel", () => {
       pestanas.map((pestana) => [pestana.clave, pestana.etiquetaAccesible]),
     );
 
-    expect(porClave.get("lugares")).toBe("Lugares: 3");
+    expect(porClave.get("lugares")).toBe("Colonias: 3");
     // Las dos etiquetas cambiaron con A2: la de calles decia "catalogo del
     // asentamiento" cuando el numero era el catalogo entero y todos los
     // nodos mostraban el mismo; la de domicilios decia "de este lugar"

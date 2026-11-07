@@ -92,3 +92,12 @@ describe("la lista de lugares", () => {
     expect(html).toMatch(/>Comisaría</);
   });
 });
+
+describe("la pestana vacia dice que le falta", () => {
+  it("un asentamiento sin colonias lo dice con su nombre", () => {
+    const html = render([]);
+
+    expect(html).toContain("Kiní no tiene colonias todavía.");
+    expect(html).not.toContain("no tiene lugares adentro");
+  });
+});

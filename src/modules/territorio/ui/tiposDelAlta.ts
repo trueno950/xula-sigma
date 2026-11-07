@@ -1,4 +1,5 @@
 import {
+  PLURAL_DE_TIPO_DE_LUGAR,
   puedeSerRaiz,
   TIPOS_DE_LUGAR,
   type TipoDeLugar,
@@ -58,4 +59,18 @@ export const verboDelAlta = (
   const unico = tipoUnicoDelAlta(tipos);
 
   return unico ? `Agregar ${tipoDeLugarEnFrase(unico)}` : undefined;
+};
+
+/**
+ * Como se llama lo que cuelga de un lugar: "Colonias" cuando solo cabe ese
+ * tipo, que hoy es siempre el caso dentro de un asentamiento; "Lugares" si
+ * algun dia caben dos.
+ */
+export const nombreDeLoContenido = (tipo: TipoDeLugar): string => {
+  const tipos = tiposContenidosPor(tipo);
+  const [unico] = tipos;
+
+  return tipos.length === 1 && unico
+    ? PLURAL_DE_TIPO_DE_LUGAR[unico]
+    : "Lugares";
 };

@@ -14,3 +14,10 @@ export const ETIQUETA_DE_TIPO_DE_LUGAR: Record<TipoDeLugar, string> = {
 /** El tipo en medio de una frase: "Kantirix, comisaría", no "Comisaría". */
 export const tipoDeLugarEnFrase = (tipo: TipoDeLugar): string =>
   ETIQUETA_DE_TIPO_DE_LUGAR[tipo].toLowerCase();
+
+/** El plural, para nombrar lo que cuelga de un lugar: "Colonias". */
+export const PLURAL_DE_TIPO_DE_LUGAR: Record<TipoDeLugar, string> = {
+  cabecera: "Cabeceras",
+  comisaria: "Comisarías",
+  colonia: "Colonias",
+};
