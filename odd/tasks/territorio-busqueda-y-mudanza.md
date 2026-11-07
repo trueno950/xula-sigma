@@ -33,9 +33,9 @@ sobre `xula_test`), Playwright y `pnpm check`.
 
 ## Tasks
 
-- [ ] **T1** · S1,S2 · delegado (paralelo) — Búsqueda por palabras y búsqueda de domicilio en la entrada.
-- [ ] **T2** · S3,S4 · delegado (paralelo) — Domicilio nuevo preseleccionado en la mudanza; etiqueta en la ficha.
-- [ ] **T3** · S1-S4 · suite, E2E, revisión, PR con issue aprobado.
+- [x] **T1** · S1,S2 · delegado (paralelo) — Búsqueda por palabras y búsqueda de domicilio en la entrada. Commit: `4aa9181`.
+- [x] **T2** · S3,S4 · delegado (paralelo) — Domicilio nuevo preseleccionado en la mudanza; etiqueta en la ficha. Commit: `9fcd88d`.
+- [x] **T3** · S1-S4 · suite, E2E, revisión, PR con issue aprobado.
 
 ## Log
 
@@ -45,3 +45,7 @@ sobre `xula_test`), Playwright y `pnpm check`.
   de `odd/tasks/territorio-acciones.md`. Efecto esperado y aceptado en L3 de
   `odd/tasks/territorio-pendientes.md`: la búsqueda compartida también
   cambia en reportes y mudanza.
+
+- **L2** — 2026-11-07. T1: `busquedaPorPalabras.ts` parte la consulta (sin `#` ni `,`; separadores sueltos se descartan; un token de solo `%`/`_` se busca literal; tope de 6 palabras, las demás se ignoran) y cada palabra debe coincidir con calle, número, colonia o asentamiento, con parámetros y el mismo plegado; `/territorio/domicilios` manda `?q=` a esa búsqueda general («Buscar domicilio (calle y número)», chip «Búsqueda: …»); la entrada ofrece «Buscar domicilio» dentro de `<search>`. T2: `altaDeDomicilioAction` vuelve a la ficha con `?ok=domicilio-creado&domicilio=<uuid>`; la ficha solo preselecciona un id que esté en sus domicilios cargados bajo RLS; mensaje «Domicilio registrado y elegido para la mudanza. Revise la fecha y guarde.»; las residencias de la ficha usan `etiquetaDeDomicilio`. `pnpm check` exit 0; suite completa 526 archivos y 2728 tests; E2E 34/34 (incluye la ida y vuelta de la mudanza). Revisiones aprobadas y reconocidas: T1 `review-5012ac0112d102ce`, T2 `review-4a7173f8ca7b9a92`, rama `review-78fa9203cfbd4910`.
+
+- **L3** — 2026-11-07. Advertencia de la revisión: la ficha deja de usar el formato de la constancia, que antes se eligió para que la ficha no dijera una dirección y el documento otra. Decisión del usuario: «1», sobre «Como quedó (recomendado): la ficha muestra "Calle 38 #157, Centro, Motul", con el mismo formato de las listas, y la constancia impresa no cambia», «Volver atrás» y «Cambiar también la constancia». Otras advertencias: el tope de palabras es silencioso; `?q=` en el registro ahora es más amplio que el filtro de calle.
