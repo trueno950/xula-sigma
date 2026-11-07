@@ -9,6 +9,7 @@ import type {
 } from "./eventosDeCalles";
 import type { NodoDeSubarbol, OpcionesDeSubarbol } from "./nodoDeSubarbol";
 import type { DependenciasDeLugar } from "./puertosDeDependenciasDeLugares";
+import type { ConteosDeUsoDeCalle } from "./puertosDeUsoDeCalle";
 
 export type DatosDeAltaDeLugar = {
   id: LugarId;
@@ -144,7 +145,7 @@ export type {
  * Las cuatro operaciones de evento son una por naturaleza, no un escritor
  * generico: cada mutacion llama a la suya y ninguna sale del modulo.
  */
-export type RepositorioDeCalles = {
+export type RepositorioDeCalles = ConteosDeUsoDeCalle & {
   crear(tx: TransaccionTenant, datos: DatosDeAltaDeCalle): Promise<void>;
   buscarPorId(
     tx: TransaccionTenant,
@@ -159,14 +160,6 @@ export type RepositorioDeCalles = {
     tx: TransaccionTenant,
     datos: DatosDeActualizacionDeCalle,
   ): Promise<CalleGuardada | null>;
-  contarDomiciliosQueLaUsan(
-    tx: TransaccionTenant,
-    calleId: CalleId,
-  ): Promise<number>;
-  contarZonasQueLaUsan(
-    tx: TransaccionTenant,
-    calleId: CalleId,
-  ): Promise<number>;
   /** Calles activas (`bajaEn IS NULL`) de un lugar, para el catalogo y `SelectorDeCalle`. */
   listarPorLugar(
     tx: TransaccionTenant,

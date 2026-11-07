@@ -102,11 +102,20 @@ export async function corregirDomicilioAction(
     return;
   }
 
+  let correccion: Awaited<ReturnType<typeof corregirDomicilio>> | undefined;
   await ejecutarEnContexto(
     conToken(navegacion, borrador),
-    (contexto) => corregirDomicilio(comandoDe(analisis.data), contexto),
+    async (contexto) => {
+      correccion = await corregirDomicilio(comandoDe(analisis.data), contexto);
+    },
     guardandoBorrador(borrador, mensajeDeError),
   );
   await descartarBorrador();
-  confirmarEnArbol(navegacion, "domicilio-corregido");
+  // Agregar, quitar o cambiar la colonia mueve la direccion de lugar, y el
+  // arbol responde 404 a `?domicilio=` pedido desde un `?nodo=` que ya no
+  // es el suyo. El rechazo, en cambio, vuelve al nodo del formulario.
+  confirmarEnArbol(
+    { ...navegacion, nodo: correccion?.lugarId ?? navegacion.nodo },
+    "domicilio-corregido",
+  );
 }

@@ -3,6 +3,7 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import {
   CalleConDomiciliosError,
+  CalleEnZonaError,
   comoCalleId,
   comoLugarId,
   type PuntoGeografico,
@@ -49,6 +50,7 @@ const repositorioDeCalles = (): RepositorioDeCalles => ({
   actualizar: vi.fn(),
   contarDomiciliosQueLaUsan: vi.fn(),
   contarZonasQueLaUsan: vi.fn().mockResolvedValue(0),
+  contarZonasActivasQueLaUsan: vi.fn().mockResolvedValue(0),
   listarPorLugar: vi.fn(),
   registrarEventoDeAlta: vi.fn(),
   registrarEventoDeRenombre: vi.fn(),
@@ -115,5 +117,45 @@ describe("dar de baja calles", () => {
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
     expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  it("bloquea la baja de una calle que pertenece a una zona activa", async () => {
+    const repositorio = repositorioDeCalles();
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.contarDomiciliosQueLaUsan).mockResolvedValue(0);
+    vi.mocked(repositorio.contarZonasActivasQueLaUsan).mockResolvedValue(1);
+
+    const rechazo = crearDarDeBajaCalle(repositorio)(
+      calleId,
+      contextoCon("ADMIN_MUNICIPAL"),
+    );
+
+    await expect(rechazo).rejects.toBeInstanceOf(CalleEnZonaError);
+    await expect(rechazo).rejects.toThrow(
+      "Esta calle pertenece a una zona operativa. Quítela de la zona antes de darla de baja.",
+    );
+    expect(repositorio.actualizar).not.toHaveBeenCalled();
+    expect(registrarMock).not.toHaveBeenCalled();
+  });
+
+  // Las pertenencias a zonas dadas de baja siguen en `calles_de_zonas`: la
+  // cuenta que decide es la de zonas activas, no la de todas.
+  it("permite la baja si la calle solo pertenece a zonas dadas de baja", async () => {
+    const repositorio = repositorioDeCalles();
+    vi.mocked(repositorio.bloquearPorId).mockResolvedValue(calleGuardada);
+    vi.mocked(repositorio.contarDomiciliosQueLaUsan).mockResolvedValue(0);
+    vi.mocked(repositorio.contarZonasQueLaUsan).mockResolvedValue(1);
+    vi.mocked(repositorio.contarZonasActivasQueLaUsan).mockResolvedValue(0);
+    vi.mocked(repositorio.actualizar).mockResolvedValue({
+      ...calleGuardada,
+      bajaEn: new Date(),
+    });
+
+    await crearDarDeBajaCalle(repositorio)(
+      calleId,
+      contextoCon("ADMIN_MUNICIPAL"),
+    );
+
+    expect(repositorio.actualizar).toHaveBeenCalledOnce();
   });
 });

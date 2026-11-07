@@ -23,6 +23,7 @@ const COLUMNAS_DE_CALLES: readonly ColumnaDeTabla[] = [
   { clave: "calle", etiqueta: "Calle" },
   { clave: "quitar", etiqueta: "Acciones" },
 ];
+const SOLO_CALLE = COLUMNAS_DE_CALLES.slice(0, 1);
 
 const COLUMNAS_DE_DOMICILIOS: readonly ColumnaDeTabla[] = [
   { clave: "calle", etiqueta: "Calle" },
@@ -38,6 +39,8 @@ type Props = {
   callesDelAsentamiento: readonly CalleParaZona[];
   error: string | undefined;
   aviso: string | undefined;
+  /** Sin el, la zona se lee pero no se renombra, ni baja, ni se le cambian calles. */
+  puedeAdministrar: boolean;
 };
 
 /**
@@ -56,6 +59,7 @@ export function DetalleDeZona({
   callesDelAsentamiento,
   error,
   aviso,
+  puedeAdministrar,
 }: Props) {
   const base = `/territorio/zonas?zona=${zona.id}`;
   const pestanas: readonly Pestana[] = [
@@ -96,14 +100,15 @@ export function DetalleDeZona({
       {error ? <Aviso tono="error">{error}</Aviso> : null}
       {aviso ? <Aviso tono="exito">{aviso}</Aviso> : null}
 
-      <AccionesDeZona zona={zona} />
+      {puedeAdministrar ? <AccionesDeZona zona={zona} /> : null}
 
       <Pestanas pestanas={pestanas} etiqueta="Vistas de la zona" />
       {vista === "calles" ? (
         <CallesDeLaZona
           zonaId={zona.id}
           calles={calles}
-          callesDelAsentamiento={callesDelAsentamiento}
+          callesDelAsentamiento={puedeAdministrar ? callesDelAsentamiento : []}
+          puedeQuitar={puedeAdministrar}
         />
       ) : (
         <DomiciliosDeLaZona domicilios={domicilios} />
@@ -116,10 +121,12 @@ function CallesDeLaZona({
   zonaId,
   calles,
   callesDelAsentamiento,
+  puedeQuitar,
 }: {
   zonaId: ZonaGuardada["id"];
   calles: readonly CalleParaZona[];
   callesDelAsentamiento: readonly CalleParaZona[];
+  puedeQuitar: boolean;
 }) {
   const fuera = callesDelAsentamiento.filter(
     (calle) => !calles.some((enZona) => enZona.id === calle.id),
@@ -137,11 +144,16 @@ function CallesDeLaZona({
           hrefSinFiltro={`/territorio/zonas?zona=${zonaId}`}
         />
       ) : (
-        <Tabla etiqueta="Calles de la zona" columnas={COLUMNAS_DE_CALLES}>
+        <Tabla
+          etiqueta="Calles de la zona"
+          columnas={puedeQuitar ? COLUMNAS_DE_CALLES : SOLO_CALLE}
+        >
           {calles.map((calle) => (
             <FilaDeTabla key={calle.id} etiquetaAccesible={calle.nombre}>
               <CeldaPrincipal>{calle.nombre}</CeldaPrincipal>
-              <FormularioDeQuitarCalleDeZona zonaId={zonaId} calle={calle} />
+              {puedeQuitar ? (
+                <FormularioDeQuitarCalleDeZona zonaId={zonaId} calle={calle} />
+              ) : null}
             </FilaDeTabla>
           ))}
         </Tabla>

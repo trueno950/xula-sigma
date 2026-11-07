@@ -34,6 +34,7 @@ export function TabDeCalles({
   calleId,
   busqueda,
   limite,
+  usoDeCalle,
 }: PropsDeContenido) {
   if (!puedeTenerCatalogoDeCalles(lugar.tipo)) {
     // `pestanasDePanel` ya filtra este tipo; el guard protege otras llamadas.
@@ -125,6 +126,7 @@ export function TabDeCalles({
             accion={accion}
             permisos={permisos}
             centro={centroDeCalles(calles)}
+            uso={usoDeCalle}
           />
         ) : null}
         <ListaDeCalles

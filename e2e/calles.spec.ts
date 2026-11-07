@@ -91,20 +91,22 @@ async function rechazarMovimientoDuplicado(
   ).toBeVisible();
 }
 
-async function rechazarBajaConDomicilio(
+/**
+ * Una calle con domicilios no ofrece moverla ni darla de baja: en su lugar
+ * dice cuantos la usan. `darDeBajaCalle` sigue rechazandola igual.
+ */
+async function bajaConDomicilioNoSeOfrece(
   page: Page,
   escenario: Scenario,
 ): Promise<void> {
   await abrirCalle(page, escenario.origenId, escenario.domicilio);
-  await abrirAccionDeCalle(page, "Dar de baja");
-  await page
-    .getByRole("button", {
-      name: new RegExp(`Dar de baja ${escenario.domicilio}`),
-    })
-    .click();
+  await expect(page.getByText(/La usan \d+ domicilios?\./)).toBeVisible();
   await expect(
-    page.getByRole("alert").filter({ hasText: "tiene domicilios" }),
-  ).toBeVisible();
+    page.locator("summary", { hasText: /^Dar de baja$/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.locator("summary", { hasText: /^Mover a otro lugar$/ }),
+  ).toHaveCount(0);
 }
 
 async function darDeBajaReporte(
@@ -177,7 +179,7 @@ test("calles conserva el flujo nativo, los estados vacios y las reglas de baja",
   await verificarLugarVacio(page, escenario.vacioId);
   await ubicarYReparentear(page, escenario);
   await rechazarMovimientoDuplicado(page, escenario);
-  await rechazarBajaConDomicilio(page, escenario);
+  await bajaConDomicilioNoSeOfrece(page, escenario);
   await darDeBajaReporte(page, escenario);
 
   const auditoria = await leerAuditoria(escenario);

@@ -5,6 +5,7 @@ import {
   GrupoDeCampos,
   type OpcionDeLista,
 } from "@/shared/ui";
+import type { AsentamientoDeCalle } from "./coloniasDelAlta";
 import { SelectorDeCalleConBusqueda } from "./SelectorDeCalleConBusqueda";
 import type { NivelDelFormulario } from "./zonaDelFormulario";
 
@@ -29,6 +30,8 @@ type Props = {
   valores?: Valores;
   /** Con grupos bajo un titulo (alta) o en una sola columna (panel). */
   agrupar: boolean;
+  /** Acorta la colonia a la calle elegida; ver `SelectorDeCalleConBusqueda`. */
+  asentamientoDeCalle?: AsentamientoDeCalle | undefined;
 };
 
 const alfabeticas = (calles: readonly OpcionDeLista[]) =>
@@ -60,10 +63,9 @@ function Seccion({
  * alta y la correccion; solo cambian los `id` y los valores de arranque.
  *
  * La colonia es un campo con etiqueta y no un bloque plegado: esconderla
- * hacia que la operadora no supiera que existia. Cuando el municipio no
- * tiene ninguna zona el campo se deshabilita y explica el vacio
- * (`NivelDelFormulario.sinZonas`): un `<select>` con el marcador solo se lee
- * como un control roto.
+ * hacia que la operadora no supiera que existia. La pinta
+ * `SelectorDeCalleConBusqueda`, porque lo que ofrece depende de la calle;
+ * el numero va entre las dos como hijo del servidor.
  *
  * La calle es el unico campo con buscador; ver `SelectorDeCalleConBusqueda`.
  */
@@ -75,6 +77,7 @@ export function CamposDeDomicilio({
   origenDeCalles,
   valores,
   agrupar,
+  asentamientoDeCalle,
 }: Props) {
   const opciones = alfabeticas(calles);
   const por = (campo: keyof Valores) =>
@@ -94,26 +97,23 @@ export function CamposDeDomicilio({
               : "La calle donde está el domicilio."
           }
           valorInicial={valores?.calleId}
-        />
-        <Campo
-          id={`${prefijo}-numero`}
-          name="numero"
-          etiqueta="Número"
-          tipografia="dato"
-          ayuda="Dejar vacío si el domicilio no tiene número."
-          {...por("numero")}
-        />
-        <CampoDeLista
-          id={`${prefijo}-zona-id`}
-          name={nombreDeZona}
-          etiqueta="Colonia (opcional)"
-          marcador={zona.marcador}
-          opcional
-          opciones={zona.opciones}
-          ayuda={zona.resumen}
-          defaultValue={valores?.zonaId ?? zona.inicial}
-          disabled={zona.sinZonas}
-        />
+          colonia={{
+            id: `${prefijo}-zona-id`,
+            name: nombreDeZona,
+            nivel: zona,
+            valorInicial: valores?.zonaId ?? zona.inicial,
+            asentamientoDeCalle,
+          }}
+        >
+          <Campo
+            id={`${prefijo}-numero`}
+            name="numero"
+            etiqueta="Número"
+            tipografia="dato"
+            ayuda="Dejar vacío si el domicilio no tiene número."
+            {...por("numero")}
+          />
+        </SelectorDeCalleConBusqueda>
       </Seccion>
 
       <Seccion titulo="Entre qué calles" agrupar={agrupar}>

@@ -5,6 +5,11 @@ import {
   type TipoDeLugar,
 } from "../domain";
 import {
+  type GrupoDeColonias,
+  mensajeSinColonias,
+  type NivelDelFormulario,
+} from "./coloniasDelAlta";
+import {
   type Asentamiento,
   type LugarConPadre,
   opcionesDeNivel,
@@ -18,36 +23,69 @@ import {
  * `vistaDeDomicilios.ts` porque esa vista se ocupa de como se lee un lugar y
  * este archivo de como se elige.
  */
-export type NivelDelFormulario = {
-  opciones: readonly OpcionDeLista[];
-  /** El primer `<option>`: el asentamiento, o "Sin colonia" cuando no se conoce. */
-  marcador: string;
-  /** El nivel con el que abre el select: el nodo actual, o vacio. */
-  inicial: LugarId | "";
-  /** La frase completa que describe donde se guarda por defecto. */
-  resumen: string;
-  /**
-   * No hay ninguna colonia en el municipio. El campo de colonia no se puede
-   * elegir: `CamposDeDomicilio` lo deshabilita y el marcador y el resumen
-   * dicen por que, en vez de dejar un `<select>` con el marcador solo, que
-   * se lee como un control roto.
-   */
-  sinZonas: boolean;
-};
+export type { NivelDelFormulario } from "./coloniasDelAlta";
 
-const MARCADOR_SIN_ZONAS = "Sin colonias registradas";
 const AYUDA_SIN_ZONAS =
   "Todavía no hay colonias en el municipio: el domicilio se guarda en el asentamiento de la calle. Cree una colonia dentro del asentamiento para poder elegirla.";
 
-const marcadorDe = (
-  sinZonas: boolean,
-  asentamiento: Asentamiento | undefined,
-): string => {
-  if (sinZonas) return MARCADOR_SIN_ZONAS;
-  if (asentamiento) return `Sin colonia: ${asentamiento.nombre}`;
+const marcadorDe = (asentamiento: Asentamiento | undefined): string =>
+  asentamiento ? `Sin colonia: ${asentamiento.nombre}` : "Sin colonia";
 
-  return "Sin colonia";
+const asentamientoDe = (
+  porId: ReadonlyMap<string, LugarConPadre>,
+  lugarId: string,
+): Asentamiento | undefined => {
+  const vistos = new Set<string>();
+  let actual = porId.get(lugarId);
+
+  // Un ciclo de `padreId` en datos corruptos no puede colgar el render.
+  while (actual && !vistos.has(actual.id)) {
+    if (puedeTenerCatalogoDeCalles(actual.tipo)) {
+      return { id: actual.id, nombre: actual.nombre };
+    }
+    vistos.add(actual.id);
+    actual = actual.padreId ? porId.get(actual.padreId) : undefined;
+  }
+
+  return undefined;
 };
+
+const gruposDeColonias = (
+  lugares: readonly LugarConPadre[],
+  opciones: readonly OpcionDeLista[],
+): readonly GrupoDeColonias[] => {
+  const porId = new Map(lugares.map((lugar) => [lugar.id as string, lugar]));
+  const grupos = new Map<string, GrupoDeColonias>();
+
+  for (const opcion of opciones) {
+    const asentamiento = asentamientoDe(porId, opcion.valor);
+    if (!asentamiento) continue;
+    const previas = grupos.get(asentamiento.id)?.opciones ?? [];
+    grupos.set(asentamiento.id, {
+      asentamiento,
+      opciones: [...previas, opcion],
+    });
+  }
+
+  return [...grupos.values()].sort((a, b) =>
+    a.asentamiento.nombre.localeCompare(b.asentamiento.nombre, "es"),
+  );
+};
+
+/** Con el asentamiento conocido todas sus colonias son un solo grupo. */
+const gruposDelAlcance = (
+  lugares: readonly LugarConPadre[],
+  asentamiento: Asentamiento | undefined,
+  opciones: readonly OpcionDeLista[],
+): readonly GrupoDeColonias[] => {
+  if (opciones.length === 0) return [];
+  if (asentamiento) return [{ asentamiento, opciones }];
+
+  return gruposDeColonias(lugares, opciones);
+};
+
+const resumenSinZonas = (asentamiento: Asentamiento | undefined): string =>
+  asentamiento ? mensajeSinColonias(asentamiento.nombre) : AYUDA_SIN_ZONAS;
 
 export const zonaConInicial = (
   lugares: readonly LugarConPadre[],
@@ -60,10 +98,11 @@ export const zonaConInicial = (
   return {
     opciones,
     sinZonas,
-    marcador: marcadorDe(sinZonas, asentamiento),
+    grupos: gruposDelAlcance(lugares, asentamiento, opciones),
+    marcador: marcadorDe(asentamiento),
     inicial,
     resumen: sinZonas
-      ? AYUDA_SIN_ZONAS
+      ? resumenSinZonas(asentamiento)
       : resumenDeGuardado(lugares, asentamiento, inicial),
   };
 };

@@ -3,7 +3,11 @@ import { puedeAdministrarTerritorio } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { registrar } from "@/shared/tenancy/bitacora";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { CalleConDomiciliosError, type CalleId } from "../domain";
+import {
+  CalleConDomiciliosError,
+  CalleEnZonaError,
+  type CalleId,
+} from "../domain";
 import type { RepositorioDeCalles } from "./puertos";
 
 export function crearDarDeBajaCalle(repositorio: RepositorioDeCalles) {
@@ -23,6 +27,19 @@ export function crearDarDeBajaCalle(repositorio: RepositorioDeCalles) {
 
       const domicilios = await repositorio.contarDomiciliosQueLaUsan(tx, id);
       if (domicilios > 0) throw new CalleConDomiciliosError();
+
+      // La zona seguiria nombrando a una calle que ya no existe. Las zonas
+      // dadas de baja no cuentan: ya no se leen y no se puede quitar la
+      // calle de ellas.
+      const zonasActivas = await repositorio.contarZonasActivasQueLaUsan(
+        tx,
+        id,
+      );
+      if (zonasActivas > 0) {
+        throw new CalleEnZonaError(
+          "Esta calle pertenece a una zona operativa. Quítela de la zona antes de darla de baja.",
+        );
+      }
 
       const actualizada = await repositorio.actualizar(tx, {
         id,

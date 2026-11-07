@@ -9,8 +9,17 @@
  * (tasks.md 1.8): `reportes` necesita construir un `CalleId` valido antes
  * de llamar a `ubicacionDeLugar`, que lo pide tipado en su entrada.
  */
+import { crearUsoDeCalle } from "./application";
+import { repositorioDeCallesSql } from "./infrastructure";
+
 export * from "./application";
 export * from "./composicion";
+
+/**
+ * Se compone junto al barrel y no en `composicion.ts`, que ronda su limite
+ * de 200 lineas (`AGENTS.md`, Metricas).
+ */
+export const usoDeCalle = crearUsoDeCalle(repositorioDeCallesSql);
 export {
   type CalleId,
   comoCalleId,

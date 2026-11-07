@@ -7,7 +7,11 @@ import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { darDeBajaCalle } from "../../composicion";
-import { CalleConDomiciliosError, comoCalleId } from "../../domain";
+import {
+  CalleConDomiciliosError,
+  CalleEnZonaError,
+  comoCalleId,
+} from "../../domain";
 import { irAlArbol, navegacionDe, volverAlArbol } from "./volverAlArbol";
 
 const esquemaDeEntrada = z.object({
@@ -20,6 +24,7 @@ const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
   if (error instanceof NoEncontradoError) return error.message;
   if (error instanceof CalleConDomiciliosError) return error.message;
+  if (error instanceof CalleEnZonaError) return error.message;
 
   console.error("[territorio] baja de calle fallo", datosSegurosDeError(error));
   return MENSAJE_GENERICO;

@@ -45,3 +45,4 @@ export * from "./residentesDeDomicilio";
 export * from "./subarbol";
 export * from "./ubicacionDeLugar";
 export * from "./ubicarCalle";
+export * from "./usoDeCalle";

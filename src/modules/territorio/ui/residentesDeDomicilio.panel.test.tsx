@@ -71,19 +71,18 @@ describe("panel del domicilio: residentes", () => {
     expect(html).toContain(`href="/padron/${rosa.personaId}"`);
   });
 
-  it("con residentes, la baja avisa a quien mudar antes de enviarla", () => {
+  it("con residentes, la baja no se envia: manda a la ficha de cada uno", () => {
     const html = render({ domicilioId, residentes: [ana, rosa] });
-    const baja = formularioDeBaja(html);
+    const baja = html.slice(html.lastIndexOf("Dar de baja"));
 
-    expect(baja).toContain(
-      "Antes de dar de baja esta dirección, registre la mudanza de:",
-    );
+    expect(baja).toContain("Registre la mudanza desde su ficha.");
     expect(baja).toContain(`href="/padron/${ana.personaId}"`);
     expect(baja).toContain(`href="/padron/${rosa.personaId}"`);
+    expect(html).not.toContain('name="accion" value="bajaDomicilio"');
   });
 
   it("la baja manda el domicilio para que un rechazo vuelva a su panel", () => {
-    const html = render({ domicilioId, residentes: [rosa] });
+    const html = render({ domicilioId, residentes: [] });
 
     expect(formularioDeBaja(html)).toContain(
       `name="domicilio" value="${domicilioId}"`,

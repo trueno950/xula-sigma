@@ -3,6 +3,7 @@ import type { RepositorioDeCalles } from "../application/puertos";
 import { NombreDeCalleDuplicadoError } from "../domain";
 import { calles, domicilios, eventosDeCalles } from "./esquema";
 import { callesDeZonas } from "./esquemaDeCallesDeZonas";
+import { zonas } from "./esquemaDeZonas";
 import {
   aCalleGuardada,
   columnasDeLecturaDeCalle as columnasDeLectura,
@@ -96,6 +97,16 @@ export const repositorioDeCallesSql: RepositorioDeCalles = {
       .select({ total: count() })
       .from(callesDeZonas)
       .where(eq(callesDeZonas.calleId, calleId));
+
+    return Number(fila?.total ?? 0);
+  },
+
+  async contarZonasActivasQueLaUsan(tx, calleId) {
+    const [fila] = await tx
+      .select({ total: count() })
+      .from(callesDeZonas)
+      .innerJoin(zonas, eq(zonas.id, callesDeZonas.zonaId))
+      .where(and(eq(callesDeZonas.calleId, calleId), isNull(zonas.bajaEn)));
 
     return Number(fila?.total ?? 0);
   },

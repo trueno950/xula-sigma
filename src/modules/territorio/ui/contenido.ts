@@ -9,6 +9,7 @@ import type {
   DomicilioGuardado,
 } from "../application/puertosDeDomicilios";
 import type { ResidenteDeDomicilio } from "../application/puertosDeResidencias";
+import type { UsoDeCalle } from "../application/usoDeCalle";
 import {
   type CalleId,
   type DomicilioId,
@@ -63,6 +64,10 @@ export type PropsDeContenido = {
   busqueda?: string | undefined;
   /** El `?limite=` vigente de Calles y Domicilios. */
   limite?: number | undefined;
+  /** Zonas activas del lugar, leidas para la pestana Editar de un asentamiento. */
+  zonasDelLugar?: number | undefined;
+  /** Lo que frena mover o dar de baja la calle abierta. `null`: no se leyo. */
+  usoDeCalle?: UsoDeCalle | null | undefined;
 };
 
 /** Una fila de la pestana Domicilios, con su calle y su lugar ya resueltos. */

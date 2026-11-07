@@ -13,6 +13,7 @@ const pintar = (volverA?: string) =>
         marcador: "Sin colonia",
         resumen: "",
         sinZonas: false,
+        grupos: [],
       }}
       {...(volverA ? { volverA } : {})}
     />,
@@ -51,6 +52,7 @@ describe("RegistroDeDomicilio: pedido desde la ficha de una persona", () => {
           marcador: "Sin colonia",
           resumen: "",
           sinZonas: false,
+          grupos: [],
         }}
         volverA={FICHA}
         regreso={FICHA}

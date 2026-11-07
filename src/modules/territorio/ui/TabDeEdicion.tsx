@@ -1,26 +1,23 @@
 import {
   ArrowsOutCardinal,
-  CaretRight,
   PencilSimple,
   Prohibit,
 } from "@phosphor-icons/react/ssr";
-import Link from "next/link";
-import type { ComponentType } from "react";
+import type { EstadoDeAccion } from "./bloqueosDeLugar";
 import { type PropsDeContenido, rutaDe } from "./contenido";
+import {
+  type ClaveDeEdicion,
+  domiciliosDe,
+  estadosDeEdicion,
+  padreDe,
+} from "./estadosDeEdicion";
 import { FormularioDeBajaDeLugar } from "./FormularioDeBajaDeLugar";
 import { FormularioDeEdicionDeLugar } from "./FormularioDeEdicionDeLugar";
 import { FormularioDeReparenteo } from "./FormularioDeReparenteo";
 import { PanelDeAccion } from "./PanelDeAccion";
-import type { AccionDeNodo } from "./PanelDeNodo";
+import { PieDeFormulario } from "./PieDeFormulario";
 import { puedeAbrir } from "./permisos";
-
-type ItemDeEdicion = {
-  clave: Extract<AccionDeNodo, "renombrar" | "reparentear" | "baja">;
-  etiqueta: string;
-  descripcion: string;
-  Icono: ComponentType<{ size?: number; className?: string }>;
-  destructiva?: boolean;
-};
+import { type ItemDeEdicion, RenglonDeEdicion } from "./RenglonDeEdicion";
 
 /**
  * Cada accion trae su descripcion, y no es adorno: "Mover" no dice que se
@@ -49,80 +46,62 @@ const ACCIONES: readonly ItemDeEdicion[] = [
   },
 ];
 
-/**
- * De que lugar cuelga este, para poder subir cuando se da de baja. La raiz
- * del arbol no esta en el subarbol y no cuelga de nada: `undefined`.
- */
-const padreDe = (
-  nodos: PropsDeContenido["nodos"],
-  lugarId: PropsDeContenido["lugar"]["id"],
-) => {
-  const propio = nodos.find((nodo) => nodo.id === lugarId);
-
-  return propio?.clase === "lugar" ? (propio.padreId ?? undefined) : undefined;
-};
+/** El motivo en lugar del formulario, con la salida de siempre. */
+function MotivoEnLugarDelFormulario({
+  motivo,
+  volverA,
+}: {
+  motivo: string;
+  volverA: string;
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-[15px] text-caliza-tinta">{motivo}</p>
+      <PieDeFormulario volverA={volverA} />
+    </div>
+  );
+}
 
 /** Pestana Editar: los cambios al lugar mismo, fuera del camino diario. */
-export function TabDeEdicion({
-  raizId,
-  lugar,
-  nodos,
-  lugares,
-  accion,
-  permisos,
-}: PropsDeContenido) {
-  const disponibles = ACCIONES.filter((item) =>
-    puedeAbrir(item.clave, permisos),
+export function TabDeEdicion(props: PropsDeContenido) {
+  const { raizId, lugar, nodos, lugares, accion, permisos } = props;
+  const estados = estadosDeEdicion(props);
+  const disponibles = ACCIONES.filter(
+    (item) =>
+      puedeAbrir(item.clave, permisos) &&
+      estados[item.clave].clase !== "oculta",
   );
 
   if (disponibles.length === 0) return null;
 
   const volverA = rutaDe({ raizId: raizId, nodoId: lugar.id, vista: "editar" });
+  const abierta = (clave: ClaveDeEdicion): EstadoDeAccion | undefined =>
+    accion === clave && puedeAbrir(clave, permisos)
+      ? estados[clave]
+      : undefined;
+  const mover = abierta("reparentear");
+  const baja = abierta("baja");
 
   return (
     <div className="flex flex-col gap-4">
       <ul className="flex flex-col">
         {disponibles.map((item) => (
-          <li key={item.clave} className="border-b border-caliza-divisor">
-            <Link
-              href={rutaDe({
-                raizId: raizId,
-                nodoId: lugar.id,
-                vista: "editar",
-                accion: item.clave,
-              })}
-              aria-current={accion === item.clave ? "true" : undefined}
-              aria-label={`${item.etiqueta}. ${item.descripcion}`}
-              className="flex min-h-11 items-center gap-3 px-3 py-2.5 transition-colors hover:bg-caliza-superficie focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-marca"
-            >
-              <item.Icono
-                size={20}
-                className={
-                  item.destructiva ? "text-senial-error" : "text-caliza-apagada"
-                }
-              />
-              <span className="flex min-w-0 flex-col">
-                <span
-                  className={`text-[15px] font-medium ${
-                    item.destructiva ? "text-senial-error" : "text-caliza-tinta"
-                  }`}
-                >
-                  {item.etiqueta}
-                </span>
-                <span className="text-[13px] text-caliza-apagada">
-                  {item.descripcion}
-                </span>
-              </span>
-              <CaretRight
-                size={16}
-                className="ml-auto shrink-0 text-caliza-apagada"
-              />
-            </Link>
-          </li>
+          <RenglonDeEdicion
+            key={item.clave}
+            item={item}
+            estado={estados[item.clave]}
+            href={rutaDe({
+              raizId: raizId,
+              nodoId: lugar.id,
+              vista: "editar",
+              accion: item.clave,
+            })}
+            actual={accion === item.clave}
+          />
         ))}
       </ul>
 
-      {accion === "renombrar" && puedeAbrir("renombrar", permisos) ? (
+      {abierta("renombrar") ? (
         <PanelDeAccion titulo={`Renombrar ${lugar.nombre}`}>
           <FormularioDeEdicionDeLugar
             raiz={raizId}
@@ -133,28 +112,43 @@ export function TabDeEdicion({
         </PanelDeAccion>
       ) : null}
 
-      {accion === "reparentear" && puedeAbrir("reparentear", permisos) ? (
+      {mover && mover.clase !== "oculta" ? (
         <PanelDeAccion titulo={`Mover ${lugar.nombre}`}>
-          <FormularioDeReparenteo
-            raiz={raizId}
-            nodo={lugar.id}
-            tipoDelLugar={lugar.tipo}
-            lugares={lugares}
-            padre={padreDe(nodos, lugar.id)}
-            volverA={volverA}
-          />
+          {mover.clase === "bloqueada" ? (
+            <MotivoEnLugarDelFormulario
+              motivo={mover.motivo}
+              volverA={volverA}
+            />
+          ) : (
+            <FormularioDeReparenteo
+              raiz={raizId}
+              nodo={lugar.id}
+              tipoDelLugar={lugar.tipo}
+              lugares={lugares}
+              padre={padreDe(nodos, lugar.id)}
+              volverA={volverA}
+              domicilios={domiciliosDe(props)}
+            />
+          )}
         </PanelDeAccion>
       ) : null}
 
-      {accion === "baja" && puedeAbrir("baja", permisos) ? (
+      {baja ? (
         <PanelDeAccion titulo="Baja de lugar">
-          <FormularioDeBajaDeLugar
-            raiz={raizId}
-            nodo={lugar.id}
-            padre={padreDe(nodos, lugar.id)}
-            nombre={lugar.nombre}
-            volverA={volverA}
-          />
+          {baja.clase === "bloqueada" ? (
+            <MotivoEnLugarDelFormulario
+              motivo={baja.motivo}
+              volverA={volverA}
+            />
+          ) : (
+            <FormularioDeBajaDeLugar
+              raiz={raizId}
+              nodo={lugar.id}
+              padre={padreDe(nodos, lugar.id)}
+              nombre={lugar.nombre}
+              volverA={volverA}
+            />
+          )}
         </PanelDeAccion>
       ) : null}
     </div>

@@ -81,6 +81,7 @@ describe("ListaDeZonas: el asentamiento es dato de apoyo", () => {
       raizActiva={null}
       error={undefined}
       aviso={undefined}
+      puedeAdministrar
     />,
   );
 

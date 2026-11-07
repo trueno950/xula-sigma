@@ -7,6 +7,7 @@ import {
   MENSAJE_DE_RECORTE,
 } from "./borradorDeDomicilio";
 import { CamposDeDomicilio } from "./CamposDeDomicilio";
+import type { AsentamientoDeCalle } from "./coloniasDelAlta";
 import { VALOR_SIN_COLONIA } from "./declaracionDeDestino";
 import { PieDeFormulario } from "./PieDeFormulario";
 import type { NivelDelFormulario } from "./zonaDelFormulario";
@@ -24,30 +25,30 @@ type Props = {
   regreso?: string | undefined;
   /** Lo capturado en un alta rechazada; ver `borradorEnCookie.ts`. */
   borrador?: BorradorDeDomicilio | null | undefined;
+  /** Acorta la colonia a la calle elegida; ver `asentamientosDeCalles`. */
+  asentamientoDeCalle?: AsentamientoDeCalle | undefined;
 };
 
 /**
  * Server Component, `<form action={...}>` nativo sin `"use client"`.
  *
+ * En el alta el marcador no es una respuesta: un `lugarId` vacio con
+ * colonias en el asentamiento es `ColoniaRequeridaError`. «Sin colonia» es
+ * una sola opcion y viaja como `VALOR_SIN_COLONIA`.
  */
 const zonaParaAlta = (zona: NivelDelFormulario): NivelDelFormulario => {
   if (zona.sinZonas) return zona;
 
   return {
     ...zona,
-    marcador: zona.inicial
-      ? zona.marcador
-      : "Elija una colonia o indique que no tiene",
+    marcador: "Elija una colonia o indique que no tiene",
     resumen: zona.inicial
       ? zona.resumen
       : "Elija una colonia o «Sin colonia» si la dirección no pertenece a una colonia.",
-    opciones: [
-      ...zona.opciones,
-      {
-        valor: VALOR_SIN_COLONIA,
-        etiqueta: "Sin colonia (la dirección no pertenece a una colonia)",
-      },
-    ],
+    sinColonia: {
+      valor: VALOR_SIN_COLONIA,
+      etiqueta: "Sin colonia (la dirección no pertenece a una colonia)",
+    },
   };
 };
 
@@ -61,6 +62,7 @@ export function FormularioDeDomicilio({
   regreso,
   volverA,
   borrador,
+  asentamientoDeCalle,
 }: Props) {
   const zonaDeAlta = zonaParaAlta(zona);
   const destino = { formulario: "alta" } as const;
@@ -88,6 +90,7 @@ export function FormularioDeDomicilio({
         origenDeCalles={origenDeCalles}
         {...(capturado ? { valores: capturado } : {})}
         agrupar
+        asentamientoDeCalle={asentamientoDeCalle}
       />
 
       <PieDeFormulario volverA={volverA}>

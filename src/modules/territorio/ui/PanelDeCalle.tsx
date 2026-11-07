@@ -12,6 +12,7 @@ import {
   EnlaceDeAccion,
 } from "@/shared/ui";
 import type { LugarGuardado } from "../application/puertos";
+import type { UsoDeCalle } from "../application/usoDeCalle";
 import type { LugarId, PuntoGeografico } from "../domain";
 import { AccionesDeCalle, esAccionDeCalle } from "./AccionesDeCalle";
 import { rutaDe } from "./contenido";
@@ -29,6 +30,8 @@ type Props = {
   permisos: PermisosDeTerritorio;
   /** Donde abre el mapa si la calle no tiene punto; ver `centroDeCalles`. */
   centro?: PuntoGeografico | null | undefined;
+  /** Lo que frena mover o dar de baja; ver `bloqueosDeCalle`. */
+  uso?: UsoDeCalle | null | undefined;
 };
 
 const ENLACE_DE_CONTEXTO = `inline-flex items-center gap-2 self-start rounded-sm text-[15px] ${CLASES_DE_ENLACE}`;
@@ -50,6 +53,7 @@ export function PanelDeCalle({
   accion,
   permisos,
   centro,
+  uso,
 }: Props) {
   const accionAbierta =
     esAccionDeCalle(accion) && puedeAbrir(accion, permisos)
@@ -89,6 +93,7 @@ export function PanelDeCalle({
           datos={{ raizId, nodoId, calle, lugares, centro }}
           permisos={permisos}
           accionAbierta={accionAbierta}
+          uso={uso}
         />
       ) : (
         <AvisoDePermiso
