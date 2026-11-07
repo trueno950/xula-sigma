@@ -105,6 +105,10 @@ export const residencias = pgTable(
   },
   (t) => [
     index("residencias_tenant_idx").on(t.ayuntamientoId),
+    // El parcial de abajo exige `hasta_en IS NULL`: no sirve al historial
+    // completo de una persona ni a los residentes de un domicilio.
+    index("residencias_domicilio_idx").on(t.ayuntamientoId, t.domicilioId),
+    index("residencias_persona_idx").on(t.ayuntamientoId, t.personaId),
     foreignKey({
       columns: [t.domicilioId, t.ayuntamientoId],
       foreignColumns: [domicilios.id, domicilios.ayuntamientoId],

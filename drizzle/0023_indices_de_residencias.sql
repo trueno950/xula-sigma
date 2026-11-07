@@ -1,0 +1,2 @@
+CREATE INDEX "residencias_domicilio_idx" ON "residencias" USING btree ("ayuntamiento_id","domicilio_id");--> statement-breakpoint
+CREATE INDEX "residencias_persona_idx" ON "residencias" USING btree ("ayuntamiento_id","persona_id");

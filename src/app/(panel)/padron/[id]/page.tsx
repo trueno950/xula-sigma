@@ -79,8 +79,10 @@ export default async function PaginaDeDetalleDePersona({
   // aca es indistinguible de uno inexistente. Los dos son 404.
   if (!persona) notFound();
 
+  const puedeActuar = puedeEscribir(contexto.usuario.rol);
   const historial = await historialDeResidencias(persona.id, contexto);
-  const domicilios = await listarDomicilios(contexto);
+  // `listar` no tiene LIMIT: solo se paga cuando la mudanza se muestra.
+  const domicilios = puedeActuar ? await listarDomicilios(contexto) : [];
   const nombre = `${persona.nombres} ${persona.primerApellido}${
     persona.segundoApellido ? ` ${persona.segundoApellido}` : ""
   }`;
@@ -90,7 +92,7 @@ export default async function PaginaDeDetalleDePersona({
    * que se entra a la ficha de alguien desde el mostrador. Antes vivia al
    * pie, debajo del historial, detras de un scroll.
    */
-  const emitir = puedeEscribir(contexto.usuario.rol) ? (
+  const emitir = puedeActuar ? (
     <EnlaceDeAccion
       href={`/constancias/emitir?personaId=${persona.id}`}
       variante="primaria"
@@ -99,7 +101,6 @@ export default async function PaginaDeDetalleDePersona({
       Emitir constancia
     </EnlaceDeAccion>
   ) : undefined;
-  const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
     <PaginaDePanel
