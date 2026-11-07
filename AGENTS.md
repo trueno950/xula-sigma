@@ -397,6 +397,11 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `longitud`; si Leaflet o sus tiles fallan, el operador conserva el camino
   sin JavaScript. Redacta `NoAutorizadoError`, `NoEncontradoError` y
   `PuntoFueraDeYucatanError`.
+- `darDeBajaCalleAction` (`territorio`): mismo motivo exacto que
+  `darDeBajaLugarAction`. Redacta `NoAutorizadoError`, `NoEncontradoError`,
+  `CalleConDomiciliosError` -una direccion la usa como calle o como
+  transversal- y `CalleEnZonaError` -la calle pertenece a una zona activa y
+  hay que quitarla de la zona primero-.
 - `registrarMudanzaAction` (`territorio`, T7 de `territorio-direcciones`):
   `FormularioDeMudanza` renderiza la isla `SelectorDeDomicilioDeMudanza`
   (`"use client"`), pero esa isla llama a `buscarDomiciliosAction` -la

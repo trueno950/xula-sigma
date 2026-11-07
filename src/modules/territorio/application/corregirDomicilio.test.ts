@@ -4,6 +4,7 @@ import { TransversalRepetidaError, UbicacionIncoherenteError } from "../domain";
 import {
   ajenoId,
   asentamientoGuardado,
+  asentamientoId,
   calleGuardada,
   calleId,
   contextoCon,
@@ -126,6 +127,30 @@ describe("corregirDomicilio", () => {
     ).rejects.toBeInstanceOf(UbicacionIncoherenteError);
 
     expect(repositorio.actualizar).not.toHaveBeenCalled();
+  });
+
+  // La accion redirige a este lugar: `cargaDeTerritorio` responde 404 si
+  // `?nodo=` no es el lugar del que cuelga la direccion corregida.
+  it("devuelve la colonia declarada como el lugar donde quedo la direccion", async () => {
+    const resultado = await corregir()(
+      { ...datosValidos, nivelesDeclarados: [lugarId] },
+      contextoCon("OPERADOR"),
+    );
+
+    expect(resultado).toEqual({ lugarId });
+  });
+
+  it("sin colonia devuelve el asentamiento de la calle como lugar resultante", async () => {
+    const resultado = await corregir()(
+      { ...datosValidos, lugarId: undefined, nivelesDeclarados: [] },
+      contextoCon("OPERADOR"),
+    );
+
+    expect(resultado).toEqual({ lugarId: asentamientoId });
+    expect(repositorio.actualizar).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ lugarId: asentamientoId }),
+    );
   });
 
   it("corrige los cinco campos y registra la bitacora", async () => {

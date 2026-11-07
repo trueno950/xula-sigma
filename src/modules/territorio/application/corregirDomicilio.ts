@@ -27,6 +27,14 @@ export type CorreccionDeDomicilio = {
 };
 
 /**
+ * El lugar del que cuelga la direccion despues de corregirla. Cambia cuando
+ * la correccion agrega, quita o cambia la colonia, y quien redirige tiene
+ * que volver ahi: el arbol responde 404 a una direccion pedida desde un
+ * lugar que ya no es el suyo.
+ */
+export type ResultadoDeCorreccion = { lugarId: LugarId };
+
+/**
  * Corrige una direccion existente: `puedeEscribir`, trabajo de mostrador
  * (design.md seccion 12), igual que el alta. Revalida todo lo que el alta
  * valida usando el mismo camino (`verificarZonaYCalles`): una direccion no
@@ -46,7 +54,7 @@ export function crearCorregirDomicilio(
   return async function corregirDomicilio(
     datos: CorreccionDeDomicilio,
     contexto: ContextoActual,
-  ): Promise<void> {
+  ): Promise<ResultadoDeCorreccion> {
     if (!puedeEscribir(contexto.usuario.rol)) {
       throw new NoAutorizadoError();
     }
@@ -63,7 +71,7 @@ export function crearCorregirDomicilio(
 
     const numero = datos.numero?.trim() || null;
 
-    await withTenant(contexto.ayuntamientoId, async (tx) => {
+    return withTenant(contexto.ayuntamientoId, async (tx) => {
       const existente = await repositorio.bloquearPorId(tx, datos.id);
       if (!existente || existente.bajaEn !== null) {
         throw new NoEncontradoError();
@@ -91,6 +99,8 @@ export function crearCorregirDomicilio(
         entidad: "domicilios",
         entidadId: datos.id,
       });
+
+      return { lugarId };
     });
   };
 }
