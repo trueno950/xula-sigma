@@ -13,10 +13,10 @@ describe("filtrosVisiblesDeDomicilios", () => {
   it("nombra los tres filtros en el orden del formulario", () => {
     expect(
       filtrosVisiblesDeDomicilios(
-        { calle: "Calle 21", numero: "5", raizId },
+        { busqueda: "Calle 21", numero: "5", raizId },
         nombre,
       ).map((f) => f.etiqueta),
-    ).toEqual(["Calle: Calle 21", "Número: 5", "Asentamiento: Tepakan"]);
+    ).toEqual(["Búsqueda: Calle 21", "Número: 5", "Asentamiento: Tepakan"]);
   });
 
   it("un asentamiento fuera del catalogo se nombra igual, sin mostrar el id", () => {

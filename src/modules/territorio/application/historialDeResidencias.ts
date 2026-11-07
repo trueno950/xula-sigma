@@ -1,7 +1,11 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoEncontradoError } from "@/shared/lib/errores";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { componerDireccion } from "../domain";
+import {
+  calleYNumero,
+  etiquetaDeDomicilio,
+  type PartesDeDireccion,
+} from "../domain";
 import type { LectorDeDirecciones } from "./puertosDeDirecciones";
 import type {
   LecturaDePersonas,
@@ -27,12 +31,20 @@ export type ResidenciaConDireccion = ResidenciaGuardada & {
  * el orden `desdeEn DESC, creadoEn DESC` que ya trae `historialDe`-, nunca
  * este caso de uso: no hay escritura que reconciliar.
  *
- * El texto de cada fila sale de `componerDireccion`, el mismo que usa
- * `direccionVigenteDePersona` para la constancia: la ficha no puede decir
- * una direccion y el documento impreso otra. Una lectura por residencia,
+ * El texto de cada fila es la `etiquetaDeDomicilio` de las listas y del
+ * buscador, no el `componerDireccion` de la constancia: en la ficha el
+ * operador elige y compara contra esas listas. Una lectura por residencia,
  * dentro de la misma transaccion; el historial de una persona son pocas
  * filas.
  */
+/** `ancestros` va del lugar del domicilio a su asentamiento, la raiz. */
+const etiquetaDe = ({ calle, numero, ancestros }: PartesDeDireccion) => {
+  const [lugar] = ancestros;
+  if (lugar === undefined) return calleYNumero({ calle, numero });
+
+  return etiquetaDeDomicilio({ calle, numero, lugar, raiz: ancestros.at(-1) });
+};
+
 export function crearHistorialDeResidencias(
   repositorio: RepositorioDeResidencias,
   lectorDeDirecciones: LectorDeDirecciones,
@@ -57,7 +69,7 @@ export function crearHistorialDeResidencias(
         );
         conDireccion.push({
           ...residencia,
-          texto: partes ? componerDireccion(partes) : null,
+          texto: partes ? etiquetaDe(partes) : null,
         });
       }
 

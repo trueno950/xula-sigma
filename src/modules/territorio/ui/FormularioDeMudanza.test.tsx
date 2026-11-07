@@ -81,4 +81,32 @@ describe("FormularioDeMudanza", () => {
 
     expect(html).toContain("Primero cree un domicilio desde Territorio.");
   });
+
+  it("con un domicilio preseleccionado, el select del HTML inicial ya lo trae elegido", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeMudanza
+        personaId={personaId}
+        domicilios={domicilios}
+        textoDeEnvio="Registrar mudanza"
+        domicilioPreseleccionado={domicilios[0]?.id}
+      />,
+    );
+
+    expect(html).toMatch(
+      /<option value="22222222-2222-4222-8222-222222222222" selected="">Calle 21 #12, Tepakan<\/option>/,
+    );
+  });
+
+  it("sin preseleccion el select empieza en el marcador", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeMudanza
+        personaId={personaId}
+        domicilios={domicilios}
+        textoDeEnvio="Registrar mudanza"
+      />,
+    );
+
+    expect(html).toMatch(/<option value="" disabled="" selected="">/);
+    expect(html.match(/selected=""/g)).toHaveLength(1);
+  });
 });

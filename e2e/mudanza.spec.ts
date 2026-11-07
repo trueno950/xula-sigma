@@ -170,7 +170,7 @@ test("en el buscador, enviar sin elegir domicilio no sale de la ficha ni registr
   expect(await leerDomicilioVigente(personaId)).toBeNull();
 });
 
-test("desde la ficha se registra un domicilio nuevo y se vuelve a ella para asignarlo", async ({
+test("desde la ficha se registra un domicilio nuevo y se vuelve a ella con el domicilio ya elegido", async ({
   page,
 }) => {
   const personaId = escenario.personaIdaYVueltaId;
@@ -196,24 +196,28 @@ test("desde la ficha se registra un domicilio nuevo y se vuelve a ella para asig
     .getByRole("button", { name: "Registrar domicilio", exact: true })
     .click();
 
-  // El alta exitosa vuelve a la ficha, no al árbol de territorio.
+  // El alta exitosa vuelve a la ficha con el id del domicilio nuevo, no
+  // con su dirección.
   await expect(page).toHaveURL(
-    new RegExp(`/padron/${personaId}\\?ok=domicilio-creado$`),
+    new RegExp(`/padron/${personaId}\\?ok=domicilio-creado&domicilio=`),
   );
-  await expect(
-    page.getByText(
-      "Domicilio registrado. Búsquelo abajo para asignarlo a esta persona.",
-    ),
-  ).toBeVisible();
   const nuevoId = await leerDomicilioPorNumero(escenario.calleId, numero);
   expect(nuevoId).not.toBeNull();
+  expect(new URL(page.url()).searchParams.get("domicilio")).toBe(nuevoId);
+  await expect(
+    page.getByText(
+      "Domicilio registrado y elegido para la mudanza. Revise la fecha y guarde.",
+    ),
+  ).toBeVisible();
+  // Hidratada la isla, el valor elegido la deja en la lista y no en el buscador.
+  await page.waitForLoadState("load");
+  await expect(page.getByLabel("Domicilio", { exact: true })).toHaveValue(
+    nuevoId ?? "",
+  );
+  await expect(page.getByLabel("Buscar una dirección registrada")).toHaveCount(
+    0,
+  );
 
-  await page
-    .getByLabel("Buscar una dirección registrada")
-    .fill(escenario.consulta);
-  await page
-    .getByLabel("Domicilio", { exact: true })
-    .selectOption({ label: escenario.etiquetaCon(numero) });
   await Promise.all([
     page.waitForResponse(
       (respuesta) =>
@@ -224,4 +228,11 @@ test("desde la ficha se registra un domicilio nuevo y se vuelve a ella para asig
   ]);
 
   await expect.poll(() => leerDomicilioVigente(personaId)).toBe(nuevoId);
+  // La ficha escribe la residencia con la misma etiqueta que las listas.
+  await page.goto(urlDe("motul", `/padron/${personaId}`));
+  await expect(
+    page
+      .getByRole("listitem")
+      .filter({ hasText: escenario.etiquetaCon(numero) }),
+  ).toBeVisible();
 });

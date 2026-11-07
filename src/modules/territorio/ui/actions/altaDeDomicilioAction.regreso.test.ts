@@ -59,7 +59,7 @@ describe("altaDeDomicilioAction: regreso a la ficha", () => {
     });
   });
 
-  it("con un regreso valido, el alta exitosa vuelve a la ficha con su aviso", async () => {
+  it("con un regreso valido, el alta exitosa vuelve a la ficha con su aviso y el id del domicilio nuevo", async () => {
     await expect(
       altaDeDomicilioAction(
         formulario({
@@ -70,7 +70,9 @@ describe("altaDeDomicilioAction: regreso a la ficha", () => {
           regreso: `/padron/${PERSONA}`,
         }),
       ),
-    ).rejects.toThrow(`REDIRECT:/padron/${PERSONA}?ok=domicilio-creado`);
+    ).rejects.toMatchObject({
+      message: `REDIRECT:/padron/${PERSONA}?ok=domicilio-creado&domicilio=77777777-7777-4777-8777-777777777777`,
+    });
   });
 
   it.each([
@@ -91,9 +93,10 @@ describe("altaDeDomicilioAction: regreso a la ficha", () => {
             regreso,
           }),
         ),
-      ).rejects.toThrow(
-        "REDIRECT:/territorio?vista=domicilios&accion=domicilio&ok=domicilio-creado",
-      );
+      ).rejects.toMatchObject({
+        message:
+          "REDIRECT:/territorio?vista=domicilios&accion=domicilio&ok=domicilio-creado",
+      });
     },
   );
 
@@ -102,9 +105,9 @@ describe("altaDeDomicilioAction: regreso a la ficha", () => {
       altaDeDomicilioAction(
         formulario({ ...navegacion, calleId: CALLE, lugarId: "" }),
       ),
-    ).rejects.toThrow(
-      `REDIRECT:/territorio?raiz=${RAIZ}&nodo=${NODO}&vista=domicilios&accion=domicilio&ok=domicilio-creado`,
-    );
+    ).rejects.toMatchObject({
+      message: `REDIRECT:/territorio?raiz=${RAIZ}&nodo=${NODO}&vista=domicilios&accion=domicilio&ok=domicilio-creado`,
+    });
   });
 
   it("un error del alta conserva el regreso para que el siguiente intento vuelva a la ficha", async () => {

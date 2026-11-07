@@ -15,6 +15,7 @@ type Props = {
   personaId: string;
   domicilios: readonly DomicilioParaListado[];
   textoDeEnvio: string;
+  domicilioPreseleccionado?: string | undefined;
 };
 
 /**
@@ -28,6 +29,7 @@ export function FormularioDeMudanza({
   personaId,
   domicilios,
   textoDeEnvio,
+  domicilioPreseleccionado,
 }: Props) {
   return (
     <form action={registrarMudanzaAction} className={CLASES_DE_FORMULARIO}>
@@ -37,6 +39,7 @@ export function FormularioDeMudanza({
           valor: domicilio.id,
           etiqueta: etiquetaDeDomicilio(domicilio),
         }))}
+        preseleccionado={domicilioPreseleccionado}
       />
       <BarraDeAcciones>
         <Boton type="submit" variante="primaria">

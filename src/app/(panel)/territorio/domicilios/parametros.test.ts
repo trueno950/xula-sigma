@@ -15,7 +15,7 @@ describe("leerParametros de /territorio/domicilios", () => {
 
     expect(parametros.filtros).toEqual({
       raizId: raiz,
-      calle: "Calle 21",
+      busqueda: "Calle 21",
       numero: "5",
     });
     expect(parametros.limite).toBe(TAMANO_DE_PAGINA * 2);
@@ -42,7 +42,7 @@ describe("leerParametros de /territorio/domicilios", () => {
     expect(parametros.limite).toBeUndefined();
     expect(parametros.filtros).toEqual({
       raizId: raiz,
-      calle: "Calle 21",
+      busqueda: "Calle 21",
       numero: "5",
     });
   });
@@ -54,7 +54,7 @@ describe("leerParametros de /territorio/domicilios", () => {
       raiz: "no-es-un-uuid",
     });
 
-    expect(parametros.filtros).toEqual({ calle: "Calle 21", numero: "5" });
+    expect(parametros.filtros).toEqual({ busqueda: "Calle 21", numero: "5" });
   });
 
   it("un filtro repetido en la URL cae por su cuenta", () => {
@@ -73,7 +73,7 @@ describe("leerParametros de /territorio/domicilios", () => {
     });
 
     expect(parametros.limite).toBeUndefined();
-    expect(parametros.filtros).toEqual({ calle: "Calle 21" });
+    expect(parametros.filtros).toEqual({ busqueda: "Calle 21" });
   });
 
   it("un filtro en blanco no viaja como cadena vacia", () => {

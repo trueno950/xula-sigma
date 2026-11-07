@@ -18,10 +18,10 @@ describe("construirHrefDeDomicilios", () => {
     expect(construirHrefDeDomicilios({})).toBe("/territorio/domicilios");
   });
 
-  it("preserva la busqueda por calle", () => {
-    expect(construirHrefDeDomicilios({ filtros: { calle: "Calle 21" } })).toBe(
-      "/territorio/domicilios?q=Calle+21",
-    );
+  it("preserva la busqueda general en ?q=", () => {
+    expect(
+      construirHrefDeDomicilios({ filtros: { busqueda: "Calle 21" } }),
+    ).toBe("/territorio/domicilios?q=Calle+21");
   });
 
   it("preserva el numero y la raiz", () => {
@@ -41,7 +41,7 @@ describe("construirHrefDeDomicilios", () => {
   it("incluye limite cuando difiere del default y combina todo", () => {
     expect(
       construirHrefDeDomicilios({
-        filtros: { raizId: cabeceraId, calle: "Calle 21", numero: "5" },
+        filtros: { raizId: cabeceraId, busqueda: "Calle 21", numero: "5" },
         limite: TAMANO_DE_PAGINA * 2,
       }),
     ).toBe(
@@ -62,7 +62,7 @@ describe("hrefDeVerMasDeDomicilios", () => {
   it("crece sobre el limite actual y conserva los filtros", () => {
     expect(
       hrefDeVerMasDeDomicilios({
-        filtros: { calle: "Calle 21" },
+        filtros: { busqueda: "Calle 21" },
         limite: TAMANO_DE_PAGINA * 2,
       }),
     ).toBe(`/territorio/domicilios?q=Calle+21&limite=${TAMANO_DE_PAGINA * 3}`);
@@ -114,10 +114,10 @@ describe("hrefDeDomicilioDelRegistro", () => {
 });
 
 describe("hrefSinFiltroDeDomicilios", () => {
-  const filtros = { raizId: cabeceraId, calle: "Calle 21", numero: "5" };
+  const filtros = { raizId: cabeceraId, busqueda: "Calle 21", numero: "5" };
 
   it("quita solo el filtro nombrado y descarta el limite", () => {
-    expect(hrefSinFiltroDeDomicilios(filtros, "calle")).toBe(
+    expect(hrefSinFiltroDeDomicilios(filtros, "busqueda")).toBe(
       `/territorio/domicilios?numero=5&raiz=${cabeceraId}`,
     );
     expect(hrefSinFiltroDeDomicilios(filtros, "numero")).toBe(

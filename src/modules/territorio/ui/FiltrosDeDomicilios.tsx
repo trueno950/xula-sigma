@@ -17,7 +17,7 @@ type Props = {
 /**
  * Un solo `<form method="get">` para los tres filtros, mismo criterio que
  * `FiltrosDeReportes`: con formularios separados, cambiar el `<select>` de
- * asentamiento mandaria un GET que no lleva la calle escrita, y la busqueda
+ * asentamiento mandaria un GET que no lleva lo escrito en la busqueda, que
  * se perderia sin que nada lo avise. Un solo submit manda los tres a la
  * vez, sin JavaScript ni campos ocultos.
  */
@@ -29,7 +29,7 @@ export function FiltrosDeDomicilios({ filtros, raices }: Props) {
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="q" className={CLASES_DE_ETIQUETA}>
-          Buscar calle
+          Buscar domicilio (calle y número)
         </label>
         <div className="relative">
           <MagnifyingGlass
@@ -41,7 +41,7 @@ export function FiltrosDeDomicilios({ filtros, raices }: Props) {
             id="q"
             name="q"
             type="search"
-            defaultValue={filtros.calle}
+            defaultValue={filtros.busqueda}
             className={`${clasesDeCampo()} w-full sm:w-64 pl-9`}
           />
         </div>

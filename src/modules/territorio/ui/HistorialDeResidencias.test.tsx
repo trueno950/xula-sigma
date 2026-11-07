@@ -36,14 +36,14 @@ describe("HistorialDeResidencias", () => {
         historial={[
           residencia({
             id: "33333333-3333-4333-8333-333333333331",
-            texto: "Calle 20 10, Colonia Centro, Motul",
+            texto: "Calle 20 #10, Colonia Centro, Motul",
             numero: "10",
             desdeEn: "2025-03-01",
             hastaEn: null,
           }),
           residencia({
             id: "33333333-3333-4333-8333-333333333332",
-            texto: "Calle 31 S/N, Motul",
+            texto: "Calle 31 sin número, Motul",
             numero: null,
             desdeEn: "2024-01-01",
             hastaEn: "2025-03-01",
@@ -54,7 +54,7 @@ describe("HistorialDeResidencias", () => {
 
     expect(html.match(/>Vigente</g)).toHaveLength(1);
     expect(html).toMatch(
-      /Calle 20 10, Colonia Centro, Motul<span[\s\S]*?Vigente/,
+      /Calle 20 #10, Colonia Centro, Motul<span[\s\S]*?Vigente/,
     );
     expect(html.indexOf("Vigente")).toBeLessThan(html.indexOf("Calle 31"));
   });

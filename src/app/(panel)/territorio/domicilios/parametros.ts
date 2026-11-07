@@ -48,7 +48,7 @@ export const leerParametros = (
   return {
     filtros: {
       ...(datos.raiz ? { raizId: comoLugarId(datos.raiz) } : {}),
-      ...(datos.q ? { calle: datos.q } : {}),
+      ...(datos.q ? { busqueda: datos.q } : {}),
       ...(datos.numero ? { numero: datos.numero } : {}),
     },
     limite: datos.limite,

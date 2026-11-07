@@ -132,10 +132,26 @@ describe("PaginaDeDomicilios", () => {
     await render({ q: "Calle 21", numero: "5", raiz: raiz.id });
 
     expect(mocks.registroDeDomicilios).toHaveBeenCalledWith(
-      { raizId: raiz.id, calle: "Calle 21", numero: "5" },
+      { raizId: raiz.id, busqueda: "Calle 21", numero: "5" },
       expect.anything(),
       TAMANO_DE_PAGINA,
     );
+  });
+
+  /**
+   * Hallazgo 11: el campo principal busca por calle y numero juntos; un
+   * enlace viejo con `?q=` sigue abriendo, ahora con la busqueda general.
+   */
+  it("el campo principal se rotula para calle y numero, con su chip de busqueda", async () => {
+    const html = await render({ q: "Calle 22 265" });
+
+    expect(html).toMatch(
+      /<label[^>]*for="q"[^>]*>Buscar domicilio \(calle y número\)<\/label>/,
+    );
+    expect(html).toMatch(/<input[^>]*name="q"[^>]*value="Calle 22 265"/);
+    expect(html).toContain("Búsqueda: Calle 22 265");
+    expect(html).not.toContain("Calle: Calle 22 265");
+    expect(html).toMatch(/<label[^>]*for="numero"[^>]*>Número<\/label>/);
   });
 
   it("carga las raices para el select del filtro", async () => {

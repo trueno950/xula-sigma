@@ -9,6 +9,8 @@ type Props = {
   sinHistorial: boolean;
   /** Se vuelve del alta de domicilio abierta desde esta misma ficha. */
   domicilioRecienCreado: boolean;
+  /** Un domicilio de `domicilios` que el formulario trae ya elegido. */
+  domicilioPreseleccionado?: string | undefined;
 };
 
 export function RegistroDeMudanza({
@@ -16,6 +18,7 @@ export function RegistroDeMudanza({
   domicilios,
   sinHistorial,
   domicilioRecienCreado,
+  domicilioPreseleccionado,
 }: Props) {
   const titulo = sinHistorial
     ? "Registrar domicilio actual"
@@ -28,13 +31,16 @@ export function RegistroDeMudanza({
       </h2>
       {domicilioRecienCreado ? (
         <Aviso tono="exito">
-          Domicilio registrado. Búsquelo abajo para asignarlo a esta persona.
+          {domicilioPreseleccionado
+            ? "Domicilio registrado y elegido para la mudanza. Revise la fecha y guarde."
+            : "Domicilio registrado. Búsquelo abajo para asignarlo a esta persona."}
         </Aviso>
       ) : null}
       <FormularioDeMudanza
         personaId={personaId}
         domicilios={domicilios}
         textoDeEnvio={titulo}
+        domicilioPreseleccionado={domicilioPreseleccionado}
       />
     </section>
   );

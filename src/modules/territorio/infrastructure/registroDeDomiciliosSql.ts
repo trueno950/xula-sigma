@@ -1,9 +1,10 @@
-import { type SQL, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import type {
   DomicilioDelRegistro,
   RepositorioDeDomicilios,
 } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
+import { condicionDeBusquedaPorPalabras } from "./busquedaPorPalabras";
 import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
 import { cteDescendientes } from "./jerarquiaDeLugaresSql";
 import { textoDeBusquedaSql } from "./textoDeBusquedaSql";
@@ -58,21 +59,14 @@ export const registroDeDomiciliosSql: Pick<
     const condicionDeNumero = filtros.numero
       ? sql`AND dom.numero = ${filtros.numero}`
       : sql.empty();
-    const patronDeBusqueda = filtros.busqueda
-      ? textoDeBusquedaSql(
-          sql`${`%${escaparComodinesDeLike(filtros.busqueda)}%`}::text`,
-        )
-      : undefined;
-    const coincide = (columna: SQL) =>
-      sql`${textoDeBusquedaSql(columna)} LIKE ${patronDeBusqueda}`;
     const nombreDeRaiz = sql`COALESCE(padre3.nombre, padre2.nombre, padre1.nombre, lug.nombre)`;
-    const condicionDeBusqueda = patronDeBusqueda
-      ? sql`AND (
-          ${coincide(sql`cal.nombre`)}
-          OR ${coincide(sql`dom.numero`)}
-          OR ${coincide(sql`lug.nombre`)}
-          OR ${coincide(nombreDeRaiz)}
-        )`
+    const condicionDeBusqueda = filtros.busqueda
+      ? sql`AND ${condicionDeBusquedaPorPalabras(filtros.busqueda, [
+          sql`cal.nombre`,
+          sql`dom.numero`,
+          sql`lug.nombre`,
+          nombreDeRaiz,
+        ])}`
       : sql.empty();
     const filas = await tx.execute<FilaDeRegistro>(sql`
       ${cteDescendientes(filtros.raizId ?? null)}

@@ -72,7 +72,16 @@ describe("el buscador de direcciones de reportes", () => {
     expect(await idsDe("motul", "JOSÉ")).toContain(domicilioId);
   });
 
+  it("«jose perez 7» encuentra la calle y el numero escritos juntos", async () => {
+    expect(await idsDe("motul", "jose perez 7")).toEqual([domicilioId]);
+  });
+
+  it("«Calle José Pérez #7» tambien, con el # pegado al numero", async () => {
+    expect(await idsDe("motul", "Calle José Pérez #7")).toEqual([domicilioId]);
+  });
+
   it("desde otro municipio no aparece", async () => {
     expect(await idsDe("ticul", "jose perez")).not.toContain(domicilioId);
+    expect(await idsDe("ticul", "jose perez 7")).toEqual([]);
   });
 });
