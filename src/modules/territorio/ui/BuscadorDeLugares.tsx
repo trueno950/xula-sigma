@@ -1,5 +1,5 @@
 import { MagnifyingGlass } from "@phosphor-icons/react/ssr";
-import { ChipDeFiltro, clasesDeCampo } from "@/shared/ui";
+import { ChipDeFiltro, CLASES_DE_ETIQUETA, clasesDeCampo } from "@/shared/ui";
 
 type Props = {
   busqueda: string | undefined;
@@ -13,8 +13,8 @@ type Props = {
 export function BuscadorDeLugares({ busqueda }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <form method="get" className="w-full sm:w-80">
-        <label htmlFor="buscar-lugar" className="sr-only">
+      <form method="get" className="flex w-full flex-col gap-1 sm:w-80">
+        <label htmlFor="buscar-lugar" className={CLASES_DE_ETIQUETA}>
           Buscar lugar por nombre
         </label>
         <div className="relative">
@@ -29,7 +29,7 @@ export function BuscadorDeLugares({ busqueda }: Props) {
             type="search"
             enterKeyHint="search"
             maxLength={100}
-            placeholder="Buscar lugar"
+            placeholder="Colonia o comisaría"
             defaultValue={busqueda}
             className={`${clasesDeCampo()} pl-9`}
           />

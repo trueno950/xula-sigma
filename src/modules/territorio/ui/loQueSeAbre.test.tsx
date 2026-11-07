@@ -86,7 +86,7 @@ describe("el alta de lugar se abre a la vista", () => {
   it("va antes de la lista de lugares, con el ancla", () => {
     const html = renderToStaticMarkup(<TabDeLugares {...props("lugar")} />);
 
-    antesDe(html, "Nueva colonia en Motul", "Lugares dentro de Motul");
+    antesDe(html, "Nueva colonia en Motul", "Colonias dentro de Motul");
     expect(html).toContain(ANCLA);
   });
 

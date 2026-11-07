@@ -144,6 +144,7 @@ describe("VistaDeRaices: busqueda", () => {
     expect(html).toContain('method="get"');
     expect(html).toContain('name="q"');
     expect(html).toContain("Buscar lugar");
+    expect(html).not.toMatch(/<label[^>]*class="sr-only"[^>]*>Buscar lugar/);
   });
 
   it("filtrada, conserva los ancestros, abre las ramas y muestra el chip", () => {

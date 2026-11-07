@@ -6,6 +6,7 @@ import {
   TIPOS_DE_LUGAR,
   type TipoDeLugar,
 } from "../domain";
+import { nombreDeLoContenido } from "./tiposDelAlta";
 
 type PasoDeArbol = { readonly id: LugarId; readonly nombre: string };
 type TabDeLugar = "lugares" | "calles" | "domicilios" | "editar";
@@ -47,7 +48,6 @@ type DatosDePestanas = {
 };
 
 const ETIQUETA_ACCESIBLE = {
-  lugares: "Lugares",
   calles: "Calles",
   domicilios: "Domicilios (de este lugar y lo que contiene)",
 } as const;
@@ -61,6 +61,8 @@ const pestanaDeCuenta = (
   etiqueta: string,
 ): Pestana => {
   const cuenta = datos.cuentas[clave];
+  // "Lugares" cambia de nombre segun lo que cabe adentro; las otras dos no.
+  const accesible = clave === "lugares" ? etiqueta : ETIQUETA_ACCESIBLE[clave];
 
   return {
     clave,
@@ -68,10 +70,10 @@ const pestanaDeCuenta = (
     href: hrefDePanel(datos, clave),
     activa: datos.vista === clave,
     ...(cuenta === undefined
-      ? { etiquetaAccesible: ETIQUETA_ACCESIBLE[clave] }
+      ? { etiquetaAccesible: accesible }
       : {
           cuenta,
-          etiquetaAccesible: `${ETIQUETA_ACCESIBLE[clave]}: ${cuenta}`,
+          etiquetaAccesible: `${accesible}: ${cuenta}`,
         }),
   };
 };
@@ -95,7 +97,7 @@ export const vistaVisibleDeLugar = (
 
 export const pestanasDePanel = (datos: DatosDePestanas): readonly Pestana[] => [
   ...(admiteLugares(datos.tipo)
-    ? [pestanaDeCuenta(datos, "lugares", "Lugares")]
+    ? [pestanaDeCuenta(datos, "lugares", nombreDeLoContenido(datos.tipo))]
     : []),
   ...(puedeTenerCatalogoDeCalles(datos.tipo)
     ? [pestanaDeCuenta(datos, "calles", "Calles")]

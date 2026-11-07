@@ -15,7 +15,12 @@ import { Cuentas, PastillaDeTipo } from "./FilaDeLugar";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
 import { puedeAbrir } from "./permisos";
-import { tiposParaElAlta, tituloDelAlta, verboDelAlta } from "./tiposDelAlta";
+import {
+  nombreDeLoContenido,
+  tiposParaElAlta,
+  tituloDelAlta,
+  verboDelAlta,
+} from "./tiposDelAlta";
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,2fr)" },
@@ -103,7 +108,7 @@ export function TabDeLugares({
 
       {hijos.length > 0 ? (
         <Tabla
-          etiqueta={`Lugares dentro de ${lugar.nombre}`}
+          etiqueta={`${nombreDeLoContenido(lugar.tipo)} dentro de ${lugar.nombre}`}
           columnas={mezclaTipos ? COLUMNAS : SIN_TIPO}
         >
           {hijos.map((hijo) => (
@@ -128,7 +133,8 @@ export function TabDeLugares({
         </Tabla>
       ) : admiteLugares ? (
         <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
-          {lugar.nombre} no tiene lugares adentro todavía.
+          {lugar.nombre} no tiene{" "}
+          {nombreDeLoContenido(lugar.tipo).toLowerCase()} todavía.
         </p>
       ) : null}
     </div>
