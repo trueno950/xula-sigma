@@ -42,6 +42,17 @@ const esIntocable = (rol: Rol) => rol === "SUPER_ADMIN";
 /** Administrar usuarios es alta, baja y restablecimiento. */
 export const puedeAdministrarUsuarios = (rol: Rol) => rol === "ADMIN_MUNICIPAL";
 
+/**
+ * Estrecha un valor sin tipo a uno de los cuatro roles.
+ *
+ * Lo usan los bordes que reciben texto —la sesion de Better Auth, la fila de
+ * un listado— para no castear a mano. Vive aca y no en `contexto.ts` porque
+ * `roles.ts` es el archivo de la union: una segunda copia de la lista es la
+ * forma en que un rol nuevo entra en un lugar y no en el otro.
+ */
+export const esRol = (valor: unknown): valor is Rol =>
+  typeof valor === "string" && (ROLES as readonly string[]).includes(valor);
+
 /** `CONSULTA` es el unico de solo lectura. */
 export const puedeEscribir = (rol: Rol) => rol !== "CONSULTA";
 

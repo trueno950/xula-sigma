@@ -14,7 +14,16 @@
  * puerto.
  */
 
+export {
+  darDeBajaUsuario,
+  restablecerContrasenia,
+} from "./administracionDeUsuarios";
 export { altaDePersona } from "./alta";
+export {
+  ALFABETO_DE_CLAVE_TEMPORAL,
+  generarClaveTemporal,
+  LARGO_DE_CLAVE_TEMPORAL,
+} from "./claveTemporal";
 export { type ContextoActual, contextoActual } from "./contexto";
 export {
   ClaveDebilError,
@@ -24,6 +33,7 @@ export {
 } from "./contrasenia";
 export { manejarAuth } from "./instancia";
 export {
+  esRol,
   puedeAdministrarUsuarios,
   puedeDarDeBaja,
   puedeEscribir,

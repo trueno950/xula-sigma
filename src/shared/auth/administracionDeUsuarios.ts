@@ -5,7 +5,7 @@ import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import type { ContextoActual } from "./contexto";
 import { hashDeClave } from "./contrasenia";
-import { cuentas, usuarios } from "./esquema";
+import { cuentas, sesiones, usuarios } from "./esquema";
 import { puedeDarDeBaja, puedeRestablecerContrasenia, type Rol } from "./roles";
 
 /**
@@ -97,12 +97,23 @@ export function restablecerContrasenia(
 }
 
 /**
- * Baja logica: marca `bajaEn` y nada mas.
+ * Baja logica: marca `bajaEn` y revoca las sesiones vigentes.
  *
  * **No borra la fila**, y por eso `usuarios` no tiene `GRANT DELETE`: la
- * persona sigue siendo quien firmo las constancias que ya emitio. Lo que
- * cambia es que `soloSiSigueActiva` deja de dejarla abrir sesion
- * (`instancia.ts`).
+ * persona sigue siendo quien firmo las constancias que ya emitio.
+ *
+ * **Borra sus sesiones** (S6: «quien queda de baja pierde sus sesiones»).
+ * Cerrar el alta de sesiones nuevas no alcanza: `soloSiSigueActiva` solo
+ * corre al crear una (`instancia.ts`), asi que la que ya estaba abierta
+ * seguiria sirviendo hasta vencer. `xula_app` tiene `GRANT DELETE` sobre
+ * `sesiones` (`drizzle/0001_auth.sql`), y va en la misma transaccion que el
+ * `UPDATE` de la baja: o queda fuera de la cuenta y sin sesiones, o no
+ * quedo de baja.
+ *
+ * **Nadie se da de baja a si mismo.** El municipio tiene un solo
+ * `ADMIN_MUNICIPAL` (S3), ninguna ruta limpia `bajaEn` —el SUPER_ADMIN solo
+ * restablece contrasenias— y darse de baja seria un bloqueo permanente del
+ * municipio entero.
  */
 export function darDeBajaUsuario(
   contexto: ContextoActual,
@@ -115,10 +126,14 @@ export function darDeBajaUsuario(
       throw new NoAutorizadoError();
     }
 
+    if (objetivo.id === contexto.usuario.id) throw new NoAutorizadoError();
+
     await tx
       .update(usuarios)
       .set({ bajaEn: new Date() })
       .where(eq(usuarios.id, objetivo.id));
+
+    await tx.delete(sesiones).where(eq(sesiones.userId, objetivo.id));
 
     await trazaDe(tx, {
       contexto,
