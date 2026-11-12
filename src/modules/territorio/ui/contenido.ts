@@ -68,6 +68,12 @@ export type PropsDeContenido = {
   zonasDelLugar?: number | undefined;
   /** Lo que frena mover o dar de baja la calle abierta. `null`: no se leyo. */
   usoDeCalle?: UsoDeCalle | null | undefined;
+  /**
+   * La ficha de la persona desde la que se entro al arbol, ya validada por
+   * `esquemaDeRegreso`; viaja en los enlaces y en los formularios para que
+   * corregir una direccion no la pierda. Ver `regresoAFicha.ts`.
+   */
+  regreso?: string | undefined;
 };
 
 /** Una fila de la pestana Domicilios, con su calle y su lugar ya resueltos. */
@@ -89,6 +95,7 @@ export const rutaDe = ({
   accion,
   calleId,
   domicilioId,
+  regreso,
 }: {
   raizId: LugarId;
   nodoId: LugarId;
@@ -96,12 +103,14 @@ export const rutaDe = ({
   accion?: AccionDeNodo;
   calleId?: CalleId;
   domicilioId?: DomicilioId;
+  /** La ficha a la que se vuelve, ya validada; ver `regresoAFicha.ts`. */
+  regreso?: string | undefined;
 }) =>
   `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=${vista}${
     accion ? `&accion=${accion}` : ""
   }${calleId ? `&calle=${calleId}` : ""}${
     domicilioId ? `&domicilio=${domicilioId}` : ""
-  }`;
+  }${regreso ? `&regreso=${encodeURIComponent(regreso)}` : ""}`;
 
 export const hijosDirectosDe = (
   nodos: readonly NodoDeSubarbol[],

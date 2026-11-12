@@ -31,7 +31,7 @@ export type RepositorioDeAdministracionDeZonas = {
     datos: { id: ZonaId; nombre: string },
   ): Promise<void>;
   darDeBaja(tx: TransaccionTenant, zonaId: ZonaId): Promise<void>;
-  calleActivaPorId(
+  bloquearCalleActivaPorId(
     tx: TransaccionTenant,
     calleId: CalleId,
   ): Promise<{ id: CalleId; lugarId: LugarId } | null>;

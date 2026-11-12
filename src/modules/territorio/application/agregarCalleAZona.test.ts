@@ -42,7 +42,7 @@ const repositorioDeZonas = (): RepositorioDeAdministracionDeZonas => ({
   bloquearPorId: vi.fn().mockResolvedValue(zonaActiva),
   renombrar: vi.fn(),
   darDeBaja: vi.fn(),
-  calleActivaPorId: vi.fn().mockResolvedValue({ id: calleId, lugarId }),
+  bloquearCalleActivaPorId: vi.fn().mockResolvedValue({ id: calleId, lugarId }),
   perteneceLaCalle: vi.fn().mockResolvedValue(false),
   agregarCalle: vi.fn(),
   quitarCalle: vi.fn(),
@@ -82,7 +82,7 @@ describe("agregar calle a zona", () => {
 
   it("rechaza calle inexistente o dada de baja", async () => {
     const repositorio = repositorioDeZonas();
-    vi.mocked(repositorio.calleActivaPorId).mockResolvedValue(null);
+    vi.mocked(repositorio.bloquearCalleActivaPorId).mockResolvedValue(null);
 
     await expect(
       crearAgregarCalleAZona(repositorio)(
@@ -95,7 +95,7 @@ describe("agregar calle a zona", () => {
 
   it("rechaza una calle de otro asentamiento", async () => {
     const repositorio = repositorioDeZonas();
-    vi.mocked(repositorio.calleActivaPorId).mockResolvedValue({
+    vi.mocked(repositorio.bloquearCalleActivaPorId).mockResolvedValue({
       id: calleId,
       lugarId: otroLugarId,
     });
@@ -107,6 +107,24 @@ describe("agregar calle a zona", () => {
       ),
     ).rejects.toBeInstanceOf(CalleFueraDelAsentamientoError);
     expect(repositorio.agregarCalle).not.toHaveBeenCalled();
+  });
+
+  it("bloquea la calle antes que la zona", async () => {
+    const repositorio = repositorioDeZonas();
+
+    await crearAgregarCalleAZona(repositorio)(
+      { zonaId, calleId },
+      contextoCon("ADMIN_MUNICIPAL"),
+    );
+
+    const [bloqueoDeCalle] = vi.mocked(repositorio.bloquearCalleActivaPorId)
+      .mock.invocationCallOrder;
+    const [bloqueoDeZona] = vi.mocked(repositorio.bloquearPorId).mock
+      .invocationCallOrder;
+    if (!bloqueoDeCalle || !bloqueoDeZona) {
+      throw new Error("El alta no bloqueo las dos filas.");
+    }
+    expect(bloqueoDeCalle).toBeLessThan(bloqueoDeZona);
   });
 
   it("es idempotente si la calle ya pertenece", async () => {

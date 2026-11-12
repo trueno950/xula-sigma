@@ -24,6 +24,8 @@ type Props = {
   lugares: readonly Pick<LugarGuardado, "id" | "nombre">[];
   nodos: readonly NodoDeSubarbol[];
   borrador?: BorradorDeDomicilio | null | undefined;
+  /** La ficha desde la que se entro; ver `contenido.ts` (`PropsDeContenido`). */
+  regreso?: string | undefined;
 };
 
 /**
@@ -39,6 +41,7 @@ export function CorreccionDeDomicilio({
   lugares,
   nodos,
   borrador,
+  regreso,
 }: Props) {
   const direccion = direccionDeDomicilio(domicilio, calles);
   const panel = `${rutaDe({
@@ -46,6 +49,7 @@ export function CorreccionDeDomicilio({
     nodoId,
     vista: "domicilios",
     domicilioId: domicilio.id,
+    regreso,
   })}#panel-de-domicilio`;
 
   return (
@@ -68,6 +72,7 @@ export function CorreccionDeDomicilio({
         zona={zonaDeCorreccion({ raizId, domicilio, lugares, nodos })}
         borrador={borrador}
         volverA={panel}
+        regreso={regreso}
       />
     </section>
   );

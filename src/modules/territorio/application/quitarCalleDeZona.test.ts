@@ -36,7 +36,7 @@ const repositorioDeZonas = (): RepositorioDeAdministracionDeZonas => ({
   bloquearPorId: vi.fn().mockResolvedValue(zonaActiva),
   renombrar: vi.fn(),
   darDeBaja: vi.fn(),
-  calleActivaPorId: vi.fn(),
+  bloquearCalleActivaPorId: vi.fn(),
   perteneceLaCalle: vi.fn().mockResolvedValue(true),
   agregarCalle: vi.fn(),
   quitarCalle: vi.fn(),

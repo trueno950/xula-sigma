@@ -1,5 +1,6 @@
 import { MapPin } from "@phosphor-icons/react/ssr";
 import {
+  Aviso,
   CeldaDeApoyo,
   CeldaPrincipal,
   ChipDeFiltro,
@@ -16,6 +17,7 @@ import type {
   FiltrosDeRegistro,
 } from "../application/puertosDeDomicilios";
 import { calleYNumero, etiquetaDeDomicilio } from "../domain";
+import { avisoDePalabrasIgnoradas } from "../domain/busquedaPorPalabras";
 import { FiltrosDeDomicilios } from "./FiltrosDeDomicilios";
 import { filtrosVisiblesDeDomicilios } from "./filtrosVisiblesDeDomicilios";
 import {
@@ -51,6 +53,9 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
  * La fila no arma su direccion a mano: `calleYNumero` es la misma que usa el
  * arbol, para que un domicilio se lea igual en las dos pantallas. La raiz
  * queda fuera porque la columna Lugar es lo unico que la fila muestra.
+ *
+ * El chip repite la consulta tal como se escribio, y debajo el registro dice
+ * cuantas palabras quedaron fuera del tope de la busqueda.
  */
 export function RegistroDeDomicilios({
   domicilios,
@@ -64,6 +69,9 @@ export function RegistroDeDomicilios({
   const nombreDeRaiz = (id: string) =>
     raices.find((raiz) => raiz.valor === id)?.etiqueta;
   const chips = filtrosVisiblesDeDomicilios(filtros, nombreDeRaiz);
+  const aviso = filtros.busqueda
+    ? avisoDePalabrasIgnoradas(filtros.busqueda)
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -93,6 +101,8 @@ export function RegistroDeDomicilios({
           ))}
         </ul>
       ) : null}
+
+      {aviso ? <Aviso tono="aviso">{aviso}</Aviso> : null}
 
       {estado.clase !== "con-filas" ? (
         <EstadoVacio

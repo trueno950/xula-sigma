@@ -39,3 +39,13 @@ export const enlaceDeAltaDesdeFicha = (personaId: string): string =>
     accion: "domicilio",
     regreso: fichaDePersona(personaId),
   }).toString()}`;
+
+/**
+ * El regreso ya recortado, o `undefined` si no pasa el esquema. Lo usan los
+ * bordes que lo reciben de la URL o del formulario y lo vuelven a escribir en
+ * un enlace: un valor que no es la ficha de una persona no llega al HTML.
+ */
+export const regresoValido = (
+  destino: string | undefined,
+): string | undefined =>
+  destino && esquemaDeRegreso.safeParse(destino).success ? destino : undefined;

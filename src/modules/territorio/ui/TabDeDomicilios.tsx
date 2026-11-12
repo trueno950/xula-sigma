@@ -33,6 +33,7 @@ export function TabDeDomicilios(props: PropsDeContenido) {
       lugares={props.lugares}
       nodos={props.nodos}
       borrador={props.borrador}
+      regreso={props.regreso}
     />
   );
 }
@@ -51,6 +52,7 @@ function ListaYPanel({
   mismaDireccion,
   busqueda,
   limite,
+  regreso,
 }: PropsDeContenido) {
   const puedeActuar = puedeAbrir("domicilio", permisos);
   const puedeAgregarCalle = puedeAbrir("calle", permisos);
@@ -109,6 +111,7 @@ function ListaYPanel({
               permisos={permisos}
               residentes={residentes === undefined ? [] : residentes}
               mismaDireccion={mismaDireccion ?? []}
+              regreso={regreso}
             />
           ) : null}
           <PaginaOVacioPorFiltro

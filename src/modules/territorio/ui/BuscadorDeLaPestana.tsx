@@ -1,11 +1,13 @@
 import { MagnifyingGlass } from "@phosphor-icons/react/ssr";
 import {
+  Aviso,
   Boton,
   ChipDeFiltro,
   CLASES_DE_ETIQUETA,
   clasesDeCampo,
 } from "@/shared/ui";
 import type { LugarId } from "../domain";
+import { avisoDePalabrasIgnoradas } from "../domain/busquedaPorPalabras";
 import { rutaDe } from "./contenido";
 
 type Props = {
@@ -21,6 +23,10 @@ type Props = {
  * JavaScript. Un `<form method="get">` reemplaza la query entera, asi que
  * el lugar y la pestana viajan como campos ocultos; el `?limite=` no, y
  * una busqueda nueva vuelve a la primera pagina.
+ *
+ * Solo Domicilios tiene tope de palabras (`registroDeDomicilios`): ahi el
+ * chip repite la consulta y debajo se avisa cuantas quedaron fuera. Calles
+ * filtra por subcadena (`paginaDeCalles`), sin recorte que avisar.
  */
 export function BuscadorDeLaPestana({
   raizId,
@@ -30,6 +36,10 @@ export function BuscadorDeLaPestana({
   busqueda,
 }: Props) {
   const id = `buscar-en-${vista}`;
+  const aviso =
+    vista === "domicilios" && busqueda
+      ? avisoDePalabrasIgnoradas(busqueda)
+      : undefined;
 
   return (
     <div className="flex flex-col gap-3">
@@ -72,6 +82,7 @@ export function BuscadorDeLaPestana({
           hrefQuitar={rutaDe({ raizId, nodoId, vista })}
         />
       ) : null}
+      {aviso ? <Aviso tono="aviso">{aviso}</Aviso> : null}
     </div>
   );
 }

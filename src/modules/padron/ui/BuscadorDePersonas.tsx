@@ -1,5 +1,6 @@
 import { MagnifyingGlass } from "@phosphor-icons/react/ssr";
-import { Boton, CLASES_DE_ETIQUETA, clasesDeCampo } from "@/shared/ui";
+import { Aviso, Boton, CLASES_DE_ETIQUETA, clasesDeCampo } from "@/shared/ui";
+import { avisoDePalabrasIgnoradas } from "../domain";
 
 type Props = {
   /** `searchParams.q` de `/padron`, para que el campo no se vacie al postear. */
@@ -21,8 +22,14 @@ type Props = {
  * La ayuda de abajo dice por que el campo, y no un placeholder: al escribir
  * el placeholder desaparece y con el la unica pista de que la busqueda
  * tambien alcanza a la CURP.
+ *
+ * Cuando la consulta pasa el tope de palabras, la busqueda usa solo las
+ * primeras y el aviso dice cuantas quedaron fuera; el campo conserva lo
+ * escrito, igual que el chip de la busqueda de domicilios.
  */
 export function BuscadorDePersonas({ cadena }: Props) {
+  const aviso = cadena ? avisoDePalabrasIgnoradas(cadena) : undefined;
+
   return (
     <form method="get" className="flex flex-col gap-1">
       <label htmlFor="q" className={CLASES_DE_ETIQUETA}>
@@ -49,6 +56,7 @@ export function BuscadorDePersonas({ cadena }: Props) {
       <p id="q-ayuda" className={CLASES_DE_ETIQUETA}>
         Nombre, apellidos o CURP. No distingue acentos.
       </p>
+      {aviso ? <Aviso tono="aviso">{aviso}</Aviso> : null}
     </form>
   );
 }

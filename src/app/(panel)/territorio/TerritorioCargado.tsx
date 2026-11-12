@@ -69,6 +69,7 @@ export const TerritorioCargado = ({
           ok={ok}
           nuevo={parametros.nuevo}
           lugares={lugares}
+          regreso={parametros.regreso}
         />
       ) : null}
 
@@ -123,6 +124,7 @@ export const TerritorioCargado = ({
           borrador={borrador}
           usoDeCalle={usoDeCalle}
           zonasDelLugar={zonasDelLugar}
+          regreso={parametros.regreso}
         />
       ) : null}
     </PaginaDePanel>
