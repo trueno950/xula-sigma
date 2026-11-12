@@ -1,33 +1,7 @@
 import { type SQL, sql } from "drizzle-orm";
+import { palabrasDeBusqueda } from "../domain/busquedaPorPalabras";
 import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
 import { textoDeBusquedaSql } from "./textoDeBusquedaSql";
-
-/**
- * Tope de palabras: cada una suma un `LIKE` por columna, y una direccion
- * escrita entera -calle, numero, colonia- no pasa de seis. Las de mas se
- * ignoran en vez de rechazar la busqueda.
- */
-export const MAXIMO_DE_PALABRAS = 6;
-
-const SIGNOS_QUE_SE_QUITAN = /[#,]/g;
-/**
- * Los separadores que se escriben entre las partes de una direccion. `%` y
- * `_` no estan: una palabra de solo comodines se busca como texto literal,
- * como antes de partir la consulta (`busquedaDeDirecciones.isolation.test.ts`).
- */
-const SOLO_SEPARADORES = /^[-.;:/]*$/;
-
-/**
- * La consulta de la operadora partida en palabras: «Calle 22 #265» es
- * `["Calle", "22", "265"]`. El guion se queda porque vive dentro de numeros
- * como «265-A».
- */
-export const palabrasDeBusqueda = (consulta: string): readonly string[] =>
-  consulta
-    .split(/\s+/)
-    .map((palabra) => palabra.replace(SIGNOS_QUE_SE_QUITAN, ""))
-    .filter((palabra) => !SOLO_SEPARADORES.test(palabra))
-    .slice(0, MAXIMO_DE_PALABRAS);
 
 const patronDe = (palabra: string): SQL =>
   textoDeBusquedaSql(sql`${`%${escaparComodinesDeLike(palabra)}%`}::text`);

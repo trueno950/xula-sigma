@@ -154,6 +154,12 @@ describe("PaginaDeDomicilios", () => {
     expect(html).toMatch(/<label[^>]*for="numero"[^>]*>Número<\/label>/);
   });
 
+  it("avisa en la pantalla cuantas palabras quedaron fuera del tope de la busqueda", async () => {
+    const html = await render({ q: "Calle 22 265 entre 21 y 23 norte" });
+
+    expect(html).toContain("se ignoraron 2 palabras");
+  });
+
   it("carga las raices para el select del filtro", async () => {
     const html = await render();
 

@@ -18,6 +18,38 @@ const FRAGMENTO_DE_CURP = /^[A-Z]{4}\d[A-Z0-9]{0,13}$/;
  */
 const MAXIMO_DE_PALABRAS = 8;
 
+const palabrasDeLaCadena = (cadena: string): readonly string[] =>
+  cadena.split(/\s+/).filter(Boolean);
+
+/**
+ * Las palabras que el tope deja fuera del `WHERE`, para decircelo a la
+ * operadora. Se cuentan sobre la cadena escrita y la busqueda corre sobre la
+ * expandida: coinciden mientras cada abreviatura del catalogo sea una sola
+ * palabra, que es como esta sembrado (`drizzle/0004_padron.sql`).
+ */
+export const palabrasIgnoradasDeBusqueda = (cadena: string): number =>
+  Math.max(0, palabrasDeLaCadena(cadena).length - MAXIMO_DE_PALABRAS);
+
+/**
+ * El aviso que acompaña al buscador. Con una sola palabra fuera es singular,
+ * y sin palabras ignoradas no hay nada que avisar. El texto es el mismo que
+ * el de la busqueda de domicilios, con el tope de este buscador.
+ */
+export const avisoDePalabrasIgnoradas = (
+  cadena: string,
+): string | undefined => {
+  const ignoradas = palabrasIgnoradasDeBusqueda(cadena);
+
+  if (ignoradas === 0) return undefined;
+
+  const recorte =
+    ignoradas === 1
+      ? "se ignoró 1 palabra"
+      : `se ignoraron ${ignoradas} palabras`;
+
+  return `Se busca con las ${MAXIMO_DE_PALABRAS} primeras palabras; ${recorte}.`;
+};
+
 export type CriteriosDeBusqueda = {
   readonly palabras: readonly string[];
   readonly curp?: string;
@@ -37,10 +69,10 @@ export function criteriosDeBusqueda(
   cadena: string,
   cadenaExpandida: string,
 ): CriteriosDeBusqueda {
-  const palabras = cadenaExpandida
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, MAXIMO_DE_PALABRAS);
+  const palabras = palabrasDeLaCadena(cadenaExpandida).slice(
+    0,
+    MAXIMO_DE_PALABRAS,
+  );
   const compacta = cadena.replace(/\s+/g, "").toUpperCase();
 
   return FRAGMENTO_DE_CURP.test(compacta)

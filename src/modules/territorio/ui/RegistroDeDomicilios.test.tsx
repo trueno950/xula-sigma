@@ -79,6 +79,22 @@ describe("RegistroDeDomicilios", () => {
     expect(html).toContain('href="/territorio/domicilios"');
   });
 
+  it("avisa cuantas palabras quedo fuera del tope, junto al chip que repite la consulta", () => {
+    const html = render({
+      filtros: { busqueda: "Calle 22 265 entre 21 y 23 norte" },
+    });
+
+    expect(html).toContain("Búsqueda: Calle 22 265 entre 21 y 23 norte");
+    expect(html).toContain("se ignoraron 2 palabras");
+  });
+
+  it("con la busqueda dentro del tope no hay aviso de recorte", () => {
+    const html = render({ filtros: { busqueda: "Calle 21" } });
+
+    expect(html).toContain("Búsqueda: Calle 21");
+    expect(html).not.toContain("se ignor");
+  });
+
   it("no ofrece Ver mas cuando el registro no trajo una fila de mas", () => {
     expect(render({ hayMas: false })).not.toContain("Ver más");
   });

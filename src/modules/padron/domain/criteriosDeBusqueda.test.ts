@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { criteriosDeBusqueda } from "./criteriosDeBusqueda";
+import {
+  avisoDePalabrasIgnoradas,
+  criteriosDeBusqueda,
+  palabrasIgnoradasDeBusqueda,
+} from "./criteriosDeBusqueda";
+import { normalizarParaBusqueda } from "./normalizarParaBusqueda";
 
 describe("criteriosDeBusqueda", () => {
   it("cada palabra de la cadena expandida es un prefijo a buscar", () => {
@@ -56,5 +61,62 @@ describe("criteriosDeBusqueda", () => {
     );
 
     expect(criteriosDeBusqueda(veinte, veinte).palabras).toHaveLength(8);
+  });
+});
+
+describe("palabrasIgnoradasDeBusqueda", () => {
+  const diez = Array.from({ length: 10 }, (_, i) => `palabra${i}`).join(" ");
+
+  it("cuenta las palabras que el tope deja fuera de la busqueda", () => {
+    expect(palabrasIgnoradasDeBusqueda(diez)).toBe(2);
+  });
+
+  it("una sola palabra de mas cuenta como una", () => {
+    expect(palabrasIgnoradasDeBusqueda("a b c d e f g h i")).toBe(1);
+  });
+
+  it("hasta el tope no se ignora ninguna", () => {
+    expect(palabrasIgnoradasDeBusqueda("a b c d e f g h")).toBe(0);
+    expect(palabrasIgnoradasDeBusqueda("   ")).toBe(0);
+  });
+
+  /**
+   * La cuenta se hace sobre la cadena escrita y la busqueda sobre la
+   * expandida: coinciden mientras cada abreviatura del catalogo sea una
+   * sola palabra, que es como esta sembrado
+   * (`drizzle/0004_padron.sql`).
+   */
+  it("cuenta lo mismo que recorta la busqueda, con abreviaturas de por medio", () => {
+    const cadena = "gpe poot canul pech ma jose maria lopez santos uno";
+    const expandida = normalizarParaBusqueda(
+      cadena,
+      new Map([
+        ["gpe", "guadalupe"],
+        ["ma", "maria"],
+      ]),
+    );
+    const buscadas = criteriosDeBusqueda(cadena, expandida).palabras.length;
+
+    expect(buscadas + palabrasIgnoradasDeBusqueda(cadena)).toBe(10);
+  });
+});
+
+describe("avisoDePalabrasIgnoradas", () => {
+  it("avisa en plural cuantas palabras quedaron fuera", () => {
+    const diez = Array.from({ length: 10 }, (_, i) => `palabra${i}`).join(" ");
+
+    expect(avisoDePalabrasIgnoradas(diez)).toBe(
+      "Se busca con las 8 primeras palabras; se ignoraron 2 palabras.",
+    );
+  });
+
+  it("avisa en singular cuando quedo fuera una sola", () => {
+    expect(avisoDePalabrasIgnoradas("a b c d e f g h i")).toBe(
+      "Se busca con las 8 primeras palabras; se ignoró 1 palabra.",
+    );
+  });
+
+  it("sin palabras ignoradas no hay nada que avisar", () => {
+    expect(avisoDePalabrasIgnoradas("gpe poot")).toBe(undefined);
   });
 });
