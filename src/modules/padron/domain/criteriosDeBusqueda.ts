@@ -18,14 +18,22 @@ const FRAGMENTO_DE_CURP = /^[A-Z]{4}\d[A-Z0-9]{0,13}$/;
  */
 const MAXIMO_DE_PALABRAS = 8;
 
+/**
+ * La misma particion que la busqueda: `normalizarParaBusqueda` quita los
+ * puntos y descarta los tokens vacios antes de partir en palabras, asi que
+ * «Poot.» y «.» son una palabra y ninguna, no dos. Sin eso el aviso contaba
+ * un punto suelto que la busqueda nunca miro (S3 de
+ * `territorio-seguimiento`).
+ */
 const palabrasDeLaCadena = (cadena: string): readonly string[] =>
-  cadena.split(/\s+/).filter(Boolean);
+  cadena.replace(/[.]/g, "").split(/\s+/).filter(Boolean);
 
 /**
  * Las palabras que el tope deja fuera del `WHERE`, para decircelo a la
- * operadora. Se cuentan sobre la cadena escrita y la busqueda corre sobre la
- * expandida: coinciden mientras cada abreviatura del catalogo sea una sola
- * palabra, que es como esta sembrado (`drizzle/0004_padron.sql`).
+ * operadora. La busqueda corre sobre la cadena expandida y normalizada, y
+ * esta cuenta sobre la escrita con la misma particion: coinciden mientras
+ * cada abreviatura del catalogo sea una sola palabra, que es como esta
+ * sembrado (`drizzle/0004_padron.sql`).
  */
 export const palabrasIgnoradasDeBusqueda = (cadena: string): number =>
   Math.max(0, palabrasDeLaCadena(cadena).length - MAXIMO_DE_PALABRAS);

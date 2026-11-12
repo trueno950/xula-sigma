@@ -26,6 +26,21 @@ describe("BuscadorDePersonas", () => {
     expect(html).not.toContain("se ignor");
   });
 
+  /**
+   * S3 de `territorio-seguimiento`: el aviso cuenta las palabras con la
+   * misma particion que la busqueda, y la busqueda descarta el punto suelto
+   * al normalizar. Avisar de una palabra que se busca entera seria un aviso
+   * falso.
+   */
+  it("un punto suelto dentro del tope no dispara el aviso", () => {
+    const html = renderToStaticMarkup(
+      <BuscadorDePersonas cadena="a b c d e f g h ." />,
+    );
+
+    expect(html).not.toContain("se ignor");
+    expect(html).toMatch(/value="a b c d e f g h ."/);
+  });
+
   it("sin busqueda no hay aviso", () => {
     expect(renderToStaticMarkup(<BuscadorDePersonas />)).not.toContain(
       "se ignor",
