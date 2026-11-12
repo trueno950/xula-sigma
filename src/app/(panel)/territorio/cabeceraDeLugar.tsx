@@ -48,12 +48,23 @@ const cadenaDe = (
  * raices el titulo es "Territorio" y no hay migaja: es el primer eslabon.
  * Dentro de un lugar el titulo es el lugar -la pantalla ya dice donde esta-
  * y el primer eslabon de la migaja sigue siendo "Territorio".
+ *
+ * `regreso` baja entero a la migaja: quien llego al arbol desde la ficha de
+ * una persona la conserva en cada eslabon que se puede clickear (S4 de
+ * `territorio-seguimiento`).
  */
-export const cabeceraDeLugar = (
-  raiz: Pick<LugarGuardado, "id" | "nombre"> | null,
-  nodos: readonly NodoDeSubarbol[],
-  nodo: NodoSeleccionado | null,
-): Cabecera => {
+export const cabeceraDeLugar = ({
+  raiz,
+  nodos,
+  nodo,
+  regreso,
+}: {
+  raiz: Pick<LugarGuardado, "id" | "nombre"> | null;
+  nodos: readonly NodoDeSubarbol[];
+  nodo: NodoSeleccionado | null;
+  /** La ficha desde la que se entro; ver `regresoAFicha.ts`. */
+  regreso?: string | undefined;
+}): Cabecera => {
   if (!raiz || !nodo) return { titulo: "Territorio" };
 
   return {
@@ -61,7 +72,7 @@ export const cabeceraDeLugar = (
     etiqueta: etiquetaDeTipo(nodo.tipo),
     migaja: (
       <Migaja
-        pasos={pasosDeMigaja(raiz.id, cadenaDe(raiz, nodos, nodo))}
+        pasos={pasosDeMigaja(raiz.id, cadenaDe(raiz, nodos, nodo), regreso)}
         etiqueta="Ubicación"
       />
     ),

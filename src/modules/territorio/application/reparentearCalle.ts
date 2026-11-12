@@ -31,6 +31,16 @@ type DatosDeDestino = {
  * Valida el destino y, si de verdad cambia de asentamiento, que la calle no
  * tenga domicilios colgados -esos domicilios se quedarian con el lugarId
  * viejo, apuntando a una calle que ya vive en otro lugar.
+ *
+ * El destino se bloquea (`bloquearPorId`, `FOR UPDATE` con `baja_en IS
+ * NULL`) despues de la calle: un `darDeBajaLugar` concurrente sobre el
+ * destino espera a que este movimiento termine, y el que llega segundo ve
+ * el lugar dado de baja como inexistente. Leerlo sin lock dejaba mover una
+ * calle a un lugar que la baja simultanea daba de baja sin verla, y quedaba
+ * una calle activa colgando de un lugar de baja (S2 de
+ * `territorio-seguimiento`). El orden calle → lugar es el que ya usa
+ * `agregarCalleAZona` con la zona; ninguna ruta toma el lugar y despues la
+ * calle.
  */
 async function exigirDestinoValido({
   repositorio,
@@ -39,7 +49,7 @@ async function exigirDestinoValido({
   existente,
   nuevoLugarId,
 }: DatosDeDestino) {
-  const destino = await repositorioDeLugares.buscarPorId(tx, nuevoLugarId);
+  const destino = await repositorioDeLugares.bloquearPorId(tx, nuevoLugarId);
   if (!destino) throw new NoEncontradoError();
   if (!puedeTenerCatalogoDeCalles(destino.tipo)) {
     throw new CatalogoDeCallesSoloEnAsentamientosError();

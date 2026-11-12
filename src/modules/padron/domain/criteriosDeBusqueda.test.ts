@@ -99,6 +99,31 @@ describe("palabrasIgnoradasDeBusqueda", () => {
 
     expect(buscadas + palabrasIgnoradasDeBusqueda(cadena)).toBe(10);
   });
+
+  /**
+   * S3 de `territorio-seguimiento`: la busqueda corre sobre
+   * `normalizarParaBusqueda`, que quita los puntos y descarta los tokens
+   * vacios. Un punto suelto no es una palabra para la busqueda, asi que
+   * tampoco puede contarse como ignorada.
+   */
+  it("un token de solo puntos no cuenta como palabra ignorada", () => {
+    expect(palabrasIgnoradasDeBusqueda("a b c d e f g h .")).toBe(0);
+    expect(palabrasIgnoradasDeBusqueda("a b c d e f g h i ...")).toBe(1);
+  });
+
+  it("cuenta lo mismo que recorta la busqueda cuando la cadena lleva puntos", () => {
+    const cadena = "gpe poot canul pech ma jose maria lopez santos uno .";
+    const expandida = normalizarParaBusqueda(
+      cadena,
+      new Map([
+        ["gpe", "guadalupe"],
+        ["ma", "maria"],
+      ]),
+    );
+    const buscadas = criteriosDeBusqueda(cadena, expandida).palabras.length;
+
+    expect(buscadas + palabrasIgnoradasDeBusqueda(cadena)).toBe(10);
+  });
 });
 
 describe("avisoDePalabrasIgnoradas", () => {
@@ -118,5 +143,9 @@ describe("avisoDePalabrasIgnoradas", () => {
 
   it("sin palabras ignoradas no hay nada que avisar", () => {
     expect(avisoDePalabrasIgnoradas("gpe poot")).toBe(undefined);
+  });
+
+  it("un punto suelto no alcanza para avisar", () => {
+    expect(avisoDePalabrasIgnoradas("a b c d e f g h .")).toBe(undefined);
   });
 });

@@ -55,7 +55,12 @@ export const TerritorioCargado = ({
   } = carga;
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, ok, vista } = parametros;
-  const cabecera = cabeceraDeLugar(raiz, nodos, nodo);
+  const cabecera = cabeceraDeLugar({
+    raiz,
+    nodos,
+    nodo,
+    regreso: parametros.regreso,
+  });
 
   return (
     <PaginaDePanel

@@ -28,7 +28,11 @@ const calle: CalleParaPanel = {
   punto: null,
 };
 
-const renderPanel = (accion: AccionDeNodo, permisos: PermisosDeTerritorio) =>
+const renderPanel = (
+  accion: AccionDeNodo,
+  permisos: PermisosDeTerritorio,
+  regreso?: string,
+) =>
   renderToStaticMarkup(
     <PanelDeCalle
       raizId={raizId}
@@ -37,6 +41,7 @@ const renderPanel = (accion: AccionDeNodo, permisos: PermisosDeTerritorio) =>
       lugares={[]}
       accion={accion}
       permisos={permisos}
+      regreso={regreso}
     />,
   );
 
@@ -82,5 +87,23 @@ describe("PanelDeCalle", () => {
     );
 
     expect(html).toContain('data-formulario="renombrar"');
+  });
+
+  /**
+   * S4 de `territorio-seguimiento`: cerrar el panel no pierde la ficha desde
+   * la que se entro, igual que «Corregir» en el panel del domicilio.
+   */
+  it("«Cerrar» conserva el regreso cuando lo hay", () => {
+    const REGRESO = `/padron/88888888-8888-4888-8888-888888888888`;
+    const html = renderPanel(
+      "renombrarCalle",
+      permisosDeTerritorio("ADMIN_MUNICIPAL"),
+      REGRESO,
+    );
+
+    expect(anclas(html)[0]).toEqual({
+      href: `/territorio?raiz=${raizId}&amp;nodo=${nodoId}&amp;vista=calles&amp;regreso=${encodeURIComponent(REGRESO)}`,
+      texto: "Cerrar",
+    });
   });
 });

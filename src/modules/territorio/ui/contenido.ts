@@ -24,6 +24,7 @@ import type {
   TabDeLugar,
 } from "./PanelDeNodo";
 import type { PermisosDeTerritorio } from "./permisos";
+import { conRegreso } from "./regresoEnRuta";
 
 /**
  * Lo que las cuatro pestanas comparten: su forma de props, la ruta que las
@@ -106,11 +107,14 @@ export const rutaDe = ({
   /** La ficha a la que se vuelve, ya validada; ver `regresoAFicha.ts`. */
   regreso?: string | undefined;
 }) =>
-  `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=${vista}${
-    accion ? `&accion=${accion}` : ""
-  }${calleId ? `&calle=${calleId}` : ""}${
-    domicilioId ? `&domicilio=${domicilioId}` : ""
-  }${regreso ? `&regreso=${encodeURIComponent(regreso)}` : ""}`;
+  conRegreso(
+    `/territorio?raiz=${raizId}&nodo=${nodoId}&vista=${vista}${
+      accion ? `&accion=${accion}` : ""
+    }${calleId ? `&calle=${calleId}` : ""}${
+      domicilioId ? `&domicilio=${domicilioId}` : ""
+    }`,
+    regreso,
+  );
 
 export const hijosDirectosDe = (
   nodos: readonly NodoDeSubarbol[],
