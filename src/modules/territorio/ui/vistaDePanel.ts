@@ -6,6 +6,7 @@ import {
   TIPOS_DE_LUGAR,
   type TipoDeLugar,
 } from "../domain";
+import { conRegreso } from "./regresoEnRuta";
 import { nombreDeLoContenido } from "./tiposDelAlta";
 
 type PasoDeArbol = { readonly id: LugarId; readonly nombre: string };
@@ -20,20 +21,31 @@ type CuentasDeLugar = {
  * El camino de la migaja: "Territorio" siempre primero -el mismo nombre que
  * el titulo de la raiz y que las otras pantallas del modulo-, cada paso previo con
  * enlace, y el ultimo sin `href` -es el paso actual, no algo a donde ir-.
+ * `regreso` viaja en cada enlace con el que se puede clickear, igual que en
+ * `rutaDe`: subir un nivel no pierde la ficha desde la que se entro.
  */
 export const pasosDeMigaja = (
   raizId: LugarId,
   migaja: readonly PasoDeArbol[],
+  regreso?: string | undefined,
 ): readonly EnlaceDeMigaja[] => {
   const ultimo = migaja[migaja.length - 1];
 
   return [
-    { etiqueta: "Territorio", href: "/territorio" },
+    {
+      etiqueta: "Territorio",
+      href: conRegreso("/territorio", regreso),
+    },
     ...migaja.map((paso) => ({
       etiqueta: paso.nombre,
       ...(paso.id === ultimo?.id
         ? {}
-        : { href: `/territorio?raiz=${raizId}&nodo=${paso.id}` }),
+        : {
+            href: conRegreso(
+              `/territorio?raiz=${raizId}&nodo=${paso.id}`,
+              regreso,
+            ),
+          }),
     })),
   ];
 };

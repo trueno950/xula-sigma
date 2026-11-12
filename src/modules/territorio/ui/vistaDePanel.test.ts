@@ -34,6 +34,47 @@ describe("pasosDeMigaja", () => {
   });
 });
 
+/**
+ * S4 de `territorio-seguimiento`: quien llego al arbol desde la ficha de una
+ * persona no la pierde al subir por la migaja.
+ */
+describe("los pasos de la migaja conservan el regreso", () => {
+  const PERSONA = "88888888-8888-4888-8888-888888888888";
+  const REGRESO = `/padron/${PERSONA}`;
+
+  const pasos = () =>
+    pasosDeMigaja(
+      idA,
+      [
+        { id: idA, nombre: "Motul" },
+        { id: idB, nombre: "Centro" },
+      ],
+      REGRESO,
+    );
+
+  it("cada paso con enlace lo lleva consigo", () => {
+    const [territorio, motul] = pasos();
+
+    expect(territorio?.href).toBe(
+      `/territorio?regreso=${encodeURIComponent(REGRESO)}`,
+    );
+    expect(motul?.href).toBe(
+      `/territorio?raiz=${idA}&nodo=${idA}&regreso=${encodeURIComponent(REGRESO)}`,
+    );
+  });
+
+  it("el paso actual sigue sin href, y sin regreso no hay nada que agregar", () => {
+    const sinRegreso = pasosDeMigaja(idA, [
+      { id: idA, nombre: "Motul" },
+      { id: idB, nombre: "Centro" },
+    ]);
+
+    expect(pasos().at(-1)).toEqual({ etiqueta: "Centro" });
+    expect(sinRegreso[0]?.href).toBe("/territorio");
+    expect(sinRegreso[1]?.href).toBe(`/territorio?raiz=${idA}&nodo=${idA}`);
+  });
+});
+
 describe("pestanasDePanel", () => {
   const base = {
     raizId: idA,

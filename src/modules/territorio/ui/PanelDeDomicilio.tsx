@@ -86,7 +86,7 @@ export function PanelDeDomicilio({
           nodos={nodos}
         />
         <EnlaceDeAccion
-          href={rutaDe({ raizId, nodoId, vista: "domicilios" })}
+          href={rutaDe({ raizId, nodoId, vista: "domicilios", regreso })}
           variante="fantasma"
         >
           <X size={16} weight="bold" aria-hidden="true" />
@@ -110,6 +110,7 @@ export function PanelDeDomicilio({
       <HermanosDeDireccion
         raizId={raizId}
         hermanos={hermanosDeDireccion(mismaDireccion, domicilio)}
+        regreso={regreso}
       />
     </section>
   );

@@ -32,6 +32,8 @@ type Props = {
   centro?: PuntoGeografico | null | undefined;
   /** Lo que frena mover o dar de baja; ver `bloqueosDeCalle`. */
   uso?: UsoDeCalle | null | undefined;
+  /** La ficha desde la que se entro; ver `contenido.ts` (`PropsDeContenido`). */
+  regreso?: string | undefined;
 };
 
 const ENLACE_DE_CONTEXTO = `inline-flex items-center gap-2 self-start rounded-sm text-[15px] ${CLASES_DE_ENLACE}`;
@@ -54,12 +56,13 @@ export function PanelDeCalle({
   permisos,
   centro,
   uso,
+  regreso,
 }: Props) {
   const accionAbierta =
     esAccionDeCalle(accion) && puedeAbrir(accion, permisos)
       ? accion
       : undefined;
-  const volver = rutaDe({ raizId, nodoId, vista: "calles" });
+  const volver = rutaDe({ raizId, nodoId, vista: "calles", regreso });
 
   return (
     <section

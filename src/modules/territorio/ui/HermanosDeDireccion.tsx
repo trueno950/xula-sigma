@@ -10,15 +10,18 @@ type Props = {
     calle: string;
     numero: string | null;
   }[];
+  /** La ficha desde la que se entro; ver `contenido.ts` (`PropsDeContenido`). */
+  regreso?: string | undefined;
 };
 
 /**
  * Las otras direcciones vivas con la misma calle y numero, cada una a su
  * propio panel: un hermano puede colgar de otro lugar del subarbol -otra
  * colonia- y enlazarlo con el nodo abierto lo manda a un domicilio que ese
- * panel no reconoce como suyo.
+ * panel no reconoce como suyo. `regreso` viaja en cada enlace, como en
+ * `rutaDe`: saltar de hermano no pierde la ficha desde la que se entro.
  */
-export function HermanosDeDireccion({ raizId, hermanos }: Props) {
+export function HermanosDeDireccion({ raizId, hermanos, regreso }: Props) {
   if (hermanos.length === 0) return null;
 
   return (
@@ -37,6 +40,7 @@ export function HermanosDeDireccion({ raizId, hermanos }: Props) {
                 nodoId: hermano.lugarId,
                 vista: "domicilios",
                 domicilioId: hermano.id,
+                regreso,
               })}
               className="text-[15px] text-marca underline underline-offset-2"
             >
