@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { hermanosDeDireccion } from "./contenido";
+import { comoDomicilioId } from "../domain";
+import { hermanosDeDireccion, rutaDe } from "./contenido";
 import {
+  cabeceraId,
   calleId,
   coloniaId,
   enColonia,
@@ -58,5 +60,31 @@ describe("hermanosDeDireccion", () => {
 
   it("solo compara contra los candidatos que recibe", () => {
     expect(hermanosDeDireccion([enColonia], seleccionado)).toEqual([]);
+  });
+});
+
+const corregirElDomicilio = {
+  raizId: cabeceraId,
+  nodoId: coloniaId,
+  vista: "domicilios" as const,
+  accion: "corregirDomicilio" as const,
+  domicilioId: comoDomicilioId("44444444-4444-4444-8444-444444444444"),
+};
+const PERSONA = "88888888-8888-4888-8888-888888888888";
+
+/** S4 de `territorio-advertencias`: la ruta conserva de donde vino el operador. */
+describe("rutaDe", () => {
+  it("sin regreso arma la misma ruta de siempre", () => {
+    expect(rutaDe(corregirElDomicilio)).toBe(
+      `/territorio?raiz=${cabeceraId}&nodo=${coloniaId}&vista=domicilios&accion=corregirDomicilio&domicilio=${corregirElDomicilio.domicilioId}`,
+    );
+  });
+
+  it("con regreso lo agrega escapado, para que no rompa la consulta", () => {
+    expect(
+      rutaDe({ ...corregirElDomicilio, regreso: `/padron/${PERSONA}` }),
+    ).toBe(
+      `/territorio?raiz=${cabeceraId}&nodo=${coloniaId}&vista=domicilios&accion=corregirDomicilio&domicilio=${corregirElDomicilio.domicilioId}&regreso=%2Fpadron%2F${PERSONA}`,
+    );
   });
 });

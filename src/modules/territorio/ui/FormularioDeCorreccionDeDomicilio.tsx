@@ -21,6 +21,8 @@ type Props = {
   borrador?: BorradorDeDomicilio | null | undefined;
   /** El panel del domicilio, al que vuelve «Cancelar». */
   volverA: string;
+  /** La ficha desde la que se entro; ver `regresoAFicha.ts`. */
+  regreso?: string | undefined;
 };
 
 const guardados = (domicilio: DomicilioGuardado) => ({
@@ -40,6 +42,7 @@ export function FormularioDeCorreccionDeDomicilio({
   zona,
   borrador,
   volverA,
+  regreso,
 }: Props) {
   const destino = {
     formulario: "correccion",
@@ -54,6 +57,7 @@ export function FormularioDeCorreccionDeDomicilio({
       <input type="hidden" name="vista" value="domicilios" />
       <input type="hidden" name="accion" value="corregirDomicilio" />
       <input type="hidden" name="domicilioId" value={domicilio.id} />
+      {regreso ? <input type="hidden" name="regreso" value={regreso} /> : null}
 
       {avisaRecorte(borrador, destino) ? (
         <Aviso tono="aviso">{MENSAJE_DE_RECORTE}</Aviso>

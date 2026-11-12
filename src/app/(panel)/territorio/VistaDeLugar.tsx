@@ -58,6 +58,8 @@ type Props = {
   limite?: number | undefined;
   usoDeCalle?: PropsDeContenido["usoDeCalle"];
   zonasDelLugar?: PropsDeContenido["zonasDelLugar"];
+  /** La ficha de la persona desde la que se entro; ver `regresoAFicha.ts`. */
+  regreso?: string | undefined;
 };
 
 /**
@@ -89,6 +91,7 @@ export function VistaDeLugar({
   limite,
   usoDeCalle,
   zonasDelLugar,
+  regreso,
 }: Props) {
   const zona = zonaDelFormulario(
     lugaresDeNodos(nodos),
@@ -168,6 +171,7 @@ export function VistaDeLugar({
         limite={limite}
         usoDeCalle={usoDeCalle}
         zonasDelLugar={zonasDelLugar}
+        regreso={regreso}
       />
     </>
   );

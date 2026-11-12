@@ -24,6 +24,10 @@ const render = (resto: Partial<PropsDeContenido> = {}) =>
 
 const panelDelDomicilio = `/territorio?raiz=${base.raizId}&amp;nodo=${base.lugar.id}&amp;vista=domicilios&amp;domicilio=${domicilioId}#panel-de-domicilio`;
 
+const PERSONA = "88888888-8888-4888-8888-888888888888";
+const REGRESO = `/padron/${PERSONA}`;
+const regresoEscapado = encodeURIComponent(REGRESO);
+
 /**
  * S2 de `territorio-formularios`: dentro del panel angosto los campos median
  * 340 px. La correccion es su propia vista, a lo ancho del contenido.
@@ -72,5 +76,33 @@ describe("correccion de domicilio: vista propia", () => {
     expect(html).not.toContain('id="panel-de-correccion"');
     expect(html).not.toContain("Corregir");
     expect(html).toContain('id="panel-de-domicilio"');
+  });
+});
+
+/**
+ * S4 de `territorio-advertencias`: la correccion abierta desde la ficha de una
+ * persona la conserva hasta el guardado, y el rechazo la devuelve igual.
+ */
+describe("correccion de domicilio: regreso a la ficha", () => {
+  it("el formulario lo manda escondido", () => {
+    const html = render({ accion: "corregirDomicilio", regreso: REGRESO });
+
+    expect(html).toContain('name="regreso"');
+    expect(html).toContain(`value="${REGRESO}"`);
+  });
+
+  it("«Cancelar» vuelve al panel del domicilio sin perderlo", () => {
+    const html = render({ accion: "corregirDomicilio", regreso: REGRESO });
+
+    expect(html).toContain(
+      `href="/territorio?raiz=${base.raizId}&amp;nodo=${base.lugar.id}&amp;vista=domicilios&amp;domicilio=${domicilioId}&amp;regreso=${regresoEscapado}#panel-de-domicilio"`,
+    );
+  });
+
+  it("sin regreso no hay campo escondido y la salida no cambia", () => {
+    const html = render({ accion: "corregirDomicilio" });
+
+    expect(html).not.toContain('name="regreso"');
+    expect(html).toContain(`href="${panelDelDomicilio}"`);
   });
 });

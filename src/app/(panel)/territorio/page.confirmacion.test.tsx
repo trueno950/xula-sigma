@@ -3,6 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VistaDeRaices } from "@/modules/territorio/ui/VistaDeRaices";
 
+/** Lo que la pagina le pasa a la pestana; el stub expone los dos datos. */
+type ContenidoDePrueba = { vista: string; regreso?: string | undefined };
+
 const mocks = vi.hoisted(() => ({
   contarContenidoDeLugares: vi.fn(),
   contextoActual: vi.fn(),
@@ -23,7 +26,11 @@ vi.mock("@/modules/territorio", async () => ({
     "@/modules/territorio/ui/acciones",
   )),
   PanelDeNodo: ({ children }: { children: ReactNode }) => children,
-  ContenidoDeLugar: ({ children }: { children: ReactNode }) => children,
+  // Expone la navegacion que `VistaDeLugar` le pasa, que es lo que viaja del
+  // `?regreso=` de la URL hasta la pestana.
+  ContenidoDeLugar: ({ vista, regreso }: ContenidoDePrueba) => (
+    <div data-contenido-vista={vista} data-regreso={regreso ?? ""} />
+  ),
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
   contarContenidoDeLugares: mocks.contarContenidoDeLugares,
@@ -116,5 +123,57 @@ describe("Territorio: confirmacion del alta de lugar", () => {
 
     expect(html).toContain("Calle agregada.");
     expect(html).not.toContain("Ver Colonia Prueba UX");
+  });
+});
+
+const PERSONA = "33333333-3333-4333-8333-333333333333";
+const REGRESO = `/padron/${PERSONA}`;
+
+/**
+ * S4 de `territorio-advertencias`: quien corrigio la direccion desde la ficha
+ * de una persona se queda en el arbol, con el cambio confirmado y la vuelta a
+ * mano.
+ */
+describe("Territorio: la correccion con regreso a la ficha", () => {
+  it("confirma el cambio y ofrece volver a la ficha", async () => {
+    const html = await pagina({ ok: "domicilio-corregido", regreso: REGRESO });
+
+    expect(html).toContain("Domicilio corregido.");
+    expect(html).toMatch(enlace(REGRESO, "Volver a la ficha"));
+  });
+
+  it("un regreso que no es la ficha de una persona no llega al HTML", async () => {
+    const html = await pagina({
+      ok: "domicilio-corregido",
+      regreso: "//evil.example",
+    });
+
+    expect(html).toContain("Domicilio corregido.");
+    expect(html).not.toContain("Volver a la ficha");
+    expect(html).not.toContain("evil.example");
+  });
+
+  it("sin regreso la confirmacion queda como siempre", async () => {
+    const html = await pagina({ ok: "domicilio-corregido" });
+
+    expect(html).toContain("Domicilio corregido.");
+    expect(html).not.toContain("Volver a la ficha");
+  });
+
+  it("el arbol abierto con regreso se lo pasa a la pestana", async () => {
+    const html = await pagina({
+      raiz: KINI,
+      nodo: NUEVA,
+      vista: "domicilios",
+      regreso: REGRESO,
+    });
+
+    expect(html).toContain(`data-regreso="${REGRESO}"`);
+  });
+
+  it("sin regreso la pestana no lo recibe", async () => {
+    const html = await pagina({ raiz: KINI, nodo: NUEVA, vista: "domicilios" });
+
+    expect(html).toContain('data-regreso=""');
   });
 });

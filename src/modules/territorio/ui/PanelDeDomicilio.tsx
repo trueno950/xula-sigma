@@ -37,6 +37,8 @@ type Props = {
   residentes: readonly ResidenteDeDomicilio[] | null;
   /** Los vivos con su calle y su numero, leidos en el subarbol del asentamiento. */
   mismaDireccion: readonly DomicilioDeLaPestana[];
+  /** La ficha desde la que se entro; ver `contenido.ts` (`PropsDeContenido`). */
+  regreso?: string | undefined;
 };
 
 const esAccionDeDomicilio = (
@@ -61,6 +63,7 @@ export function PanelDeDomicilio({
   permisos,
   residentes,
   mismaDireccion,
+  regreso,
 }: Props) {
   const direccion = direccionDeDomicilio(domicilio, calles);
   const accionAbierta =
@@ -101,6 +104,7 @@ export function PanelDeDomicilio({
         permisos={permisos}
         accionAbierta={accionAbierta}
         residentes={residentes}
+        regreso={regreso}
       />
 
       <HermanosDeDireccion

@@ -19,6 +19,8 @@ type Props = {
   accionAbierta: AccionDeDomicilio | undefined;
   /** `null`: la lectura fallo; ver `FormularioDeBajaDeDomicilio`. */
   residentes: readonly ResidenteDeDomicilio[] | null;
+  /** La ficha desde la que se entro; ver `contenido.ts` (`PropsDeContenido`). */
+  regreso?: string | undefined;
 };
 
 /**
@@ -35,6 +37,7 @@ export function AccionesDeDomicilio({
   permisos,
   accionAbierta,
   residentes,
+  regreso,
 }: Props) {
   const puedeCorregir = puedeAbrir("corregirDomicilio", permisos);
   const puedeDarDeBaja = puedeAbrir("bajaDomicilio", permisos);
@@ -52,6 +55,7 @@ export function AccionesDeDomicilio({
             vista: "domicilios",
             accion: "corregirDomicilio",
             domicilioId: domicilio.id,
+            regreso,
           })}#${ANCLA_DE_CORRECCION}`}
         />
       ) : null}
