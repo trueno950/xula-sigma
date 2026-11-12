@@ -18,6 +18,7 @@ const ARCHIVO_DE_RAIZ: Record<string, string> = {
   "/mapa-operativo": "mapa-operativo/page.tsx",
   "/intervenciones": "intervenciones/page.tsx",
   "/marca": "marca/page.tsx",
+  "/usuarios": "usuarios/page.tsx",
 };
 
 describe("raices de seccion", () => {

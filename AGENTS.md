@@ -356,6 +356,9 @@ que devuelva, y devolverlo sería código muerto.
 | `cambiarEstadoAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `corregirIntervencionAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `asignarAreaAction` | `reportes` | Server Component, `<form action={...}>` |
+| `altaDeUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
+| `restablecerContraseniaAction` | `usuarios` | Server Component, `<form action={...}>` |
+| `darDeBajaUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
 
 Notas que no caben en la tabla, una por fila que las necesita:
 
@@ -461,6 +464,20 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `CalleFueraDelAsentamientoError` -la calle es de otro asentamiento-.
   Quitar calle exige que la pertenencia exista: sin ella responde
   `NoEncontradoError`, no un exito silencioso.
+- Las tres de `usuarios` (`administracion-de-usuarios`, S1 a S7):
+  `altaDeUsuarioAction`, `restablecerContraseniaAction` y
+  `darDeBajaUsuarioAction`. Mismo motivo que `altaDePersonaAction`: el
+  listado no tiene isla cliente y cada boton de fila es su propio `<form>`
+  nativo. Las tres redactan `NoAutorizadoError` y `NoEncontradoError` -un
+  `usuarioId` de otro ayuntamiento responde 404, S7-; la de alta tambien
+  `RolNoAsignableError` -solo `OPERADOR` y `CONSULTA`, S3- y
+  `CorreoYaRegistradoError` -el choque contra `usuarios_tenant_email_idx`-.
+  **La contraseña temporal no vuelve por `?clave=`**: el redirect lleva solo
+  un token opaco y la clave viaja en una cookie httpOnly de 120 segundos que
+  la página lee únicamente cuando ese token coincide -nunca en la URL, que
+  queda en el historial del navegador y en el log de accesos del servidor-.
+  Ver `src/modules/usuarios/ui/claveTemporalEnCookie.ts`; S4 de
+  `odd/tasks/administracion-de-usuarios.md`.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un
