@@ -49,7 +49,7 @@ funcional de territorio.
   uso, lectura que resuelve nombres por join bajo RLS y vista con
   «antes «X» → ahora «Y»». El folio no entra: vive en reportes y ya se enlaza
   por id desde la línea de tiempo.
-- [ ] **T5** · S1-S3 · directo — `pnpm check` y suites en verde; commits por
+- [x] **T5** · S1-S3 · directo — `pnpm check` y suites en verde; commits por
   unidad y revisión nativa.
 
 ## Log
