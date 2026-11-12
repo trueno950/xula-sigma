@@ -97,11 +97,17 @@ export const repositorioDeZonasSql: RepositorioDeLecturaDeZonas &
   async darDeBaja(tx, id) {
     await tx.update(zonas).set({ bajaEn: new Date() }).where(eq(zonas.id, id));
   },
-  async calleActivaPorId(tx, calleId) {
+  /**
+   * Bloquea la calle antes de leerla, como `repositorioDeCallesSql.bloquearPorId`:
+   * un `SELECT` suelto no ve la baja que otra transaccion todavia no confirmo
+   * y la pertenencia entra igual en una zona activa (S3).
+   */
+  async bloquearCalleActivaPorId(tx, calleId) {
     const [calle] = await tx
       .select({ id: calles.id, lugarId: calles.lugarId })
       .from(calles)
-      .where(and(eq(calles.id, calleId), isNull(calles.bajaEn)));
+      .where(and(eq(calles.id, calleId), isNull(calles.bajaEn)))
+      .for("update");
     return calle ?? null;
   },
   async perteneceLaCalle(tx, { zonaId, calleId }) {

@@ -17,6 +17,14 @@ import type { RepositorioDeAdministracionDeZonas } from "./puertosDeAdministraci
  * bitacora: la PK compuesta de `calles_de_zonas` ya expresa esa regla y un
  * segundo POST del mismo boton no es un evento auditable.
  *
+ * La calle se bloquea antes que la zona, igual que `reparentearCalle`
+ * bloquea la calle antes que el lugar destino. `darDeBajaCalle` bloquea la
+ * calle y despues cuenta zonas activas: con el orden inverso las dos
+ * transacciones no se veian, la baja contaba cero y confirmaba, y esta alta
+ * insertaba despues la pertenencia -una zona activa con una calle de baja
+ * (S3)-. Con la calle tomada primero, el alta espera, la relee con la baja
+ * ya confirmada y responde `NoEncontradoError`.
+ *
  * La bitacora ancla en la zona, no en la pareja: `bitacora.entidad_id` es
  * una columna uuid y la clave de `calles_de_zonas` es un par, asi que un
  * `zonaId/calleId` compuesto llega a Postgres como texto y revienta con
@@ -38,11 +46,11 @@ export function crearAgregarCalleAZona(
     }
 
     await withTenant(contexto.ayuntamientoId, async (tx) => {
+      const calle = await repositorio.bloquearCalleActivaPorId(tx, ids.calleId);
+      if (!calle) throw new NoEncontradoError();
+
       const zona = await repositorio.bloquearPorId(tx, ids.zonaId);
       if (!zona) throw new NoEncontradoError();
-
-      const calle = await repositorio.calleActivaPorId(tx, ids.calleId);
-      if (!calle) throw new NoEncontradoError();
       if (calle.lugarId !== zona.lugarId) {
         throw new CalleFueraDelAsentamientoError();
       }

@@ -4,7 +4,7 @@ import {
   enTransaccionParalela,
   motul,
 } from "@/shared/tenancy/municipiosDePrueba";
-import type { CalleId, LugarId } from "./domain";
+import type { CalleId, LugarId, ZonaId } from "./domain";
 
 export type CambioDeCalle = (tx: TransactionSql, id: CalleId) => Promise<void>;
 export type CambioDeLugar = (tx: TransactionSql, id: LugarId) => Promise<void>;
@@ -30,6 +30,29 @@ export const iniciarCarreraDeCalle = (
   const transaccion = enTransaccionParalela(motul, async (tx) => {
     await tx`SELECT id FROM calles WHERE id = ${id} FOR UPDATE`;
     await cambio(tx, id);
+    confirmar();
+    await abierta;
+  });
+
+  return { lista, transaccion, liberar };
+};
+
+/**
+ * La otra mitad de una carrera en la que alcanza con dejar la zona
+ * bloqueada: `agregarCalleAZona` la pide despues de la calle (S3), asi que
+ * quien la retiene decide cuando puede continuar el alta.
+ */
+export const iniciarBloqueoDeZona = (id: ZonaId): CarreraDeCalle => {
+  let confirmar: () => void = () => {};
+  let liberar: () => void = () => {};
+  const lista = new Promise<void>((resolve) => {
+    confirmar = resolve;
+  });
+  const abierta = new Promise<void>((resolve) => {
+    liberar = resolve;
+  });
+  const transaccion = enTransaccionParalela(motul, async (tx) => {
+    await tx`SELECT id FROM zonas WHERE id = ${id} FOR UPDATE`;
     confirmar();
     await abierta;
   });
