@@ -125,3 +125,30 @@ const formateadorDeHora = new Intl.DateTimeFormat("en-US", {
  */
 export const horaEnMerida = (instante: Date): number =>
   Number(formateadorDeHora.format(instante));
+
+const formateadorDeFechaCivilConCeros = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Merida",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const formateadorDeHoraConMinutos = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "America/Merida",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/**
+ * Instante ya guardado como `YYYY-MM-DD HH:MM` en `America/Merida`, con
+ * ceros y sin locale. Lo pide S3 de `exportacion-de-datos`: Excel ordena esa
+ * forma como fecha y no confunde dia con mes, cosa que `13/11/2026` si hace
+ * al abrirse en una instalacion en ingles. `fechaYHoraEnMerida` no sirve
+ * porque es `medium`/`short` espanol, con mes en letras.
+ *
+ * `en-CA` produce el ISO de fecha y `en-GB` el de hora; el `hourCycle: h23`
+ * es el mismo que `horaEnMerida`.
+ */
+export const fechaYHoraIsoEnMerida = (fecha: Date): string =>
+  `${formateadorDeFechaCivilConCeros.format(fecha)} ${formateadorDeHoraConMinutos.format(fecha)}`;
