@@ -22,6 +22,7 @@ const PANTALLAS: ReadonlyArray<readonly [string, string]> = [
   ["/constancias/emitir", "Emitir constancia"],
   ["/constancias/configuracion", "Configuración de constancias"],
   ["/marca", "Marca"],
+  ["/exportacion", "Exportación"],
 ];
 
 test.beforeEach(liberarVentanaDeRitmo);

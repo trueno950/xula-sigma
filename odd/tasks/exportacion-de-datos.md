@@ -63,7 +63,7 @@ Vitest (integración sobre `xula_test`), Playwright y `pnpm check`.
 
 ## Tasks
 
-- [ ] **T1** (S3, S7) escritor ZIP y CSV en `shared/exportacion` — worker — commit:
+- [x] **T1** (S3, S7) escritor ZIP y CSV en `shared/exportacion` — worker — commit: `b57dd55`
 - [ ] **T2** (S2) porciones que faltan — worker — commit:
 - [ ] **T3** (S1, S4, S5, S6) descarga, pantalla, enlace del panel, escudo y E2E — worker — commit:
 - [ ] **T4** (S1-S7) verificación independiente, revisión y cierre — verify — commit:
@@ -80,3 +80,57 @@ Vitest (integración sobre `xula_test`), Playwright y `pnpm check`.
   dependencia ZIP ni helper CSV en el repo. Precedente de Route Handler con
   guardas propias: `src/app/(panel)/constancias/[id]/pdf/route.ts`.
 - **L3** — 2026-11-13. Decisiones del usuario citadas en S2, S3 y S4.
+- **L4** — 2026-11-13. T1: `aCsv` (BOM, coma, CRLF, RFC 4180, fechas por
+  el nuevo `fechaYHoraIsoEnMerida`, «2026-11-13 18:05»), `crc32` ("123456789"
+  → 0xCBF43926) y `armarZip` (solo almacenamiento, bit UTF-8, rechaza nombres
+  repetidos, `..` y `/` inicial; sin ZIP64). RED por módulo inexistente,
+  GREEN 79 tests unitarios; `unzip -t` y `unzip -p` del sistema abren el
+  archivo y devuelven los bytes idénticos. El Info-ZIP 6.00 de macOS no
+  selecciona por nombre UTF-8: el test lo documenta y verifica el nombre
+  guardado por bytes.
+- **L5** — 2026-11-13. T3. RED por módulo inexistente en
+  `archivoDeExportacion` y en `descargaDeDatos`/`route`, y por inventario en
+  `titulos.test.ts`, `raicesSinMigaja.test.ts`, `NavegacionDeModulos.test.tsx`
+  y `modulosDelPanel.test.ts` (6 fallos visibles). GREEN: 3026 tests en 567
+  archivos y 80 E2E, incluidos los dos nuevos.
+  - `archivoDeExportacion.ts`: un `<conjunto>.csv` por conjunto —incluso
+    vacío, que sale con el BOM solo— más `manifiesto.json` y `escudo.png`
+    cuando hay escudo. El manifiesto lleva subdominio, nombre, marca,
+    `generadaEn` en ISO, `generadaEnMerida` en la forma de S3 y la lista de
+    conjuntos con su número de filas; no lleva `ayuntamientoId` (S2).
+  - El escudo no tenía lectura en el almacén: entró `LectorDeAssets`
+    (`modules/marca/application/puertos.ts`), su adaptador `lectorR2`
+    (`GetObjectCommand`, misma barrera `claveTenantDesdeUrl` que `borrar`) y
+    `lectorDeEscudo` en la raíz de composición, que es lo único que `src/app`
+    puede importar (`app-no-importa-infrastructure`). Una URL que no es del
+    almacén de ese ayuntamiento falla en vez de omitirse: S4 prohíbe un ZIP
+    que parezca completo. Se lee después de que `exportarAyuntamiento`
+    devuelve —transacción cerrada— y su fallo se propaga.
+  - Ruta `src/app/(panel)/exportacion/descarga/route.ts`, `runtime =
+    "nodejs"`, con las guardas del precedente de constancias: superficie,
+    `exigirAyuntamiento`, sesión (401), `NoAutorizadoError` (403),
+    `TenantNoResueltoError`/`NoEncontradoError` (404), y 500 con
+    `datosSegurosDeError`. El ZIP se arma entero antes de responder.
+  - Textos exactos que ve la operadora: 403 «Su rol no tiene permiso para
+    descargar los datos del ayuntamiento.»; 500 «No se pudo preparar la
+    descarga. Vuelva a intentarlo en un momento.»; pantalla sin permiso «Su
+    rol no tiene permiso para exportar los datos del ayuntamiento.»; botón
+    «Descargar los datos del ayuntamiento»; pestaña «Exportación». Nombre del
+    archivo: `<subdominio>-<YYYY-MM-DD>.zip`, con la fecha civil de Mérida
+    (los diez primeros caracteres del formato ya probado de
+    `fechaYHoraIsoEnMerida`; `shared/lib/fecha` no expone la fecha civil de
+    un instante y esa carpeta estaba fuera de la superficie de T3).
+  - `/exportacion` es raíz de sección, así que `PaginaDePanel` va **sin**
+    `migaja` y la ruta entra en `raicesSinMigaja.test.ts`; la pantalla es
+    `ancho="detalle"`. El botón es un `<a href="/exportacion/descarga"
+    download>` nativo con las clases de `clasesDeBoton("primaria")`:
+    descargar no es navegar y funciona sin JavaScript.
+  - Entrada «Exportación» en «Administración» con `permite: puedeExportar`,
+    así que solo la ve el `ADMIN_MUNICIPAL`.
+  - El E2E no puede probar el escudo: no hay bucket en CI y
+    `MUNICIPIOS.motul.marca.escudo` apunta a `/api/salud` de la propia
+    aplicación —una URL que no es del almacén, que la descarga rechaza a
+    propósito—. El spec limpia la marca de Motul antes y la restaura en
+    `afterAll` para no cambiar lo que ven los demás specs; el escudo con
+    bytes reales queda cubierto por `route.integration.test.ts` y
+    `descargaDeDatos.test.ts` con el puerto falso.

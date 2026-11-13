@@ -37,11 +37,15 @@ describe("modulosDelPanel", () => {
       "/mapa-operativo",
       "/intervenciones",
     ]);
-    expect(rutas(grupos[2]?.modulos ?? [])).toEqual(["/usuarios", "/marca"]);
+    expect(rutas(grupos[2]?.modulos ?? [])).toEqual([
+      "/usuarios",
+      "/marca",
+      "/exportacion",
+    ]);
   });
 
   it.each(ROLES.filter((rol) => rol !== "ADMIN_MUNICIPAL"))(
-    "oculta Usuarios, Marca y su grupo vacio para %s",
+    "oculta Usuarios, Marca, Exportacion y su grupo vacio para %s",
     (rol) => {
       const grupos = modulosAgrupados(rol);
 
@@ -50,12 +54,13 @@ describe("modulosDelPanel", () => {
       );
       expect(rutas(modulosVisibles(rol))).not.toContain("/marca");
       expect(rutas(modulosVisibles(rol))).not.toContain("/usuarios");
+      expect(rutas(modulosVisibles(rol))).not.toContain("/exportacion");
     },
   );
 
   it("solo el administrador del municipio ve los modulos de administracion", () => {
     expect(rutas(modulosVisibles("ADMIN_MUNICIPAL"))).toEqual(
-      expect.arrayContaining(["/usuarios", "/marca"]),
+      expect.arrayContaining(["/usuarios", "/marca", "/exportacion"]),
     );
   });
 

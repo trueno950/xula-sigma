@@ -19,6 +19,7 @@ const ARCHIVO_DE_RAIZ: Record<string, string> = {
   "/intervenciones": "intervenciones/page.tsx",
   "/marca": "marca/page.tsx",
   "/usuarios": "usuarios/page.tsx",
+  "/exportacion": "exportacion/page.tsx",
 };
 
 describe("raices de seccion", () => {
