@@ -1,0 +1,11 @@
+-- El gemelo por `lower(email)` de "usuarios_tenant_email_idx", que compara
+-- exacto: `Ana@motul.mx` y `ana@motul.mx` son dos valores distintos para
+-- Postgres, asi que dos altas simultaneas -cada una en su transaccion, sin ver
+-- la fila que la otra todavia no confirmo- pasan las dos el chequeo del
+-- adaptador y dejan dos cuentas para la misma persona. Una de las dos queda
+-- muda: existe, tiene clave, y el acceso la busca en minusculas.
+--
+-- La puerta del panel normaliza a minusculas antes de escribir, asi que ahi
+-- alcanzaba el indice exacto. La primitiva `altaDePersona`, que usan el
+-- provisionamiento del primer administrador y las siembras, no normaliza.
+CREATE UNIQUE INDEX "usuarios_tenant_email_lower_idx" ON "usuarios" USING btree ("ayuntamiento_id",lower("email"));

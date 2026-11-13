@@ -169,6 +169,13 @@
       "when": 1794014911065,
       "tag": "0023_indices_de_residencias",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794590495259,
+      "tag": "0024_usuarios_email_lower_unico",
+      "breakpoints": true
     }
   ]
 }
