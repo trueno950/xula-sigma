@@ -57,10 +57,12 @@ Requisitos citados de `openspec/specs/autorizacion-roles/spec.md`:
 
 ## Tasks
 
-- [x] **T1** (S1-S7) pantalla, acciones, enlace del panel y tests — worker — commit:
-  `90fcfd9` (backend de auth) y las unidades de `src/modules/usuarios`,
-  rutas, panel, AGENTS.md y E2E que registra el padre (ver L4)
-- [ ] **T2** (S1-S7) verificación independiente, E2E y cierre — verify — commit:
+- [x] **T1** (S1-S7) pantalla, acciones, enlace del panel y tests — worker — commits:
+  `bb18d04` (auth), `c992a43` (capas del módulo), `e45660a` (componentes),
+  `fbcbe7c` (la clave temporal se descarta al mostrarse), `78cfddb` (acción
+  de alta), `610f163` (baja y restablecimiento), `425b21e` (rutas, panel y
+  E2E), `d032f49` (excepción en AGENTS.md)
+- [x] **T2** (S1-S7) verificación independiente, E2E y cierre — verify — ver L6
 
 ## Log
 
@@ -247,3 +249,20 @@ Requisitos citados de `openspec/specs/autorizacion-roles/spec.md`:
   archivos, 9 reglas y 2 métricas sin hallazgos; 52 warnings preexistentes);
   `pnpm vitest run` 552 archivos / 2935 tests verdes; `pnpm test:e2e` 78
   pasados.
+
+- **L6** — 2026-11-13. Cierre. Verificador independiente en dos rondas:
+  primero dos bloqueantes en S6 (la baja no revocaba sesiones; el
+  administrador podía darse de baja a sí mismo) y cinco avisos; corregidos
+  con test primero y reverificados con mutaciones, sin bloqueantes nuevos.
+  La revisión nativa no cabía entera (unas 3,950 líneas): por decisión del
+  usuario («Partir en revisiones encadenadas») la rama se reordenó en seis
+  rebanadas revisadas por separado, todas aprobadas. La rebanada 3 tuvo un
+  hallazgo crítico confirmado por el refutador: la contraseña temporal se
+  podía volver a ver al recargar durante 120 s. Corregido en `fbcbe7c`: un
+  componente cliente llama al montarse a `descartarClaveMostradaAction`, que
+  borra la cookie si el token coincide; sin JavaScript la cookie vence sola.
+  La recuperación por cambio de alcance no se pudo enviar por un defecto de
+  la herramienta, así que, por decisión del usuario, esa revisión se
+  abandonó y la rebanada corregida se revisó de nuevo. La acción nueva
+  devuelve `void` y quedó como excepción propia en AGENTS.md.
+
