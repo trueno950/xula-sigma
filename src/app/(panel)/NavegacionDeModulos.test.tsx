@@ -46,6 +46,7 @@ describe("NavegacionDeModulos", () => {
     const html = pintar("OPERADOR", "/padron");
 
     expect(html).not.toContain('href="/marca"');
+    expect(html).not.toContain('href="/usuarios"');
     expect(html).not.toContain("Administración");
     expect(html).toContain('href="/padron"');
   });

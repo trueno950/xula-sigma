@@ -40,7 +40,7 @@ Vitest (integración sobre `xula_test`), Playwright y `pnpm check`.
 - [x] **T2** (S2) bloqueo del lugar destino en `reparentearCalle` — commit: `cebdb65`
 - [x] **T3** (S3) conteo del padrón sobre la partición de la búsqueda — commit: `3bee6df`
 - [x] **T4** (S4) `regreso` en «Cerrar», hermanos y migaja — commit: `6d5283e`
-- [ ] **T5** (S1-S4) suite completa, verificación de S2 y cierre — commit:
+- [x] **T5** (S1-S4) suite completa, verificación de S2 y cierre — PR #134 (`992d899`)
 
 ## Log
 

@@ -3,12 +3,17 @@ import {
   MapPinLine,
   MapTrifold,
   Palette,
+  UserGear,
   UsersThree,
   Warning,
   Wrench,
 } from "@phosphor-icons/react/ssr";
 import type { ComponentType } from "react";
-import { puedeCambiarMarca, type Rol } from "@/shared/auth/roles";
+import {
+  puedeAdministrarUsuarios,
+  puedeCambiarMarca,
+  type Rol,
+} from "@/shared/auth/roles";
 
 export const GRUPOS_DE_MODULOS = [
   "Atención",
@@ -84,6 +89,14 @@ export const MODULOS_DEL_PANEL: readonly ModuloDelPanel[] = [
     descripcion: "Obras y trabajos del municipio en calles y lugares.",
     grupo: "Territorio",
     Icono: Wrench,
+  },
+  {
+    nombre: "Usuarios",
+    ruta: "/usuarios",
+    descripcion: "Altas, bajas y contraseñas de la gente del ayuntamiento.",
+    grupo: "Administración",
+    permite: puedeAdministrarUsuarios,
+    Icono: UserGear,
   },
   {
     nombre: "Marca",

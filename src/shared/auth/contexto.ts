@@ -1,8 +1,11 @@
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { exigirAyuntamiento } from "@/shared/tenancy/contexto";
+import { withTenant } from "@/shared/tenancy/withTenant";
+import { usuarios } from "./esquema";
 import { origenDelRequest } from "./origen";
-import { ROLES, type Rol } from "./roles";
+import { esRol, type Rol } from "./roles";
 import { sesionActual } from "./sesion";
 
 /**
@@ -37,8 +40,27 @@ export type ContextoActual = {
   origen: string;
 };
 
-const esRol = (valor: unknown): valor is Rol =>
-  typeof valor === "string" && (ROLES as readonly string[]).includes(valor);
+/**
+ * Si la cuenta sigue activa, leida del lado del servidor.
+ *
+ * **Segunda mitad de S6.** La baja borra las sesiones y bloquea el alta de
+ * nuevas, pero una sesion que sobreviva —creada en la misma carrera que la
+ * baja, o por un camino que todavia no existe— no debe servir para operar:
+ * el rol y el tenant salen de la cookie, y sin esta consulta nadie volveria
+ * a mirar la fila. Es un `SELECT` por clave primaria, en el mismo request
+ * que ya resolvio el subdominio.
+ */
+const sigueActiva = (
+  ayuntamientoId: AyuntamientoId,
+  usuarioId: string,
+): Promise<boolean> =>
+  withTenant(ayuntamientoId, (tx) =>
+    tx
+      .select({ bajaEn: usuarios.bajaEn })
+      .from(usuarios)
+      .where(eq(usuarios.id, usuarioId))
+      .limit(1),
+  ).then(([fila]) => fila !== undefined && fila.bajaEn === null);
 
 /**
  * `null` cuando no hay sesion.
@@ -65,6 +87,8 @@ export async function contextoActual(): Promise<ContextoActual | null> {
   if (!esRol(rol)) return null;
 
   const { id: ayuntamientoId } = await exigirAyuntamiento();
+
+  if (!(await sigueActiva(ayuntamientoId, id))) return null;
 
   return {
     ayuntamientoId,

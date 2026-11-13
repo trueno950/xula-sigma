@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { CABECERA_SUBDOMINIO } from "@/shared/tenancy/cabeceras";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { altaDePersona } from "./alta";
+import { usuarios } from "./esquema";
 
 /**
  * `contextoActual()` de punta a punta, sin mockear nada de negocio.
@@ -155,5 +157,42 @@ describe("contextoActual", () => {
     situarseEn(enMotul, cookie);
 
     expect(await contextoActual()).toBeNull();
+  });
+
+  /**
+   * Defensa en profundidad de S6: la baja borra las sesiones del objetivo,
+   * pero una que sobreviva —la misma carrera, otro camino— no debe servir.
+   */
+  it("una sesion de alguien dado de baja no resuelve contexto", async () => {
+    const cookie = await acceder(enTicul);
+    situarseEn(enTicul, cookie);
+
+    // Control positivo: sin esto el test pasaria con el acceso roto.
+    expect(await contextoActual()).not.toBeNull();
+
+    const [persona] = await withTenant(ticul, (tx) =>
+      tx
+        .select({ id: usuarios.id })
+        .from(usuarios)
+        .where(eq(usuarios.email, CORREO)),
+    );
+
+    if (!persona) throw new Error("La siembra no dejo a la persona de Ticul.");
+
+    await withTenant(ticul, (tx) =>
+      tx
+        .update(usuarios)
+        .set({ bajaEn: new Date() })
+        .where(eq(usuarios.id, persona.id)),
+    );
+
+    expect(await contextoActual()).toBeNull();
+
+    await withTenant(ticul, (tx) =>
+      tx
+        .update(usuarios)
+        .set({ bajaEn: null })
+        .where(eq(usuarios.id, persona.id)),
+    );
   });
 });

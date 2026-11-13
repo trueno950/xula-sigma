@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  esRol,
   puedeAdministrarDocumentos,
   puedeAdministrarIntervenciones,
   puedeAdministrarReportes,
@@ -220,4 +221,17 @@ describe("puedeAdministrarIntervenciones", () => {
       expect(puedeAdministrarIntervenciones(rol)).toBe(false);
     }
   });
+});
+
+describe("esRol", () => {
+  it.each([...ROLES])("acepta %s, que es un rol del sistema", (rol) => {
+    expect(esRol(rol)).toBe(true);
+  });
+
+  it.each([["Admin_Municipal"], ["administrador"], [""], [null], [42], [{}]])(
+    "rechaza %s, que llega sin tipo desde afuera",
+    (valor) => {
+      expect(esRol(valor)).toBe(false);
+    },
+  );
 });
