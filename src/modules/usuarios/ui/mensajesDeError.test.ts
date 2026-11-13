@@ -34,6 +34,14 @@ describe("mensajeDeError", () => {
       "generico-restablecimiento",
       "No se pudo restablecer la contraseña. Intente de nuevo.",
     ],
+    [
+      "clave-no-mostrada",
+      "La cuenta quedó lista, pero la contraseña no se pudo mostrar. Restablézcala para generar otra.",
+    ],
+    [
+      "clave-no-mostrada-restablecimiento",
+      "La contraseña quedó restablecida, pero no se pudo mostrar. Restablézcala para generar otra.",
+    ],
     ["generico-baja", "No se pudo dar de baja a la persona. Intente de nuevo."],
   ])("traduce %s al mensaje de la operadora", (codigo, mensaje) => {
     expect(mensajeDeError(codigo)).toBe(mensaje);

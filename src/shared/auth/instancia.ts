@@ -130,7 +130,9 @@ function construirInstancia(
  * servidor, nunca de la peticion.
  *
  * Interno a `shared/auth` — no se reexporta desde `index.ts`. Lo que la
- * superficie publica ofrece es `manejarAuth` y `sesionActual`.
+ * superficie publica ofrece es `manejarAuth`. `sesionActual` tampoco sale:
+ * devuelve la sesion sin mirar `bajaEn`, y quien autoriza tiene que pasar
+ * por `contextoActual`, que si lo mira.
  *
  * @param origen Cada municipio tiene el suyo, asi que sale del request y no
  *   de una variable de entorno: la cookie se acota a `ticul.dominio` y no

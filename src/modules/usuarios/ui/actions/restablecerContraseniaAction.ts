@@ -8,7 +8,7 @@ import {
   generarClaveTemporal,
   restablecerContrasenia,
 } from "@/shared/auth";
-import { guardarClaveMostrada } from "../claveTemporalEnCookie";
+import { intentarGuardarClaveMostrada } from "../claveTemporalEnCookie";
 import type { CodigoDeError } from "../mensajesDeError";
 import { codigoDeErrorParaLaOperadora } from "./codigoDeError";
 import { rutaDeUsuarios } from "./destinoDeUsuarios";
@@ -64,12 +64,20 @@ export async function restablecerContraseniaAction(
     return;
   }
 
-  const mostrada = await guardarClaveMostrada({
+  // La clave ya quedo cambiada: el listado se revalida aunque no se pueda
+  // mostrar, porque el restablecimiento ocurrio igual.
+  revalidatePath("/usuarios");
+
+  const mostrada = await intentarGuardarClaveMostrada({
     motivo: "restablecimiento",
     usuarioId,
     clave: claveTemporal,
   });
 
-  revalidatePath("/usuarios");
+  if (!mostrada) {
+    volverAlListado("clave-no-mostrada-restablecimiento");
+    return;
+  }
+
   redirect(rutaDeUsuarios({ clave: mostrada.token, ok: "restablecimiento" }));
 }

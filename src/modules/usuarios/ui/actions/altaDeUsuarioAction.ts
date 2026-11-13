@@ -6,7 +6,7 @@ import { z } from "zod";
 import { contextoActual } from "@/shared/auth";
 import type { UsuarioDadoDeAlta } from "../../application";
 import { altaDeUsuario } from "../../composicion";
-import { guardarClaveMostrada } from "../claveTemporalEnCookie";
+import { intentarGuardarClaveMostrada } from "../claveTemporalEnCookie";
 import type { CodigoDeError } from "../mensajesDeError";
 import { codigoDeErrorParaLaOperadora } from "./codigoDeError";
 import { rutaDelAltaDeUsuario, rutaDeUsuarios } from "./destinoDeUsuarios";
@@ -27,7 +27,8 @@ import { rutaDelAltaDeUsuario, rutaDeUsuarios } from "./destinoDeUsuarios";
 
 const esquemaDeEntrada = z.object({
   nombre: z.string().trim().min(3).max(120),
-  email: z.email(),
+  // El correo se pega desde otro lado y suele traer espacios en los bordes.
+  email: z.string().trim().pipe(z.email()),
   rol: z.string().trim(),
 });
 
@@ -75,12 +76,20 @@ export async function altaDeUsuarioAction(formData: FormData): Promise<void> {
     return;
   }
 
-  const mostrada = await guardarClaveMostrada({
+  // La cuenta ya existe: el listado se revalida aunque la clave no llegue a
+  // guardarse, porque el alta ocurrio igual.
+  revalidatePath("/usuarios");
+
+  const mostrada = await intentarGuardarClaveMostrada({
     motivo: "alta",
     usuarioId: alta.usuarioId,
     clave: alta.claveTemporal,
   });
 
-  revalidatePath("/usuarios");
+  if (!mostrada) {
+    redirigirAlAlta("clave-no-mostrada");
+    return;
+  }
+
   redirect(rutaDeUsuarios({ clave: mostrada.token, ok: "alta" }));
 }

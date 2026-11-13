@@ -130,6 +130,31 @@ describe("restablecerContraseniaAction", () => {
     expect(errorDelDestino()).toBe("sin-permiso");
   });
 
+  /**
+   * La clave ya quedo restablecida: si no se puede guardar para mostrarla,
+   * la operadora no la tiene. El codigo lo dice y el listado se revalida
+   * igual, porque el cambio si ocurrio.
+   */
+  it("si la clave no se puede guardar, el restablecimiento se informa igual", async () => {
+    const escribir = vi.spyOn(cookies.almacen, "set").mockImplementation(() => {
+      throw new Error("no hay donde escribir la cookie");
+    });
+
+    try {
+      await expect(
+        restablecerContraseniaAction(formulario({ usuarioId: OPERADOR })),
+      ).rejects.toThrow("REDIRECT:");
+
+      expect(destino()).toBe(
+        "/usuarios?error=clave-no-mostrada-restablecimiento",
+      );
+      expect(restablecerMock).toHaveBeenCalledTimes(1);
+      expect(revalidatePathMock).toHaveBeenCalledWith("/usuarios");
+    } finally {
+      escribir.mockRestore();
+    }
+  });
+
   it("la clave que se muestra es la que quedo guardada, y no esta en la URL", async () => {
     await expect(
       restablecerContraseniaAction(formulario({ usuarioId: OPERADOR })),

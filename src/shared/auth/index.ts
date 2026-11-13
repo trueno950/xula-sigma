@@ -41,4 +41,3 @@ export {
   ROLES,
   type Rol,
 } from "./roles";
-export { sesionActual } from "./sesion";

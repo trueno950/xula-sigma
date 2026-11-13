@@ -26,8 +26,6 @@ export type DirectorioDePrueba = DirectorioDeUsuarios & {
       rol: RolAsignable;
     };
   }[];
-  /** El id que devuelve la proxima alta. */
-  idDeAlta: string;
   /** Hace que la proxima alta lance el error recibido. */
   fallarEnAlta(error: unknown): void;
 };
@@ -41,7 +39,6 @@ export function crearDirectorioDePrueba(
   return {
     filas: [...filas],
     altas,
-    idDeAlta: "usuario-nuevo",
     fallarEnAlta(error) {
       errorDeAlta = error;
     },
