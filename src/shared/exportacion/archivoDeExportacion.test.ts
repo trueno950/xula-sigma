@@ -2,10 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { Marca } from "@/shared/marca";
 import { comoAyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
-import {
-  archivosDeExportacion,
-  nombreDelArchivo,
-} from "./archivoDeExportacion";
+import { archivosDeExportacion } from "./archivoDeExportacion";
 import type { Exportacion } from "./exportar";
 import { type ArchivoDelZip, armarZip } from "./zip";
 
@@ -102,13 +99,14 @@ describe("archivosDeExportacion", () => {
     );
   });
 
-  it("el manifiesto lleva el municipio, su marca y los dos momentos", () => {
+  it("el manifiesto lleva el municipio, su marca sin el escudo y los dos momentos", () => {
     const archivos = archivosDeExportacion(exportacionDe({ personas: [] }));
 
     expect(manifiestoDe(archivos)).toEqual({
       subdominio: "motul",
       nombre: "Motul",
-      marca,
+      marca: { primario: "oklch(0.42 0.12 25)" },
+      tieneEscudo: false,
       generadaEn: "2026-11-13T23:05:00.000Z",
       // 23:05 UTC son las 17:05 en Merida: la hora civil de quien recibe
       // el archivo, no la del servidor.
@@ -130,14 +128,26 @@ describe("archivosDeExportacion", () => {
     ]);
   });
 
-  it("el manifiesto no lleva el id del ayuntamiento", () => {
+  it("el manifiesto no lleva el id, ni el que esconde la URL del escudo", () => {
+    // La URL del escudo es `R2_PUBLIC_URL/{ayuntamientoId}/escudo-<uuid>.png`:
+    // serializar la marca entera metia el id que S2 deja afuera, y el
+    // manifiesto seguia pareciendo correcto.
     const exportacion = exportacionDe({ personas: [] });
+    const id = exportacion.ayuntamiento.id;
+    const conEscudo: Exportacion = {
+      ...exportacion,
+      ayuntamiento: {
+        ...exportacion.ayuntamiento,
+        marca: { escudo: `https://assets.example.com/${id}/escudo-x.png` },
+      },
+    };
+
     const manifiesto = texto(
-      archivo(archivosDeExportacion(exportacion), "manifiesto.json"),
+      archivo(archivosDeExportacion(conEscudo, ESCUDO), "manifiesto.json"),
     );
 
     expect(manifiesto).not.toContain("ayuntamientoId");
-    expect(manifiesto).not.toContain(exportacion.ayuntamiento.id);
+    expect(manifiesto).not.toContain(id);
   });
 
   it("ningun archivo lleva hashes, contrasenas ni tokens", () => {
@@ -160,6 +170,7 @@ describe("archivosDeExportacion", () => {
     );
 
     expect(archivo(archivos, "escudo.png").contenido).toEqual(ESCUDO);
+    expect(manifiestoDe(archivos).tieneEscudo).toBe(true);
   });
 
   it("sin escudo, el ZIP sale sin escudo.png", () => {
@@ -181,18 +192,5 @@ describe("archivosDeExportacion", () => {
 
     expect(new TextDecoder().decode(zip)).toContain("escudo.png");
     expect(() => armarZip(archivos)).not.toThrow();
-  });
-});
-
-describe("nombreDelArchivo", () => {
-  it("lleva el subdominio y la fecha civil de Merida", () => {
-    // 02:00 UTC del 14 son las 20:00 del 13 en Merida: el nombre no puede
-    // decir 14, porque quien lo recibe abre el archivo del dia que fue.
-    expect(
-      nombreDelArchivo("motul", new Date("2026-11-14T02:00:00.000Z")),
-    ).toBe("motul-2026-11-13.zip");
-    expect(
-      nombreDelArchivo("ticul", new Date("2026-11-13T23:05:00.000Z")),
-    ).toBe("ticul-2026-11-13.zip");
   });
 });

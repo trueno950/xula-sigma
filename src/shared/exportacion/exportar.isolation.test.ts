@@ -91,11 +91,11 @@ describe("exportarAyuntamiento", () => {
 
   it("lleva la bitacora, que es la evidencia que hay que conservar", async () => {
     /**
-     * La razon por la que va, en `exportar.ts`. Lo que agrega este test es
-     * que exista: el comentario decia que la bitacora se exportaba cuando
-     * `conjuntosDePlataforma` solo devolvia `usuarios`, y nada fallaba.
-     * Un archivo municipal sin su bitacora no tiene con que probar quien
-     * emitio que.
+     * La razon por la que va, en `conjuntosDePlataforma.ts`. Lo que agrega
+     * este test es que exista: el comentario decia que la bitacora se
+     * exportaba cuando `conjuntosDePlataforma` solo devolvia `usuarios`, y
+     * nada fallaba. Un archivo municipal sin su bitacora no tiene con que
+     * probar quien emitio que.
      */
     const exportacion = await exportarAyuntamiento(
       actor("motul", "ADMIN_MUNICIPAL"),
@@ -113,10 +113,11 @@ describe("exportarAyuntamiento", () => {
 
   it("no exporta credenciales", async () => {
     /**
-     * Que tablas no salen y por que, en `exportar.ts`. Lo que agrega este
-     * test es la forma del assert: va contra el JSON entero y no contra la
-     * lista de conjuntos, porque exportar una tabla nueva con credenciales
-     * adentro no rompe un assert que solo mire nombres, y si rompe este.
+     * Que tablas no salen y por que, en `conjuntosDePlataforma.ts`. Lo que
+     * agrega este test es la forma del assert: va contra el JSON entero y
+     * no contra la lista de conjuntos, porque exportar una tabla nueva con
+     * credenciales adentro no rompe un assert que solo mire nombres, y si
+     * rompe este.
      */
     const exportacion = await exportarAyuntamiento(
       actor("motul", "ADMIN_MUNICIPAL"),

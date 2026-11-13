@@ -22,10 +22,9 @@ import { exigirAyuntamiento } from "@/shared/tenancy/contexto";
  * servidor y no de la URL: no hay ningun parametro que el cliente pueda
  * mandar.
  *
- * El ZIP se arma entero antes de responder, en memoria. Un ZIP en streaming
- * que fallara a la mitad le dejaria a la operadora un archivo que abre y
- * esta incompleto —exactamente lo que S4 prohibe—, mientras que un 500 no
- * deja archivo.
+ * El ZIP se arma entero antes de responder, en memoria: en streaming, un
+ * fallo a la mitad deja un archivo que abre incompleto, mientras que un 500
+ * no deja archivo. Por que eso importa, en `shared/exportacion/exportar.ts`.
  */
 
 export const runtime = "nodejs";

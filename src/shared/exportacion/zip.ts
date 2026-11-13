@@ -170,8 +170,8 @@ const concatenar = (partes: readonly Uint8Array[]): Uint8Array => {
  * @throws Si dos archivos comparten nombre, si un nombre sale de la carpeta
  *   del ZIP o si el resultado no entra en los 32 bits de un ZIP sin ZIP64.
  *   El limite se declara en vez de escribirse mal: un ZIP con offsets
- *   truncados lo abre `unzip` a medias y parece completo, que es el modo de
- *   falla que S4 prohibe.
+ *   truncados lo abre `unzip` a medias. Por que un ZIP a medias no se
+ *   entrega, en `exportar.ts`.
  */
 export function armarZip(archivos: readonly ArchivoDelZip[]): Uint8Array {
   if (archivos.length > MAXIMO_DE_ENTRADAS) {

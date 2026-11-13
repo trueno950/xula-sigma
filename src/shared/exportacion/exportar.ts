@@ -1,17 +1,19 @@
 import { eq } from "drizzle-orm";
 import type { ContextoActual } from "@/shared/auth/contexto";
-import { usuarios } from "@/shared/auth/esquema";
 import { puedeExportar } from "@/shared/auth/roles";
 import { NoAutorizadoError, TenantNoResueltoError } from "@/shared/lib/errores";
 import { leerMarca, type Marca } from "@/shared/marca";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { registrar } from "@/shared/tenancy/bitacora";
-import { ayuntamientos, bitacora } from "@/shared/tenancy/esquema";
+import { ayuntamientos } from "@/shared/tenancy/esquema";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { agregarPorciones, type PorcionExportable } from "./agregarPorciones";
+import type { PorcionExportable } from "./agregarPorciones";
+import { conjuntosDe } from "./conjuntosDePlataforma";
+import { escudoDe, type LectorDeEscudo } from "./escudo";
 
 export type { PorcionExportable } from "./agregarPorciones";
+export type { LectorDeEscudo } from "./escudo";
 
 /**
  * La entrega de los datos de un ayuntamiento, en formato abierto.
@@ -51,73 +53,22 @@ export type Exportacion = {
 };
 
 /**
- * Las columnas se listan una por una, igual que en
- * `resolverAyuntamientoPorSubdominio` y por un motivo mas fuerte: el dia
- * que `usuarios` gane una columna sensible, un `select()` pelado la mete
- * sola en un archivo que sale de la organizacion.
+ * La exportacion con el escudo ya leido (S1).
  *
- * **Que NO se exporta, y por que.** El codigo no puede explicar la
- * ausencia de una tabla, asi que va aca:
+ * Los bytes viajan con la exportacion y no aparte porque la lectura ocurre
+ * **adentro** de la transaccion: si el almacenamiento falla, el ROLLBACK se
+ * lleva la traza `EXPORTAR_AYUNTAMIENTO` y el municipio no queda registrado
+ * como exportado sin haber recibido su archivo. `escudo` es opcional y
+ * aditivo: quien solo mira los datos sigue viendo una `Exportacion`.
  *
- * - `cuentas` — lleva el hash de la contrasenia. Argon2 no se revierte,
- *   pero un volcado de hashes junto a los correos reales es material de
- *   fuerza bruta offline, y la gente reusa la clave del municipio en otro
- *   lado. No es dato del municipio: es una credencial.
- * - `sesiones` y `verificaciones` — llevan tokens vigentes. Entregarlos es
- *   entregar sesiones abiertas, no historia.
- * - `intentos_acceso` — es telemetria de seguridad de la plataforma, no
- *   registro del municipio.
- *
- * La bitacora si va: es la evidencia de quien hizo que, y es justamente lo
- * que un archivo municipal necesita conservar.
+ * `| undefined` explicito porque el `tsconfig` usa
+ * `exactOptionalPropertyTypes`: sin el, `escudo` ausente y `escudo`
+ * `undefined` serian dos cosas distintas y `exportarAyuntamiento` no podria
+ * devolver la clave cuando el municipio no tiene escudo.
  */
-const conjuntosDePlataforma = async (
-  tx: TransaccionTenant,
-): Promise<Record<string, readonly unknown[]>> => ({
-  usuarios: await tx
-    .select({
-      id: usuarios.id,
-      nombre: usuarios.name,
-      email: usuarios.email,
-      rol: usuarios.rol,
-      bajaEn: usuarios.bajaEn,
-      creadoEn: usuarios.createdAt,
-    })
-    .from(usuarios),
-  /**
-   * Columnas explicitas, mismo criterio que `usuarios` arriba: sin esto
-   * una columna nueva de `bitacora` entraria sola al archivo entregado sin
-   * que nadie la revise.
-   *
-   * Se lee antes de que `registrar` escriba la traza de esta exportacion,
-   * asi que el archivo entregado no se incluye a si mismo. Es lo correcto:
-   * esa fila todavia no existe cuando se lee.
-   */
-  bitacora: await tx
-    .select({
-      id: bitacora.id,
-      ayuntamientoId: bitacora.ayuntamientoId,
-      actor: bitacora.actor,
-      accion: bitacora.accion,
-      entidad: bitacora.entidad,
-      entidadId: bitacora.entidadId,
-      origen: bitacora.origen,
-      ocurridoEn: bitacora.ocurridoEn,
-    })
-    .from(bitacora)
-    .orderBy(bitacora.ocurridoEn),
-});
-
-/**
- * Los conjuntos de la plataforma y los que aportan los modulos, en un solo
- * mapa. Sale de `exportarAyuntamiento` para que esa quede en el flujo y no
- * en el armado.
- */
-const conjuntosDe = async (
-  tx: TransaccionTenant,
-  porciones: readonly PorcionExportable[],
-): Promise<Record<string, readonly unknown[]>> =>
-  agregarPorciones(tx, await conjuntosDePlataforma(tx), porciones);
+export type ExportacionConEscudo = Exportacion & {
+  readonly escudo?: Uint8Array | undefined;
+};
 
 /**
  * El municipio del contexto, o falla.
@@ -126,6 +77,10 @@ const conjuntosDe = async (
  * un municipio ausente significa que se borro entre la resolucion del
  * tenant y esta consulta. Descubrirlo antes de leer nada evita recorrer
  * todas las porciones para despues tirar el trabajo.
+ *
+ * El `id` que devuelve es el que leyo RLS, y es el que usa la lectura del
+ * escudo: la barrera del almacenamiento compara contra ese, no contra el
+ * contexto.
  */
 const municipioDe = async (
   tx: TransaccionTenant,
@@ -154,16 +109,40 @@ const municipioDe = async (
  * @param porciones Lo que aportan los modulos. Se componen en `src/app`,
  *   que es la unica capa que conoce todos los modulos — `shared` no puede
  *   importarlos.
+ * @param lectorEscudo El almacenamiento de assets. Ausente cuando quien
+ *   llama no quiere el escudo; con el, la lectura ocurre adentro de la
+ *   transaccion y su fallo no deja traza.
  */
 export async function exportarAyuntamiento(
   contexto: ContextoActual,
   porciones: readonly PorcionExportable[],
-): Promise<Exportacion> {
+  lectorEscudo?: LectorDeEscudo,
+): Promise<ExportacionConEscudo> {
   if (!puedeExportar(contexto.usuario.rol)) throw new NoAutorizadoError();
 
   return withTenant(contexto.ayuntamientoId, async (tx) => {
     const municipio = await municipioDe(tx, contexto.ayuntamientoId);
     const conjuntos = await conjuntosDe(tx, porciones);
+
+    /**
+     * **Este orden es la regla de S1.** El escudo se lee aca adentro y antes
+     * de `registrar` porque un ZIP que sale sin el escudo —porque el
+     * almacenamiento no respondio— se ve igual que el de un municipio sin
+     * escudo, y el archivo de un municipio que se va no admite esa
+     * ambiguedad. Yendo adentro, el fallo deshace la transaccion entera: sin
+     * ZIP no hay traza.
+     *
+     * Cuesta una conexion del pool sujeta al viaje de red del
+     * almacenamiento, y se acepta a proposito: leerlo afuera —lo que hacia
+     * antes— es justo la traza sin archivo que S1 cierra. Los otros archivos
+     * que dependen de esta regla (`zip.ts`, `route.ts`,
+     * `marca/application/puertos.ts`) apuntan aca en vez de repetirla.
+     */
+    const escudo = await escudoDe(
+      municipio.id,
+      municipio.marca.escudo,
+      lectorEscudo,
+    );
 
     /**
      * La traza va en la misma transaccion que la lectura. Regla dura: no
@@ -180,6 +159,11 @@ export async function exportarAyuntamiento(
       entidadId: contexto.ayuntamientoId,
     });
 
-    return { generadaEn: new Date(), ayuntamiento: municipio, conjuntos };
+    return {
+      generadaEn: new Date(),
+      ayuntamiento: municipio,
+      conjuntos,
+      escudo,
+    };
   });
 }

@@ -10,7 +10,7 @@ import { porcionDePadron } from "./composicion";
  * Prueba design.md decision 6: el archivo entregado a un municipio no
  * esconde tombstones de fusion. Un `select()` pelado deja pasar una
  * columna nueva y sensible sin que nadie la revise -mismo riesgo que
- * `exportar.ts` ya documenta para `usuarios`- y este test lo fija para
+ * `conjuntosDePlataforma.ts` ya documenta para `usuarios`- y este test lo fija para
  * `personas` antes de que exista una segunda columna sensible.
  */
 const txDePrueba = () => {
