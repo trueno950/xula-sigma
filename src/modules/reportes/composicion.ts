@@ -23,7 +23,11 @@ import {
   repositorioDeReportesSql,
 } from "./infrastructure";
 import { buscadorDeDireccionesPorTerritorio } from "./infrastructure/buscadorDeDireccionesPorTerritorio";
-import { movimientosDeReportes, reportes } from "./infrastructure/esquema";
+import {
+  foliosDeReportes,
+  movimientosDeReportes,
+  reportes,
+} from "./infrastructure/esquema";
 import { crearLectorDeDomiciliosPorTerritorio } from "./infrastructure/lectorDeDomiciliosPorTerritorio";
 
 export const buscarDireccionesParaReporte = crearBuscarDireccionesParaReporte(
@@ -81,8 +85,15 @@ export const historialDeReporte = crearHistorialDeReporte(
  * reconstruir que se reporto, el mismo argumento con el que `constancias`
  * incluye `codigoVerificacion`, y la exportacion ya sale detras de
  * `puedeExportar` con traza en bitacora.
+ *
+ * `folios_de_reportes` cierra el conjunto (S2 de
+ * `odd/tasks/exportacion-de-datos.md`): sin el contador, quien reciba los
+ * datos no puede seguir la numeracion sin repetirla. Sale sin `id` porque
+ * la tabla no lo tiene -su identidad es la pareja municipio/anio, y el
+ * municipio es el que ya eligio quien exporta-.
  */
 export const porcionesDeReportes: readonly [
+  PorcionExportable,
   PorcionExportable,
   PorcionExportable,
 ] = [
@@ -126,5 +137,15 @@ export const porcionesDeReportes: readonly [
           ocurridoEn: movimientosDeReportes.ocurridoEn,
         })
         .from(movimientosDeReportes),
+  },
+  {
+    nombre: "folios_de_reportes",
+    leer: (tx) =>
+      tx
+        .select({
+          anio: foliosDeReportes.anio,
+          ultimoConsecutivo: foliosDeReportes.ultimoConsecutivo,
+        })
+        .from(foliosDeReportes),
   },
 ];

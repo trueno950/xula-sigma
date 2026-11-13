@@ -1,5 +1,5 @@
 import { crearCambiarEscudo } from "./application";
-import { almacenR2, repositorioDeMarcaSql } from "./infrastructure";
+import { almacenR2, lectorR2, repositorioDeMarcaSql } from "./infrastructure";
 
 /**
  * Raiz de composicion del modulo: une la fabrica del caso de uso con los
@@ -16,3 +16,13 @@ export const cambiarEscudo = crearCambiarEscudo(
   almacenR2,
   repositorioDeMarcaSql,
 );
+
+/**
+ * El lector del escudo para la exportacion completa (S4 de
+ * `exportacion-de-datos`). Se expone desde la raiz de composicion y no del
+ * barril del modulo porque `src/app` no puede importar
+ * `infrastructure/` (`app-no-importa-infrastructure` en
+ * `.dependency-cruiser.cjs`): cablear adaptadores es justo lo que este
+ * archivo hace.
+ */
+export const lectorDeEscudo = lectorR2;

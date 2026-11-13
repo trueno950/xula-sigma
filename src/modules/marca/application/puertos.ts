@@ -37,6 +37,32 @@ export type AlmacenDeAssets = {
 };
 
 /**
+ * Lo que necesita quien tenga que **entregar** un asset ya guardado —hoy,
+ * la exportacion completa de `exportacion-de-datos`, que mete el escudo en
+ * el ZIP de S4—. Es un puerto aparte de `AlmacenDeAssets` y no un tercer
+ * metodo suyo: subir y bajar son permisos distintos, y quien solo baja no
+ * deberia recibir un `guardar` con el que no hace nada.
+ *
+ * `url`, no clave, por simetria con `borrar`: el adaptador es el unico que
+ * sabe mapear en las dos direcciones.
+ *
+ * **No devuelve `null` cuando el objeto no esta.** `marca.escudo` admite
+ * cualquier URL http pegada a mano, y una lectura que devolviera vacio ante
+ * una URL ajena al almacen —o del municipio de al lado— dejaria salir un
+ * archivo que parece completo sin el escudo. La garantia es la misma de
+ * `borrar` (`domain/claveDesdeUrl.ts#claveTenantDesdeUrl`) y
+ * `ayuntamientoId` es `string` por la razon que ese archivo explica.
+ */
+export type LectorDeAssets = {
+  /**
+   * @throws Si la URL no es de este almacen ni de este ayuntamiento, o si
+   *   el almacenamiento falla. Un ZIP a medias nunca se entrega: quien
+   *   llama decide si el fallo es un mensaje para la operadora.
+   */
+  leer(ayuntamientoId: string, url: string): Promise<Uint8Array>;
+};
+
+/**
  * Lo que el caso de uso necesita para leer y escribir `ayuntamientos.marca`
  * sin componer SQL a mano (antipatron 7 de `AGENTS.md`). Las dos
  * operaciones reciben la transaccion de `withTenant` por parametro y no la

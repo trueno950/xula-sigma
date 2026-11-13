@@ -31,6 +31,7 @@ describe("NavegacionDeModulos", () => {
     expect(html).toContain("Territorio");
     expect(html).toContain("Administración");
     expect(html).toContain('href="/marca"');
+    expect(html).toContain('href="/exportacion"');
   });
 
   it("marca solo el modulo activo con aria-current", () => {
@@ -47,6 +48,8 @@ describe("NavegacionDeModulos", () => {
 
     expect(html).not.toContain('href="/marca"');
     expect(html).not.toContain('href="/usuarios"');
+    // Solo el `ADMIN_MUNICIPAL` exporta los datos del ayuntamiento (S1).
+    expect(html).not.toContain('href="/exportacion"');
     expect(html).not.toContain("Administración");
     expect(html).toContain('href="/padron"');
   });

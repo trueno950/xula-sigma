@@ -1,9 +1,10 @@
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import type { AlmacenDeAssets } from "../application/puertos";
+import type { AlmacenDeAssets, LectorDeAssets } from "../application/puertos";
 import { claveTenantDesdeUrl } from "../domain/claveDesdeUrl";
 
 /**
@@ -110,5 +111,38 @@ export const almacenR2: AlmacenDeAssets = {
         Key: clave,
       }),
     );
+  },
+};
+
+/**
+ * Leer un asset ya guardado, para la exportacion de `exportacion-de-datos`
+ * (S4: el escudo va dentro del ZIP).
+ *
+ * El GET efectivo contra R2 tampoco tiene test aqui, por la misma razon que
+ * el PUT y el DELETE (`design.md` seccion 3): no hay credenciales en CI. Lo
+ * que si se prueba —`almacenR2.test.ts`, con `S3Client` mockeado— es que la
+ * clave sale de `claveTenantDesdeUrl` y que una URL ajena no llega al
+ * almacenamiento. La lectura real sale por el E2E de la descarga.
+ */
+export const lectorR2: LectorDeAssets = {
+  async leer(ayuntamientoId, url) {
+    const config = configuracion();
+    const clave = claveTenantDesdeUrl(config.urlPublica, ayuntamientoId, url);
+
+    if (!clave) {
+      throw new Error(
+        "El escudo guardado no pertenece al almacenamiento de este ayuntamiento.",
+      );
+    }
+
+    const objeto = await clienteDe(config).send(
+      new GetObjectCommand({ Bucket: config.bucket, Key: clave }),
+    );
+    const bytes = await objeto.Body?.transformToByteArray();
+
+    if (!bytes)
+      throw new Error("El almacenamiento devolvio un escudo sin bytes.");
+
+    return bytes;
   },
 };

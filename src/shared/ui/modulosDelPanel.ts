@@ -1,4 +1,5 @@
 import {
+  DownloadSimple,
   FileText,
   MapPinLine,
   MapTrifold,
@@ -12,6 +13,7 @@ import type { ComponentType } from "react";
 import {
   puedeAdministrarUsuarios,
   puedeCambiarMarca,
+  puedeExportar,
   type Rol,
 } from "@/shared/auth/roles";
 
@@ -105,6 +107,14 @@ export const MODULOS_DEL_PANEL: readonly ModuloDelPanel[] = [
     grupo: "Administración",
     permite: puedeCambiarMarca,
     Icono: Palette,
+  },
+  {
+    nombre: "Exportación",
+    ruta: "/exportacion",
+    descripcion: "Descargar todos los datos del ayuntamiento.",
+    grupo: "Administración",
+    permite: puedeExportar,
+    Icono: DownloadSimple,
   },
 ];
 

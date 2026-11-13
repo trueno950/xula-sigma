@@ -11,6 +11,7 @@ export {
   intervencionPorId,
   listarIntervencionesDeCalleEnTransaccion,
   listarIntervencionesParaMapa,
+  porcionesDeIntervenciones,
   registrarIntervencion,
 } from "./composicion";
 export * from "./domain";

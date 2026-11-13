@@ -25,6 +25,7 @@ const TITULOS: Record<string, string> = {
   "(panel)/constancias/configuracion/page.tsx": "Configuración de constancias",
   "(panel)/constancias/emitir/page.tsx": "Emitir constancia",
   "(panel)/constancias/page.tsx": "Constancias",
+  "(panel)/exportacion/page.tsx": "Exportación",
   "(panel)/intervenciones/[id]/page.tsx": "Intervención",
   "(panel)/intervenciones/page.tsx": "Intervenciones",
   "(panel)/mapa-operativo/page.tsx": "Mapa operativo",

@@ -30,10 +30,18 @@ vi.mock("@aws-sdk/client-s3", () => {
     }
   }
 
+  class GetObjectCommandDeMentira {
+    input: unknown;
+    constructor(input: unknown) {
+      this.input = input;
+    }
+  }
+
   return {
     S3Client: S3ClientDeMentira,
     PutObjectCommand: PutObjectCommandDeMentira,
     DeleteObjectCommand: DeleteObjectCommandDeMentira,
+    GetObjectCommand: GetObjectCommandDeMentira,
   };
 });
 
@@ -96,5 +104,64 @@ describe("almacenR2.borrar", () => {
     );
 
     expect(enviar).not.toHaveBeenCalled();
+  });
+});
+
+describe("lectorR2.leer", () => {
+  const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+
+  beforeEach(() => {
+    vi.resetModules();
+    enviar.mockReset();
+    enviar.mockResolvedValue({
+      Body: { transformToByteArray: async () => bytes },
+    });
+
+    for (const [llave, valor] of Object.entries(ENV_R2)) {
+      vi.stubEnv(llave, valor);
+    }
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("lee la clave propia y devuelve los bytes del escudo", async () => {
+    const { lectorR2 } = await import("./almacenR2");
+
+    const leidos = await lectorR2.leer(
+      "motul",
+      "https://assets.xulasigma.mx/motul/escudo-x.png",
+    );
+
+    expect(leidos).toEqual(bytes);
+    const comando = enviar.mock.calls[0]?.[0] as { input: unknown };
+    expect(comando.input).toEqual({
+      Bucket: "xula-assets",
+      Key: "motul/escudo-x.png",
+    });
+  });
+
+  /**
+   * Una URL que no es de este almacenamiento o no es de este ayuntamiento
+   * no se puede entregar en el ZIP, y faltar en silencio dejaria un archivo
+   * que parece completo sin el escudo (S4 de `exportacion-de-datos`).
+   */
+  it("rechaza la URL de otro ayuntamiento sin pedirle nada al almacen", async () => {
+    const { lectorR2 } = await import("./almacenR2");
+
+    await expect(
+      lectorR2.leer("motul", "https://assets.xulasigma.mx/ticul/escudo-x.png"),
+    ).rejects.toThrow(/almacenamiento/);
+    expect(enviar).not.toHaveBeenCalled();
+  });
+
+  it("rechaza una respuesta sin cuerpo en vez de entregar un escudo vacio", async () => {
+    const { lectorR2 } = await import("./almacenR2");
+    enviar.mockResolvedValue({});
+
+    await expect(
+      lectorR2.leer("motul", "https://assets.xulasigma.mx/motul/escudo-x.png"),
+    ).rejects.toThrow(/escudo/);
   });
 });
