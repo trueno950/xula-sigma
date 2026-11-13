@@ -503,6 +503,23 @@ tres condiciones juntas, la acción vuelve a `ActionResult<T>`. Hoy hay una:
 **Una segunda no entra sin agregarse a esta lista**, mismo motivo que la de
 arriba.
 
+### La única excepción: descarte sin resultado invocado desde cliente
+
+Una Server Action puede devolver `void` en vez de `ActionResult<T>` **solo**
+si (a) la invoca un componente `"use client"` sin que nadie lea su retorno,
+(b) su único efecto es borrar algo que la propia sesión guardó y (c) su
+falla no cambia lo que la operadora ve ni debe hacer. Hoy hay una:
+
+- `descartarClaveMostradaAction` (`usuarios`, administración de usuarios):
+  `DescartarClaveAlMostrar` la llama al montarse para borrar la cookie de la
+  contraseña temporal apenas se mostró -la contraseña se ve una sola vez-.
+  Valida el token con Zod, solo borra si coincide con el guardado y registra
+  su propia caída sin datos de la persona. Si falla, la cookie vence sola a
+  los 120 segundos.
+
+**Una segunda no entra sin agregarse a esta lista**, mismo motivo que las de
+arriba.
+
 ---
 
 ## Datos personales
