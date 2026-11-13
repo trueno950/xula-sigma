@@ -19,11 +19,47 @@ const txDePrueba = () => {
   return { tx: { select } as unknown as TransaccionTenant, select };
 };
 
+/**
+ * La primera columna que cada conjunto tiene que listar. Sin `ayuntamientoId`
+ * -el mapa lo excluye a proposito- y sin `id` en los tres que no lo llevan:
+ * su identidad es la llave completa de la fila.
+ */
+const PRIMERA_COLUMNA: Record<string, string> = {
+  constancias: "id",
+  reimpresiones: "id",
+  configuracion_de_documentos: "datos",
+  folios_de_documentos: "tipo",
+};
+
+const primeraColumna = (nombre: string) => {
+  const columna = PRIMERA_COLUMNA[nombre];
+
+  if (!columna) throw new Error(`Falta la primera columna de "${nombre}".`);
+
+  return columna;
+};
+
+const porcionLlamada = (nombre: string) => {
+  const porcion = porcionesDeConstancias.find(
+    (candidata) => candidata.nombre === nombre,
+  );
+
+  if (!porcion) throw new Error(`Falta la porcion "${nombre}".`);
+
+  return porcion;
+};
+
 describe("porcionesDeConstancias", () => {
-  it("declara su nombre distinto de la plataforma, padron y territorio", () => {
+  it("declara sus cuatro nombres distintos de la plataforma, padron y territorio", () => {
     const nombres = porcionesDeConstancias.map((porcion) => porcion.nombre);
 
-    expect(nombres).toEqual(["constancias"]);
+    expect(nombres).toEqual([
+      "constancias",
+      "reimpresiones",
+      "configuracion_de_documentos",
+      "folios_de_documentos",
+    ]);
+    expect(new Set(nombres).size).toBe(nombres.length);
     for (const conocido of [
       "usuarios",
       "bitacora",
@@ -32,52 +68,76 @@ describe("porcionesDeConstancias", () => {
       "calles",
       "domicilios",
       "residencias",
+      "zonas",
+      "calles_de_zonas",
+      "eventos_de_calles",
     ]) {
       expect(nombres).not.toContain(conocido);
     }
   });
 
-  it("lee columnas explicitas, nunca select() pelado", async () => {
-    const porcion = porcionesDeConstancias[0];
-    const { tx, select } = txDePrueba();
+  it("cada porcion lee columnas explicitas, nunca select() pelado", async () => {
+    for (const porcion of porcionesDeConstancias) {
+      const { tx, select } = txDePrueba();
 
-    await porcion.leer(tx);
+      await porcion.leer(tx);
 
-    expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ id: expect.anything() }),
-    );
+      expect(select).toHaveBeenCalledWith(
+        expect.objectContaining({
+          [primeraColumna(porcion.nombre)]: expect.anything(),
+        }),
+      );
+    }
   });
 
-  it("incluye codigoVerificacion: el archivo municipal reconstruye el documento", async () => {
-    const porcion = porcionesDeConstancias[0];
+  it("constancias incluye codigoVerificacion: el archivo municipal reconstruye el documento", async () => {
     const { tx, select } = txDePrueba();
 
-    await porcion.leer(tx);
+    await porcionLlamada("constancias").leer(tx);
 
     expect(select).toHaveBeenCalledWith(
       expect.objectContaining({ codigoVerificacion: expect.anything() }),
     );
   });
 
-  it("no incluye el jsonb datos completo sin decision explicita de que columnas exportar", async () => {
-    const porcion = porcionesDeConstancias[0];
+  it("constancias no incluye el jsonb datos completo sin decision explicita de que columnas exportar", async () => {
+    /**
+     * Es sobre `constancias` y no sobre el arreglo entero:
+     * `configuracion_de_documentos` **si** exporta su jsonb `datos`, porque
+     * ahi `datos` es toda la fila -el bloque de firma- y no hay otra
+     * columna que lo sustituya.
+     */
     const { tx, select } = txDePrueba();
 
-    await porcion.leer(tx);
+    await porcionLlamada("constancias").leer(tx);
 
     expect(select).not.toHaveBeenCalledWith(
       expect.objectContaining({ datos: expect.anything() }),
     );
   });
 
-  it("no incluye ayuntamientoId: es redundante para quien pide la exportacion", async () => {
-    const porcion = porcionesDeConstancias[0];
+  it("reimpresiones exporta motivo y ocurridoEn: el historial de impresiones se lee fuera del sistema", async () => {
     const { tx, select } = txDePrueba();
 
-    await porcion.leer(tx);
+    await porcionLlamada("reimpresiones").leer(tx);
 
-    expect(select).not.toHaveBeenCalledWith(
-      expect.objectContaining({ ayuntamientoId: expect.anything() }),
+    expect(select).toHaveBeenCalledWith(
+      expect.objectContaining({
+        motivo: expect.anything(),
+        ocurridoEn: expect.anything(),
+      }),
     );
+  });
+
+  it("ninguna porcion incluye ayuntamientoId: es redundante para quien pide la exportacion", async () => {
+    for (const porcion of porcionesDeConstancias) {
+      const { tx, select } = txDePrueba();
+
+      await porcion.leer(tx);
+
+      expect(select).not.toHaveBeenCalledWith(
+        expect.objectContaining({ ayuntamientoId: expect.anything() }),
+      );
+    }
   });
 });

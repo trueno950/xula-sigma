@@ -1,4 +1,5 @@
 import { porcionesDeConstancias } from "@/modules/constancias";
+import { porcionesDeIntervenciones } from "@/modules/intervenciones";
 import { porcionDePadron } from "@/modules/padron";
 import { porcionesDeReportes } from "@/modules/reportes";
 import { porcionesDeTerritorio } from "@/modules/territorio";
@@ -23,4 +24,5 @@ export const porciones: readonly PorcionExportable[] = [
   ...porcionesDeTerritorio,
   ...porcionesDeConstancias,
   ...porcionesDeReportes,
+  ...porcionesDeIntervenciones,
 ];
