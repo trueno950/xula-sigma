@@ -38,9 +38,10 @@ const CONFIRMACIONES: Record<ConfirmacionDeUsuarios, string> = {
  * (`05-seguridad.md` seccion 6).
  *
  * La contrasenia temporal no viene por ningun parametro: el redirect trae
- * solo su token y la clave se lee de la cookie httpOnly
- * (`claveTemporalEnCookie.ts`, S4). Sin ese token la cookie no se toca, asi
- * que volver a esta pantalla no la vuelve a mostrar.
+ * solo su token, y el proxy pone la clave en una cabecera del request -que
+ * la pagina lee y la cookie no- en la unica peticion que trae ese token
+ * (`claveMostradaEnTransito.ts`, S4 y S2). Sin el token en la URL no hay
+ * cabecera, asi que volver a esta pantalla no la muestra.
  *
  * `?error=` trae un codigo del vocabulario de `mensajesDeError.ts`, nunca el
  * texto del error: la URL la escribe cualquiera y reflejarla seria pintar

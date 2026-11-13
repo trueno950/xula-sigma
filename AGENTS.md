@@ -471,13 +471,18 @@ Notas que no caben en la tabla, una por fila que las necesita:
   nativo. Las tres redactan `NoAutorizadoError` y `NoEncontradoError` -un
   `usuarioId` de otro ayuntamiento responde 404, S7-; la de alta tambien
   `RolNoAsignableError` -solo `OPERADOR` y `CONSULTA`, S3- y
-  `CorreoYaRegistradoError` -el choque contra `usuarios_tenant_email_idx`-.
+  `CorreoYaRegistradoError` -el choque contra `usuarios_tenant_email_idx` o
+  `usuarios_tenant_email_lower_idx`, migracion `0024`-.
   **La contraseña temporal no vuelve por `?clave=`**: el redirect lleva solo
-  un token opaco y la clave viaja en una cookie httpOnly de 120 segundos que
-  la página lee únicamente cuando ese token coincide -nunca en la URL, que
-  queda en el historial del navegador y en el log de accesos del servidor-.
-  Ver `src/modules/usuarios/ui/claveTemporalEnCookie.ts`; S4 de
-  `odd/tasks/administracion-de-usuarios.md`.
+  un token opaco y la clave viaja en una cookie httpOnly de 120 segundos. La
+  consume el proxy, en la única petición que trae ese token: la pasa a una
+  cabecera que el cliente no puede escribir y borra la cookie en la misma
+  respuesta, así que se muestra una sola vez también sin JavaScript. La
+  pantalla lee la cabecera, nunca la cookie -nunca en la URL, que queda en el
+  historial del navegador y en el log de accesos del servidor-.
+  Ver `src/modules/usuarios/ui/claveMostradaEnTransito.ts`; S4 de
+  `odd/tasks/administracion-de-usuarios.md` y S2 de
+  `odd/tasks/pendientes-fase-0.md`.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un
@@ -501,23 +506,6 @@ tres condiciones juntas, la acción vuelve a `ActionResult<T>`. Hoy hay una:
   a mostrar como error.
 
 **Una segunda no entra sin agregarse a esta lista**, mismo motivo que la de
-arriba.
-
-### La única excepción: descarte sin resultado invocado desde cliente
-
-Una Server Action puede devolver `void` en vez de `ActionResult<T>` **solo**
-si (a) la invoca un componente `"use client"` sin que nadie lea su retorno,
-(b) su único efecto es borrar algo que la propia sesión guardó y (c) su
-falla no cambia lo que la operadora ve ni debe hacer. Hoy hay una:
-
-- `descartarClaveMostradaAction` (`usuarios`, administración de usuarios):
-  `DescartarClaveAlMostrar` la llama al montarse para borrar la cookie de la
-  contraseña temporal apenas se mostró -la contraseña se ve una sola vez-.
-  Valida el token con Zod, solo borra si coincide con el guardado y registra
-  su propia caída sin datos de la persona. Si falla, la cookie vence sola a
-  los 120 segundos.
-
-**Una segunda no entra sin agregarse a esta lista**, mismo motivo que las de
 arriba.
 
 ---
