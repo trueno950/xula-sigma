@@ -25,7 +25,9 @@ Vitest (integración sobre `xula_test`), Playwright y `pnpm check`.
   `configuracion_de_documentos`, `folios_de_documentos` y
   `folios_de_reportes`. Siguen fuera, a propósito (`exportar.ts`), `cuentas`,
   `sesiones`, `verificaciones` e `intentos_acceso`: credenciales y telemetría,
-  no datos del municipio. Ningún conjunto lleva `ayuntamiento_id`.
+  no datos del municipio. Ningún conjunto nuevo lleva `ayuntamiento_id`
+  (`bitacora` ya lo llevaba antes de este frente: es el id del propio
+  municipio).
 
 - **S3.** Decisión del usuario: «Para abrir en Excel (Recomendado)» — «UTF-8
   con BOM, separados por coma y fechas en hora de Mérida legibles (2026-11-13
@@ -63,10 +65,10 @@ Vitest (integración sobre `xula_test`), Playwright y `pnpm check`.
 
 ## Tasks
 
-- [x] **T1** (S3, S7) escritor ZIP y CSV en `shared/exportacion` — worker — commit: `b57dd55`
-- [ ] **T2** (S2) porciones que faltan — worker — commit:
-- [ ] **T3** (S1, S4, S5, S6) descarga, pantalla, enlace del panel, escudo y E2E — worker — commit:
-- [ ] **T4** (S1-S7) verificación independiente, revisión y cierre — verify — commit:
+- [x] **T1** (S3, S7) escritor ZIP y CSV en `shared/exportacion` — worker — commit: `b57dd55` `b57dd55`
+- [x] **T2** (S2) porciones que faltan — worker — commits: `89b4a4d`, `7222c89`
+- [x] **T3** (S1, S4, S5, S6) descarga, pantalla, enlace del panel, escudo y E2E — worker — commits: `b194e8e`, `d5de30f`
+- [x] **T4** (S1-S7) verificación independiente, revisión y cierre — verify — ver L6
 
 ## Log
 
@@ -134,3 +136,19 @@ Vitest (integración sobre `xula_test`), Playwright y `pnpm check`.
     `afterAll` para no cambiar lo que ven los demás specs; el escudo con
     bytes reales queda cubierto por `route.integration.test.ts` y
     `descargaDeDatos.test.ts` con el puerto falso.
+- **L6** — 2026-11-13. Verificador independiente: S1-S7 cumplen, sin
+  bloqueantes. Ninguna tabla con `ayuntamiento_id` queda fuera del ZIP salvo
+  las cuatro excluidas a propósito; el ZIP real pasa `unzip -t` y
+  `zipfile.testzip()`; un escudo que apunte a la carpeta de otro municipio
+  falla sin llamar al almacenamiento. Mutaciones que muerden: quitar
+  `puedeExportar`, la guarda de superficie o el `Cache-Control`, desactivar
+  RLS en `zonas`, tragar el error del escudo y quitar BOM/CRLF. Suite: 567
+  archivos / 3026 tests; E2E 80/80. Decisiones sobre sus avisos: S2 se
+  precisa (la `bitacora` ya traía el id del propio municipio antes de este
+  frente). Si el escudo falla después de la lectura, la traza
+  `EXPORTAR_AYUNTAMIENTO` queda aunque el ZIP no se entregue: se acepta,
+  porque la lectura sí ocurrió y S5 exige registrarla en la misma
+  transacción. Quedan como avisos el E2E que vacía la marca de Motul hasta su
+  `afterAll` y la razón «ZIP que parece completo» repetida en varios
+  comentarios.
+
