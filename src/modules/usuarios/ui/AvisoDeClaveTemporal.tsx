@@ -1,5 +1,6 @@
 import { CLASES_DE_TARJETA } from "@/shared/ui";
 import type { ClaveMostrada } from "./claveMostrada";
+import { DescartarClaveAlMostrar } from "./DescartarClaveAlMostrar";
 
 /**
  * La contrasenia temporal, la unica vez que se muestra (S4).
@@ -36,6 +37,7 @@ export function AvisoDeClaveTemporal({
       <p className="text-[15px] text-caliza-apagada">
         Anótela ahora: esta pantalla no la vuelve a mostrar.
       </p>
+      <DescartarClaveAlMostrar token={mostrada.token} />
     </section>
   );
 }

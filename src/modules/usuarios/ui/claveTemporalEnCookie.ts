@@ -17,11 +17,10 @@ import {
  * y de 120 segundos. La URL lleva unicamente el token, y la pantalla la
  * aplica solo si coincide: cualquier otra navegacion no la muestra.
  *
- * Sin poder borrarla al leerla: en Next.js 16 un Server Component lee
- * cookies pero no las escribe ni las borra —solo una Server Function o un
- * Route Handler—, misma limitacion que documenta
- * `territorio/ui/borradorEnCookie.ts`. El siguiente envio de estos
- * formularios la reemplaza, y si no hay envio vence sola.
+ * Un Server Component lee cookies pero no las borra: solo una Server
+ * Function puede, y por eso el aviso monta `DescartarClaveAlMostrar`, que
+ * la consume en la primera pintura. Recargar o retroceder a la misma URL
+ * ya no la muestra. Sin JavaScript la cookie vive hasta que vence.
  *
  * Las dos acciones que escriben esta cookie son un `<form>` nativo que
  * redirige, la excepcion de `AGENTS.md` en la seccion Server Actions.
@@ -56,4 +55,12 @@ export const claveMostradaDeLaPeticion = async (
   );
 
   return mostrada?.token === token ? mostrada : null;
+};
+
+/** Solo la borra si el token es el suyo: otra visita no toca esta cookie. */
+export const descartarClaveMostrada = async (token: string): Promise<void> => {
+  const almacen = await cookies();
+  const mostrada = decodificarClaveMostrada(almacen.get(NOMBRE)?.value);
+
+  if (mostrada?.token === token) almacen.delete({ name: NOMBRE, path: RUTA });
 };
