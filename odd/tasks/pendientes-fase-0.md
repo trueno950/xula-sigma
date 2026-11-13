@@ -34,9 +34,9 @@ Lo que quedó abierto tras los PRs #135 (administración de usuarios) y #136
 ## Tasks
 
 - [x] **T1** (S3) clasificar los avisos — explore — ver L3
-- [ ] **T2** (S1) escudo antes de confirmar la traza — worker — commit:
-- [ ] **T3** (S2) consumo de la contraseña temporal en el servidor — worker — commit:
-- [ ] **T4** (S3) correcciones de los avisos que proceden — worker — commit:
+- [x] **T2** (S1) escudo antes de confirmar la traza — worker — commit: `8010c11`
+- [x] **T3** (S2) consumo de la contraseña temporal en el servidor — worker — commits: `07422f7`, y ver L6
+- [x] **T4** (S3) correcciones de los avisos que proceden — worker — commits: `8a71d3f`, `7845040`, `8010c11`
 - [ ] **T5** (S1-S3) verificación independiente, revisión, PR y merge — verify — commit:
 
 ## Log
@@ -219,4 +219,20 @@ Lo que quedó abierto tras los PRs #135 (administración de usuarios) y #136
   de la superficie autorizada de esta tarea: `modules/padron/composicion.ts`
   (líneas 55 y 59) y `modules/padron/composicion.test.ts` (línea 13) siguen
   diciendo «en `exportar.ts`» donde ahora dice `conjuntosDePlataforma.ts`.
-  Son tres líneas de comentario; quedan anotadas acá y no se tocaron.
+  Son tres líneas de comentario; las corrigió el padre al integrar
+  (`8010c11`).
+- **L6** — 2026-11-13. Verificador independiente: S1, S2, S3 y la migración
+  `0024` cumplen, sin bloqueantes. Mutaciones que muerden: leer el escudo
+  fuera de la transacción, quitar el borrado de la cabecera en el proxy,
+  borrar la cookie con otro `Path` y quitar el índice nuevo de la traducción
+  de restricciones. `drizzle-kit check` limpio; la migración aplica desde
+  cero con RLS y permisos intactos. Avisos y su destino: (1) el proxy
+  consumía la cookie con cualquier método y con un `?clave=` de otra alta,
+  así que volver a una URL vieja quemaba la contraseña nueva; corregido por
+  el padre: solo un `GET` cuyo token coincide con el de la cookie la
+  consume (RED 3 tests, GREEN 136/136 en usuarios y proxy). (2) La migración
+  falla, y lo dice, si ya existen correos que solo difieren en mayúsculas;
+  hoy no hay datos de producción, y si los hubiera hay que unificarlos a
+  mano antes de aplicarla. (3) La nota de L5 sobre los comentarios del
+  padrón estaba vieja; corregida.
+

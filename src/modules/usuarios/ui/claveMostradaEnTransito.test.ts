@@ -16,11 +16,36 @@ const COOKIE = JSON.stringify({
   clave: "clave-temporal-larga",
 });
 
+const OTRO_TOKEN = "33333333-3333-4333-8333-333333333333";
+
 describe("claveATrasladar", () => {
   it("traslada la cookie cuando la ruta es /usuarios y la URL trae su token", () => {
     expect(
       claveATrasladar({ ruta: "/usuarios", token: TOKEN, cookie: COOKIE }),
     ).toBe(COOKIE);
+  });
+
+  it("un token que no es el de la cookie no la consume: volver a una URL vieja no quema la clave nueva", () => {
+    expect(
+      claveATrasladar({ ruta: "/usuarios", token: OTRO_TOKEN, cookie: COOKIE }),
+    ).toBeNull();
+  });
+
+  it("una cookie que no es una clave mostrada valida no se traslada", () => {
+    expect(
+      claveATrasladar({ ruta: "/usuarios", token: TOKEN, cookie: "basura" }),
+    ).toBeNull();
+  });
+
+  it("solo un GET la consume: un POST a la misma URL la deja donde esta", () => {
+    expect(
+      claveATrasladar({
+        metodo: "POST",
+        ruta: "/usuarios",
+        token: TOKEN,
+        cookie: COOKIE,
+      }),
+    ).toBeNull();
   });
 
   it("en otra ruta no la traslada ni la toca", () => {

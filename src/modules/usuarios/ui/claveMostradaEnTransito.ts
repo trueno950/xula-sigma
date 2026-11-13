@@ -13,6 +13,8 @@
  * cookie sobrevive y la clave se vuelve a mostrar al recargar.
  */
 
+import { decodificarClaveMostrada } from "./claveMostrada";
+
 export const NOMBRE_COOKIE_CLAVE_MOSTRADA = "clave-temporal-de-usuario";
 export const RUTA_COOKIE_CLAVE_MOSTRADA = "/usuarios";
 
@@ -30,19 +32,22 @@ export const CABECERA_CLAVE_MOSTRADA = "x-xula-clave-mostrada";
  *
  * Sin `clave` en la URL no se toca nada: recargar o volver a `/usuarios`
  * deja la cookie donde esta hasta que vence, y la pantalla no la muestra.
+ * Tampoco la consume un `?clave=` de otra alta: volver con el navegador a
+ * una URL vieja borraria la clave recien generada sin mostrarla.
  */
 export const claveATrasladar = ({
+  metodo = "GET",
   ruta,
   token,
   cookie,
 }: {
+  metodo?: string;
   ruta: string;
   token: string | undefined;
   cookie: string | undefined;
 }): string | null => {
-  if (ruta !== RUTA_COOKIE_CLAVE_MOSTRADA) return null;
-  if (!token) return null;
-  if (!cookie) return null;
+  if (metodo !== "GET" || ruta !== RUTA_COOKIE_CLAVE_MOSTRADA) return null;
+  if (!token || !cookie) return null;
 
-  return cookie;
+  return decodificarClaveMostrada(cookie)?.token === token ? cookie : null;
 };

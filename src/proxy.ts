@@ -154,6 +154,7 @@ export async function proxy(request: NextRequest) {
    * que el cliente no puede escribir: la que mande se borro arriba.
    */
   const clave = claveATrasladar({
+    metodo: request.method,
     ruta: request.nextUrl.pathname,
     token: request.nextUrl.searchParams.get("clave") ?? undefined,
     cookie: request.cookies.get(NOMBRE_COOKIE_CLAVE_MOSTRADA)?.value,
