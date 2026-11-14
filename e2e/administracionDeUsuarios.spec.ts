@@ -82,6 +82,11 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   expect(page.url()).not.toContain(clave);
   await expect(avisoDe(page, "Contraseña temporal")).toContainText(NOMBRE);
 
+  // S2 con JavaScript: la recarga de la misma URL con el token no la muestra.
+  await page.reload();
+  await expect(avisoDe(page, "Contraseña temporal")).toHaveCount(0);
+  await expect(page.getByText(clave)).toHaveCount(0);
+
   // Volver al listado sin el token del redirect no la muestra otra vez. Lo
   // que prueba que se consume —tambien sin JavaScript— es el test de abajo:
   // aca la URL ya no trae el token, asi que esto solo afirma lo obvio.

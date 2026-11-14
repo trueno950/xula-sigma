@@ -147,10 +147,11 @@ export async function proxy(request: NextRequest) {
   cabeceras.set(CABECERA_SUBDOMINIO, resultado.subdominio);
 
   /**
-   * S2: aca se consume la cookie de la contrasenia temporal. Es el unico
-   * lugar donde se puede —un Server Component no borra cookies— y por eso
-   * el valor viaja en una cabecera que el cliente no puede escribir: la
-   * que mande se borro arriba, junto con las de tenant.
+   * S2: aca se consume la cookie de la contrasenia temporal en el GET real,
+   * el camino sin JavaScript. El render sintetico del redirect de la Server
+   * Action pasa por aca igual, pero su `Set-Cookie` no lo guarda nadie: de
+   * ese se ocupa `DescartarClaveAlMostrar`. El valor viaja en una cabecera
+   * que el cliente no puede escribir: la que mande se borro arriba.
    */
   const clave = claveATrasladar({
     ruta: request.nextUrl.pathname,
@@ -162,8 +163,6 @@ export async function proxy(request: NextRequest) {
 
   const respuesta = NextResponse.next({ request: { headers: cabeceras } });
 
-  // En la misma respuesta que la muestra: la recarga ya no la tiene, ni con
-  // JavaScript ni sin el.
   if (clave) {
     respuesta.cookies.delete({
       name: NOMBRE_COOKIE_CLAVE_MOSTRADA,

@@ -23,13 +23,15 @@ import {
  * y de 120 segundos. La URL lleva unicamente el token, y la pantalla la
  * aplica solo si coincide: cualquier otra navegacion no la muestra.
  *
- * **Quien la consume es el proxy, no esta pantalla.** Un Server Component
+ * **La consumen el proxy y la hoja cliente.** Un Server Component
  * lee cookies pero no las borra, y sin JavaScript no hay Server Function
  * que las borre despues de pintar: la primera recarga volvia a mostrar la
  * clave (S2). El proxy la mueve a `CABECERA_CLAVE_MOSTRADA` y la borra en
  * la misma respuesta, en la unica peticion que trae el token; de ahi en
- * adelante la cookie ya no existe. El traslado y los nombres compartidos
- * viven en `claveMostradaEnTransito.ts`.
+ * adelante la cookie ya no existe. Con JavaScript ese pintado sale del
+ * render sintetico del redirect, cuyo `Set-Cookie` no guarda nadie, y lo
+ * borra `DescartarClaveAlMostrar` al montarse. El traslado y los nombres
+ * compartidos viven en `claveMostradaEnTransito.ts`.
  *
  * Las dos acciones que escriben esta cookie son un `<form>` nativo que
  * redirige, la excepcion de `AGENTS.md` en la seccion Server Actions.
@@ -85,4 +87,18 @@ export const claveMostradaDeLaPeticion = async (
   );
 
   return mostrada?.token === token ? mostrada : null;
+};
+
+/** Solo la borra si el token es el suyo: otra visita no toca esta cookie. */
+export const descartarClaveMostrada = async (token: string): Promise<void> => {
+  const almacen = await cookies();
+  const guardada = decodificarClaveMostrada(
+    almacen.get(NOMBRE_COOKIE_CLAVE_MOSTRADA)?.value,
+  );
+  if (guardada?.token !== token) return;
+
+  almacen.delete({
+    name: NOMBRE_COOKIE_CLAVE_MOSTRADA,
+    path: RUTA_COOKIE_CLAVE_MOSTRADA,
+  });
 };
