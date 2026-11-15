@@ -1,4 +1,8 @@
-import { crearCambiarEscudo } from "./application";
+import {
+  crearCambiarColores,
+  crearCambiarEscudo,
+  crearRestablecerColores,
+} from "./application";
 import { almacenR2, lectorR2, repositorioDeMarcaSql } from "./infrastructure";
 
 /**
@@ -14,6 +18,16 @@ import { almacenR2, lectorR2, repositorioDeMarcaSql } from "./infrastructure";
  */
 export const cambiarEscudo = crearCambiarEscudo(
   almacenR2,
+  repositorioDeMarcaSql,
+);
+
+/**
+ * Los dos caminos de escritura de los colores (S1-S3, S5). No llevan
+ * adaptadores propios: `ayuntamientos.marca` se escribe con el mismo
+ * `repositorioDeMarcaSql` que el escudo.
+ */
+export const cambiarColores = crearCambiarColores(repositorioDeMarcaSql);
+export const restablecerColores = crearRestablecerColores(
   repositorioDeMarcaSql,
 );
 
