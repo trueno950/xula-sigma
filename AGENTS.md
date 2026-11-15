@@ -329,6 +329,8 @@ que devuelva, y devolverlo sería código muerto.
 |---|---|---|
 | `altaDePersonaAction` | `padron` | Server Component, `<form action={...}>` |
 | `fusionarPersonasAction` | `padron` | Server Component, `<form action={...}>` |
+| `cambiarColoresAction` | `marca` | Server Component, `<form action={...}>` |
+| `restablecerColoresAction` | `marca` | Server Component, `<form action={...}>` |
 | `altaDeLugarAction` | `territorio` | Server Component, `<form action={...}>` |
 | `editarLugarAction` | `territorio` | Server Component, `<form action={...}>` |
 | `darDeBajaLugarAction` | `territorio` | Server Component, `<form action={...}>` |
@@ -486,6 +488,22 @@ Notas que no caben en la tabla, una por fila que las necesita:
   Ver `src/modules/usuarios/ui/claveMostradaEnTransito.ts`; S4 de
   `odd/tasks/administracion-de-usuarios.md` y S2 de
   `odd/tasks/pendientes-fase-0.md`.
+- `cambiarColoresAction`/`restablecerColoresAction` (`marca`, S1-S8 de
+  `odd/tasks/marca-colores.md`): mismo motivo que `altaDePersonaAction`, y
+  **la única hoja cliente de la pantalla no toca ninguna de las dos**. Esa
+  hoja es `MuestraDeColores`, que repinta un botón, un encabezado y el
+  acento de ejemplo mientras se elige: escucha los `input` y `change` del
+  `<form>` que la contiene y lee `FormData`, y no envuelve la acción ni
+  dibuja un solo campo. Sin JavaScript, el envío es el POST nativo y los
+  colores se guardan igual. Las dos redactan con la lista blanca de
+  `src/modules/marca/ui/mensajesDeMarca.ts`: `NoAutorizadoError` -el aviso
+  de permiso-, `ValidacionError` -el color no deja leer el texto o no es un
+  color medible- y el fallo genérico que se queda en el log. Ninguna
+  devuelve el mensaje de la excepción, y el `?error=` que llega por la URL
+  se pinta solo porque lo escribió la acción. `restablecerColoresAction`
+  recibe un único campo, `ambito=colores`, para que un formulario viejo en
+  una pestaña abierta no dispare otro restablecimiento el día que `/marca`
+  tenga el suyo.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un
