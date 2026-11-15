@@ -477,7 +477,10 @@ Notas que no caben en la tabla, una por fila que las necesita:
   un token opaco y la clave viaja en una cookie httpOnly de 120 segundos. La
   consume el proxy, en la única petición que trae ese token: la pasa a una
   cabecera que el cliente no puede escribir y borra la cookie en la misma
-  respuesta, así que se muestra una sola vez también sin JavaScript. La
+  respuesta, así que se muestra una sola vez también sin JavaScript. Con
+  JavaScript la primera vista es el render sintético del `redirect`, cuyo
+  borrado de cookie no llega al navegador: ahí la borra
+  `DescartarClaveAlMostrar` -la excepción de descarte, abajo-. La
   pantalla lee la cabecera, nunca la cookie -nunca en la URL, que queda en el
   historial del navegador y en el log de accesos del servidor-.
   Ver `src/modules/usuarios/ui/claveMostradaEnTransito.ts`; S4 de

@@ -37,7 +37,7 @@ Lo que quedó abierto tras los PRs #135 (administración de usuarios) y #136
 - [x] **T2** (S1) escudo antes de confirmar la traza — worker — commit: `8010c11`
 - [x] **T3** (S2) consumo de la contraseña temporal en el servidor — worker — commits: `07422f7`, y ver L6
 - [x] **T4** (S3) correcciones de los avisos que proceden — worker — commits: `8a71d3f`, `7845040`, `8010c11`
-- [ ] **T5** (S1-S3) verificación independiente, revisión, PR y merge — verify — commit:
+- [x] **T5** (S1-S3) verificación independiente, revisión, PR y merge — verify — commits: `01c67d2`, `fbe17ac`, y ver L6-L7
 
 ## Log
 
@@ -235,4 +235,22 @@ Lo que quedó abierto tras los PRs #135 (administración de usuarios) y #136
   hoy no hay datos de producción, y si los hubiera hay que unificarlos a
   mano antes de aplicarla. (3) La nota de L5 sobre los comentarios del
   padrón estaba vieja; corregida.
-
+- **L7** — 2026-11-14. Revisión nativa en cinco rebanadas. La 1 (`07422f7`)
+  tuvo un hallazgo CRÍTICO confirmado: con JavaScript, la primera vista de
+  la contraseña es el render sintético del `redirect` de la Server Action, y
+  el borrado de cookie de ese render nunca llega al navegador; recargar la
+  misma URL con `?clave=` la volvía a mostrar. Corrección `01c67d2` (90
+  líneas): quedan los dos consumidores, el proxy para el `GET` real sin
+  JavaScript y la hoja cliente `DescartarClaveAlMostrar` con su acción para
+  el render sintético. Volvió a `AGENTS.md` la excepción «descarte sin
+  resultado invocado desde cliente», y el E2E con JavaScript ahora recarga la
+  URL (RED y luego GREEN). El validador confirmó que cierra el hallazgo. Las
+  rebanadas 2 (avisos + índice `0024`), 3 (snapshot), 4 (escudo) y 5 (`GET`
+  con token) quedaron aprobadas; los hallazgos graves de la 2 y la 4 los
+  refutó el refutador. Rama rehecha sobre la corrección:
+  `fix/pendientes-fase-0-v3`, con `pnpm check` 0, Vitest 574/3051 y E2E
+  81/81. La nota de `altaDeUsuarioAction` en `AGENTS.md`, que todavía daba
+  al proxy como único consumidor, se corrigió en el mismo commit que este
+  registro. Avisos que no bloquean y quedan para después: no hay test unitario de `descartarClaveMostrada`; la lectura
+  del escudo retiene una conexión del pool mientras va al almacenamiento;
+  la prueba de carrera del índice no fuerza el entrelazado.
