@@ -52,11 +52,11 @@ export const identidadesDePersona = crearIdentidadesDePersona(
  * datos sin abrir su interior.
  *
  * Columnas listadas una por una, nunca `select()` pelado -mismo criterio
- * que `conjuntosDePlataforma` en `exportar.ts`-. Incluye `fusionadaEn` y
+ * que `conjuntosDePlataforma` en `conjuntosDePlataforma.ts`-. Incluye `fusionadaEn` y
  * `fusionadaDirectoEn`: el archivo es el archivo municipal, y esconder el
  * tombstone de una fusion borra la evidencia de que ocurrio. Excluye
  * `ayuntamientoId` -redundante, ya lo sabe quien pide la exportacion,
- * mismo criterio que `usuarios` en `exportar.ts`- y `nombreNormalizado`
+ * mismo criterio que `usuarios` en `conjuntosDePlataforma.ts`- y `nombreNormalizado`
  * -artefacto de busqueda derivado del resto de las columnas, no dato del
  * municipio.
  */

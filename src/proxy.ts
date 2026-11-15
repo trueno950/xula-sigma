@@ -1,5 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
+  CABECERA_CLAVE_MOSTRADA,
+  claveATrasladar,
+  NOMBRE_COOKIE_CLAVE_MOSTRADA,
+  RUTA_COOKIE_CLAVE_MOSTRADA,
+} from "@/modules/usuarios/ui/claveMostradaEnTransito";
+import {
   CABECERA_RUTA,
   CABECERA_SUBDOMINIO,
   CABECERA_SUPERFICIE,
@@ -113,6 +119,7 @@ export async function proxy(request: NextRequest) {
    */
   cabeceras.delete(CABECERA_SUPERFICIE);
   cabeceras.delete(CABECERA_SUBDOMINIO);
+  cabeceras.delete(CABECERA_CLAVE_MOSTRADA);
   cabeceras.set(CABECERA_RUTA, request.nextUrl.pathname);
 
   const resultado = await resolverHost(request);
@@ -139,7 +146,30 @@ export async function proxy(request: NextRequest) {
   cabeceras.set(CABECERA_SUPERFICIE, "ayuntamiento");
   cabeceras.set(CABECERA_SUBDOMINIO, resultado.subdominio);
 
+  /**
+   * S2: aca se consume la cookie de la contrasenia temporal en el GET real,
+   * el camino sin JavaScript. El render sintetico del redirect de la Server
+   * Action pasa por aca igual, pero su `Set-Cookie` no lo guarda nadie: de
+   * ese se ocupa `DescartarClaveAlMostrar`. El valor viaja en una cabecera
+   * que el cliente no puede escribir: la que mande se borro arriba.
+   */
+  const clave = claveATrasladar({
+    metodo: request.method,
+    ruta: request.nextUrl.pathname,
+    token: request.nextUrl.searchParams.get("clave") ?? undefined,
+    cookie: request.cookies.get(NOMBRE_COOKIE_CLAVE_MOSTRADA)?.value,
+  });
+
+  if (clave) cabeceras.set(CABECERA_CLAVE_MOSTRADA, clave);
+
   const respuesta = NextResponse.next({ request: { headers: cabeceras } });
+
+  if (clave) {
+    respuesta.cookies.delete({
+      name: NOMBRE_COOKIE_CLAVE_MOSTRADA,
+      path: RUTA_COOKIE_CLAVE_MOSTRADA,
+    });
+  }
 
   // Solo se refirma en la rama directa. Refirmar tambien en la rama del
   // respaldo alargaria la cookie con cada render sintetico -que no lo

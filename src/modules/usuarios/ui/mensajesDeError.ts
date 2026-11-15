@@ -28,6 +28,12 @@ export const CODIGOS_DE_ERROR = [
   "generico-alta",
   "generico-restablecimiento",
   "generico-baja",
+  /**
+   * La cuenta quedo creada o restablecida y la clave no se pudo guardar
+   * para mostrarla: el cambio si ocurrio y lo que falta es la clave.
+   */
+  "clave-no-mostrada",
+  "clave-no-mostrada-restablecimiento",
 ] as const;
 
 export type CodigoDeError = (typeof CODIGOS_DE_ERROR)[number];
@@ -46,6 +52,10 @@ const MENSAJES: Record<CodigoDeError, string> = {
   "generico-restablecimiento":
     "No se pudo restablecer la contraseña. Intente de nuevo.",
   "generico-baja": "No se pudo dar de baja a la persona. Intente de nuevo.",
+  "clave-no-mostrada":
+    "La cuenta quedó lista, pero la contraseña no se pudo mostrar. Restablézcala para generar otra.",
+  "clave-no-mostrada-restablecimiento":
+    "La contraseña quedó restablecida, pero no se pudo mostrar. Restablézcala para generar otra.",
 };
 
 export const esCodigoDeError = (valor: unknown): valor is CodigoDeError =>

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { type Browser, expect, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 import { verificarClave } from "@/shared/auth/contrasenia";
 import { cuentas, usuarios } from "@/shared/auth/esquema";
@@ -44,6 +44,16 @@ const filaDe = (page: Parameters<typeof accederAMotul>[0]) =>
  */
 test.beforeEach(liberarVentanaDeRitmo);
 
+/** La sesion se abre con script; lo que se prueba despues corre sin el. */
+const contextoSinJavaScript = async (browser: Browser) => {
+  const conJs = await browser.newContext();
+  await accederAMotul(await conJs.newPage());
+  const estado = await conJs.storageState();
+  await conJs.close();
+
+  return browser.newContext({ javaScriptEnabled: false, storageState: estado });
+};
+
 test("el administrador da de alta, restablece y da de baja sin que la contraseña toque la URL", async ({
   page,
 }) => {
@@ -72,8 +82,14 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   expect(page.url()).not.toContain(clave);
   await expect(avisoDe(page, "Contraseña temporal")).toContainText(NOMBRE);
 
-  // S4: la contrasenia no queda en la pantalla. Volver al listado sin el
-  // token del redirect no la muestra otra vez.
+  // S2 con JavaScript: la recarga de la misma URL con el token no la muestra.
+  await page.reload();
+  await expect(avisoDe(page, "Contraseña temporal")).toHaveCount(0);
+  await expect(page.getByText(clave)).toHaveCount(0);
+
+  // Volver al listado sin el token del redirect no la muestra otra vez. Lo
+  // que prueba que se consume —tambien sin JavaScript— es el test de abajo:
+  // aca la URL ya no trae el token, asi que esto solo afirma lo obvio.
   await page.goto(urlDe("motul", "/usuarios"));
   await expect(page.getByText(clave)).toHaveCount(0);
 
@@ -133,4 +149,41 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   );
 
   expect(enLaBase?.bajaEn).toBeInstanceOf(Date);
+});
+
+/**
+ * S2: la contraseña temporal se muestra una sola vez también sin JavaScript.
+ *
+ * Es la recarga la que prueba la regla, y por eso el alta entera corre sin
+ * script: la primera petición con el token consume la cookie en el servidor
+ * —la consume el proxy, que es el único lugar donde se puede borrar— y la
+ * recarga, que pide la misma URL, ya no encuentra nada que mostrar.
+ */
+test("sin JavaScript, la contraseña temporal se ve una vez y no vuelve al recargar", async ({
+  browser,
+}) => {
+  const correo = `sin-javascript-${randomUUID()}@example.com`;
+  const contexto = await contextoSinJavaScript(browser);
+
+  try {
+    const page = await contexto.newPage();
+    await page.goto(urlDe("motul", "/usuarios/alta"));
+
+    await page.getByLabel("Nombre completo").fill(NOMBRE);
+    await page.getByLabel("Correo").fill(correo);
+    await page.getByLabel("Rol").selectOption("OPERADOR");
+    await page.getByRole("button", { name: "Dar de alta" }).click();
+
+    await page.waitForURL(/\/usuarios\?clave=[0-9a-f-]+&ok=alta$/);
+
+    const clave = await claveDe(page, "Contraseña temporal");
+    expect(clave).toMatch(/^[A-Za-z0-9]{16}$/);
+
+    await page.reload();
+
+    await expect(avisoDe(page, "Contraseña temporal")).toHaveCount(0);
+    await expect(page.getByText(clave)).toHaveCount(0);
+  } finally {
+    await contexto.close();
+  }
 });

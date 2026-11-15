@@ -1,4 +1,5 @@
 import { fechaYHoraIsoEnMerida } from "@/shared/lib/fecha";
+import type { Marca } from "@/shared/marca";
 import { aCsv, type FilaDeCsv } from "./csv";
 import type { Exportacion } from "./exportar";
 import type { ArchivoDelZip } from "./zip";
@@ -42,25 +43,46 @@ const archivoDeConjunto = (
 });
 
 /**
+ * La marca sin `escudo`, campo por campo y no con un `...` menos una clave.
+ *
+ * La URL del escudo es `R2_PUBLIC_URL/{ayuntamientoId}/escudo-<uuid>.png`:
+ * serializarla metia en el manifiesto el id que S2 deja afuera. Y listar los
+ * campos, en vez de restar `escudo` de un objeto abierto, hace que un campo
+ * nuevo de `Marca` no entre solo — misma razon que las columnas de
+ * `usuarios` en `conjuntosDePlataforma.ts`.
+ */
+const marcaSinEscudo = (marca: Marca): Omit<Marca, "escudo"> => ({
+  primario: marca.primario,
+  primarioTexto: marca.primarioTexto,
+  secundario: marca.secundario,
+});
+
+/**
  * El manifiesto: lo que deja legible el ZIP sin abrir veinte hojas de
  * calculo. `conjuntos` es una lista de conteos y no el volcado, para que
  * quien reciba el archivo sepa que esperar de cada CSV.
  *
  * **No lleva `ayuntamientoId`** (S2). El `subdominio` ya identifica al
  * municipio, y el id es una clave interna de la plataforma que deja de
- * significar algo fuera de ella.
+ * significar algo fuera de ella. Por lo mismo la marca va sin `escudo`: su
+ * URL lo lleva adentro.
+ *
+ * `tieneEscudo` sale de los bytes que de verdad van en el ZIP y no de
+ * `marca.escudo`: el manifiesto describe el archivo entregado, no lo que el
+ * municipio tenia configurado.
  *
  * El momento va dos veces y las dos hacen falta: `generadaEn` en ISO con
  * zona —el unico valor que se puede volver a procesar— y
  * `generadaEnMerida` en la forma civil que S3 pide para Excel, porque el
  * servidor corre en UTC y quien abre el ZIP esta en Merida.
  */
-const manifiestoDe = (exportacion: Exportacion): string =>
+const manifiestoDe = (exportacion: Exportacion, tieneEscudo: boolean): string =>
   JSON.stringify(
     {
       subdominio: exportacion.ayuntamiento.subdominio,
       nombre: exportacion.ayuntamiento.nombre,
-      marca: exportacion.ayuntamiento.marca,
+      marca: marcaSinEscudo(exportacion.ayuntamiento.marca),
+      tieneEscudo,
       generadaEn: exportacion.generadaEn.toISOString(),
       generadaEnMerida: fechaYHoraIsoEnMerida(exportacion.generadaEn),
       conjuntos: Object.entries(exportacion.conjuntos).map(
@@ -88,7 +110,9 @@ export function archivosDeExportacion(
     ...conjuntos,
     {
       nombre: NOMBRE_DEL_MANIFIESTO,
-      contenido: CODIFICADOR.encode(manifiestoDe(exportacion)),
+      contenido: CODIFICADOR.encode(
+        manifiestoDe(exportacion, escudo !== undefined),
+      ),
     },
     ...(escudo ? [{ nombre: NOMBRE_DEL_ESCUDO, contenido: escudo }] : []),
   ];

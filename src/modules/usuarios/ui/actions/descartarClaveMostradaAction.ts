@@ -7,18 +7,14 @@ import { descartarClaveMostrada } from "../claveTemporalEnCookie";
 const esquemaDeEntrada = z.string().trim().uuid();
 
 /**
- * Invocada directo por `DescartarClaveAlMostrar` (`"use client"`), no por un
- * `<form action>`: consume la cookie de la clave ya mostrada (S4). Un fallo
- * se registra en el log del servidor, nunca viaja al navegador.
+ * Invocada por `DescartarClaveAlMostrar` (`"use client"`): cubre el render
+ * sintetico del redirect, donde el proxy no puede borrar la cookie (S2).
  */
 export async function descartarClaveMostradaAction(
   token: unknown,
 ): Promise<void> {
   const analisis = esquemaDeEntrada.safeParse(token);
-  if (!analisis.success) {
-    console.error("[usuarios] token de la clave mostrada invalido");
-    return;
-  }
+  if (!analisis.success) return;
 
   try {
     await descartarClaveMostrada(analisis.data);

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
@@ -34,6 +35,7 @@ export {
   TIPOS_INTENTO,
   type TipoIntento,
 } from "./intentosAcceso";
+export { verificaciones } from "./verificaciones";
 
 /**
  * Las cuatro tablas que impone Better Auth. La quinta —`intentos_acceso`,
@@ -88,6 +90,16 @@ export const usuarios = pgTable(
      * nunca llega a Postgres. La restriccion real es esta.
      */
     uniqueIndex("usuarios_tenant_email_idx").on(t.ayuntamientoId, t.email),
+    /**
+     * La unicidad que de verdad cierra la carrera entre `Ana@motul.mx` y
+     * `ana@motul.mx`: compara por `lower(email)` y el limite lo pone
+     * Postgres, no el codigo. Por que el indice de arriba no alcanza esta
+     * en `drizzle/0024_usuarios_email_lower_unico.sql`.
+     */
+    uniqueIndex("usuarios_tenant_email_lower_idx").on(
+      t.ayuntamientoId,
+      sql`lower(${t.email})`,
+    ),
     check("usuarios_rol_valido", enumerado("rol", ROLES)),
     // Destino de las FK compuestas de `sesiones` y `cuentas`. Postgres
     // exige una restriccion UNIQUE sobre las columnas referenciadas; con
@@ -164,36 +176,5 @@ export const cuentas = pgTable(
     politicaTenant("cuentas"),
     altaDeCredencialDelAdministrador(),
     restablecimientoDelAdministrador(),
-  ],
-).enableRLS();
-
-/**
- * Tokens de un solo uso: restablecimiento de contrasenia, verificacion de
- * correo.
- *
- * **Es el caso duro del aislamiento.** Sin `userId` el tenant no se deriva
- * por join: lo pone el hook `verification.create.before` de `instancia.ts`
- * y lo obliga la politica. Si el mecanismo fallara en alguna tabla, falla
- * primero aca.
- *
- * Lo que todavia no existe es un flujo que **escriba** aca:
- * restablecimiento de contrasenia y verificacion de correo necesitan envio
- * de correo. La tabla esta creada y sin usar, asi que el hook no se
- * ejercita todavia (tarea 2.12b).
- */
-export const verificaciones = pgTable(
-  "verificaciones",
-  {
-    id: uuid().primaryKey().defaultRandom(),
-    ayuntamientoId: columnaTenant(),
-    identifier: text().notNull(),
-    value: text().notNull(),
-    expiresAt: timestamp({ withTimezone: true }).notNull(),
-    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [
-    index("verificaciones_tenant_idx").on(t.ayuntamientoId, t.identifier),
-    politicaTenant("verificaciones"),
   ],
 ).enableRLS();

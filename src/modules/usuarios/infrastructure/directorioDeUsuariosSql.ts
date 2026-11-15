@@ -17,10 +17,22 @@ import { violaRestriccionUnica } from "./violacionDeRestriccion";
  *
  * **El alta reusa `altaDePersona`** (`shared/auth/alta.ts`), que es la unica
  * primitiva que escribe `usuarios` mas su credencial en la misma
- * transaccion. Lo unico que agrega este archivo es traducir el choque contra
- * `usuarios_tenant_email_idx` a un error del dominio: eso es de Postgres, no
- * del caso de uso.
+ * transaccion. Lo unico que agrega este archivo es traducir el choque de
+ * correo duplicado a un error del dominio: eso es de Postgres, no del caso
+ * de uso.
  */
+
+/**
+ * Los dos indices unicos que pueden frenar un alta. El exacto
+ * (`usuarios_tenant_email_idx`) y el que compara por `lower(email)`
+ * (`usuarios_tenant_email_lower_idx`, migracion `0024`): el segundo es el
+ * que gana la carrera que el chequeo de abajo no puede ganar, porque dos
+ * transacciones simultaneas no se ven entre si.
+ */
+const RESTRICCIONES_DE_CORREO = [
+  "usuarios_tenant_email_idx",
+  "usuarios_tenant_email_lower_idx",
+] as const;
 export const directorioDeUsuariosSql: DirectorioDeUsuarios = {
   listar: (tx) =>
     tx
@@ -63,7 +75,11 @@ export const directorioDeUsuariosSql: DirectorioDeUsuarios = {
     try {
       return await altaDePersona(tx, ayuntamientoId, datos);
     } catch (error) {
-      if (violaRestriccionUnica(error, "usuarios_tenant_email_idx")) {
+      if (
+        RESTRICCIONES_DE_CORREO.some((nombre) =>
+          violaRestriccionUnica(error, nombre),
+        )
+      ) {
         throw new CorreoYaRegistradoError();
       }
 

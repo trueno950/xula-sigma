@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Exportacion } from "@/shared/exportacion/exportar";
+import type { ExportacionConEscudo } from "@/shared/exportacion/exportar";
 import { comoAyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 
 /**
- * La composicion de la descarga: exportar, leer el escudo del almacen y
- * armar el ZIP (S4). Los dos puertos que decide la peticion —la base y el
- * almacenamiento de objetos— van mockeados; lo que se prueba es el orden y
- * lo que pasa cuando uno de los dos falla, porque de eso depende que el
- * municipio nunca reciba un archivo que parece completo y no lo esta.
+ * La composicion de la descarga: exportar —el escudo se lee alla adentro— y
+ * armar el ZIP (S1, S4). La base va mockeada; lo que se prueba es que el
+ * escudo que trae la exportacion sea el que viaja en el ZIP, y que quien
+ * recibe el lector del modulo de marca sea `exportarAyuntamiento` y no este
+ * archivo.
  */
 
 const exportarMock = vi.hoisted(() => vi.fn());
@@ -24,6 +24,7 @@ vi.mock("@/modules/marca/composicion", () => ({
 const { descargaDeDatos } = await import("./descargaDeDatos");
 
 const ESCUDO = new TextEncoder().encode("escudo-de-prueba");
+const URL_DEL_ESCUDO = "https://assets.example.com/motul/escudo-x.png";
 
 const contexto = {
   ayuntamientoId: comoAyuntamientoId(randomUUID()),
@@ -32,10 +33,10 @@ const contexto = {
 };
 
 const exportacionDe = (
-  marca: Exportacion["ayuntamiento"]["marca"],
-  generadaEn = new Date("2026-11-13T23:05:00.000Z"),
-): Exportacion => ({
-  generadaEn,
+  marca: ExportacionConEscudo["ayuntamiento"]["marca"],
+  escudo?: Uint8Array,
+): ExportacionConEscudo => ({
+  generadaEn: new Date("2026-11-13T23:05:00.000Z"),
   ayuntamiento: {
     id: contexto.ayuntamientoId,
     subdominio: "motul",
@@ -43,6 +44,7 @@ const exportacionDe = (
     marca,
   },
   conjuntos: { usuarios: [{ id: "1", email: "admin@motul.example.com" }] },
+  escudo,
 });
 
 const comoTexto = (bytes: Uint8Array): string =>
@@ -54,15 +56,36 @@ describe("descargaDeDatos", () => {
     leerMock.mockResolvedValue(ESCUDO);
   });
 
-  it("el escudo se lee del almacen y viaja dentro del ZIP", async () => {
-    const escudo = "https://assets.example.com/motul/escudo-x.png";
-    exportarMock.mockResolvedValue(exportacionDe({ escudo }));
+  it("el escudo que trae la exportacion viaja dentro del ZIP", async () => {
+    exportarMock.mockResolvedValue(
+      exportacionDe({ escudo: URL_DEL_ESCUDO }, ESCUDO),
+    );
 
     const { bytes } = await descargaDeDatos(contexto);
 
-    expect(leerMock).toHaveBeenCalledWith(contexto.ayuntamientoId, escudo);
     expect(comoTexto(bytes)).toContain("escudo.png");
     expect(comoTexto(bytes)).toContain("escudo-de-prueba");
+    // La lectura del escudo ya no ocurre aca: si este archivo la hiciera, el
+    // ZIP se armaria con un escudo distinto del que la exportacion registro.
+    expect(leerMock).not.toHaveBeenCalled();
+  });
+
+  it("sin escudo el ZIP sale sin el", async () => {
+    exportarMock.mockResolvedValue(exportacionDe({}));
+
+    const { bytes } = await descargaDeDatos(contexto);
+
+    expect(comoTexto(bytes)).not.toContain("escudo.png");
+  });
+
+  it("la exportacion recibe el lector de escudos del modulo de marca", async () => {
+    exportarMock.mockResolvedValue(exportacionDe({}));
+
+    await descargaDeDatos(contexto);
+
+    const [, , lector] = exportarMock.mock.calls[0] ?? [];
+
+    expect(lector.leer).toBe(leerMock);
   });
 
   it("el ZIP lleva el CSV del conjunto y el manifiesto", async () => {
@@ -76,32 +99,7 @@ describe("descargaDeDatos", () => {
     expect(texto).toContain("admin@motul.example.com");
   });
 
-  it("sin escudo el ZIP sale sin el, y no consulta el almacenamiento", async () => {
-    exportarMock.mockResolvedValue(exportacionDe({}));
-
-    const { bytes } = await descargaDeDatos(contexto);
-
-    expect(leerMock).not.toHaveBeenCalled();
-    expect(comoTexto(bytes)).not.toContain("escudo.png");
-  });
-
-  it("un fallo del almacenamiento aborta la descarga en vez de entregar un ZIP sin escudo", async () => {
-    exportarMock.mockResolvedValue(
-      exportacionDe({ escudo: "https://assets.example.com/motul/x.png" }),
-    );
-    leerMock.mockRejectedValue(new Error("R2 no respondio"));
-
-    await expect(descargaDeDatos(contexto)).rejects.toThrow(/R2/);
-  });
-
-  /**
-   * La lectura del escudo ocurre despues de que `exportarAyuntamiento`
-   * devuelve, o sea con la transaccion ya cerrada: si la base falla no hay
-   * nada que leer en el almacenamiento, y sostener una transaccion abierta
-   * mientras se habla con R2 ataria una conexion del pool a un servicio
-   * externo.
-   */
-  it("si la lectura de la base falla no toca el almacenamiento", async () => {
+  it("un fallo de la base aborta la descarga", async () => {
     exportarMock.mockRejectedValue(new Error("la base no respondio"));
 
     await expect(descargaDeDatos(contexto)).rejects.toThrow(/base/);
@@ -109,9 +107,10 @@ describe("descargaDeDatos", () => {
   });
 
   it("nombra el archivo con el subdominio y la fecha civil de Merida", async () => {
-    exportarMock.mockResolvedValue(
-      exportacionDe({}, new Date("2026-11-14T02:00:00.000Z")),
-    );
+    exportarMock.mockResolvedValue({
+      ...exportacionDe({}),
+      generadaEn: new Date("2026-11-14T02:00:00.000Z"),
+    });
 
     const { nombre } = await descargaDeDatos(contexto);
 

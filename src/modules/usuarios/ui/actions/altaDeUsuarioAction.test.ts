@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import { CorreoYaRegistradoError, RolNoAsignableError } from "../../domain";
-import { decodificarClaveMostrada } from "../claveMostrada";
 
 /**
  * El borde de la accion del alta (S3 y S4): valida la forma, redacta el error
@@ -122,6 +121,22 @@ describe("altaDeUsuarioAction", () => {
     expect(altaDeUsuarioMock).not.toHaveBeenCalled();
   });
 
+  it("acepta un correo pegado con espacios y se lo pasa limpio al caso de uso", async () => {
+    await expect(
+      altaDeUsuarioAction(
+        formulario({ ...ALTA_VALIDA, email: "  nueva@motul.example.com  " }),
+      ),
+    ).rejects.toThrow("REDIRECT:/usuarios?clave=");
+
+    expect(altaDeUsuarioMock).toHaveBeenCalledTimes(1);
+    const [, datos] = altaDeUsuarioMock.mock.calls.at(-1) ?? [];
+    expect(datos).toEqual({
+      nombre: "Nueva Operadora",
+      email: "nueva@motul.example.com",
+      rol: "OPERADOR",
+    });
+  });
+
   it("un correo ya registrado se lee como instruccion para la operadora", async () => {
     const error = new CorreoYaRegistradoError();
     altaDeUsuarioMock.mockRejectedValue(error);
@@ -165,35 +180,5 @@ describe("altaDeUsuarioAction", () => {
 
     expect(errorDelDestino()).toBe("generico-alta");
     expect(console.error).toHaveBeenCalled();
-  });
-
-  it("el exito deja la clave en una cookie httpOnly y no en la URL", async () => {
-    altaDeUsuarioMock.mockResolvedValue({
-      usuarioId: USUARIO_NUEVO,
-      claveTemporal: CLAVE_TEMPORAL,
-    });
-
-    await expect(altaDeUsuarioAction(formulario(ALTA_VALIDA))).rejects.toThrow(
-      "REDIRECT:",
-    );
-
-    const guardada = cookies.guardadas.get("clave-temporal-de-usuario");
-    const mostrada = decodificarClaveMostrada(guardada?.valor);
-
-    expect(mostrada).toEqual({
-      token: expect.stringMatching(/^[0-9a-f-]{36}$/),
-      motivo: "alta",
-      usuarioId: USUARIO_NUEVO,
-      clave: CLAVE_TEMPORAL,
-    });
-    expect(guardada?.opciones).toMatchObject({
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/usuarios",
-      maxAge: 120,
-    });
-    expect(destino()).toBe(`/usuarios?clave=${mostrada?.token}&ok=alta`);
-    expect(destino()).not.toContain(CLAVE_TEMPORAL);
-    expect(revalidatePathMock).toHaveBeenCalledWith("/usuarios");
   });
 });

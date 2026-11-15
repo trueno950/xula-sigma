@@ -48,10 +48,11 @@ export type AlmacenDeAssets = {
  *
  * **No devuelve `null` cuando el objeto no esta.** `marca.escudo` admite
  * cualquier URL http pegada a mano, y una lectura que devolviera vacio ante
- * una URL ajena al almacen —o del municipio de al lado— dejaria salir un
- * archivo que parece completo sin el escudo. La garantia es la misma de
- * `borrar` (`domain/claveDesdeUrl.ts#claveTenantDesdeUrl`) y
- * `ayuntamientoId` es `string` por la razon que ese archivo explica.
+ * una URL ajena al almacen —o del municipio de al lado— dejaria salir el ZIP
+ * sin escudo y sin error. Por que eso no se admite, en
+ * `shared/exportacion/exportar.ts`. La garantia es la misma de `borrar`
+ * (`domain/claveDesdeUrl.ts#claveTenantDesdeUrl`) y `ayuntamientoId` es
+ * `string` por la razon que ese archivo explica.
  */
 export type LectorDeAssets = {
   /**
