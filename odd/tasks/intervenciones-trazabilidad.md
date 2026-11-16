@@ -27,8 +27,8 @@ La bandeja de intervenciones existe, pero está vacía y no tiene alta. Un repor
 ## Tasks
 
 - [x] **T1** (S4, S2, S3) dominio y casos de uso: tipo `PAVIMENTACION` y migración; `programarObraDeReporte`; cierre automático del reporte al finalizar la intervención; tests unitarios, de integración y de aislamiento — worker — commit: `c5f17e2`
-- [x] **T2** (S1, S2) UI: bandeja y alta de intervenciones, botón «Programar obra» en el detalle del reporte, acciones, filas de `AGENTS.md` y E2E — worker — commit:
-- [x] **T3** (S5) historial de calle con tipo, estado y fecha de la obra — worker — commit:
+- [x] **T2** (S1, S2) UI: bandeja y alta de intervenciones, botón «Programar obra» en el detalle del reporte, acciones, filas de `AGENTS.md` y E2E — worker — commit: `68a4307`
+- [x] **T3** (S5) historial de calle con tipo, estado y fecha de la obra — worker — commit: `c5cc9a5`
 - [ ] **T4** (S1-S6) verificador independiente, revisión, PR y merge — verify — commit:
 
 ## Log
