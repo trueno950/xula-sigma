@@ -360,6 +360,7 @@ que devuelva, y devolverlo sería código muerto.
 | `altaDeIntervencionAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `programarObraAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `asignarAreaAction` | `reportes` | Server Component, `<form action={...}>` |
+| `cambiarUmbralDeAtrasoAction` | `reportes` | Server Component, `<form action={...}>` |
 | `altaDeUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `restablecerContraseniaAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `darDeBajaUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
@@ -426,6 +427,14 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `altaDeReporteAction`: el envio del formulario sigue siendo el POST
   nativo. Redacta `NoAutorizadoError`, `NoEncontradoError`,
   `UbicacionInvalidaError` y `ReportanteDadoDeBajaError`.
+- `cambiarUmbralDeAtrasoAction` (`reportes`, S1 de `gestion-municipal`): el
+  formulario de `/reportes/configuracion` es un `<form action>` nativo sin
+  `"use client"` de por medio, y guarda un entero de 1 a 90 en
+  `configuracion_de_reportes`. Redacta `NoAutorizadoError` -el aviso de
+  permiso, que la pantalla ya muestra sin formulario- y `ValidacionError` -el
+  numero fuera del rango-, y deja cualquier otra caida en el log con el
+  mensaje generico. El `ayuntamiento_id` sale del contexto del servidor: el
+  formulario no lo manda, y uno pegado a mano se ignora.
 - `cambiarEstadoAction`/`asignarAreaAction` (`reportes`, rebanada 7): mismo
   motivo que `darDeBajaLugarAction`, cada boton de `AccionesDeReporte` su
   propio `<form>`. `cambiarEstadoAction` redacta `NoAutorizadoError`,

@@ -98,3 +98,31 @@ describe("hrefSinFiltro", () => {
     ).toBe("/reportes");
   });
 });
+
+describe("el filtro «solo atrasados» en los links", () => {
+  it("viaja a la URL como un uno, sin la fecha de corte adentro", () => {
+    expect(construirHrefDeListado({ soloAtrasados: true })).toBe(
+      "/reportes?atrasados=1",
+    );
+  });
+
+  it("«Ver mas» lo conserva junto con los demas filtros", () => {
+    expect(
+      hrefDeVerMas({
+        filtros: { estado: "RECIBIDO" },
+        soloAtrasados: true,
+      }),
+    ).toBe(
+      `/reportes?estado=RECIBIDO&atrasados=1&limite=${TAMANO_DE_PAGINA * 2}`,
+    );
+  });
+
+  it("la x de su chip lo quita y deja el resto", () => {
+    expect(
+      hrefSinFiltro(
+        { filtros: { estado: "RECIBIDO" }, soloAtrasados: true },
+        "atrasados",
+      ),
+    ).toBe("/reportes?estado=RECIBIDO");
+  });
+});

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
 import type {
   FiltrosDeListado,
   OpcionesDeListado,
@@ -23,6 +23,24 @@ import { reportes } from "./esquema";
  * en `puertosDeLecturaDeReportes.ts`.
  */
 
+/**
+ * El «solo atrasados» de S1: `RECIBIDO` y con la fecha civil de registro
+ * igual o anterior al corte.
+ *
+ * La fecha civil la calcula Postgres (`AT TIME ZONE`), no una resta de
+ * milisegundos: es la misma zona que formatea `shared/lib/fecha` del lado de
+ * JavaScript, y hacerla aca deja el filtro aplicado antes de paginar -un
+ * recorte en memoria escondería filas de la pagina en vez de traer las que
+ * corresponden-. `estado = 'RECIBIDO'` es parte de la condicion y no un
+ * filtro de UI: solo un reporte sin atender puede estar atrasado, asi que
+ * pedir «atrasados» con `estado=RESUELTO` no devuelve nada, y eso es correcto.
+ */
+const condicionDeAtraso = (desde: string): SQL =>
+  and(
+    eq(reportes.estado, "RECIBIDO"),
+    sql`(${reportes.registradoEn} AT TIME ZONE 'America/Merida')::date <= ${desde}::date`,
+  ) as SQL;
+
 /** `estado`/`tipo` de `FiltrosDeListado`, compartidas por `listar` y `buscar`. */
 const condicionesDeFiltros = (filtros: FiltrosDeListado): SQL[] => {
   const condiciones: SQL[] = [];
@@ -31,6 +49,9 @@ const condicionesDeFiltros = (filtros: FiltrosDeListado): SQL[] => {
   }
   if (filtros.tipo !== undefined) {
     condiciones.push(eq(reportes.tipo, filtros.tipo));
+  }
+  if (filtros.atrasadosDesde !== undefined) {
+    condiciones.push(condicionDeAtraso(filtros.atrasadosDesde));
   }
   return condiciones;
 };
@@ -120,6 +141,7 @@ export const lectorDeReportesDeMapaSql: LectorDeReportesDeMapa &
         areaResponsable: reportes.areaResponsable,
         calleId: reportes.calleId,
         lugarId: reportes.lugarId,
+        registradoEn: reportes.registradoEn,
       })
       .from(reportes);
   },

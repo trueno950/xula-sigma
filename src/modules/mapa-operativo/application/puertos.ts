@@ -16,6 +16,12 @@ export type ReporteParaMapaOperativo = {
   areaResponsable: string | null;
   calleId: string | null;
   lugarId: string;
+  /**
+   * Fecha civil del registro (`YYYY-MM-DD` en `America/Merida`), ya resuelta
+   * por el adaptador con `shared/lib/fecha`: es lo que la senal de atraso de
+   * S1 necesita, y el dominio del mapa no conoce zonas horarias ni `Date`.
+   */
+  fechaDeRegistro: string;
 };
 export type IntervencionParaMapaOperativo = {
   id: string;
@@ -41,6 +47,12 @@ export type FuentesDeMapa = {
   territoriosParaMapa(
     contexto: ContextoActual,
   ): Promise<readonly TerritorioParaMapaOperativo[]>;
+  /**
+   * El umbral de atraso del municipio, leido de `reportes` por la API publica
+   * de ese modulo. `reportes` es el dueno de la regla; el mapa solo la aplica
+   * para marcar sus pines.
+   */
+  umbralDeAtraso(contexto: ContextoActual): Promise<number>;
   /** El lugar y todos sus descendientes, a cualquier profundidad. */
   lugaresDelSubarbol(
     contexto: ContextoActual,

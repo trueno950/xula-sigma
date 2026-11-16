@@ -1,7 +1,9 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
+import { hoyEnMerida } from "@/shared/lib/fecha";
 import type { MapaOperativoAgregado } from "../domain";
 import { cajaDePuntos, construirLeyenda } from "../domain";
 import {
+  type AtrasoDelMapa,
   filtrarIntervenciones,
   filtrarReportes,
   type Hecho,
@@ -28,6 +30,7 @@ type LecturasDelMapa = {
   territorios: readonly TerritorioParaMapaOperativo[];
   raiz: TerritorioParaMapaOperativo | null;
   permitidos: ReadonlySet<string> | null;
+  atraso: AtrasoDelMapa;
 };
 
 const contar = (hechos: readonly Hecho[]) => ({
@@ -65,15 +68,25 @@ async function leerMapa(
   contexto: ContextoActual,
   lugar: string | undefined,
 ): Promise<LecturasDelMapa> {
-  const [calles, reportes, intervenciones, territorios] = await Promise.all([
-    fuentes.callesParaMapa(contexto),
-    fuentes.reportesParaMapa(contexto),
-    fuentes.intervencionesParaMapa(contexto),
-    fuentes.territoriosParaMapa(contexto),
-  ]);
+  const [calles, reportes, intervenciones, territorios, umbral] =
+    await Promise.all([
+      fuentes.callesParaMapa(contexto),
+      fuentes.reportesParaMapa(contexto),
+      fuentes.intervencionesParaMapa(contexto),
+      fuentes.territoriosParaMapa(contexto),
+      fuentes.umbralDeAtraso(contexto),
+    ]);
   const raiz = raizElegida(territorios, lugar);
   const permitidos = await lugaresPermitidos(fuentes, contexto, raiz);
-  return { calles, reportes, intervenciones, territorios, raiz, permitidos };
+  return {
+    calles,
+    reportes,
+    intervenciones,
+    territorios,
+    raiz,
+    permitidos,
+    atraso: { umbral, hoy: hoyEnMerida() },
+  };
 }
 
 function componerMapa(
@@ -84,13 +97,14 @@ function componerMapa(
     territorios,
     raiz,
     permitidos,
+    atraso,
   }: LecturasDelMapa,
   filtros: FiltrosDeMapa,
 ): MapaOperativoAgregado {
   const puntos = new Map(calles.map((calle) => [calle.id, calle]));
   const hechos = filtrarPorTerritorio(
     [
-      ...filtrarReportes(reportes, filtros),
+      ...filtrarReportes(reportes, filtros, atraso),
       ...filtrarIntervenciones(intervenciones, filtros),
     ],
     puntos,

@@ -6,15 +6,18 @@ import {
 
 /**
  * Nombra cada filtro aplicado para el vacio por filtro: con solo `q` en el
- * mensaje, un listado vacio por `estado` o `tipo` no decia por que.
+ * mensaje, un listado vacio por `estado`, `tipo` o «solo atrasados» no decia
+ * por que.
  */
 export const descripcionDeFiltrosDeReportes = (
   { estado, tipo }: FiltrosDeListado,
   q: string | undefined,
+  soloAtrasados?: boolean,
 ): string | undefined => {
   const partes = [
     estado ? `Estado "${ETIQUETA_DE_ESTADO_DE_REPORTE[estado]}"` : null,
     tipo ? `tipo "${ETIQUETA_DE_TIPO_DE_INCIDENCIA[tipo]}"` : null,
+    soloAtrasados ? "solo atrasados" : null,
     q ? `búsqueda "${q}"` : null,
   ].filter((parte) => parte !== null);
 

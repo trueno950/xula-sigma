@@ -16,7 +16,10 @@ import {
 } from "../domain";
 import { hrefSinFiltro } from "./hrefsDeListado";
 
-type Props = FiltrosDeListado & { q?: string | undefined };
+type Props = FiltrosDeListado & {
+  q?: string | undefined;
+  soloAtrasados?: boolean | undefined;
+};
 
 /**
  * Un solo `<form method="get">` para busqueda y filtros, no dos separados
@@ -26,12 +29,17 @@ type Props = FiltrosDeListado & { q?: string | undefined };
  * que nada lo avise. Un solo submit manda los tres a la vez, sin
  * JavaScript ni campos ocultos.
  *
+ * «Solo atrasados» (S1 de `gestion-municipal`) es una casilla y no un
+ * `<select>`: son dos estados, y desmarcarla es lo mismo que no mandar el
+ * campo. Viaja en el mismo GET, asi que cambiar de estado o de tipo no la
+ * pierde, y su chip de abajo la quita sin tocar los demas filtros.
+ *
  * Los chips de abajo (`design.md`, "Filtros") son el select confirmado: el
  * `<select>` captura, el chip dice que el filtro esta puesto -sin el, un
  * `<select>` que cambia de valor se lee como la lista completa, no como un
  * resultado acotado.
  */
-export function FiltrosDeReportes({ q, estado, tipo }: Props) {
+export function FiltrosDeReportes({ q, estado, tipo, soloAtrasados }: Props) {
   const filtros: FiltrosDeListado = {
     ...(estado ? { estado } : {}),
     ...(tipo ? { tipo } : {}),
@@ -83,12 +91,23 @@ export function FiltrosDeReportes({ q, estado, tipo }: Props) {
             ETIQUETA_DE_TIPO_DE_INCIDENCIA,
           )}
         />
+        <label className="flex h-11 items-center gap-2 text-[13px] font-medium leading-tight text-caliza-apagada">
+          <input
+            type="checkbox"
+            id="filtro-atrasados"
+            name="atrasados"
+            value="1"
+            defaultChecked={soloAtrasados}
+            className="size-4"
+          />
+          Solo atrasados
+        </label>
         <Boton type="submit" variante="secundaria">
           Buscar
         </Boton>
       </form>
 
-      {estado || tipo ? (
+      {estado || tipo || soloAtrasados ? (
         <div className="flex flex-wrap gap-2">
           {estado ? (
             <ChipDeFiltro
@@ -100,6 +119,15 @@ export function FiltrosDeReportes({ q, estado, tipo }: Props) {
             <ChipDeFiltro
               etiqueta={`Tipo: ${ETIQUETA_DE_TIPO_DE_INCIDENCIA[tipo]}`}
               hrefQuitar={hrefSinFiltro({ filtros, q }, "tipo")}
+            />
+          ) : null}
+          {soloAtrasados ? (
+            <ChipDeFiltro
+              etiqueta="Solo atrasados"
+              hrefQuitar={hrefSinFiltro(
+                { filtros, q, soloAtrasados },
+                "atrasados",
+              )}
             />
           ) : null}
         </div>

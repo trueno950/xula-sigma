@@ -8,7 +8,7 @@ import {
 } from "@/modules/reportes";
 
 /**
- * La lectura de `?estado=&tipo=&q=&limite=&ordenar=&direccion=&error=`.
+ * La lectura de `?estado=&tipo=&q=&atrasados=&limite=&ordenar=&direccion=&error=`.
  *
  * Vive aparte de `page.tsx` por el mismo motivo que
  * `territorio/parametros.ts`: aca se interpreta la URL, alla se compone la
@@ -20,6 +20,12 @@ export type ParametrosDeReportes = {
   limite: number | undefined;
   orden: OrdenDeReportes | undefined;
   error: string | undefined;
+  /**
+   * `?atrasados=1`: el filtro de S1. Booleano y no fecha porque el corte lo
+   * resuelve el servidor con el umbral del municipio y el dia de hoy; una
+   * fecha en la URL quedaria congelada en el historial del navegador.
+   */
+  soloAtrasados: boolean;
 };
 
 /**
@@ -47,6 +53,7 @@ const esquemaDeParametros = z.object({
     .catch(undefined),
   ordenar: z.enum(["folio", "registrado"]).optional().catch(undefined),
   direccion: z.enum(["asc", "desc"]).optional().catch(undefined),
+  atrasados: z.literal("1").optional().catch(undefined),
   error: z.string().optional().catch(undefined),
 });
 
@@ -70,5 +77,6 @@ export const leerParametros = (
     limite: datos.limite,
     orden,
     error: datos.error,
+    soloAtrasados: datos.atrasados === "1",
   };
 };

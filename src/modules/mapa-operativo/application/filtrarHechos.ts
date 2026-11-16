@@ -9,11 +9,15 @@ import {
   TIPOS_DE_INTERVENCION_PARA_FILTRO,
   TIPOS_DE_REPORTE_PARA_FILTRO,
 } from "../domain";
+import { diasDeAtrasoEnElMapa } from "../domain/atraso";
 import type {
   FiltrosDeMapa,
   IntervencionParaMapaOperativo,
   ReporteParaMapaOperativo,
 } from "./puertos";
+
+/** El umbral del municipio y el dia civil de hoy, para la senal de atraso. */
+export type AtrasoDelMapa = { umbral: number; hoy: string };
 
 export type Hecho =
   | {
@@ -25,6 +29,8 @@ export type Hecho =
       etiqueta: string;
       tipo: string;
       estado: string;
+      /** Dias sin atender, o `null`: ver `domain/atraso.ts`. */
+      diasDeAtraso: number | null;
     }
   | {
       recurso: "INTERVENCION";
@@ -34,6 +40,7 @@ export type Hecho =
       etiqueta: string;
       tipo: string;
       estado: string;
+      diasDeAtraso: number | null;
     };
 
 const coincide = (valor: string, filtro: string | undefined) =>
@@ -52,6 +59,7 @@ const coincideSiAplica = (
 export function filtrarReportes(
   reportes: readonly ReporteParaMapaOperativo[],
   filtros: FiltrosDeMapa,
+  atraso: AtrasoDelMapa,
 ): readonly Hecho[] {
   return reportes
     .filter(
@@ -72,6 +80,12 @@ export function filtrarReportes(
       etiqueta: r.folio,
       tipo: r.tipo,
       estado: r.estado,
+      diasDeAtraso: diasDeAtrasoEnElMapa({
+        estado: r.estado,
+        fechaDeRegistro: r.fechaDeRegistro,
+        hoy: atraso.hoy,
+        umbral: atraso.umbral,
+      }),
     }));
 }
 
@@ -102,5 +116,8 @@ export function filtrarIntervenciones(
       etiqueta: etiquetaDeFiltro(i.tipo),
       tipo: i.tipo,
       estado: i.estado,
+      // Una obra no esta "sin atender": no hay nada que la marque con el
+      // umbral de los reportes ciudadanos.
+      diasDeAtraso: null,
     }));
 }

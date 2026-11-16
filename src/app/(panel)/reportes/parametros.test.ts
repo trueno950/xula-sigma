@@ -61,6 +61,26 @@ describe("leerParametros", () => {
       limite: undefined,
       orden: undefined,
       error: undefined,
+      soloAtrasados: false,
     });
+  });
+
+  it("atrasados=1 enciende el filtro y cualquier otra cosa lo apaga", () => {
+    expect(leerParametros({ atrasados: "1" }).soloAtrasados).toBe(true);
+    expect(leerParametros({ atrasados: "0" }).soloAtrasados).toBe(false);
+    expect(leerParametros({ atrasados: "" }).soloAtrasados).toBe(false);
+    expect(leerParametros({ atrasados: ["1", "1"] }).soloAtrasados).toBe(false);
+  });
+
+  it("atrasados convive con los otros filtros y no los descarta", () => {
+    const parametros = leerParametros({
+      atrasados: "1",
+      estado: "RECIBIDO",
+      q: "bache",
+    });
+
+    expect(parametros.soloAtrasados).toBe(true);
+    expect(parametros.filtros.estado).toBe("RECIBIDO");
+    expect(parametros.q).toBe("bache");
   });
 });

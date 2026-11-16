@@ -24,13 +24,19 @@ const reporte = (parcial: Partial<ReporteGuardado>): ReporteGuardado => ({
   ...parcial,
 });
 
-const html = (reportes: readonly ReporteGuardado[]) =>
+const html = (
+  reportes: readonly ReporteGuardado[],
+  extras: { soloAtrasados?: boolean } = {},
+) =>
   renderToStaticMarkup(
     <ListadoDeReportes
       reportes={reportes}
       hayMas={false}
       estadoDeLista={estadoDeLista({ total: reportes.length })}
       filtros={{}}
+      umbral={7}
+      hoy="2026-03-11"
+      {...extras}
     />,
   );
 
@@ -67,5 +73,46 @@ describe("ListadoDeReportes", () => {
       '<option value="EN_ATENCION">En atención</option>',
     );
     expect(pagina).toContain('<option value="ALUMBRADO">Alumbrado</option>');
+  });
+});
+
+describe("ListadoDeReportes, atraso configurable (S1)", () => {
+  const recibidoHace = (dias: number) =>
+    reporte({
+      estado: "RECIBIDO",
+      // 18:00 UTC son las 12:00 en Merida del mismo dia civil.
+      registradoEn: new Date(
+        Date.parse("2026-03-11T18:00:00Z") - dias * 86_400_000,
+      ),
+    });
+
+  it("un reporte RECIBIDO que cumplio el umbral lleva la insignia con sus dias", () => {
+    expect(html([recibidoHace(10)])).toContain("Atrasado · 10 días");
+  });
+
+  it("exactamente 7 dias ya es atraso; 6 todavia no", () => {
+    expect(html([recibidoHace(7)])).toContain("Atrasado · 7 días");
+    expect(html([recibidoHace(6)])).not.toContain("Atrasado");
+  });
+
+  it("un reporte ya atendido no lleva insignia aunque tenga meses", () => {
+    const pagina = html([
+      reporte({
+        estado: "EN_ATENCION",
+        registradoEn: new Date("2025-01-01T18:00:00Z"),
+      }),
+    ]);
+
+    expect(pagina).not.toContain("Atrasado");
+  });
+
+  it("el formulario de filtros ofrece «solo atrasados» y lo deja marcado", () => {
+    expect(html([recibidoHace(10)])).toContain('name="atrasados"');
+
+    const conFiltro = html([recibidoHace(10)], { soloAtrasados: true });
+    expect(conFiltro).toContain("Solo atrasados");
+    expect(conFiltro).toMatch(
+      /<input(?=[^>]*name="atrasados")(?=[^>]*checked)[^>]*>/,
+    );
   });
 });

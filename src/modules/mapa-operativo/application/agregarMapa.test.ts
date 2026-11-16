@@ -1,78 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { comoIntervencionId } from "@/modules/intervenciones";
-import { comoReporteId } from "@/modules/reportes";
-import { comoCalleId, comoLugarId } from "@/modules/territorio";
-import type { ContextoActual } from "@/shared/auth/contexto";
-import type { FuentesDeMapa } from "./puertos";
-
-const contexto: ContextoActual = {
-  ayuntamientoId:
-    "11111111-1111-4111-8111-111111111111" as ContextoActual["ayuntamientoId"],
-  usuario: { id: "operador-1", rol: "OPERADOR" },
-  origen: "web",
-};
-
-const calleConPunto = {
-  id: comoCalleId("22222222-2222-4222-8222-222222222222"),
-  nombre: "Calle con punto",
-  lugarId: comoLugarId("33333333-3333-4333-8333-333333333333"),
-  punto: { latitud: 20.9674, longitud: -89.5926 },
-  bajaEn: null,
-};
-const calleSinPunto = {
-  ...calleConPunto,
-  id: comoCalleId("44444444-4444-4444-8444-444444444444"),
-  nombre: "Calle sin punto",
-  punto: null,
-};
+import {
+  calleConPunto,
+  calleSinPunto,
+  contexto,
+  crearFuentesDeMapa,
+  REPORTE_EN_CALLE,
+  REPORTE_SIN_CALLE,
+  sembrarHechos,
+} from "./agregarMapaDePrueba";
 
 describe("agregarMapa", () => {
-  const fuentes: FuentesDeMapa = {
-    callesParaMapa: vi.fn(),
-    reportesParaMapa: vi.fn(),
-    intervencionesParaMapa: vi.fn(),
-    territoriosParaMapa: vi.fn(),
-    lugaresDelSubarbol: vi.fn(),
-  };
+  const fuentes = crearFuentesDeMapa();
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([]);
-    vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValue([]);
-    vi.mocked(fuentes.callesParaMapa).mockResolvedValue([
-      calleConPunto,
-      calleSinPunto,
-    ]);
-    vi.mocked(fuentes.reportesParaMapa).mockResolvedValue([
-      {
-        id: comoReporteId("55555555-5555-4555-8555-555555555555"),
-        folio: "REP-1",
-        tipo: "BASURA",
-        estado: "RECIBIDO",
-        areaResponsable: "OBRAS_PUBLICAS",
-        calleId: calleConPunto.id,
-        lugarId: calleConPunto.lugarId,
-      },
-      {
-        id: comoReporteId("66666666-6666-4666-8666-666666666666"),
-        folio: "REP-2",
-        tipo: "FUGA",
-        estado: "RESUELTO",
-        areaResponsable: null,
-        calleId: null,
-        lugarId: calleConPunto.lugarId,
-      },
-    ]);
-    vi.mocked(fuentes.intervencionesParaMapa).mockResolvedValue([
-      {
-        id: comoIntervencionId("77777777-7777-4777-8777-777777777777"),
-        tipo: "OBRA",
-        estado: "EN_EJECUCION",
-        calleId: calleSinPunto.id,
-        lugarId: calleSinPunto.lugarId,
-      },
-    ]);
-  });
+  beforeEach(() => sembrarHechos(fuentes));
 
   it("ubica solo hechos con punto de calle y declara los restantes como cobertura faltante", async () => {
     const { crearAgregarMapa } = await import("./agregarMapa");
@@ -85,7 +26,7 @@ describe("agregarMapa", () => {
         hechos: [
           expect.objectContaining({
             recurso: "REPORTE",
-            href: "/reportes/detalle/55555555-5555-4555-8555-555555555555",
+            href: `/reportes/detalle/${REPORTE_EN_CALLE}`,
           }),
         ],
       }),
@@ -94,7 +35,7 @@ describe("agregarMapa", () => {
       expect.objectContaining({
         recurso: "REPORTE",
         razon: "SIN_CALLE",
-        href: "/reportes/detalle/66666666-6666-4666-8666-666666666666",
+        href: `/reportes/detalle/${REPORTE_SIN_CALLE}`,
         calle: null,
       }),
       expect.objectContaining({

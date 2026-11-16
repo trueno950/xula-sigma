@@ -5,8 +5,10 @@ import {
   crearBuscarReportes,
   crearBuscarReportesSimilares,
   crearCambiarEstadoDeReporte,
+  crearCambiarUmbralDeAtraso,
   crearConsultarFolioDeReporte,
   crearHistorialDeReporte,
+  crearLeerUmbralDeAtraso,
   crearListarReportes,
   crearListarReportesParaMapa,
   crearRegistrarReporte,
@@ -21,6 +23,7 @@ import {
   crearLectorDeUbicacionesPorTerritorio,
   lectorDeReportesDeMapaSql,
   registroDeMovimientosSql,
+  repositorioDeConfiguracionDeReportesSql,
   repositorioDeReportesSql,
 } from "./infrastructure";
 import { buscadorDeDireccionesPorTerritorio } from "./infrastructure/buscadorDeDireccionesPorTerritorio";
@@ -72,6 +75,17 @@ export const buscarReportesSimilares = crearBuscarReportesSimilares(
 );
 export const historialDeReporte = crearHistorialDeReporte(
   registroDeMovimientosSql,
+);
+/**
+ * S1 de `gestion-municipal`: el umbral de atraso del municipio. La lectura
+ * la usa la bandeja para la insignia y el mapa para su senal; la escritura
+ * solo `ADMIN_MUNICIPAL`, desde `/reportes/configuracion`.
+ */
+export const leerUmbralDeAtraso = crearLeerUmbralDeAtraso(
+  repositorioDeConfiguracionDeReportesSql,
+);
+export const cambiarUmbralDeAtraso = crearCambiarUmbralDeAtraso(
+  repositorioDeConfiguracionDeReportesSql,
 );
 /**
  * La cara que usa `intervenciones` para programar y cerrar obra (S2 y S3 de

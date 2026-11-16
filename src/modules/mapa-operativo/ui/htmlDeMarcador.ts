@@ -12,6 +12,22 @@ const PIN =
   "display:flex;align-items:center;justify-content:center;position:relative;width:30px;height:30px;border-radius:9999px;color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)";
 const CONTADOR =
   "position:absolute;top:-6px;right:-8px;min-width:18px;height:18px;padding:0 3px;border-radius:9999px;background:#111827;color:#fff;font:600 11px/18px system-ui,sans-serif;text-align:center";
+/**
+ * El aro del atraso (S1): el pin de una calle con algun reporte pasado del
+ * umbral del municipio. Va como `box-shadow` y no como una segunda capa: el
+ * pin ya tiene su borde blanco y su color de estado, y el aro dice lo unico
+ * que el color no puede decir -que ese hecho lleva demasiado tiempo ahi-.
+ */
+const ARO_DE_ATRASO = ";box-shadow:0 0 0 3px #b91c1c,0 1px 4px rgba(0,0,0,.45)";
+
+const diasDeAtrasoDe = (marcador: MarcadorDeMapa): number | null =>
+  marcador.hechos.reduce<number | null>(
+    (mayor, hecho) =>
+      hecho.diasDeAtraso === null
+        ? mayor
+        : Math.max(mayor ?? 0, hecho.diasDeAtraso),
+    null,
+  );
 
 export const htmlDeMarcador = (marcador: MarcadorDeMapa): string => {
   const cuantos = marcador.hechos.length;
@@ -19,14 +35,24 @@ export const htmlDeMarcador = (marcador: MarcadorDeMapa): string => {
     cuantos > 1
       ? `<span data-hechos="${cuantos}" style="${CONTADOR}">${cuantos}</span>`
       : "";
-  return `<span style="${PIN};background:${colorVerificado(marcador.color)}">${svgDeIcono(marcador.icono)}${contador}</span>`;
+  const atrasados = diasDeAtrasoDe(marcador);
+  const aro = atrasados === null ? "" : ARO_DE_ATRASO;
+  // `data-atrasado="1"` es lo que el E2E lee: el aro se ve, pero un test no
+  // puede afirmar un `box-shadow`.
+  const marca = atrasados === null ? "" : ' data-atrasado="1"';
+  return `<span${marca} style="${PIN};background:${colorVerificado(marcador.color)}${aro}">${svgDeIcono(marcador.icono)}${contador}</span>`;
 };
 
 /**
  * La ventana del pin: folio -o el tipo, si es una intervencion-, tipo y
- * estado de cada hecho. Sin fecha, porque los lectores del mapa no la
- * exponen, y sin datos de la persona que reporto: el mapa nunca los pide.
+ * estado de cada hecho, con los dias de atraso cuando los tiene (S1). Sin
+ * datos de la persona que reporto: el mapa nunca los pide.
  */
+const atrasoDeLaVentana = (dias: number | null): string =>
+  dias === null
+    ? ""
+    : ` · <strong>Atrasado · ${dias} ${dias === 1 ? "día" : "días"}</strong>`;
+
 export const htmlDeLaVentana = (marcador: MarcadorDeMapa): string => {
   const filas = marcador.hechos
     .map(
@@ -34,6 +60,7 @@ export const htmlDeLaVentana = (marcador: MarcadorDeMapa): string => {
         `<li style="margin-bottom:4px">` +
         `<a href="${escapar(hecho.href)}">${escapar(hecho.etiqueta)}</a> · ` +
         `${escapar(hecho.etiquetaDeTipo)} · ${escapar(hecho.etiquetaDeEstado)}` +
+        `${atrasoDeLaVentana(hecho.diasDeAtraso)}` +
         `</li>`,
     )
     .join("");

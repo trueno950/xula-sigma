@@ -26,6 +26,7 @@ const reporte = (id: string, folio: string, estado: string) => ({
   areaResponsable: null,
   calleId: CALLE,
   lugarId: LUGAR,
+  fechaDeRegistro: "2026-11-16",
 });
 
 const fuentes: FuentesDeMapa = {
@@ -33,12 +34,14 @@ const fuentes: FuentesDeMapa = {
   reportesParaMapa: vi.fn(),
   intervencionesParaMapa: vi.fn(),
   territoriosParaMapa: vi.fn(),
+  umbralDeAtraso: vi.fn(),
   lugaresDelSubarbol: vi.fn(),
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([]);
+  vi.mocked(fuentes.umbralDeAtraso).mockResolvedValue(7);
   vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValue([]);
   vi.mocked(fuentes.callesParaMapa).mockResolvedValue([
     { id: CALLE, nombre: "Calle 20", lugarId: LUGAR, punto: PUNTO },

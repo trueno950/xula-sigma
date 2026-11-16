@@ -21,3 +21,17 @@ describe("descripcionDeFiltrosDeReportes", () => {
     ).toBe('Estado "Resuelto", tipo "Alumbrado", búsqueda "luz"');
   });
 });
+
+describe("descripcionDeFiltrosDeReportes, filtro de atrasados", () => {
+  it("nombra el filtro de atrasados junto a los demas", () => {
+    expect(
+      descripcionDeFiltrosDeReportes({ estado: "RECIBIDO" }, undefined, true),
+    ).toBe('Estado "Recibido", solo atrasados');
+  });
+
+  it("sin el filtro no agrega nada", () => {
+    expect(
+      descripcionDeFiltrosDeReportes({}, undefined, false),
+    ).toBeUndefined();
+  });
+});

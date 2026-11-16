@@ -118,3 +118,29 @@ NOT incluir datos de otro ayuntamiento.
 
 El mapa MUST NOT introducir PostGIS, geocodificacion ni polilineas. La
 geometria sigue siendo el punto de `calles`.
+
+### Requirement: Senal de reportes atrasados en el mapa
+
+El mapa operativo MUST marcar los reportes atrasados -los que pasaron el
+umbral configurable de su municipio- en el pin, en su ventana y en la lista
+sin JavaScript, y MUST publicar en la leyenda el conteo de atrasados. El
+mapa MUST NOT importar el dominio de `reportes`: la fecha de registro llega
+por el puerto de reportes, ya resuelta a fecha civil por su adaptador, y el
+umbral por `leerUmbralDeAtraso` de la API publica de ese modulo. La copia
+local de la regla MUST compararse con su duena en un test, como ya se hace
+con los vocabularios.
+
+#### Scenario: El pin de una calle con un reporte atrasado se marca
+
+- GIVEN un reporte `RECIBIDO` que paso el umbral del municipio, en una calle
+  con punto
+- WHEN se dibuja el mapa
+- THEN su pin lleva la marca de atraso
+- AND su ventana dice «Atrasado · N dias»
+
+#### Scenario: La leyenda cuenta los atrasados
+
+- GIVEN dos reportes atrasados entre los hechos del mapa
+- WHEN se dibuja la leyenda
+- THEN hay un renglon de atrasados con el conteo 2
+- AND sin reportes atrasados ese renglon no aparece

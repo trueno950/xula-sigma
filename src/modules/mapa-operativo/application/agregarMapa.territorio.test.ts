@@ -44,6 +44,7 @@ const fuentes: FuentesDeMapa = {
   reportesParaMapa: vi.fn(),
   intervencionesParaMapa: vi.fn(),
   territoriosParaMapa: vi.fn(),
+  umbralDeAtraso: vi.fn(),
   lugaresDelSubarbol: vi.fn(),
 };
 
@@ -64,6 +65,7 @@ beforeEach(() => {
       areaResponsable: null,
       calleId: CALLE_DE_LA_COMISARIA.id,
       lugarId: CABECERA,
+      fechaDeRegistro: "2026-11-16",
     },
     {
       id: comoReporteId("66666666-6666-4666-8666-666666666666"),
@@ -73,6 +75,7 @@ beforeEach(() => {
       areaResponsable: null,
       calleId: null,
       lugarId: CABECERA,
+      fechaDeRegistro: "2026-11-16",
     },
   ]);
   vi.mocked(fuentes.intervencionesParaMapa).mockResolvedValue([

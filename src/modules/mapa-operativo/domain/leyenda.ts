@@ -21,12 +21,19 @@ export type EntradaDeEstado = {
 export type LeyendaDelMapa = {
   tipos: readonly EntradaDeTipo[];
   estados: readonly EntradaDeEstado[];
+  /** Reportes que pasaron el umbral de atraso del municipio (S1). */
+  atrasados: number;
 };
 
 export type HechoContable = {
   recurso: RecursoDeMapa;
   tipo: string;
   estado: string;
+  /**
+   * Los dias de atraso del hecho, si los tiene. Opcional para los dobles de
+   * prueba que solo cuentan tipos y estados: ausente es "no esta atrasado".
+   */
+  diasDeAtraso?: number | null;
 };
 
 /**
@@ -34,6 +41,10 @@ export type HechoContable = {
  * pines: un marcador agrupado cuenta cada hecho que lleva adentro. El mismo
  * tipo en reporte y en intervencion son dos renglones, porque `BACHE`
  * significa cosas distintas segun quien lo registre.
+ *
+ * `atrasados` es el conteo de S1 y va aparte de los dos anteriores: no es un
+ * tipo ni un estado, es la senal de que el municipio se esta pasando de su
+ * propio umbral, y por eso tiene su renglon en la leyenda.
  */
 export function construirLeyenda(
   hechos: readonly HechoContable[],
@@ -62,5 +73,10 @@ export function construirLeyenda(
         conteo: 1,
       });
   }
-  return { tipos: [...tipos.values()], estados: [...estados.values()] };
+  return {
+    tipos: [...tipos.values()],
+    estados: [...estados.values()],
+    atrasados: hechos.filter((hecho) => (hecho.diasDeAtraso ?? null) !== null)
+      .length,
+  };
 }

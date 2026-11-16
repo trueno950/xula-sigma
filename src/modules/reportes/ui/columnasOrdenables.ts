@@ -53,6 +53,7 @@ export function resolverOrdenDeColumnas(
     orden?: OrdenDeReportes | undefined;
     filtros?: FiltrosDeListado | undefined;
     q?: string | undefined;
+    soloAtrasados?: boolean | undefined;
   },
 ): readonly ColumnaDeTabla[] {
   const sorting: SortingState = parametros.orden
@@ -87,6 +88,7 @@ export function resolverOrdenDeColumnas(
         href: construirHrefDeListado({
           filtros: parametros.filtros,
           q: parametros.q,
+          soloAtrasados: parametros.soloAtrasados,
           orden: {
             campo: columna.clave as OrdenDeReportes["campo"],
             direccion: siguiente,

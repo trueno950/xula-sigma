@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { COLOR_DE_ESTADO_DESCONOCIDO, type MarcadorDeMapa } from "../domain";
+import {
+  COLOR_DE_ESTADO_DESCONOCIDO,
+  comoIdDeReporteEnMapa,
+  type MarcadorDeMapa,
+} from "../domain";
 import { htmlDeLaVentana, htmlDeMarcador } from "./htmlDeMarcador";
 import {
   HECHO_DE_INTERVENCION,
@@ -34,6 +38,35 @@ describe("htmlDeMarcador", () => {
 
     expect(html).toContain('data-hechos="2"');
     expect(html).toContain(">2<");
+  });
+});
+
+describe("htmlDeMarcador, la senal de atraso de S1", () => {
+  it("un pin con un reporte atrasado se marca, y uno sin atraso no", () => {
+    const atrasado = marcadorDe([HECHO_DE_REPORTE], {
+      hechos: [{ ...HECHO_DE_REPORTE, diasDeAtraso: 10 }],
+    });
+
+    expect(htmlDeMarcador(atrasado)).toContain('data-atrasado="1"');
+    expect(htmlDeMarcador(marcadorDe([HECHO_DE_REPORTE]))).not.toContain(
+      "data-atrasado",
+    );
+  });
+
+  it("un pin agrupado se marca si cualquiera de sus hechos esta atrasado", () => {
+    const marcador = marcadorDe([], {
+      hechos: [
+        { ...HECHO_DE_REPORTE, diasDeAtraso: null },
+        { ...HECHO_DE_INTERVENCION, diasDeAtraso: null },
+        {
+          ...HECHO_DE_REPORTE,
+          id: comoIdDeReporteEnMapa("reporte-2"),
+          diasDeAtraso: 3,
+        },
+      ],
+    });
+
+    expect(htmlDeMarcador(marcador)).toContain('data-atrasado="1"');
   });
 });
 
@@ -134,5 +167,21 @@ describe("html del mapa: solo las etiquetas que el modulo escribe", () => {
 
     expect(html).toContain(`background:${COLOR_DE_ESTADO_DESCONOCIDO}`);
     expect(html).not.toContain("script");
+  });
+});
+
+describe("htmlDeLaVentana, la senal de atraso de S1", () => {
+  it("dice cuantos dias lleva atrasado el reporte", () => {
+    const marcador = marcadorDe([], {
+      hechos: [{ ...HECHO_DE_REPORTE, diasDeAtraso: 12 }],
+    });
+
+    expect(htmlDeLaVentana(marcador)).toContain("Atrasado · 12 días");
+  });
+
+  it("un reporte al dia no dice nada de atraso", () => {
+    expect(htmlDeLaVentana(marcadorDe([HECHO_DE_REPORTE]))).not.toContain(
+      "Atrasado",
+    );
   });
 });

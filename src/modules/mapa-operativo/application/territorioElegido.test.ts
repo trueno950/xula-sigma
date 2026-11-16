@@ -33,6 +33,7 @@ const reporte = (calleId: string | null, lugarId: string): Hecho => ({
   etiqueta: "REP-1",
   tipo: "BACHE",
   estado: "RECIBIDO",
+  diasDeAtraso: null,
 });
 
 const intervencion = (calleId: string | null, lugarId: string): Hecho => ({
@@ -43,6 +44,7 @@ const intervencion = (calleId: string | null, lugarId: string): Hecho => ({
   etiqueta: "Obra",
   tipo: "OBRA",
   estado: "PLANIFICADA",
+  diasDeAtraso: null,
 });
 
 /**
