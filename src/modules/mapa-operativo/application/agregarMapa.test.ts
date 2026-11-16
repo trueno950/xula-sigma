@@ -81,9 +81,13 @@ describe("agregarMapa", () => {
 
     expect(mapa.marcadores).toEqual([
       expect.objectContaining({
-        recurso: "REPORTE",
-        href: "/reportes/detalle/55555555-5555-4555-8555-555555555555",
         punto: calleConPunto.punto,
+        hechos: [
+          expect.objectContaining({
+            recurso: "REPORTE",
+            href: "/reportes/detalle/55555555-5555-4555-8555-555555555555",
+          }),
+        ],
       }),
     ]);
     expect(mapa.cobertura).toEqual([
@@ -143,7 +147,7 @@ describe("agregarMapa", () => {
       tipo: "BASURA",
     });
 
-    expect(mapa.marcadores).toEqual([
+    expect(mapa.marcadores.flatMap((marcador) => marcador.hechos)).toEqual([
       expect.objectContaining({ recurso: "REPORTE", etiqueta: "REP-1" }),
     ]);
     expect(mapa.cobertura).toEqual([

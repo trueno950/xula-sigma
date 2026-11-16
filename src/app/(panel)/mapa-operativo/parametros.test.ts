@@ -33,7 +33,7 @@ describe("vocabularios de filtro del mapa", () => {
       ESTADOS_DE_INTERVENCION,
     ],
   ])(
-    "la copia local de %s coincide con el catalogo de su modulo",
+    "la copia local de %s conserva el catalogo de su modulo",
     (_, copia, original) => {
       expect([...copia].sort()).toEqual([...original].sort());
     },

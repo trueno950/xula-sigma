@@ -288,3 +288,29 @@ test("sin JavaScript, el territorio elegido filtra la lista del mapa", async ({
     await contexto.close();
   }
 });
+
+test("mapa operativo agrupa por calle y publica la leyenda con conteos", async ({
+  page,
+}) => {
+  await abrirMapaDeMotul(page);
+  await elegirTerritorio(page, escenario.origenId);
+
+  const mapa = page.getByRole("region", {
+    name: /Mapa con los marcadores del municipio/,
+  });
+  // El reporte y la intervencion del escenario comparten calle: un pin, dos
+  // hechos adentro.
+  await expect(mapa.locator('[data-hechos="2"]')).toHaveCount(1);
+  await expect(page.getByText("2 hechos en esta calle")).toBeVisible();
+
+  const leyenda = page.getByRole("region", { name: "Leyenda del mapa" });
+  const porTipo = leyenda.getByRole("list", { name: "Conteo por tipo" });
+  const porEstado = leyenda.getByRole("list", { name: "Conteo por estado" });
+
+  await expect(porTipo).toBeVisible();
+  await expect(porTipo).toContainText("Bache (reporte) 1");
+  await expect(porTipo).toContainText("Obra (intervención) 1");
+  await expect(porTipo).toContainText("Mantenimiento (intervención) 1");
+  await expect(porEstado).toContainText("Recibido 1");
+  await expect(porEstado).toContainText("Planificada 2");
+});

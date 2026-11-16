@@ -71,10 +71,11 @@ describe("agregarMapa: enlace al historial de calle", () => {
   it("enlaza cada marcador, de reporte o de intervencion, al historial de su calle", async () => {
     const mapa = await crearAgregarMapa(fuentes)(contexto, {});
 
-    expect(mapa.marcadores.map(({ recurso }) => recurso).sort()).toEqual([
-      "INTERVENCION",
-      "REPORTE",
-    ]);
+    expect(
+      mapa.marcadores.flatMap((marcador) =>
+        marcador.hechos.map(({ recurso }) => recurso),
+      ),
+    ).toEqual(["REPORTE", "INTERVENCION"]);
     for (const marcador of mapa.marcadores) {
       expect(marcador.historiaHref).toBe(
         `/calles/${calleConPunto.id}/historial`,

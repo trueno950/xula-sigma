@@ -17,8 +17,8 @@ Hoy el mapa pinta todos los hechos como círculos iguales y lo limita la caja de
 
 ## Tasks
 
-- [x] **T1** (S1, S2, S5) selector de territorio, filtro por subárbol y vista bloqueada a la caja de sus calles; tests de dominio, de integración y E2E — worker — commit:
-- [ ] **T2** (S3, S4, S5) íconos por tipo, color por estado, leyenda y agrupación por calle — worker — commit:
+- [x] **T1** (S1, S2, S5) selector de territorio, filtro por subárbol y vista bloqueada a la caja de sus calles; tests de dominio, de integración y E2E — worker — commit: fa73040
+- [x] **T2** (S3, S4, S5) íconos por tipo, color por estado, leyenda y agrupación por calle — worker — commit: (pendiente del padre)
 - [ ] **T3** (S1-S6) verificador independiente, revisión, PR y merge — verify — commit:
 
 ## Log
@@ -36,3 +36,13 @@ Hoy el mapa pinta todos los hechos como círculos iguales y lo limita la caja de
   - GREEN: unit 13 archivos / 70 tests; integración 5/5; typecheck, layers y reglas en 0; build en 0; E2E `mapa-operativo.spec.ts` 4/4 en el puerto 3108 sobre `xula_test_b`.
   - Falta un dato: `ReporteParaMapa` e `IntervencionParaMapa` no exponen fecha, así que la ventana de S4 va sin fecha.
   - Riesgo de integración con el bloque A: `TIPOS_DE_INTERVENCION_PARA_FILTRO` no tiene `PAVIMENTACION`.
+- **L4** — 2026-11-16. T2 (S3, S4, S5), hecho por el worker y sin commit (las escrituras de git son del padre).
+  - Iconos: `domain/iconos.ts` tiene un icono por tipo y `ui/iconosDelMapa.ts` guarda sus trazos en el código, como datos y no como componentes, porque los necesitan los dos caminos: el pin de Leaflet los pide como texto para `divIcon` y la leyenda los pinta con `IconoDeMapa`. Un tipo desconocido cae a `OTRO`, y hay un test que lo fija.
+  - `PAVIMENTACION` se adelanta al bloque A en el icono, en la etiqueta y en la copia del vocabulario. La excepción está declarada una sola vez, en `infrastructure/vocabulariosSincronizados.test.ts`, junto con el test que falla el día que el catálogo dueño la tenga: la excepción se borra sola. Esto resuelve el riesgo que anotó L3.
+  - Colores: `domain/coloresDeEstado.ts` decide un color por estado en el servidor y viaja como dato; dos estados del mismo recurso nunca comparten color y uno desconocido cae a un gris que no usa ningún otro.
+  - Agrupación (S4): `domain/agrupacion.ts` agrupa por calle y `application/marcadores.ts` arma el pin. Varios hechos sobre la misma calle son un pin con contador (`data-hechos`), el pin lleva el icono y el color del hecho predominante y cada hecho conserva los suyos adentro.
+  - La ventana del pin lista folio —o el tipo, si es una intervención—, tipo y estado de cada hecho. **Va sin fecha**: `ReporteParaMapa` e `IntervencionParaMapa` no la exponen y el mapa no la pide por otra puerta. Tampoco lleva dato personal alguno; la lista y la ventana se arman como texto y se escapan (`ui/escaparHtml.ts`).
+  - Leyenda (S5): `ui/LeyendaDelMapa.tsx` es HTML del servidor con icono, etiqueta, conteo por tipo y por estado, y la muestra de color es la que decidió el servidor. La lista sin JavaScript muestra lo mismo (`ui/ListaDeMarcadores.tsx`).
+  - RED: 15 archivos y 44 tests fallando por las razones esperadas —`agruparEnCalles`, `construirLeyenda`, `colorDeEstado` e `iconoDe` no existían, el marcador no tenía `hechos` y `PAVIMENTACION` no estaba en la copia del vocabulario—.
+  - GREEN: `vitest related --run --project unit` 21 archivos / 131 tests; integración 6/6 contra `xula_test_b`; `pnpm typecheck`, `pnpm layers` y `pnpm reglas` en 0; `pnpm check` en 0 con sus 52 avisos previos fuera de esta superficie; `pnpm build` en 0; E2E `mapa-operativo.spec.ts` 5/5 en el puerto 3108 (incluye el pin agrupado con contador y los conteos de la leyenda).
+  - Queda en manos del padre el commit de T2; el árbol queda listo para `git add`.

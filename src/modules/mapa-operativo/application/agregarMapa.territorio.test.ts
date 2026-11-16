@@ -93,7 +93,9 @@ beforeEach(() => {
 const foliosDe = (
   mapa: Awaited<ReturnType<ReturnType<typeof crearAgregarMapa>>>,
 ) =>
-  [...mapa.marcadores, ...mapa.cobertura].map((hecho) => hecho.etiqueta).sort();
+  [...mapa.marcadores.flatMap((marcador) => marcador.hechos), ...mapa.cobertura]
+    .map((hecho) => hecho.etiqueta)
+    .sort();
 
 describe("agregarMapa: territorio elegido", () => {
   it("sin lugar en la URL ofrece todas las raices y no acota nada", async () => {

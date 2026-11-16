@@ -1,8 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { comoIdDeIntervencionEnMapa, comoIdDeReporteEnMapa } from "../domain";
+import { comoIdDeIntervencionEnMapa } from "../domain";
 import { MapaOperativo } from "./MapaOperativo";
-import { INTERVENCION, mapaDe, REPORTE } from "./mapaDePrueba";
+import {
+  HECHO_DE_INTERVENCION,
+  HECHO_DE_REPORTE,
+  mapaDe,
+  marcadorDe,
+} from "./mapaDePrueba";
 
 describe("MapaOperativo", () => {
   it("distingue hechos y declara que la ubicacion de calle es aproximada", () => {
@@ -10,7 +15,10 @@ describe("MapaOperativo", () => {
       <MapaOperativo
         filtros={{}}
         mapa={mapaDe({
-          marcadores: [REPORTE, INTERVENCION],
+          marcadores: [
+            marcadorDe([HECHO_DE_REPORTE]),
+            marcadorDe([HECHO_DE_INTERVENCION], { clave: "calle-2" }),
+          ],
           conteos: { reportes: 1, intervenciones: 1, total: 2 },
         })}
       />,
@@ -88,21 +96,35 @@ describe("MapaOperativo", () => {
         filtros={{}}
         mapa={mapaDe({
           marcadores: [
-            {
-              ...REPORTE,
-              id: comoIdDeReporteEnMapa("reporte-3"),
-              etiqueta: "REP-3",
-              href: "/reportes/detalle/reporte-3",
+            marcadorDe([HECHO_DE_REPORTE], {
               historiaHref: "/calles/calle-3/historial",
-            },
+            }),
           ],
           conteos: { reportes: 1, intervenciones: 0, total: 1 },
         })}
       />,
     );
 
-    expect(html).toContain('href="/reportes/detalle/reporte-3"');
+    expect(html).toContain('href="/reportes/detalle/reporte-1"');
     expect(html).toContain('href="/calles/calle-3/historial"');
     expect(html).toContain("Ver historial de calle");
+  });
+
+  it("la lista sin JavaScript muestra el conteo del marcador agrupado y cada hecho", () => {
+    const html = renderToStaticMarkup(
+      <MapaOperativo
+        filtros={{}}
+        mapa={mapaDe({
+          marcadores: [marcadorDe([HECHO_DE_REPORTE, HECHO_DE_INTERVENCION])],
+          conteos: { reportes: 1, intervenciones: 1, total: 2 },
+        })}
+      />,
+    );
+
+    expect(html).toContain("2 hechos en esta calle");
+    expect(html).toContain("REP-1");
+    expect(html).toContain("Obra");
+    expect(html).toContain("Recibido");
+    expect(html).toContain("Planificada");
   });
 });

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { Aviso, CLASES_DE_ENLACE, CLASES_DE_TARJETA } from "@/shared/ui";
 import type { FiltrosDeMapa } from "../application";
 import type { MapaOperativoAgregado, TerritorioDeMapa } from "../domain";
+import { etiquetaDeRecurso } from "./etiquetasDeRecurso";
 import { FormularioDeFiltrosDeMapa } from "./FormularioDeFiltrosDeMapa";
+import { LeyendaDelMapa } from "./LeyendaDelMapa";
+import { ListaDeMarcadores } from "./ListaDeMarcadores";
 import { MapaVisual } from "./MapaVisual";
 
 type Props = { mapa: MapaOperativoAgregado; filtros: FiltrosDeMapa };
-const etiquetaDe = (recurso: "REPORTE" | "INTERVENCION") =>
-  recurso === "REPORTE" ? "Reporte ciudadano" : "Intervención municipal";
 const conteoDe = (n: number, singular: string, plural: string) =>
   `${n} ${n === 1 ? singular : plural}`;
 const razonDe = (
@@ -48,27 +49,12 @@ export function MapaOperativo({ mapa, filtros }: Props) {
           No hay hechos para los filtros seleccionados.
         </p>
       ) : null}
+      <LeyendaDelMapa leyenda={mapa.leyenda} />
       {mapa.caja === null ? (
         <Aviso tono="aviso">{mensajeSinCalles(mapa.territorioElegido)}</Aviso>
       ) : null}
       <MapaVisual marcadores={mapa.marcadores} caja={mapa.caja} />
-      <ul className={LISTA} aria-label="Marcadores del mapa">
-        {mapa.marcadores.map((marcador) => (
-          <li key={marcador.id} className={FILA}>
-            <Link href={marcador.href} className={CLASES_DE_ENLACE}>
-              {etiquetaDe(marcador.recurso)}: {marcador.etiqueta}
-            </Link>
-            {marcador.historiaHref ? (
-              <>
-                {" · "}
-                <Link href={marcador.historiaHref} className={CLASES_DE_ENLACE}>
-                  Ver historial de calle
-                </Link>
-              </>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      <ListaDeMarcadores marcadores={mapa.marcadores} />
       {mapa.cobertura.length > 0 ? (
         <section
           aria-label="Cobertura faltante"
@@ -81,8 +67,8 @@ export function MapaOperativo({ mapa, filtros }: Props) {
             {mapa.cobertura.map((entrada) => (
               <li key={entrada.id} className={FILA}>
                 <Link href={entrada.href} className={CLASES_DE_ENLACE}>
-                  {etiquetaDe(entrada.recurso)}: {entrada.etiqueta} (
-                  {razonDe(entrada.razon, entrada.calle)})
+                  {etiquetaDeRecurso(entrada.recurso, "lista")}:{" "}
+                  {entrada.etiqueta} ({razonDe(entrada.razon, entrada.calle)})
                 </Link>
               </li>
             ))}

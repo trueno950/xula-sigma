@@ -1,98 +1,18 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
-import type {
-  CoberturaFaltante,
-  MapaOperativoAgregado,
-  MarcadorDeMapa,
-  RazonDeCoberturaFaltante,
-} from "../domain";
-import { cajaDePuntos } from "../domain";
+import type { MapaOperativoAgregado } from "../domain";
+import { cajaDePuntos, construirLeyenda } from "../domain";
 import {
   filtrarIntervenciones,
   filtrarReportes,
   type Hecho,
 } from "./filtrarHechos";
+import { clasificar } from "./marcadores";
 import type {
   CalleParaMapaOperativo,
   FiltrosDeMapa,
   FuentesDeMapa,
 } from "./puertos";
 import { callesDelTerritorio, filtrarPorTerritorio } from "./territorioElegido";
-
-const hrefDe = (recurso: Hecho["recurso"], id: string) =>
-  recurso === "REPORTE" ? `/reportes/detalle/${id}` : `/intervenciones/${id}`;
-const historiaHrefDe = (calleId: string) => `/calles/${calleId}/historial`;
-
-function entradaDe(
-  hecho: Hecho,
-  calle: CalleParaMapaOperativo | undefined,
-): { marcador: MarcadorDeMapa } | { cobertura: CoberturaFaltante } {
-  const href = hrefDe(hecho.recurso, hecho.id);
-  if (calle?.punto) {
-    const punto = calle.punto;
-    const historiaHref = historiaHrefDe(calle.id);
-    return hecho.recurso === "REPORTE"
-      ? {
-          marcador: {
-            recurso: "REPORTE",
-            id: hecho.id,
-            etiqueta: hecho.etiqueta,
-            href,
-            punto,
-            historiaHref,
-          },
-        }
-      : {
-          marcador: {
-            recurso: "INTERVENCION",
-            id: hecho.id,
-            etiqueta: hecho.etiqueta,
-            href,
-            punto,
-            historiaHref,
-          },
-        };
-  }
-  const razon: RazonDeCoberturaFaltante = hecho.calleId
-    ? "CALLE_SIN_PUNTO"
-    : "SIN_CALLE";
-  const calleNombre = calle?.nombre ?? null;
-  return hecho.recurso === "REPORTE"
-    ? {
-        cobertura: {
-          recurso: "REPORTE",
-          id: hecho.id,
-          etiqueta: hecho.etiqueta,
-          href,
-          razon,
-          calle: calleNombre,
-        },
-      }
-    : {
-        cobertura: {
-          recurso: "INTERVENCION",
-          id: hecho.id,
-          etiqueta: hecho.etiqueta,
-          href,
-          razon,
-          calle: calleNombre,
-        },
-      };
-}
-
-function clasificar(
-  hechos: readonly Hecho[],
-  puntos: ReadonlyMap<string, CalleParaMapaOperativo>,
-): { marcadores: MarcadorDeMapa[]; cobertura: CoberturaFaltante[] } {
-  const marcadores: MarcadorDeMapa[] = [];
-  const cobertura: CoberturaFaltante[] = [];
-  for (const hecho of hechos) {
-    const calle = hecho.calleId ? puntos.get(hecho.calleId) : undefined;
-    const entrada = entradaDe(hecho, calle);
-    if ("marcador" in entrada) marcadores.push(entrada.marcador);
-    else cobertura.push(entrada.cobertura);
-  }
-  return { marcadores, cobertura };
-}
 
 const contar = (hechos: readonly Hecho[]) => ({
   reportes: hechos.filter((h) => h.recurso === "REPORTE").length,
@@ -154,6 +74,7 @@ export function crearAgregarMapa(fuentes: FuentesDeMapa) {
       marcadores,
       cobertura,
       conteos,
+      leyenda: construirLeyenda(hechos),
     };
   };
 }

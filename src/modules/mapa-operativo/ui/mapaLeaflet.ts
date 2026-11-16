@@ -1,5 +1,6 @@
 import type { Map as LeafletMap } from "leaflet";
 import type { CajaDeMapa, MarcadorDeMapa } from "../domain";
+import { htmlDeLaVentana, htmlDeMarcador } from "./htmlDeMarcador";
 
 const OSM_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const OSM_ATTRIBUTION =
@@ -7,9 +8,9 @@ const OSM_ATTRIBUTION =
 /**
  * Caja de Yucatan, copiada de `territorio/domain/punto.ts` -no importada,
  * antipatron 8-: aca solo encuadra el mapa, no valida coordenadas. Es la
- * vista de respaldo cuando el territorio elegido no tiene calles ubicadas.
+ * vista de respaldo cuando el territorio elegido no tiene calles ubicadas, y
+ * se exporta porque el test la compara con `maxBounds`.
  */
-/** La caja de respaldo; se exporta porque el test la compara con `maxBounds`. */
 export const LIMITES_DE_YUCATAN: Limites = [
   [19.4333, -90.4667],
   [21.6667, -87.4833],
@@ -30,18 +31,6 @@ const limitesDe = (caja: CajaDeMapa): Limites => [
   [caja.sur, caja.oeste],
   [caja.norte, caja.este],
 ];
-
-const colorDe = (recurso: MarcadorDeMapa["recurso"]) =>
-  recurso === "REPORTE" ? "#c0392b" : "#2563eb";
-
-const escapar = (texto: string) =>
-  texto.replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ] ?? c,
-  );
 
 type Opciones = {
   leaflet: typeof import("leaflet");
@@ -88,6 +77,23 @@ function agregarCapaDeTiles({
   tiles.addTo(mapa);
 }
 
+/**
+ * El pin no es un circulo igual a todos: `divIcon` deja meter el SVG del tipo
+ * y el contador del grupo. `className` propio para no arrastrar la caja
+ * blanca que Leaflet le pone a un `divIcon` sin clase.
+ */
+const iconoDe = (
+  leaflet: typeof import("leaflet"),
+  marcador: MarcadorDeMapa,
+): ReturnType<typeof leaflet.divIcon> =>
+  leaflet.divIcon({
+    className: "mapa-operativo-pin",
+    html: htmlDeMarcador(marcador),
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -16],
+  });
+
 function agregarMarcadores({
   leaflet,
   mapa,
@@ -99,16 +105,11 @@ function agregarMarcadores({
 }): void {
   for (const marcador of marcadores) {
     leaflet
-      .circleMarker([marcador.punto.latitud, marcador.punto.longitud], {
-        color: colorDe(marcador.recurso),
-        fillColor: colorDe(marcador.recurso),
-        fillOpacity: 1,
-        radius: 8,
-        weight: 2,
+      .marker([marcador.punto.latitud, marcador.punto.longitud], {
+        icon: iconoDe(leaflet, marcador),
+        title: marcador.hechos.map((hecho) => hecho.etiqueta).join(", "),
       })
-      .bindPopup(
-        `<a href="${escapar(marcador.href)}">${escapar(marcador.etiqueta)}</a>`,
-      )
+      .bindPopup(htmlDeLaVentana(marcador))
       .addTo(mapa);
   }
 }

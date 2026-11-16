@@ -43,7 +43,10 @@ const contexto = (municipio: "motul" | "ticul") =>
 const idsDe = (
   mapa: Awaited<ReturnType<typeof agregarMapa>>,
 ): readonly string[] =>
-  [...mapa.marcadores, ...mapa.cobertura].map((hecho) => String(hecho.id));
+  [
+    ...mapa.marcadores.flatMap((marcador) => marcador.hechos),
+    ...mapa.cobertura,
+  ].map((hecho) => String(hecho.id));
 
 describe("agregarMapa, contra Postgres real", () => {
   it("sin territorio elegido trae los hechos del municipio y ninguno ajeno", async () => {
@@ -84,6 +87,20 @@ describe("agregarMapa, contra Postgres real", () => {
     );
     expect(idsDe(mapa)).not.toContain(t.reporteDeA);
     expect(mapa.caja).toEqual(cajaDePuntos([PUNTO_B]));
+  });
+
+  it("dos hechos sobre la misma calle comparten un marcador agrupado", async () => {
+    const mapa = await agregarMapa(contexto("motul"), { lugar: t.comisariaB });
+
+    expect(mapa.marcadores).toHaveLength(1);
+    expect(
+      (mapa.marcadores[0]?.hechos ?? [])
+        .map((hecho) => String(hecho.id))
+        .sort(),
+    ).toEqual([String(t.intervencionDeB), String(t.reporteDeB)].sort());
+    expect(
+      mapa.leyenda.tipos.map((entrada) => `${entrada.tipo}:${entrada.conteo}`),
+    ).toEqual(["BACHE:1", "OBRA:1"]);
   });
 
   it("un lugar de otro municipio no muestra ningun hecho", async () => {
