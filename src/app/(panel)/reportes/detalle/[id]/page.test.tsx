@@ -27,6 +27,10 @@ vi.mock("@/modules/reportes", async (importOriginal) => ({
   reportePorId: reportePorIdMock,
   historialDeReporte: historialDeReporteMock,
 }));
+vi.mock("@/modules/intervenciones", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/intervenciones")>()),
+  ProgramarObra: () => <div>formulario de programar obra</div>,
+}));
 
 const { default: PaginaDeDetalleDeReporte } = await import("./page");
 
@@ -115,5 +119,39 @@ describe("detalle de un reporte sin permiso de administrar", () => {
     expect(pagina).not.toContain("Transiciones");
     expect(pagina).not.toContain("Asignar área");
     expect(pagina).toContain("Su rol no permite cambiar el estado");
+  });
+});
+
+describe("programar obra desde el detalle del reporte", () => {
+  it("un reporte recibido ofrece programar obra", async () => {
+    reportePorIdMock.mockResolvedValue(reporte("RECIBIDO"));
+
+    const pagina = await html();
+
+    expect(pagina).toContain("Programar obra");
+    expect(pagina).toContain("formulario de programar obra");
+  });
+
+  it.each(["RESUELTO", "RECHAZADO"] as const)(
+    "un reporte %s ya no admite obra",
+    async (estado) => {
+      reportePorIdMock.mockResolvedValue(reporte(estado));
+
+      const pagina = await html();
+
+      expect(pagina).not.toContain("Programar obra");
+      expect(pagina).not.toContain("formulario de programar obra");
+    },
+  );
+
+  it("un rol sin permiso de administrar reportes no ve el formulario", async () => {
+    contextoActualMock.mockResolvedValue({
+      ayuntamientoId: "motul",
+      usuario: { id: "u2", rol: "OPERADOR" },
+      origen: "web",
+    });
+    reportePorIdMock.mockResolvedValue(reporte("RECIBIDO"));
+
+    expect(await html()).not.toContain("formulario de programar obra");
   });
 });

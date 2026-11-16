@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import {
+  ETIQUETA_DE_TIPO_DE_INTERVENCION,
+  ProgramarObra,
+  TIPOS_DE_INTERVENCION,
+} from "@/modules/intervenciones";
+import {
   AccionesDeReporte,
   comoReporteId,
   DetalleDeReporte,
@@ -21,6 +26,7 @@ import {
   FichaDeDatos,
   FilaDeFicha,
   Migaja,
+  opcionesEtiquetadas,
   PaginaDePanel,
   Panel,
   PantallaDeMensaje,
@@ -128,6 +134,24 @@ export default async function PaginaDeDetalleDeReporte({
           <AccionesDeReporte
             reporteId={reporte.id}
             estadoActual={reporte.estado}
+          />
+        </Panel>
+      ) : null}
+
+      {/*
+        «Programar obra» (S2 de `intervenciones-trazabilidad`): solo para quien
+        administra reportes -la misma regla que exige `programarObraDeReporte`-
+        y solo mientras el reporte admite trabajo. En `RESUELTO`/`RECHAZADO`
+        el caso de uso lo rechazaria, asi que no se ofrece.
+      */}
+      {puedeAdministrar && !esTerminal(reporte.estado) ? (
+        <Panel titulo="Programar obra">
+          <ProgramarObra
+            reporteId={reporte.id}
+            tipos={opcionesEtiquetadas(
+              TIPOS_DE_INTERVENCION,
+              ETIQUETA_DE_TIPO_DE_INTERVENCION,
+            )}
           />
         </Panel>
       ) : null}

@@ -26,8 +26,8 @@ La bandeja de intervenciones existe, pero está vacía y no tiene alta. Un repor
 
 ## Tasks
 
-- [x] **T1** (S4, S2, S3) dominio y casos de uso: tipo `PAVIMENTACION` y migración; `programarObraDeReporte`; cierre automático del reporte al finalizar la intervención; tests unitarios, de integración y de aislamiento — worker — commit: `feat(reportes): programar obra desde el reporte`
-- [ ] **T2** (S1, S2) UI: bandeja y alta de intervenciones, botón «Programar obra» en el detalle del reporte, acciones, filas de `AGENTS.md` y E2E — worker — commit:
+- [x] **T1** (S4, S2, S3) dominio y casos de uso: tipo `PAVIMENTACION` y migración; `programarObraDeReporte`; cierre automático del reporte al finalizar la intervención; tests unitarios, de integración y de aislamiento — worker — commit: `c5f17e2`
+- [x] **T2** (S1, S2) UI: bandeja y alta de intervenciones, botón «Programar obra» en el detalle del reporte, acciones, filas de `AGENTS.md` y E2E — worker — commit:
 - [ ] **T3** (S5) historial de calle con tipo, estado y fecha de la obra — worker — commit:
 - [ ] **T4** (S1-S6) verificador independiente, revisión, PR y merge — verify — commit:
 
@@ -67,3 +67,22 @@ La bandeja de intervenciones existe, pero está vacía y no tiene alta. Un repor
   `intervenciones`, `reportes` e `historial-de-calle` en verde (368 y 120
   pruebas). Enforcement de `puedeAdministrarIntervenciones` para la bandeja y
   para programar obra, que `AGENTS.md` documenta en T2.
+- **L6** — 2026-11-16. T2 (S1, S2). `/intervenciones` deja de ser el texto de
+  «todavía no está disponible» y pasa a ser la bandeja real: listado con
+  tipo, estado, lugar y fecha civil, filtros por `estado`/`tipo`/`lugarId` en
+  un solo `<form method="get">` con un chip por filtro puesto, y enlace de
+  alta que solo ve quien administra. El alta vive en
+  `/intervenciones/alta` (`altaDeIntervencionAction`, `<form action>` nativo,
+  Zod primero, `ayuntamientoId` del contexto) y `ProgramarObra` en el detalle
+  del reporte (`programarObraAction`, misma forma, sin pedir ubicación porque
+  se copia del reporte). Las dos acciones y sus filas quedaron en la tabla de
+  excepciones de `AGENTS.md`. El alta exige `puedeAdministrarIntervenciones`
+  como pide S1 -lo que quedó escrito también en el spec de `openspec/`-, aunque
+  `registrarIntervencion` siga admitiendo `puedeEscribir` para el mostrador.
+  Tests: unitarios de `listarIntervenciones`, de las dos acciones (validación,
+  permiso, lista blanca de mensajes, `ayuntamientoId` del cliente ignorado), de
+  la bandeja, del alta y de los tres componentes; E2E
+  `e2e/intervenciones.spec.ts` con cinco casos: bandeja, filtros, alta desde la
+  bandeja, «programar → en atención → finalizar → resuelto» y el alta sin
+  JavaScript. `pnpm check` en verde, `pnpm build` en verde y los cinco E2E en
+  verde contra `pnpm start` en el puerto 3107.

@@ -5,6 +5,7 @@ import {
   crearCorregirIntervencion,
   crearIntervencionConReferencias,
   crearIntervencionPorId,
+  crearListarIntervenciones,
   crearListarIntervencionesParaMapa,
   crearProgramarObraDeReporte,
   crearRegistrarIntervencion,
@@ -15,6 +16,7 @@ import {
   crearLectorDeUbicacionesPorTerritorio,
   crearReportesParaObraPorReportes,
   lectorDeIntervencionesDeMapaSql,
+  lectorDeIntervencionesSql,
   repositorioDeIntervencionesSql,
 } from "./infrastructure";
 import {
@@ -37,6 +39,9 @@ export const intervencionConReferencias = crearIntervencionConReferencias(
 );
 export const listarIntervencionesParaMapa = crearListarIntervencionesParaMapa(
   lectorDeIntervencionesDeMapaSql,
+);
+export const listarIntervenciones = crearListarIntervenciones(
+  lectorDeIntervencionesSql,
 );
 export const listarIntervencionesDeCalleEnTransaccion = (
   tx: TransaccionTenant,

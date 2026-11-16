@@ -3,6 +3,7 @@ export * from "./cambiarEstadoDeIntervencion";
 export * from "./corregirIntervencion";
 export * from "./intervencionConReferencias";
 export * from "./intervencionPorId";
+export * from "./listarIntervenciones";
 export * from "./listarIntervencionesParaMapa";
 export * from "./programarObraDeReporte";
 export * from "./puertos";
