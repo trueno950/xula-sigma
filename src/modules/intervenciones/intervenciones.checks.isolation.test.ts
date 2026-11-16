@@ -14,6 +14,7 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
+import { intervenciones } from "./infrastructure/esquema";
 
 let gente: GentePorMunicipio;
 
@@ -53,7 +54,23 @@ const insertarCon = (lugarId: string, tipo: string, estado: string) =>
     `),
   );
 
+const tiposGuardados = () =>
+  withTenant(motul, (tx) =>
+    tx.select({ tipo: intervenciones.tipo }).from(intervenciones),
+  );
+
 describe("CHECKs de intervenciones", () => {
+  it("acepta PAVIMENTACION, el tipo que agrego la migracion 0025", async () => {
+    const lugarId = await lugarDe();
+
+    await expect(
+      insertarCon(lugarId, "PAVIMENTACION", "PLANIFICADA"),
+    ).resolves.toBeDefined();
+    await expect(tiposGuardados()).resolves.toEqual([
+      { tipo: "PAVIMENTACION" },
+    ]);
+  });
+
   it("rechaza un tipo fuera de la union cerrada", async () => {
     const lugarId = await lugarDe();
     const motivo = await motivoDeFalla(() =>

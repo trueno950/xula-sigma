@@ -8,6 +8,7 @@ import {
   ValidacionError,
 } from "@/shared/lib/errores";
 import { hoyEnMerida } from "@/shared/lib/fecha";
+import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import {
   comoIntervencionId,
@@ -17,8 +18,11 @@ import {
   type TipoDeIntervencion,
 } from "../domain";
 import { guardarIntervencionEnTransaccion } from "./altaDeIntervencion";
-import type { RepositorioDeIntervenciones } from "./puertos";
-import type { ReportesParaObra } from "./puertosDeReportes";
+import type {
+  DatosDeRegistroDeIntervencion,
+  RepositorioDeIntervenciones,
+} from "./puertos";
+import type { ReporteDeOrigen, ReportesParaObra } from "./puertosDeReportes";
 
 /**
  * Lo que elige la operadora al programar obra desde un reporte (S2). La
@@ -43,6 +47,73 @@ const validarEntrada = (datos: unknown): EntradaDeProgramacionDeObra => {
   if (resultado.success) return resultado.data;
   throw new ValidacionError();
 };
+
+type SolicitudDeObra = {
+  tx: TransaccionTenant;
+  contexto: ContextoActual;
+  repositorio: Pick<RepositorioDeIntervenciones, "guardar">;
+  reportes: ReportesParaObra;
+  entrada: EntradaDeProgramacionDeObra;
+  hoy: () => string;
+};
+
+/**
+ * La fila que se guarda: tipo elegido, `PLANIFICADA`, la fecha de hoy y la
+ * ubicacion copiada del reporte. El reporte de origen queda en `reporteId`, que
+ * es el vinculo que despues cierra el reporte solo (S3).
+ */
+const datosDeLaObra = ({
+  contexto,
+  reporte,
+  entrada,
+  hoy,
+}: {
+  contexto: ContextoActual;
+  reporte: ReporteDeOrigen;
+  entrada: EntradaDeProgramacionDeObra;
+  hoy: () => string;
+}): DatosDeRegistroDeIntervencion => ({
+  id: comoIntervencionId(randomUUID()),
+  ayuntamientoId: contexto.ayuntamientoId,
+  tipo: entrada.tipo,
+  estado: "PLANIFICADA",
+  fechaDeOcurrencia: hoy(),
+  lugarId: reporte.lugarId,
+  calleId: reporte.calleId,
+  reporteId: reporte.id,
+  descripcion: entrada.descripcion,
+  registradoPorUsuarioId: contexto.usuario.id,
+});
+
+/**
+ * Lectura del reporte, su movimiento a `EN_ATENCION` y el alta de la obra,
+ * todo con el `tx` de quien llama: si el alta falla, el movimiento se revierte
+ * con ella.
+ */
+async function programarEnTenant(
+  solicitud: SolicitudDeObra,
+): Promise<IntervencionId> {
+  const { tx, contexto, repositorio, reportes, entrada, hoy } = solicitud;
+
+  const reporte = await reportes.de(tx, entrada.reporteId);
+  if (!reporte) throw new NoEncontradoError();
+
+  const movimiento = await reportes.mover(tx, {
+    reporteId: reporte.id,
+    estadoNuevo: "EN_ATENCION",
+    contexto,
+  });
+  if (movimiento === "AUSENTE") throw new NoEncontradoError();
+  if (movimiento === "CERRADO") throw new ReporteNoProgramableError();
+
+  return guardarIntervencionEnTransaccion({
+    tx,
+    contexto,
+    repositorio,
+    accion: "PROGRAMAR_OBRA",
+    datos: datosDeLaObra({ contexto, reporte, entrada, hoy }),
+  });
+}
 
 /**
  * «Programar y luego terminar» (S2): crea la intervencion `PLANIFICADA` ligada
@@ -74,36 +145,15 @@ export function crearProgramarObraDeReporte({
 
     const entrada = validarEntrada(datos);
 
-    return withTenant(contexto.ayuntamientoId, async (tx) => {
-      const reporte = await reportes.de(tx, entrada.reporteId);
-      if (!reporte) throw new NoEncontradoError();
-
-      const movimiento = await reportes.mover(tx, {
-        reporteId: reporte.id,
-        estadoNuevo: "EN_ATENCION",
-        contexto,
-      });
-      if (movimiento === "AUSENTE") throw new NoEncontradoError();
-      if (movimiento === "CERRADO") throw new ReporteNoProgramableError();
-
-      return guardarIntervencionEnTransaccion({
+    return withTenant(contexto.ayuntamientoId, (tx) =>
+      programarEnTenant({
         tx,
         contexto,
         repositorio,
-        accion: "PROGRAMAR_OBRA",
-        datos: {
-          id: comoIntervencionId(randomUUID()),
-          ayuntamientoId: contexto.ayuntamientoId,
-          tipo: entrada.tipo,
-          estado: "PLANIFICADA",
-          fechaDeOcurrencia: hoy(),
-          lugarId: reporte.lugarId,
-          calleId: reporte.calleId,
-          reporteId: reporte.id,
-          descripcion: entrada.descripcion,
-          registradoPorUsuarioId: contexto.usuario.id,
-        },
-      });
-    });
+        reportes,
+        entrada,
+        hoy,
+      }),
+    );
   };
 }

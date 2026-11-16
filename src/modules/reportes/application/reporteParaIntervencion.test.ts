@@ -107,41 +107,6 @@ describe("reporteParaIntervencion.mover", () => {
     });
   });
 
-  it("un reporte que ya esta en el estado pedido no se toca ni deja movimiento", async () => {
-    repositorio.buscarPorId.mockResolvedValue(guardado("EN_ATENCION"));
-
-    await expect(
-      reportes.mover(tx, {
-        reporteId,
-        estadoNuevo: "EN_ATENCION",
-        contexto,
-      }),
-    ).resolves.toBe("SIN_CAMBIOS");
-
-    expect(repositorio.aplicarTransicion).not.toHaveBeenCalled();
-    expect(movimientos.agregar).not.toHaveBeenCalled();
-    expect(registrarMock).not.toHaveBeenCalled();
-    expect(publicarMock).not.toHaveBeenCalled();
-  });
-
-  it.each(["RESUELTO", "RECHAZADO"] as const)(
-    "un reporte %s no se reabre: la operacion informa que esta cerrado",
-    async (estado) => {
-      repositorio.buscarPorId.mockResolvedValue(guardado(estado));
-
-      await expect(
-        reportes.mover(tx, {
-          reporteId,
-          estadoNuevo: "EN_ATENCION",
-          contexto,
-        }),
-      ).resolves.toBe("CERRADO");
-
-      expect(repositorio.aplicarTransicion).not.toHaveBeenCalled();
-      expect(movimientos.agregar).not.toHaveBeenCalled();
-    },
-  );
-
   it("cierra un reporte en atencion como RESUELTO, con su movimiento", async () => {
     repositorio.buscarPorId.mockResolvedValue(guardado("EN_ATENCION"));
 

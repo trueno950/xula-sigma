@@ -448,8 +448,9 @@ Notas que no caben en la tabla, una por fila que las necesita:
   -un lugar o una calle de otro municipio, que `registrarIntervencion` lee
   bajo RLS antes de insertar-, `ValidacionError` y el fallo de resolucion del
   tenant. **El alta exige `puedeAdministrarIntervenciones`**, no
-  `puedeEscribir` como el mostrador de `padron`: la bandeja programa y
-  administra trabajo, y es la regla que fija S1.
+  `puedeEscribir`, que es con lo que `registrarIntervencion` autoriza la
+  captura de mostrador: la bandeja programa y administra trabajo, y es la
+  regla que fija S1.
 - `programarObraAction` (`intervenciones`, S2 de
   `intervenciones-trazabilidad`): el `<form>` vive en el detalle del reporte y
   no pide ubicacion -se copia del reporte-. Redacta `NoAutorizadoError`,

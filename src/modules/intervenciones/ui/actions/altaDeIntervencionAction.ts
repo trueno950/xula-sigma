@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { contextoActual } from "@/shared/auth";
+import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeAdministrarIntervenciones } from "@/shared/auth/roles";
 import {
   NoAutorizadoError,
@@ -37,6 +38,8 @@ const esquemaDeEntrada = z.strictObject({
   descripcion: z.string().trim().min(10).max(1000),
 });
 
+type EntradaDelAlta = z.infer<typeof esquemaDeEntrada>;
+
 const MENSAJE_FORMULARIO_INVALIDO = "Revise los datos de la intervención.";
 const MENSAJE_GENERICO =
   "No se pudo registrar la intervención. Intente de nuevo.";
@@ -62,9 +65,32 @@ const mensajeDeError = (error: unknown): string => {
   return MENSAJE_GENERICO;
 };
 
-export async function altaDeIntervencionAction(
-  formData: FormData,
-): Promise<void> {
+/**
+ * El alta con su guarda de rol, en un solo lugar: la accion la invoca dentro
+ * del `try` que ya traduce cualquier rechazo al mensaje de la operadora.
+ */
+async function registrarComoAdministracion(
+  entrada: EntradaDelAlta,
+  contexto: ContextoActual,
+): Promise<string> {
+  if (!puedeAdministrarIntervenciones(contexto.usuario.rol)) {
+    throw new NoAutorizadoError();
+  }
+
+  return registrarIntervencion(
+    {
+      tipo: entrada.tipo,
+      fechaDeOcurrencia: entrada.fechaDeOcurrencia,
+      lugarId: entrada.lugarId,
+      calleId: entrada.calleId ?? null,
+      reporteId: null,
+      descripcion: entrada.descripcion,
+    },
+    contexto,
+  );
+}
+
+const leerEntrada = (formData: FormData): EntradaDelAlta => {
   const analisis = esquemaDeEntrada.safeParse({
     tipo: formData.get("tipo"),
     fechaDeOcurrencia: formData.get("fechaDeOcurrencia"),
@@ -74,41 +100,28 @@ export async function altaDeIntervencionAction(
   });
 
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
-    return;
+    return redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
   }
+
+  return analisis.data;
+};
+
+export async function altaDeIntervencionAction(
+  formData: FormData,
+): Promise<void> {
+  const entrada = leerEntrada(formData);
 
   const contexto = await contextoActual().catch((error) =>
     redirigirConError(mensajeDeError(error)),
   );
-
   if (!contexto) redirect("/acceso");
-
-  if (!puedeAdministrarIntervenciones(contexto.usuario.rol)) {
-    redirigirConError(new NoAutorizadoError().message);
-    return;
-  }
-
-  const { tipo, fechaDeOcurrencia, lugarId, calleId, descripcion } =
-    analisis.data;
 
   let id: string;
 
   try {
-    id = await registrarIntervencion(
-      {
-        tipo,
-        fechaDeOcurrencia,
-        lugarId,
-        calleId: calleId ?? null,
-        reporteId: null,
-        descripcion,
-      },
-      contexto,
-    );
+    id = await registrarComoAdministracion(entrada, contexto);
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
-    return;
+    return redirigirConError(mensajeDeError(error));
   }
 
   revalidatePath("/intervenciones");

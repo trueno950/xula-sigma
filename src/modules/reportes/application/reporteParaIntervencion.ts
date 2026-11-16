@@ -5,6 +5,7 @@ import { comoReporteId, type EstadoDeReporte, esTerminal } from "../domain";
 import type { RepositorioDeReportes } from "./puertos";
 import type { RegistroDeMovimientos } from "./puertosDeMovimientos";
 import { aplicarTransicionConMovimiento } from "./transicionDeReporte";
+import { validarTransicion } from "./validacionDeCambioDeEstado";
 
 /**
  * La cara de `reportes` que necesita una obra de `intervenciones` (S2 y S3 de
@@ -80,6 +81,10 @@ export function crearReporteParaIntervencion({
       if (!reporte) return "AUSENTE";
       if (reporte.estado === estadoNuevo) return "SIN_CAMBIOS";
       if (esTerminal(reporte.estado)) return "CERRADO";
+      // El mismo cuadro de transiciones que el camino manual de la operadora:
+      // los dos estados que llegan por aca estan en la tabla, y si alguno
+      // dejara de estarlo el rechazo es de dominio, no un UPDATE silencioso.
+      validarTransicion(reporte, estadoNuevo);
 
       await aplicarTransicionConMovimiento({
         repositorio,

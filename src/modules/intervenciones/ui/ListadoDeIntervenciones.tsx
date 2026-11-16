@@ -40,9 +40,8 @@ const nombresDeLugar = (lugares: readonly OpcionDeLista[]) =>
 
 /**
  * La bandeja de S1: tipo, estado, lugar y fecha de ocurrencia de cada obra,
- * con la fila entera como enlace a su detalle. La fecha es civil y se
- * formatea por `shared/lib/fecha`, nunca con `getFullYear`/`getMonth`: el
- * servidor corre en UTC y la medianoche del dia se correria un dia atras.
+ * con la fila entera como enlace a su detalle. La fecha es civil y se formatea
+ * por `shared/lib/fecha` (`AGENTS.md`, "Fecha y hora").
  */
 export function ListadoDeIntervenciones({
   intervenciones,

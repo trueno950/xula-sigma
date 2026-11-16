@@ -102,3 +102,40 @@ La bandeja de intervenciones existe, pero está vacía y no tiene alta. Un repor
   del E2E de `e2e/intervenciones.spec.ts`. `pnpm check` en verde, `pnpm build`
   en verde y los cinco E2E en verde contra `pnpm start` en el puerto 3107.
   `openspec/specs/historial-de-calle/spec.md` gana el requisito de la obra.
+- **L8** — 2026-11-17. Verificador independiente (T4 en curso): **pasa**
+  S1-S6 sobre los cuatro commits de la rama —unit 2596/2596, integración 160
+  archivos / 599 pruebas, `drizzle-kit check` OK— con **un bloqueante** y cinco
+  avisos, ya corregidos en un commit de corrección:
+  - **B1 (bloqueante)**: `e2e/calles.spec.ts` seguía afirmando «La bandeja de
+    intervenciones todavía no está disponible.», que S1 borró. Ahora afirma la
+    bandeja real: el enlace al detalle de la intervención sembrada por el
+    escenario. El segundo fallo que reportó el verificador
+    (`duplicate key lugares_una_cabecera`) era cascada del primero: con el
+    test entero en verde, los dos casos de `calles.spec.ts` pasan.
+  - **Regresión de atomicidad** (pedida por el verificador):
+    `programarObra.atomicidad.integration.test.ts`, con un repositorio cuyo
+    `guardar` revienta. Prueba que si el alta de la obra falla el reporte queda
+    `RECIBIDO` con un solo movimiento, sin obra y con solo `REGISTRAR_REPORTE`
+    en bitácora; y que la obra que se programa y finaliza deja
+    `REGISTRAR_REPORTE` + `CAMBIAR_ESTADO_REPORTE` ×2.
+  - **A1**: las cuatro funciones de más de 30 líneas de código se partieron sin
+    cambiar comportamiento (`altaDeIntervencionAction` 42→17,
+    `cambiarEstadoDeIntervencion` 43→19, `programarObraDeReporte` 36→19,
+    `programarObraAction` 35→9).
+  - **A2**: la nota de `AGENTS.md` contrapone el alta con `registrarIntervencion`
+    -que es quien sigue autorizando con `puedeEscribir`-, no con el mostrador de
+    `padron`.
+  - **A3**: `reporteParaIntervencion.mover` ahora llama a `validarTransicion`,
+    el mismo cuadro que el camino manual, con su prueba de que una transición
+    fuera de la tabla no escribe (`reporteParaIntervencion.transiciones.test.ts`,
+    que además baja el archivo original de las 200 líneas).
+  - **A4**: `intervenciones.checks.isolation.test.ts` afirma que el CHECK de la
+    base acepta `PAVIMENTACION`.
+  - **A5**: el comentario de `ListadoDeIntervenciones` quedó como puntero a
+    `AGENTS.md` en vez de repetir la regla de `shared/lib/fecha`.
+  Chequeos de la corrección: `pnpm reglas` y `pnpm check` en verde,
+  `vitest related --run --project unit` 45 archivos / 248 pruebas,
+  integración de `intervenciones`/`reportes`/`historial-de-calle` 41 archivos /
+  128 pruebas, `pnpm build` en verde y el E2E **completo** 92/92 contra
+  `pnpm start` en el puerto 3107 (más `calles.spec.ts` aislado 2/2). T4 sigue
+  abierta: revisión, PR y merge.

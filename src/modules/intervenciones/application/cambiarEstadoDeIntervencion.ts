@@ -16,6 +16,7 @@ import {
   type EstadoDeIntervencion,
   esTerminal,
   IntervencionCerradaError,
+  type IntervencionId,
   TransicionInvalidaError,
   transicionValida,
 } from "../domain";
@@ -69,6 +70,85 @@ async function cerrarReporteLigado({
   if (movimiento === "AUSENTE") throw new NoEncontradoError();
 }
 
+type SolicitudDeCambio = {
+  tx: TransaccionTenant;
+  contexto: ContextoActual;
+  repositorio: Pick<
+    RepositorioDeIntervenciones,
+    "buscarPorId" | "aplicarTransicion"
+  >;
+  reportes: Pick<ReportesParaObra, "mover">;
+  entrada: { id: string; estadoNuevo: EstadoDeIntervencion };
+  id: IntervencionId;
+};
+
+/**
+ * Lee la fila, valida la transicion contra la tabla del dominio y la aplica.
+ * Devuelve la intervencion previa, que es lo que `cerrarReporteLigado`
+ * necesita para saber si tenia reporte.
+ */
+async function transicionar({
+  tx,
+  repositorio,
+  entrada,
+  id,
+}: Pick<
+  SolicitudDeCambio,
+  "tx" | "repositorio" | "entrada" | "id"
+>): Promise<IntervencionGuardada> {
+  const actual = await repositorio.buscarPorId(tx, id);
+  if (!actual) throw new NoEncontradoError();
+
+  const estadoActual = actual.estado;
+  if (esTerminal(estadoActual)) throw new IntervencionCerradaError();
+  if (!transicionValida(estadoActual, entrada.estadoNuevo)) {
+    throw new TransicionInvalidaError();
+  }
+
+  const aplicada = await repositorio.aplicarTransicion(tx, {
+    id,
+    estadoAnterior: estadoActual,
+    estadoNuevo: entrada.estadoNuevo,
+  });
+  if (!aplicada) throw new NoEncontradoError();
+
+  return actual;
+}
+
+/**
+ * El cambio completo dentro de la transaccion de `withTenant`: transicion,
+ * cierre del reporte ligado, traza y publicacion del estado nuevo. La guarda
+ * de rol y la validacion del borde se quedan en el caso de uso, antes de
+ * abrir la transaccion.
+ */
+async function aplicarElCambio(solicitud: SolicitudDeCambio): Promise<void> {
+  const { tx, contexto, repositorio, reportes, entrada, id } = solicitud;
+  const actual = await transicionar({ tx, repositorio, entrada, id });
+
+  await cerrarReporteLigado({
+    tx,
+    contexto,
+    actual,
+    estadoNuevo: entrada.estadoNuevo,
+    reportes,
+  });
+
+  await registrar(tx, {
+    ayuntamientoId: contexto.ayuntamientoId,
+    actor: contexto.usuario.id,
+    origen: contexto.origen,
+    accion: "CAMBIAR_ESTADO_INTERVENCION",
+    entidad: "intervenciones",
+    entidadId: entrada.id,
+  });
+
+  await publicarActualizacion(tx, contexto.ayuntamientoId, {
+    tipo: "intervencion",
+    id: entrada.id,
+    cambio: "estado",
+  });
+}
+
 export function crearCambiarEstadoDeIntervencion({
   repositorio,
   reportes,
@@ -88,45 +168,16 @@ export function crearCambiarEstadoDeIntervencion({
     }
 
     const entrada = validarEntrada(datos);
-    const id = comoIntervencionId(entrada.id);
-    await withTenant(contexto.ayuntamientoId, async (tx) => {
-      const actual = await repositorio.buscarPorId(tx, id);
-      if (!actual) throw new NoEncontradoError();
 
-      const estadoActual = actual.estado;
-      if (esTerminal(estadoActual)) throw new IntervencionCerradaError();
-      if (!transicionValida(estadoActual, entrada.estadoNuevo)) {
-        throw new TransicionInvalidaError();
-      }
-      const aplicada = await repositorio.aplicarTransicion(tx, {
-        id,
-        estadoAnterior: actual.estado,
-        estadoNuevo: entrada.estadoNuevo,
-      });
-      if (!aplicada) throw new NoEncontradoError();
-
-      await cerrarReporteLigado({
+    return withTenant(contexto.ayuntamientoId, (tx) =>
+      aplicarElCambio({
         tx,
         contexto,
-        actual,
-        estadoNuevo: entrada.estadoNuevo,
+        repositorio,
         reportes,
-      });
-
-      await registrar(tx, {
-        ayuntamientoId: contexto.ayuntamientoId,
-        actor: contexto.usuario.id,
-        origen: contexto.origen,
-        accion: "CAMBIAR_ESTADO_INTERVENCION",
-        entidad: "intervenciones",
-        entidadId: entrada.id,
-      });
-
-      await publicarActualizacion(tx, contexto.ayuntamientoId, {
-        tipo: "intervencion",
-        id: entrada.id,
-        cambio: "estado",
-      });
-    });
+        entrada,
+        id: comoIntervencionId(entrada.id),
+      }),
+    );
   };
 }
