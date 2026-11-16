@@ -7,7 +7,7 @@ Hoy el mapa pinta todos los hechos como círculos iguales y lo limita la caja de
 - **S1** — Selector de territorio en `/mapa-operativo`. Las opciones son «Todo el municipio», la cabecera y cada comisaría (`listarRaices`). Viaja como parámetro GET `?lugar=` y filtra reportes e intervenciones por el subárbol del lugar elegido. El criterio de pertenencia (lugar del hecho o lugar de la calle) se fija con un test. Un `?lugar=` de otro municipio o inexistente no muestra hechos ajenos.
 - **S2** — «BLIEARAS POR EJEMPLO LA LOCALIDAD»: la vista queda bloqueada al territorio elegido. `maxBounds` es la caja de las calles ubicadas de ese territorio, con margen, y `minZoom` no deja alejarse a otras localidades. Con «Todo el municipio», la caja es la de todas las calles del municipio. Si el territorio no tiene calles ubicadas, el mapa vuelve a la vista de Yucatán y lo avisa; nunca inventa un centro.
 - **S3** — «MARCAR CON ICONOS LOS REPORTES»: un ícono por tipo de reporte (bache, alumbrado, fuga, basura, parque, otro) y por tipo de intervención, un color por estado y una leyenda con conteos. Los colores salen del servidor (antipatrón 13). Los íconos son SVG en el código, nunca archivos escritos al disco (regla 10).
-- **S4** — Varios hechos sobre la misma calle comparten punto: se agrupan en un marcador con contador. Su ventana lista folio, tipo, estado y fecha de cada hecho, sin datos personales.
+- **S4** — Varios hechos sobre la misma calle comparten punto: se agrupan en un marcador con contador. Su ventana lista folio —o el tipo, cuando el hecho es una intervención—, tipo y estado de cada hecho, sin datos personales. **La fecha queda fuera de este bloque**: ni `listarReportesParaMapa` ni `listarIntervencionesParaMapa` la exponen, y agregarla obliga a tocar `reportes` e `intervenciones`, que el bloque A está cambiando en paralelo. Pasa al bloque C (`odd/tasks/gestion-municipal.md`) cuando A esté fusionado.
 - **S5** — Sin JavaScript sigue estando la lista de hechos que ya existe, ahora también filtrada por territorio. La leyenda es HTML del servidor.
 - **S6** — Reglas de `AGENTS.md`:
   - todo pasa por `withTenant`;
@@ -18,7 +18,7 @@ Hoy el mapa pinta todos los hechos como círculos iguales y lo limita la caja de
 ## Tasks
 
 - [x] **T1** (S1, S2, S5) selector de territorio, filtro por subárbol y vista bloqueada a la caja de sus calles; tests de dominio, de integración y E2E — worker — commit: fa73040
-- [x] **T2** (S3, S4, S5) íconos por tipo, color por estado, leyenda y agrupación por calle — worker — commit: (pendiente del padre)
+- [x] **T2** (S3, S4, S5) íconos por tipo, color por estado, leyenda y agrupación por calle — worker — commit: b79f29b
 - [ ] **T3** (S1-S6) verificador independiente, revisión, PR y merge — verify — commit:
 
 ## Log
@@ -46,3 +46,13 @@ Hoy el mapa pinta todos los hechos como círculos iguales y lo limita la caja de
   - RED: 15 archivos y 44 tests fallando por las razones esperadas —`agruparEnCalles`, `construirLeyenda`, `colorDeEstado` e `iconoDe` no existían, el marcador no tenía `hechos` y `PAVIMENTACION` no estaba en la copia del vocabulario—.
   - GREEN: `vitest related --run --project unit` 21 archivos / 131 tests; integración 6/6 contra `xula_test_b`; `pnpm typecheck`, `pnpm layers` y `pnpm reglas` en 0; `pnpm check` en 0 con sus 52 avisos previos fuera de esta superficie; `pnpm build` en 0; E2E `mapa-operativo.spec.ts` 5/5 en el puerto 3108 (incluye el pin agrupado con contador y los conteos de la leyenda).
   - Queda en manos del padre el commit de T2; el árbol queda listo para `git add`.
+- **L5** — 2026-11-16. Veredicto del verificador independiente y corrección acotada, sin commit (las escrituras de git son del padre).
+  - Veredicto: S1, S2, S3, S5 y S6 cumplidos; S4 bloqueado por la fecha. Avisos: el cuerpo de `agregarMapa` pasaba de 30 líneas, y un `?lugar=` con un lugar que no es raíz —una colonia del propio municipio— filtraba el mapa pero dejaba el selector en «Todo el municipio».
+  - Decisión del padre sobre el bloqueo: la fecha de la ventana de S4 sale del bloque B. S4 quedó reescrita arriba y la fecha pasa al bloque C cuando A esté fusionado. Se borró la aserción que fijaba su ausencia en `ui/htmlDeMarcador.test.ts`: era el único sitio que la nombraba, y ahora la decisión vive acá.
+  - Sonda de XSS durable en `ui/htmlDeMarcador.test.ts`: lista blanca `ul/li/a/span/svg/path` y un marcador con `etiqueta`, `href`, `etiquetaDeTipo`, `etiquetaDeEstado` y color hostiles. Nada que no esté en la lista sobrevive en `htmlDeMarcador` ni en `htmlDeLaVentana`.
+  - El color era el único valor que entraba a una hoja de estilo; ahora `domain/coloresDeEstado.ts` exporta `colorVerificado`, que exige la forma `#rrggbb` y cae al gris neutro si no la tiene. El test lo fija con `red\"><script>alert(1)</script>`.
+  - `application/territorioElegido.test.ts`: un hecho cuya calle tiene `punto: null` sigue resolviendo por el `lugarId` de la calle, no por el suyo; entra al subárbol de esa calle y va a cobertura faltante.
+  - `?lugar=` que no es raíz: `raizElegida` en `application/territorioElegido.ts` decide, y un lugar que no es raíz no es una selección —no filtra, vale «todo el municipio» y el selector queda en su marcador—. Fijado en `agregarMapa.territorio.test.ts` (colonia, lugar ajeno, id inexistente) y en la integración contra Postgres, que además comprueba que no se cuela un hecho de Ticul: eso lo sigue garantizando RLS.
+  - `agregarMapa.ts` partido en `leerMapa` (las cuatro lecturas juntas y el subárbol, que espera a las raíces) y `componerMapa` (filtro, marcadores, caja, leyenda). El cuerpo de `agregarMapa` quedó en dos líneas, sin cambio de comportamiento.
+  - RED: 5 tests fallando por las razones esperadas —el color hostil se escribía, los tres casos de lugar no raíz seguían filtrando y la comisaría sin calles devolvía la caja del municipio—.
+  - GREEN: unit 21 archivos / 137 tests; integración 7/7 contra `xula_test_b`; `pnpm reglas`, `pnpm biome check`, `pnpm typecheck` y `pnpm layers` en 0; `pnpm build` en 0; E2E `mapa-operativo.spec.ts` 5/5 en el puerto 3108.

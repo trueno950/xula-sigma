@@ -133,6 +133,7 @@ export const sembrarTerritorioDelMapa = async (gente: GentePorMunicipio) => {
 
   return {
     comisariaA,
+    coloniaDeA,
     comisariaB,
     comisariaAjena,
     reporteDeA: await reporteEn({

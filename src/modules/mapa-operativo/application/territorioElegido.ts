@@ -1,5 +1,8 @@
 import type { Hecho } from "./filtrarHechos";
-import type { CalleParaMapaOperativo } from "./puertos";
+import type {
+  CalleParaMapaOperativo,
+  TerritorioParaMapaOperativo,
+} from "./puertos";
 
 export type PuntosPorCalle = ReadonlyMap<string, CalleParaMapaOperativo>;
 
@@ -14,6 +17,19 @@ export type PuntosPorCalle = ReadonlyMap<string, CalleParaMapaOperativo>;
 export const lugarDelHecho = (hecho: Hecho, puntos: PuntosPorCalle): string =>
   (hecho.calleId === null ? undefined : puntos.get(hecho.calleId)?.lugarId) ??
   hecho.lugarId;
+
+/**
+ * Solo una raiz del arbol es un territorio elegible. Un `?lugar=` con otro id
+ * -una colonia escrita a mano, un lugar de otro municipio, uno que ya no
+ * existe- no es una seleccion: la pantalla no puede quedar mostrando «Todo el
+ * municipio» en el selector y los hechos de una colonia en el mapa, ni con la
+ * vista bloqueada a una caja que no lleva nombre.
+ */
+export const raizElegida = (
+  territorios: readonly TerritorioParaMapaOperativo[],
+  lugar: string | undefined,
+): TerritorioParaMapaOperativo | null =>
+  territorios.find((territorio) => territorio.id === lugar) ?? null;
 
 /**
  * `permitidos` en `null` es «todo el municipio»: el `?lugar=` viaja solo

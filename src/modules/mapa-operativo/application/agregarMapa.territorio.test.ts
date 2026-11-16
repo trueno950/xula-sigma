@@ -16,6 +16,7 @@ const contexto: ContextoActual = {
 const CABECERA = "cabecera-1";
 const COMISARIA = "comisaria-1";
 const ARISTA = "asistencia-1";
+const SIN_CALLES = "comisaria-sin-calles";
 const AJENO = "lugar-de-otro-municipio";
 
 const calleDe = (
@@ -86,6 +87,7 @@ beforeEach(() => {
   vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([
     { id: CABECERA, nombre: "Motul" },
     { id: COMISARIA, nombre: "Comisaría de Kinchil" },
+    { id: SIN_CALLES, nombre: "Comisaría sin calles" },
   ]);
   vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValue([ARISTA]);
 });
@@ -104,6 +106,7 @@ describe("agregarMapa: territorio elegido", () => {
     expect(mapa.territorios).toEqual([
       { id: CABECERA, nombre: "Motul" },
       { id: COMISARIA, nombre: "Comisaría de Kinchil" },
+      { id: SIN_CALLES, nombre: "Comisaría sin calles" },
     ]);
     expect(mapa.territorioElegido).toBeNull();
     expect(foliosDe(mapa)).toEqual(["Obra", "REP-COMISARIA", "REP-SIN-CALLE"]);
@@ -145,26 +148,42 @@ describe("agregarMapa: territorio elegido", () => {
     expect(mapa.conteos).toEqual({ reportes: 1, intervenciones: 0, total: 1 });
   });
 
-  it("un lugar de otro municipio o inexistente no deja pasar hechos ajenos", async () => {
-    vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValueOnce([]);
+  /**
+   * Solo una raiz es un territorio elegible. Con un `?lugar=` que no lo sea
+   * -una colonia, un id de otro municipio, uno borrado- la pantalla no puede
+   * mostrar el selector en una opcion y los hechos de otra, asi que vale
+   * «todo el municipio»: no se filtra y el selector queda en su marcador.
+   */
+  it.each([
+    ["una colonia del propio municipio", ARISTA],
+    ["un lugar de otro municipio", AJENO],
+    ["un id que ya no existe", "99999999-9999-4999-8999-999999999999"],
+  ])("un lugar que no es una raiz (%s) no acota nada", async (_caso, lugar) => {
+    const mapa = await crearAgregarMapa(fuentes)(contexto, { lugar });
 
-    const mapa = await crearAgregarMapa(fuentes)(contexto, { lugar: AJENO });
-
-    expect(mapa.marcadores).toEqual([]);
-    expect(mapa.cobertura).toEqual([]);
-    expect(mapa.caja).toBeNull();
-    expect(mapa.estado).toBe("VACIO");
     expect(mapa.territorioElegido).toBeNull();
+    expect(foliosDe(mapa)).toEqual(["Obra", "REP-COMISARIA", "REP-SIN-CALLE"]);
+    expect(fuentes.lugaresDelSubarbol).not.toHaveBeenCalled();
+    expect(mapa.caja).toEqual(
+      cajaDePuntos([
+        { latitud: 21.02, longitud: -89.6 },
+        { latitud: 20.9674, longitud: -89.5926 },
+        { latitud: 21.04, longitud: -89.62 },
+      ]),
+    );
   });
 
   it("sin calles ubicadas en el territorio no hay caja que bloquear", async () => {
-    vi.mocked(fuentes.callesParaMapa).mockResolvedValueOnce([
-      CALLE_DE_LA_CABECERA,
-    ]);
     vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValueOnce([]);
 
-    const mapa = await crearAgregarMapa(fuentes)(contexto, { lugar: ARISTA });
+    const mapa = await crearAgregarMapa(fuentes)(contexto, {
+      lugar: SIN_CALLES,
+    });
 
+    expect(fuentes.lugaresDelSubarbol).toHaveBeenCalledWith(
+      contexto,
+      SIN_CALLES,
+    );
     expect(mapa.caja).toBeNull();
   });
 });

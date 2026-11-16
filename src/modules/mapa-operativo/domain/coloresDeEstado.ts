@@ -22,3 +22,14 @@ export const COLOR_DE_ESTADO_DESCONOCIDO = "#4b5563";
 
 export const colorDeEstado = (estado: string): string =>
   COLOR_DE_ESTADO[estado] ?? COLOR_DE_ESTADO_DESCONOCIDO;
+
+const FORMA_DE_COLOR = /^#[0-9a-f]{6}$/i;
+
+/**
+ * Un color que no tiene la forma de la paleta no se escribe: cae al gris
+ * neutro. Es la unica salida de esta paleta hacia una hoja de estilo, y una
+ * hoja de estilo admite `;` y `url()`, asi que lo que entra se verifica por
+ * forma y no se confia en el llamador.
+ */
+export const colorVerificado = (color: string): string =>
+  FORMA_DE_COLOR.test(color) ? color : COLOR_DE_ESTADO_DESCONOCIDO;

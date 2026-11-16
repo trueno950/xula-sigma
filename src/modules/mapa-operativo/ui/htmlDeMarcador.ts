@@ -1,4 +1,4 @@
-import type { MarcadorDeMapa } from "../domain";
+import { colorVerificado, type MarcadorDeMapa } from "../domain";
 import { escapar } from "./escaparHtml";
 import { svgDeIcono } from "./iconosDelMapa";
 
@@ -19,7 +19,7 @@ export const htmlDeMarcador = (marcador: MarcadorDeMapa): string => {
     cuantos > 1
       ? `<span data-hechos="${cuantos}" style="${CONTADOR}">${cuantos}</span>`
       : "";
-  return `<span style="${PIN};background:${escapar(marcador.color)}">${svgDeIcono(marcador.icono)}${contador}</span>`;
+  return `<span style="${PIN};background:${colorVerificado(marcador.color)}">${svgDeIcono(marcador.icono)}${contador}</span>`;
 };
 
 /**

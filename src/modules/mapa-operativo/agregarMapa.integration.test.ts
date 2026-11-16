@@ -103,22 +103,29 @@ describe("agregarMapa, contra Postgres real", () => {
     ).toEqual(["BACHE:1", "OBRA:1"]);
   });
 
-  it("un lugar de otro municipio no muestra ningun hecho", async () => {
-    const mapa = await agregarMapa(contexto("motul"), {
-      lugar: t.comisariaAjena,
-    });
+  /**
+   * Solo una raiz es elegible: con cualquier otro `?lugar=` la pantalla no
+   * puede quedar mostrando una opcion en el selector y los hechos de otra, y
+   * ademas el mapa se acotaria a una caja sin nombre. Vale «todo el
+   * municipio», y RLS sigue siendo lo que impide que se cuele un hecho ajeno.
+   */
+  it.each([
+    ["una colonia del propio municipio", () => t.coloniaDeA],
+    ["una comisaria de otro municipio", () => t.comisariaAjena],
+    ["un id inexistente", () => "99999999-9999-4999-8999-999999999999"],
+  ])("un lugar que no es una raiz (%s) no acota nada", async (_caso, lugar) => {
+    const mapa = await agregarMapa(contexto("motul"), { lugar: lugar() });
 
-    expect(idsDe(mapa)).toEqual([]);
-    expect(mapa.caja).toBeNull();
-    expect(mapa.estado).toBe("VACIO");
-  });
-
-  it("un lugar inexistente tampoco", async () => {
-    const mapa = await agregarMapa(contexto("motul"), {
-      lugar: "99999999-9999-4999-8999-999999999999",
-    });
-
-    expect(idsDe(mapa)).toEqual([]);
-    expect(mapa.caja).toBeNull();
+    expect(mapa.territorioElegido).toBeNull();
+    expect(idsDe(mapa)).toEqual(
+      expect.arrayContaining([
+        t.reporteDeA,
+        t.reporteDeLaColonia,
+        t.reporteDeB,
+        t.intervencionDeB,
+      ]),
+    );
+    expect(idsDe(mapa)).not.toContain(t.reporteAjeno);
+    expect(mapa.caja).toEqual(cajaDePuntos([PUNTO_A, PUNTO_B]));
   });
 });
