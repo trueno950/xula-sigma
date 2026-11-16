@@ -22,6 +22,7 @@ const entrada = (
   precision: "MOMENTO",
   ocurridoEn: new Date("2026-09-22T15:30:00.000Z"),
   cambio: null,
+  obra: null,
 });
 
 describe("LineaDeTiempoDeCalle: detalle legible", () => {
@@ -44,9 +45,38 @@ describe("LineaDeTiempoDeCalle: detalle legible", () => {
   it("una intervención enlaza a su detalle por id", () => {
     const html = dibujar(entrada("INTERVENCION", "int-1"));
 
-    expect(html).toContain("Se registró una intervención en esta calle.");
     expect(html).toMatch(/<a [^>]*href="\/intervenciones\/int-1"/);
     expect(html).toContain("Ver intervención");
+  });
+
+  it("una intervención con payload de obra dice qué se hizo, con sus dos enlaces", () => {
+    const html = dibujar({
+      ...entrada("INTERVENCION", "int-1"),
+      precision: "DIA",
+      ocurridoEn: new Date("2026-11-12T00:00:00.000Z"),
+      obra: {
+        tipo: "Bache",
+        estado: "Finalizada",
+        reporteId: "rep-1",
+      },
+    });
+
+    expect(html).toContain("Bache · finalizada");
+    expect(html).toContain("12 nov 2026");
+    expect(html).not.toContain("Se registró una intervención en esta calle.");
+    expect(html).toMatch(/<a [^>]*href="\/intervenciones\/int-1"/);
+    expect(html).toMatch(/<a [^>]*href="\/reportes\/detalle\/rep-1"/);
+    expect(html).toContain("Ver reporte de origen");
+  });
+
+  it("una obra sin reporte de origen no inventa el enlace al reporte", () => {
+    const html = dibujar({
+      ...entrada("INTERVENCION", "int-1"),
+      obra: { tipo: "Bache", estado: "Planificada", reporteId: null },
+    });
+
+    expect(html).toContain("Bache · planificada");
+    expect(html).not.toContain("/reportes/detalle/");
   });
 
   it("los hechos estructurales no inventan enlaces", () => {

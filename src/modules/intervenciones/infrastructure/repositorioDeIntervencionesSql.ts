@@ -22,6 +22,9 @@ export const repositorioDeIntervencionesSql: RepositorioDeIntervenciones = {
       .select({
         id: intervenciones.id,
         fechaDeOcurrencia: intervenciones.fechaDeOcurrencia,
+        tipo: intervenciones.tipo,
+        estado: intervenciones.estado,
+        reporteId: intervenciones.reporteId,
       })
       .from(intervenciones)
       .where(eq(intervenciones.calleId, calleId));

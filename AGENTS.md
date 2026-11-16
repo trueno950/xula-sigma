@@ -357,6 +357,8 @@ que devuelva, y devolverlo sería código muerto.
 | `cambiarEstadoAction` | `reportes` | Server Component, `<form action={...}>` |
 | `cambiarEstadoAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `corregirIntervencionAction` | `intervenciones` | Server Component, `<form action={...}>` |
+| `altaDeIntervencionAction` | `intervenciones` | Server Component, `<form action={...}>` |
+| `programarObraAction` | `intervenciones` | Server Component, `<form action={...}>` |
 | `asignarAreaAction` | `reportes` | Server Component, `<form action={...}>` |
 | `altaDeUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `restablecerContraseniaAction` | `usuarios` | Server Component, `<form action={...}>` |
@@ -439,6 +441,24 @@ Notas que no caben en la tabla, una por fila que las necesita:
   entre dos módulos y son acciones distintas**; ésta redacta
   `NoAutorizadoError`, `NoEncontradoError`, `TenantNoResueltoError`,
   `ValidacionError`, `IntervencionCerradaError` y `TransicionInvalidaError`.
+- `altaDeIntervencionAction` (`intervenciones`, S1 de
+  `intervenciones-trazabilidad`): mismo motivo que `altaDeLugarAction`, con el
+  formulario de `/intervenciones/alta` -tipo, lugar, calle opcional, fecha de
+  ocurrencia y descripcion-. Redacta `NoAutorizadoError`, `NoEncontradoError`
+  -un lugar o una calle de otro municipio, que `registrarIntervencion` lee
+  bajo RLS antes de insertar-, `ValidacionError` y el fallo de resolucion del
+  tenant. **El alta exige `puedeAdministrarIntervenciones`**, no
+  `puedeEscribir`, que es con lo que `registrarIntervencion` autoriza la
+  captura de mostrador: la bandeja programa y administra trabajo, y es la
+  regla que fija S1.
+- `programarObraAction` (`intervenciones`, S2 de
+  `intervenciones-trazabilidad`): el `<form>` vive en el detalle del reporte y
+  no pide ubicacion -se copia del reporte-. Redacta `NoAutorizadoError`,
+  `NoEncontradoError`, `ReporteNoProgramableError` -el reporte ya esta
+  `RESUELTO` o `RECHAZADO`-, `ValidacionError` y el fallo del tenant. Vuelve
+  al detalle del reporte, donde la operadora ve el estado nuevo; si el
+  `reporteId` del formulario no es un uuid valido no hay detalle al que
+  volver y el error va a `/reportes`.
 - `corregirDomicilioAction`/`darDeBajaDomicilioAction` (`territorio`, Fase 2
   de direcciones editables): mismo motivo exacto que `renombrarCalleAction`,
   cada uno su `<form>` nativo. `corregirDomicilioAction` redacta

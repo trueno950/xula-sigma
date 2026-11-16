@@ -33,7 +33,15 @@ describe("componerHistorialDeCalle: precision de cada entrada", () => {
     reportes: [
       { id: "reporte", registradoEn: new Date("2026-09-23T02:30:00.000Z") },
     ],
-    intervenciones: [{ id: "intervencion", fechaDeOcurrencia: "2026-09-22" }],
+    intervenciones: [
+      {
+        id: "intervencion",
+        fechaDeOcurrencia: "2026-09-22",
+        tipo: "Bache",
+        estado: "Finalizada",
+        reporteId: "reporte",
+      },
+    ],
   });
   const precisionDe = (id: string) =>
     historial.entradas.find((entrada) => entrada.id === id)?.precision;
@@ -71,5 +79,60 @@ describe("componerHistorialDeCalle: precision de cada entrada", () => {
       "reparenteo",
       "ubicacion",
     ]);
+  });
+});
+
+describe("componerHistorialDeCalle: la obra que se hizo", () => {
+  const historial = componerHistorialDeCalle({
+    calleId,
+    eventos: [],
+    reportes: [],
+    intervenciones: [
+      {
+        id: "con-obra",
+        fechaDeOcurrencia: "2026-11-12",
+        tipo: "Pavimentación",
+        estado: "Finalizada",
+        reporteId: "reporte-origen",
+      },
+      {
+        id: "suelta",
+        fechaDeOcurrencia: "2026-11-10",
+        tipo: "Bache",
+        estado: "Planificada",
+        reporteId: null,
+      },
+    ],
+  });
+  const obraDe = (id: string) =>
+    historial.entradas.find((entrada) => entrada.id === id)?.obra;
+
+  it("lleva tipo, estado y reporte de origen a la entrada de la intervencion", () => {
+    expect(obraDe("con-obra")).toEqual({
+      tipo: "Pavimentación",
+      estado: "Finalizada",
+      reporteId: "reporte-origen",
+    });
+  });
+
+  it("una obra sin reporte de origen lo dice en nulo", () => {
+    expect(obraDe("suelta")).toEqual({
+      tipo: "Bache",
+      estado: "Planificada",
+      reporteId: null,
+    });
+  });
+
+  it("las entradas que no son obra no inventan un payload de obra", () => {
+    const conReporte = componerHistorialDeCalle({
+      calleId,
+      eventos: [],
+      reportes: [
+        { id: "reporte", registradoEn: new Date("2026-11-01T15:00:00.000Z") },
+      ],
+      intervenciones: [],
+    });
+
+    expect(conReporte.entradas[0]?.obra).toBeNull();
   });
 });

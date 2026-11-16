@@ -14,6 +14,7 @@ export {
   comoIntervencionId,
   type IntervencionId,
 } from "./identificadores";
+export { ReporteNoProgramableError } from "./programacion";
 export {
   TIPOS_DE_INTERVENCION,
   type TipoDeIntervencion,

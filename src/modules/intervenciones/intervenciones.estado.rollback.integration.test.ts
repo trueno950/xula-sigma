@@ -16,7 +16,10 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { crearCambiarEstadoDeIntervencion } from "./application/cambiarEstadoDeIntervencion";
-import { repositorioDeIntervencionesSql } from "./infrastructure";
+import {
+  crearReportesParaObraPorReportes,
+  repositorioDeIntervencionesSql,
+} from "./infrastructure";
 import { intervenciones } from "./infrastructure/esquema";
 import { intervencionDe } from "./intervencionDePrueba";
 
@@ -66,6 +69,7 @@ const insertar = async (lugarId: string) => {
 
 const cambiarEstado = crearCambiarEstadoDeIntervencion({
   repositorio: repositorioDeIntervencionesSql,
+  reportes: crearReportesParaObraPorReportes(),
 });
 
 describe("rollback del estado de intervenciones", () => {

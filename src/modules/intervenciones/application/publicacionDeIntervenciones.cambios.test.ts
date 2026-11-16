@@ -62,7 +62,11 @@ beforeEach(() => {
 
 describe("cambiarEstadoDeIntervencion publica el estado", () => {
   const repositorio = { buscarPorId: vi.fn(), aplicarTransicion: vi.fn() };
-  const cambiarEstado = crearCambiarEstadoDeIntervencion({ repositorio });
+  const reportes = { de: vi.fn(), mover: vi.fn() };
+  const cambiarEstado = crearCambiarEstadoDeIntervencion({
+    repositorio,
+    reportes,
+  });
   const guardada = (estado: IntervencionGuardada["estado"]) =>
     ({
       id: comoIntervencionId(intervencionId),

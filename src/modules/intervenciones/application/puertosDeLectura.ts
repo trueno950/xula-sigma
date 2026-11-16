@@ -5,6 +5,7 @@ import type {
   IntervencionId,
   TipoDeIntervencion,
 } from "../domain";
+import type { IntervencionGuardada } from "./puertos";
 
 export type LecturaDeUbicaciones = {
   de(
@@ -60,4 +61,27 @@ export type LectorDeReferencias = {
       reporteId: string | null;
     },
   ): Promise<ReferenciasDeIntervencion>;
+};
+
+/**
+ * Los tres filtros de la bandeja (S1). `lugarId` viaja como texto, no como el
+ * id marcado de `territorio`: el filtro es un valor de la URL que el borde ya
+ * valido con Zod, y el modulo no importa el dominio del otro.
+ */
+export type FiltrosDeIntervenciones = {
+  estado?: EstadoDeIntervencion;
+  tipo?: TipoDeIntervencion;
+  lugarId?: string;
+};
+
+/**
+ * La lectura de la bandeja. Devuelve las filas ya ordenadas -la mas reciente
+ * primero, por `capturadoEn`- y acotadas, para que la pantalla no tenga que
+ * decidir el orden ni traer el municipio entero.
+ */
+export type LectorDeIntervenciones = {
+  listar(
+    tx: TransaccionTenant,
+    filtros: FiltrosDeIntervenciones,
+  ): Promise<readonly IntervencionGuardada[]>;
 };

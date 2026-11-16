@@ -5,14 +5,18 @@ import {
   crearCorregirIntervencion,
   crearIntervencionConReferencias,
   crearIntervencionPorId,
+  crearListarIntervenciones,
   crearListarIntervencionesParaMapa,
+  crearProgramarObraDeReporte,
   crearRegistrarIntervencion,
 } from "./application";
 import {
   crearLectorDeReferenciasPorModulos,
   crearLectorDeReportesPorReportes,
   crearLectorDeUbicacionesPorTerritorio,
+  crearReportesParaObraPorReportes,
   lectorDeIntervencionesDeMapaSql,
+  lectorDeIntervencionesSql,
   repositorioDeIntervencionesSql,
 } from "./infrastructure";
 import {
@@ -36,6 +40,9 @@ export const intervencionConReferencias = crearIntervencionConReferencias(
 export const listarIntervencionesParaMapa = crearListarIntervencionesParaMapa(
   lectorDeIntervencionesDeMapaSql,
 );
+export const listarIntervenciones = crearListarIntervenciones(
+  lectorDeIntervencionesSql,
+);
 export const listarIntervencionesDeCalleEnTransaccion = (
   tx: TransaccionTenant,
   calleId: string,
@@ -49,6 +56,17 @@ export const corregirIntervencion = crearCorregirIntervencion({
 
 export const cambiarEstadoDeIntervencion = crearCambiarEstadoDeIntervencion({
   repositorio: repositorioDeIntervencionesSql,
+  reportes: crearReportesParaObraPorReportes(),
+});
+
+/**
+ * «Programar obra» desde el detalle de un reporte (S2 de
+ * `intervenciones-trazabilidad`): crea la intervencion planificada y mueve el
+ * reporte en la misma transaccion.
+ */
+export const programarObraDeReporte = crearProgramarObraDeReporte({
+  repositorio: repositorioDeIntervencionesSql,
+  reportes: crearReportesParaObraPorReportes(),
 });
 
 /**

@@ -11,6 +11,7 @@ describe("contrato de intervenciones", () => {
     expect(TIPOS_DE_INTERVENCION).toEqual([
       "OBRA",
       "REPAVIMENTACION",
+      "PAVIMENTACION",
       "MEJORA",
       "FUGA",
       "ALUMBRADO",

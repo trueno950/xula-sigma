@@ -30,6 +30,7 @@ export const ETIQUETA_DE_FILTRO: Record<Miembro, string> = {
   OTRO: "Otro",
   OBRA: "Obra",
   REPAVIMENTACION: "Repavimentación",
+  PAVIMENTACION: "Pavimentación",
   MEJORA: "Mejora",
   MANTENIMIENTO: "Mantenimiento",
   RECIBIDO: "Recibido",

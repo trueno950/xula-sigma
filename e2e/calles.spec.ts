@@ -142,10 +142,11 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
   await expect(
     page.getByRole("heading", { name: "Intervenciones", exact: true }),
   ).toBeVisible();
+  // S1 de `intervenciones-trazabilidad` reemplazo la frase de "todavia no
+  // disponible" por la bandeja real: el escenario de esta corrida tiene que
+  // aparecer en ella, con su enlace al detalle.
   await expect(
-    page.getByText("La bandeja de intervenciones todavía no está disponible.", {
-      exact: true,
-    }),
+    page.locator(`a[href$="/intervenciones/${escenario.intervencionId}"]`),
   ).toBeVisible();
 
   await page.goto(

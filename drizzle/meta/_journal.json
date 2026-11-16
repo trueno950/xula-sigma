@@ -176,6 +176,13 @@
       "when": 1794590495259,
       "tag": "0024_usuarios_email_lower_unico",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794806499688,
+      "tag": "0025_tipo_pavimentacion",
+      "breakpoints": true
     }
   ]
 }

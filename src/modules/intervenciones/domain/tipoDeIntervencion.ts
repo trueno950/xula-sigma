@@ -1,6 +1,7 @@
 export const TIPOS_DE_INTERVENCION = [
   "OBRA",
   "REPAVIMENTACION",
+  "PAVIMENTACION",
   "MEJORA",
   "FUGA",
   "ALUMBRADO",

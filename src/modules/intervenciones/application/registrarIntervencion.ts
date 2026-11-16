@@ -2,8 +2,6 @@ import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import { publicarActualizacion } from "@/shared/notificaciones/notificar";
-import { registrar } from "@/shared/tenancy/bitacora";
 import {
   type TransaccionTenant,
   withTenant,
@@ -13,6 +11,7 @@ import {
   type IntervencionId,
   type TipoDeIntervencion,
 } from "../domain";
+import { guardarIntervencionEnTransaccion } from "./altaDeIntervencion";
 import type { RepositorioDeIntervenciones } from "./puertos";
 import type {
   LecturaDeReportes,
@@ -60,36 +59,25 @@ const registrarIntervencionEnTenant = async (
 ): Promise<IntervencionId> => {
   const { tx, datos, contexto, repositorio } = solicitud;
   await validarReferenciasDeRegistro(solicitud);
-  const id = comoIntervencionId(randomUUID());
 
-  await repositorio.guardar(tx, {
-    id,
-    ayuntamientoId: contexto.ayuntamientoId,
-    tipo: datos.tipo,
-    estado: "PLANIFICADA",
-    fechaDeOcurrencia: datos.fechaDeOcurrencia,
-    lugarId: datos.lugarId,
-    calleId: datos.calleId,
-    reporteId: datos.reporteId,
-    descripcion: datos.descripcion,
-    registradoPorUsuarioId: contexto.usuario.id,
-  });
-
-  await registrar(tx, {
-    ayuntamientoId: contexto.ayuntamientoId,
-    actor: contexto.usuario.id,
-    origen: contexto.origen,
+  return guardarIntervencionEnTransaccion({
+    tx,
+    contexto,
+    repositorio,
     accion: "REGISTRAR_INTERVENCION",
-    entidad: "intervenciones",
-    entidadId: id,
+    datos: {
+      id: comoIntervencionId(randomUUID()),
+      ayuntamientoId: contexto.ayuntamientoId,
+      tipo: datos.tipo,
+      estado: "PLANIFICADA",
+      fechaDeOcurrencia: datos.fechaDeOcurrencia,
+      lugarId: datos.lugarId,
+      calleId: datos.calleId,
+      reporteId: datos.reporteId,
+      descripcion: datos.descripcion,
+      registradoPorUsuarioId: contexto.usuario.id,
+    },
   });
-
-  await publicarActualizacion(tx, contexto.ayuntamientoId, {
-    tipo: "intervencion",
-    id,
-    cambio: "alta",
-  });
-  return id;
 };
 
 export function crearRegistrarIntervencion({

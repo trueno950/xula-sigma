@@ -14,8 +14,13 @@ origino y correccion que no borra historia.
 ### Requirement: Tipos cerrados de intervencion
 
 `tipo` MUST pertenecer a la union cerrada `OBRA`, `REPAVIMENTACION`,
-`MEJORA`, `FUGA`, `ALUMBRADO`, `BACHE`, `MANTENIMIENTO`. El sistema MUST
-rechazar un valor fuera de la union en el borde y con `CHECK` en la base.
+`PAVIMENTACION`, `MEJORA`, `FUGA`, `ALUMBRADO`, `BACHE`, `MANTENIMIENTO`. El
+sistema MUST rechazar un valor fuera de la union en el borde y con `CHECK` en
+la base.
+
+`PAVIMENTACION` entra por migracion (`drizzle/0025_tipo_pavimentacion.sql`):
+distingue una calle pavimentada de una repavimentada, que es lo que el
+municipio necesita para el historial de la calle.
 
 #### Scenario: Un tipo fuera de la union se rechaza
 
@@ -65,8 +70,10 @@ fechas por separado.
 
 `reporteId` MUST ser nullable y MUST referenciar un reporte del mismo
 ayuntamiento. El vinculo MUST ser FK compuesto contra `(id,
-ayuntamientoId)`. El sistema MUST NOT copiar datos del reporte a la
-intervencion.
+ayuntamientoId)`. El sistema MUST NOT copiar a la intervencion ningun dato de
+texto del reporte -descripcion, referencia, reportante-: la ubicacion
+(`lugarId`, `calleId`) si se copia al programar la obra, porque son columnas
+propias de la intervencion y el trabajo ocurre donde el reporte lo ubico.
 
 #### Scenario: Intervencion sin reporte
 
@@ -99,11 +106,59 @@ con etiqueta explicita sobre no anotar datos personales. MUST NOT
 exponerse en ninguna superficie sin sesion, y MUST NOT escribirse en logs:
 en logs la intervencion se referencia por ID.
 
+### Requirement: Programar obra desde un reporte
+
+«Programar obra» MUST crear una intervencion `PLANIFICADA` ligada al reporte
+(`reporteId`) con su `lugarId`/`calleId` copiados, el tipo elegido y la fecha
+de ocurrencia del dia de la programacion, corregible despues. En la misma
+transaccion el reporte MUST pasar a `EN_ATENCION` si estaba `RECIBIDO`, con su
+movimiento; uno que ya estaba `EN_ATENCION` MUST quedar como esta. Un reporte
+`RESUELTO` o `RECHAZADO` MUST rechazarse con un error de dominio y sin
+escribir la intervencion.
+
+#### Scenario: Programar sobre un reporte recibido
+
+- GIVEN un reporte `RECIBIDO` de un bache en una calle
+- WHEN la operadora programa una obra de tipo `BACHE`
+- THEN existe una intervencion `PLANIFICADA` ligada al reporte, en esa calle
+- AND el reporte queda `EN_ATENCION` con su movimiento
+- AND las dos escrituras comparten la misma transaccion
+
+#### Scenario: Un reporte cerrado no admite obra
+
+- GIVEN un reporte `RESUELTO`
+- WHEN se intenta programar obra sobre el
+- THEN el sistema lo rechaza con un error de dominio
+- AND no se escribe ninguna intervencion
+
+### Requirement: Finalizar la obra cierra su reporte
+
+Cuando una intervencion con `reporteId` pasa a `FINALIZADA`, el reporte
+ligado MUST pasar a `RESUELTO`, con su movimiento, en la misma transaccion.
+Una intervencion `CANCELADA` MUST NOT tocar el reporte: esa decision es de la
+operadora.
+
+#### Scenario: La obra termina y el reporte se cierra solo
+
+- GIVEN una intervencion `EN_EJECUCION` ligada a un reporte `EN_ATENCION`
+- WHEN se la pasa a `FINALIZADA`
+- THEN el reporte queda `RESUELTO` con su movimiento
+- AND las dos escrituras comparten la misma transaccion
+
+#### Scenario: Cancelar la obra no cierra el reporte
+
+- GIVEN una intervencion ligada a un reporte `EN_ATENCION`
+- WHEN se la cancela
+- THEN el reporte sigue `EN_ATENCION` y sin movimiento nuevo
+
 ### Requirement: Registrar es mostrador; administrar es del ADMIN_MUNICIPAL
 
-Registrar una intervencion MUST autorizarse por `puedeEscribir`. Cambiar
-estado y registrar correcciones MUST exigir
-`puedeAdministrarIntervenciones`.
+Registrar una intervencion desde mostrador MUST autorizarse por
+`puedeEscribir`. La bandeja y el alta de `/intervenciones`, programar obra
+desde un reporte, cambiar estado y registrar correcciones MUST exigir
+`puedeAdministrarIntervenciones`: mueven la historia de un reporte ciudadano o
+deciden sobre trabajo ya registrado, que no es captura de mostrador (S1 de
+`odd/tasks/intervenciones-trazabilidad.md`).
 
 #### Scenario: Un OPERADOR registra pero no cambia estado
 

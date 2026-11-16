@@ -1,4 +1,8 @@
-import { listarIntervencionesDeCalleEnTransaccion } from "@/modules/intervenciones";
+import {
+  ETIQUETA_DE_ESTADO_DE_INTERVENCION,
+  ETIQUETA_DE_TIPO_DE_INTERVENCION,
+  listarIntervencionesDeCalleEnTransaccion,
+} from "@/modules/intervenciones";
 import { listarReportesDeCalleEnTransaccion } from "@/modules/reportes";
 import {
   callePorIdEnTransaccion,
@@ -20,6 +24,14 @@ export const fuentesDeHistorial: FuentesDeHistorial = {
   },
 
   async intervencionesPorCalle(tx, calleId) {
-    return listarIntervencionesDeCalleEnTransaccion(tx, calleId);
+    const filas = await listarIntervencionesDeCalleEnTransaccion(tx, calleId);
+
+    return filas.map((fila) => ({
+      id: fila.id,
+      fechaDeOcurrencia: fila.fechaDeOcurrencia,
+      tipo: ETIQUETA_DE_TIPO_DE_INTERVENCION[fila.tipo],
+      estado: ETIQUETA_DE_ESTADO_DE_INTERVENCION[fila.estado],
+      reporteId: fila.reporteId,
+    }));
   },
 };

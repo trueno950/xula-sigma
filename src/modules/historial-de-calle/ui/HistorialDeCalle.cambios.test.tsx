@@ -32,6 +32,7 @@ const dibujar = (
             precision: "MOMENTO",
             ocurridoEn: new Date("2026-09-22T15:30:00.000Z"),
             cambio,
+            obra: null,
           },
         ],
       }}

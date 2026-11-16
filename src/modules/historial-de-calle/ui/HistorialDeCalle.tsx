@@ -21,12 +21,44 @@ import { detalleDe } from "./detalleDeEntrada";
 
 type Props = { historial: Historial };
 
+type Enlace = { texto: string; href: string };
+
 type Presentacion = {
   etiqueta: string;
-  detalle: string;
+  /** La frase fija de la naturaleza; `detalleDe` la reemplaza cuando hay payload. */
+  detalle: (entrada: EntradaDeHistorial) => string;
   Icono: typeof CalendarDots;
-  /** El detalle del hecho, si existe una pantalla a la que ir por su id. */
-  enlace?: { texto: string; href: (id: string) => string };
+  /** A donde ir por el hecho. La entrada decide cuales, con sus propios ids. */
+  enlaces?: (entrada: EntradaDeHistorial) => readonly Enlace[];
+};
+
+const SIN_DETALLE = "Se registró una intervención en esta calle.";
+
+/**
+ * S5 de `intervenciones-trazabilidad`: una intervención se lee por la obra que
+ * fue -«Bache · finalizada», con la fecha en su `<time>`-, no por la frase
+ * genérica de su naturaleza. El tipo y el estado llegan ya legibles desde el
+ * adaptador, y el reporte de origen se enlaza solo si lo tiene.
+ */
+const detalleDeObra = (entrada: EntradaDeHistorial): string => {
+  if (!entrada.obra) return SIN_DETALLE;
+
+  return `${entrada.obra.tipo} · ${entrada.obra.estado.toLocaleLowerCase("es-MX")}`;
+};
+
+const enlacesDeObra = (entrada: EntradaDeHistorial): readonly Enlace[] => {
+  const enlaces: Enlace[] = [
+    { texto: "Ver intervención", href: `/intervenciones/${entrada.id}` },
+  ];
+
+  if (entrada.obra?.reporteId) {
+    enlaces.push({
+      texto: "Ver reporte de origen",
+      href: `/reportes/detalle/${entrada.obra.reporteId}`,
+    });
+  }
+
+  return enlaces;
 };
 
 /**
@@ -36,32 +68,31 @@ type Presentacion = {
 const PRESENTACIONES: Record<EntradaDeHistorial["naturaleza"], Presentacion> = {
   REPORTE: {
     etiqueta: "Reporte",
-    detalle: "Se registró un reporte en esta calle.",
+    detalle: () => "Se registró un reporte en esta calle.",
     Icono: NotePencil,
-    enlace: { texto: "Ver reporte", href: (id) => `/reportes/detalle/${id}` },
+    enlaces: (entrada) => [
+      { texto: "Ver reporte", href: `/reportes/detalle/${entrada.id}` },
+    ],
   },
   INTERVENCION: {
     etiqueta: "Intervención",
-    detalle: "Se registró una intervención en esta calle.",
+    detalle: detalleDeObra,
     Icono: Wrench,
-    enlace: {
-      texto: "Ver intervención",
-      href: (id) => `/intervenciones/${id}`,
-    },
+    enlaces: enlacesDeObra,
   },
   RENOMBRE: {
     etiqueta: "Renombre",
-    detalle: "Se cambió el nombre de la calle.",
+    detalle: () => "Se cambió el nombre de la calle.",
     Icono: Signpost,
   },
   REPARENTEO: {
     etiqueta: "Reparenteo",
-    detalle: "Se movió la calle a otro lugar.",
+    detalle: () => "Se movió la calle a otro lugar.",
     Icono: ArrowsLeftRight,
   },
   UBICACION: {
     etiqueta: "Ubicación",
-    detalle: "Se actualizó el punto de la calle en el mapa.",
+    detalle: () => "Se actualizó el punto de la calle en el mapa.",
     Icono: MapPin,
   },
 };
@@ -69,8 +100,10 @@ const PRESENTACIONES: Record<EntradaDeHistorial["naturaleza"], Presentacion> = {
 const esDia = (entrada: EntradaDeHistorial) => entrada.precision === "DIA";
 
 function Entrada({ entrada }: { entrada: EntradaDeHistorial }) {
-  const { etiqueta, detalle, Icono, enlace } =
+  const { etiqueta, detalle, Icono, enlaces } =
     PRESENTACIONES[entrada.naturaleza];
+  const enlacesDelHecho = enlaces?.(entrada) ?? [];
+
   return (
     <li className="flex items-start gap-3 px-5 py-4">
       <Icono
@@ -97,16 +130,17 @@ function Entrada({ entrada }: { entrada: EntradaDeHistorial }) {
           </time>
         </div>
         <p className="text-[15px] text-caliza-tinta">
-          {detalleDe(entrada, detalle)}
+          {detalleDe(entrada, detalle(entrada))}
         </p>
-        {enlace ? (
+        {enlacesDelHecho.map((enlace) => (
           <Link
-            href={enlace.href(entrada.id)}
+            key={enlace.href}
+            href={enlace.href}
             className={`self-start rounded-sm text-[15px] ${CLASES_DE_ENLACE}`}
           >
             {enlace.texto}
           </Link>
-        ) : null}
+        ))}
       </div>
     </li>
   );
