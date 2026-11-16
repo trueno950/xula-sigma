@@ -490,15 +490,17 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `odd/tasks/pendientes-fase-0.md`.
 - `cambiarColoresAction`/`restablecerColoresAction` (`marca`, S1-S8 de
   `odd/tasks/marca-colores.md`): mismo motivo que `altaDePersonaAction`, y
-  **la única hoja cliente de la pantalla no toca ninguna de las dos**. Esa
-  hoja es `MuestraDeColores`, que repinta un botón, un encabezado y el
-  acento de ejemplo mientras se elige: escucha los `input` y `change` del
+  **ninguna hoja cliente de la pantalla envuelve ninguna de las dos**.
+  `FormularioDeEscudo` media otra acción, la del escudo, y
+  `MuestraDeColores` repinta un botón, un encabezado y el acento de ejemplo
+  mientras se elige: escucha los `input` y `change` del
   `<form>` que la contiene y lee `FormData`, y no envuelve la acción ni
   dibuja un solo campo. Sin JavaScript, el envío es el POST nativo y los
   colores se guardan igual. Las dos redactan con la lista blanca de
   `src/modules/marca/ui/mensajesDeMarca.ts`: `NoAutorizadoError` -el aviso
-  de permiso-, `ValidacionError` -el color no deja leer el texto o no es un
-  color medible- y el fallo genérico que se queda en el log. Ninguna
+  de permiso- y el fallo genérico que se queda en el log, y
+  `cambiarColoresAction` también `ValidacionError` -el color no es un color
+  medible-. Ninguna
   devuelve el mensaje de la excepción, y el `?error=` que llega por la URL
   se pinta solo porque lo escribió la acción. `restablecerColoresAction`
   recibe un único campo, `ambito=colores`, para que un formulario viejo en
