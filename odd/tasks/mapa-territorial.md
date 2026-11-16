@@ -56,3 +56,13 @@ Hoy el mapa pinta todos los hechos como círculos iguales y lo limita la caja de
   - `agregarMapa.ts` partido en `leerMapa` (las cuatro lecturas juntas y el subárbol, que espera a las raíces) y `componerMapa` (filtro, marcadores, caja, leyenda). El cuerpo de `agregarMapa` quedó en dos líneas, sin cambio de comportamiento.
   - RED: 5 tests fallando por las razones esperadas —el color hostil se escribía, los tres casos de lugar no raíz seguían filtrando y la comisaría sin calles devolvía la caja del municipio—.
   - GREEN: unit 21 archivos / 137 tests; integración 7/7 contra `xula_test_b`; `pnpm reglas`, `pnpm biome check`, `pnpm typecheck` y `pnpm layers` en 0; `pnpm build` en 0; E2E `mapa-operativo.spec.ts` 5/5 en el puerto 3108.
+- **L6** — 2026-11-16. El bloque A entró a `main` (PR #139, `29063df`).
+  - La rama se rebasó sobre `main` sin conflictos.
+  - Se retiró la excepción de `PAVIMENTACION`, que ahora sí tiene dueño en `intervenciones`. `vocabulariosSincronizados.test.ts` vuelve a comparar la copia completa con el catálogo dueño, y se borraron los comentarios de «adelantada» en `vocabularios.ts`, `iconos.ts` y `parametros.test.ts`.
+  - Unit del mapa 134/134; `pnpm check` en 0.
+- **L7** — 2026-11-16. Revisión nativa en tres partes, sobre la rama rehecha encima de `main`.
+  - Parte 1 (`f0c6ede`, territorio): aprobada.
+  - Parte 2: tras el rebase, el commit de íconos (`7334750`) quedó con un test roto. `main` ya traía `PAVIMENTACION` y la excepción «adelantada» fallaba. RED confirmado en ese commit (2 tests).
+  - La corrección retira la excepción, igual que `71bf662`. El validador la rechazó porque solo leyó el diff: no vio que el valor ya venía de la base.
+  - Resolución: la historia se rehízo en `feat/mapa-territorial-v2`, con el retiro de la excepción fundido en el commit de íconos. Así ese commit nunca introduce la excepción. El árbol final es idéntico a `71bf662`, salvo este registro.
+
