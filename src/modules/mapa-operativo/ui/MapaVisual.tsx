@@ -1,19 +1,27 @@
 "use client";
 
 import { Aviso } from "@/shared/ui";
-import type { MarcadorDeMapa } from "../domain";
+import type { CajaDeMapa, MarcadorDeMapa } from "../domain";
 import { useMapaOperativo } from "./useMapaOperativo";
 
-type Props = { marcadores: readonly MarcadorDeMapa[] };
+type Props = {
+  marcadores: readonly MarcadorDeMapa[];
+  caja: CajaDeMapa | null;
+};
 
 /**
  * Progresiva: si Leaflet no carga, `mapaFallido` oculta el contenedor y la
  * lista de `MapaOperativo` sigue siendo el camino sin JavaScript -mismo
- * criterio que `SelectorDePunto` de `territorio`-.
+ * criterio que `SelectorDePunto` de `territorio`-. Region y no imagen: una
+ * `<section>` con nombre accesible ya expone `role="region"`, y sus
+ * marcadores y controles de zoom son enfocables, asi que `role="img"` los
+ * esconderia al lector de pantalla.
  */
-export function MapaVisual({ marcadores }: Props) {
-  const { mapaRef, mapaVisible, mapaFallido, aviso } =
-    useMapaOperativo(marcadores);
+export function MapaVisual({ marcadores, caja }: Props) {
+  const { mapaRef, mapaVisible, mapaFallido, aviso } = useMapaOperativo(
+    marcadores,
+    caja,
+  );
 
   if (marcadores.length === 0) return null;
 

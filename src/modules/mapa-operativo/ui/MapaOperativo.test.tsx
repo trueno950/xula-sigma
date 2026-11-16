@@ -2,33 +2,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { comoIdDeIntervencionEnMapa, comoIdDeReporteEnMapa } from "../domain";
 import { MapaOperativo } from "./MapaOperativo";
+import { INTERVENCION, mapaDe, REPORTE } from "./mapaDePrueba";
 
 describe("MapaOperativo", () => {
   it("distingue hechos y declara que la ubicacion de calle es aproximada", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo
         filtros={{}}
-        mapa={{
-          estado: "CON_DATOS",
-          marcadores: [
-            {
-              id: comoIdDeReporteEnMapa("reporte-1"),
-              recurso: "REPORTE",
-              etiqueta: "REP-1",
-              href: "/reportes/detalle/reporte-1",
-              punto: { latitud: 20.9, longitud: -89.6 },
-            },
-            {
-              id: comoIdDeIntervencionEnMapa("intervencion-1"),
-              recurso: "INTERVENCION",
-              etiqueta: "OBRA",
-              href: "/intervenciones/intervencion-1",
-              punto: { latitud: 20.9, longitud: -89.6 },
-            },
-          ],
-          cobertura: [],
+        mapa={mapaDe({
+          marcadores: [REPORTE, INTERVENCION],
           conteos: { reportes: 1, intervenciones: 1, total: 2 },
-        }}
+        })}
       />,
     );
 
@@ -47,15 +31,7 @@ describe("MapaOperativo", () => {
 
   it("los filtros ofrecen etiquetas legibles y conservan el codigo como valor", () => {
     const html = renderToStaticMarkup(
-      <MapaOperativo
-        filtros={{}}
-        mapa={{
-          estado: "VACIO",
-          marcadores: [],
-          cobertura: [],
-          conteos: { reportes: 0, intervenciones: 0, total: 0 },
-        }}
-      />,
+      <MapaOperativo filtros={{}} mapa={mapaDe({ estado: "VACIO" })} />,
     );
 
     expect(html).toContain('<option value="ALUMBRADO">Alumbrado</option>');
@@ -71,9 +47,7 @@ describe("MapaOperativo", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo
         filtros={{}}
-        mapa={{
-          estado: "CON_DATOS",
-          marcadores: [],
+        mapa={mapaDe({
           cobertura: [
             {
               id: comoIdDeIntervencionEnMapa("intervencion-2"),
@@ -85,7 +59,7 @@ describe("MapaOperativo", () => {
             },
           ],
           conteos: { reportes: 0, intervenciones: 1, total: 1 },
-        }}
+        })}
       />,
     );
 
@@ -96,12 +70,10 @@ describe("MapaOperativo", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo
         filtros={{}}
-        mapa={{
+        mapa={mapaDe({
           estado: "VACIO",
-          marcadores: [],
-          cobertura: [],
           conteos: { reportes: 0, intervenciones: 0, total: 0 },
-        }}
+        })}
       />,
     );
 
@@ -109,31 +81,28 @@ describe("MapaOperativo", () => {
     expect(html).toContain("0 reportes");
     expect(html).toContain("0 intervenciones");
   });
-});
 
-it("enlaza cada hecho ubicado al historial de su calle sin reemplazar su detalle", () => {
-  const html = renderToStaticMarkup(
-    <MapaOperativo
-      filtros={{}}
-      mapa={{
-        estado: "CON_DATOS",
-        marcadores: [
-          {
-            id: comoIdDeReporteEnMapa("reporte-3"),
-            recurso: "REPORTE",
-            etiqueta: "REP-3",
-            href: "/reportes/detalle/reporte-3",
-            historiaHref: "/calles/calle-3/historial",
-            punto: { latitud: 20.9, longitud: -89.6 },
-          },
-        ],
-        cobertura: [],
-        conteos: { reportes: 1, intervenciones: 0, total: 1 },
-      }}
-    />,
-  );
+  it("enlaza cada hecho ubicado al historial de su calle sin reemplazar su detalle", () => {
+    const html = renderToStaticMarkup(
+      <MapaOperativo
+        filtros={{}}
+        mapa={mapaDe({
+          marcadores: [
+            {
+              ...REPORTE,
+              id: comoIdDeReporteEnMapa("reporte-3"),
+              etiqueta: "REP-3",
+              href: "/reportes/detalle/reporte-3",
+              historiaHref: "/calles/calle-3/historial",
+            },
+          ],
+          conteos: { reportes: 1, intervenciones: 0, total: 1 },
+        })}
+      />,
+    );
 
-  expect(html).toContain('href="/reportes/detalle/reporte-3"');
-  expect(html).toContain('href="/calles/calle-3/historial"');
-  expect(html).toContain("Ver historial de calle");
+    expect(html).toContain('href="/reportes/detalle/reporte-3"');
+    expect(html).toContain('href="/calles/calle-3/historial"');
+    expect(html).toContain("Ver historial de calle");
+  });
 });

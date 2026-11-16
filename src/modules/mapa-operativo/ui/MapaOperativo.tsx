@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { CLASES_DE_ENLACE, CLASES_DE_TARJETA } from "@/shared/ui";
+import { Aviso, CLASES_DE_ENLACE, CLASES_DE_TARJETA } from "@/shared/ui";
 import type { FiltrosDeMapa } from "../application";
-import type { MapaOperativoAgregado } from "../domain";
+import type { MapaOperativoAgregado, TerritorioDeMapa } from "../domain";
 import { FormularioDeFiltrosDeMapa } from "./FormularioDeFiltrosDeMapa";
 import { MapaVisual } from "./MapaVisual";
 
@@ -15,6 +15,14 @@ const razonDe = (
   calle: string | null,
 ) => (razon === "SIN_CALLE" ? "sin calle" : `calle sin punto: ${calle ?? "?"}`);
 
+/**
+ * El aviso de S2: un territorio sin calles ubicadas no tiene caja que
+ * bloquear, asi que el mapa vuelve a la vista de Yucatan. Se dice, no se
+ * inventa un centro.
+ */
+export const mensajeSinCalles = (territorio: TerritorioDeMapa | null) =>
+  `Sin calles ubicadas en ${territorio?.nombre ?? "el municipio"}. El mapa muestra todo Yucatán.`;
+
 const LISTA =
   "divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo";
 const FILA =
@@ -23,7 +31,7 @@ const FILA =
 export function MapaOperativo({ mapa, filtros }: Props) {
   return (
     <section aria-label="Mapa operativo" className="flex flex-col gap-4">
-      <FormularioDeFiltrosDeMapa {...filtros} />
+      <FormularioDeFiltrosDeMapa {...filtros} territorios={mapa.territorios} />
       <p className="text-[15px] text-caliza-apagada">
         Ubicación aproximada de la calle
       </p>
@@ -40,7 +48,10 @@ export function MapaOperativo({ mapa, filtros }: Props) {
           No hay hechos para los filtros seleccionados.
         </p>
       ) : null}
-      <MapaVisual marcadores={mapa.marcadores} />
+      {mapa.caja === null ? (
+        <Aviso tono="aviso">{mensajeSinCalles(mapa.territorioElegido)}</Aviso>
+      ) : null}
+      <MapaVisual marcadores={mapa.marcadores} caja={mapa.caja} />
       <ul className={LISTA} aria-label="Marcadores del mapa">
         {mapa.marcadores.map((marcador) => (
           <li key={marcador.id} className={FILA}>

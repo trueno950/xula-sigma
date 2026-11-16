@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { comoIdDeReporteEnMapa } from "../domain";
+import { cajaDePuntos, comoIdDeReporteEnMapa } from "../domain";
 import { MapaVisual } from "./MapaVisual";
 
 const MARCADOR = {
@@ -11,6 +11,8 @@ const MARCADOR = {
   punto: { latitud: 20.9, longitud: -89.6 },
 } as const;
 
+const CAJA = cajaDePuntos([MARCADOR.punto]);
+
 describe("MapaVisual", () => {
   /**
    * Leaflet deja dentro del contenedor los marcadores y los controles de
@@ -20,12 +22,22 @@ describe("MapaVisual", () => {
    * mapa para quien navega con teclado.
    */
   it("se declara region etiquetada, no imagen, porque sus marcadores son enfocables", () => {
-    const html = renderToStaticMarkup(<MapaVisual marcadores={[MARCADOR]} />);
+    const html = renderToStaticMarkup(
+      <MapaVisual marcadores={[MARCADOR]} caja={CAJA} />,
+    );
 
     expect(html).toContain("<section");
     expect(html).toContain(
       'aria-label="Mapa con los marcadores del municipio, ubicación aproximada"',
     );
     expect(html).not.toContain('role="img"');
+  });
+
+  it("sin calles ubicadas no dibuja el mapa, que no tiene caja que bloquear", () => {
+    const html = renderToStaticMarkup(
+      <MapaVisual marcadores={[]} caja={null} />,
+    );
+
+    expect(html).toBe("");
   });
 });

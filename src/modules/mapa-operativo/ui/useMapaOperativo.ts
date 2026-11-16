@@ -2,7 +2,7 @@
 
 import type { Map as LeafletMap } from "leaflet";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import type { MarcadorDeMapa } from "../domain";
+import type { CajaDeMapa, MarcadorDeMapa } from "../domain";
 import { mensajeDeFalloDeTiles, prepararMapaOperativo } from "./mapaLeaflet";
 
 type Resultado = {
@@ -14,6 +14,7 @@ type Resultado = {
 
 export function useMapaOperativo(
   marcadores: readonly MarcadorDeMapa[],
+  caja: CajaDeMapa | null,
 ): Resultado {
   const mapaRef = useRef<HTMLDivElement | null>(null);
   const [mapaVisible, setMapaVisible] = useState(false);
@@ -34,6 +35,7 @@ export function useMapaOperativo(
           leaflet,
           elemento: mapaRef.current,
           marcadores,
+          caja,
           onTileError: () => setAviso(mensajeDeFalloDeTiles()),
         });
         setMapaVisible(true);
@@ -47,7 +49,7 @@ export function useMapaOperativo(
       cancelado = true;
       mapaInstancia?.remove();
     };
-  }, [marcadores]);
+  }, [marcadores, caja]);
 
   return { mapaRef, mapaVisible, mapaFallido, aviso };
 }

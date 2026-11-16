@@ -11,6 +11,8 @@ export type ParametrosDeMapa = {
   tipo: string | undefined;
   estado: string | undefined;
   area: string | undefined;
+  /** El `?lugar=` de S1: la cabecera o una comisaria; `undefined` es todo el municipio. */
+  lugar: string | undefined;
 };
 
 /**
@@ -37,6 +39,11 @@ const esquemaDeParametros = z.object({
     .optional()
     .catch(undefined),
   area: z.enum(AREAS_PARA_FILTRO).optional().catch(undefined),
+  /**
+   * Solo la forma: que el lugar exista y sea de este municipio lo decide RLS
+   * al leer su subarbol, y un id ajeno no interseca ningun hecho.
+   */
+  lugar: z.string().uuid().optional().catch(undefined),
 });
 
 export const leerParametrosDeMapa = (
@@ -44,5 +51,10 @@ export const leerParametrosDeMapa = (
 ): ParametrosDeMapa => {
   // Cada campo ya cae solo con `.catch()`: este parse no falla.
   const datos = esquemaDeParametros.parse(searchParams);
-  return { tipo: datos.tipo, estado: datos.estado, area: datos.area };
+  return {
+    tipo: datos.tipo,
+    estado: datos.estado,
+    area: datos.area,
+    lugar: datos.lugar,
+  };
 };

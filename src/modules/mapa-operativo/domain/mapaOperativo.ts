@@ -44,6 +44,25 @@ export type MarcadorDeMapa =
 
 export type RecursoDeMapa = MarcadorDeMapa["recurso"];
 
+/**
+ * Los limites de la vista: la caja de las calles ubicadas del territorio
+ * elegido, calculada en el servidor. `null` es "ese territorio no tiene
+ * calles ubicadas", y entonces el mapa vuelve a la caja de Yucatan y lo
+ * avisa; nunca se inventa un centro.
+ */
+export type CajaDeMapa = {
+  readonly sur: number;
+  readonly oeste: number;
+  readonly norte: number;
+  readonly este: number;
+};
+
+/** Una opcion del selector `?lugar=`: una raiz del arbol territorial. */
+export type TerritorioDeMapa = {
+  readonly id: string;
+  readonly nombre: string;
+};
+
 export type CoberturaFaltante =
   | {
       recurso: "REPORTE";
@@ -64,6 +83,11 @@ export type CoberturaFaltante =
 
 export type MapaOperativoAgregado = {
   estado: "VACIO" | "CON_DATOS";
+  /** La cabecera y cada comisaria del municipio, para el selector. */
+  territorios: readonly TerritorioDeMapa[];
+  /** La raiz elegida, ya resuelta; `null` es «todo el municipio». */
+  territorioElegido: TerritorioDeMapa | null;
+  caja: CajaDeMapa | null;
   marcadores: readonly MarcadorDeMapa[];
   cobertura: readonly CoberturaFaltante[];
   conteos: { reportes: number; intervenciones: number; total: number };
