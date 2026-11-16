@@ -336,6 +336,22 @@ test("elegir un color de la paleta lo guarda y el panel lo pinta", async ({
   await expect.poll(() => primarioEnElPanel(page)).toBe(ORO);
 });
 
+test("el selector exacto solo se ofrece con «Otro color» marcado", async ({
+  page,
+}) => {
+  // El servidor lee el selector exacto solo con «Otro color» marcado: si
+  // se pudiera tocar con un color de la paleta elegido, el guardado
+  // ignoraria el color exacto y avisaria exito igual.
+  await abrirMarca(page);
+  const exacto = grupoDelPrimario(page).getByLabel("Elegir color primario");
+
+  await opcionDelPrimario(page, "Oro").click();
+  await expect(exacto).toBeHidden();
+
+  await opcionDelPrimario(page, "Otro color").click();
+  await expect(exacto).toBeVisible();
+});
+
 test("elegir un color libre se guarda tal cual y el panel lo pinta", async ({
   page,
 }) => {

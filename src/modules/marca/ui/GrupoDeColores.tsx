@@ -36,13 +36,19 @@ type Props = {
  * `<form>` nativo manda el color elegido tambien sin JavaScript (S4). La
  * opcion "Otro color" es la que le da voz al selector; el servidor lee ese
  * campo solo cuando esa opcion esta marcada (`colorElegido`).
+ *
+ * Por eso el selector exacto se esconde mientras "Otro color" no esta
+ * marcado: si se pudiera tocar con un color de la paleta elegido, el
+ * guardado lo ignoraria y avisaria exito igual. Lo esconde CSS (`:has`), no
+ * JavaScript, para que valga tambien en el POST nativo; un navegador sin
+ * `:has` lo deja visible, que es el comportamiento de antes.
  */
 export function GrupoDeColores({ campo, etiqueta, actual }: Props) {
   const seleccion = seleccionDeColor(actual);
   const idLibre = `${campo}Libre`;
 
   return (
-    <fieldset className="flex flex-col gap-2">
+    <fieldset className="group flex flex-col gap-2">
       <legend className={CLASES_DE_ETIQUETA}>{etiqueta}</legend>
       <div className="flex flex-wrap gap-2">
         {opciones.map(({ nombre, valor, muestra }) => (
@@ -52,6 +58,7 @@ export function GrupoDeColores({ campo, etiqueta, actual }: Props) {
               name={campo}
               value={valor}
               defaultChecked={seleccion.radio === valor}
+              data-libre={valor === VALOR_LIBRE ? "" : undefined}
               className="peer sr-only"
             />
             <span className={CLASES_DE_OPCION}>
@@ -67,7 +74,7 @@ export function GrupoDeColores({ campo, etiqueta, actual }: Props) {
           </label>
         ))}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 group-has-[[data-libre]:not(:checked)]:hidden">
         <input
           id={idLibre}
           name={idLibre}
