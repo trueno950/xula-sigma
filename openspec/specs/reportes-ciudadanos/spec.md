@@ -359,3 +359,43 @@ pin y renglon de leyenda con el conteo.
 - THEN esta atrasado y lleva N dias
 - AND uno registrado hace N-1 dias no esta atrasado
 - AND uno ya atendido no esta atrasado aunque tenga meses
+
+### Requirement: Filtros y conteos por lugar y por area en la bandeja
+
+La bandeja de reportes MUST poder filtrarse por lugar -una colonia o una
+localidad del municipio- y por area responsable, ademas de estado, tipo y
+«solo atrasados». Los filtros MUST viajar por parametros GET validados con
+Zod, y un valor fuera del catalogo MUST caerse solo, sin arrastrar los
+demas.
+
+El lugar MUST resolverse contra la API publica de `territorio` e incluir su
+subarbol; un lugar de otro ayuntamiento MUST NOT producir ninguna fila ajena
+ni entrar como filtro. La bandeja MUST mostrar los conteos por estado -los
+cuatro, con sus ceros- y por area responsable de los filtros elegidos,
+computados en SQL bajo `withTenant` y con las mismas condiciones que el
+listado, de modo que los numeros coincidan con las filas.
+
+#### Scenario: El lugar elegido trae su subarbol
+
+- GIVEN una comisaria con una colonia adentro y reportes en las dos
+- WHEN se filtra por la comisaria
+- THEN aparecen los reportes de la comisaria y los de la colonia
+
+#### Scenario: El area recorta el conjunto del lugar
+
+- GIVEN los mismos reportes, con areas distintas
+- WHEN se filtra por la comisaria y por un area
+- THEN solo aparecen los de esa area dentro de ese subarbol
+- AND los conteos suman las filas visibles
+
+#### Scenario: Un lugar de otro municipio no muestra nada ajeno
+
+- GIVEN un lugar de Ticul y una sesion de Motul
+- WHEN se pide la bandeja con ese lugar
+- THEN no aparece ninguna fila de Ticul
+
+#### Scenario: Los conteos traen los ceros del catalogo
+
+- GIVEN un municipio sin reportes rechazados
+- WHEN se leen los conteos
+- THEN «Rechazado» aparece en cero

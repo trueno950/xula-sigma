@@ -56,7 +56,7 @@ export const htmlDeMarcador = (marcador: MarcadorDeMapa): string => {
 /**
  * S4: la fecha del hecho, en fecha civil. `fechaCivilCorta` es la de
  * `shared/lib/fecha` para una fecha ya civil -el registro de un reporte o la
- * ocurrencia de una obra-, y no `fechaEnMerida`: esa convertí­a un instante, y
+ * ocurrencia de una obra-, y no `fechaEnMerida`: esa convierte un instante, y
  * aca no hay instante que convertir. Un hecho sin fecha no pinta `<time>`.
  */
 const fechaDeLaVentana = (hecho: HechoEnMarcador): string =>

@@ -144,3 +144,40 @@ con los vocabularios.
 - WHEN se dibuja la leyenda
 - THEN hay un renglon de atrasados con el conteo 2
 - AND sin reportes atrasados ese renglon no aparece
+
+### Requirement: Calles sin ubicar por territorio
+
+El mapa operativo MUST mostrar, por cada territorio, cuantas calles activas
+no tienen punto, con un enlace a cada una que abra el registro territorial
+listo para ubicarla. La lectura MUST venir de una lectura publica de
+`territorio` -el mapa no reimplementa la jerarquia ni importa su dominio- y
+MUST NOT incluir calles dadas de baja ni calles colgadas de un lugar dado de
+baja. La seccion MUST respetar el `?lugar=` elegido: con un territorio
+acotado MUST NOT contar calles de otro.
+
+#### Scenario: Una calle sin punto aparece bajo su asentamiento
+
+- GIVEN una comisaria con una calle sin punto y una colonia adentro
+- WHEN se abre el mapa acotado a esa comisaria
+- THEN la seccion dice «1 calle sin ubicar» con el enlace a la calle
+- AND la colonia, que no tiene catalogo de calles, no se cuenta aparte
+
+#### Scenario: Una calle ubicada no falta
+
+- GIVEN una calle con punto
+- WHEN se abre el mapa
+- THEN esa calle no aparece en las calles sin ubicar
+
+### Requirement: Fecha del hecho en la ventana del marcador
+
+La ventana de cada marcador MUST mostrar la fecha civil del hecho: el
+registro de un reporte o la fecha de ocurrencia de una intervencion. La
+fecha MUST NOT depender de la zona horaria del proceso, y la de la obra MUST
+llegar por la API publica de `intervenciones`.
+
+#### Scenario: La ventana dice cuando ocurrio cada hecho
+
+- GIVEN un reporte y una obra sobre la misma calle
+- WHEN se abre la ventana de ese pin
+- THEN el reporte muestra su fecha de registro
+- AND la obra muestra su fecha de ocurrencia, en fecha civil

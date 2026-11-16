@@ -17,8 +17,8 @@ Va después de los bloques A (`odd/tasks/intervenciones-trazabilidad.md`) y B (`
 ## Tasks
 
 - [x] **T1** (S1) umbral de atraso configurable y su señal en la bandeja y el mapa — worker — commit: `8f57228` + `87ebe9c` (snapshot)
-- [ ] **T2** (S2) filtros y conteos por lugar y por área en la bandeja de reportes — worker — commit:
-- [ ] **T3** (S3, S4) calles sin ubicar por localidad y fecha en la ventana del mapa — worker — commit:
+- [x] **T2** (S2) filtros y conteos por lugar y por área en la bandeja de reportes — worker — commit: `2ca4973`
+- [x] **T3** (S3, S4) calles sin ubicar por localidad y fecha en la ventana del mapa — worker — commit: `ed909ff`
 - [ ] **T4** (S1-S4) verificador, revisión, PR y merge — verify — commit:
 
 ## Log
@@ -57,3 +57,49 @@ Va después de los bloques A (`odd/tasks/intervenciones-trazabilidad.md`) y B (`
   `pnpm check` en verde, unit 521, integracion de `reportes` 79 y de
   `mapa-operativo` 7, `pnpm build` en verde y la suite E2E completa 100/100
   contra `pnpm start` en el puerto 3108.
+- **L4** — 2026-11-16. T2 (S2). La bandeja de `reportes` se filtra por lugar
+  y por area responsable. `?lugar=` y `?area=` se validan con Zod en
+  `parametros.ts` (el area contra el catalogo, el lugar contra la forma de
+  uuid); el lugar se resuelve en la pagina -`cargaDeLaBandeja.ts`, el unico
+  lugar donde `reportes` y `territorio` se tocan- contra la API publica de
+  `territorio`, y viaja al repositorio como el conjunto de ids de su
+  subarbol (`lugarIds`): un arreglo vacio es «ninguno» y no «sin filtro», y
+  un `?lugar=` de otro municipio no entra como filtro -la bandeja se lee sin
+  el y no se pinta un chip que no esta puesto-. Los filtros de la URL y los
+  de la consulta quedaron en dos tipos (`FiltrosDeLaBandeja` y
+  `FiltrosDeListado`): la pantalla nunca manda al SQL un id de lugar suelto.
+  Los conteos por estado y por area los hace `contarReportes` con dos
+  `GROUP BY` bajo `withTenant`, compartiendo con el listado las condiciones
+  y la busqueda (`condicionesDeFiltrosSql.ts`), y `domain/conteosDeReportes.ts`
+  completa los cuatro estados con sus ceros, ordena las areas por catalogo y
+  deja «Sin asignar» al final. La pantalla suma dos `<select>`, un chip por
+  filtro y la tarjeta de conteos. Tests: 8 unitarios nuevos y 14 ampliados
+  (`componerConteos`, `contarReportes`, `filtrosDeLaConsulta`, links,
+  descripcion del vacio, conteos, bandeja y parametros), el de integracion
+  `filtrosYConteos` con siete casos -subarbol, area, busqueda, lugar ajeno,
+  conteos contra las filas y por municipio- y el E2E
+  `e2e/reportesFiltros.spec.ts`, que siembra por SQL las areas y los estados
+  y afirma los conteos acotados a los lugares del escenario. `pnpm reglas` y
+  `pnpm check` en verde, integracion de `reportes` 86 pruebas, y la suite E2E
+  completa en verde.
+- **L5** — 2026-11-16. T3 (S3, S4). S3: `territorio` gana la lectura publica
+  `callesSinPunto`, un solo recorrido recursivo de la jerarquia
+  (`callesSinPuntoSql.ts` sobre `jerarquiaDeLugaresSql.ts`) que da cada calle
+  activa sin punto con el asentamiento que la contiene y la raiz de su
+  territorio; sin una consulta por raiz, sin RLS nueva y sin calles de
+  baja. El mapa la pide por su puerto (`callesSinUbicar`) y
+  `domain/sinUbicar.ts` agrupa por raiz, ordena territorios y calles y arma
+  el enlace al registro territorial con `accion=ubicarCalle` abierta;
+  `agregarMapa` le pasa el mismo conjunto de ids que ya usa el `?lugar=`,
+  asi que la seccion respeta la vista acotada. S4: `HechoEnMarcador` gana
+  `fechaCivil` -el registro del reporte, que ya viajaba desde S1, y la
+  ocurrencia de la obra, que `listarIntervencionesParaMapa` expone ahora por
+  la API publica de `intervenciones`- y la ventana la pinta en su propio
+  `<time>` con `fechaCivilCorta` de `shared/lib/fecha`. Tests: unitarios de
+  `agruparCallesSinUbicar` y `hrefDeUbicacion`, del agregado con y sin
+  territorio elegido, de la ventana con las dos fechas y de la seccion; la
+  integracion `callesSinPunto` con cuatro casos y una calle sin punto en el
+  escenario del mapa; E2E del territorio, el `?lugar=`, el enlace y la fecha
+  en la ventana del pin. `pnpm reglas` y `pnpm check` en verde, integracion de
+  los cuatro modulos tocados, `pnpm build` en verde y la suite E2E completa
+  103/103 contra `pnpm start` en el puerto 3108. T4 queda para el verificador.
