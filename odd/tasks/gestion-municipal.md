@@ -103,3 +103,38 @@ Va después de los bloques A (`odd/tasks/intervenciones-trazabilidad.md`) y B (`
   en la ventana del pin. `pnpm reglas` y `pnpm check` en verde, integracion de
   los cuatro modulos tocados, `pnpm build` en verde y la suite E2E completa
   103/103 contra `pnpm start` en el puerto 3108. T4 queda para el verificador.
+- **L6** — 2026-11-16. Verificador independiente (T4 en curso) sobre
+  `31f54d9..d14d7fb`: **pasa** S1-S4 -unit 2818, integracion 634 y E2E 103, los
+  tres en verde; migracion `0026` confirmada viva con FORCE, politica, GRANT y
+  CHECK; la frontera de las 23:30 de Merida coincide entre SQL y JavaScript-
+  con **un bloqueante** y avisos, corregidos en el commit
+  `fix(reportes): correcciones del verificador en gestion municipal`:
+  - **B1 (bloqueante)**: `ui/htmlDeMarcador.ts` escribe `<strong>` para la
+    senal de atraso de S1 y la lista de etiquetas permitidas de la sonda de XSS
+    solo habia ganado `time`; la sonda pasaba porque su unico fixture llevaba
+    `diasDeAtraso: null`, que no imprime la senal. Ahora `strong` entra a la
+    lista y la sonda gana un caso con fecha, atraso y valores hostiles que
+    afirma que la ventana escribe exactamente `a`, `li`, `strong`, `time` y
+    `ul`. La sonda se movio a `ui/htmlDeMarcador.xss.test.ts` por la metrica de
+    lineas por archivo.
+  - **Aviso cerrado**: `lugarIds: []` -que `condicionesDeFiltrosSql.ts`
+    traduce a `FALSE`- no tenia prueba. Se agrego a `filtrosYConteos`: cero
+    filas y cero conteos, no «sin filtro».
+  - **Aviso cerrado**: el bloque «La ventana del pin…» estaba encima de
+    `fechaDeLaVentana`; se movio a `htmlDeLaVentana`, que es lo que documenta.
+  - **Sondas durables** del verificador, con los nombres reales:
+    `domain/umbralDeAtraso.frontera.test.ts` (N y N-1, equivalencia de
+    `fechaDeCorte` con la regla pura para 1/7/90, las 23:30 de Merida de
+    `2026-11-17T05:30Z` como dia civil 2026-11-16, y 0/91/1.5/NaN fuera de
+    rango; el instante se resuelve en el test porque el dominio no importa
+    `shared`, y `application/fechaCivil.test.ts` fija que el convertidor
+    canonico diga lo mismo de ese mismo instante), `configuracionDeReportes`
+    (la fila escrita pertenece al ayuntamiento del contexto, leida cruda bajo
+    `withTenant`) y `conteosIgualesAlListado.integration.test.ts` (total,
+    estado por estado y area por area igualan las filas; area + lugar acotan
+    las dos lecturas; un lugar de otro municipio da cero filas y cero
+    conteos). El permiso de `callesSinUbicar` ya estaba cubierto por
+    `domain/sinUbicar.test.ts` y `agregarMapa.test.ts`, asi que no se
+    duplico. `pnpm reglas` y `pnpm check` en verde, unit 29 pruebas sobre los
+    archivos tocados e integracion de `reportes` y `mapa-operativo` 99. Sin
+    E2E: el cambio es de tests, un comentario y la lista de etiquetas.

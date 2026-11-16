@@ -133,6 +133,28 @@ describe("conteos por estado y por area para los filtros elegidos", () => {
     expect(conteos.total).toBe(3);
   });
 
+  /**
+   * El arreglo vacio es «ese lugar no tiene reportes», no «sin filtro»: es la
+   * unica forma en que un `?lugar=` que no resolvio a ningun lugar del
+   * municipio puede llegar al repositorio sin devolver la bandeja entera.
+   * `condicionesDeFiltrosSql.ts` lo traduce a `FALSE`, y esto lo fija.
+   */
+  it("un conjunto de lugares vacio da cero filas y cero conteos, no «sin filtro»", async () => {
+    const filtros = { lugarIds: [] as readonly string[] };
+    const filas = await listarReportes(filtros, motul());
+    const conteos = await contarReportes({ filtros }, motul());
+
+    expect(filas.reportes).toEqual([]);
+    expect(conteos.total).toBe(0);
+    expect(conteos.porEstado).toEqual({
+      RECIBIDO: 0,
+      EN_ATENCION: 0,
+      RESUELTO: 0,
+      RECHAZADO: 0,
+    });
+    expect(conteos.porArea).toEqual([]);
+  });
+
   it("cada municipio cuenta solo lo suyo", async () => {
     const ajenos = await contarReportes({}, ticul());
     const propios = await contarReportes({}, motul());

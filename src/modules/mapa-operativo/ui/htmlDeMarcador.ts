@@ -49,11 +49,6 @@ export const htmlDeMarcador = (marcador: MarcadorDeMapa): string => {
 };
 
 /**
- * La ventana del pin: folio -o el tipo, si es una intervencion-, tipo,
- * estado, fecha del hecho y dias de atraso cuando los tiene. Sin datos de la
- * persona que reporto: el mapa nunca los pide.
- */
-/**
  * S4: la fecha del hecho, en fecha civil. `fechaCivilCorta` es la de
  * `shared/lib/fecha` para una fecha ya civil -el registro de un reporte o la
  * ocurrencia de una obra-, y no `fechaEnMerida`: esa convierte un instante, y
@@ -71,6 +66,11 @@ const atrasoDeLaVentana = (dias: number | null): string =>
     ? ""
     : ` · <strong>Atrasado · ${dias} ${dias === 1 ? "día" : "días"}</strong>`;
 
+/**
+ * La ventana del pin: folio -o el tipo, si es una intervencion-, tipo,
+ * estado, fecha del hecho y dias de atraso cuando los tiene. Sin datos de la
+ * persona que reporto: el mapa nunca los pide.
+ */
 export const htmlDeLaVentana = (marcador: MarcadorDeMapa): string => {
   const filas = marcador.hechos
     .map(

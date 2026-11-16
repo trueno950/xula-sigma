@@ -16,6 +16,25 @@ describe("fechaCivilDeInstante", () => {
     );
   });
 
+  /**
+   * El mismo instante que `domain/umbralDeAtraso.frontera.test.ts` resuelve
+   * con su propio formateador, porque el dominio no importa `shared`: si el
+   * convertidor canonico y esa lectura se separan, falla uno de los dos.
+   */
+  it("las 23:30 del 16 en Merida son el dia 16, aunque en UTC ya sea el 17", () => {
+    const registradoEn = new Date("2026-11-17T05:30:00Z");
+
+    expect(fechaCivilDeInstante(registradoEn)).toBe("2026-11-16");
+    expect(
+      diasDeAtraso({
+        estado: "RECIBIDO",
+        fechaDeRegistro: fechaCivilDeInstante(registradoEn),
+        hoy: "2026-11-23",
+        umbral: 7,
+      }),
+    ).toBe(7);
+  });
+
   it("las 19:00 de Merida caen al dia siguiente en UTC y no corren la fecha", () => {
     // 19:00 del 31 de diciembre en Merida son la 01:00 UTC del 1 de enero.
     expect(fechaCivilDeInstante(new Date("2027-01-01T01:00:00Z"))).toBe(

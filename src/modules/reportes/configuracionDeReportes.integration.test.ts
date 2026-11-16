@@ -7,6 +7,7 @@ import {
 } from "@/shared/auth/genteDePrueba";
 import {
   limpiar,
+  motul,
   owner,
   sembrar,
   ticul,
@@ -67,6 +68,24 @@ describe("umbral de atraso configurable", () => {
     });
 
     await expect(leer(actor("motul", "OPERADOR"))).resolves.toBe(antes);
+  });
+
+  /**
+   * El `ayuntamiento_id` sale del contexto del servidor y de ningun otro
+   * lado: lo que queda escrito es la fila de quien lo cambio. Se afirma sobre
+   * la fila cruda y no sobre el caso de uso, porque RLS haria pasar por
+   * correcta cualquier lectura equivocada.
+   */
+  it("la fila escrita pertenece al ayuntamiento del contexto, no a otro", async () => {
+    await cambiar(21, actor("motul", "ADMIN_MUNICIPAL"));
+
+    const filas = await withTenant(motul, (tx) =>
+      tx.select().from(configuracionDeReportes),
+    );
+
+    expect(filas).toHaveLength(1);
+    expect(filas[0]?.ayuntamientoId).toBe(motul);
+    expect(filas[0]?.diasDeAtraso).toBe(21);
   });
 
   it("cambiar dos veces deja una sola fila por municipio, no un historial", async () => {
