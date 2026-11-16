@@ -31,10 +31,14 @@ describe("agregarMapa", () => {
     callesParaMapa: vi.fn(),
     reportesParaMapa: vi.fn(),
     intervencionesParaMapa: vi.fn(),
+    territoriosParaMapa: vi.fn(),
+    lugaresDelSubarbol: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([]);
+    vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValue([]);
     vi.mocked(fuentes.callesParaMapa).mockResolvedValue([
       calleConPunto,
       calleSinPunto,
@@ -47,6 +51,7 @@ describe("agregarMapa", () => {
         estado: "RECIBIDO",
         areaResponsable: "OBRAS_PUBLICAS",
         calleId: calleConPunto.id,
+        lugarId: calleConPunto.lugarId,
       },
       {
         id: comoReporteId("66666666-6666-4666-8666-666666666666"),
@@ -55,6 +60,7 @@ describe("agregarMapa", () => {
         estado: "RESUELTO",
         areaResponsable: null,
         calleId: null,
+        lugarId: calleConPunto.lugarId,
       },
     ]);
     vi.mocked(fuentes.intervencionesParaMapa).mockResolvedValue([
@@ -63,6 +69,7 @@ describe("agregarMapa", () => {
         tipo: "OBRA",
         estado: "EN_EJECUCION",
         calleId: calleSinPunto.id,
+        lugarId: calleSinPunto.lugarId,
       },
     ]);
   });
@@ -74,9 +81,13 @@ describe("agregarMapa", () => {
 
     expect(mapa.marcadores).toEqual([
       expect.objectContaining({
-        recurso: "REPORTE",
-        href: "/reportes/detalle/55555555-5555-4555-8555-555555555555",
         punto: calleConPunto.punto,
+        hechos: [
+          expect.objectContaining({
+            recurso: "REPORTE",
+            href: "/reportes/detalle/55555555-5555-4555-8555-555555555555",
+          }),
+        ],
       }),
     ]);
     expect(mapa.cobertura).toEqual([
@@ -116,6 +127,7 @@ describe("agregarMapa", () => {
     expect(fuentes.callesParaMapa).toHaveBeenCalledWith(contexto);
     expect(fuentes.reportesParaMapa).toHaveBeenCalledWith(contexto);
     expect(fuentes.intervencionesParaMapa).toHaveBeenCalledWith(contexto);
+    expect(fuentes.territoriosParaMapa).toHaveBeenCalledWith(contexto);
   });
 
   it("la etiqueta de una intervencion es su tipo legible, no el codigo", async () => {
@@ -135,7 +147,7 @@ describe("agregarMapa", () => {
       tipo: "BASURA",
     });
 
-    expect(mapa.marcadores).toEqual([
+    expect(mapa.marcadores.flatMap((marcador) => marcador.hechos)).toEqual([
       expect.objectContaining({ recurso: "REPORTE", etiqueta: "REP-1" }),
     ]);
     expect(mapa.cobertura).toEqual([
@@ -175,6 +187,7 @@ describe("agregarMapa", () => {
         tipo: "FUGA",
         estado: "PLANIFICADA",
         calleId: calleConPunto.id,
+        lugarId: calleConPunto.lugarId,
       },
     ]);
     const { crearAgregarMapa } = await import("./agregarMapa");

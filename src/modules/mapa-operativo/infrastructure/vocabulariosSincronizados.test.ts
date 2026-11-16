@@ -28,6 +28,7 @@ import {
  * unico lugar donde se comparan con sus duenos: si alguno agrega, quita o
  * renombra un miembro, este test falla en vez de dejar la copia vieja.
  */
+
 const CASOS = [
   ["tipos de reporte", TIPOS_DE_REPORTE_PARA_FILTRO, TIPOS_DE_INCIDENCIA],
   [
@@ -54,7 +55,7 @@ const ETIQUETAS_DUENAS: Readonly<Record<string, string>> = {
 
 describe("vocabularios del mapa frente a sus duenos", () => {
   it.each(CASOS)(
-    "%s: mismos miembros, en el mismo orden",
+    "%s: la copia tiene los mismos miembros que el dueno, en el mismo orden",
     (_n, copia, dueno) => {
       expect([...copia]).toEqual([...dueno]);
     },

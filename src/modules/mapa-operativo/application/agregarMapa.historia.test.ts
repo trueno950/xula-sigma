@@ -32,6 +32,7 @@ const intervencionEn = (id: string, calleId: typeof calleConPunto.id) => ({
   tipo: "OBRA" as const,
   estado: "EN_EJECUCION" as const,
   calleId,
+  lugarId: calleConPunto.lugarId,
 });
 
 const fuentes: FuentesDeMapa = {
@@ -44,6 +45,7 @@ const fuentes: FuentesDeMapa = {
       estado: "RECIBIDO",
       areaResponsable: null,
       calleId: calleConPunto.id,
+      lugarId: calleConPunto.lugarId,
     },
     {
       id: comoReporteId("66666666-6666-4666-8666-666666666666"),
@@ -52,6 +54,7 @@ const fuentes: FuentesDeMapa = {
       estado: "RECIBIDO",
       areaResponsable: null,
       calleId: null,
+      lugarId: calleConPunto.lugarId,
     },
   ]),
   intervencionesParaMapa: vi
@@ -60,16 +63,19 @@ const fuentes: FuentesDeMapa = {
       intervencionEn("88888888-8888-4888-8888-888888888888", calleConPunto.id),
       intervencionEn("77777777-7777-4777-8777-777777777777", calleSinPunto.id),
     ]),
+  territoriosParaMapa: vi.fn().mockResolvedValue([]),
+  lugaresDelSubarbol: vi.fn().mockResolvedValue([]),
 };
 
 describe("agregarMapa: enlace al historial de calle", () => {
   it("enlaza cada marcador, de reporte o de intervencion, al historial de su calle", async () => {
     const mapa = await crearAgregarMapa(fuentes)(contexto, {});
 
-    expect(mapa.marcadores.map(({ recurso }) => recurso).sort()).toEqual([
-      "INTERVENCION",
-      "REPORTE",
-    ]);
+    expect(
+      mapa.marcadores.flatMap((marcador) =>
+        marcador.hechos.map(({ recurso }) => recurso),
+      ),
+    ).toEqual(["REPORTE", "INTERVENCION"]);
     for (const marcador of mapa.marcadores) {
       expect(marcador.historiaHref).toBe(
         `/calles/${calleConPunto.id}/historial`,

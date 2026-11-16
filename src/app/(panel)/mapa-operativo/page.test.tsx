@@ -24,6 +24,9 @@ const contexto = {
 };
 const mapa = {
   estado: "VACIO" as const,
+  territorios: [],
+  territorioElegido: null,
+  caja: null,
   marcadores: [],
   cobertura: [],
   conteos: { reportes: 0, intervenciones: 0, total: 0 },
@@ -51,7 +54,10 @@ describe("PaginaDeMapaOperativo", () => {
 
     const html = renderToStaticMarkup(
       await PaginaDeMapaOperativo({
-        searchParams: Promise.resolve({ estado: "RECIBIDO" }),
+        searchParams: Promise.resolve({
+          estado: "RECIBIDO",
+          lugar: "22222222-2222-4222-8222-222222222222",
+        }),
       }),
     );
 
@@ -59,6 +65,7 @@ describe("PaginaDeMapaOperativo", () => {
       tipo: undefined,
       estado: "RECIBIDO",
       area: undefined,
+      lugar: "22222222-2222-4222-8222-222222222222",
     });
     expect(html).toContain("snapshot del mapa");
     expect(html).toContain("estado en vivo");

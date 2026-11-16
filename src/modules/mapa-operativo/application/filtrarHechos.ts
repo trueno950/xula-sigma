@@ -20,13 +20,20 @@ export type Hecho =
       recurso: "REPORTE";
       id: IdDeReporteEnMapa;
       calleId: string | null;
+      /** El lugar propio del hecho; ver `territorioElegido.ts`, `lugarDelHecho`. */
+      lugarId: string;
       etiqueta: string;
+      tipo: string;
+      estado: string;
     }
   | {
       recurso: "INTERVENCION";
       id: IdDeIntervencionEnMapa;
       calleId: string | null;
+      lugarId: string;
       etiqueta: string;
+      tipo: string;
+      estado: string;
     };
 
 const coincide = (valor: string, filtro: string | undefined) =>
@@ -61,7 +68,10 @@ export function filtrarReportes(
       recurso: "REPORTE" as const,
       id: comoIdDeReporteEnMapa(r.id),
       calleId: r.calleId,
+      lugarId: r.lugarId,
       etiqueta: r.folio,
+      tipo: r.tipo,
+      estado: r.estado,
     }));
 }
 
@@ -88,6 +98,9 @@ export function filtrarIntervenciones(
       recurso: "INTERVENCION" as const,
       id: comoIdDeIntervencionEnMapa(i.id),
       calleId: i.calleId,
+      lugarId: i.lugarId,
       etiqueta: etiquetaDeFiltro(i.tipo),
+      tipo: i.tipo,
+      estado: i.estado,
     }));
 }

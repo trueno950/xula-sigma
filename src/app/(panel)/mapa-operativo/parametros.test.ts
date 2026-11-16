@@ -33,7 +33,7 @@ describe("vocabularios de filtro del mapa", () => {
       ESTADOS_DE_INTERVENCION,
     ],
   ])(
-    "la copia local de %s coincide con el catalogo de su modulo",
+    "la copia local de %s conserva el catalogo de su modulo",
     (_, copia, original) => {
       expect([...copia].sort()).toEqual([...original].sort());
     },
@@ -86,6 +86,31 @@ describe("leerParametrosDeMapa", () => {
       tipo: undefined,
       estado: undefined,
       area: undefined,
+      lugar: undefined,
     });
+  });
+});
+
+describe("leerParametrosDeMapa: territorio elegido", () => {
+  const LUGAR = "22222222-2222-4222-8222-222222222222";
+
+  it("un lugar con forma de uuid se conserva", () => {
+    expect(leerParametrosDeMapa({ lugar: LUGAR }).lugar).toBe(LUGAR);
+  });
+
+  it("un lugar que no es uuid cae a undefined sin romper los otros filtros", () => {
+    const parametros = leerParametrosDeMapa({
+      lugar: "donde-sea",
+      estado: "RECIBIDO",
+    });
+
+    expect(parametros.lugar).toBeUndefined();
+    expect(parametros.estado).toBe("RECIBIDO");
+  });
+
+  it("lugar=a&lugar=b (string[]) cae a undefined", () => {
+    expect(
+      leerParametrosDeMapa({ lugar: [LUGAR, LUGAR] }).lugar,
+    ).toBeUndefined();
   });
 });

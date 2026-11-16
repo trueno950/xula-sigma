@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
+import { accederAMotul } from "./acceder";
 import {
   liberarVentanaDeRitmo,
   prepararEscenario,
@@ -153,4 +154,163 @@ test("mapa operativo muestra snapshot, desconexión e historial sin filtrar otro
   await verificarHistorial(page);
   await verificarIdMalFormado(page);
   await verificarAislamientoDeTicul(page);
+});
+
+/**
+ * S2 de `mapa-territorial`: la vista se queda en el territorio elegido. Lo
+ * que se lee es lo que el mapa dejo anotado en su propio contenedor
+ * (`data-min-zoom`, `data-zoom`, `data-limites`), no una copia de la
+ * configuracion: por eso tambien se hace clic en el zoom-out real y se
+ * comprueba que no baja del minimo.
+ */
+const limitesDelMapa = async (region: Locator) => {
+  const texto = await region.getAttribute("data-limites");
+  if (!texto) throw new Error("El mapa no declaró sus límites.");
+  const [sur, oeste, norte, este] = texto.split(",").map(Number);
+  return { sur, oeste, norte, este };
+};
+
+const zoomDelMapa = async (region: Locator) =>
+  Number(await region.getAttribute("data-zoom"));
+
+const elegirTerritorio = async (page: Page, lugarId: string) => {
+  await page
+    .getByRole("combobox", { name: "Territorio" })
+    .selectOption(lugarId);
+  await page.getByRole("button", { name: "Filtrar" }).click();
+  await expect(page).toHaveURL(new RegExp(`lugar=${lugarId}`));
+};
+
+test("mapa operativo acota hechos y vista al territorio elegido", async ({
+  page,
+}) => {
+  await abrirMapaDeMotul(page);
+
+  const selector = page.getByRole("combobox", { name: "Territorio" });
+  await expect(selector).toBeVisible();
+  await expect(selector.locator('option[value=""]')).toHaveText(
+    "Todo el municipio",
+  );
+  await expect(
+    selector.locator(`option[value="${escenario.origenId}"]`),
+  ).toHaveCount(1);
+  await expect(
+    selector.locator(`option[value="${escenario.vacioId}"]`),
+  ).toHaveCount(1);
+
+  await elegirTerritorio(page, escenario.origenId);
+
+  // Solo los hechos del subarbol: el reporte y las dos intervenciones del
+  // escenario. Cualquier hecho de otra localidad romperia el conteo.
+  await expect(page.getByText("1 reporte · 2 intervenciones")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: marcadorDeReporte() }),
+  ).toBeVisible();
+
+  const mapa = page.getByRole("region", {
+    name: /Mapa con los marcadores del municipio/,
+  });
+  await expect(mapa).toHaveAttribute("data-limites");
+  const limites = await limitesDelMapa(mapa);
+  // La unica calle ubicada del escenario, con su margen.
+  expect(limites.sur).toBeCloseTo(21.283 - 0.005, 5);
+  expect(limites.oeste).toBeCloseTo(-89.667 - 0.005, 5);
+  expect(limites.norte).toBeCloseTo(21.283 + 0.005, 5);
+  expect(limites.este).toBeCloseTo(-89.667 + 0.005, 5);
+
+  // La vista entra ya en el minimo y el control de alejar nace deshabilitado.
+  const zoomMinimo = Number(await mapa.getAttribute("data-min-zoom"));
+  expect(zoomMinimo).toBeGreaterThanOrEqual(10);
+  expect(await zoomDelMapa(mapa)).toBe(zoomMinimo);
+
+  // Leaflet deshabilita alejar cuando el zoom ya es el minimo, y el clic
+  // forzado no lo mueve: no hay forma de alejarse hasta las comisarias
+  // vecinas, que es lo que el pedido original pedia.
+  const alejar = mapa.getByRole("button", { name: "Zoom out" });
+  await expect(alejar).toBeDisabled();
+  for (let clic = 0; clic < 3; clic++) {
+    await alejar.click({ force: true });
+  }
+
+  expect(await zoomDelMapa(mapa)).toBe(zoomMinimo);
+  await expect(alejar).toBeDisabled();
+});
+
+test("mapa operativo avisa cuando el territorio no tiene calles ubicadas", async ({
+  page,
+}) => {
+  await abrirMapaDeMotul(page);
+
+  await elegirTerritorio(page, escenario.vacioId);
+
+  await expect(
+    page.getByText("No hay hechos para los filtros seleccionados."),
+  ).toBeVisible();
+  await expect(page.getByText(/El mapa muestra todo Yucatán\./)).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: /Mapa con los marcadores del municipio/ }),
+  ).toHaveCount(0);
+});
+
+test("sin JavaScript, el territorio elegido filtra la lista del mapa", async ({
+  browser,
+}) => {
+  const conJs = await browser.newContext();
+  await accederAMotul(await conJs.newPage());
+  const estado = await conJs.storageState();
+  await conJs.close();
+
+  const contexto = await browser.newContext({
+    javaScriptEnabled: false,
+    storageState: estado,
+  });
+
+  try {
+    const page = await contexto.newPage();
+    await page.goto(urlDe("motul", "/mapa-operativo"));
+    await expect(
+      page.getByRole("link", { name: marcadorDeReporte() }),
+    ).toBeVisible();
+
+    await elegirTerritorio(page, escenario.vacioId);
+    await expect(
+      page.getByRole("link", { name: marcadorDeReporte() }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("No hay hechos para los filtros seleccionados."),
+    ).toBeVisible();
+
+    await elegirTerritorio(page, escenario.origenId);
+    await expect(
+      page.getByRole("link", { name: marcadorDeReporte() }),
+    ).toBeVisible();
+  } finally {
+    await contexto.close();
+  }
+});
+
+test("mapa operativo agrupa por calle y publica la leyenda con conteos", async ({
+  page,
+}) => {
+  await abrirMapaDeMotul(page);
+  await elegirTerritorio(page, escenario.origenId);
+
+  const mapa = page.getByRole("region", {
+    name: /Mapa con los marcadores del municipio/,
+  });
+  // El reporte y la intervencion del escenario comparten calle: un pin, dos
+  // hechos adentro.
+  await expect(mapa.locator('[data-hechos="2"]')).toHaveCount(1);
+  await expect(page.getByText("2 hechos en esta calle")).toBeVisible();
+
+  const leyenda = page.getByRole("region", { name: "Leyenda del mapa" });
+  const porTipo = leyenda.getByRole("list", { name: "Conteo por tipo" });
+  const porEstado = leyenda.getByRole("list", { name: "Conteo por estado" });
+
+  await expect(porTipo).toBeVisible();
+  await expect(porTipo).toContainText("Bache (reporte) 1");
+  await expect(porTipo).toContainText("Obra (intervención) 1");
+  await expect(porTipo).toContainText("Mantenimiento (intervención) 1");
+  await expect(porEstado).toContainText("Recibido 1");
+  await expect(porEstado).toContainText("Planificada 2");
 });
