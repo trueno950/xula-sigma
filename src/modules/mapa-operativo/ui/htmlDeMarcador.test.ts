@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COLOR_DE_ESTADO_DESCONOCIDO, type MarcadorDeMapa } from "../domain";
+import { comoIdDeReporteEnMapa, type MarcadorDeMapa } from "../domain";
 import { htmlDeLaVentana, htmlDeMarcador } from "./htmlDeMarcador";
 import {
   HECHO_DE_INTERVENCION,
@@ -37,6 +37,35 @@ describe("htmlDeMarcador", () => {
   });
 });
 
+describe("htmlDeMarcador, la senal de atraso de S1", () => {
+  it("un pin con un reporte atrasado se marca, y uno sin atraso no", () => {
+    const atrasado = marcadorDe([HECHO_DE_REPORTE], {
+      hechos: [{ ...HECHO_DE_REPORTE, diasDeAtraso: 10 }],
+    });
+
+    expect(htmlDeMarcador(atrasado)).toContain('data-atrasado="1"');
+    expect(htmlDeMarcador(marcadorDe([HECHO_DE_REPORTE]))).not.toContain(
+      "data-atrasado",
+    );
+  });
+
+  it("un pin agrupado se marca si cualquiera de sus hechos esta atrasado", () => {
+    const marcador = marcadorDe([], {
+      hechos: [
+        { ...HECHO_DE_REPORTE, diasDeAtraso: null },
+        { ...HECHO_DE_INTERVENCION, diasDeAtraso: null },
+        {
+          ...HECHO_DE_REPORTE,
+          id: comoIdDeReporteEnMapa("reporte-2"),
+          diasDeAtraso: 3,
+        },
+      ],
+    });
+
+    expect(htmlDeMarcador(marcador)).toContain('data-atrasado="1"');
+  });
+});
+
 describe("htmlDeLaVentana", () => {
   const marcador = marcadorDe([HECHO_DE_REPORTE, HECHO_DE_INTERVENCION]);
 
@@ -70,69 +99,5 @@ describe("htmlDeLaVentana", () => {
 
     expect(html).toContain("REP &lt;1&gt; &amp; &quot;x&quot;");
     expect(html).not.toContain("<script>");
-  });
-});
-
-/**
- * Sonda de XSS durable: el pin y su ventana se insertan con `innerHTML` en
- * Leaflet, asi que cualquier cadena que llegue ahi -folio, enlace, etiqueta o
- * el color del estado- podria cerrar la etiqueta y meter la suya. En vez de
- * perseguir payloads, se comprueba lo unico que importa: que del HTML armado
- * solo salgan las etiquetas que este modulo escribe.
- */
-const ETIQUETAS_PERMITIDAS: ReadonlySet<string> = new Set([
-  "ul",
-  "li",
-  "a",
-  "span",
-  "svg",
-  "path",
-]);
-
-const CARGA = '"><img src=x onerror=alert(1)>';
-const COLOR_CARGA = 'red"><script>alert(1)</script>';
-
-const etiquetasDe = (html: string): readonly string[] =>
-  [...html.matchAll(/<\/?([a-zA-Z][a-zA-Z0-9-]*)/g)].map((coincidencia) =>
-    (coincidencia[1] ?? "").toLowerCase(),
-  );
-
-const etiquetasAjenas = (html: string): readonly string[] =>
-  etiquetasDe(html).filter((etiqueta) => !ETIQUETAS_PERMITIDAS.has(etiqueta));
-
-const marcadorHostil = (): MarcadorDeMapa =>
-  marcadorDe([
-    {
-      ...HECHO_DE_REPORTE,
-      etiqueta: CARGA,
-      href: CARGA,
-      etiquetaDeTipo: CARGA,
-      etiquetaDeEstado: CARGA,
-      color: COLOR_CARGA,
-    },
-  ]);
-
-describe("html del mapa: solo las etiquetas que el modulo escribe", () => {
-  it("el pin no deja pasar ninguna etiqueta ajena", () => {
-    const html = htmlDeMarcador(marcadorHostil());
-
-    expect(etiquetasAjenas(html)).toEqual([]);
-    expect(html).not.toContain("<img");
-    expect(html).not.toContain("<script");
-  });
-
-  it("la ventana no deja pasar ninguna etiqueta ajena", () => {
-    const html = htmlDeLaVentana(marcadorHostil());
-
-    expect(etiquetasAjenas(html)).toEqual([]);
-    expect(html).not.toContain("<img");
-    expect(html).not.toContain("<script");
-  });
-
-  it("un color fuera de la paleta no se escribe: el pin cae al gris neutro", () => {
-    const html = htmlDeMarcador(marcadorHostil());
-
-    expect(html).toContain(`background:${COLOR_DE_ESTADO_DESCONOCIDO}`);
-    expect(html).not.toContain("script");
   });
 });

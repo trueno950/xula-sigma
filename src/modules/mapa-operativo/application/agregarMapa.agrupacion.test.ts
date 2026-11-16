@@ -26,19 +26,23 @@ const reporte = (id: string, folio: string, estado: string) => ({
   areaResponsable: null,
   calleId: CALLE,
   lugarId: LUGAR,
+  fechaDeRegistro: "2026-11-16",
 });
 
 const fuentes: FuentesDeMapa = {
   callesParaMapa: vi.fn(),
   reportesParaMapa: vi.fn(),
+  callesSinUbicar: vi.fn().mockResolvedValue([]),
   intervencionesParaMapa: vi.fn(),
   territoriosParaMapa: vi.fn(),
+  umbralDeAtraso: vi.fn(),
   lugaresDelSubarbol: vi.fn(),
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([]);
+  vi.mocked(fuentes.umbralDeAtraso).mockResolvedValue(7);
   vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValue([]);
   vi.mocked(fuentes.callesParaMapa).mockResolvedValue([
     { id: CALLE, nombre: "Calle 20", lugarId: LUGAR, punto: PUNTO },
@@ -54,6 +58,7 @@ beforeEach(() => {
       estado: "PLANIFICADA",
       calleId: CALLE,
       lugarId: LUGAR,
+      fechaDeOcurrencia: "2026-01-15",
     },
   ]);
 });

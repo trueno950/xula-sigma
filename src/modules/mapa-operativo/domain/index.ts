@@ -6,4 +6,5 @@ export * from "./iconos";
 export * from "./leyenda";
 export * from "./mapaOperativo";
 export * from "./recursoDeMapa";
+export * from "./sinUbicar";
 export * from "./vocabularios";

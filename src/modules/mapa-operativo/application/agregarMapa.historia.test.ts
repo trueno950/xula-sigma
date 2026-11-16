@@ -33,6 +33,7 @@ const intervencionEn = (id: string, calleId: typeof calleConPunto.id) => ({
   estado: "EN_EJECUCION" as const,
   calleId,
   lugarId: calleConPunto.lugarId,
+  fechaDeOcurrencia: "2026-01-15",
 });
 
 const fuentes: FuentesDeMapa = {
@@ -46,6 +47,7 @@ const fuentes: FuentesDeMapa = {
       areaResponsable: null,
       calleId: calleConPunto.id,
       lugarId: calleConPunto.lugarId,
+      fechaDeRegistro: "2026-11-16",
     },
     {
       id: comoReporteId("66666666-6666-4666-8666-666666666666"),
@@ -55,6 +57,7 @@ const fuentes: FuentesDeMapa = {
       areaResponsable: null,
       calleId: null,
       lugarId: calleConPunto.lugarId,
+      fechaDeRegistro: "2026-11-16",
     },
   ]),
   intervencionesParaMapa: vi
@@ -64,6 +67,8 @@ const fuentes: FuentesDeMapa = {
       intervencionEn("77777777-7777-4777-8777-777777777777", calleSinPunto.id),
     ]),
   territoriosParaMapa: vi.fn().mockResolvedValue([]),
+  callesSinUbicar: vi.fn().mockResolvedValue([]),
+  umbralDeAtraso: vi.fn().mockResolvedValue(7),
   lugaresDelSubarbol: vi.fn().mockResolvedValue([]),
 };
 

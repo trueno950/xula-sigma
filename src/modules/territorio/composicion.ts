@@ -8,6 +8,7 @@ import {
   crearCallePorId,
   crearCallePorIdEnTransaccion,
   crearCallesParaMapa,
+  crearCallesSinPunto,
   crearContarContenidoDeLugares,
   crearDarDeBajaCalle,
   crearDarDeBajaLugar,
@@ -33,6 +34,7 @@ import {
 import {
   crearLectorDePersonasPorPadron,
   lectorDeCallesDeMapaSql,
+  lectorDeCallesSinPuntoSql,
   lectorDeContenidoDeLugaresSql,
   lectorDeDireccionesSql,
   lectorDeUbicacionesSql,
@@ -69,6 +71,7 @@ export const listarCallesDelMunicipio = crearListarCallesDelMunicipio(
   repositorioDeLugaresSql,
 );
 export const callesParaMapa = crearCallesParaMapa(lectorDeCallesDeMapaSql);
+export const callesSinPunto = crearCallesSinPunto(lectorDeCallesSinPuntoSql);
 export const callePorId = crearCallePorId(lectorDeCallesDeMapaSql);
 export const callePorIdEnTransaccion = crearCallePorIdEnTransaccion(
   lectorDeCallesDeMapaSql,

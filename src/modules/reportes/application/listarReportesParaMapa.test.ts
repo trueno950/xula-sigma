@@ -32,6 +32,7 @@ const reporteSinCalle: ReporteParaMapa = {
   areaResponsable: null,
   calleId: null,
   lugarId: "22222222-2222-4222-8222-222222222222",
+  registradoEn: new Date("2026-11-16T18:00:00Z"),
 };
 
 const reporteConCalle: ReporteParaMapa = {
@@ -79,7 +80,10 @@ describe("listarReportesParaMapa", () => {
     ).resolves.toHaveLength(2);
   });
 
-  it("cada fila trae exactamente los siete campos contratados", async () => {
+  // Ocho desde S1 de `gestion-municipal`: `registradoEn` es lo que la senal
+  // de atraso del mapa necesita, y sin este recuento se colaria cualquier
+  // columna nueva sin que nadie lo notara.
+  it("cada fila trae exactamente los ocho campos contratados", async () => {
     const filas = await crearListarReportesParaMapa(lector)(
       contextoCon("CONSULTA"),
     );
@@ -91,6 +95,7 @@ describe("listarReportesParaMapa", () => {
       "folio",
       "id",
       "lugarId",
+      "registradoEn",
       "tipo",
     ]);
   });

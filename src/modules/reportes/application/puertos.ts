@@ -1,4 +1,3 @@
-import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type {
   AreaResponsable,
@@ -8,60 +7,26 @@ import type {
   TipoDeIncidencia,
 } from "../domain";
 import type {
+  DatosDeRegistroDeReporte,
+  ReporteGuardado,
+} from "./puertosDeFilas";
+import type {
+  ConteosCrudos,
   FiltrosDeListado,
   OpcionesDeBusqueda,
+  OpcionesDeConteo,
   OpcionesDeListado,
 } from "./puertosDeListado";
 
 /**
- * Lo que `registrarReporte` guarda en una sola fila (design.md seccion 10).
- * `lugarId`, `calleId` y `personaId` viajan como `string` y nunca como el id
- * marcado del modulo ajeno (design.md seccion 3): el dominio de `reportes` no
- * importa el de `territorio` ni el de `padron`.
- *
- * `estado` y `areaResponsable` viajan aca aunque siempre sean `"RECIBIDO"` y
- * `null` al alta: el paso 4c de design.md seccion 11 los pasa explicitos al
- * `guardar`, y la columna `estado` es NOT NULL sin default, asi que el
- * INSERT no se puede armar sin ellos. El resto del contrato de la tabla
- * (`motivoDeRechazo`, `duplicadoDeReporteId`) nace nulo y no viaja.
+ * Las dos formas de una fila -lo que se guarda y lo que se lee- viven en
+ * `puertosDeFilas.ts` por la metrica de lineas por archivo; se re-exportan
+ * aca para que `import { ... } from "./puertos"` siga funcionando.
  */
-export type DatosDeRegistroDeReporte = {
-  id: ReporteId;
-  ayuntamientoId: AyuntamientoId;
-  folio: string;
-  anio: number;
-  consecutivo: number;
-  tipo: TipoDeIncidencia;
-  estado: EstadoDeReporte;
-  areaResponsable: AreaResponsable | null;
-  lugarId: string;
-  calleId: string | null;
-  domicilioId: string | null;
-  referencia: string | null;
-  descripcion: string;
-  personaId: string | null;
-  registradoPorUsuarioId: string;
-};
-
-/** Lo que devuelve una lectura: los mismos campos mas lo que solo existe una vez guardada. */
-export type ReporteGuardado = {
-  id: ReporteId;
-  folio: string;
-  tipo: TipoDeIncidencia;
-  estado: EstadoDeReporte;
-  areaResponsable: AreaResponsable | null;
-  lugarId: string;
-  calleId: string | null;
-  domicilioId?: string | null;
-  referencia: string | null;
-  descripcion: string;
-  personaId: string | null;
-  motivoDeRechazo: MotivoDeRechazo | null;
-  duplicadoDeReporteId: string | null;
-  registradoPorUsuarioId: string;
-  registradoEn: Date;
-  actualizadoEn: Date;
-};
+export type {
+  DatosDeRegistroDeReporte,
+  ReporteGuardado,
+} from "./puertosDeFilas";
 
 /** Lo minimo del candidato a original: un salto, no la fila entera (design.md seccion 8). */
 export type CandidatoAOriginal = {
@@ -88,14 +53,16 @@ export type ReporteSimilar = {
 };
 
 /**
- * `FiltrosDeListado`, `OpcionesDeListado` y `OpcionesDeBusqueda` viven en
+ * `FiltrosDeListado`, `OpcionesDeListado`, `OpcionesDeBusqueda` y `ConteosCrudos` viven en
  * `puertosDeListado.ts` -tema propio, mismo criterio que
  * `puertosDeMovimientos.ts`- pero se re-exportan aca para que
  * `import { ... } from "./puertos"` siga funcionando.
  */
 export type {
+  FiltrosDeLaBandeja,
   FiltrosDeListado,
   OpcionesDeBusqueda,
+  OpcionesDeConteo,
   OpcionesDeListado,
 } from "./puertosDeListado";
 
@@ -175,6 +142,15 @@ export type RepositorioDeReportes = {
     cadena: string,
     opciones: OpcionesDeBusqueda,
   ): Promise<readonly ReporteGuardado[]>;
+  /**
+   * Los conteos de S2 en dos `GROUP BY`, con los mismos filtros y la misma
+   * busqueda que `listar`/`buscar`: los numeros de la pantalla tienen que
+   * corresponder a las filas que se ven.
+   */
+  contar(
+    tx: TransaccionTenant,
+    opciones: OpcionesDeConteo,
+  ): Promise<ConteosCrudos>;
   similaresAbiertos(
     tx: TransaccionTenant,
     criterio: { lugarId: string; tipo: TipoDeIncidencia },

@@ -315,3 +315,87 @@ mapa declara como cobertura faltante, y MUST NOT devolver `descripcion` ni
 - GIVEN reportes en Motul y en Ticul
 - WHEN se ejecuta la lectura con contexto de Motul
 - THEN solo aparecen reportes de Motul
+
+### Requirement: Umbral de atraso configurable por municipio
+
+Cada ayuntamiento MUST poder fijar cuantos dias sin atender marcan un
+reporte como atrasado, con 7 como valor por defecto y un entero de 1 a 90
+como rango. El valor MUST guardarse por municipio en
+`configuracion_de_reportes`, con `ayuntamiento_id`, RLS y politica de
+tenant; un municipio sin fila MUST leerse como 7. Solo `ADMIN_MUNICIPAL`
+(`puedeAdministrarReportes`) MUST poder cambiarlo, y el `ayuntamiento_id`
+MUST salir del contexto del servidor.
+
+Un reporte MUST considerarse atrasado solo si su estado es `RECIBIDO` y su
+fecha civil de registro -en `America/Merida`, por `shared/lib/fecha`- lleva
+al menos N dias. El atraso MUST verse en la bandeja como «Atrasado · N
+dias», con un filtro `?atrasados=1`, y en el mapa operativo como marca del
+pin y renglon de leyenda con el conteo.
+
+#### Scenario: Un municipio sin configurar usa el valor recomendado
+
+- GIVEN un ayuntamiento sin fila en `configuracion_de_reportes`
+- WHEN se lee su umbral
+- THEN el umbral es 7
+
+#### Scenario: El umbral de un municipio no toca al otro
+
+- GIVEN Motul con umbral 30 y Ticul sin configurar
+- WHEN el administrador de Motul cambia su umbral
+- THEN Motul lee el valor nuevo
+- AND Ticul sigue leyendo 7
+
+#### Scenario: Un rol sin permiso no cambia el umbral
+
+- GIVEN una sesion con rol `OPERADOR`
+- WHEN intenta guardar un umbral
+- THEN la operacion responde `NoAutorizadoError`
+- AND el umbral guardado no cambia
+
+#### Scenario: La frontera es inclusiva y solo cuenta lo recibido
+
+- GIVEN un reporte `RECIBIDO` registrado hace exactamente N dias
+- WHEN se calcula su atraso
+- THEN esta atrasado y lleva N dias
+- AND uno registrado hace N-1 dias no esta atrasado
+- AND uno ya atendido no esta atrasado aunque tenga meses
+
+### Requirement: Filtros y conteos por lugar y por area en la bandeja
+
+La bandeja de reportes MUST poder filtrarse por lugar -una colonia o una
+localidad del municipio- y por area responsable, ademas de estado, tipo y
+«solo atrasados». Los filtros MUST viajar por parametros GET validados con
+Zod, y un valor fuera del catalogo MUST caerse solo, sin arrastrar los
+demas.
+
+El lugar MUST resolverse contra la API publica de `territorio` e incluir su
+subarbol; un lugar de otro ayuntamiento MUST NOT producir ninguna fila ajena
+ni entrar como filtro. La bandeja MUST mostrar los conteos por estado -los
+cuatro, con sus ceros- y por area responsable de los filtros elegidos,
+computados en SQL bajo `withTenant` y con las mismas condiciones que el
+listado, de modo que los numeros coincidan con las filas.
+
+#### Scenario: El lugar elegido trae su subarbol
+
+- GIVEN una comisaria con una colonia adentro y reportes en las dos
+- WHEN se filtra por la comisaria
+- THEN aparecen los reportes de la comisaria y los de la colonia
+
+#### Scenario: El area recorta el conjunto del lugar
+
+- GIVEN los mismos reportes, con areas distintas
+- WHEN se filtra por la comisaria y por un area
+- THEN solo aparecen los de esa area dentro de ese subarbol
+- AND los conteos suman las filas visibles
+
+#### Scenario: Un lugar de otro municipio no muestra nada ajeno
+
+- GIVEN un lugar de Ticul y una sesion de Motul
+- WHEN se pide la bandeja con ese lugar
+- THEN no aparece ninguna fila de Ticul
+
+#### Scenario: Los conteos traen los ceros del catalogo
+
+- GIVEN un municipio sin reportes rechazados
+- WHEN se leen los conteos
+- THEN «Rechazado» aparece en cero

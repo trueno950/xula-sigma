@@ -16,6 +16,7 @@ export { TAMANO_DE_PAGINA } from "./application/listarReportes";
  * entre los dos rompe la compilacion.
  */
 export type {
+  FiltrosDeLaBandeja,
   FiltrosDeListado,
   ReporteGuardado,
   ReporteSimilar,
@@ -27,8 +28,11 @@ export {
   buscarReportes,
   buscarReportesSimilares,
   cambiarEstadoDeReporte,
+  cambiarUmbralDeAtraso,
   consultarFolioDeReporte,
+  contarReportes,
   historialDeReporte,
+  leerUmbralDeAtraso,
   listarReportes,
   listarReportesDeCalleEnTransaccion,
   listarReportesParaMapa,

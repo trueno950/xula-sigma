@@ -89,6 +89,26 @@ describe("agregarMapa, contra Postgres real", () => {
     expect(mapa.caja).toEqual(cajaDePuntos([PUNTO_B]));
   });
 
+  it("S3: las calles sin punto aparecen bajo su territorio y respetan el elegido", async () => {
+    const todoElMunicipio = await agregarMapa(contexto("motul"), {});
+    const soloA = await agregarMapa(contexto("motul"), { lugar: t.comisariaA });
+
+    const nombres = (mapa: typeof todoElMunicipio) =>
+      mapa.sinUbicar.flatMap((grupo) =>
+        grupo.calles.map((calle) => `${grupo.nombre}:${calle.nombre}`),
+      );
+
+    expect(
+      nombres(todoElMunicipio).some((nombre) =>
+        nombre.includes("Calle sin punto A"),
+      ),
+    ).toBe(true);
+    expect(nombres(soloA)).toEqual([
+      expect.stringContaining("Calle sin punto A"),
+    ]);
+    expect(nombres(soloA)[0]).toContain("Comisaria A");
+  });
+
   it("dos hechos sobre la misma calle comparten un marcador agrupado", async () => {
     const mapa = await agregarMapa(contexto("motul"), { lugar: t.comisariaB });
 

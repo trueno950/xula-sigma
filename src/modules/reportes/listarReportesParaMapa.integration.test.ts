@@ -153,7 +153,7 @@ describe("listarReportesParaMapa, contra Postgres real", () => {
     expect(ids).not.toContain(deTicul);
   });
 
-  it("no devuelve descripcion ni referencia, solo los siete campos contratados", async () => {
+  it("no devuelve descripcion ni referencia, solo los ocho campos contratados", async () => {
     const lugarId = await lugarDe("motul", "Comisaria Mapa Protegidos");
     const reporteId = await insertarReporte({
       municipio: "motul",
@@ -174,6 +174,7 @@ describe("listarReportesParaMapa, contra Postgres real", () => {
       "folio",
       "id",
       "lugarId",
+      "registradoEn",
       "tipo",
     ]);
     expect(fila).not.toHaveProperty("descripcion");

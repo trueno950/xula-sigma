@@ -183,6 +183,13 @@
       "when": 1794806499688,
       "tag": "0025_tipo_pavimentacion",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794817752697,
+      "tag": "0026_wet_warlock",
+      "breakpoints": true
     }
   ]
 }

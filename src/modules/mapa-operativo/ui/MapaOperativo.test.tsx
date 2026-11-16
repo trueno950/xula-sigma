@@ -128,3 +128,44 @@ describe("MapaOperativo", () => {
     expect(html).toContain("Planificada");
   });
 });
+
+describe("MapaOperativo, calles sin ubicar por territorio (S3)", () => {
+  const CALLE_SIN_PUNTO = {
+    id: "calle-9",
+    nombre: "Calle 21",
+    href: "/territorio?raiz=raiz-1&nodo=lugar-1&vista=calles&accion=ubicarCalle&calle=calle-9",
+  };
+
+  it("dice cuántas calles no tienen punto y enlaza cada una para ubicarla", () => {
+    const html = renderToStaticMarkup(
+      <MapaOperativo
+        filtros={{}}
+        mapa={mapaDe({
+          sinUbicar: [
+            {
+              id: "raiz-1",
+              nombre: "Comisaría de Kinchil",
+              calles: [CALLE_SIN_PUNTO],
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(html).toContain('aria-label="Calles sin ubicar"');
+    expect(html).toContain("Comisaría de Kinchil");
+    expect(html).toContain(
+      `href="${CALLE_SIN_PUNTO.href.replaceAll("&", "&amp;")}"`,
+    );
+    expect(html).toContain("Calle 21");
+    expect(html).toContain("1 calle sin ubicar");
+  });
+
+  it("sin calles sin punto no dibuja la sección", () => {
+    const html = renderToStaticMarkup(
+      <MapaOperativo filtros={{}} mapa={mapaDe({})} />,
+    );
+
+    expect(html).not.toContain('aria-label="Calles sin ubicar"');
+  });
+});

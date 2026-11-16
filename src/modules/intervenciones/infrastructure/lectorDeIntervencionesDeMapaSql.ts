@@ -10,6 +10,7 @@ export const lectorDeIntervencionesDeMapaSql: LectorDeIntervencionesDeMapa = {
         estado: intervenciones.estado,
         calleId: intervenciones.calleId,
         lugarId: intervenciones.lugarId,
+        fechaDeOcurrencia: intervenciones.fechaDeOcurrencia,
       })
       .from(intervenciones);
   },

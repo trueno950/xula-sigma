@@ -1,13 +1,14 @@
-import { Plus } from "@phosphor-icons/react/ssr";
+import { Plus, SlidersHorizontal } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import {
-  buscarReportes,
   descripcionDeFiltrosDeReportes,
+  fechaDeCorte,
   ListadoDeReportes,
-  listarReportes,
+  leerUmbralDeAtraso,
 } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
-import { puedeEscribir } from "@/shared/auth/roles";
+import { puedeAdministrarReportes, puedeEscribir } from "@/shared/auth/roles";
+import { hoyEnMerida } from "@/shared/lib/fecha";
 import {
   Aviso,
   AvisoDePermiso,
@@ -16,6 +17,12 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+import { AccionesDeCabecera } from "./accionesDeCabecera";
+import {
+  cargarFiltrosDeTerritorio,
+  filtrosDeLaConsulta,
+  leerLaBandeja,
+} from "./cargaDeLaBandeja";
 import { leerParametros } from "./parametros";
 
 export const metadata: Metadata = { title: "Reportes" };
@@ -35,6 +42,19 @@ type Props = {
  * `PaginaDePadron`-, pero a diferencia de esa pantalla los filtros de
  * `estado`/`tipo` viajan en los dos casos: `design.md`, "Buscador",
  * "convive con los filtros, nunca los reemplaza".
+ *
+ * S1 de `gestion-municipal` agrega el umbral de atraso: el `?atrasados=1` de
+ * la URL se resuelve aca a la fecha civil de corte -con el umbral del
+ * municipio y el dia de hoy en Merida- y viaja al repositorio como
+ * condicion de SQL, para que el filtro recorte antes de paginar. La
+ * insignia de cada fila la calcula `ListadoDeReportes` con el mismo umbral y
+ * el mismo dia.
+ *
+ * S2 agrega el lugar y el area responsable. El `?lugar=` se resuelve contra
+ * la API publica de `territorio` -este es el unico lugar donde los dos
+ * modulos se tocan- y viaja como el conjunto de ids de su subarbol; los
+ * conteos por estado y por area se piden con los mismos filtros y la misma
+ * busqueda, en el mismo `Promise.all` que el listado.
  */
 export default async function PaginaDeReportes({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -43,20 +63,38 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
     return <PantallaDeMensaje mensaje="No se pudo determinar su sesión." />;
   }
 
-  const { filtros, q, limite, orden, error } = leerParametros(
+  const { filtros, q, limite, orden, error, soloAtrasados } = leerParametros(
     await searchParams,
   );
+  const umbral = await leerUmbralDeAtraso(contexto);
+  const hoy = hoyEnMerida();
+  const territorio = await cargarFiltrosDeTerritorio(filtros, contexto);
+  const filtrosDeConsulta = filtrosDeLaConsulta({
+    filtros,
+    ...(territorio.lugarIds ? { lugarIds: territorio.lugarIds } : {}),
+    ...(soloAtrasados ? { atrasadosDesde: fechaDeCorte(hoy, umbral) } : {}),
+  });
 
-  const opciones = {
+  // Un `?lugar=` que no es un lugar del municipio no se pinta ni se nombra:
+  // el filtro no se aplico -lo resuelve `cargarFiltrosDeTerritorio`-, asi que
+  // la pantalla no puede mostrar un chip de un filtro que no esta puesto.
+  const { lugar: lugarPedido, ...sinLugar } = filtros;
+  void lugarPedido;
+  const filtrosDeLaPantalla = territorio.lugarIds ? filtros : sinLugar;
+
+  const { reportes, hayMas, conteos } = await leerLaBandeja({
+    filtros: filtrosDeConsulta,
+    cadena: q,
+    contexto,
     ...(limite ? { limite } : {}),
     ...(orden ? { orden } : {}),
-  };
-  const { reportes, hayMas } = q
-    ? await buscarReportes(q, contexto, { filtros, ...opciones })
-    : await listarReportes(filtros, contexto, opciones);
+  });
   const estado = estadoDeLista({
     total: reportes.length,
-    filtro: descripcionDeFiltrosDeReportes(filtros, q),
+    filtro: descripcionDeFiltrosDeReportes(filtrosDeLaPantalla, q, {
+      soloAtrasados,
+      lugares: territorio.lugares,
+    }),
   });
 
   const alta = puedeEscribir(contexto.usuario.rol) ? (
@@ -65,10 +103,19 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
       Registrar reporte
     </EnlaceDeAccion>
   ) : undefined;
+  const configuracion = puedeAdministrarReportes(contexto.usuario.rol) ? (
+    <EnlaceDeAccion href="/reportes/configuracion" variante="secundaria">
+      <SlidersHorizontal size={18} weight="bold" aria-hidden="true" />
+      Configurar atraso
+    </EnlaceDeAccion>
+  ) : undefined;
   const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
-    <PaginaDePanel titulo="Reportes ciudadanos" accion={alta}>
+    <PaginaDePanel
+      titulo="Reportes ciudadanos"
+      accion={<AccionesDeCabecera alta={alta} configuracion={configuracion} />}
+    >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
       {!puedeActuar ? (
@@ -82,7 +129,12 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
         reportes={reportes}
         hayMas={hayMas}
         estadoDeLista={estado}
-        filtros={filtros}
+        filtros={filtrosDeLaPantalla}
+        umbral={umbral}
+        hoy={hoy}
+        lugares={territorio.opciones}
+        conteos={conteos}
+        soloAtrasados={soloAtrasados}
         q={q}
         orden={orden}
         limite={limite}

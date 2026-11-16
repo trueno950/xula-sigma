@@ -39,9 +39,23 @@ describe("LeyendaDelMapa", () => {
 
   it("no dibuja una leyenda vacia", () => {
     const html = renderToStaticMarkup(
-      <LeyendaDelMapa leyenda={{ tipos: [], estados: [] }} />,
+      <LeyendaDelMapa leyenda={{ tipos: [], estados: [], atrasados: 0 }} />,
     );
 
     expect(html).toBe("");
+  });
+
+  it("S1: dice cuantos reportes estan atrasados, y calla cuando no hay", () => {
+    const conAtraso = renderToStaticMarkup(
+      <LeyendaDelMapa leyenda={{ ...LEYENDA, atrasados: 2 }} />,
+    );
+
+    expect(conAtraso).toContain('aria-label="Conteo de atrasados"');
+    expect(textoPlano(conAtraso)).toContain(
+      "Reportes sin atender más de lo permitido 2",
+    );
+    expect(
+      textoPlano(renderToStaticMarkup(<LeyendaDelMapa leyenda={LEYENDA} />)),
+    ).not.toContain("Atrasados");
   });
 });

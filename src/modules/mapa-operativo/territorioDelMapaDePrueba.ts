@@ -112,6 +112,11 @@ export const sembrarTerritorioDelMapa = async (gente: GentePorMunicipio) => {
   const comisariaB = await lugarDe("motul", `Comisaria B ${MARCA}`);
   const comisariaAjena = await lugarDe("ticul", `Comisaria ajena ${MARCA}`);
 
+  // Sin punto, para S3: no se ubica, asi que queda pendiente en su territorio.
+  const calleSinPuntoDeA = await altaDeCalle(
+    { nombre: `Calle sin punto A ${MARCA}`, lugarId: comisariaA },
+    contextoDe(gente, "motul", "ADMIN_MUNICIPAL"),
+  );
   const calleDeA = await calleUbicadaDe({
     municipio: "motul",
     lugarId: comisariaA,
@@ -133,6 +138,7 @@ export const sembrarTerritorioDelMapa = async (gente: GentePorMunicipio) => {
 
   return {
     comisariaA,
+    calleSinPuntoDeA: calleSinPuntoDeA.id,
     coloniaDeA,
     comisariaB,
     comisariaAjena,

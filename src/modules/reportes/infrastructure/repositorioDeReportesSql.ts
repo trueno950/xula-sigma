@@ -3,6 +3,7 @@ import type { RepositorioDeReportes } from "../application/puertos";
 import { comoReporteId, ESTADOS_DE_REPORTE, esTerminal } from "../domain";
 import { aReporteGuardado } from "./aReporteGuardado";
 import { consultaPublicaDeReportesSql } from "./consultaPublicaDeReportesSql";
+import { conteosDeReportesSql } from "./conteosDeReportesSql";
 import { reportes } from "./esquema";
 import { listadoDeReportesSql } from "./listadoDeReportesSql";
 import { similaresDeReportesSql } from "./similaresDeReportesSql";
@@ -23,10 +24,11 @@ const ESTADOS_NO_TERMINALES = ESTADOS_DE_REPORTE.filter(
  * (tasks.md 5.3, 5.14), sobre `guardar`, `buscarPorId` y `listar` de la
  * Fase 4. `paraConsultaPublica`/`paraConsultaPublicaPorId` entran en esta
  * rebanada (tasks.md Fase 6) para `consultarFolioDeReporte`;
- * `similaresAbiertos` (tasks.md 7.1) cierra el contrato completo. `listar`
- * y `buscar` se completan por spread desde `listadoDeReportesSql.ts` -
- * mismo mecanismo que `consultaPublicaDeReportesSql`/`similaresDeReportesSql`,
- * separados por la metrica de lineas por archivo (`AGENTS.md`).
+ * `similaresAbiertos` (tasks.md 7.1) cierra el contrato completo. `listar`,
+ * `buscar` y `contar` se completan por spread desde
+ * `listadoDeReportesSql.ts` y `conteosDeReportesSql.ts` -mismo mecanismo que
+ * `consultaPublicaDeReportesSql`/`similaresDeReportesSql`, separados por la
+ * metrica de lineas por archivo (`AGENTS.md`).
  */
 export const repositorioDeReportesSql: Pick<
   RepositorioDeReportes,
@@ -34,6 +36,7 @@ export const repositorioDeReportesSql: Pick<
   | "buscarPorId"
   | "listar"
   | "buscar"
+  | "contar"
   | "candidatoAOriginalPorFolio"
   | "aplicarTransicion"
   | "asignarArea"
@@ -131,6 +134,7 @@ export const repositorioDeReportesSql: Pick<
   },
 
   ...listadoDeReportesSql,
+  ...conteosDeReportesSql,
   ...consultaPublicaDeReportesSql,
   ...similaresDeReportesSql,
 };

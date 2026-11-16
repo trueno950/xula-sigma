@@ -107,6 +107,10 @@ describe("construirLeyenda", () => {
   });
 
   it("sin hechos la leyenda queda vacia y no inventa renglones", () => {
-    expect(construirLeyenda([])).toEqual({ tipos: [], estados: [] });
+    expect(construirLeyenda([])).toEqual({
+      tipos: [],
+      estados: [],
+      atrasados: 0,
+    });
   });
 });

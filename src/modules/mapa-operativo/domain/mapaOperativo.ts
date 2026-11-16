@@ -1,5 +1,6 @@
 import type { ClaveDeIcono } from "./iconos";
 import type { LeyendaDelMapa } from "./leyenda";
+import type { TerritorioSinUbicar } from "./sinUbicar";
 
 export type RazonDeCoberturaFaltante = "SIN_CALLE" | "CALLE_SIN_PUNTO";
 
@@ -30,6 +31,19 @@ type DatosDeHechoEnMarcador = {
   icono: ClaveDeIcono;
   /** El color lo decidio el servidor; ver `coloresDeEstado.ts`. */
   color: string;
+  /**
+   * Los dias que el reporte lleva sin atenderse (S1), o `null` si esta al
+   * dia, ya se atendio, o el hecho es una intervencion. Es lo que marca el
+   * pin y lo que dice su ventana.
+   */
+  diasDeAtraso: number | null;
+  /**
+   * La fecha del hecho en fecha civil (`YYYY-MM-DD`, S4): el registro de un
+   * reporte o la fecha de ocurrencia de una intervencion. La ventana del pin
+   * la muestra tal cual; el formato lo pone la UI con `shared/lib/fecha`.
+   * Cadena vacia es «no hay fecha que mostrar», y entonces no se pinta.
+   */
+  fechaCivil: string;
 };
 
 /**
@@ -38,8 +52,9 @@ type DatosDeHechoEnMarcador = {
  * 8-): armar un hecho o una entrada de cobertura con el `recurso` equivocado
  * para su `id` es un error de tipos, no algo que solo un test detecte.
  *
- * No lleva fecha: ni `listarReportesParaMapa` ni `listarIntervencionesParaMapa`
- * la exponen, y el mapa no la pide por otra puerta.
+ * Lleva los dias de atraso y no la fecha de registro: lo que el pin necesita
+ * decir es "lleva N dias sin atenderse", y esa cuenta la resolvio el
+ * adaptador con el umbral del municipio y la fecha civil de hoy.
  */
 export type HechoEnMarcador =
   | ({ recurso: "REPORTE"; id: IdDeReporteEnMapa } & DatosDeHechoEnMarcador)
@@ -112,4 +127,6 @@ export type MapaOperativoAgregado = {
   cobertura: readonly CoberturaFaltante[];
   conteos: { reportes: number; intervenciones: number; total: number };
   leyenda: LeyendaDelMapa;
+  /** S3: las calles sin punto, por territorio; vacio si no falta ninguna. */
+  sinUbicar: readonly TerritorioSinUbicar[];
 };

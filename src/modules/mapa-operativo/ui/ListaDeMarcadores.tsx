@@ -12,7 +12,8 @@ const DETALLE = "text-caliza-apagada";
 /**
  * S5: el camino sin JavaScript sigue siendo esta lista, y ahora dice lo mismo
  * que el mapa: un pin por calle, con cuantos hechos lleva adentro y cuales
- * son. Es tambien la alternativa para quien no puede usar el mapa.
+ * son. Es tambien la alternativa para quien no puede usar el mapa, y por eso
+ * la senal de atraso de S1 se escribe aca y no solo se pinta en el pin.
  */
 export function ListaDeMarcadores({
   marcadores,
@@ -39,6 +40,12 @@ export function ListaDeMarcadores({
                 </Link>{" "}
                 <span className={DETALLE}>
                   {hecho.etiquetaDeTipo} · {hecho.etiquetaDeEstado}
+                  {hecho.diasDeAtraso === null ? null : (
+                    <strong className="ml-1 text-senial-error">
+                      Atrasado · {hecho.diasDeAtraso}{" "}
+                      {hecho.diasDeAtraso === 1 ? "día" : "días"}
+                    </strong>
+                  )}
                 </span>
               </li>
             ))}

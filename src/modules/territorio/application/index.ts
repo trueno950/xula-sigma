@@ -5,6 +5,7 @@ export * from "./altaDeLugar";
 export * from "./altaDeZona";
 export * from "./callePorId";
 export * from "./callesParaMapa";
+export * from "./callesSinPunto";
 export * from "./contarContenidoDeLugares";
 export * from "./corregirDomicilio";
 export * from "./crearDomiciliosDeZona";

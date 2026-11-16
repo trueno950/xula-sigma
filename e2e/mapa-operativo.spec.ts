@@ -314,3 +314,60 @@ test("mapa operativo agrupa por calle y publica la leyenda con conteos", async (
   await expect(porEstado).toContainText("Recibido 1");
   await expect(porEstado).toContainText("Planificada 2");
 });
+
+/**
+ * S3 y S4 de `gestion-municipal`: cada territorio dice cuantas de sus calles
+ * no tienen punto, con el enlace para ubicarlas, y la ventana de cada
+ * marcador muestra la fecha civil del hecho -el registro del reporte y la
+ * ocurrencia de la obra-.
+ *
+ * La seccion respeta el `?lugar=`: en un territorio sin calles sin punto no
+ * aparece, que es lo mismo que decir que no esta contando todo el municipio
+ * cuando la vista esta acotada.
+ */
+test("mapa operativo: calles sin ubicar por territorio y fecha civil en la ventana", async ({
+  page,
+}) => {
+  await abrirMapaDeMotul(page);
+  await elegirTerritorio(page, escenario.origenId);
+
+  const seccion = page.getByRole("region", { name: "Calles sin ubicar" });
+  await expect(seccion).toBeVisible();
+
+  const pendientes = page.getByRole("list", {
+    name: /Calles sin ubicar en/,
+  });
+  await expect(pendientes).toContainText(escenario.movible);
+  await expect(
+    pendientes.getByRole("link", { name: escenario.movible }),
+  ).toHaveAttribute(
+    "href",
+    new RegExp(`accion=ubicarCalle&calle=${escenario.movibleId}`),
+  );
+
+  // La ventana del pin: el folio del reporte con su fecha civil y la
+  // ocurrencia de la obra, que el escenario siembra el 2026-01-15.
+  const mapa = page.getByRole("region", {
+    name: /Mapa con los marcadores del municipio/,
+  });
+  await mapa.locator(".leaflet-marker-icon").first().click();
+  const ventana = page.locator(".leaflet-popup-content");
+  await expect(ventana).toContainText(escenario.folio);
+  await expect(ventana).toContainText("15 ene 2026");
+
+  // Acotado a un territorio sin calles pendientes, la seccion no aparece.
+  await elegirTerritorio(page, escenario.vacioId);
+  await expect(seccion).toHaveCount(0);
+
+  // Y el enlace lleva al registro territorial con la calle ya abierta.
+  await elegirTerritorio(page, escenario.origenId);
+  await pendientes.getByRole("link", { name: escenario.movible }).click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/territorio\\?raiz=.*accion=ubicarCalle&calle=${escenario.movibleId}`,
+    ),
+  );
+  await expect(
+    page.getByRole("heading", { name: escenario.movible }),
+  ).toBeVisible();
+});

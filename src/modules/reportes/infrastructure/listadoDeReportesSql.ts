@@ -1,6 +1,5 @@
-import { and, asc, desc, eq, ilike, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import type {
-  FiltrosDeListado,
   OpcionesDeListado,
   RepositorioDeReportes,
 } from "../application/puertos";
@@ -9,7 +8,7 @@ import type {
   LectorDeReportesDeMapa,
 } from "../application/puertosDeLecturaDeReportes";
 import { aReporteGuardado } from "./aReporteGuardado";
-import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
+import { condicionesDeLectura } from "./condicionesDeFiltrosSql";
 import { reportes } from "./esquema";
 
 /**
@@ -21,19 +20,11 @@ import { reportes } from "./esquema";
  *
  * Tambien vive aca `lectorDeReportesDeMapaSql`: el contrato completo esta
  * en `puertosDeLecturaDeReportes.ts`.
+ *
+ * Las condiciones de los filtros viven en `condicionesDeFiltrosSql.ts` porque
+ * los conteos de S2 las comparten: los numeros y las filas no pueden contar
+ * conjuntos distintos.
  */
-
-/** `estado`/`tipo` de `FiltrosDeListado`, compartidas por `listar` y `buscar`. */
-const condicionesDeFiltros = (filtros: FiltrosDeListado): SQL[] => {
-  const condiciones: SQL[] = [];
-  if (filtros.estado !== undefined) {
-    condiciones.push(eq(reportes.estado, filtros.estado));
-  }
-  if (filtros.tipo !== undefined) {
-    condiciones.push(eq(reportes.tipo, filtros.tipo));
-  }
-  return condiciones;
-};
 
 /**
  * `opciones.orden` de `design.md`, "Ordenamiento de columnas": "folio" es
@@ -58,7 +49,7 @@ export const listadoDeReportesSql: Pick<
     // Sin `WHERE ayuntamiento_id` a mano: la politica de la tabla ya acota
     // el SELECT al tenant de la transaccion (mismo criterio que
     // `similaresAbiertos`, design.md seccion 13).
-    const condiciones = condicionesDeFiltros(filtros);
+    const condiciones = condicionesDeLectura({ filtros });
 
     const filas = await tx
       .select()
@@ -77,19 +68,10 @@ export const listadoDeReportesSql: Pick<
     // necesita tolerancia a variantes para encontrar un folio o una
     // palabra de la descripcion. `%` no es sargable sin GIN, pero la
     // politica de tenant ya acota el barrido a un solo municipio.
-    //
-    // `escaparComodinesDeLike` va antes de armar el patron: sin escapar,
-    // un "%" o un "_" en lo que tipeo el operador actua como comodin de
-    // Postgres en vez de como texto literal.
-    const cadenaEscapada = escaparComodinesDeLike(cadena);
-    const condiciones = [
-      ...condicionesDeFiltros(opciones.filtros ?? {}),
-      or(
-        ilike(reportes.folio, `%${cadenaEscapada}%`),
-        ilike(reportes.descripcion, `%${cadenaEscapada}%`),
-        ilike(reportes.referencia, `%${cadenaEscapada}%`),
-      ) as SQL,
-    ];
+    const condiciones = condicionesDeLectura({
+      ...(opciones.filtros === undefined ? {} : { filtros: opciones.filtros }),
+      cadena,
+    });
 
     const filas = await tx
       .select()
@@ -120,6 +102,7 @@ export const lectorDeReportesDeMapaSql: LectorDeReportesDeMapa &
         areaResponsable: reportes.areaResponsable,
         calleId: reportes.calleId,
         lugarId: reportes.lugarId,
+        registradoEn: reportes.registradoEn,
       })
       .from(reportes);
   },

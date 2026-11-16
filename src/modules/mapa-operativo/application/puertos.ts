@@ -16,6 +16,12 @@ export type ReporteParaMapaOperativo = {
   areaResponsable: string | null;
   calleId: string | null;
   lugarId: string;
+  /**
+   * Fecha civil del registro (`YYYY-MM-DD` en `America/Merida`), ya resuelta
+   * por el adaptador con `shared/lib/fecha`: es lo que la senal de atraso de
+   * S1 necesita, y el dominio del mapa no conoce zonas horarias ni `Date`.
+   */
+  fechaDeRegistro: string;
 };
 export type IntervencionParaMapaOperativo = {
   id: string;
@@ -23,6 +29,17 @@ export type IntervencionParaMapaOperativo = {
   estado: string;
   calleId: string | null;
   lugarId: string;
+  /** Fecha civil del hecho (`YYYY-MM-DD`), como la guarda `intervenciones`. */
+  fechaDeOcurrencia: string;
+};
+
+/** Una calle activa sin punto, con la raiz de su territorio (S3). */
+export type CalleSinPuntoParaMapaOperativo = {
+  calleId: string;
+  calleNombre: string;
+  lugarId: string;
+  raizId: string;
+  raizNombre: string;
 };
 
 /** Una opcion del selector de territorio: la cabecera o una comisaria. */
@@ -41,6 +58,19 @@ export type FuentesDeMapa = {
   territoriosParaMapa(
     contexto: ContextoActual,
   ): Promise<readonly TerritorioParaMapaOperativo[]>;
+  /**
+   * El umbral de atraso del municipio, leido de `reportes` por la API publica
+   * de ese modulo. `reportes` es el dueno de la regla; el mapa solo la aplica
+   * para marcar sus pines.
+   */
+  umbralDeAtraso(contexto: ContextoActual): Promise<number>;
+  /**
+   * S3: las calles sin punto de cada territorio, leidas por la API publica de
+   * `territorio` -el mapa no importa su dominio ni reimplementa la jerarquia-.
+   */
+  callesSinUbicar(
+    contexto: ContextoActual,
+  ): Promise<readonly CalleSinPuntoParaMapaOperativo[]>;
   /** El lugar y todos sus descendientes, a cualquier profundidad. */
   lugaresDelSubarbol(
     contexto: ContextoActual,

@@ -5,7 +5,10 @@ import {
   type SortingState,
 } from "@tanstack/table-core";
 import type { ColumnaDeTabla } from "@/shared/ui";
-import type { FiltrosDeListado, ReporteGuardado } from "../application/puertos";
+import type {
+  FiltrosDeLaBandeja,
+  ReporteGuardado,
+} from "../application/puertos";
 import type { OrdenDeReportes } from "../domain";
 import { construirHrefDeListado } from "./hrefsDeListado";
 
@@ -51,8 +54,9 @@ export function resolverOrdenDeColumnas(
   columnasBase: readonly ColumnaDeTabla[],
   parametros: {
     orden?: OrdenDeReportes | undefined;
-    filtros?: FiltrosDeListado | undefined;
+    filtros?: FiltrosDeLaBandeja | undefined;
     q?: string | undefined;
+    soloAtrasados?: boolean | undefined;
   },
 ): readonly ColumnaDeTabla[] {
   const sorting: SortingState = parametros.orden
@@ -87,6 +91,7 @@ export function resolverOrdenDeColumnas(
         href: construirHrefDeListado({
           filtros: parametros.filtros,
           q: parametros.q,
+          soloAtrasados: parametros.soloAtrasados,
           orden: {
             campo: columna.clave as OrdenDeReportes["campo"],
             direccion: siguiente,

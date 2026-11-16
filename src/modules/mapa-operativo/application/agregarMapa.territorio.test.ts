@@ -42,8 +42,10 @@ const CALLE_DE_LA_ARISTA = calleDe("calle-arista", ARISTA, {
 const fuentes: FuentesDeMapa = {
   callesParaMapa: vi.fn(),
   reportesParaMapa: vi.fn(),
+  callesSinUbicar: vi.fn().mockResolvedValue([]),
   intervencionesParaMapa: vi.fn(),
   territoriosParaMapa: vi.fn(),
+  umbralDeAtraso: vi.fn(),
   lugaresDelSubarbol: vi.fn(),
 };
 
@@ -64,6 +66,7 @@ beforeEach(() => {
       areaResponsable: null,
       calleId: CALLE_DE_LA_COMISARIA.id,
       lugarId: CABECERA,
+      fechaDeRegistro: "2026-11-16",
     },
     {
       id: comoReporteId("66666666-6666-4666-8666-666666666666"),
@@ -73,6 +76,7 @@ beforeEach(() => {
       areaResponsable: null,
       calleId: null,
       lugarId: CABECERA,
+      fechaDeRegistro: "2026-11-16",
     },
   ]);
   vi.mocked(fuentes.intervencionesParaMapa).mockResolvedValue([
@@ -82,6 +86,7 @@ beforeEach(() => {
       estado: "PLANIFICADA",
       calleId: CALLE_DE_LA_CABECERA.id,
       lugarId: CABECERA,
+      fechaDeOcurrencia: "2026-01-15",
     },
   ]);
   vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([

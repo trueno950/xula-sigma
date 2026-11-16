@@ -10,6 +10,9 @@ const TITULO = "text-[15px] font-semibold tracking-[-0.01em] text-caliza-tinta";
  * S3: la leyenda es HTML del servidor -sin JavaScript se ve igual-, y sus
  * colores son los que decidio `domain/coloresDeEstado.ts`, no una paleta del
  * cliente: la muestra es el color que va a tener el pin en el mapa.
+ *
+ * S1 le agrega el renglon de atrasados, con el mismo aro rojo que marca el
+ * pin: es el unico conteo de la leyenda que no es un tipo ni un estado.
  */
 export function LeyendaDelMapa({ leyenda }: { leyenda: Leyenda }) {
   if (leyenda.tipos.length === 0 && leyenda.estados.length === 0) return null;
@@ -36,6 +39,21 @@ export function LeyendaDelMapa({ leyenda }: { leyenda: Leyenda }) {
                 <span className="ml-auto font-semibold">{entrada.conteo}</span>
               </li>
             ))}
+          </ul>
+        </div>
+      ) : null}
+      {leyenda.atrasados > 0 ? (
+        <div className="flex flex-col gap-2">
+          <h2 className={TITULO}>Atrasados</h2>
+          <ul aria-label="Conteo de atrasados" className="flex flex-col gap-1">
+            <li className={RENGLON}>
+              <span
+                aria-hidden="true"
+                className="size-3 shrink-0 rounded-full ring-2 ring-senial-error"
+              />{" "}
+              <span>Reportes sin atender más de lo permitido</span>{" "}
+              <span className="ml-auto font-semibold">{leyenda.atrasados}</span>
+            </li>
           </ul>
         </div>
       ) : null}

@@ -1,6 +1,7 @@
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type {
   CalleId,
+  LugarId,
   NaturalezaEstructural,
   PuntoGeografico,
 } from "../domain";
@@ -48,4 +49,27 @@ export type LectorDeCallesDeMapa = {
     tx: TransaccionTenant,
     id: CalleId,
   ): Promise<CalleConEventos | null>;
+};
+
+/**
+ * Una calle activa sin punto, con el lugar que la contiene y la raiz de su
+ * territorio. La raiz la resuelve el recorrido de la jerarquia: el mapa
+ * necesita decir «esta comisaria tiene N calles sin ubicar», no un listado
+ * plano de calles sueltas (S3 de `gestion-municipal`).
+ */
+export type CalleSinPunto = {
+  calleId: CalleId;
+  calleNombre: string;
+  lugarId: LugarId;
+  raizId: LugarId;
+  raizNombre: string;
+};
+
+/**
+ * Lado de lectura de S3: las calles sin punto de cada territorio. Sin
+ * guarda de rol -leer el mapa no es administrar- y sin `WHERE` de tenant a
+ * mano: RLS acota `calles` y `lugares` bajo el mismo `tx`.
+ */
+export type LectorDeCallesSinPunto = {
+  listarSinPunto(tx: TransaccionTenant): Promise<readonly CalleSinPunto[]>;
 };

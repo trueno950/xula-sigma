@@ -20,16 +20,31 @@ const comun = (tipo: string, estado: string) => ({
   color: colorDeEstado(estado),
 });
 
-export const HECHO_DE_REPORTE: HechoEnMarcador = {
+/**
+ * Los dos dobles llevan su variante concreta y no la union: un `{...hecho}`
+ * sobre la union produce una union de objetos donde el `id` de una variante
+ * puede caer en la otra, y eso no compila.
+ */
+export const HECHO_DE_REPORTE: Extract<
+  HechoEnMarcador,
+  { recurso: "REPORTE" }
+> = {
   ...comun("BACHE", "RECIBIDO"),
+  diasDeAtraso: null,
+  fechaCivil: "2026-11-16",
   recurso: "REPORTE",
   id: comoIdDeReporteEnMapa("reporte-1"),
   etiqueta: "REP-1",
   href: "/reportes/detalle/reporte-1",
 };
 
-export const HECHO_DE_INTERVENCION: HechoEnMarcador = {
+export const HECHO_DE_INTERVENCION: Extract<
+  HechoEnMarcador,
+  { recurso: "INTERVENCION" }
+> = {
   ...comun("OBRA", "PLANIFICADA"),
+  diasDeAtraso: null,
+  fechaCivil: "2026-01-15",
   recurso: "INTERVENCION",
   id: comoIdDeIntervencionEnMapa("intervencion-1"),
   etiqueta: "Obra",
@@ -58,6 +73,7 @@ export const mapaDe = (
   marcadores: [],
   cobertura: [],
   conteos: { reportes: 0, intervenciones: 0, total: 0 },
-  leyenda: { tipos: [], estados: [] },
+  leyenda: { tipos: [], estados: [], atrasados: 0 },
+  sinUbicar: [],
   ...parcial,
 });

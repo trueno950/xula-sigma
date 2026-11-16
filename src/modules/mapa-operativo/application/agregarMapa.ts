@@ -1,7 +1,13 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
+import { hoyEnMerida } from "@/shared/lib/fecha";
 import type { MapaOperativoAgregado } from "../domain";
-import { cajaDePuntos, construirLeyenda } from "../domain";
 import {
+  agruparCallesSinUbicar,
+  cajaDePuntos,
+  construirLeyenda,
+} from "../domain";
+import {
+  type AtrasoDelMapa,
   filtrarIntervenciones,
   filtrarReportes,
   type Hecho,
@@ -9,6 +15,7 @@ import {
 import { clasificar } from "./marcadores";
 import type {
   CalleParaMapaOperativo,
+  CalleSinPuntoParaMapaOperativo,
   FiltrosDeMapa,
   FuentesDeMapa,
   IntervencionParaMapaOperativo,
@@ -23,11 +30,13 @@ import {
 
 type LecturasDelMapa = {
   calles: readonly CalleParaMapaOperativo[];
+  callesSinUbicar: readonly CalleSinPuntoParaMapaOperativo[];
   reportes: readonly ReporteParaMapaOperativo[];
   intervenciones: readonly IntervencionParaMapaOperativo[];
   territorios: readonly TerritorioParaMapaOperativo[];
   raiz: TerritorioParaMapaOperativo | null;
   permitidos: ReadonlySet<string> | null;
+  atraso: AtrasoDelMapa;
 };
 
 const contar = (hechos: readonly Hecho[]) => ({
@@ -65,32 +74,52 @@ async function leerMapa(
   contexto: ContextoActual,
   lugar: string | undefined,
 ): Promise<LecturasDelMapa> {
-  const [calles, reportes, intervenciones, territorios] = await Promise.all([
+  const [
+    calles,
+    callesSinUbicar,
+    reportes,
+    intervenciones,
+    territorios,
+    umbral,
+  ] = await Promise.all([
     fuentes.callesParaMapa(contexto),
+    fuentes.callesSinUbicar(contexto),
     fuentes.reportesParaMapa(contexto),
     fuentes.intervencionesParaMapa(contexto),
     fuentes.territoriosParaMapa(contexto),
+    fuentes.umbralDeAtraso(contexto),
   ]);
   const raiz = raizElegida(territorios, lugar);
   const permitidos = await lugaresPermitidos(fuentes, contexto, raiz);
-  return { calles, reportes, intervenciones, territorios, raiz, permitidos };
-}
-
-function componerMapa(
-  {
+  return {
     calles,
+    callesSinUbicar,
     reportes,
     intervenciones,
     territorios,
     raiz,
     permitidos,
+    atraso: { umbral, hoy: hoyEnMerida() },
+  };
+}
+
+function componerMapa(
+  {
+    calles,
+    callesSinUbicar,
+    reportes,
+    intervenciones,
+    territorios,
+    raiz,
+    permitidos,
+    atraso,
   }: LecturasDelMapa,
   filtros: FiltrosDeMapa,
 ): MapaOperativoAgregado {
   const puntos = new Map(calles.map((calle) => [calle.id, calle]));
   const hechos = filtrarPorTerritorio(
     [
-      ...filtrarReportes(reportes, filtros),
+      ...filtrarReportes(reportes, filtros, atraso),
       ...filtrarIntervenciones(intervenciones, filtros),
     ],
     puntos,
@@ -107,6 +136,7 @@ function componerMapa(
     cobertura,
     conteos,
     leyenda: construirLeyenda(hechos),
+    sinUbicar: agruparCallesSinUbicar({ calles: callesSinUbicar, permitidos }),
   };
 }
 

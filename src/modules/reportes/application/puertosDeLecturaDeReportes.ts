@@ -8,9 +8,15 @@ import type {
 
 /**
  * Lo que el mapa operativo necesita de un reporte: identidad, clasificacion,
- * estado y ubicacion. Sin `descripcion` ni `referencia` -siguen protegidas
- * en el detalle del reporte-, y `calleId` nulo es una fila valida: el mapa
- * la declara como cobertura faltante, no la descarta.
+ * estado, ubicacion y fecha de registro. Sin `descripcion` ni `referencia`
+ * -siguen protegidas en el detalle del reporte-, y `calleId` nulo es una
+ * fila valida: el mapa la declara como cobertura faltante, no la descarta.
+ *
+ * `registradoEn` lo pide la senal de atraso de S1 de `gestion-municipal`: el
+ * mapa tiene que decir que un reporte lleva N dias sin atenderse, y esa
+ * cuenta sale de la fecha de registro. Es el mismo dato que la bandeja
+ * (ya lo expone, con `ReporteGuardado`). El mapa lo traduce a fecha civil en
+ * su propio adaptador, con `shared/lib/fecha`; aca viaja el instante.
  */
 export type ReporteParaMapa = {
   id: ReporteId;
@@ -20,6 +26,7 @@ export type ReporteParaMapa = {
   areaResponsable: AreaResponsable | null;
   calleId: string | null;
   lugarId: string;
+  registradoEn: Date;
 };
 
 /**

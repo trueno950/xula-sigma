@@ -9,6 +9,12 @@ export {
   SIN_REGISTRO,
 } from "./consulta";
 export {
+  type ConteosDeReportes,
+  componerConteos,
+  type FilaDeConteoDeArea,
+  type FilaDeConteoDeEstado,
+} from "./conteosDeReportes";
+export {
   type CandidatoAOriginal,
   originalDe,
   vincularDuplicado,
@@ -57,3 +63,11 @@ export {
   TIPOS_DE_INCIDENCIA,
   type TipoDeIncidencia,
 } from "./tipoDeIncidencia";
+export {
+  diasDeAtraso,
+  esUmbralDeAtraso,
+  fechaDeCorte,
+  UMBRAL_DE_ATRASO_MAXIMO,
+  UMBRAL_DE_ATRASO_MINIMO,
+  UMBRAL_DE_ATRASO_POR_DEFECTO,
+} from "./umbralDeAtraso";
