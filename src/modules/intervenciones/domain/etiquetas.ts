@@ -23,6 +23,7 @@ export const ETIQUETA_DE_TIPO_DE_INTERVENCION: Record<
 > = {
   OBRA: "Obra",
   REPAVIMENTACION: "Repavimentación",
+  PAVIMENTACION: "Pavimentación",
   MEJORA: "Mejora",
   FUGA: "Fuga",
   ALUMBRADO: "Alumbrado",

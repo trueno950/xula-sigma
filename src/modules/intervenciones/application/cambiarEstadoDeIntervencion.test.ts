@@ -40,7 +40,6 @@ const entrada = {
   id: "33333333-3333-4333-8333-333333333333",
   estadoNuevo: "EN_EJECUCION" as const,
 };
-
 const guardada = (estado: IntervencionGuardada["estado"]) =>
   ({ id: comoIntervencionId(entrada.id), estado }) as IntervencionGuardada;
 
@@ -64,7 +63,11 @@ describe("cambiarEstadoDeIntervencion", () => {
     vi.mocked(repositorio.aplicarTransicion).mockResolvedValue(true);
   });
 
-  const cambiar = () => crearCambiarEstadoDeIntervencion({ repositorio });
+  const cambiar = () =>
+    crearCambiarEstadoDeIntervencion({
+      repositorio,
+      reportes: { mover: vi.fn().mockResolvedValue("MOVIDO") },
+    });
 
   it.each([
     ["PLANIFICADA", "EN_EJECUCION"],

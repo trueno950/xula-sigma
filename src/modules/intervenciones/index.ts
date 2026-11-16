@@ -1,3 +1,4 @@
+export type { EntradaDeProgramacionDeObra } from "./application/programarObraDeReporte";
 export type {
   DatosDeRegistroDeIntervencion,
   IntervencionGuardada,
@@ -12,6 +13,7 @@ export {
   listarIntervencionesDeCalleEnTransaccion,
   listarIntervencionesParaMapa,
   porcionesDeIntervenciones,
+  programarObraDeReporte,
   registrarIntervencion,
 } from "./composicion";
 export * from "./domain";

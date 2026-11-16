@@ -14,6 +14,7 @@ import {
   crearReportePorId,
 } from "./application";
 import { crearBuscarDireccionesParaReporte } from "./application/buscarDireccionesParaReporte";
+import { crearReporteParaIntervencion } from "./application/reporteParaIntervencion";
 import {
   contadorDeFoliosSql,
   crearLectorDeReportantesPorPadron,
@@ -72,6 +73,15 @@ export const buscarReportesSimilares = crearBuscarReportesSimilares(
 export const historialDeReporte = crearHistorialDeReporte(
   registroDeMovimientosSql,
 );
+/**
+ * La cara que usa `intervenciones` para programar y cerrar obra (S2 y S3 de
+ * `intervenciones-trazabilidad`): sus dos operaciones reciben el `tx` de quien
+ * las llama, para que la obra y el movimiento del reporte confirmen juntos.
+ */
+export const reporteParaIntervencion = crearReporteParaIntervencion({
+  repositorio: repositorioDeReportesSql,
+  movimientos: registroDeMovimientosSql,
+});
 
 /**
  * Porcion que `reportes` aporta al exportador de plataforma (design.md
