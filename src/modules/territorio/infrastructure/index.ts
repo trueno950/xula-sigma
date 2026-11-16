@@ -1,3 +1,4 @@
+export { lectorDeCallesSinPuntoSql } from "./callesSinPuntoSql";
 export { lectorDeCallesDeMapaSql } from "./lectorDeCallesDeMapaSql";
 export { lectorDeContenidoDeLugaresSql } from "./lectorDeContenidoDeLugaresSql";
 export { lectorDeDireccionesSql } from "./lectorDeDireccionesSql";

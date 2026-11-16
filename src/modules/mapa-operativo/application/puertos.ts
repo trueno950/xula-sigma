@@ -29,6 +29,17 @@ export type IntervencionParaMapaOperativo = {
   estado: string;
   calleId: string | null;
   lugarId: string;
+  /** Fecha civil del hecho (`YYYY-MM-DD`), como la guarda `intervenciones`. */
+  fechaDeOcurrencia: string;
+};
+
+/** Una calle activa sin punto, con la raiz de su territorio (S3). */
+export type CalleSinPuntoParaMapaOperativo = {
+  calleId: string;
+  calleNombre: string;
+  lugarId: string;
+  raizId: string;
+  raizNombre: string;
 };
 
 /** Una opcion del selector de territorio: la cabecera o una comisaria. */
@@ -53,6 +64,13 @@ export type FuentesDeMapa = {
    * para marcar sus pines.
    */
   umbralDeAtraso(contexto: ContextoActual): Promise<number>;
+  /**
+   * S3: las calles sin punto de cada territorio, leidas por la API publica de
+   * `territorio` -el mapa no importa su dominio ni reimplementa la jerarquia-.
+   */
+  callesSinUbicar(
+    contexto: ContextoActual,
+  ): Promise<readonly CalleSinPuntoParaMapaOperativo[]>;
   /** El lugar y todos sus descendientes, a cualquier profundidad. */
   lugaresDelSubarbol(
     contexto: ContextoActual,

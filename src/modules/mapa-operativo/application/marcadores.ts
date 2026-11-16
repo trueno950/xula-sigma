@@ -30,6 +30,7 @@ function hechoEnMarcador(hecho: Hecho): HechoEnMarcador {
     icono: iconoDe(hecho.tipo),
     color: colorDeEstado(hecho.estado),
     diasDeAtraso: hecho.diasDeAtraso,
+    fechaCivil: hecho.fechaCivil,
   };
   return hecho.recurso === "REPORTE"
     ? { ...comunes, recurso: "REPORTE", id: hecho.id }

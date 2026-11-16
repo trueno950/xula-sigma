@@ -1,5 +1,6 @@
 import type { ClaveDeIcono } from "./iconos";
 import type { LeyendaDelMapa } from "./leyenda";
+import type { TerritorioSinUbicar } from "./sinUbicar";
 
 export type RazonDeCoberturaFaltante = "SIN_CALLE" | "CALLE_SIN_PUNTO";
 
@@ -36,6 +37,13 @@ type DatosDeHechoEnMarcador = {
    * pin y lo que dice su ventana.
    */
   diasDeAtraso: number | null;
+  /**
+   * La fecha del hecho en fecha civil (`YYYY-MM-DD`, S4): el registro de un
+   * reporte o la fecha de ocurrencia de una intervencion. La ventana del pin
+   * la muestra tal cual; el formato lo pone la UI con `shared/lib/fecha`.
+   * Cadena vacia es «no hay fecha que mostrar», y entonces no se pinta.
+   */
+  fechaCivil: string;
 };
 
 /**
@@ -119,4 +127,6 @@ export type MapaOperativoAgregado = {
   cobertura: readonly CoberturaFaltante[];
   conteos: { reportes: number; intervenciones: number; total: number };
   leyenda: LeyendaDelMapa;
+  /** S3: las calles sin punto, por territorio; vacio si no falta ninguna. */
+  sinUbicar: readonly TerritorioSinUbicar[];
 };

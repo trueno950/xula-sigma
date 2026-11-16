@@ -32,6 +32,7 @@ const reporte = (id: string, folio: string, estado: string) => ({
 const fuentes: FuentesDeMapa = {
   callesParaMapa: vi.fn(),
   reportesParaMapa: vi.fn(),
+  callesSinUbicar: vi.fn().mockResolvedValue([]),
   intervencionesParaMapa: vi.fn(),
   territoriosParaMapa: vi.fn(),
   umbralDeAtraso: vi.fn(),
@@ -57,6 +58,7 @@ beforeEach(() => {
       estado: "PLANIFICADA",
       calleId: CALLE,
       lugarId: LUGAR,
+      fechaDeOcurrencia: "2026-01-15",
     },
   ]);
 });

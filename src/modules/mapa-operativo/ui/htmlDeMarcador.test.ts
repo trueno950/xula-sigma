@@ -120,6 +120,8 @@ const ETIQUETAS_PERMITIDAS: ReadonlySet<string> = new Set([
   "span",
   "svg",
   "path",
+  // S4: la fecha del hecho va en su propio `<time>`.
+  "time",
 ]);
 
 const CARGA = '"><img src=x onerror=alert(1)>';

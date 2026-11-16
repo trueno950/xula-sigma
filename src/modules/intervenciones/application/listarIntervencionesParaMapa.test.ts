@@ -27,6 +27,7 @@ describe("listarIntervencionesParaMapa", () => {
         estado: "PLANIFICADA",
         calleId: null,
         lugarId: "lugar-1",
+        fechaDeOcurrencia: "2026-01-15",
       },
     ]);
   });

@@ -2,6 +2,7 @@ import { listarIntervencionesParaMapa } from "@/modules/intervenciones";
 import { leerUmbralDeAtraso, listarReportesParaMapa } from "@/modules/reportes";
 import {
   callesParaMapa,
+  callesSinPunto,
   comoLugarId,
   listarRaices,
   subarbol,
@@ -26,6 +27,20 @@ export const fuentesDeMapa: FuentesDeMapa = {
       nombre,
       lugarId,
       punto,
+    }));
+  },
+  /**
+   * S3: las calles sin punto las resuelve `territorio`, que es el dueno de la
+   * jerarquia; el mapa solo las agrupa por la raiz que ya traen.
+   */
+  async callesSinUbicar(contexto) {
+    const calles = await callesSinPunto(contexto);
+    return calles.map((calle) => ({
+      calleId: String(calle.calleId),
+      calleNombre: calle.calleNombre,
+      lugarId: String(calle.lugarId),
+      raizId: String(calle.raizId),
+      raizNombre: calle.raizNombre,
     }));
   },
   async reportesParaMapa(contexto) {
@@ -61,13 +76,16 @@ export const fuentesDeMapa: FuentesDeMapa = {
   },
   async intervencionesParaMapa(contexto) {
     const intervenciones = await listarIntervencionesParaMapa(contexto);
-    return intervenciones.map(({ id, tipo, estado, calleId, lugarId }) => ({
-      id,
-      tipo,
-      estado,
-      calleId,
-      lugarId,
-    }));
+    return intervenciones.map(
+      ({ id, tipo, estado, calleId, lugarId, fechaDeOcurrencia }) => ({
+        id,
+        tipo,
+        estado,
+        calleId,
+        lugarId,
+        fechaDeOcurrencia,
+      }),
+    );
   },
   async territoriosParaMapa(contexto) {
     const raices = await listarRaices(contexto);

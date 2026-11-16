@@ -31,6 +31,7 @@ export const HECHO_DE_REPORTE: Extract<
 > = {
   ...comun("BACHE", "RECIBIDO"),
   diasDeAtraso: null,
+  fechaCivil: "2026-11-16",
   recurso: "REPORTE",
   id: comoIdDeReporteEnMapa("reporte-1"),
   etiqueta: "REP-1",
@@ -43,6 +44,7 @@ export const HECHO_DE_INTERVENCION: Extract<
 > = {
   ...comun("OBRA", "PLANIFICADA"),
   diasDeAtraso: null,
+  fechaCivil: "2026-01-15",
   recurso: "INTERVENCION",
   id: comoIdDeIntervencionEnMapa("intervencion-1"),
   etiqueta: "Obra",
@@ -72,5 +74,6 @@ export const mapaDe = (
   cobertura: [],
   conteos: { reportes: 0, intervenciones: 0, total: 0 },
   leyenda: { tipos: [], estados: [], atrasados: 0 },
+  sinUbicar: [],
   ...parcial,
 });

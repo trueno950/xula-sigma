@@ -129,6 +129,7 @@ describe("agregarMapa", () => {
         estado: "PLANIFICADA",
         calleId: calleConPunto.id,
         lugarId: calleConPunto.lugarId,
+        fechaDeOcurrencia: "2026-01-15",
       },
     ]);
     const { crearAgregarMapa } = await import("./agregarMapa");
@@ -136,5 +137,59 @@ describe("agregarMapa", () => {
     const mapa = await crearAgregarMapa(fuentes)(contexto, { tipo: "FUGA" });
 
     expect(mapa.conteos).toEqual({ reportes: 1, intervenciones: 1, total: 2 });
+  });
+});
+
+describe("agregarMapa: calles sin ubicar (S3)", () => {
+  const fuentes = crearFuentesDeMapa();
+
+  beforeEach(() => sembrarHechos(fuentes));
+
+  const callesSinPunto = [
+    {
+      calleId: "55555555-5555-4555-8555-555555555555",
+      calleNombre: "Calle 20",
+      lugarId: "33333333-3333-4333-8333-333333333333",
+      raizId: "99999999-9999-4999-8999-999999999999",
+      raizNombre: "Comisaria norte",
+    },
+  ];
+
+  it("agrupa las calles sin punto por la raiz que trae el lector de territorio", async () => {
+    vi.mocked(fuentes.callesSinUbicar).mockResolvedValue(callesSinPunto);
+    vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([
+      {
+        id: "99999999-9999-4999-8999-999999999999",
+        nombre: "Comisaria norte",
+      },
+    ]);
+    const { crearAgregarMapa } = await import("./agregarMapa");
+
+    const mapa = await crearAgregarMapa(fuentes)(contexto, {});
+
+    expect(fuentes.callesSinUbicar).toHaveBeenCalledWith(contexto);
+    expect(mapa.sinUbicar).toHaveLength(1);
+    expect(mapa.sinUbicar[0]?.calles[0]?.nombre).toBe("Calle 20");
+    expect(mapa.sinUbicar[0]?.calles[0]?.href).toContain(
+      "accion=ubicarCalle&calle=55555555-5555-4555-8555-555555555555",
+    );
+  });
+
+  it("con un territorio elegido deja solo sus calles pendientes", async () => {
+    vi.mocked(fuentes.callesSinUbicar).mockResolvedValue(callesSinPunto);
+    vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([
+      {
+        id: "88888888-8888-4888-8888-888888888888",
+        nombre: "Comisaria sur",
+      },
+    ]);
+
+    const { crearAgregarMapa } = await import("./agregarMapa");
+
+    const mapa = await crearAgregarMapa(fuentes)(contexto, {
+      lugar: "88888888-8888-4888-8888-888888888888",
+    });
+
+    expect(mapa.sinUbicar).toEqual([]);
   });
 });

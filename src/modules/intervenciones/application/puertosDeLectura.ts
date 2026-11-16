@@ -25,6 +25,12 @@ export type IntervencionParaMapa = {
   estado: EstadoDeIntervencion;
   calleId: string | null;
   lugarId: string;
+  /**
+   * La fecha del hecho, civil (`YYYY-MM-DD`): S4 de `gestion-municipal` pide
+   * la fecha en la ventana de cada marcador, y para una obra esa fecha es la
+   * de ocurrencia, no la de captura.
+   */
+  fechaDeOcurrencia: string;
 };
 
 export type LectorDeIntervencionesDeMapa = {

@@ -1,7 +1,11 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { hoyEnMerida } from "@/shared/lib/fecha";
 import type { MapaOperativoAgregado } from "../domain";
-import { cajaDePuntos, construirLeyenda } from "../domain";
+import {
+  agruparCallesSinUbicar,
+  cajaDePuntos,
+  construirLeyenda,
+} from "../domain";
 import {
   type AtrasoDelMapa,
   filtrarIntervenciones,
@@ -11,6 +15,7 @@ import {
 import { clasificar } from "./marcadores";
 import type {
   CalleParaMapaOperativo,
+  CalleSinPuntoParaMapaOperativo,
   FiltrosDeMapa,
   FuentesDeMapa,
   IntervencionParaMapaOperativo,
@@ -25,6 +30,7 @@ import {
 
 type LecturasDelMapa = {
   calles: readonly CalleParaMapaOperativo[];
+  callesSinUbicar: readonly CalleSinPuntoParaMapaOperativo[];
   reportes: readonly ReporteParaMapaOperativo[];
   intervenciones: readonly IntervencionParaMapaOperativo[];
   territorios: readonly TerritorioParaMapaOperativo[];
@@ -68,18 +74,26 @@ async function leerMapa(
   contexto: ContextoActual,
   lugar: string | undefined,
 ): Promise<LecturasDelMapa> {
-  const [calles, reportes, intervenciones, territorios, umbral] =
-    await Promise.all([
-      fuentes.callesParaMapa(contexto),
-      fuentes.reportesParaMapa(contexto),
-      fuentes.intervencionesParaMapa(contexto),
-      fuentes.territoriosParaMapa(contexto),
-      fuentes.umbralDeAtraso(contexto),
-    ]);
+  const [
+    calles,
+    callesSinUbicar,
+    reportes,
+    intervenciones,
+    territorios,
+    umbral,
+  ] = await Promise.all([
+    fuentes.callesParaMapa(contexto),
+    fuentes.callesSinUbicar(contexto),
+    fuentes.reportesParaMapa(contexto),
+    fuentes.intervencionesParaMapa(contexto),
+    fuentes.territoriosParaMapa(contexto),
+    fuentes.umbralDeAtraso(contexto),
+  ]);
   const raiz = raizElegida(territorios, lugar);
   const permitidos = await lugaresPermitidos(fuentes, contexto, raiz);
   return {
     calles,
+    callesSinUbicar,
     reportes,
     intervenciones,
     territorios,
@@ -92,6 +106,7 @@ async function leerMapa(
 function componerMapa(
   {
     calles,
+    callesSinUbicar,
     reportes,
     intervenciones,
     territorios,
@@ -121,6 +136,7 @@ function componerMapa(
     cobertura,
     conteos,
     leyenda: construirLeyenda(hechos),
+    sinUbicar: agruparCallesSinUbicar({ calles: callesSinUbicar, permitidos }),
   };
 }
 

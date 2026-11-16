@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Aviso, CLASES_DE_ENLACE, CLASES_DE_TARJETA } from "@/shared/ui";
 import type { FiltrosDeMapa } from "../application";
 import type { MapaOperativoAgregado, TerritorioDeMapa } from "../domain";
+import { CallesSinUbicar } from "./CallesSinUbicar";
 import { etiquetaDeRecurso } from "./etiquetasDeRecurso";
 import { FormularioDeFiltrosDeMapa } from "./FormularioDeFiltrosDeMapa";
 import { LeyendaDelMapa } from "./LeyendaDelMapa";
@@ -55,6 +56,7 @@ export function MapaOperativo({ mapa, filtros }: Props) {
       ) : null}
       <MapaVisual marcadores={mapa.marcadores} caja={mapa.caja} />
       <ListaDeMarcadores marcadores={mapa.marcadores} />
+      <CallesSinUbicar sinUbicar={mapa.sinUbicar} />
       {mapa.cobertura.length > 0 ? (
         <section
           aria-label="Cobertura faltante"

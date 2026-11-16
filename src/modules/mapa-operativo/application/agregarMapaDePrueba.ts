@@ -46,6 +46,7 @@ export const INTERVENCION_EN_CALLE = comoIntervencionId(
 export const crearFuentesDeMapa = (): FuentesDeMapa => ({
   callesParaMapa: vi.fn(),
   reportesParaMapa: vi.fn(),
+  callesSinUbicar: vi.fn(),
   umbralDeAtraso: vi.fn(),
   intervencionesParaMapa: vi.fn(),
   territoriosParaMapa: vi.fn(),
@@ -56,13 +57,15 @@ export const crearFuentesDeMapa = (): FuentesDeMapa => ({
  * Deja las fuentes en el escenario base de cada test: dos calles -una con
  * punto y otra sin-, dos reportes y una intervencion. `umbralDeAtraso` en 7,
  * el valor por defecto, y todas las fechas de registro fuera de la ventana:
- * el atraso es lo que el test que lo mide decide, no el fixture.
+ * el atraso es lo que el test que lo mide decide, no el fixture. Las calles
+ * sin ubicar arrancan vacias: S3 se prueba en su propio archivo.
  */
 export const sembrarHechos = (fuentes: FuentesDeMapa): void => {
   vi.clearAllMocks();
   vi.mocked(fuentes.territoriosParaMapa).mockResolvedValue([]);
   vi.mocked(fuentes.lugaresDelSubarbol).mockResolvedValue([]);
   vi.mocked(fuentes.umbralDeAtraso).mockResolvedValue(7);
+  vi.mocked(fuentes.callesSinUbicar).mockResolvedValue([]);
   vi.mocked(fuentes.callesParaMapa).mockResolvedValue([
     calleConPunto,
     calleSinPunto,
@@ -96,6 +99,7 @@ export const sembrarHechos = (fuentes: FuentesDeMapa): void => {
       estado: "EN_EJECUCION",
       calleId: calleSinPunto.id,
       lugarId: calleSinPunto.lugarId,
+      fechaDeOcurrencia: "2026-01-15",
     },
   ]);
 };

@@ -1,4 +1,9 @@
-import { colorVerificado, type MarcadorDeMapa } from "../domain";
+import { fechaCivilCorta } from "@/shared/lib/fecha";
+import {
+  colorVerificado,
+  type HechoEnMarcador,
+  type MarcadorDeMapa,
+} from "../domain";
 import { escapar } from "./escaparHtml";
 import { svgDeIcono } from "./iconosDelMapa";
 
@@ -44,10 +49,23 @@ export const htmlDeMarcador = (marcador: MarcadorDeMapa): string => {
 };
 
 /**
- * La ventana del pin: folio -o el tipo, si es una intervencion-, tipo y
- * estado de cada hecho, con los dias de atraso cuando los tiene (S1). Sin
- * datos de la persona que reporto: el mapa nunca los pide.
+ * La ventana del pin: folio -o el tipo, si es una intervencion-, tipo,
+ * estado, fecha del hecho y dias de atraso cuando los tiene. Sin datos de la
+ * persona que reporto: el mapa nunca los pide.
  */
+/**
+ * S4: la fecha del hecho, en fecha civil. `fechaCivilCorta` es la de
+ * `shared/lib/fecha` para una fecha ya civil -el registro de un reporte o la
+ * ocurrencia de una obra-, y no `fechaEnMerida`: esa convertí­a un instante, y
+ * aca no hay instante que convertir. Un hecho sin fecha no pinta `<time>`.
+ */
+const fechaDeLaVentana = (hecho: HechoEnMarcador): string =>
+  hecho.fechaCivil === ""
+    ? ""
+    : ` · <time datetime="${escapar(hecho.fechaCivil)}">${escapar(
+        fechaCivilCorta(hecho.fechaCivil),
+      )}</time>`;
+
 const atrasoDeLaVentana = (dias: number | null): string =>
   dias === null
     ? ""
@@ -60,6 +78,7 @@ export const htmlDeLaVentana = (marcador: MarcadorDeMapa): string => {
         `<li style="margin-bottom:4px">` +
         `<a href="${escapar(hecho.href)}">${escapar(hecho.etiqueta)}</a> · ` +
         `${escapar(hecho.etiquetaDeTipo)} · ${escapar(hecho.etiquetaDeEstado)}` +
+        `${fechaDeLaVentana(hecho)}` +
         `${atrasoDeLaVentana(hecho.diasDeAtraso)}` +
         `</li>`,
     )

@@ -143,7 +143,10 @@ describe("listarIntervencionesParaMapa, contra Postgres real", () => {
     expect(ids).not.toContain(deTicul);
   });
 
-  it("no devuelve descripcion ni reporteId, solo los cinco campos contratados", async () => {
+  // Seis desde S4 de `gestion-municipal`: `fechaDeOcurrencia` es la fecha que
+  // la ventana del marcador muestra, y sin este recuento se colaria cualquier
+  // columna nueva sin que nadie lo notara.
+  it("no devuelve descripcion ni reporteId, solo los seis campos contratados", async () => {
     const lugarId = await lugarDe("motul", "Comisaria Mapa Protegida Int");
     const id = await insertarIntervencion({ municipio: "motul", lugarId });
 
@@ -155,6 +158,7 @@ describe("listarIntervencionesParaMapa, contra Postgres real", () => {
     expect(Object.keys(fila ?? {}).sort()).toEqual([
       "calleId",
       "estado",
+      "fechaDeOcurrencia",
       "id",
       "lugarId",
       "tipo",

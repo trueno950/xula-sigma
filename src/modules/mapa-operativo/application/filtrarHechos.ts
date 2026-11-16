@@ -31,6 +31,8 @@ export type Hecho =
       estado: string;
       /** Dias sin atender, o `null`: ver `domain/atraso.ts`. */
       diasDeAtraso: number | null;
+      /** La fecha civil del registro (S4). */
+      fechaCivil: string;
     }
   | {
       recurso: "INTERVENCION";
@@ -41,6 +43,8 @@ export type Hecho =
       tipo: string;
       estado: string;
       diasDeAtraso: number | null;
+      /** La fecha civil de ocurrencia de la obra (S4). */
+      fechaCivil: string;
     };
 
 const coincide = (valor: string, filtro: string | undefined) =>
@@ -80,6 +84,7 @@ export function filtrarReportes(
       etiqueta: r.folio,
       tipo: r.tipo,
       estado: r.estado,
+      fechaCivil: r.fechaDeRegistro,
       diasDeAtraso: diasDeAtrasoEnElMapa({
         estado: r.estado,
         fechaDeRegistro: r.fechaDeRegistro,
@@ -119,5 +124,6 @@ export function filtrarIntervenciones(
       // Una obra no esta "sin atender": no hay nada que la marque con el
       // umbral de los reportes ciudadanos.
       diasDeAtraso: null,
+      fechaCivil: i.fechaDeOcurrencia,
     }));
 }
