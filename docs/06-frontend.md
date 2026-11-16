@@ -323,6 +323,32 @@ fuera de la validación de medibilidad: por ahí pasó una vez un `oklch`
 inválido hasta el `style` de la página, y no hay reja de contraste que lo
 atajara justamente porque `--accent` no pasa por ella.
 
+### Elegir los colores
+
+`/marca` ofrece la paleta de `shared/marca/paleta.ts` y, para el municipio
+que trae el suyo, un selector de color exacto. La paleta es corta y cada
+color está medido en su test: elegir de un clic no puede terminar en una
+marca que la reja rechace después.
+
+El color del texto sobre el primario **no es un campo**. Lo elige el
+servidor con `textoSobre`: compara el contraste del primario contra blanco
+y contra negro y guarda el que gana en `primarioTexto` (S2). Quien elige un
+color de fondo no está en condiciones de juzgar si su texto se lee, y el
+par es justo lo que la reja mide.
+
+De ahí sale un hecho que conviene tener escrito: **con texto automático
+todo color medible alcanza el piso**. Para cualquier fondo, una de las dos
+razones —blanco o negro— es siempre mayor que 4.5, así que lo que la reja
+rechaza nunca es un color legible sino un valor que no se puede medir
+(`oklch(0.5)`, un nombre de CSS, basura pegada a mano). Por eso el mensaje
+de error no habla de contraste: para la operadora los dos casos son el
+mismo, y el que puede provocar desde la pantalla es el segundo.
+
+Restablecer **borra** `primario`, `primarioTexto` y `secundario` en vez de
+escribir los valores por defecto: `globals.css` ya los tiene, y una copia
+en el `jsonb` de cada municipio se quedaría vieja el día que el design
+system cambie de rojo. El escudo no se toca.
+
 ### Assets
 
 Escudo y logotipo en object storage, nunca en el filesystem del contenedor.

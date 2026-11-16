@@ -15,8 +15,8 @@ import { cambiarEscudoAction } from "./actions/cambiarEscudo.action";
 import { subirEscudo } from "./subirEscudo";
 
 /**
- * El formulario de escudo. Es la hoja: lo unico `"use client"` de la
- * pantalla, igual que `FormularioDeAcceso`.
+ * El formulario de escudo. Es una hoja cliente, igual que
+ * `FormularioDeAcceso`.
  *
  * Arma el `FormData` a mano en el `onSubmit` en vez de usar la `action`
  * nativa del `<form>`: la nativa no deja leer el `ActionResult` para

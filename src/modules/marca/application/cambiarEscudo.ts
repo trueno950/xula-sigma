@@ -1,21 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeCambiarMarca } from "@/shared/auth/roles";
-import {
-  NoAutorizadoError,
-  TenantNoResueltoError,
-  ValidacionError,
-} from "@/shared/lib/errores";
+import { NoAutorizadoError, ValidacionError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
-import { validarMarca } from "@/shared/marca";
-import { registrar } from "@/shared/tenancy/bitacora";
-import {
-  type TransaccionTenant,
-  withTenant,
-} from "@/shared/tenancy/withTenant";
 import { claveDeEscudo } from "../domain/claveDeEscudo";
 import { type MotivoDeRechazo, validarPng } from "../domain/png";
 import type { EntradaDeEscudo, EscudoCambiado } from "../types";
+import { escribirMarcaCompuesta } from "./escrituraDeMarca";
 import type { AlmacenDeAssets, RepositorioDeMarca } from "./puertos";
 
 /**
@@ -38,9 +29,6 @@ const MENSAJES_DE_RECHAZO: Record<MotivoDeRechazo, string> = {
   DIMENSIONES: "El escudo debe medir entre 80x80 y 2048x2048 píxeles.",
 };
 
-const esObjetoPlano = (valor: unknown): valor is Record<string, unknown> =>
-  typeof valor === "object" && valor !== null && !Array.isArray(valor);
-
 const urlAnteriorDe = (marca: Record<string, unknown>): string | undefined =>
   typeof marca.escudo === "string" ? marca.escudo : undefined;
 
@@ -54,58 +42,25 @@ const exigirPngValido = (bytes: Uint8Array): void => {
   }
 };
 
-const marcaConEscudo = (
-  base: Record<string, unknown>,
-  url: string,
-): Record<string, unknown> => {
-  const propuesta = validarMarca({ ...base, escudo: url });
-
-  if (!propuesta.ok) throw new ValidacionError(propuesta.campos);
-
-  // `validarMarca` es precondicion, no normalizador: se devuelve el crudo
-  // compuesto y no `propuesta.marca`, porque Zod descarta claves que no
-  // conoce y eso borraria en silencio un campo futuro pegado a mano
-  // (design.md seccion 5).
-  return { ...base, escudo: url };
-};
-
-const registrarCambio = async (
-  tx: TransaccionTenant,
-  contexto: ContextoActual,
-): Promise<void> => {
-  await registrar(tx, {
-    ayuntamientoId: contexto.ayuntamientoId,
-    actor: contexto.usuario.id,
-    origen: contexto.origen,
-    accion: "CAMBIAR_MARCA",
-    entidad: "ayuntamientos",
-    entidadId: contexto.ayuntamientoId,
-  });
-};
-
-/** Devuelve la URL que habia antes, para el borrado diferido. */
-const escribirEscudo = (
+/**
+ * Compone el escudo sobre la marca existente y devuelve la URL que habia
+ * antes, para el borrado diferido. La composicion conserva los colores
+ * (S7): el `base` que recibe lleva `primario`, `primarioTexto` y
+ * `secundario` si estaban.
+ */
+const escribirEscudo = async (
   repositorio: RepositorioDeMarca,
   contexto: ContextoActual,
   url: string,
-): Promise<string | undefined> =>
-  withTenant(contexto.ayuntamientoId, async (tx) => {
-    const filaMarca = await repositorio.leer(tx, contexto.ayuntamientoId);
+): Promise<string | undefined> => {
+  const anterior = await escribirMarcaCompuesta(
+    repositorio,
+    contexto,
+    (base) => ({ ...base, escudo: url }),
+  );
 
-    if (filaMarca === null) throw new TenantNoResueltoError();
-
-    const base = esObjetoPlano(filaMarca) ? filaMarca : {};
-
-    await repositorio.escribir(
-      tx,
-      contexto.ayuntamientoId,
-      marcaConEscudo(base, url),
-    );
-
-    await registrarCambio(tx, contexto);
-
-    return urlAnteriorDe(base);
-  });
+  return urlAnteriorDe(anterior);
+};
 
 // Fuera de la transaccion y best-effort: la verdad esta en Postgres, no en
 // el bucket. Un borrado que falla no cambia el resultado ya confirmado
