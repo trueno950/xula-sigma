@@ -17,6 +17,7 @@ const historial: HistorialDeCalleDeDominio = {
       naturaleza: "REPORTE",
       ocurridoEn: new Date("2026-03-05"),
       cambio: null,
+      obra: null,
     },
     {
       id: "intervencion",
@@ -24,6 +25,7 @@ const historial: HistorialDeCalleDeDominio = {
       naturaleza: "INTERVENCION",
       ocurridoEn: new Date("2026-03-04"),
       cambio: null,
+      obra: null,
     },
     {
       id: "renombre",
@@ -31,6 +33,7 @@ const historial: HistorialDeCalleDeDominio = {
       naturaleza: "RENOMBRE",
       ocurridoEn: new Date("2026-03-03"),
       cambio: null,
+      obra: null,
     },
     {
       id: "reparenteo",
@@ -38,6 +41,7 @@ const historial: HistorialDeCalleDeDominio = {
       naturaleza: "REPARENTEO",
       ocurridoEn: new Date("2026-03-02"),
       cambio: null,
+      obra: null,
     },
     {
       id: "ubicacion",
@@ -45,6 +49,7 @@ const historial: HistorialDeCalleDeDominio = {
       naturaleza: "UBICACION",
       ocurridoEn: new Date("2026-03-01"),
       cambio: null,
+      obra: null,
     },
   ],
 };
@@ -97,6 +102,7 @@ describe("HistorialDeCalle", () => {
           precision: "DIA",
           ocurridoEn: new Date("2026-09-22T00:00:00.000Z"),
           cambio: null,
+          obra: null,
         })}
       />,
     );
@@ -116,6 +122,7 @@ describe("HistorialDeCalle", () => {
           precision: "MOMENTO",
           ocurridoEn: new Date("2026-09-22T02:30:00.000Z"),
           cambio: null,
+          obra: null,
         })}
       />,
     );

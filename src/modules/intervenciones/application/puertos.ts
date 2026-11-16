@@ -27,9 +27,15 @@ export type IntervencionGuardada = Omit<
   actualizadoEn: Date;
 };
 
+/**
+ * Lo que `historial-de-calle` lee de una intervencion (S5 de
+ * `intervenciones-trazabilidad`): ademas de cuando ocurrio, que trabajo fue,
+ * como termino y que reporte lo origino, que es lo que la linea de tiempo
+ * necesita para decir «Bache · finalizada · 12 nov 2026» y enlazar al origen.
+ */
 export type IntervencionParaHistorial = Pick<
   IntervencionGuardada,
-  "id" | "fechaDeOcurrencia"
+  "id" | "fechaDeOcurrencia" | "tipo" | "estado" | "reporteId"
 >;
 
 export type ValoresAnterioresDeIntervencion = Pick<

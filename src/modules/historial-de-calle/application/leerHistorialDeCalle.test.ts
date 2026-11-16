@@ -60,6 +60,9 @@ const reporte: ReporteParaHistorial = {
 const intervencion: IntervencionParaHistorial = {
   id: "intervencion-1",
   fechaDeOcurrencia: "2026-03-10",
+  tipo: "Bache",
+  estado: "Finalizada",
+  reporteId: null,
 };
 
 describe("leerHistorialDeCalle", () => {

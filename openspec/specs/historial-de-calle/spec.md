@@ -127,3 +127,27 @@ cambio que dejo el mismo valor MUST NOT repetirlo a los dos lados.
 - WHEN se abre la linea de tiempo
 - THEN la entrada conserva su naturaleza y su fecha
 - AND el detalle no se reconstruye ni se inventa
+
+### Requirement: La obra dice que trabajo se hizo
+
+Una entrada `INTERVENCION` MUST decir el tipo de trabajo y en que estado
+termino, ademas de su fecha de ocurrencia, en vez de la frase generica de la
+naturaleza. MUST enlazar a la intervencion y, cuando la tenga, al reporte de
+origen. El tipo y el estado MUST llegar ya legibles desde el modulo que posee
+el catalogo cerrado: esta proyeccion MUST NOT copiar el catalogo ni inventar
+etiquetas propias. Sigue siendo de solo lectura.
+
+#### Scenario: La calle que se pavimento
+
+- GIVEN una calle con una intervencion `PAVIMENTACION` en `FINALIZADA`, ligada
+  al reporte que la origino
+- WHEN se abre la linea de tiempo de la calle
+- THEN la entrada dice «Pavimentación · finalizada» con su fecha civil
+- AND enlaza a la intervencion y al reporte de origen
+
+#### Scenario: Una obra sin reporte de origen
+
+- GIVEN una intervencion que no se programo desde un reporte
+- WHEN se abre la linea de tiempo de la calle
+- THEN la entrada sigue diciendo su tipo y su estado
+- AND no ofrece un enlace al reporte de origen

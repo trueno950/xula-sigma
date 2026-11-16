@@ -131,6 +131,23 @@ test("programar obra desde el reporte y finalizarla cierra el reporte", async ({
   await page.goto(reporteUrl);
   await expect(page.getByText("Resuelto", { exact: true })).toBeVisible();
   await expect(page.getByText("En atención → Resuelto")).toBeVisible();
+
+  // S5: el historial de la calle dice qué obra se hizo, con su fecha y el
+  // enlace al reporte de origen, en vez de la frase genérica.
+  await page.goto(
+    urlDe("motul", `/calles/${escenario.reporteCalleId}/historial`),
+  );
+  const obra = page.getByRole("listitem").filter({
+    hasText: "Bache · finalizada",
+  });
+  await expect(obra).toBeVisible();
+  await expect(obra.locator("time")).toHaveCount(1);
+  await expect(
+    obra.getByRole("link", { name: "Ver reporte de origen" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Se registró una intervención en esta calle."),
+  ).toHaveCount(0);
 });
 
 test("sin JavaScript, el alta de intervencion se ve y se envia", async ({

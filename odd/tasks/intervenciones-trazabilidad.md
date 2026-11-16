@@ -28,7 +28,7 @@ La bandeja de intervenciones existe, pero está vacía y no tiene alta. Un repor
 
 - [x] **T1** (S4, S2, S3) dominio y casos de uso: tipo `PAVIMENTACION` y migración; `programarObraDeReporte`; cierre automático del reporte al finalizar la intervención; tests unitarios, de integración y de aislamiento — worker — commit: `c5f17e2`
 - [x] **T2** (S1, S2) UI: bandeja y alta de intervenciones, botón «Programar obra» en el detalle del reporte, acciones, filas de `AGENTS.md` y E2E — worker — commit:
-- [ ] **T3** (S5) historial de calle con tipo, estado y fecha de la obra — worker — commit:
+- [x] **T3** (S5) historial de calle con tipo, estado y fecha de la obra — worker — commit:
 - [ ] **T4** (S1-S6) verificador independiente, revisión, PR y merge — verify — commit:
 
 ## Log
@@ -86,3 +86,19 @@ La bandeja de intervenciones existe, pero está vacía y no tiene alta. Un repor
   bandeja, «programar → en atención → finalizar → resuelto» y el alta sin
   JavaScript. `pnpm check` en verde, `pnpm build` en verde y los cinco E2E en
   verde contra `pnpm start` en el puerto 3107.
+- **L7** — 2026-11-16. T3 (S5). El historial de calle deja de nombrar la obra
+  con la frase genérica: la entrada de una intervención lleva un payload
+  `obra` con `tipo`, `estado` y `reporteId`, que el adaptador
+  (`historial-de-calle/infrastructure/lectores.ts`) traduce desde los
+  catálogos de `intervenciones` -esta proyección no copia el catálogo ni crea
+  una tercera copia de las etiquetas-. La línea de tiempo muestra «Bache ·
+  finalizada» con la fecha civil en su `<time>` -formateada por
+  `shared/lib/fecha`, nunca con `getFullYear`/`getMonth`- y enlaza a la
+  intervención y al reporte de origen cuando lo tiene. Sigue siendo de solo
+  lectura. Tests: tres unitarios de `componerHistorialDeCalle`, dos de la
+  presentación con enlaces, tres de integración en
+  `historialDeObra.integration.test.ts` (payload completo, naturalezas sin
+  payload y calle de otro municipio) y una comprobación del historial dentro
+  del E2E de `e2e/intervenciones.spec.ts`. `pnpm check` en verde, `pnpm build`
+  en verde y los cinco E2E en verde contra `pnpm start` en el puerto 3107.
+  `openspec/specs/historial-de-calle/spec.md` gana el requisito de la obra.

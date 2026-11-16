@@ -29,10 +29,21 @@ export type EventoEstructuralParaHistorial = {
 };
 export type CalleParaHistorial = readonly EventoEstructuralParaHistorial[];
 export type ReporteParaHistorial = { id: string; registradoEn: Date };
+/**
+ * El tipo y el estado llegan ya legibles -los traduce el adaptador desde el
+ * modulo que los posee-, mismo criterio que los nombres de lugar y calle de
+ * `ReferenciasDeIntervencion` en `intervenciones`: un modulo no importa el
+ * dominio del otro.
+ */
+export type ObraDeHistorial = {
+  tipo: string;
+  estado: string;
+  reporteId: string | null;
+};
 export type IntervencionParaHistorial = {
   id: string;
   fechaDeOcurrencia: string;
-};
+} & ObraDeHistorial;
 export type PrecisionDeEntrada = "DIA" | "MOMENTO";
 export type EntradaDeHistorial = {
   id: string;
@@ -40,6 +51,8 @@ export type EntradaDeHistorial = {
   ocurridoEn: Date;
   precision: PrecisionDeEntrada;
   cambio: CambioDeCalle | null;
+  /** Presente solo en `INTERVENCION`: que trabajo se hizo, como termino y de que reporte salio. */
+  obra: ObraDeHistorial | null;
 };
 export type HistorialDeCalle = {
   calleId: CalleId;
@@ -83,17 +96,20 @@ export const componerHistorialDeCalle = (datos: {
       ocurridoEn: registradoEn,
       precision: "MOMENTO" as const,
       cambio: null,
+      obra: null,
     })),
-    ...datos.intervenciones.map(({ id, fechaDeOcurrencia }) => ({
+    ...datos.intervenciones.map(({ id, fechaDeOcurrencia, ...obra }) => ({
       id,
       naturaleza: "INTERVENCION" as const,
       ocurridoEn: fechaDeOcurrenciaComoMomento(fechaDeOcurrencia),
       precision: "DIA" as const,
       cambio: null,
+      obra,
     })),
     ...datos.eventos.map((evento) => ({
       ...evento,
       precision: "MOMENTO" as const,
+      obra: null,
     })),
   ].sort(compararEntradas);
   return {
