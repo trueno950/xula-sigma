@@ -1,21 +1,23 @@
 import { z } from "zod";
 import {
+  AREAS_RESPONSABLES,
   ESTADOS_DE_REPORTE,
-  type FiltrosDeListado,
+  type FiltrosDeLaBandeja,
   type OrdenDeReportes,
   TAMANO_DE_PAGINA,
   TIPOS_DE_INCIDENCIA,
 } from "@/modules/reportes";
 
 /**
- * La lectura de `?estado=&tipo=&q=&atrasados=&limite=&ordenar=&direccion=&error=`.
+ * La lectura de
+ * `?estado=&tipo=&area=&lugar=&q=&atrasados=&limite=&ordenar=&direccion=&error=`.
  *
  * Vive aparte de `page.tsx` por el mismo motivo que
  * `territorio/parametros.ts`: aca se interpreta la URL, alla se compone la
  * pantalla.
  */
 export type ParametrosDeReportes = {
-  filtros: FiltrosDeListado;
+  filtros: FiltrosDeLaBandeja;
   q: string | undefined;
   limite: number | undefined;
   orden: OrdenDeReportes | undefined;
@@ -43,6 +45,11 @@ export type ParametrosDeReportes = {
 const esquemaDeParametros = z.object({
   estado: z.enum(ESTADOS_DE_REPORTE).optional().catch(undefined),
   tipo: z.enum(TIPOS_DE_INCIDENCIA).optional().catch(undefined),
+  area: z.enum(AREAS_RESPONSABLES).optional().catch(undefined),
+  // Forma de uuid y nada mas: el nombre y el subarbol los resuelve la pagina
+  // contra los lugares del propio municipio, y un id de otro tenant no entra
+  // a los filtros.
+  lugar: z.string().uuid().optional().catch(undefined),
   q: z.string().trim().min(1).optional().catch(undefined),
   limite: z.coerce
     .number()
@@ -63,9 +70,11 @@ export const leerParametros = (
   // Cada campo ya cae solo con `.catch()`: este parse no falla.
   const datos = esquemaDeParametros.parse(searchParams);
 
-  const filtros: FiltrosDeListado = {
+  const filtros: FiltrosDeLaBandeja = {
     ...(datos.estado ? { estado: datos.estado } : {}),
     ...(datos.tipo ? { tipo: datos.tipo } : {}),
+    ...(datos.area ? { area: datos.area } : {}),
+    ...(datos.lugar ? { lugar: datos.lugar } : {}),
   };
   const orden = datos.ordenar
     ? { campo: datos.ordenar, direccion: datos.direccion || "asc" }

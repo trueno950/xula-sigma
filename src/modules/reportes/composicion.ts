@@ -7,6 +7,7 @@ import {
   crearCambiarEstadoDeReporte,
   crearCambiarUmbralDeAtraso,
   crearConsultarFolioDeReporte,
+  crearContarReportes,
   crearHistorialDeReporte,
   crearLeerUmbralDeAtraso,
   crearListarReportes,
@@ -59,6 +60,7 @@ export const listarReportesDeCalleEnTransaccion = (
   calleId: string,
 ) => lectorDeReportesDeMapaSql.listarPorCalle(tx, calleId);
 export const buscarReportes = crearBuscarReportes(repositorioDeReportesSql);
+export const contarReportes = crearContarReportes(repositorioDeReportesSql);
 export const cambiarEstadoDeReporte = crearCambiarEstadoDeReporte({
   repositorio: repositorioDeReportesSql,
   movimientos: registroDeMovimientosSql,

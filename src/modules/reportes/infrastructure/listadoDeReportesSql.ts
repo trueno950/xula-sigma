@@ -1,6 +1,5 @@
-import { and, asc, desc, eq, ilike, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import type {
-  FiltrosDeListado,
   OpcionesDeListado,
   RepositorioDeReportes,
 } from "../application/puertos";
@@ -9,7 +8,7 @@ import type {
   LectorDeReportesDeMapa,
 } from "../application/puertosDeLecturaDeReportes";
 import { aReporteGuardado } from "./aReporteGuardado";
-import { escaparComodinesDeLike } from "./escaparComodinesDeLike";
+import { condicionesDeLectura } from "./condicionesDeFiltrosSql";
 import { reportes } from "./esquema";
 
 /**
@@ -21,40 +20,11 @@ import { reportes } from "./esquema";
  *
  * Tambien vive aca `lectorDeReportesDeMapaSql`: el contrato completo esta
  * en `puertosDeLecturaDeReportes.ts`.
- */
-
-/**
- * El «solo atrasados» de S1: `RECIBIDO` y con la fecha civil de registro
- * igual o anterior al corte.
  *
- * La fecha civil la calcula Postgres (`AT TIME ZONE`), no una resta de
- * milisegundos: es la misma zona que formatea `shared/lib/fecha` del lado de
- * JavaScript, y hacerla aca deja el filtro aplicado antes de paginar -un
- * recorte en memoria escondería filas de la pagina en vez de traer las que
- * corresponden-. `estado = 'RECIBIDO'` es parte de la condicion y no un
- * filtro de UI: solo un reporte sin atender puede estar atrasado, asi que
- * pedir «atrasados» con `estado=RESUELTO` no devuelve nada, y eso es correcto.
+ * Las condiciones de los filtros viven en `condicionesDeFiltrosSql.ts` porque
+ * los conteos de S2 las comparten: los numeros y las filas no pueden contar
+ * conjuntos distintos.
  */
-const condicionDeAtraso = (desde: string): SQL =>
-  and(
-    eq(reportes.estado, "RECIBIDO"),
-    sql`(${reportes.registradoEn} AT TIME ZONE 'America/Merida')::date <= ${desde}::date`,
-  ) as SQL;
-
-/** `estado`/`tipo` de `FiltrosDeListado`, compartidas por `listar` y `buscar`. */
-const condicionesDeFiltros = (filtros: FiltrosDeListado): SQL[] => {
-  const condiciones: SQL[] = [];
-  if (filtros.estado !== undefined) {
-    condiciones.push(eq(reportes.estado, filtros.estado));
-  }
-  if (filtros.tipo !== undefined) {
-    condiciones.push(eq(reportes.tipo, filtros.tipo));
-  }
-  if (filtros.atrasadosDesde !== undefined) {
-    condiciones.push(condicionDeAtraso(filtros.atrasadosDesde));
-  }
-  return condiciones;
-};
 
 /**
  * `opciones.orden` de `design.md`, "Ordenamiento de columnas": "folio" es
@@ -79,7 +49,7 @@ export const listadoDeReportesSql: Pick<
     // Sin `WHERE ayuntamiento_id` a mano: la politica de la tabla ya acota
     // el SELECT al tenant de la transaccion (mismo criterio que
     // `similaresAbiertos`, design.md seccion 13).
-    const condiciones = condicionesDeFiltros(filtros);
+    const condiciones = condicionesDeLectura({ filtros });
 
     const filas = await tx
       .select()
@@ -98,19 +68,10 @@ export const listadoDeReportesSql: Pick<
     // necesita tolerancia a variantes para encontrar un folio o una
     // palabra de la descripcion. `%` no es sargable sin GIN, pero la
     // politica de tenant ya acota el barrido a un solo municipio.
-    //
-    // `escaparComodinesDeLike` va antes de armar el patron: sin escapar,
-    // un "%" o un "_" en lo que tipeo el operador actua como comodin de
-    // Postgres en vez de como texto literal.
-    const cadenaEscapada = escaparComodinesDeLike(cadena);
-    const condiciones = [
-      ...condicionesDeFiltros(opciones.filtros ?? {}),
-      or(
-        ilike(reportes.folio, `%${cadenaEscapada}%`),
-        ilike(reportes.descripcion, `%${cadenaEscapada}%`),
-        ilike(reportes.referencia, `%${cadenaEscapada}%`),
-      ) as SQL,
-    ];
+    const condiciones = condicionesDeLectura({
+      ...(opciones.filtros === undefined ? {} : { filtros: opciones.filtros }),
+      cadena,
+    });
 
     const filas = await tx
       .select()

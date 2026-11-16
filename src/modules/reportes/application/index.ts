@@ -4,6 +4,7 @@ export * from "./buscarReportesSimilares";
 export * from "./cambiarEstadoDeReporte";
 export * from "./cambiarUmbralDeAtraso";
 export * from "./consultarFolioDeReporte";
+export * from "./contarReportes";
 export * from "./historialDeReporte";
 export * from "./leerUmbralDeAtraso";
 export * from "./listarReportes";

@@ -2,23 +2,27 @@ import { MagnifyingGlass } from "@phosphor-icons/react/ssr";
 import {
   Boton,
   CampoDeLista,
-  ChipDeFiltro,
   CLASES_DE_ETIQUETA,
   clasesDeCampo,
+  type OpcionDeLista,
   opcionesEtiquetadas,
 } from "@/shared/ui";
-import type { FiltrosDeListado } from "../application/puertos";
+import type { FiltrosDeLaBandeja } from "../application/puertos";
 import {
+  AREAS_RESPONSABLES,
   ESTADOS_DE_REPORTE,
+  ETIQUETA_DE_AREA,
   ETIQUETA_DE_ESTADO_DE_REPORTE,
   ETIQUETA_DE_TIPO_DE_INCIDENCIA,
   TIPOS_DE_INCIDENCIA,
 } from "../domain";
-import { hrefSinFiltro } from "./hrefsDeListado";
+import { ChipsDeFiltros } from "./ChipsDeFiltros";
 
-type Props = FiltrosDeListado & {
+type Props = FiltrosDeLaBandeja & {
   q?: string | undefined;
   soloAtrasados?: boolean | undefined;
+  /** Las opciones del `?lugar=`: los lugares activos del municipio. */
+  lugares: readonly OpcionDeLista[];
 };
 
 /**
@@ -34,15 +38,31 @@ type Props = FiltrosDeListado & {
  * campo. Viaja en el mismo GET, asi que cambiar de estado o de tipo no la
  * pierde, y su chip de abajo la quita sin tocar los demas filtros.
  *
+ * S2 agrega lugar y area responsable al mismo formulario: el lugar es una
+ * colonia o una localidad del municipio -el `?lugar=` se resuelve a su
+ * subarbol en el servidor-, y el area es el catalogo cerrado de areas que
+ * atienden un reporte.
+ *
  * Los chips de abajo (`design.md`, "Filtros") son el select confirmado: el
  * `<select>` captura, el chip dice que el filtro esta puesto -sin el, un
  * `<select>` que cambia de valor se lee como la lista completa, no como un
- * resultado acotado.
+ * resultado acotado-. Viven en `ChipsDeFiltros.tsx`: cinco filtros en un solo
+ * componente pasaban la metrica de complejidad de Biome.
  */
-export function FiltrosDeReportes({ q, estado, tipo, soloAtrasados }: Props) {
-  const filtros: FiltrosDeListado = {
+export function FiltrosDeReportes({
+  q,
+  estado,
+  tipo,
+  area,
+  lugar,
+  soloAtrasados,
+  lugares,
+}: Props) {
+  const filtros: FiltrosDeLaBandeja = {
     ...(estado ? { estado } : {}),
     ...(tipo ? { tipo } : {}),
+    ...(area ? { area } : {}),
+    ...(lugar ? { lugar } : {}),
   };
 
   return (
@@ -91,6 +111,24 @@ export function FiltrosDeReportes({ q, estado, tipo, soloAtrasados }: Props) {
             ETIQUETA_DE_TIPO_DE_INCIDENCIA,
           )}
         />
+        <CampoDeLista
+          id="filtro-lugar"
+          name="lugar"
+          etiqueta="Lugar"
+          marcador="Todos"
+          opcional
+          defaultValue={lugar ?? ""}
+          opciones={lugares}
+        />
+        <CampoDeLista
+          id="filtro-area"
+          name="area"
+          etiqueta="Área"
+          marcador="Todas"
+          opcional
+          defaultValue={area ?? ""}
+          opciones={opcionesEtiquetadas(AREAS_RESPONSABLES, ETIQUETA_DE_AREA)}
+        />
         <label className="flex h-11 items-center gap-2 text-[13px] font-medium leading-tight text-caliza-apagada">
           <input
             type="checkbox"
@@ -107,31 +145,12 @@ export function FiltrosDeReportes({ q, estado, tipo, soloAtrasados }: Props) {
         </Boton>
       </form>
 
-      {estado || tipo || soloAtrasados ? (
-        <div className="flex flex-wrap gap-2">
-          {estado ? (
-            <ChipDeFiltro
-              etiqueta={`Estado: ${ETIQUETA_DE_ESTADO_DE_REPORTE[estado]}`}
-              hrefQuitar={hrefSinFiltro({ filtros, q }, "estado")}
-            />
-          ) : null}
-          {tipo ? (
-            <ChipDeFiltro
-              etiqueta={`Tipo: ${ETIQUETA_DE_TIPO_DE_INCIDENCIA[tipo]}`}
-              hrefQuitar={hrefSinFiltro({ filtros, q }, "tipo")}
-            />
-          ) : null}
-          {soloAtrasados ? (
-            <ChipDeFiltro
-              etiqueta="Solo atrasados"
-              hrefQuitar={hrefSinFiltro(
-                { filtros, q, soloAtrasados },
-                "atrasados",
-              )}
-            />
-          ) : null}
-        </div>
-      ) : null}
+      <ChipsDeFiltros
+        filtros={filtros}
+        lugares={lugares}
+        q={q}
+        soloAtrasados={soloAtrasados}
+      />
     </div>
   );
 }

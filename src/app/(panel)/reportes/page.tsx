@@ -1,13 +1,10 @@
 import { Plus, SlidersHorizontal } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import {
-  buscarReportes,
   descripcionDeFiltrosDeReportes,
-  type FiltrosDeListado,
   fechaDeCorte,
   ListadoDeReportes,
   leerUmbralDeAtraso,
-  listarReportes,
 } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarReportes, puedeEscribir } from "@/shared/auth/roles";
@@ -20,6 +17,12 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+import { AccionesDeCabecera } from "./accionesDeCabecera";
+import {
+  cargarFiltrosDeTerritorio,
+  filtrosDeLaConsulta,
+  leerLaBandeja,
+} from "./cargaDeLaBandeja";
 import { leerParametros } from "./parametros";
 
 export const metadata: Metadata = { title: "Reportes" };
@@ -46,6 +49,12 @@ type Props = {
  * condicion de SQL, para que el filtro recorte antes de paginar. La
  * insignia de cada fila la calcula `ListadoDeReportes` con el mismo umbral y
  * el mismo dia.
+ *
+ * S2 agrega el lugar y el area responsable. El `?lugar=` se resuelve contra
+ * la API publica de `territorio` -este es el unico lugar donde los dos
+ * modulos se tocan- y viaja como el conjunto de ids de su subarbol; los
+ * conteos por estado y por area se piden con los mismos filtros y la misma
+ * busqueda, en el mismo `Promise.all` que el listado.
  */
 export default async function PaginaDeReportes({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -59,23 +68,33 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
   );
   const umbral = await leerUmbralDeAtraso(contexto);
   const hoy = hoyEnMerida();
-  const filtrosDeConsulta: FiltrosDeListado = soloAtrasados
-    ? { ...filtros, atrasadosDesde: fechaDeCorte(hoy, umbral) }
-    : filtros;
+  const territorio = await cargarFiltrosDeTerritorio(filtros, contexto);
+  const filtrosDeConsulta = filtrosDeLaConsulta({
+    filtros,
+    ...(territorio.lugarIds ? { lugarIds: territorio.lugarIds } : {}),
+    ...(soloAtrasados ? { atrasadosDesde: fechaDeCorte(hoy, umbral) } : {}),
+  });
 
-  const opciones = {
+  // Un `?lugar=` que no es un lugar del municipio no se pinta ni se nombra:
+  // el filtro no se aplico -lo resuelve `cargarFiltrosDeTerritorio`-, asi que
+  // la pantalla no puede mostrar un chip de un filtro que no esta puesto.
+  const { lugar: lugarPedido, ...sinLugar } = filtros;
+  void lugarPedido;
+  const filtrosDeLaPantalla = territorio.lugarIds ? filtros : sinLugar;
+
+  const { reportes, hayMas, conteos } = await leerLaBandeja({
+    filtros: filtrosDeConsulta,
+    cadena: q,
+    contexto,
     ...(limite ? { limite } : {}),
     ...(orden ? { orden } : {}),
-  };
-  const { reportes, hayMas } = q
-    ? await buscarReportes(q, contexto, {
-        filtros: filtrosDeConsulta,
-        ...opciones,
-      })
-    : await listarReportes(filtrosDeConsulta, contexto, opciones);
+  });
   const estado = estadoDeLista({
     total: reportes.length,
-    filtro: descripcionDeFiltrosDeReportes(filtros, q, soloAtrasados),
+    filtro: descripcionDeFiltrosDeReportes(filtrosDeLaPantalla, q, {
+      soloAtrasados,
+      lugares: territorio.lugares,
+    }),
   });
 
   const alta = puedeEscribir(contexto.usuario.rol) ? (
@@ -95,16 +114,7 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
   return (
     <PaginaDePanel
       titulo="Reportes ciudadanos"
-      accion={
-        alta && configuracion ? (
-          <div className="flex flex-wrap gap-2">
-            {configuracion}
-            {alta}
-          </div>
-        ) : (
-          (alta ?? configuracion)
-        )
-      }
+      accion={<AccionesDeCabecera alta={alta} configuracion={configuracion} />}
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
@@ -119,9 +129,11 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
         reportes={reportes}
         hayMas={hayMas}
         estadoDeLista={estado}
-        filtros={filtros}
+        filtros={filtrosDeLaPantalla}
         umbral={umbral}
         hoy={hoy}
+        lugares={territorio.opciones}
+        conteos={conteos}
         soloAtrasados={soloAtrasados}
         q={q}
         orden={orden}

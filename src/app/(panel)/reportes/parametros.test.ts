@@ -72,6 +72,24 @@ describe("leerParametros", () => {
     expect(leerParametros({ atrasados: ["1", "1"] }).soloAtrasados).toBe(false);
   });
 
+  it("un area del catalogo se conserva y una inventada se descarta sola", () => {
+    expect(leerParametros({ area: "OBRAS_PUBLICAS" }).filtros.area).toBe(
+      "OBRAS_PUBLICAS",
+    );
+    expect(leerParametros({ area: "TESORERIA" }).filtros.area).toBeUndefined();
+    expect(leerParametros({ area: "" }).filtros.area).toBeUndefined();
+  });
+
+  it("un lugar con forma de uuid se conserva; uno mal formado o repetido se descarta", () => {
+    const lugar = "11111111-1111-4111-8111-111111111111";
+
+    expect(leerParametros({ lugar }).filtros.lugar).toBe(lugar);
+    expect(leerParametros({ lugar: "kinchil" }).filtros.lugar).toBeUndefined();
+    expect(
+      leerParametros({ lugar: [lugar, lugar] }).filtros.lugar,
+    ).toBeUndefined();
+  });
+
   it("atrasados convive con los otros filtros y no los descarta", () => {
     const parametros = leerParametros({
       atrasados: "1",
@@ -82,5 +100,22 @@ describe("leerParametros", () => {
     expect(parametros.soloAtrasados).toBe(true);
     expect(parametros.filtros.estado).toBe("RECIBIDO");
     expect(parametros.q).toBe("bache");
+  });
+
+  it("lugar y area viajan en los filtros sin pisar estado ni tipo", () => {
+    const lugar = "11111111-1111-4111-8111-111111111111";
+    const parametros = leerParametros({
+      lugar,
+      area: "ALUMBRADO_PUBLICO",
+      estado: "RECIBIDO",
+      tipo: "BACHE",
+    });
+
+    expect(parametros.filtros).toEqual({
+      lugar,
+      area: "ALUMBRADO_PUBLICO",
+      estado: "RECIBIDO",
+      tipo: "BACHE",
+    });
   });
 });

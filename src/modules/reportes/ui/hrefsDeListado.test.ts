@@ -126,3 +126,47 @@ describe("el filtro «solo atrasados» en los links", () => {
     ).toBe("/reportes?estado=RECIBIDO");
   });
 });
+
+describe("los filtros de lugar y area en los links", () => {
+  const LUGAR = "11111111-1111-4111-8111-111111111111";
+
+  it("preserva lugar y area junto con estado y tipo", () => {
+    expect(
+      construirHrefDeListado({
+        filtros: {
+          estado: "RECIBIDO",
+          tipo: "BACHE",
+          area: "OBRAS_PUBLICAS",
+          lugar: LUGAR,
+        },
+      }),
+    ).toBe(
+      `/reportes?estado=RECIBIDO&tipo=BACHE&area=OBRAS_PUBLICAS&lugar=${LUGAR}`,
+    );
+  });
+
+  it("«Ver mas» y el orden los conservan", () => {
+    expect(
+      hrefDeVerMas({
+        filtros: { area: "ALUMBRADO_PUBLICO", lugar: LUGAR },
+      }),
+    ).toBe(
+      `/reportes?area=ALUMBRADO_PUBLICO&lugar=${LUGAR}&limite=${TAMANO_DE_PAGINA * 2}`,
+    );
+  });
+
+  it("la x de cada chip quita solo su campo", () => {
+    const filtros = {
+      estado: "RECIBIDO" as const,
+      area: "OBRAS_PUBLICAS" as const,
+      lugar: LUGAR,
+    };
+
+    expect(hrefSinFiltro({ filtros }, "lugar")).toBe(
+      "/reportes?estado=RECIBIDO&area=OBRAS_PUBLICAS",
+    );
+    expect(hrefSinFiltro({ filtros }, "area")).toBe(
+      `/reportes?estado=RECIBIDO&lugar=${LUGAR}`,
+    );
+  });
+});

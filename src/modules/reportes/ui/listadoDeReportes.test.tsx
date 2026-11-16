@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { estadoDeLista } from "@/shared/ui";
 import type { ReporteGuardado } from "../application/puertos";
-import { comoReporteId } from "../domain";
+import { comoReporteId, componerConteos } from "../domain";
 import { ListadoDeReportes } from "./ListadoDeReportes";
 
 const reporte = (parcial: Partial<ReporteGuardado>): ReporteGuardado => ({
@@ -24,19 +24,38 @@ const reporte = (parcial: Partial<ReporteGuardado>): ReporteGuardado => ({
   ...parcial,
 });
 
+const LUGAR = "22222222-2222-4222-8222-222222222222";
+
+const LUGARES = [
+  { valor: LUGAR, etiqueta: "Comisaría de Kinchil (comisaría)" },
+] as const;
+
+const conteos = (total: number) =>
+  componerConteos({
+    porEstado: total === 0 ? [] : [{ estado: "EN_ATENCION", conteo: total }],
+    porArea: total === 0 ? [] : [{ area: "OBRAS_PUBLICAS", conteo: total }],
+  });
+
 const html = (
   reportes: readonly ReporteGuardado[],
-  extras: { soloAtrasados?: boolean } = {},
+  extras: {
+    soloAtrasados?: boolean;
+    filtros?: Parameters<typeof ListadoDeReportes>[0]["filtros"];
+  } = {},
 ) =>
   renderToStaticMarkup(
     <ListadoDeReportes
       reportes={reportes}
       hayMas={false}
       estadoDeLista={estadoDeLista({ total: reportes.length })}
-      filtros={{}}
+      filtros={extras.filtros ?? {}}
       umbral={7}
       hoy="2026-03-11"
-      {...extras}
+      lugares={LUGARES}
+      conteos={conteos(reportes.length)}
+      {...(extras.soloAtrasados === undefined
+        ? {}
+        : { soloAtrasados: extras.soloAtrasados })}
     />,
   );
 
@@ -114,5 +133,40 @@ describe("ListadoDeReportes, atraso configurable (S1)", () => {
     expect(conFiltro).toMatch(
       /<input(?=[^>]*name="atrasados")(?=[^>]*checked)[^>]*>/,
     );
+  });
+});
+
+describe("ListadoDeReportes, filtros por lugar y área (S2)", () => {
+  it("ofrece el catalogo de lugares del municipio como opciones del select", () => {
+    const pagina = html([reporte({})]);
+
+    expect(pagina).toContain('name="lugar"');
+    expect(pagina).toContain(`<option value="${LUGAR}">`);
+    expect(pagina).toContain("Comisaría de Kinchil (comisaría)");
+  });
+
+  it("ofrece las áreas responsables con su etiqueta y el código como valor", () => {
+    const pagina = html([reporte({})]);
+
+    expect(pagina).toContain('name="area"');
+    expect(pagina).toContain('<option value="OBRAS_PUBLICAS">Obras públicas');
+  });
+
+  it("cada filtro puesto se lee en su chip, y quitar uno conserva el otro", () => {
+    const pagina = html([reporte({})], {
+      filtros: { lugar: LUGAR, area: "OBRAS_PUBLICAS" },
+    });
+
+    expect(pagina).toContain("Lugar: Comisaría de Kinchil (comisaría)");
+    expect(pagina).toContain("Área: Obras públicas");
+    expect(pagina).toContain(`href="/reportes?area=OBRAS_PUBLICAS"`);
+    expect(pagina).toContain(`href="/reportes?lugar=${LUGAR}"`);
+  });
+
+  it("los conteos de los filtros elegidos van arriba de la tabla", () => {
+    const pagina = html([reporte({}), reporte({})]);
+
+    expect(pagina).toContain('aria-label="Conteos de reportes"');
+    expect(pagina).toContain('aria-label="Conteo por estado"');
   });
 });

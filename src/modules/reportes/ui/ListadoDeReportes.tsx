@@ -7,11 +7,16 @@ import {
   type EstadoDeLista,
   EstadoVacio,
   FilaDeTabla,
+  type OpcionDeLista,
   Tabla,
 } from "@/shared/ui";
 import { fechaCivilDeInstante } from "../application/fechaCivil";
-import type { FiltrosDeListado, ReporteGuardado } from "../application/puertos";
+import type {
+  FiltrosDeLaBandeja,
+  ReporteGuardado,
+} from "../application/puertos";
 import {
+  type ConteosDeReportes as Conteos,
   diasDeAtraso,
   ETIQUETA_DE_AREA,
   ETIQUETA_DE_TIPO_DE_INCIDENCIA,
@@ -19,6 +24,7 @@ import {
   SIN_AREA,
 } from "../domain";
 import { CeldaDeEstado } from "./CeldaDeEstado";
+import { ConteosDeReportes } from "./ConteosDeReportes";
 import { resolverOrdenDeColumnas } from "./columnasOrdenables";
 import { FiltrosDeReportes } from "./FiltrosDeReportes";
 import { hrefDeVerMas } from "./hrefsDeListado";
@@ -27,10 +33,14 @@ type Props = {
   reportes: readonly ReporteGuardado[];
   hayMas: boolean;
   estadoDeLista: EstadoDeLista;
-  filtros: FiltrosDeListado;
+  filtros: FiltrosDeLaBandeja;
   /** El umbral del municipio (`leerUmbralDeAtraso`) y el dia civil de hoy. */
   umbral: number;
   hoy: string;
+  /** Las opciones del filtro de lugar: los lugares activos del municipio. */
+  lugares: readonly OpcionDeLista[];
+  /** Los conteos por estado y por area de los filtros elegidos (S2). */
+  conteos: Conteos;
   q?: string | undefined;
   orden?: OrdenDeReportes | undefined;
   limite?: number | undefined;
@@ -57,6 +67,10 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
  * La insignia de atraso se calcula aca, con el umbral y el dia civil que
  * llegan por props, y no en el repositorio: el filtro ya lo aplico SQL, y lo
  * que falta es cuanto lleva cada fila para contarlo en la insignia.
+ *
+ * S2 suma los dos filtros nuevos -lugar y area responsable- y los conteos por
+ * estado y por area, que llegan ya computados: contarlos aca seria contar la
+ * pagina, no el municipio.
  */
 export function ListadoDeReportes({
   reportes,
@@ -65,6 +79,8 @@ export function ListadoDeReportes({
   filtros,
   umbral,
   hoy,
+  lugares,
+  conteos,
   q,
   orden,
   limite,
@@ -79,7 +95,14 @@ export function ListadoDeReportes({
 
   return (
     <div className="flex flex-col gap-4">
-      <FiltrosDeReportes {...filtros} q={q} soloAtrasados={soloAtrasados} />
+      <FiltrosDeReportes
+        {...filtros}
+        q={q}
+        soloAtrasados={soloAtrasados}
+        lugares={lugares}
+      />
+
+      <ConteosDeReportes conteos={conteos} />
 
       {estado.clase !== "con-filas" ? (
         <EstadoVacio
