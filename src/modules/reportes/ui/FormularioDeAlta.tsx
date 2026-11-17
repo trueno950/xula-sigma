@@ -28,13 +28,21 @@ type Props = {
  * libre del modulo (decision 13 de `proposal.md`): llevan la advertencia
  * explicita de no anotar datos de vecinos y el mismo largo acotado que
  * `validacionDeReporte.ts` valida en el servidor.
+ *
+ * Los campos obligatorios se dicen en una linea, nombrando los dos que no
+ * lo son, en vez de con un asterisco por etiqueta: `Lugar`, `Calle` y
+ * `Domicilio registrado` son nombres accesibles que `e2e/` busca exactos.
  */
 export function FormularioDeAlta({ lugares, calles, tipos, error }: Props) {
   return (
     <form action={altaDeReporteAction} className={CLASES_DE_FORMULARIO}>
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      <GrupoDeCampos titulo="Dónde y qué pasó">
+      <p className={CLASES_DE_ETIQUETA}>
+        Todos los campos son obligatorios, salvo la calle y la referencia.
+      </p>
+
+      <GrupoDeCampos titulo="Qué pasó y dónde">
         <SelectorDeUbicacionYTipo
           lugares={lugares}
           calles={calles}
@@ -67,7 +75,7 @@ export function FormularioDeAlta({ lugares, calles, tipos, error }: Props) {
           name="referencia"
           etiqueta="Referencia"
           maxLength={200}
-          ayuda="Una seña para encontrar el punto: frente a la tienda, junto a la cancha. No anote nombres ni domicilios de vecinos."
+          ayuda="Una seña del punto, sin nombres de vecinos."
         />
       </GrupoDeCampos>
 
