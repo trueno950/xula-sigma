@@ -11,20 +11,37 @@ function etiquetaDeEstado(conectado: boolean): string {
   return conectado ? "Actualización en vivo" : "Actualización desconectada";
 }
 
-export function EstadoEnVivo() {
+export function EstadoEnVivo({
+  variante = "tarjeta",
+}: {
+  /**
+   * `tarjeta` es la de siempre -borde, fondo y sombra- y es el default para
+   * que ninguna otra pantalla cambie de aspecto. `compacta` es una linea sin
+   * marco: la usa `/mapa-operativo`, donde el estado va bajo la descripcion
+   * del titulo y una tarjeta mas competiria con el mapa.
+   */
+  variante?: "tarjeta" | "compacta";
+} = {}) {
   const router = useRouter();
   const [conectado, setConectado] = useState(false);
 
   useEventosEnVivo(router.refresh, setConectado);
 
   const Icono = conectado ? WifiHigh : WifiSlash;
+  const compacta = variante === "compacta";
 
   return (
     <div
       aria-live="polite"
-      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-caliza-divisor bg-caliza-lienzo p-3 shadow-reposo"
+      className={
+        compacta
+          ? "flex flex-wrap items-center gap-3"
+          : "flex flex-wrap items-center justify-between gap-3 rounded-lg border border-caliza-divisor bg-caliza-lienzo p-3 shadow-reposo"
+      }
     >
-      <span className="flex items-center gap-2 pl-2 text-[15px] text-caliza-tinta">
+      <span
+        className={`flex items-center gap-2 text-[15px] text-caliza-tinta ${compacta ? "" : "pl-2"}`}
+      >
         <Icono
           size={20}
           aria-hidden="true"

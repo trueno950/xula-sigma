@@ -15,7 +15,13 @@ import { svgDeIcono } from "./iconosDelMapa";
  */
 const PIN =
   "display:flex;align-items:center;justify-content:center;position:relative;width:30px;height:30px;border-radius:9999px;color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)";
-const CONTADOR =
+/**
+ * La insignia del pin: el numero de orden de su fila en el panel (L3). No es
+ * el conteo de hechos -eso lo dicen la fila y la ventana-: es la liga entre
+ * las dos vistas, y dos numeros distintos para la misma calle se
+ * desincronizan sin que nada falle.
+ */
+const ORDEN =
   "position:absolute;top:-6px;right:-8px;min-width:18px;height:18px;padding:0 3px;border-radius:9999px;background:#111827;color:#fff;font:600 11px/18px system-ui,sans-serif;text-align:center";
 /**
  * El aro del atraso (S1): el pin de una calle con algun reporte pasado del
@@ -35,17 +41,13 @@ const diasDeAtrasoDe = (marcador: MarcadorDeMapa): number | null =>
   );
 
 export const htmlDeMarcador = (marcador: MarcadorDeMapa): string => {
-  const cuantos = marcador.hechos.length;
-  const contador =
-    cuantos > 1
-      ? `<span data-hechos="${cuantos}" style="${CONTADOR}">${cuantos}</span>`
-      : "";
+  const insignia = `<span data-orden="${marcador.orden}" style="${ORDEN}">${marcador.orden}</span>`;
   const atrasados = diasDeAtrasoDe(marcador);
   const aro = atrasados === null ? "" : ARO_DE_ATRASO;
   // `data-atrasado="1"` es lo que el E2E lee: el aro se ve, pero un test no
   // puede afirmar un `box-shadow`.
   const marca = atrasados === null ? "" : ' data-atrasado="1"';
-  return `<span${marca} style="${PIN};background:${colorVerificado(marcador.color)}${aro}">${svgDeIcono(marcador.icono)}${contador}</span>`;
+  return `<span${marca} style="${PIN};background:${colorVerificado(marcador.color)}${aro}">${svgDeIcono(marcador.icono)}${insignia}</span>`;
 };
 
 /**
@@ -67,11 +69,12 @@ const atrasoDeLaVentana = (dias: number | null): string =>
     : ` · <strong>Atrasado · ${dias} ${dias === 1 ? "día" : "días"}</strong>`;
 
 /**
- * La ventana del pin: folio -o el tipo, si es una intervencion-, tipo,
- * estado, fecha del hecho y dias de atraso cuando los tiene. Sin datos de la
- * persona que reporto: el mapa nunca los pide.
+ * La ventana del pin: el nombre de la calle, cuantos hechos lleva -lo mismo
+ * que dice su fila-, y cada hecho con folio, tipo, estado, fecha y dias de
+ * atraso. Sin datos de la persona que reporto: el mapa nunca los pide.
  */
 export const htmlDeLaVentana = (marcador: MarcadorDeMapa): string => {
+  const cuantos = marcador.hechos.length;
   const filas = marcador.hechos
     .map(
       (hecho) =>
@@ -83,5 +86,9 @@ export const htmlDeLaVentana = (marcador: MarcadorDeMapa): string => {
         `</li>`,
     )
     .join("");
-  return `<ul style="margin:0;padding-left:16px">${filas}</ul>`;
+  return (
+    `<p style="margin:0 0 4px"><strong>${escapar(marcador.calleNombre)}</strong></p>` +
+    `<p style="margin:0 0 8px">${cuantos} ${cuantos === 1 ? "hecho" : "hechos"} en esta calle</p>` +
+    `<ul style="margin:0;padding-left:16px">${filas}</ul>`
+  );
 };

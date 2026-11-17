@@ -5,6 +5,8 @@ export * from "./etiquetasDeFiltro";
 export * from "./iconos";
 export * from "./leyenda";
 export * from "./mapaOperativo";
+export * from "./panelDeCalles";
 export * from "./recursoDeMapa";
 export * from "./sinUbicar";
+export * from "./tonoDeEstado";
 export * from "./vocabularios";

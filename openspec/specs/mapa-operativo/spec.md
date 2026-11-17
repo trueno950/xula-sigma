@@ -75,8 +75,9 @@ contexto.
 ### Requirement: Cobertura faltante declarada, nunca ocultada
 
 Las calles sin punto y los reportes e intervenciones sin calle MUST
-aparecer en una seccion explicita de cobertura faltante. El sistema MUST
-NOT omitirlos de la agregacion ni de los conteos.
+aparecer en una pestana explicita de cobertura faltante -«Sin ubicar»-, en
+el mismo lugar para las dos cosas. El sistema MUST NOT omitirlos de la
+agregacion ni de los conteos.
 
 #### Scenario: Reporte sin calle visible en cobertura faltante
 
@@ -181,3 +182,51 @@ llegar por la API publica de `intervenciones`.
 - WHEN se abre la ventana de ese pin
 - THEN el reporte muestra su fecha de registro
 - AND la obra muestra su fecha de ocurrencia, en fecha civil
+
+### Requirement: Panel de calles con dos pestanas en la URL
+
+El panel MUST mostrar dos pestanas -«En el mapa (N)» y «Sin ubicar (N)»- y
+MUST llevar la elegida en la URL (`?panel=sin-ubicar`), de modo que las dos
+listas se alcancen sin JavaScript y cada una tenga direccion propia. Las dos
+listas MUST seguir en el HTML del servidor: cambiar de pestana MUST NOT
+depender de estado de cliente. El N de «Sin ubicar» MUST contar las calles
+sin punto mas los hechos que no se pueden dibujar, y el de «En el mapa» las
+calles con pin.
+
+#### Scenario: La pestana de lo que no se puede dibujar viaja en la URL
+
+- GIVEN un mapa abierto en «En el mapa»
+- WHEN se pide `?panel=sin-ubicar`
+- THEN el panel muestra las calles sin punto y los hechos sin punto
+- AND la lista de calles dibujadas sigue en el HTML del servidor
+
+### Requirement: La fila y su marcador comparten numero de orden
+
+Cada fila del panel MUST numerar su calle con el mismo numero que lleva la
+insignia de su pin, y ese numero MUST asignarse una sola vez en el agregado.
+Elegir una fila MUST resaltar su marcador y abrir su ventana; elegir un
+marcador MUST resaltar su fila. El conteo de hechos de la calle MUST decirse
+en la fila y en la ventana del marcador, nunca en el pin.
+
+#### Scenario: Elegir la fila de una calle marca su pin
+
+- GIVEN un mapa con una calle dibujada y su pin
+- WHEN la operadora elige la fila de esa calle
+- THEN el pin queda marcado con el atributo `data-elegida`
+- AND su ventana se abre con los hechos de la calle
+
+### Requirement: Resumen de filtros y leyenda dentro del mapa
+
+Bajo los filtros, el mapa MUST mostrar los filtros puestos como chips
+removibles -cada uno con la misma pantalla sin ese filtro- y un resumen con
+los numeros de hechos, calles dibujadas, atrasados y pendientes de ubicar.
+La leyenda MUST vivir dentro del mapa como una capa plegable, abierta por
+defecto, con el total de hechos, el conteo por tipo, el conteo por estado y
+el renglon de atrasados cuando lo haya.
+
+#### Scenario: Quitar un filtro conserva los otros
+
+- GIVEN un mapa filtrado por territorio y por tipo
+- WHEN se quita el chip del tipo
+- THEN el mapa queda filtrado solo por territorio
+- AND el resumen se recalcula

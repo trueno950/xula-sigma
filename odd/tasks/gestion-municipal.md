@@ -19,7 +19,7 @@ Va después de los bloques A (`odd/tasks/intervenciones-trazabilidad.md`) y B (`
 - [x] **T1** (S1) umbral de atraso configurable y su señal en la bandeja y el mapa — worker — commit: `8f57228` + `87ebe9c` (snapshot)
 - [x] **T2** (S2) filtros y conteos por lugar y por área en la bandeja de reportes — worker — commit: `2ca4973`
 - [x] **T3** (S3, S4) calles sin ubicar por localidad y fecha en la ventana del mapa — worker — commit: `ed909ff`
-- [ ] **T4** (S1-S4) verificador, revisión, PR y merge — verify — commit:
+- [x] **T4** (S1-S4) verificador, revisión, PR y merge — verify — commit: `63ca091`, PR #141 (`6cca2cd`)
 
 ## Log
 

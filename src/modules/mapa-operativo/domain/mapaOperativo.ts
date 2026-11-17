@@ -27,6 +27,8 @@ type DatosDeHechoEnMarcador = {
   href: string;
   tipo: string;
   etiquetaDeTipo: string;
+  /** El codigo del estado, con el que la UI elige el tono de la insignia. */
+  estado: string;
   etiquetaDeEstado: string;
   icono: ClaveDeIcono;
   /** El color lo decidio el servidor; ver `coloresDeEstado.ts`. */
@@ -76,6 +78,19 @@ export type MarcadorDeMapa = {
   hechos: readonly HechoEnMarcador[];
   icono: ClaveDeIcono;
   color: string;
+  /**
+   * El numero de orden de su fila en el panel, desde 1 (L3). Lo lleva la
+   * insignia del pin: es lo que liga el marcador con su fila, y por eso se
+   * asigna una sola vez en el agregado y no en cada lado de la pantalla.
+   */
+  orden: number;
+  /** El nombre de la calle, que la fila del panel declara. */
+  calleNombre: string;
+  /**
+   * La raiz del arbol territorial a la que pertenece la calle, o `null` si no
+   * se pudo resolver. La fila lo omite antes que inventar un territorio.
+   */
+  territorioNombre: string | null;
   historiaHref?: string;
 };
 

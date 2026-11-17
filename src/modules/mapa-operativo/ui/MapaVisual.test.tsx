@@ -13,7 +13,12 @@ describe("MapaVisual", () => {
    */
   it("se declara region etiquetada, no imagen, porque sus marcadores son enfocables", () => {
     const html = renderToStaticMarkup(
-      <MapaVisual marcadores={[marcadorDe([HECHO_DE_REPORTE])]} caja={CAJA} />,
+      <MapaVisual
+        marcadores={[marcadorDe([HECHO_DE_REPORTE])]}
+        caja={CAJA}
+        elegida={null}
+        onSeleccion={() => {}}
+      />,
     );
 
     expect(html).toContain("<section");
@@ -25,7 +30,12 @@ describe("MapaVisual", () => {
 
   it("sin calles ubicadas no dibuja el mapa, que no tiene caja que bloquear", () => {
     const html = renderToStaticMarkup(
-      <MapaVisual marcadores={[]} caja={null} />,
+      <MapaVisual
+        marcadores={[]}
+        caja={null}
+        elegida={null}
+        onSeleccion={() => {}}
+      />,
     );
 
     expect(html).toBe("");

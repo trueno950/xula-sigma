@@ -115,7 +115,9 @@ describe("agregarMapa: territorio elegido", () => {
     ]);
     expect(mapa.territorioElegido).toBeNull();
     expect(foliosDe(mapa)).toEqual(["Obra", "REP-COMISARIA", "REP-SIN-CALLE"]);
-    expect(fuentes.lugaresDelSubarbol).not.toHaveBeenCalled();
+    // S4: cada fila declara a que territorio pertenece su calle, y sin
+    // `?lugar=` esa respuesta sale del subarbol de cada raiz del municipio.
+    expect(fuentes.lugaresDelSubarbol).toHaveBeenCalledTimes(3);
   });
 
   it("la caja es la de todas las calles ubicadas del municipio", async () => {
@@ -168,7 +170,8 @@ describe("agregarMapa: territorio elegido", () => {
 
     expect(mapa.territorioElegido).toBeNull();
     expect(foliosDe(mapa)).toEqual(["Obra", "REP-COMISARIA", "REP-SIN-CALLE"]);
-    expect(fuentes.lugaresDelSubarbol).not.toHaveBeenCalled();
+    // Un lugar que no es raiz no acota, pero el territorio de cada calle se
+    // sigue resolviendo contra todas las raices (S4).
     expect(mapa.caja).toEqual(
       cajaDePuntos([
         { latitud: 21.02, longitud: -89.6 },

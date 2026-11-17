@@ -1,21 +1,27 @@
-import Link from "next/link";
-import { Aviso, CLASES_DE_ENLACE, CLASES_DE_TARJETA } from "@/shared/ui";
+import { Aviso, EstadoVacio, estadoDeLista } from "@/shared/ui";
 import type { FiltrosDeMapa } from "../application";
-import type { MapaOperativoAgregado, TerritorioDeMapa } from "../domain";
-import { CallesSinUbicar } from "./CallesSinUbicar";
-import { etiquetaDeRecurso } from "./etiquetasDeRecurso";
+import type {
+  MapaOperativoAgregado,
+  PanelDeCalles,
+  TerritorioDeMapa,
+} from "../domain";
+import { FilaDeResumen } from "./FilaDeResumen";
 import { FormularioDeFiltrosDeMapa } from "./FormularioDeFiltrosDeMapa";
 import { LeyendaDelMapa } from "./LeyendaDelMapa";
-import { ListaDeMarcadores } from "./ListaDeMarcadores";
-import { MapaVisual } from "./MapaVisual";
+import { MapaYCalles } from "./MapaYCalles";
+import {
+  chipsDeFiltro,
+  pestanasDePanel,
+  resumenDelMapa,
+} from "./resumenDelMapa";
+import { SinUbicar } from "./SinUbicar";
+import { hrefDelMapa } from "./urlDelMapa";
 
-type Props = { mapa: MapaOperativoAgregado; filtros: FiltrosDeMapa };
-const conteoDe = (n: number, singular: string, plural: string) =>
-  `${n} ${n === 1 ? singular : plural}`;
-const razonDe = (
-  razon: "SIN_CALLE" | "CALLE_SIN_PUNTO",
-  calle: string | null,
-) => (razon === "SIN_CALLE" ? "sin calle" : `calle sin punto: ${calle ?? "?"}`);
+type Props = {
+  mapa: MapaOperativoAgregado;
+  filtros: FiltrosDeMapa;
+  panel: PanelDeCalles;
+};
 
 /**
  * El aviso de S2: un territorio sin calles ubicadas no tiene caja que
@@ -25,58 +31,68 @@ const razonDe = (
 export const mensajeSinCalles = (territorio: TerritorioDeMapa | null) =>
   `Sin calles ubicadas en ${territorio?.nombre ?? "el municipio"}. El mapa muestra todo Yucatán.`;
 
-const LISTA =
-  "divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo";
-const FILA =
-  "flex min-h-12 flex-wrap items-center gap-x-2 px-5 py-2 text-[15px]";
+const SIN_HECHOS = "Todavía no hay reportes ni obras abiertas en el municipio.";
 
-export function MapaOperativo({ mapa, filtros }: Props) {
+/**
+ * La pantalla en el orden de S1: filtros, resumen con sus chips, y el mapa con
+ * el panel. La actualizacion en vivo y la descripcion viven en la cabecera de
+ * `PaginaDePanel`, que es de la pagina, no del mapa.
+ *
+ * Con hechos, el mapa y su panel van juntos a `MapaYCalles`, que es el unico
+ * componente cliente: elegir una fila o un pin es estado de la vista.
+ */
+export function MapaOperativo({ mapa, filtros, panel }: Props) {
+  const resumen = resumenDelMapa(mapa);
+  const chips = chipsDeFiltro(filtros, mapa.territorioElegido);
+  const estado = estadoDeLista({
+    total: mapa.conteos.total,
+    filtro:
+      chips.length === 0
+        ? undefined
+        : chips.map((chip) => chip.etiqueta).join(", "),
+  });
+
   return (
     <section aria-label="Mapa operativo" className="flex flex-col gap-4">
-      <FormularioDeFiltrosDeMapa {...filtros} territorios={mapa.territorios} />
-      <p className="text-[15px] text-caliza-apagada">
-        Ubicación aproximada de la calle
-      </p>
-      <p className="text-[15px] text-caliza-apagada">
-        {conteoDe(mapa.conteos.reportes, "reporte", "reportes")} ·{" "}
-        {conteoDe(
-          mapa.conteos.intervenciones,
-          "intervención",
-          "intervenciones",
-        )}
-      </p>
-      {mapa.estado === "VACIO" ? (
-        <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
-          No hay hechos para los filtros seleccionados.
-        </p>
-      ) : null}
-      <LeyendaDelMapa leyenda={mapa.leyenda} />
+      <FormularioDeFiltrosDeMapa
+        {...filtros}
+        territorios={mapa.territorios}
+        activos={chips.length}
+      />
+      <FilaDeResumen chips={chips} resumen={resumen} />
       {mapa.caja === null ? (
         <Aviso tono="aviso">{mensajeSinCalles(mapa.territorioElegido)}</Aviso>
       ) : null}
-      <MapaVisual marcadores={mapa.marcadores} caja={mapa.caja} />
-      <ListaDeMarcadores marcadores={mapa.marcadores} />
-      <CallesSinUbicar sinUbicar={mapa.sinUbicar} />
-      {mapa.cobertura.length > 0 ? (
-        <section
-          aria-label="Cobertura faltante"
-          className="flex flex-col gap-3"
-        >
-          <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
-            Cobertura faltante
-          </h2>
-          <ul className={LISTA}>
-            {mapa.cobertura.map((entrada) => (
-              <li key={entrada.id} className={FILA}>
-                <Link href={entrada.href} className={CLASES_DE_ENLACE}>
-                  {etiquetaDeRecurso(entrada.recurso, "lista")}:{" "}
-                  {entrada.etiqueta} ({razonDe(entrada.razon, entrada.calle)})
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {estado.clase === "con-filas" ? (
+        <MapaYCalles
+          marcadores={mapa.marcadores}
+          caja={mapa.caja}
+          panel={panel}
+          pestanas={pestanasDePanel({
+            filtros,
+            panel,
+            calles: mapa.marcadores.length,
+            sinUbicar: resumen.totalSinUbicar,
+          })}
+          leyenda={<LeyendaDelMapa leyenda={mapa.leyenda} />}
+          sinUbicar={
+            <SinUbicar sinUbicar={mapa.sinUbicar} cobertura={mapa.cobertura} />
+          }
+        />
+      ) : (
+        <>
+          <EstadoVacio
+            estado={estado}
+            mensajeInicial={SIN_HECHOS}
+            hrefSinFiltro={hrefDelMapa({})}
+          />
+          {/* Sin hechos no hay panel, pero las calles sin punto existen igual:
+              sin esta seccion el resumen las contaria y nadie podria abrirlas. */}
+          {resumen.totalSinUbicar > 0 ? (
+            <SinUbicar sinUbicar={mapa.sinUbicar} cobertura={mapa.cobertura} />
+          ) : null}
+        </>
+      )}
     </section>
   );
 }

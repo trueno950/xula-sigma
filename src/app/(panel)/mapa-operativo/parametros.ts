@@ -3,6 +3,9 @@ import {
   AREAS_PARA_FILTRO,
   ESTADOS_DE_INTERVENCION_PARA_FILTRO,
   ESTADOS_DE_REPORTE_PARA_FILTRO,
+  PANEL_POR_DEFECTO,
+  PANELES_DEL_MAPA,
+  type PanelDeCalles,
   TIPOS_DE_INTERVENCION_PARA_FILTRO,
   TIPOS_DE_REPORTE_PARA_FILTRO,
 } from "@/modules/mapa-operativo";
@@ -13,6 +16,11 @@ export type ParametrosDeMapa = {
   area: string | undefined;
   /** El `?lugar=` de S1: la cabecera o una comisaria; `undefined` es todo el municipio. */
   lugar: string | undefined;
+  /**
+   * S4: la pestana del panel, `?panel=sin-ubicar`. Sin ella el panel muestra
+   * las calles dibujadas, y un valor que no existe cae al mismo lugar.
+   */
+  panel: PanelDeCalles;
 };
 
 /**
@@ -44,6 +52,7 @@ const esquemaDeParametros = z.object({
    * al leer su subarbol, y un id ajeno no interseca ningun hecho.
    */
   lugar: z.string().uuid().optional().catch(undefined),
+  panel: z.enum(PANELES_DEL_MAPA).optional().catch(undefined),
 });
 
 export const leerParametrosDeMapa = (
@@ -56,5 +65,6 @@ export const leerParametrosDeMapa = (
     estado: datos.estado,
     area: datos.area,
     lugar: datos.lugar,
+    panel: datos.panel ?? PANEL_POR_DEFECTO,
   };
 };

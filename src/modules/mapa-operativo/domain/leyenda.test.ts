@@ -111,6 +111,21 @@ describe("construirLeyenda", () => {
       tipos: [],
       estados: [],
       atrasados: 0,
+      total: 0,
     });
+  });
+
+  /**
+   * S3: el total que la leyenda muestra en su cabecera es el de hechos, no el
+   * de pines ni el de calles: un pin agrupado cuenta cada hecho que lleva
+   * adentro, igual que los dos conteos de abajo.
+   */
+  it("declara el total de hechos que resume", () => {
+    const leyenda = construirLeyenda([
+      reporte("BACHE", "RECIBIDO"),
+      intervencion("OBRA", "PLANIFICADA"),
+    ]);
+
+    expect(leyenda.total).toBe(2);
   });
 });
