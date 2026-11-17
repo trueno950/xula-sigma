@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Mapa protagonista — Mapa operativo</title>
+<style>
+  :root {
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-acento: oklch(0.55 0.1 25);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-inhabilitado: oklch(0.68 0.007 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    /* Colores de estado: dato del servidor (domain/coloresDeEstado.ts) */
+    --estado-recibido: #b45309;
+    --estado-en-atencion: #1d4ed8;
+    --estado-resuelto: #15803d;
+    --estado-rechazado: #6b7280;
+    --estado-planificada: #7c3aed;
+    --estado-en-ejecucion: #0e7490;
+
+    --radio-sm: 6px;
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --sombra-flotante: 0 8px 24px -6px oklch(0.24 0.008 80 / .22), 0 2px 6px oklch(0.24 0.008 80 / .08);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, p, ul, li, figure, figcaption { margin: 0; }
+  ul { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .enlace:hover { text-decoration-thickness: 2px; }
+
+  /* ================= shell ================= */
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar {
+    position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+    border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo);
+    overflow-y: auto;
+  }
+  .municipio {
+    display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px;
+    background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2;
+    color: var(--color-caliza-tinta); text-decoration: none;
+  }
+  .municipio svg { flex: none; }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item {
+    display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px;
+    border-radius: var(--radio-md); font-weight: 600; font-size: 15px;
+    color: var(--color-caliza-apagada); text-decoration: none;
+    transition: background-color 150ms var(--ease), color 150ms var(--ease);
+  }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma {
+    display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px;
+    border: 1px solid transparent; border-radius: var(--radio-md); background: transparent;
+    color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer;
+    transition: color 150ms var(--ease), background-color 150ms var(--ease);
+  }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  /* ================= contenido ================= */
+  .contenido {
+    min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto;
+    padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; }
+  .cabecera h1 { margin-bottom: 4px; }
+  .cabecera p.descripcion { max-width: 70ch; color: var(--color-caliza-apagada); }
+
+  .en-vivo { display: flex; align-items: center; gap: 12px; }
+  .en-vivo .estado { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .en-vivo .estado svg { color: var(--color-senial-exito); }
+  .en-vivo .estado .hora { font-family: var(--fuente-dato); font-size: .875rem; color: var(--color-caliza-apagada); }
+
+  .boton {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 44px; padding: 0 18px; border-radius: var(--radio-md); border: 1px solid transparent;
+    font: 600 15px/1 var(--fuente); cursor: pointer; text-decoration: none;
+    transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease);
+  }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+
+  /* ================= filtros ================= */
+  .filtros {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px;
+    padding: 12px 16px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg);
+    background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo);
+  }
+  .campo { display: flex; flex-direction: column; gap: 6px; flex: 1 1 168px; max-width: 220px; }
+  .campo select {
+    height: 44px; width: 100%; padding: 0 32px 0 12px; appearance: none;
+    border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md);
+    background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); font: 400 15px var(--fuente);
+    background-image: linear-gradient(45deg, transparent 50%, var(--color-caliza-apagada) 50%), linear-gradient(135deg, var(--color-caliza-apagada) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 19px, calc(100% - 13px) 19px;
+    background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+  }
+
+  .chips-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; min-height: 32px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+    border-radius: var(--radio-pill); background: var(--color-marca-suave); color: var(--color-caliza-tinta);
+    font-size: 13px; font-weight: 500; text-decoration: none;
+    transition: background-color 150ms var(--ease);
+  }
+  .chip:hover { background: var(--color-caliza-relleno); }
+  .resumen { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; font-size: 15px; color: var(--color-caliza-apagada); }
+  .resumen b { font-family: var(--fuente-dato); font-size: 1.05rem; font-variant-numeric: tabular-nums; color: var(--color-caliza-tinta); }
+  .resumen .atraso b { color: var(--color-senial-error); }
+
+  /* ================= parte: mapa + panel ================= */
+  .parte { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: stretch; }
+  .tarjeta { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); }
+
+  .mapa-caja { display: flex; flex-direction: column; overflow: hidden; position: relative; min-height: 560px; }
+  .mapa-cabecera {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 10px 16px; border-bottom: 1px solid var(--color-caliza-divisor);
+  }
+  .mapa-lienzo { position: relative; flex: 1; background: var(--color-caliza-superficie); }
+  .mapa-lienzo > svg { width: 100%; height: 100%; }
+
+  /* pin */
+  .pin-cuerpo { stroke: var(--color-caliza-lienzo); stroke-width: 2.5; }
+  .pin-aro { fill: none; stroke: var(--color-senial-error); stroke-width: 3; }
+  .pin-elegido { fill: none; stroke: var(--color-caliza-tinta); stroke-width: 2; stroke-dasharray: 4 4; }
+  .pin-num { font: 600 11px var(--fuente); fill: var(--color-caliza-lienzo); text-anchor: middle; }
+  .pin-num-fondo { fill: var(--color-caliza-tinta); }
+  .pin-uso { color: var(--color-caliza-lienzo); }
+  .mapa-fondo { fill: var(--color-caliza-superficie); }
+  .manzana { fill: var(--color-caliza-relleno); stroke: var(--color-caliza-divisor); stroke-width: 1; }
+  .via { fill: none; stroke: var(--color-caliza-lienzo); stroke-width: 14; }
+  .via-borde { fill: none; stroke: var(--color-caliza-divisor); stroke-width: 1; }
+  .limite { fill: none; stroke: var(--color-caliza-borde); stroke-width: 1.5; stroke-dasharray: 8 6; }
+  .lugar-nombre { font: 500 13px var(--fuente); fill: var(--color-caliza-apagada); }
+  .lugar-nombre.cabecera { font-weight: 600; font-size: 15px; fill: var(--color-caliza-tinta); }
+
+  /* ventana del pin (popover flotante) */
+  .ventana {
+    position: absolute; left: 46%; top: 22%; width: 276px; padding: 16px;
+    background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor);
+    border-radius: var(--radio-lg); box-shadow: var(--sombra-flotante);
+  }
+  .ventana h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ventana ul { display: flex; flex-direction: column; gap: 8px; }
+  .ventana li { display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--color-caliza-divisor); }
+  .ventana li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .ventana .meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+  .ventana .atraso { color: var(--color-senial-error); font-weight: 600; }
+
+  /* leyenda superpuesta */
+  .leyenda { position: absolute; left: 16px; bottom: 16px; width: 296px; max-width: calc(100% - 32px); }
+  .leyenda > details {
+    background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor);
+    border-radius: var(--radio-lg); box-shadow: var(--sombra-flotante); overflow: clip;
+  }
+  .leyenda summary {
+    display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+    cursor: pointer; list-style: none; font-weight: 600; font-size: 15px;
+  }
+  .leyenda summary::-webkit-details-marker { display: none; }
+  .leyenda summary .cuenta-leyenda { margin-left: auto; font-family: var(--fuente-dato); font-size: .875rem; color: var(--color-caliza-apagada); }
+  .leyenda .cuerpo { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .leyenda .grupo-leyenda > .label { margin-bottom: 4px; }
+  .leyenda .grupo-leyenda ul { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; }
+  .leyenda .grupo-leyenda li { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .leyenda .grupo-leyenda li .c { margin-left: auto; font-family: var(--fuente-dato); font-weight: 600; }
+  .leyenda .grupo-leyenda.ancho ul { grid-template-columns: 1fr; }
+  .leyenda .punto { width: 10px; height: 10px; border-radius: var(--radio-pill); flex: none; }
+  .leyenda .punto.aro { width: 12px; height: 12px; border-radius: var(--radio-pill); border: 2px solid var(--color-senial-error); }
+  .leyenda .grupo-leyenda.ancho li { font-size: 13px; }
+
+  /* ================= panel derecho ================= */
+  .panel { display: flex; flex-direction: column; overflow: hidden; }
+  .pestanas { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-superficie); }
+  .pestanas a {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 40px; padding: 0 10px; border-radius: var(--radio-md);
+    font-size: 15px; font-weight: 600; color: var(--color-caliza-apagada); text-decoration: none;
+    transition: background-color 150ms var(--ease), color 150ms var(--ease);
+  }
+  .pestanas a:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+  .pestanas a[aria-current="true"] { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border: 1px solid var(--color-caliza-divisor); }
+  .pestanas .cuenta { font-family: var(--fuente-dato); font-size: .8125rem; color: var(--color-caliza-apagada); }
+  .pestanas a[aria-current="true"] .cuenta { color: var(--color-caliza-tinta); }
+
+  .calle-lista { overflow-y: auto; flex: 1; }
+  .calle { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-bottom: 1px solid var(--color-caliza-divisor); }
+  .calle:last-child { border-bottom: 0; }
+  .calle.elegida { background: var(--color-caliza-superficie); }
+  .calle-cabecera { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .num {
+    flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: var(--radio-pill);
+    background: var(--color-caliza-relleno); color: var(--color-caliza-tinta);
+    font-family: var(--fuente-dato); font-size: 12px; font-weight: 600; align-self: center;
+  }
+  .calle.elegida .num { background: var(--color-caliza-tinta); color: var(--color-caliza-lienzo); }
+  .calle-cabecera .nombre { font-size: 15px; font-weight: 600; }
+  .calle-cabecera .lugar { margin-left: auto; }
+  .elegida-marca { font-size: 13px; font-weight: 600; color: var(--color-caliza-tinta); background: var(--color-caliza-relleno); border-radius: var(--radio-pill); padding: 1px 8px; }
+
+  .hechos { display: flex; flex-direction: column; gap: 8px; }
+  .hecho { display: grid; grid-template-columns: 18px 1fr; gap: 4px 8px; align-items: center; }
+  .hecho .icono { display: grid; place-items: center; width: 18px; height: 18px; border-radius: var(--radio-pill); color: var(--color-caliza-lienzo); }
+  .hecho .linea { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .hecho .meta { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+  .hecho .atraso { color: var(--color-senial-error); font-weight: 600; }
+
+  .insignia { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--radio-pill); font-size: 13px; font-weight: 500; }
+  .insignia svg { width: 14px; height: 14px; }
+  .insignia.neutro { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+  .insignia.exito { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .insignia.aviso { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .insignia.error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+
+  .calle-pie { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .calle-pie .enlace { font-size: 13px; }
+
+  /* ================= notas del artboard ================= */
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+
+  /* ================= móvil ================= */
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono {
+    width: 390px; height: 844px; overflow-y: auto; position: relative;
+    border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo);
+    box-shadow: var(--sombra-reposo);
+  }
+  .m-municipio {
+    display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px;
+    background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor);
+    font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none;
+  }
+  .m-cuerpo { padding: 16px 16px 96px; display: flex; flex-direction: column; gap: 12px; }
+  .m-cabecera h1 { font-size: 1.4rem; }
+  .m-filtros {
+    border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg);
+    background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo);
+  }
+  .m-filtros summary {
+    display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+    cursor: pointer; list-style: none; font-weight: 600; font-size: 15px;
+  }
+  .m-filtros summary::-webkit-details-marker { display: none; }
+  .m-filtros summary .cuenta { color: var(--color-caliza-apagada); font-weight: 500; }
+  .m-filtros .cuerpo { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .m-filtros .campo { max-width: none; flex: 1 1 auto; }
+  .m-mapa { position: relative; border-radius: var(--radio-lg); border: 1px solid var(--color-caliza-divisor); overflow: hidden; height: 506px; background: var(--color-caliza-superficie); }
+  .m-mapa > svg { width: 100%; height: 100%; }
+  .m-mapa .leyenda { left: 12px; bottom: 12px; width: auto; right: 12px; }
+  .m-tabs { display: flex; gap: 4px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); padding: 4px; }
+  .m-tabs a { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; border-radius: var(--radio-md); font-size: 15px; font-weight: 600; color: var(--color-caliza-apagada); text-decoration: none; }
+  .m-tabs a[aria-current="true"] { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .m-lista { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); overflow: clip; box-shadow: var(--sombra-reposo); }
+  .m-lista .calle { padding: 12px 16px; }
+  .m-sin-ubicar { display: flex; flex-direction: column; gap: 8px; }
+  .m-sin-ubicar h2 { margin-top: 8px; }
+  .m-sin-ubicar .calle { gap: 4px; }
+  .m-nav {
+    position: sticky; bottom: 0; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo);
+  }
+  .m-nav a {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none;
+  }
+  .m-nav a[aria-current="true"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="true"] svg { color: var(--color-marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: .01ms !important; animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important; scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="ic-bache" viewBox="0 0 24 24"><path d="M3 18c1.6-6.5 4.6-10 9-10s7.4 3.5 9 10z"/><path d="M9 17.4a3 3 0 0 1 6 0z"/></symbol>
+    <symbol id="ic-alumbrado" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-3.6 10.8V16h7.2v-2.2A6 6 0 0 0 12 3z"/><path d="M9.5 18h5v2.6h-5z"/></symbol>
+    <symbol id="ic-fuga" viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.6 6 7.8 6 10.5a6 6 0 0 1-12 0c0-2.7 2.4-5.9 6-10.5z"/></symbol>
+    <symbol id="ic-basura" viewBox="0 0 24 24"><path d="M9.6 3h4.8l.8 2.3H19v2.2H5V5.3h3.8z"/><path d="M6.6 9h10.8l-1 12H7.6z"/></symbol>
+    <symbol id="ic-parque" viewBox="0 0 24 24"><path d="M12 2.5 17.5 10H14l4 6H6l4-6H6.5z"/><path d="M11 16h2v5.5h-2z"/></symbol>
+    <symbol id="ic-obra" viewBox="0 0 24 24"><path d="M4 18a8 8 0 0 1 4.6-7.3V6.5h6.8v4.2A8 8 0 0 1 20 18z"/></symbol>
+    <symbol id="ic-repavimentacion" viewBox="0 0 24 24"><path d="M8 13.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/><path d="M12.5 16.5H21v2h-8.5z"/></symbol>
+    <symbol id="ic-pavimentacion" viewBox="0 0 24 24"><path d="M3 20 9 6h2l-6 14z"/><path d="M11 20l6-14h2l-6 14z"/><path d="M4 16h16v1.6H4z"/></symbol>
+    <symbol id="ic-mejora" viewBox="0 0 24 24"><path d="M12 2.8l2.3 6.9 6.9 2.3-6.9 2.3L12 21.2l-2.3-6.9L2.8 12l6.9-2.3z"/></symbol>
+    <symbol id="ic-mantenimiento" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="ic-otro" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17z"/></symbol>
+    <symbol id="si-circulo" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 4a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></symbol>
+    <symbol id="si-aviso" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="si-x" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm3.5 12.1-1.4 1.4L12 13.9 9.9 16l-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4L12 11.1l2.1-2.1 1.4 1.4-2.1 2.1z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M12 18.5a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4zM12 13c1.9 0 3.6.7 4.9 2l1.7-1.7A10.4 10.4 0 0 0 12 10.5c-2.5 0-4.8.9-6.6 2.6l1.7 1.7c1.3-1.2 3-1.9 4.9-1.9zM12 6c3.3 0 6.3 1.3 8.5 3.4l1.7-1.7A14.4 14.4 0 0 0 12 3.5c-4.1 0-7.8 1.6-10.2 4l1.7 1.7A12.4 12.4 0 0 1 12 6z"/></symbol>
+    <symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4zm7.5-9.7a4 4 0 0 1 0 7.4 6 6 0 0 0 0-7.4zM18 13c2.2.6 4 2.1 4 4v3h-5v-3c0-1.6-.7-3-1.9-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--color-marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--color-marca-texto)" opacity=".85"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <!-- ============ lateral ============ -->
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Admin municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- ============ contenido ============ -->
+  <main class="contenido">
+    <header class="cabecera">
+      <div>
+        <h1 class="display">Mapa operativo</h1>
+        <p class="descripcion body">Dónde están los reportes y las obras abiertas del municipio, qué lleva demasiado tiempo y qué no se puede dibujar todavía.</p>
+      </div>
+      <div class="en-vivo">
+        <span class="estado"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-wifi"/></svg>
+          Actualización en vivo <span class="hora">· hace 20 s</span></span>
+        <a class="boton secundaria" href="#">Actualizar ahora</a>
+      </div>
+    </header>
+
+    <!-- filtros -->
+    <form class="filtros" method="get" aria-label="Filtros del mapa">
+      <div class="campo">
+        <label class="label" for="lugar">Territorio</label>
+        <select id="lugar" name="lugar"><option>Todo el municipio</option><option>Motul</option><option>Kiní</option><option>Ucí</option><option>Kancabchén</option><option>Sacapuc</option></select>
+      </div>
+      <div class="campo">
+        <label class="label" for="tipo">Tipo</label>
+        <select id="tipo" name="tipo"><option>Todos</option><option>Bache</option><option>Alumbrado</option><option>Fuga</option><option>Basura</option><option>Parque</option><option>Repavimentación</option><option>Mantenimiento</option><option>Otro</option></select>
+      </div>
+      <div class="campo">
+        <label class="label" for="estado">Estado</label>
+        <select id="estado" name="estado"><option>Todos</option><option>Recibido</option><option>En atención</option><option>Resuelto</option><option>Planificada</option><option>En ejecución</option><option>Finalizada</option></select>
+      </div>
+      <div class="campo">
+        <label class="label" for="area">Área</label>
+        <select id="area" name="area"><option>Todas</option><option>Obras públicas</option><option>Alumbrado público</option><option>Agua potable y drenaje</option><option>Limpia y recolección</option></select>
+      </div>
+      <button class="boton secundaria" type="submit">Filtrar</button>
+    </form>
+
+    <div class="chips-fila">
+      <p class="resumen">
+        <span><b>9</b> hechos</span>
+        <span><b>6</b> calles en el mapa</span>
+        <span class="atraso"><b>3</b> atrasados</span>
+        <span><b>5</b> sin ubicar</span>
+      </p>
+    </div>
+
+    <!-- mapa + panel -->
+    <div class="parte">
+      <figure class="tarjeta mapa-caja" aria-label="Mapa de hechos por calle">
+        <div class="mapa-cabecera">
+          <span class="label">Ubicación aproximada de la calle</span>
+          <span class="dato apagada">6 calles con hechos</span>
+        </div>
+        <div class="mapa-lienzo">
+          <svg viewBox="0 0 716 640" role="img" aria-label="Mapa estilizado del municipio de Motul. Seis calles tienen hechos: dos en la cabecera, una en Kiní, dos en Ucí y una en Sacapuc. Tres de esas calles llevan reportes atrasados.">
+            <rect class="mapa-fondo" width="716" height="640"/>
+            <path class="limite" d="M46 92 224 40 424 58 600 26 688 158 660 336 690 522 498 606 300 584 122 614 32 436 56 232Z"/>
+            <!-- vías principales -->
+            <path class="via" d="M20 470C170 420 300 380 430 300 520 244 600 214 700 196"/>
+            <path class="via-borde" d="M20 470C170 420 300 380 430 300 520 244 600 214 700 196"/>
+            <path class="via" d="M336 24 320 300 300 616"/>
+            <path class="via-borde" d="M336 24 320 300 300 616"/>
+            <!-- cabecera: Motul -->
+            <g>
+              <rect class="manzana" x="196" y="212" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="284" y="212" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="372" y="212" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="196" y="268" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="284" y="268" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="372" y="268" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="196" y="324" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="372" y="324" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="196" y="380" width="72" height="44" rx="3"/>
+              <rect class="manzana" x="284" y="380" width="72" height="44" rx="3"/>
+              <text class="lugar-nombre cabecera" x="196" y="200">Motul</text>
+            </g>
+            <!-- Kiní -->
+            <g>
+              <rect class="manzana" x="96" y="112" width="54" height="34" rx="3"/>
+              <rect class="manzana" x="160" y="112" width="54" height="34" rx="3"/>
+              <rect class="manzana" x="96" y="156" width="54" height="34" rx="3"/>
+              <text class="lugar-nombre" x="96" y="102">Kiní</text>
+            </g>
+            <!-- Ucí -->
+            <g>
+              <rect class="manzana" x="520" y="150" width="54" height="34" rx="3"/>
+              <rect class="manzana" x="584" y="150" width="54" height="34" rx="3"/>
+              <rect class="manzana" x="520" y="194" width="54" height="34" rx="3"/>
+              <rect class="manzana" x="584" y="194" width="54" height="34" rx="3"/>
+              <text class="lugar-nombre" x="520" y="140">Ucí</text>
+            </g>
+            <!-- Kancabchén -->
+            <g>
+              <rect class="manzana" x="112" y="452" width="54" height="32" rx="3"/>
+              <rect class="manzana" x="176" y="452" width="54" height="32" rx="3"/>
+              <rect class="manzana" x="112" y="494" width="54" height="32" rx="3"/>
+              <text class="lugar-nombre" x="112" y="442">Kancabchén</text>
+            </g>
+            <!-- Sacapuc -->
+            <g>
+              <rect class="manzana" x="520" y="440" width="54" height="32" rx="3"/>
+              <rect class="manzana" x="584" y="440" width="54" height="32" rx="3"/>
+              <rect class="manzana" x="520" y="482" width="54" height="32" rx="3"/>
+              <text class="lugar-nombre" x="520" y="430">Sacapuc</text>
+            </g>
+
+            <!-- pines: 6 calles con hechos, sin filtros puestos -->
+            <g transform="translate(330,300)">
+              <circle class="pin-elegido" r="25"/>
+              <g transform="translate(-13,-13)"><circle class="pin-num-fondo" cx="25" cy="0" r="8"/><text class="pin-num" x="25" y="4">1</text></g>
+              <circle r="18.5" class="pin-aro"/>
+              <circle r="15" fill="var(--estado-recibido)" class="pin-cuerpo"/>
+              <use href="#ic-bache" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+            </g>
+            <g transform="translate(160,140)">
+              <circle r="18.5" class="pin-aro"/>
+              <circle r="15" fill="var(--estado-recibido)" class="pin-cuerpo"/>
+              <use href="#ic-alumbrado" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+              <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">2</text>
+            </g>
+            <g transform="translate(556,176)">
+              <circle r="18.5" class="pin-aro"/>
+              <circle r="15" fill="var(--estado-recibido)" class="pin-cuerpo"/>
+              <use href="#ic-fuga" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+              <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">3</text>
+            </g>
+            <g transform="translate(404,392)">
+              <circle r="15" fill="var(--estado-en-ejecucion)" class="pin-cuerpo"/>
+              <use href="#ic-mejora" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+              <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">4</text>
+            </g>
+            <g transform="translate(600,236)">
+              <circle r="15" fill="var(--estado-planificada)" class="pin-cuerpo"/>
+              <use href="#ic-mantenimiento" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+              <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">5</text>
+            </g>
+            <g transform="translate(566,486)">
+              <circle r="15" fill="var(--estado-resuelto)" class="pin-cuerpo"/>
+              <use href="#ic-repavimentacion" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+              <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">6</text>
+            </g>
+          </svg>
+
+          <!-- ventana del pin 1 -->
+          <div class="ventana" role="group" aria-label="Hechos de Calle 26 x 31 y 33">
+            <h3 class="title"><svg width="16" height="16" aria-hidden="true" fill="var(--estado-recibido)"><use href="#ic-bache"/></svg> Calle 26 x 31 y 33</h3>
+            <ul>
+              <li>
+                <a class="enlace dato" href="#">REP-2026-000123</a>
+                <p class="meta label"><span>Bache</span><span>Recibido</span><span>12 feb 2026</span><span class="atraso">Atrasado · 9 días</span></p>
+              </li>
+              <li><a class="enlace label" href="#">Ver historial de calle</a></li>
+            </ul>
+          </div>
+
+          <!-- leyenda superpuesta, colapsable y del servidor -->
+          <div class="leyenda">
+            <details open>
+              <summary>Leyenda <span class="cuenta-leyenda">9 hechos</span></summary>
+              <div class="cuerpo">
+                <div class="grupo-leyenda">
+                  <p class="label">Por tipo</p>
+                  <ul>
+                    <li><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#ic-bache"/></svg>Bache <span class="c">1</span></li>
+                    <li><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#ic-alumbrado"/></svg>Alumbrado <span class="c">2</span></li>
+                    <li><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#ic-fuga"/></svg>Fuga <span class="c">2</span></li>
+                    <li><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#ic-repavimentacion"/></svg>Repavimentación <span class="c">2</span></li>
+                    <li><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#ic-mejora"/></svg>Mejora <span class="c">1</span></li>
+                    <li><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#ic-mantenimiento"/></svg>Mantenimiento <span class="c">1</span></li>
+                  </ul>
+                </div>
+                <div class="grupo-leyenda ancho">
+                  <p class="label">Por estado</p>
+                  <ul>
+                    <li><span class="punto" style="background:var(--estado-recibido)" aria-hidden="true"></span>Recibido <span class="c">5</span></li>
+                    <li><span class="punto" style="background:var(--estado-planificada)" aria-hidden="true"></span>Planificada <span class="c">2</span></li>
+                    <li><span class="punto" style="background:var(--estado-en-ejecucion)" aria-hidden="true"></span>En ejecución <span class="c">1</span></li>
+                    <li><span class="punto" style="background:var(--estado-resuelto)" aria-hidden="true"></span>Finalizada <span class="c">1</span></li>
+                    <li><span class="punto aro" aria-hidden="true"></span>Atrasados <span class="c">3</span></li>
+                  </ul>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </figure>
+
+      <!-- panel derecho -->
+      <section class="tarjeta panel" aria-label="Calles con hechos y calles por ubicar">
+        <div class="pestanas">
+          <a href="#" aria-current="true">En el mapa <span class="cuenta">6</span></a>
+          <a href="#">Sin ubicar <span class="cuenta">5</span></a>
+        </div>
+        <ul class="calle-lista">
+          <li class="calle elegida">
+            <div class="calle-cabecera">
+              <span class="num" aria-hidden="true">1</span>
+              <span class="nombre">Calle 26 x 31 y 33</span>
+              <span class="lugar label">Motul</span>
+              <span class="elegida-marca">Elegida</span>
+            </div>
+            <ul class="hechos">
+              <li class="hecho">
+                <span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-bache"/></svg></span>
+                <span class="linea"><a class="enlace dato" href="#">REP-2026-000123</a><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></span>
+                <span class="meta label"><span>Bache</span><span>12 feb 2026</span><span class="atraso">Atrasado · 9 días</span></span>
+              </li>
+            </ul>
+            <div class="calle-pie"><a class="enlace" href="#">Ver historial de calle</a></div>
+          </li>
+
+          <li class="calle">
+            <div class="calle-cabecera">
+              <span class="num" aria-hidden="true">2</span>
+              <span class="nombre">Calle 15</span>
+              <span class="lugar label">Kiní</span>
+            </div>
+            <ul class="hechos">
+              <li class="hecho">
+                <span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-alumbrado"/></svg></span>
+                <span class="linea"><a class="enlace dato" href="#">REP-2026-000140</a><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></span>
+                <span class="meta label"><span>Alumbrado</span><span>13 feb 2026</span><span class="atraso">Atrasado · 7 días</span></span>
+              </li>
+            </ul>
+            <div class="calle-pie"><a class="enlace" href="#">Ver historial de calle</a></div>
+          </li>
+
+          <li class="calle">
+            <div class="calle-cabecera">
+              <span class="num" aria-hidden="true">3</span>
+              <span class="nombre">Camino a Sisal</span>
+              <span class="lugar label">Ucí</span>
+            </div>
+            <ul class="hechos">
+              <li class="hecho">
+                <span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-fuga"/></svg></span>
+                <span class="linea"><a class="enlace dato" href="#">REP-2026-000127</a><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></span>
+                <span class="meta label"><span>Fuga</span><span>14 feb 2026</span><span class="atraso">Atrasado · 6 días</span></span>
+              </li>
+            </ul>
+            <div class="calle-pie"><a class="enlace" href="#">Ver historial de calle</a></div>
+          </li>
+
+          <li class="calle">
+            <div class="calle-cabecera">
+              <span class="num" aria-hidden="true">4</span>
+              <span class="nombre">Calle 21</span>
+              <span class="lugar label">Motul</span>
+            </div>
+            <ul class="hechos">
+              <li class="hecho">
+                <span class="icono" style="background:var(--estado-en-ejecucion)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-mejora"/></svg></span>
+                <span class="linea"><a class="enlace" href="#">Mejora</a><span class="insignia aviso"><svg fill="currentColor" aria-hidden="true"><use href="#si-aviso"/></svg>En ejecución</span></span>
+                <span class="meta label"><span>Intervención</span><span>3 feb 2026</span></span>
+              </li>
+            </ul>
+            <div class="calle-pie"><a class="enlace" href="#">Ver historial de calle</a></div>
+          </li>
+
+          <li class="calle">
+            <div class="calle-cabecera">
+              <span class="num" aria-hidden="true">5</span>
+              <span class="nombre">Calle 5</span>
+              <span class="lugar label">Ucí</span>
+            </div>
+            <ul class="hechos">
+              <li class="hecho">
+                <span class="icono" style="background:var(--estado-planificada)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-mantenimiento"/></svg></span>
+                <span class="linea"><a class="enlace" href="#">Mantenimiento</a><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></span>
+                <span class="meta label"><span>Intervención</span><span>22 feb 2026</span></span>
+              </li>
+            </ul>
+            <div class="calle-pie"><a class="enlace" href="#">Ver historial de calle</a></div>
+          </li>
+
+          <li class="calle">
+            <div class="calle-cabecera">
+              <span class="num" aria-hidden="true">6</span>
+              <span class="nombre">Calle 8</span>
+              <span class="lugar label">Sacapuc</span>
+            </div>
+            <ul class="hechos">
+              <li class="hecho">
+                <span class="icono" style="background:var(--estado-resuelto)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-repavimentacion"/></svg></span>
+                <span class="linea"><a class="enlace" href="#">Repavimentación</a><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Finalizada</span></span>
+                <span class="meta label"><span>Intervención</span><span>5 feb 2026</span></span>
+              </li>
+            </ul>
+            <div class="calle-pie"><a class="enlace" href="#">Ver historial de calle</a></div>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- ================= notas ================= -->
+<section class="hoja" aria-label="Notas del artboard">
+  <div class="hoja-inner">
+    <div class="notas">
+      <div class="nota">
+        <h3 class="headline">01 · Mapa protagonista</h3>
+        <p class="body apagada" style="margin:8px 0 12px">El mapa ocupa todo el alto útil y la lista de calles vive a su lado, con el mismo ícono, el mismo color y el mismo número.</p>
+        <p class="label">Compromiso: parte el ancho en dos y deja el mapa con 716px. En un monitor de 1366 el panel baja a 340px y las filas se aprietan; por debajo de 1024 todo se apila y el mapa va primero.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige de la pantalla actual</h3>
+        <ul class="body">
+          <li><strong>El mapa es lo primero.</strong> Va arriba del pliegue, con 560px de piso; el estado en vivo es una línea en la cabecera y la leyenda una capa colapsable.</li>
+          <li><strong>Filtros en una fila</strong> con un chip removible y el resumen en números fuertes: 9 hechos, 6 calles, 3 atrasados, 5 sin ubicar.</li>
+          <li><strong>Fila ↔ pin.</strong> Número, ícono y color idénticos a los del pin; la fila elegida aro el pin con un halo punteado.</li>
+          <li><strong>Un solo lugar para lo que no se puede dibujar:</strong> la pestaña "Sin ubicar (5)" junta calles sin punto y hechos sin calle. En móvil se apilan bajo el mapa.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Estado que muestra este tablero</h3>
+        <ul class="body">
+          <li>Sin filtros puestos: 9 hechos en 6 calles. Cada filtro aplicado aparece en esta misma fila como chip removible («Estado: Recibido ×»), antes del resumen.</li>
+          <li>Con un solo hecho por calle no se ve el contador de agrupación; aparece cuando la calle lleva varios, como en la producción.</li>
+          <li>Los tres atrasados se marcan con aro <strong>y</strong> con la palabra "Atrasado · N días" en la fila y en la ventana. El estado del pin va solo en color: la lista es el camino accesible.</li>
+          <li>Mapa estilizado en SVG: en producción es Leaflet sobre OpenStreetMap y la caja la calcula el servidor.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- móvil -->
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada">El mismo panel a 390px: mapa primero con 60&nbsp;% del alto, filtros detrás de "Filtros (N)", que cuenta los puestos, y la lista debajo, con "Sin ubicar" apilado.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <div class="m-cabecera">
+            <h1 class="display">Mapa operativo</h1>
+            <p class="label" style="margin-top:4px">Actualización en vivo · hace 20 s</p>
+          </div>
+
+          <details class="m-filtros">
+            <summary>Filtros <span class="cuenta">(0)</span> <span class="label" style="margin-left:auto">Todo el municipio</span></summary>
+            <div class="cuerpo">
+              <div class="campo">
+                <label class="label" for="m-lugar">Territorio</label>
+                <select id="m-lugar"><option>Todo el municipio</option></select>
+              </div>
+              <div class="campo">
+                <label class="label" for="m-estado">Estado</label>
+                <select id="m-estado"><option>Todos</option></select>
+              </div>
+              <div style="display:flex;gap:8px">
+                <a class="boton secundaria" href="#" style="flex:1">Filtrar</a>
+                <a class="boton secundaria" href="#" style="flex:1">Actualizar</a>
+              </div>
+            </div>
+          </details>
+
+          <figure class="m-mapa" aria-label="Mapa de hechos por calle">
+            <svg viewBox="0 0 716 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa estilizado del municipio: seis calles con hechos.">
+              <rect class="mapa-fondo" width="716" height="640"/>
+              <path class="limite" d="M46 92 224 40 424 58 600 26 688 158 660 336 690 522 498 606 300 584 122 614 32 436 56 232Z"/>
+              <path class="via" d="M20 470C170 420 300 380 430 300 520 244 600 214 700 196"/>
+              <path class="via-borde" d="M20 470C170 420 300 380 430 300 520 244 600 214 700 196"/>
+              <path class="via" d="M336 24 320 300 300 616"/>
+              <path class="via-borde" d="M336 24 320 300 300 616"/>
+              <g>
+                <rect class="manzana" x="196" y="212" width="72" height="44" rx="3"/>
+                <rect class="manzana" x="284" y="212" width="72" height="44" rx="3"/>
+                <rect class="manzana" x="372" y="212" width="72" height="44" rx="3"/>
+                <rect class="manzana" x="196" y="268" width="72" height="44" rx="3"/>
+                <rect class="manzana" x="284" y="268" width="72" height="44" rx="3"/>
+                <rect class="manzana" x="372" y="268" width="72" height="44" rx="3"/>
+                <rect class="manzana" x="196" y="324" width="72" height="44" rx="3"/>
+                <rect class="manzana" x="372" y="324" width="72" height="44" rx="3"/>
+                <text class="lugar-nombre cabecera" x="196" y="200">Motul</text>
+              </g>
+              <g>
+                <rect class="manzana" x="96" y="112" width="54" height="34" rx="3"/>
+                <rect class="manzana" x="160" y="112" width="54" height="34" rx="3"/>
+                <text class="lugar-nombre" x="96" y="102">Kiní</text>
+              </g>
+              <g>
+                <rect class="manzana" x="520" y="150" width="54" height="34" rx="3"/>
+                <rect class="manzana" x="584" y="150" width="54" height="34" rx="3"/>
+                <text class="lugar-nombre" x="520" y="140">Ucí</text>
+              </g>
+              <g>
+                <rect class="manzana" x="112" y="452" width="54" height="32" rx="3"/>
+                <rect class="manzana" x="176" y="452" width="54" height="32" rx="3"/>
+                <text class="lugar-nombre" x="112" y="442">Kancabchén</text>
+              </g>
+              <g>
+                <rect class="manzana" x="520" y="440" width="54" height="32" rx="3"/>
+                <rect class="manzana" x="584" y="440" width="54" height="32" rx="3"/>
+                <text class="lugar-nombre" x="520" y="430">Sacapuc</text>
+              </g>
+              <g transform="translate(330,300)">
+                <circle class="pin-elegido" r="25"/>
+                <circle r="18.5" class="pin-aro"/>
+                <circle r="15" fill="var(--estado-recibido)" class="pin-cuerpo"/>
+                <use href="#ic-bache" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+                <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">1</text>
+              </g>
+              <g transform="translate(160,140)">
+                <circle r="18.5" class="pin-aro"/>
+                <circle r="15" fill="var(--estado-recibido)" class="pin-cuerpo"/>
+                <use href="#ic-alumbrado" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+                <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">2</text>
+              </g>
+              <g transform="translate(556,176)">
+                <circle r="18.5" class="pin-aro"/>
+                <circle r="15" fill="var(--estado-recibido)" class="pin-cuerpo"/>
+                <use href="#ic-fuga" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+                <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">3</text>
+              </g>
+              <g transform="translate(404,392)">
+                <circle r="15" fill="var(--estado-en-ejecucion)" class="pin-cuerpo"/>
+                <use href="#ic-mejora" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+                <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">4</text>
+              </g>
+              <g transform="translate(600,236)">
+                <circle r="15" fill="var(--estado-planificada)" class="pin-cuerpo"/>
+                <use href="#ic-mantenimiento" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+                <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">5</text>
+              </g>
+              <g transform="translate(566,486)">
+                <circle r="15" fill="var(--estado-resuelto)" class="pin-cuerpo"/>
+                <use href="#ic-repavimentacion" x="-9" y="-9" width="18" height="18" fill="var(--color-caliza-lienzo)"/>
+                <circle class="pin-num-fondo" cx="13" cy="-13" r="8"/><text class="pin-num" x="13" y="-9">6</text>
+              </g>
+            </svg>
+            <div class="leyenda">
+              <details>
+                <summary>Leyenda <span class="cuenta-leyenda">9 hechos</span></summary>
+                <div class="cuerpo">
+                  <div class="grupo-leyenda ancho">
+                    <p class="label">Por estado</p>
+                    <ul>
+                      <li><span class="punto" style="background:var(--estado-recibido)" aria-hidden="true"></span>Recibido <span class="c">5</span></li>
+                      <li><span class="punto aro" aria-hidden="true"></span>Atrasados <span class="c">3</span></li>
+                      <li><span class="punto" style="background:var(--estado-planificada)" aria-hidden="true"></span>Planificada <span class="c">2</span></li>
+                      <li><span class="punto" style="background:var(--estado-en-ejecucion)" aria-hidden="true"></span>En ejecución <span class="c">1</span></li>
+                      <li><span class="punto" style="background:var(--estado-resuelto)" aria-hidden="true"></span>Finalizada <span class="c">1</span></li>
+                    </ul>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </figure>
+
+          <p class="label">Ubicación aproximada de la calle</p>
+
+          <div class="m-tabs">
+            <a href="#" aria-current="true">En el mapa <span class="cuenta">6</span></a>
+            <a href="#">Sin ubicar <span class="cuenta">5</span></a>
+          </div>
+
+          <ul class="m-lista">
+            <li class="calle elegida">
+              <div class="calle-cabecera"><span class="num" aria-hidden="true">1</span><span class="nombre">Calle 26 x 31 y 33</span><span class="lugar label">Motul</span></div>
+              <ul class="hechos">
+                <li class="hecho">
+                  <span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-bache"/></svg></span>
+                  <span class="linea"><a class="enlace dato" href="#">REP-2026-000123</a><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></span>
+                  <span class="meta label"><span>Bache</span><span>12 feb 2026</span><span class="atraso">Atrasado · 9 días</span></span>
+                </li>
+              </ul>
+              <div class="calle-pie"><a class="enlace" href="#">Ver historial de calle</a></div>
+            </li>
+            <li class="calle">
+              <div class="calle-cabecera"><span class="num" aria-hidden="true">2</span><span class="nombre">Calle 15</span><span class="lugar label">Kiní</span></div>
+              <ul class="hechos">
+                <li class="hecho">
+                  <span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-alumbrado"/></svg></span>
+                  <span class="linea"><a class="enlace dato" href="#">REP-2026-000140</a><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></span>
+                  <span class="meta label"><span>Alumbrado</span><span class="atraso">Atrasado · 7 días</span></span>
+                </li>
+              </ul>
+            </li>
+            <li class="calle">
+              <div class="calle-cabecera"><span class="num" aria-hidden="true">3</span><span class="nombre">Camino a Sisal</span><span class="lugar label">Ucí</span></div>
+              <ul class="hechos">
+                <li class="hecho">
+                  <span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg width="12" height="12" fill="currentColor"><use href="#ic-fuga"/></svg></span>
+                  <span class="linea"><a class="enlace dato" href="#">REP-2026-000127</a><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></span>
+                  <span class="meta label"><span>Fuga</span><span class="atraso">Atrasado · 6 días</span></span>
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <a class="boton secundaria" href="#">Ver las 6 calles</a>
+
+          <div class="m-sin-ubicar">
+            <h2 class="headline">Sin ubicar <span class="dato apagada">5</span></h2>
+            <p class="label">No se pueden dibujar hasta que tengan punto. Ábralas para ubicarlas.</p>
+            <ul class="m-lista">
+              <li class="calle">
+                <div class="calle-cabecera"><span class="nombre">Calle 4</span><span class="lugar label">Kiní</span></div>
+                <div class="calle-pie"><a class="enlace" href="#">Ubicar en el mapa</a></div>
+              </li>
+              <li class="calle">
+                <div class="calle-cabecera"><span class="nombre">Calle 22</span><span class="lugar label">Kiní</span></div>
+                <div class="calle-pie"><a class="enlace" href="#">Ubicar en el mapa</a></div>
+              </li>
+              <li class="calle">
+                <div class="calle-cabecera"><span class="nombre">Calle 10</span><span class="lugar label">Sacapuc</span></div>
+                <div class="calle-pie"><a class="enlace" href="#">Ubicar en el mapa</a></div>
+              </li>
+              <li class="calle">
+                <div class="calle-cabecera"><span class="num" aria-hidden="true">·</span><span class="nombre">REP-2026-000142</span><span class="lugar label">sin calle</span></div>
+                <div class="calle-pie"><a class="enlace" href="#">Abrir el reporte y asignarle calle</a></div>
+              </li>
+              <li class="calle">
+                <div class="calle-cabecera"><span class="num" aria-hidden="true">·</span><span class="nombre">REP-2026-000145</span><span class="lugar label">calle sin punto: Calle 14</span></div>
+                <div class="calle-pie"><a class="enlace" href="#">Abrir el reporte y ubicar su calle</a></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#" aria-current="true"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-mas"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
