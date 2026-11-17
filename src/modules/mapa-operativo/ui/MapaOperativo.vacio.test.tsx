@@ -53,6 +53,34 @@ describe("MapaOperativo: los caminos que ya funcionan (S7)", () => {
     expect(html).not.toContain('aria-label="Mapa de hechos por calle"');
   });
 
+  it("sin hechos, las calles sin ubicar siguen al alcance para ubicarlas", () => {
+    const html = render(
+      mapaDe({
+        estado: "VACIO",
+        conteos: { reportes: 0, intervenciones: 0, total: 0 },
+        sinUbicar: [
+          {
+            id: "lugar-1",
+            nombre: "Kiní",
+            calles: [
+              {
+                id: "calle-9",
+                nombre: "Calle 15",
+                href: "/territorio/calles/calle-9",
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    expect(textoPlano(html)).toContain(
+      "Todavía no hay reportes ni obras abiertas en el municipio.",
+    );
+    expect(html).toContain('href="/territorio/calles/calle-9"');
+    expect(textoPlano(html)).toContain("Calle 15");
+  });
+
   it("sin filtros puestos y sin hechos explica que la pantalla esta vacia", () => {
     const html = render(
       mapaDe({

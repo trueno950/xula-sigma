@@ -103,3 +103,10 @@ Implementa la dirección elegida en el lienzo de gentle design: `design/mapa-ope
     - integración del mapa 8/8;
     - E2E de mapa y reportes 14/14;
     - capturas a 1440 y 390 contra el tablero.
+- **L6** — 2026-11-17. Revisión nativa de la pantalla (parte 6/7): el
+  refutador corroboró que, sin hechos, `EstadoVacio` reemplazaba todo y las
+  calles sin ubicar quedaban fuera de alcance. El resumen las seguía
+  contando, pero nadie podía abrirlas. Antes del rediseño, «Calles sin
+  ubicar» se dibujaba siempre. Corregido: bajo el vacío se dibuja
+  `SinUbicar` cuando hay algo sin ubicar, con su test en
+  `MapaOperativo.vacio.test.tsx`, que se observó rojo antes del cambio.

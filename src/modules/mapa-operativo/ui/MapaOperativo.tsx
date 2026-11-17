@@ -80,11 +80,18 @@ export function MapaOperativo({ mapa, filtros, panel }: Props) {
           }
         />
       ) : (
-        <EstadoVacio
-          estado={estado}
-          mensajeInicial={SIN_HECHOS}
-          hrefSinFiltro={hrefDelMapa({})}
-        />
+        <>
+          <EstadoVacio
+            estado={estado}
+            mensajeInicial={SIN_HECHOS}
+            hrefSinFiltro={hrefDelMapa({})}
+          />
+          {/* Sin hechos no hay panel, pero las calles sin punto existen igual:
+              sin esta seccion el resumen las contaria y nadie podria abrirlas. */}
+          {resumen.totalSinUbicar > 0 ? (
+            <SinUbicar sinUbicar={mapa.sinUbicar} cobertura={mapa.cobertura} />
+          ) : null}
+        </>
       )}
     </section>
   );
