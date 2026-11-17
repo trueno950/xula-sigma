@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Vistas de trabajo — Mapa operativo</title>
+<style>
+  :root{--color-marca:oklch(0.42 0.12 25);--color-marca-texto:oklch(0.99 0 0);--color-marca-suave:color-mix(in oklch,var(--color-marca) 10%,var(--color-caliza-lienzo));--color-marca-tenue:color-mix(in oklch,var(--color-marca) 5%,var(--color-caliza-lienzo));--color-marca-hover:color-mix(in oklch,var(--color-marca) 92%,var(--color-caliza-tinta));
+    --color-caliza-fondo:oklch(0.962 0.005 80);--color-caliza-lienzo:oklch(0.995 0.002 80);--color-caliza-superficie:oklch(0.975 0.004 80);--color-caliza-relleno:oklch(0.94 0.005 80);--color-caliza-divisor:oklch(0.9 0.006 80);--color-caliza-borde:oklch(0.62 0.008 80);--color-caliza-apagada:oklch(0.5 0.008 80);--color-caliza-tinta:oklch(0.22 0.008 80);
+    --color-senial-error:oklch(0.46 0.17 27);--color-senial-error-suave:oklch(0.96 0.025 27);--color-senial-exito:oklch(0.46 0.11 150);--color-senial-exito-suave:oklch(0.96 0.03 150);--color-senial-aviso:oklch(0.5 0.13 65);--color-senial-aviso-suave:oklch(0.965 0.035 85);
+    /* color de estado: dato del servidor (domain/coloresDeEstado.ts) */
+    --estado-recibido:#b45309;--estado-en-atencion:#1d4ed8;--estado-resuelto:#15803d;--estado-planificada:#7c3aed;--estado-en-ejecucion:#0e7490;
+    --radio-md:8px;--radio-lg:12px;--radio-pill:999px;
+    --sombra-reposo:0 1px 2px oklch(0.24 0.008 80/.06),0 1px 1px oklch(0.24 0.008 80/.04);--sombra-flotante:0 8px 24px -6px oklch(0.24 0.008 80/.22),0 2px 6px oklch(0.24 0.008 80/.08);
+    --ease:cubic-bezier(.25,1,.5,1);--fuente:"Inter Variable",system-ui,"Segoe UI",Roboto,sans-serif;--fuente-dato:ui-monospace,"Cascadia Mono",Consolas,monospace}
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{font-family:var(--fuente)}
+  body{margin:0;background:var(--color-caliza-fondo);color:var(--color-caliza-tinta);font-size:15px;line-height:1.55}
+  :focus-visible{outline:2px solid var(--color-marca);outline-offset:2px}
+  h1,h2,h3,p,ul,li,figure,table,caption{margin:0}
+  ul{padding:0;list-style:none}
+  a{color:inherit}
+  svg{display:block}
+  table{border-collapse:collapse;width:100%}
+  .display{font-size:1.75rem;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+  .headline{font-size:1.25rem;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+  .title{font-size:.9375rem;font-weight:600;line-height:1.4}
+  .body{font-size:.9375rem;line-height:1.55}
+  .label{font-size:.8125rem;font-weight:500;line-height:1.3;color:var(--color-caliza-apagada)}
+  .dato{font-family:var(--fuente-dato);font-size:.875rem;line-height:1.4;font-variant-numeric:tabular-nums}
+  .apagada{color:var(--color-caliza-apagada)}
+  .enlace{color:var(--color-caliza-tinta);text-decoration:underline;text-underline-offset:2px}
+  .enlace:hover{text-decoration-thickness:2px}
+  .sr{position:absolute;left:-9999px}
+  .ic16{width:16px;height:16px;fill:currentColor}
+  .ic20{width:20px;height:20px;fill:currentColor}
+  .ic24{width:24px;height:24px;fill:currentColor}
+  .ic40{width:40px;height:40px}
+
+  .app{display:grid;grid-template-columns:264px minmax(0,1fr);background:var(--color-caliza-fondo)}
+  .sidebar{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;border-right:1px solid var(--color-caliza-divisor);background:var(--color-caliza-lienzo);overflow-y:auto}
+  .municipio{display:flex;align-items:center;gap:12px;min-height:64px;padding:12px 16px;background:var(--color-marca-tenue);border-bottom:1px solid var(--color-caliza-divisor);font-weight:600;font-size:15px;line-height:1.2;text-decoration:none}
+  .nav{display:flex;flex-direction:column;gap:24px;padding:12px}
+  .nav .grupo>.label{padding:0 12px 4px}
+  .nav ul{display:flex;flex-direction:column;gap:2px}
+  .nav a.item{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:var(--radio-md);font-weight:600;font-size:15px;color:var(--color-caliza-apagada);text-decoration:none;transition:background-color 150ms var(--ease),color 150ms var(--ease)}
+  .nav a.item:hover{background:var(--color-caliza-superficie);color:var(--color-caliza-tinta)}
+  .nav a.item[aria-current="page"]{background:var(--color-marca-suave);color:var(--color-caliza-tinta)}
+  .nav a.item[aria-current="page"] svg{color:var(--color-marca)}
+  .pie-del-lateral{border-top:1px solid var(--color-caliza-divisor);padding:12px;margin-top:auto}
+  .pie-del-lateral .label{padding:0 12px 4px}
+  .boton-fantasma{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:1px solid transparent;border-radius:var(--radio-md);background:transparent;color:var(--color-caliza-apagada);font:600 15px var(--fuente);cursor:pointer}
+
+  .contenido{min-width:0;width:100%;max-width:1200px;margin:0 auto;padding:24px 32px 32px;display:flex;flex-direction:column;gap:16px}
+  .cabecera{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 24px}
+  .cabecera h1{margin-bottom:4px}
+  .descripcion{max-width:70ch;color:var(--color-caliza-apagada)}
+  .en-vivo{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .en-vivo .estado{display:flex;align-items:center;gap:8px;font-size:15px}
+  .en-vivo .estado svg{color:var(--color-senial-exito)}
+  .boton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--radio-md);border:1px solid transparent;font:600 15px/1 var(--fuente);cursor:pointer;text-decoration:none;transition:background-color 150ms var(--ease),border-color 150ms var(--ease),scale 150ms var(--ease)}
+  .boton:active{scale:.98}
+  .boton.secundaria{background:var(--color-caliza-lienzo);color:var(--color-caliza-tinta);border-color:var(--color-caliza-borde)}
+  .boton.secundaria:hover{background:var(--color-caliza-superficie)}
+
+  .vistas,.m-vistas{display:flex;gap:4px;padding:4px;border:1px solid var(--color-caliza-divisor);border-radius:var(--radio-lg);background:var(--color-caliza-lienzo)}
+  .vistas{align-self:flex-start}
+  .vistas a,.m-vistas a,.orden a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:var(--radio-md);font-size:15px;font-weight:600;color:var(--color-caliza-apagada);text-decoration:none;transition:background-color 150ms var(--ease),color 150ms var(--ease)}
+  .vistas a{padding:0 20px}
+  .vistas a:hover,.m-vistas a:hover,.orden a:hover{background:var(--color-caliza-relleno);color:var(--color-caliza-tinta)}
+  .vistas a[aria-current="page"],.m-vistas a[aria-current="page"],.orden a[aria-current="true"]{background:var(--color-marca-suave);color:var(--color-caliza-tinta)}
+  .m-vistas a{flex:1;justify-content:center;gap:4px}
+  .cuenta{font-family:var(--fuente-dato);font-size:.8125rem;font-variant-numeric:tabular-nums;color:var(--color-caliza-apagada)}
+  .vistas a[aria-current="page"] .cuenta{color:var(--color-caliza-tinta)}
+
+  .barra{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;padding:12px 16px;border:1px solid var(--color-caliza-divisor);border-radius:var(--radio-lg);background:var(--color-caliza-lienzo);box-shadow:var(--sombra-reposo)}
+  .campo{display:flex;flex-direction:column;gap:6px;flex:1 1 150px;max-width:200px}
+  .campo select{height:44px;width:100%;padding:0 10px;border:1px solid var(--color-caliza-borde);border-radius:var(--radio-md);background:var(--color-caliza-lienzo);color:var(--color-caliza-tinta);font:400 15px var(--fuente)}
+  .barra .boton{margin-left:auto}
+
+  .chips-fila{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;min-height:32px}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--radio-pill);background:var(--color-marca-suave);color:var(--color-caliza-tinta);font-size:13px;font-weight:500;text-decoration:none}
+  .chip:hover{background:var(--color-caliza-relleno)}
+  .resumen{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;font-size:15px;color:var(--color-caliza-apagada)}
+  .resumen b{font-family:var(--fuente-dato);font-size:1.0625rem;font-variant-numeric:tabular-nums;color:var(--color-caliza-tinta)}
+  .atraso{color:var(--color-senial-error);font-weight:600}
+  .resumen .atraso b{color:var(--color-senial-error)}
+
+  .parte{display:grid;grid-template-columns:minmax(0,1fr) 268px;gap:16px;align-items:start}
+  .tarjeta{border:1px solid var(--color-caliza-divisor);border-radius:var(--radio-lg);background:var(--color-caliza-lienzo);box-shadow:var(--sombra-reposo)}
+  .mapa-caja{display:flex;flex-direction:column;overflow:clip}
+  .mapa-cabecera{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 16px;border-bottom:1px solid var(--color-caliza-divisor)}
+  .mapa-lienzo{position:relative;flex:1;min-height:520px;background:var(--color-caliza-superficie)}
+  .mapa-lienzo>svg{width:100%;height:100%}
+  .manzanas{fill:var(--color-caliza-relleno);stroke:var(--color-caliza-divisor)}
+  .manzanas rect{rx:3px}
+  .mz{width:72px;height:44px}
+  .mz2{width:54px;height:34px}
+  .mz3{width:54px;height:32px}
+  .pin-num{font-family:var(--fuente);font-weight:600;font-size:11px;fill:var(--color-caliza-lienzo)}
+  .ventana{position:absolute;left:56%;top:8%;width:284px;padding:16px;background:var(--color-caliza-lienzo);border:1px solid var(--color-caliza-divisor);border-radius:var(--radio-lg);box-shadow:var(--sombra-flotante)}
+  .ventana h3{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+  .ventana ul{display:flex;flex-direction:column;gap:10px}
+  .ventana li{display:flex;flex-direction:column;gap:2px;padding-bottom:10px;border-bottom:1px solid var(--color-caliza-divisor)}
+  .ventana li:last-child{border-bottom:0;padding-bottom:0}
+  .ventana .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+
+  .riel{padding:16px}
+  .riel h2{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+  .riel section+section{margin-top:16px;padding-top:16px;border-top:1px solid var(--color-caliza-divisor)}
+  .riel section>h3{margin-bottom:8px}
+  .lista-leyenda{display:flex;flex-direction:column;gap:6px}
+  .lista-leyenda li{display:flex;align-items:center;gap:8px;font-size:15px}
+  .lista-leyenda .ic16{flex:none;color:var(--color-caliza-apagada)}
+  .lista-leyenda .c{margin-left:auto;font-family:var(--fuente-dato);font-size:.875rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .punto{width:11px;height:11px;border-radius:var(--radio-pill);flex:none}
+  .punto.aro{border:2.5px solid var(--color-senial-error)}
+  .nota-riel{margin-top:16px;padding-top:12px;border-top:1px solid var(--color-caliza-divisor)}
+
+  .insignia{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:var(--radio-pill);font-size:13px;font-weight:500;white-space:nowrap}
+  .insignia svg{width:14px;height:14px;fill:currentColor}
+  .insignia.neutro{background:var(--color-caliza-relleno);color:var(--color-caliza-tinta)}
+  .insignia.exito{background:var(--color-senial-exito-suave);color:var(--color-senial-exito)}
+  .insignia.aviso{background:var(--color-senial-aviso-suave);color:var(--color-senial-aviso)}
+
+  .muestra{border-top:1px solid var(--color-caliza-divisor);background:var(--color-caliza-fondo);padding:32px}
+  .muestra-inner{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  .intro{max-width:70ch;color:var(--color-caliza-apagada)}
+  .orden{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+
+  .tabla-caja{overflow:clip}
+  .tabla caption{padding:12px 16px;text-align:left;border-bottom:1px solid var(--color-caliza-divisor)}
+  .tabla thead th{height:40px;padding:0 16px;background:var(--color-caliza-superficie);text-align:left;font-size:.8125rem;font-weight:500;color:var(--color-caliza-apagada)}
+  .tabla tbody th,.tabla td{height:48px;padding:6px 16px;border-top:1px solid var(--color-caliza-divisor);text-align:left;vertical-align:middle;font-size:15px;font-weight:400}
+  .tabla tbody th{font-weight:600}
+  .tabla .fila-grupo th{height:48px;background:var(--color-caliza-superficie);font-size:15px;font-weight:600}
+  .fila-grupo .lugar{margin-left:8px;font-weight:500;color:var(--color-caliza-apagada)}
+  .fila-grupo .cuenta{margin-left:8px}
+  .hecho-tipo{display:flex;align-items:center;gap:8px}
+  .hecho-tipo .icono{display:grid;place-items:center;width:22px;height:22px;border-radius:var(--radio-pill);color:var(--color-caliza-lienzo);flex:none}
+  .hecho-tipo .icono svg{width:13px;height:13px;fill:currentColor}
+  .hecho-tipo .folio{display:flex;flex-direction:column}
+
+  .grupo-ubicar:first-child{border-top:0}
+  .grupo-ubicar{padding:10px 16px;background:var(--color-caliza-superficie);font-size:.8125rem;font-weight:500;color:var(--color-caliza-apagada);border-top:1px solid var(--color-caliza-divisor)}
+  .ubicar-lista li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:center;padding:12px 16px;border-top:1px solid var(--color-caliza-divisor);min-height:64px}
+  .ubicar-lista .nombre{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-weight:600;font-size:15px}
+  .ubicar-lista .motivo{font-size:15px;color:var(--color-caliza-apagada)}
+  .ubicar-lista .accion{grid-row:1/span 2;grid-column:2}
+
+  .aviso{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:var(--radio-md);background:var(--color-senial-aviso-suave);color:var(--color-senial-aviso)}
+  .aviso svg{flex:none;margin-top:2px;fill:currentColor}
+
+  .notas{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  .nota{padding:16px 20px;border-radius:var(--radio-lg);background:var(--color-caliza-lienzo);border:1px solid var(--color-caliza-divisor)}
+  .nota h3{margin-bottom:8px}
+  .nota ul{display:flex;flex-direction:column;gap:6px;padding-left:18px;list-style:disc;color:var(--color-caliza-apagada)}
+  .nota li strong{color:var(--color-caliza-tinta)}
+  .nota .aviso{margin-top:10px}
+
+  .telefono-marco{display:flex;flex-direction:column;gap:12px}
+  .telefono{width:390px;height:844px;overflow-y:auto;border:1px solid var(--color-caliza-borde);border-radius:20px;background:var(--color-caliza-fondo);box-shadow:var(--sombra-reposo)}
+  .m-cuerpo{padding:16px;display:flex;flex-direction:column;gap:12px}
+  .m-mapa{border-radius:var(--radio-lg);border:1px solid var(--color-caliza-divisor);overflow:clip;height:300px;background:var(--color-caliza-superficie)}
+  .m-mapa>svg{width:100%;height:100%}
+  .m-leyenda{border:1px solid var(--color-caliza-divisor);border-radius:var(--radio-lg);background:var(--color-caliza-lienzo);overflow:clip}
+  .m-leyenda summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;cursor:pointer;list-style:none;font-weight:600;font-size:15px}
+  .m-leyenda summary::-webkit-details-marker{display:none}
+  .m-leyenda summary .cuenta{margin-left:auto}
+  .m-leyenda>ul{padding:0 16px 16px}
+  .m-nav{position:sticky;bottom:0;display:flex;gap:4px;padding:4px 8px calc(4px + env(safe-area-inset-bottom));border-top:1px solid var(--color-caliza-divisor);background:var(--color-caliza-lienzo)}
+  .m-nav a{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:var(--radio-md);font-size:13px;font-weight:500;color:var(--color-caliza-apagada);text-decoration:none}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<symbol id="ic-bache" viewBox="0 0 24 24"><path d="M3 18c1.6-6.5 4.6-10 9-10s7.4 3.5 9 10z"/><path d="M9 17.4a3 3 0 0 1 6 0z"/></symbol>
+<symbol id="ic-alumbrado" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-3.6 10.8V16h7.2v-2.2A6 6 0 0 0 12 3z"/><path d="M9.5 18h5v2.6h-5z"/></symbol>
+<symbol id="ic-fuga" viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.6 6 7.8 6 10.5a6 6 0 0 1-12 0c0-2.7 2.4-5.9 6-10.5z"/></symbol>
+<symbol id="ic-mejora" viewBox="0 0 24 24"><path d="M12 2.8l2.3 6.9 6.9 2.3-6.9 2.3L12 21.2l-2.3-6.9L2.8 12l6.9-2.3z"/></symbol>
+<symbol id="ic-mantenimiento" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+<symbol id="ic-repavimentacion" viewBox="0 0 24 24"><path d="M8 13.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/><path d="M12.5 16.5H21v2h-8.5z"/></symbol>
+<symbol id="si-circulo" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 4a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></symbol>
+<symbol id="si-aviso" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+<symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+<symbol id="i-wifi" viewBox="0 0 24 24"><path d="M12 18.5a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4zM12 13c1.9 0 3.6.7 4.9 2l1.7-1.7A10.4 10.4 0 0 0 12 10.5c-2.5 0-4.8.9-6.6 2.6l1.7 1.7c1.3-1.2 3-1.9 4.9-1.9zM12 6c3.3 0 6.3 1.3 8.5 3.4l1.7-1.7A14.4 14.4 0 0 0 12 3.5c-4.1 0-7.8 1.6-10.2 4l1.7 1.7A12.4 12.4 0 0 1 12 6z"/></symbol>
+<symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4zm7.5-9.7a4 4 0 0 1 0 7.4 6 6 0 0 0 0-7.4zM18 13c2.2.6 4 2.1 4 4v3h-5v-3c0-1.6-.7-3-1.9-4z"/></symbol>
+<symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+<symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+<symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+<symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+<symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+<symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+<symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+<symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+<symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+<symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--color-marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--color-marca-texto)" opacity=".85"/></symbol>
+
+<!-- lienzo del mapa: se reutiliza en la vista de escritorio y en la de 390px -->
+<symbol id="lienzo-mapa" viewBox="0 0 716 640">
+<rect width="716" height="640" style="fill:var(--color-caliza-superficie)"/>
+<path style="fill:none;stroke:var(--color-caliza-borde);stroke-width:1.5;stroke-dasharray:8 6" d="M46 92 224 40 424 58 600 26 688 158 660 336 690 522 498 606 300 584 122 614 32 436 56 232Z"/>
+<path style="fill:none;stroke:var(--color-caliza-lienzo);stroke-width:14" d="M20 470C170 420 300 380 430 300 520 244 600 214 700 196"/>
+<path style="fill:none;stroke:var(--color-caliza-divisor)" d="M20 470C170 420 300 380 430 300 520 244 600 214 700 196"/>
+<path style="fill:none;stroke:var(--color-caliza-lienzo);stroke-width:14" d="M336 24 320 300 300 616"/>
+<path style="fill:none;stroke:var(--color-caliza-divisor)" d="M336 24 320 300 300 616"/>
+<g class="manzanas">
+<rect class="mz" x="196" y="212"/><rect class="mz" x="284" y="212"/><rect class="mz" x="372" y="212"/>
+<rect class="mz" x="196" y="268"/><rect class="mz" x="284" y="268"/><rect class="mz" x="372" y="268"/>
+<rect class="mz" x="196" y="324"/><rect class="mz" x="372" y="324"/>
+<rect class="mz" x="196" y="380"/><rect class="mz" x="284" y="380"/>
+<rect class="mz2" x="96" y="112"/><rect class="mz2" x="160" y="112"/><rect class="mz2" x="96" y="156"/>
+<rect class="mz2" x="520" y="150"/><rect class="mz2" x="584" y="150"/><rect class="mz2" x="520" y="194"/><rect class="mz2" x="584" y="194"/>
+<rect class="mz3" x="112" y="452"/><rect class="mz3" x="176" y="452"/><rect class="mz3" x="112" y="494"/>
+<rect class="mz3" x="520" y="440"/><rect class="mz3" x="584" y="440"/><rect class="mz3" x="520" y="482"/>
+</g>
+<g style="font:500 13px var(--fuente);fill:var(--color-caliza-apagada)">
+<text x="196" y="200">Motul</text><text x="96" y="102">Kiní</text><text x="520" y="140">Ucí</text>
+<text x="112" y="442">Kancabchén</text><text x="520" y="430">Sacapuc</text>
+</g>
+</symbol>
+
+<!-- un pin por calle: el ícono dice el tipo, el color el estado, el aro el atraso, el contador cuántos hechos -->
+<symbol id="pines-mapa" viewBox="0 0 716 640" fill="currentColor" style="color:var(--color-caliza-lienzo)">
+<g transform="translate(330,300)">
+<circle r="27" style="fill:none;stroke:var(--color-caliza-tinta);stroke-width:2;stroke-dasharray:4 4"/>
+<circle r="19.5" style="fill:none;stroke:var(--color-senial-error);stroke-width:3"/>
+<circle r="16" style="fill:var(--estado-recibido);stroke:var(--color-caliza-lienzo);stroke-width:2.5"/>
+<use href="#ic-bache" x="-9" y="-9" width="18" height="18"/>
+<circle cx="15" cy="-15" r="8.5" style="fill:var(--color-caliza-tinta)"/><text class="pin-num" x="15" y="-11" text-anchor="middle">3</text>
+</g>
+<g transform="translate(160,140)">
+<circle r="19.5" style="fill:none;stroke:var(--color-senial-error);stroke-width:3"/>
+<circle r="16" style="fill:var(--estado-recibido);stroke:var(--color-caliza-lienzo);stroke-width:2.5"/>
+<use href="#ic-alumbrado" x="-9" y="-9" width="18" height="18"/>
+</g>
+<g transform="translate(556,176)">
+<circle r="19.5" style="fill:none;stroke:var(--color-senial-error);stroke-width:3"/>
+<circle r="16" style="fill:var(--estado-recibido);stroke:var(--color-caliza-lienzo);stroke-width:2.5"/>
+<use href="#ic-fuga" x="-9" y="-9" width="18" height="18"/>
+</g>
+<g transform="translate(404,392)">
+<circle r="16" style="fill:var(--estado-en-ejecucion);stroke:var(--color-caliza-lienzo);stroke-width:2.5"/>
+<use href="#ic-mejora" x="-9" y="-9" width="18" height="18"/>
+<circle cx="15" cy="-15" r="8.5" style="fill:var(--color-caliza-tinta)"/><text class="pin-num" x="15" y="-11" text-anchor="middle">2</text>
+</g>
+<g transform="translate(600,236)">
+<circle r="16" style="fill:var(--estado-planificada);stroke:var(--color-caliza-lienzo);stroke-width:2.5"/>
+<use href="#ic-mantenimiento" x="-9" y="-9" width="18" height="18"/>
+</g>
+<g transform="translate(566,486)">
+<circle r="16" style="fill:var(--estado-resuelto);stroke:var(--color-caliza-lienzo);stroke-width:2.5"/>
+<use href="#ic-repavimentacion" x="-9" y="-9" width="18" height="18"/>
+</g>
+</symbol>
+</defs>
+</svg>
+
+<div class="app">
+<aside class="sidebar" aria-label="Navegación del panel">
+<a class="municipio" href="#"><svg class="ic40" aria-hidden="true"><use href="#i-escudo"/></svg>Motul</a>
+<nav class="nav" aria-label="Módulos">
+<div class="grupo">
+<h2 class="label">Atención</h2>
+<ul>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-personas"/></svg>Padrón</a></li>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-reportes"/></svg>Reportes</a></li>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-constancias"/></svg>Constancias</a></li>
+</ul>
+</div>
+<div class="grupo">
+<h2 class="label">Territorio</h2>
+<ul>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-territorio"/></svg>Territorio</a></li>
+<li><a class="item" href="#" aria-current="page"><svg class="ic20" aria-hidden="true"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-obra"/></svg>Intervenciones</a></li>
+</ul>
+</div>
+<div class="grupo">
+<h2 class="label">Administración</h2>
+<ul>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-marca"/></svg>Marca</a></li>
+<li><a class="item" href="#"><svg class="ic20" aria-hidden="true"><use href="#i-exportar"/></svg>Exportación</a></li>
+</ul>
+</div>
+</nav>
+<div class="pie-del-lateral">
+<p class="label">Admin municipal</p>
+<button class="boton-fantasma">Cerrar sesión</button>
+</div>
+</aside>
+
+<main class="contenido">
+<header class="cabecera">
+<div>
+<h1 class="display">Mapa operativo</h1>
+<p class="descripcion body">Dónde están los reportes y las obras abiertas del municipio, qué lleva demasiado tiempo y qué no se puede dibujar todavía.</p>
+</div>
+<div class="en-vivo">
+<span class="estado"><svg class="ic20" aria-hidden="true"><use href="#i-wifi"/></svg>Actualización en vivo <span class="dato apagada">· hace 20 s</span></span>
+<a class="boton secundaria" href="?vista=mapa&amp;area=obras-publicas">Actualizar ahora</a>
+</div>
+</header>
+
+<nav class="vistas" aria-label="Vistas del mapa operativo">
+<a href="?vista=mapa" aria-current="page">Mapa</a>
+<a href="?vista=lista">Lista</a>
+<a href="?vista=por-ubicar">Por ubicar <span class="cuenta">5</span></a>
+</nav>
+
+<form class="barra" method="get" action="" aria-label="Filtros del mapa">
+<input type="hidden" name="vista" value="mapa">
+<div class="campo">
+<label class="label" for="territorio">Territorio</label>
+<select id="territorio" name="territorio"><option>Todo el municipio</option><option>Motul</option><option>Kiní</option><option>Ucí</option><option>Kancabchén</option><option>Sacapuc</option></select>
+</div>
+<div class="campo">
+<label class="label" for="tipo">Tipo</label>
+<select id="tipo" name="tipo"><option>Todos</option><option>Bache</option><option>Alumbrado</option><option>Fuga</option><option>Mejora</option><option>Repavimentación</option><option>Mantenimiento</option><option>Otro</option></select>
+</div>
+<div class="campo">
+<label class="label" for="estado">Estado</label>
+<select id="estado" name="estado"><option>Todos</option><option>Recibido</option><option>En atención</option><option>Resuelto</option><option>Planificada</option><option>En ejecución</option><option>Finalizada</option></select>
+</div>
+<div class="campo">
+<label class="label" for="area">Área</label>
+<select id="area" name="area"><option>Todas</option><option>Obras públicas</option><option>Alumbrado público</option><option>Agua potable y drenaje</option><option>Limpia y recolección</option></select>
+</div>
+<button class="boton secundaria" type="submit">Aplicar filtros</button>
+</form>
+
+<div class="chips-fila">
+<p class="resumen">
+<span><b>9</b> hechos</span><span class="apagada" aria-hidden="true">·</span>
+<span><b>6</b> reportes</span><span class="apagada" aria-hidden="true">·</span>
+<span><b>3</b> intervenciones</span><span class="apagada" aria-hidden="true">·</span>
+<span class="atraso"><b>3</b> atrasados</span>
+</p>
+</div>
+
+<div class="parte">
+<figure class="tarjeta mapa-caja" aria-label="Mapa de hechos por calle">
+<div class="mapa-cabecera">
+<span class="label">Un pin por calle · ubicación aproximada</span>
+<span class="dato apagada">6 calles</span>
+</div>
+<div class="mapa-lienzo">
+<svg viewBox="0 40 716 540" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa estilizado de Motul y sus comisarías: seis calles con hechos, tres con reportes atrasados marcados con aro rojo.">
+<use href="#lienzo-mapa" width="716" height="640"/>
+<use href="#pines-mapa" width="716" height="640"/>
+</svg>
+
+<div class="ventana" role="group" aria-label="Hechos de Calle 26 x 31 y 33, Motul">
+<h3 class="title">Calle 26 x 31 y 33 <span class="label">Motul · 3 hechos</span></h3>
+<ul>
+<li>
+<a class="enlace dato" href="#">REP-2026-000123</a>
+<p class="meta"><span class="label">Bache</span><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span><span class="label">12 feb 2026</span><span class="label atraso">Atrasado · 9 días</span></p>
+</li>
+<li>
+<a class="enlace dato" href="#">REP-2026-000131</a>
+<p class="meta"><span class="label">Alumbrado</span><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>En atención</span><span class="label">15 feb 2026</span></p>
+</li>
+<li><span class="label">1 hecho más en esta calle · REP-2026-000136</span></li>
+</ul>
+<p style="margin-top:12px"><a class="enlace" href="#">Ver historial de calle</a></p>
+</div>
+</div>
+</figure>
+
+<aside class="tarjeta riel" aria-label="Leyenda del mapa">
+<h2 class="title">Leyenda <span class="cuenta">9 hechos</span></h2>
+
+<section>
+<h3 class="label">Por tipo</h3>
+<ul class="lista-leyenda">
+<li><svg class="ic16" aria-hidden="true"><use href="#ic-bache"/></svg>Bache <span class="c">3</span></li>
+<li><svg class="ic16" aria-hidden="true"><use href="#ic-alumbrado"/></svg>Alumbrado <span class="c">2</span></li>
+<li><svg class="ic16" aria-hidden="true"><use href="#ic-fuga"/></svg>Fuga <span class="c">1</span></li>
+<li><svg class="ic16" aria-hidden="true"><use href="#ic-mejora"/></svg>Mejora <span class="c">1</span></li>
+<li><svg class="ic16" aria-hidden="true"><use href="#ic-mantenimiento"/></svg>Mantenimiento <span class="c">1</span></li>
+<li><svg class="ic16" aria-hidden="true"><use href="#ic-repavimentacion"/></svg>Repavimentación <span class="c">1</span></li>
+</ul>
+</section>
+
+<section>
+<h3 class="label">Por estado</h3>
+<ul class="lista-leyenda">
+<li><span class="punto" style="background:var(--estado-recibido)" aria-hidden="true"></span>Recibido <span class="c">4</span></li>
+<li><span class="punto" style="background:var(--estado-en-atencion)" aria-hidden="true"></span>En atención <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-planificada)" aria-hidden="true"></span>Planificada <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-en-ejecucion)" aria-hidden="true"></span>En ejecución <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-resuelto)" aria-hidden="true"></span>Resuelto <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-resuelto)" aria-hidden="true"></span>Finalizada <span class="c">1</span></li>
+<li><span class="punto aro" aria-hidden="true"></span><span class="atraso">Atrasados</span> <span class="c">3</span></li>
+</ul>
+</section>
+
+<p class="label nota-riel">El ícono dice el tipo, el color el estado y el aro rojo el atraso. El contador aparece cuando la calle lleva más de un hecho.</p>
+</aside>
+</div>
+</main>
+</div>
+
+<!-- ================= vista secundaria: Lista ================= -->
+<section class="muestra" aria-labelledby="t-lista">
+<div class="muestra-inner">
+<p class="label">Vista secundaria · <span class="dato">?vista=lista</span></p>
+<div>
+<h2 class="headline" id="t-lista">Lista · agrupada por calle, lo atrasado primero</h2>
+<p class="intro body">La misma información sin mapa, para imprimir o leer con teclado. Cada grupo lleva su conteo y el historial de la calle.</p>
+</div>
+<nav class="vistas" aria-label="Vistas del mapa operativo (lista activa)">
+<a href="?vista=mapa">Mapa</a>
+<a href="?vista=lista" aria-current="page">Lista</a>
+<a href="?vista=por-ubicar">Por ubicar <span class="cuenta">5</span></a>
+</nav>
+<div class="orden" role="group" aria-label="Ordenar la lista">
+<span class="label">Ordenar por</span>
+<a href="?vista=lista&amp;orden=atraso" aria-current="true">Más atrasados</a>
+<a href="?vista=lista&amp;orden=calle">Calle</a>
+<a href="?vista=lista&amp;orden=fecha">Fecha</a>
+</div>
+
+<div class="tarjeta tabla-caja">
+<table class="tabla">
+<thead>
+<tr><th scope="col">Hecho</th><th scope="col">Estado</th><th scope="col">Fecha</th><th scope="col">Atraso</th></tr>
+</thead>
+<tbody>
+<tr class="fila-grupo"><th scope="colgroup" colspan="4">Calle 26 x 31 y 33 <span class="lugar">Motul</span> <span class="cuenta">3 hechos</span> <a class="enlace" href="#">Historial de calle</a></th></tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg><use href="#ic-bache"/></svg></span><span class="folio"><span>Bache</span><a class="enlace dato" href="#">REP-2026-000123</a></span></span></th>
+<td><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></td>
+<td class="dato">12 feb 2026</td>
+<td><span class="atraso">Atrasado · 9 días</span></td>
+</tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg><use href="#ic-alumbrado"/></svg></span><span class="folio"><span>Alumbrado</span><a class="enlace dato" href="#">REP-2026-000131</a></span></span></th>
+<td><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>En atención</span></td>
+<td class="dato">15 feb 2026</td>
+<td><span class="apagada">—</span></td>
+</tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg><use href="#ic-bache"/></svg></span><span class="folio"><span>Bache</span><a class="enlace dato" href="#">REP-2026-000136</a></span></span></th>
+<td><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></td>
+<td class="dato">16 feb 2026</td>
+<td><span class="apagada">—</span></td>
+</tr>
+
+<tr class="fila-grupo"><th scope="colgroup" colspan="4">Calle 15 <span class="lugar">Kiní</span> <span class="cuenta">1 hecho</span> <a class="enlace" href="#">Historial de calle</a></th></tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg><use href="#ic-alumbrado"/></svg></span><span class="folio"><span>Alumbrado</span><a class="enlace dato" href="#">REP-2026-000140</a></span></span></th>
+<td><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></td>
+<td class="dato">13 feb 2026</td>
+<td><span class="atraso">Atrasado · 7 días</span></td>
+</tr>
+
+<tr class="fila-grupo"><th scope="colgroup" colspan="4">Camino a Sisal <span class="lugar">Ucí</span> <span class="cuenta">1 hecho</span> <a class="enlace" href="#">Historial de calle</a></th></tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-recibido)" aria-hidden="true"><svg><use href="#ic-fuga"/></svg></span><span class="folio"><span>Fuga</span><a class="enlace dato" href="#">REP-2026-000127</a></span></span></th>
+<td><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span></td>
+<td class="dato">14 feb 2026</td>
+<td><span class="atraso">Atrasado · 6 días</span></td>
+</tr>
+
+<tr class="fila-grupo"><th scope="colgroup" colspan="4">Calle 21 <span class="lugar">Motul</span> <span class="cuenta">2 hechos</span> <a class="enlace" href="#">Historial de calle</a></th></tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-en-ejecucion)" aria-hidden="true"><svg><use href="#ic-mejora"/></svg></span><span class="folio"><span>Mejora</span><a class="enlace" href="#">Intervención</a></span></span></th>
+<td><span class="insignia aviso"><svg aria-hidden="true"><use href="#si-aviso"/></svg>En ejecución</span></td>
+<td class="dato">3 feb 2026</td>
+<td><span class="apagada">—</span></td>
+</tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-resuelto)" aria-hidden="true"><svg><use href="#ic-bache"/></svg></span><span class="folio"><span>Bache</span><a class="enlace dato" href="#">REP-2026-000119</a></span></span></th>
+<td><span class="insignia exito"><svg aria-hidden="true"><use href="#si-check"/></svg>Resuelto</span></td>
+<td class="dato">28 ene 2026</td>
+<td><span class="apagada">—</span></td>
+</tr>
+
+<tr class="fila-grupo"><th scope="colgroup" colspan="4">Calle 5 <span class="lugar">Ucí</span> <span class="cuenta">1 hecho</span> <a class="enlace" href="#">Historial de calle</a></th></tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-planificada)" aria-hidden="true"><svg><use href="#ic-mantenimiento"/></svg></span><span class="folio"><span>Mantenimiento</span><a class="enlace" href="#">Intervención</a></span></span></th>
+<td><span class="insignia neutro"><svg aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></td>
+<td class="dato">22 feb 2026</td>
+<td><span class="apagada">—</span></td>
+</tr>
+
+<tr class="fila-grupo"><th scope="colgroup" colspan="4">Calle 8 <span class="lugar">Sacapuc</span> <span class="cuenta">1 hecho</span> <a class="enlace" href="#">Historial de calle</a></th></tr>
+<tr>
+<th scope="row"><span class="hecho-tipo"><span class="icono" style="background:var(--estado-resuelto)" aria-hidden="true"><svg><use href="#ic-repavimentacion"/></svg></span><span class="folio"><span>Repavimentación</span><a class="enlace" href="#">Intervención</a></span></span></th>
+<td><span class="insignia exito"><svg aria-hidden="true"><use href="#si-check"/></svg>Finalizada</span></td>
+<td class="dato">5 feb 2026</td>
+<td><span class="apagada">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- ================= vista secundaria: Por ubicar ================= -->
+<section class="muestra" aria-labelledby="t-ubicar">
+<div class="muestra-inner">
+<p class="label">Vista secundaria · <span class="dato">?vista=por-ubicar</span></p>
+<div>
+<h2 class="headline" id="t-ubicar">Por ubicar · lo que el mapa todavía no puede dibujar</h2>
+<p class="intro body">Dos causas en una lista: la calle no tiene punto, o el hecho no tiene calle. Cada renglón lleva a donde se arregla.</p>
+</div>
+
+<div class="tarjeta tabla-caja">
+<p class="grupo-ubicar">Calles sin punto en el mapa · 3</p>
+<ul class="ubicar-lista">
+<li>
+<div class="nombre">Calle 4 <span class="label">Kiní</span></div>
+<p class="motivo">La calle no tiene ubicación en el mapa.</p>
+<a class="boton secundaria accion" href="#">Ubicar</a>
+</li>
+<li>
+<div class="nombre">Calle 22 <span class="label">Kiní</span> <span class="insignia aviso"><svg aria-hidden="true"><use href="#si-aviso"/></svg>1 hecho esperando</span></div>
+<p class="motivo">La calle no tiene ubicación en el mapa.</p>
+<a class="boton secundaria accion" href="#">Ubicar</a>
+</li>
+<li>
+<div class="nombre">Calle 10 <span class="label">Sacapuc</span></div>
+<p class="motivo">La calle no tiene ubicación en el mapa.</p>
+<a class="boton secundaria accion" href="#">Ubicar</a>
+</li>
+</ul>
+
+<p class="grupo-ubicar">Hechos sin calle · 2</p>
+<ul class="ubicar-lista">
+<li>
+<div class="nombre"><a class="enlace dato" href="#">REP-2026-000142</a> <span class="label">Motul · Reporte</span></div>
+<p class="motivo">El reporte no tiene calle asignada.</p>
+<a class="boton secundaria accion" href="#">Ubicar</a>
+</li>
+<li>
+<div class="nombre"><a class="enlace dato" href="#">REP-2026-000145</a> <span class="label">Motul · Reporte</span></div>
+<p class="motivo">Su calle (Calle 14) no tiene punto en el mapa.</p>
+<a class="boton secundaria accion" href="#">Ubicar</a>
+</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- ================= móvil ================= -->
+<section class="muestra" aria-labelledby="t-movil">
+<div class="muestra-inner">
+<div class="telefono-marco">
+<div>
+<p class="label">Vista principal · <span class="dato">?vista=mapa</span> · 390 × 844</p>
+<h2 class="headline" id="t-movil">Móvil · el mapa primero, las otras vistas a un toque</h2>
+<p class="body apagada" style="max-width:70ch">Segmentado arriba del mapa: cambiar de vista es navegación, no estado de cliente. El aro del atraso se lee a 300px.</p>
+</div>
+<div class="telefono">
+<a class="municipio" href="#"><svg class="ic40" aria-hidden="true"><use href="#i-escudo"/></svg>Motul</a>
+<div class="m-cuerpo">
+<div>
+<h1 class="display">Mapa operativo</h1>
+<p class="label" style="margin-top:4px">Actualización en vivo · hace 20 s</p>
+</div>
+
+<nav class="m-vistas" aria-label="Vistas del mapa operativo">
+<a href="?vista=mapa" aria-current="page">Mapa</a>
+<a href="?vista=lista">Lista</a>
+<a href="?vista=por-ubicar">Por ubicar <span class="cuenta">5</span></a>
+</nav>
+
+<div class="chips-fila">
+<a class="boton secundaria" href="?vista=mapa" style="margin-left:auto">Filtros</a>
+</div>
+
+<p class="resumen"><span><b>9</b> hechos</span><span><b>6</b> calles</span><span class="atraso"><b>3</b> atrasados</span></p>
+
+<figure class="m-mapa" aria-label="Mapa de hechos por calle">
+<svg viewBox="0 0 716 640" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa estilizado de Motul y sus comisarías: seis calles con hechos, tres con reportes atrasados.">
+<use href="#lienzo-mapa" width="716" height="640"/>
+<use href="#pines-mapa" width="716" height="640"/>
+</svg>
+</figure>
+<details class="m-leyenda" open>
+<summary>Leyenda · por estado <span class="cuenta">9 hechos</span></summary>
+<ul class="lista-leyenda">
+<li><span class="punto" style="background:var(--estado-recibido)" aria-hidden="true"></span>Recibido <span class="c">4</span></li>
+<li><span class="punto" style="background:var(--estado-en-atencion)" aria-hidden="true"></span>En atención <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-planificada)" aria-hidden="true"></span>Planificada <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-en-ejecucion)" aria-hidden="true"></span>En ejecución <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-resuelto)" aria-hidden="true"></span>Resuelto <span class="c">1</span></li>
+<li><span class="punto" style="background:var(--estado-resuelto)" aria-hidden="true"></span>Finalizada <span class="c">1</span></li>
+<li><span class="punto aro" aria-hidden="true"></span><span class="atraso">Atrasados</span> <span class="c">3</span></li>
+</ul>
+</details>
+
+</div>
+
+<nav class="m-nav" aria-label="Navegación principal">
+<a href="#"><svg class="ic24" aria-hidden="true"><use href="#i-personas"/></svg>Padrón</a>
+<a href="#"><svg class="ic24" aria-hidden="true"><use href="#i-reportes"/></svg>Reportes</a>
+<a href="#"><svg class="ic24" aria-hidden="true"><use href="#i-constancias"/></svg>Constancias</a>
+<a href="#"><svg class="ic24" aria-hidden="true"><use href="#i-territorio"/></svg>Territorio</a>
+<a href="#" aria-current="page"><svg class="ic24" aria-hidden="true"><use href="#i-mas"/></svg>Más</a>
+</nav>
+</div>
+</div>
+
+<!-- notas -->
+<div class="notas">
+<div class="nota">
+<h3 class="headline">03 · Vistas de trabajo</h3>
+<p class="body apagada" style="margin:8px 0 12px">Un trabajo por vista, y el segmentado como navegación: cada vista tiene su URL, su recarga y su historial.</p>
+<p class="label">Compromiso: es la más liviana por vista y la mejor en teléfonos y máquinas viejas, porque nunca pinta mapa y lista a la vez; a cambio, no hay contexto simultáneo de mapa y lista.</p>
+</div>
+<div class="nota">
+<h3 class="title">Qué resuelve y qué estados cubre</h3>
+<ul class="body">
+<li><strong>El segmentado va antes que los filtros</strong> y muestra el conteo de "Por ubicar": el trabajo escondido se ve antes de abrir esa vista.</li>
+<li><strong>La leyenda es un riel de 268px</strong>, no una capa sobre el mapa: por tipo, por estado y el renglón de atrasados.</li>
+<li><strong>La lista ordena por atraso</strong> y agrupa por calle; "Por ubicar" junta las dos causas con "Ubicar" por renglón.</li>
+<li><strong>Estado en vivo</strong> con <code>aria-live="polite"</code>; "Actualizar ahora" es un enlace GET. Foco de 2px en marca con offset 2px y <code>aria-current</code> en la vista y el orden activos.</li>
+<li><strong>El atraso nunca es solo el aro:</strong> dice "Atrasado · N días" en la ventana, la lista y la leyenda.</li>
+</ul>
+<div class="aviso" role="status">
+<svg class="ic20" aria-hidden="true"><use href="#si-aviso"/></svg>
+<p class="body"><strong>Sin calles ubicadas en Kancabchén.</strong> El mapa muestra todo Yucatán. Ubique sus calles para ver sus hechos.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</body>
+</html>
