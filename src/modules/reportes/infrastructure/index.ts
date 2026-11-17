@@ -1,4 +1,5 @@
 export * from "./contadorDeFoliosSql";
+export * from "./lectorDeNombresPorTerritorio";
 export * from "./lectorDeReportantesPorPadron";
 export * from "./lectorDeUbicacionesPorTerritorio";
 export * from "./listadoDeReportesSql";

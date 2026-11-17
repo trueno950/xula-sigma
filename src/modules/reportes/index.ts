@@ -7,6 +7,7 @@
  * adaptadores reales, nunca la fabrica sin componer.
  */
 
+export type { ReporteDeDetalle } from "./application/detalleDeReporte";
 export { TAMANO_DE_PAGINA } from "./application/listarReportes";
 /**
  * Curado y no `export type * from "./application"`: `puertos.ts` declara
@@ -23,6 +24,11 @@ export type {
 } from "./application/puertos";
 export type { ReporteParaMapa } from "./application/puertosDeLecturaDeReportes";
 export type { MovimientoGuardado } from "./application/puertosDeMovimientos";
+export type {
+  ModoDeUbicacion,
+  ReporteDeBandeja,
+  UbicacionDeReporte,
+} from "./application/puertosDeUbicacionesDeReporte";
 export {
   asignarAreaDeReporte,
   buscarReportes,
@@ -31,6 +37,7 @@ export {
   cambiarUmbralDeAtraso,
   consultarFolioDeReporte,
   contarReportes,
+  detalleDeReporte,
   historialDeReporte,
   leerUmbralDeAtraso,
   listarReportes,

@@ -8,6 +8,8 @@ import type {
   RepositorioDeReportes,
   ResultadoDeListado,
 } from "./puertos";
+import type { CrearLecturaDeNombres } from "./puertosDeUbicacionesDeReporte";
+import { conUbicaciones } from "./ubicacionesDeReportes";
 
 /**
  * Buscador de texto libre del listado (`design.md`, "Buscador"): distinto
@@ -24,8 +26,9 @@ import type {
  */
 export function crearBuscarReportes(
   repositorio: Pick<RepositorioDeReportes, "buscar">,
+  crearLecturaDeNombres: CrearLecturaDeNombres,
 ) {
-  return function buscarReportes(
+  return async function buscarReportes(
     cadena: string,
     contexto: ContextoActual,
     opciones?: {
@@ -36,15 +39,21 @@ export function crearBuscarReportes(
   ): Promise<ResultadoDeListado> {
     const limite = opciones?.limite ?? TAMANO_DE_PAGINA;
 
-    return withTenant(contexto.ayuntamientoId, async (tx) => {
+    const pagina = await withTenant(contexto.ayuntamientoId, async (tx) => {
       const filas = await repositorio.buscar(tx, cadena, {
         limite: limite + 1,
         ...(opciones?.filtros ? { filtros: opciones.filtros } : {}),
         ...(opciones?.orden ? { orden: opciones.orden } : {}),
       });
-      const pagina = resolverPagina(filas, limite);
 
-      return { reportes: pagina.filas, hayMas: pagina.hayMas };
+      return resolverPagina(filas, limite);
     });
+    const reportes = await conUbicaciones(
+      pagina.filas,
+      crearLecturaDeNombres,
+      contexto,
+    );
+
+    return { reportes, hayMas: pagina.hayMas };
   };
 }
