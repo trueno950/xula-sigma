@@ -1,0 +1,27 @@
+{
+  "title": "Mapa operativo",
+  "brief": "Rediseño de /mapa-operativo para el personal de municipios pequeños de Yucatán: ver en segundos qué está abierto, dónde, qué está atrasado y qué falta ubicar, con el mapa como protagonista.",
+  "artboards": [
+    {
+      "file": "01-mapa-protagonista.html",
+      "title": "Mapa protagonista",
+      "tradeoff": "El mapa ocupa todo el alto útil y la lista vive a su lado, ligada por número, ícono y color; a 1366 px el panel lateral se aprieta y por debajo de 1024 todo se apila.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-resumen-y-mapa.html",
+      "title": "Resumen y mapa",
+      "tradeoff": "Cuatro contadores accionables responden «cómo vamos» de un vistazo y cada número filtra; a cambio, el mapa empieza más abajo.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-vistas-de-trabajo.html",
+      "title": "Vistas de trabajo",
+      "tradeoff": "Una tarea por vista (Mapa · Lista · Por ubicar): la más liviana en teléfonos y equipos viejos; no hay mapa y lista a la vez.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

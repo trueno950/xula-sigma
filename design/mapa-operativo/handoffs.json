@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-mapa-protagonista.html",
+  "handoffs": {
+    "01-mapa-protagonista.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-16T18:30:07.466Z",
+      "startedAt": "2026-11-16T18:30:11.885Z",
+      "implementedAt": null,
+      "note": "Feature doc odd/tasks/mapa-protagonista.md; implementación en rama feat/mapa-protagonista."
+    }
+  }
+}

@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XULA SIGMA · Sistema de diseño</title>
+<style>
+  :root {
+    /* Marca del municipio (valor por defecto de :root; cada municipio la cambia) */
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-acento: oklch(0.55 0.1 25);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    /* Neutros de caliza */
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-inhabilitado: oklch(0.68 0.007 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    /* Señales, fijas */
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    /* Estados del mapa: dato del servidor (coloresDeEstado.ts) */
+    --estado-recibido: #b45309;
+    --estado-en-atencion: #1d4ed8;
+    --estado-resuelto: #15803d;
+    --estado-rechazado: #6b7280;
+    --estado-planificada: #7c3aed;
+    --estado-en-ejecucion: #0e7490;
+    --estado-finalizada: #15803d;
+    --estado-cancelada: #6b7280;
+
+    --radio-sm: 6px;
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-xl: 16px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --sombra-elevada: 0 4px 12px -2px oklch(0.24 0.008 80 / .1), 0 2px 4px oklch(0.24 0.008 80 / .05);
+    --sombra-flotante: 0 8px 24px -6px oklch(0.24 0.008 80 / .22), 0 2px 6px oklch(0.24 0.008 80 / .08);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body {
+    margin: 0;
+    background: var(--color-caliza-fondo);
+    color: var(--color-caliza-tinta);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, p, ul, ol, figure { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+
+  .pagina { max-width: 1440px; margin: 0 auto; padding: 32px 24px 64px; }
+  .cabecera-de-hoja {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 16px; padding-bottom: 24px; border-bottom: 1px solid var(--color-caliza-divisor);
+  }
+  .seccion { margin-top: 48px; display: flex; flex-direction: column; gap: 16px; }
+  .seccion > header { display: flex; flex-direction: column; gap: 4px; }
+  .seccion > header p { max-width: 70ch; color: var(--color-caliza-apagada); }
+
+  .tarjeta {
+    background: var(--color-caliza-lienzo);
+    border: 1px solid var(--color-caliza-divisor);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra-reposo);
+    padding: 20px;
+  }
+
+  /* --- muestras de color --- */
+  .muestras { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 16px; }
+  .muestra { display: flex; flex-direction: column; gap: 8px; }
+  .muestra .pinta {
+    height: 56px; border-radius: var(--radio-md);
+    border: 1px solid var(--color-caliza-divisor);
+  }
+  .muestra .pinta.con-borde { border-color: var(--color-caliza-borde); }
+  .muestra .par { display: flex; gap: 8px; }
+  .muestra .par > span { flex: 1; }
+  .muestra code { font-family: var(--fuente-dato); font-size: .8125rem; color: var(--color-caliza-apagada); }
+  .muestra small { color: var(--color-caliza-apagada); font-size: .8125rem; }
+
+  /* --- escala tipográfica --- */
+  .escala { display: flex; flex-direction: column; }
+  .escala > div {
+    display: grid; grid-template-columns: 120px 1fr; align-items: baseline;
+    gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--color-caliza-divisor);
+  }
+  .escala > div:last-child { border-bottom: 0; }
+
+  /* --- espacio, radio, sombra --- */
+  .filas-de-tokens { display: flex; flex-direction: column; }
+  .fila-de-token {
+    display: grid; grid-template-columns: 96px 140px 1fr; align-items: center;
+    gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--color-caliza-divisor);
+  }
+  .fila-de-token:last-child { border-bottom: 0; }
+  .barra-de-espacio { height: 12px; background: var(--color-marca-suave); border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-sm); }
+  .caja-de-radio { width: 64px; height: 48px; background: var(--color-caliza-superficie); border: 1px solid var(--color-caliza-borde); }
+  .muestra-de-sombra {
+    width: 200px; height: 64px; border-radius: var(--radio-lg);
+    background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor);
+  }
+
+  /* --- botones --- */
+  .fila { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .boton {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 44px; padding: 0 18px; border-radius: var(--radio-md);
+    font: 600 15px/1 var(--fuente); cursor: pointer;
+    border: 1px solid transparent;
+    transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease);
+  }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .boton.fantasma { background: transparent; color: var(--color-caliza-apagada); border-color: transparent; }
+  .boton.fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+  .boton.peligro { background: var(--color-caliza-lienzo); color: var(--color-senial-error); border-color: var(--color-senial-error); }
+  .boton.peligro:hover { background: var(--color-senial-error-suave); }
+  .boton[disabled] {
+    background: var(--color-caliza-relleno); color: var(--color-caliza-inhabilitado);
+    border-color: transparent; pointer-events: none;
+  }
+
+  /* --- campos --- */
+  .campo { display: flex; flex-direction: column; gap: 6px; max-width: 280px; }
+  .campo select, .campo input {
+    height: 44px; width: 100%; padding: 0 12px;
+    border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md);
+    background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta);
+    font: 400 15px/1.4 var(--fuente); appearance: none;
+  }
+  .campo input::placeholder { color: var(--color-caliza-inhabilitado); }
+  .campo .error { display: flex; gap: 6px; padding: 6px 8px; border-radius: var(--radio-sm); background: var(--color-senial-error-suave); color: var(--color-senial-error); font-size: 13px; font-weight: 500; }
+
+  /* --- insignias y chips --- */
+  .insignia {
+    display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 10px;
+    border-radius: var(--radio-pill); font: 500 13px/1 var(--fuente);
+  }
+  .insignia.neutro { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+  .insignia.exito { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .insignia.aviso { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .insignia.error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+    border-radius: var(--radio-pill); background: var(--color-marca-suave);
+    color: var(--color-caliza-tinta); font: 500 13px/1 var(--fuente); text-decoration: none;
+    transition: background-color 150ms var(--ease);
+  }
+  .chip:hover { background: var(--color-caliza-relleno); }
+
+  /* --- tabla --- */
+  .tabla { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); overflow: clip; background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); }
+  .tabla .encabezado {
+    display: grid; grid-template-columns: 1fr 180px 140px 160px; align-items: center;
+    height: 40px; padding: 0 16px; background: var(--color-caliza-superficie);
+  }
+  .tabla .renglon {
+    display: grid; grid-template-columns: 1fr 180px 140px 160px; align-items: center;
+    min-height: 48px; padding: 0 16px; border-top: 1px solid var(--color-caliza-divisor);
+  }
+  .tabla .renglon.accionable { transition: background-color 150ms var(--ease); }
+  .tabla .renglon.accionable:hover { background: var(--color-caliza-superficie); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .enlace:hover { text-decoration-thickness: 2px; }
+
+  /* --- aviso y vacío --- */
+  .aviso { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-radius: var(--radio-md); font-size: 15px; }
+  .aviso.aviso-tono { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .aviso.error-tono { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+  .aviso.exito-tono { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .vacio { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px 24px; text-align: center; }
+
+  /* --- navegación --- */
+  .nav-demo { display: flex; flex-direction: column; gap: 2px; max-width: 264px; }
+  .nav-demo .grupo { padding: 8px 12px 4px; }
+  .nav-demo .item {
+    display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px;
+    border-radius: var(--radio-md); font: 600 15px/1 var(--fuente);
+    color: var(--color-caliza-apagada); text-decoration: none;
+  }
+  .nav-demo .item.activo { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav-demo .item.activo svg { color: var(--color-marca); }
+  .nav-demo .municipio {
+    display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px;
+    background: var(--color-marca-tenue); color: var(--color-caliza-tinta);
+    font: 600 15px/1.2 var(--fuente); text-decoration: none; border-radius: var(--radio-md) var(--radio-md) 0 0;
+  }
+
+  /* --- pin y leyenda --- */
+  .pin-demo { display: inline-flex; align-items: center; gap: 16px; }
+  .pin {
+    position: relative; width: 30px; height: 30px; border-radius: var(--radio-pill);
+    display: grid; place-items: center; color: var(--color-caliza-lienzo);
+    border: 2px solid var(--color-caliza-lienzo);
+    box-shadow: 0 1px 4px oklch(0.24 0.008 80 / .35);
+  }
+  .pin.atrasado { box-shadow: 0 0 0 3px var(--color-senial-error), 0 1px 4px oklch(0.24 0.008 80 / .35); }
+  .pin .contador {
+    position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px;
+    padding: 0 3px; border-radius: var(--radio-pill);
+    background: var(--color-caliza-tinta); color: var(--color-caliza-lienzo);
+    font: 600 11px/18px var(--fuente); text-align: center;
+  }
+  .leyenda { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .leyenda ul { display: flex; flex-direction: column; gap: 4px; }
+  .leyenda li { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .leyenda li .cuenta { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .leyenda .punto { width: 12px; height: 12px; border-radius: var(--radio-pill); flex: none; }
+  .leyenda .punto.aro { border: 2px solid var(--color-senial-error); }
+
+  .nota { display: flex; gap: 8px; padding: 12px 16px; border-radius: var(--radio-md); background: var(--color-caliza-superficie); border: 1px solid var(--color-caliza-divisor); font-size: 15px; }
+  .nota strong { font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="pagina">
+
+  <header class="cabecera-de-hoja">
+    <div>
+      <p class="label">XULA SIGMA · sistema de diseño</p>
+      <h1 class="display">Lo que el sistema ya tiene</h1>
+      <p class="body apagada" style="max-width:70ch">
+        Tokens y reglas de componente tomados de <code>DESIGN.md</code>,
+        <code>src/app/globals.css</code> y <code>src/shared/ui</code>. Ningún valor
+        de esta hoja es inventado: cada muestra nombra su fuente en
+        <code>design/system.md</code>.
+      </p>
+    </div>
+    <p class="label">Tema claro · Inter Variable con respaldo del sistema</p>
+  </header>
+
+  <section class="seccion" aria-labelledby="t-color">
+    <header>
+      <h2 class="headline" id="t-color">Color</h2>
+      <p>La marca es del municipio y vive en seis lugares; las señales son fijas;
+      el color de estado del mapa es un dato del servidor, no un rol de interfaz.</p>
+    </header>
+
+    <div class="tarjeta">
+      <h3 class="title" style="margin-bottom:12px">Marca del municipio</h3>
+      <div class="muestras">
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-marca)"></div>
+          <strong>marca</strong>
+          <code>oklch(0.42 0.12 25)</code>
+          <small>Acción primaria, ícono activo</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-marca-suave)"></div>
+          <strong>marca-suave</strong>
+          <code>marca 10% + lienzo</code>
+          <small>Navegación activa, chip de filtro</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-marca-tenue)"></div>
+          <strong>marca-tenue</strong>
+          <code>marca 5% + lienzo</code>
+          <small>Bloque del municipio</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-marca-hover)"></div>
+          <strong>marca-hover</strong>
+          <code>marca 92% + tinta</code>
+          <small>Hover del botón primario</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <h3 class="title" style="margin-bottom:12px">Neutros de caliza</h3>
+      <div class="muestras">
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-fondo)"></div>
+          <strong>caliza-fondo</strong>
+          <code>oklch(0.962 0.005 80)</code>
+          <small>Suelo de la página</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-lienzo)"></div>
+          <strong>caliza-lienzo</strong>
+          <code>oklch(0.995 0.002 80)</code>
+          <small>Tarjetas, tablas, campos. No es #fff</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-superficie)"></div>
+          <strong>caliza-superficie</strong>
+          <code>oklch(0.975 0.004 80)</code>
+          <small>Encabezado de tabla, hover de fila</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-relleno)"></div>
+          <strong>caliza-relleno</strong>
+          <code>oklch(0.94 0.005 80)</code>
+          <small>Insignia neutra, control inhabilitado</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-divisor)"></div>
+          <strong>caliza-divisor</strong>
+          <code>oklch(0.9 0.006 80)</code>
+          <small>Líneas entre filas y secciones</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta con-borde" style="background:var(--color-caliza-borde)"></div>
+          <strong>caliza-borde</strong>
+          <code>oklch(0.62 0.008 80)</code>
+          <small>Contorno de control, 3.5:1</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-inhabilitado)"></div>
+          <strong>caliza-inhabilitado</strong>
+          <code>oklch(0.68 0.007 80)</code>
+          <small>Solo inhabilitado y placeholder</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-apagada)"></div>
+          <strong>caliza-apagada</strong>
+          <code>oklch(0.5 0.008 80)</code>
+          <small>Etiquetas y texto secundario</small>
+        </div>
+        <div class="muestra">
+          <div class="pinta" style="background:var(--color-caliza-tinta)"></div>
+          <strong>caliza-tinta</strong>
+          <code>oklch(0.22 0.008 80)</code>
+          <small>Todo el texto que importa. No es #000</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <h3 class="title" style="margin-bottom:12px">Señales fijas, y color de estado del mapa</h3>
+      <div class="muestras">
+        <div class="muestra">
+          <div class="par">
+            <div class="pinta" style="background:var(--color-senial-error)"></div>
+            <div class="pinta" style="background:var(--color-senial-error-suave)"></div>
+          </div>
+          <strong>senial-error</strong>
+          <code>oklch(0.46 0.17 27)</code>
+          <small>Nunca derivado de la marca</small>
+        </div>
+        <div class="muestra">
+          <div class="par">
+            <div class="pinta" style="background:var(--color-senial-exito)"></div>
+            <div class="pinta" style="background:var(--color-senial-exito-suave)"></div>
+          </div>
+          <strong>senial-exito</strong>
+          <code>oklch(0.46 0.11 150)</code>
+          <small>Éxito y conexión en vivo</small>
+        </div>
+        <div class="muestra">
+          <div class="par">
+            <div class="pinta" style="background:var(--color-senial-aviso)"></div>
+            <div class="pinta" style="background:var(--color-senial-aviso-suave)"></div>
+          </div>
+          <strong>senial-aviso</strong>
+          <code>oklch(0.5 0.13 65)</code>
+          <small>Aviso y queja de dato</small>
+        </div>
+        <div class="muestra">
+          <div class="par">
+            <div class="pinta" style="background:var(--estado-recibido)"></div>
+            <div class="pinta" style="background:var(--estado-en-atencion)"></div>
+            <div class="pinta" style="background:var(--estado-resuelto)"></div>
+          </div>
+          <strong>Estado · reporte</strong>
+          <code>#b45309 · #1d4ed8 · #15803d</code>
+          <small>Recibido, en atención, resuelto</small>
+        </div>
+        <div class="muestra">
+          <div class="par">
+            <div class="pinta" style="background:var(--estado-planificada)"></div>
+            <div class="pinta" style="background:var(--estado-en-ejecucion)"></div>
+            <div class="pinta" style="background:var(--estado-rechazado)"></div>
+          </div>
+          <strong>Estado · intervención</strong>
+          <code>#7c3aed · #0e7490 · #6b7280</code>
+          <small>Planificada, en ejecución, cancelada</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-tipo">
+    <header>
+      <h2 class="headline" id="t-tipo">Tipografía</h2>
+      <p>Una sola familia variable. 15px es el piso de lo que se debe leer; 13px
+      solo como etiqueta. Nada en mayúsculas sostenidas.</p>
+    </header>
+    <div class="tarjeta">
+      <div class="escala">
+        <div><span class="label">display</span><span class="display">Mapa operativo</span></div>
+        <div><span class="label">headline</span><span class="headline">Calles sin ubicar</span></div>
+        <div><span class="label">title</span><span class="title">Calle 26 x 31 y 33</span></div>
+        <div><span class="label">body</span><span class="body">Ábralas para ubicarlas y que aparezcan en su territorio. Un pin por calle, con sus hechos adentro.</span></div>
+        <div><span class="label">label</span><span class="label">Territorio · Todos los estados</span></div>
+        <div><span class="label">dato</span><span class="dato">REP-2026-000123 · 12 feb 2026 · 3</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-espacio">
+    <header>
+      <h2 class="headline" id="t-espacio">Espacio, radio y elevación</h2>
+      <p>Entre secciones 32–48px; dentro de una tarjeta 20px; entre etiqueta y
+      campo 6px. La sombra nunca es el único separador.</p>
+    </header>
+    <div class="tarjeta">
+      <div class="filas-de-tokens">
+        <div class="fila-de-token"><span class="title">xs</span><span class="dato">4px</span><span class="barra-de-espacio" style="width:4px"></span></div>
+        <div class="fila-de-token"><span class="title">sm</span><span class="dato">8px</span><span class="barra-de-espacio" style="width:8px"></span></div>
+        <div class="fila-de-token"><span class="title">md</span><span class="dato">12px</span><span class="barra-de-espacio" style="width:12px"></span></div>
+        <div class="fila-de-token"><span class="title">lg</span><span class="dato">16px</span><span class="barra-de-espacio" style="width:16px"></span></div>
+        <div class="fila-de-token"><span class="title">xl</span><span class="dato">24px</span><span class="barra-de-espacio" style="width:24px"></span></div>
+        <div class="fila-de-token"><span class="title">xxl</span><span class="dato">32px</span><span class="barra-de-espacio" style="width:32px"></span></div>
+        <div class="fila-de-token"><span class="title">xxxl</span><span class="dato">48px</span><span class="barra-de-espacio" style="width:48px"></span></div>
+      </div>
+    </div>
+    <div class="fila" style="align-items:stretch">
+      <div class="tarjeta" style="flex:1">
+        <h3 class="title" style="margin-bottom:12px">Radio</h3>
+        <div class="fila">
+          <div><div class="caja-de-radio" style="border-radius:var(--radio-sm)"></div><p class="label" style="margin-top:4px">sm 6px</p></div>
+          <div><div class="caja-de-radio" style="border-radius:var(--radio-md)"></div><p class="label" style="margin-top:4px">md 8px</p></div>
+          <div><div class="caja-de-radio" style="border-radius:var(--radio-lg)"></div><p class="label" style="margin-top:4px">lg 12px</p></div>
+          <div><div class="caja-de-radio" style="border-radius:var(--radio-xl)"></div><p class="label" style="margin-top:4px">xl 16px</p></div>
+          <div><div class="caja-de-radio" style="border-radius:var(--radio-pill)"></div><p class="label" style="margin-top:4px">pill</p></div>
+        </div>
+      </div>
+      <div class="tarjeta" style="flex:1">
+        <h3 class="title" style="margin-bottom:12px">Elevación</h3>
+        <div class="fila">
+          <div><div class="muestra-de-sombra" style="box-shadow:var(--sombra-reposo)"></div><p class="label" style="margin-top:8px">reposo · tarjetas y tablas</p></div>
+          <div><div class="muestra-de-sombra" style="box-shadow:var(--sombra-elevada)"></div><p class="label" style="margin-top:8px">elevada · hover accionable</p></div>
+          <div><div class="muestra-de-sombra" style="box-shadow:var(--sombra-flotante)"></div><p class="label" style="margin-top:8px">flotante · lo que tapa contenido</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="t-componentes">
+    <header>
+      <h2 class="headline" id="t-componentes">Componentes</h2>
+      <p>Foco con <code>outline</code> de 2px en marca. Nada de sombra en botones,
+      campos, chips ni filas.</p>
+    </header>
+
+    <div class="fila" style="align-items:stretch">
+      <div class="tarjeta" style="flex:1 1 380px">
+        <h3 class="title" style="margin-bottom:16px">Botones</h3>
+        <div class="fila">
+          <button class="boton primaria" type="button">Nueva persona</button>
+          <button class="boton secundaria" type="button">Actualizar ahora</button>
+          <button class="boton fantasma" type="button">Cancelar</button>
+          <button class="boton peligro" type="button">Dar de baja</button>
+          <button class="boton secundaria" type="button" disabled>Inhabilitado</button>
+        </div>
+      </div>
+      <div class="tarjeta" style="flex:1 1 320px">
+        <h3 class="title" style="margin-bottom:16px">Campos</h3>
+        <div class="fila" style="align-items:flex-start">
+          <div class="campo">
+            <label class="label" for="demo-select">Territorio</label>
+            <select id="demo-select"><option>Todo el municipio</option></select>
+            <p class="label">Acota el mapa a la cabecera o a una comisaría.</p>
+          </div>
+          <div class="campo">
+            <label class="label" for="demo-input">Buscar folio</label>
+            <input id="demo-input" placeholder="REP-2026-000123">
+            <p class="error"><span aria-hidden="true">&#9888;</span> Escriba el folio completo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fila" style="align-items:stretch">
+      <div class="tarjeta" style="flex:1 1 380px">
+        <h3 class="title" style="margin-bottom:16px">Insignias y chips</h3>
+        <div class="fila">
+          <span class="insignia neutro"><span aria-hidden="true">◌</span> Recibido</span>
+          <span class="insignia aviso"><span aria-hidden="true">⚠</span> En atención</span>
+          <span class="insignia exito"><span aria-hidden="true">✓</span> Resuelto</span>
+          <span class="insignia error"><span aria-hidden="true">✕</span> Rechazado</span>
+        </div>
+        <div class="fila" style="margin-top:16px">
+          <a class="chip" href="#t-componentes">Territorio: Motul <span aria-hidden="true">×</span></a>
+          <a class="chip" href="#t-componentes">Estado: Recibido <span aria-hidden="true">×</span></a>
+        </div>
+      </div>
+      <div class="tarjeta" style="flex:1 1 380px">
+        <h3 class="title" style="margin-bottom:16px">Avisos y vacío</h3>
+        <div class="aviso aviso-tono"><span aria-hidden="true">⚠</span><span>Sin calles ubicadas en Ucí. El mapa muestra todo Yucatán.</span></div>
+        <div class="aviso error-tono" style="margin-top:8px"><span aria-hidden="true">⚠</span><span>No se pudo guardar el cambio.</span></div>
+        <div class="vacio">
+          <span style="font-size:40px;line-height:1;color:var(--color-caliza-apagada)" aria-hidden="true">◇</span>
+          <p class="body apagada">Sin resultados para <strong style="color:var(--color-caliza-tinta)">tipo Bache</strong>.</p>
+          <a class="boton secundaria" href="#t-componentes">Quitar el filtro</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <h3 class="title" style="margin-bottom:16px">Tabla y navegación</h3>
+      <div class="fila" style="align-items:flex-start;gap:24px">
+        <div class="tabla" style="flex:1 1 520px">
+          <div class="encabezado">
+            <span class="label">Folio</span><span class="label">Tipo</span><span class="label">Estado</span><span class="label">Registrado</span>
+          </div>
+          <div class="renglon accionable">
+            <a class="enlace dato" href="#t-componentes">REP-2026-000123</a>
+            <span class="label">Bache</span>
+            <span><span class="insignia neutro"><span aria-hidden="true">◌</span> Recibido</span></span>
+            <span class="dato">12 feb 2026</span>
+          </div>
+          <div class="renglon accionable">
+            <a class="enlace dato" href="#t-componentes">REP-2026-000131</a>
+            <span class="label">Bache</span>
+            <span><span class="insignia aviso"><span aria-hidden="true">⚠</span> En atención</span></span>
+            <span class="dato">18 feb 2026</span>
+          </div>
+        </div>
+        <div style="flex:0 0 264px;border:1px solid var(--color-caliza-divisor);border-radius:var(--radio-lg);background:var(--color-caliza-lienzo);overflow:clip">
+          <div class="nav-demo">
+            <a class="municipio" href="#t-componentes">
+              <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" fill="var(--color-marca)"><path d="M12 2 20 5v7c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V5z"/><path d="M8 10h8v2H8zm0 4h5v2H8z" fill="var(--color-marca-texto)"/></svg>
+              Motul
+            </a>
+            <p class="label grupo">Atención</p>
+            <a class="item" href="#t-componentes"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>Padrón</a>
+            <a class="item" href="#t-componentes"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>Reportes</a>
+            <p class="label grupo">Territorio</p>
+            <a class="item activo" aria-current="page" href="#t-componentes"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>Mapa operativo</a>
+            <a class="item" href="#t-componentes"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>Intervenciones</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <h3 class="title" style="margin-bottom:16px">Pin del mapa y leyenda</h3>
+      <div class="leyenda">
+        <div class="pin-demo">
+          <span class="pin" style="background:var(--estado-recibido)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18c1.6-6.5 4.6-10 9-10s7.4 3.5 9 10z"/><path d="M9 17.4a3 3 0 0 1 6 0z"/></svg>
+          </span>
+          <span class="pin atrasado" style="background:var(--estado-en-atencion)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a6 6 0 0 0-3.6 10.8V16h7.2v-2.2A6 6 0 0 0 12 3z"/><path d="M9.5 18h5v2.6h-5z"/></svg>
+            <span class="contador">3</span>
+          </span>
+          <span class="body apagada">El ícono dice qué es, el color cómo está, el aro que lleva<br>demasiado tiempo y el contador que agrupa varios hechos.</span>
+        </div>
+        <div>
+          <ul>
+            <li><span class="punto aro" aria-hidden="true"></span><span>Atrasado · 9 días</span><span class="cuenta">3</span></li>
+            <li><span class="punto" style="background:var(--estado-recibido)" aria-hidden="true"></span><span>Recibido</span><span class="cuenta">5</span></li>
+            <li><span class="punto" style="background:var(--estado-en-atencion)" aria-hidden="true"></span><span>En atención</span><span class="cuenta">3</span></li>
+            <li><span class="punto" style="background:var(--estado-planificada)" aria-hidden="true"></span><span>Planificada</span><span class="cuenta">2</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="nota" style="margin-top:48px">
+    <span aria-hidden="true">◇</span>
+    <span><strong>Diferencias registradas:</strong> el código de producción dibuja
+    el borde del pin con <code>#fff</code> y el aro de atraso con
+    <code>#b91c1c</code> en línea. Aquí se muestran con
+    <code>caliza-lienzo</code> y <code>senial-error</code>, que son los tokens de
+    ese rol. Los colores de estado del mapa viajan como dato del servidor.</span>
+  </p>
+</main>
+</body>
+</html>
