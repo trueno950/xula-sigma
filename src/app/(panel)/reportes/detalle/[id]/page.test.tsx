@@ -2,20 +2,22 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * T1 · un reporte terminal (`RESUELTO`, `RECHAZADO`) no tiene transiciones
- * validas, pero la pagina envolvia a `AccionesDeReporte` -que devuelve
- * `null` cuando no hay destinos- en una tarjeta "Transiciones" vacia.
- *
- * El test mira la pagina y no el componente: la tarjeta es de la pagina, y
- * la decision de no montarla cuando el estado es terminal es justo lo que
- * se corrige. El componente se deja real (no se mockea el sujeto).
+ * S11-S15 de `reportes-ux`: el detalle en dos columnas, con la ficha a la
+ * izquierda y el panel de acciones a la derecha. El test mira la pagina y no
+ * los componentes: la composicion -que panel se monta y cual no- es de la
+ * pagina, y las Server Actions se mockean porque el sujeto es el marcado.
  */
 const contextoActualMock = vi.hoisted(() => vi.fn());
-const reportePorIdMock = vi.hoisted(() => vi.fn());
+const detalleDeReporteMock = vi.hoisted(() => vi.fn());
 const historialDeReporteMock = vi.hoisted(() => vi.fn());
+const leerUmbralDeAtrasoMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: vi.fn(), redirect: vi.fn() }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
+vi.mock("@/shared/lib/fecha", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/lib/fecha")>()),
+  hoyEnMerida: () => "2026-11-20",
+}));
 vi.mock("@/modules/reportes/ui/actions/cambiarEstadoAction", () => ({
   cambiarEstadoAction: "estado-action",
 }));
@@ -24,8 +26,9 @@ vi.mock("@/modules/reportes/ui/actions/asignarAreaAction", () => ({
 }));
 vi.mock("@/modules/reportes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/reportes")>()),
-  reportePorId: reportePorIdMock,
+  detalleDeReporte: detalleDeReporteMock,
   historialDeReporte: historialDeReporteMock,
+  leerUmbralDeAtraso: leerUmbralDeAtrasoMock,
 }));
 vi.mock("@/modules/intervenciones", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/intervenciones")>()),
@@ -45,15 +48,24 @@ const reporte = (estado: Estado) => ({
   estado,
   areaResponsable: null,
   lugarId: "lugar-1",
-  calleId: null,
+  calleId: "calle-1",
   referencia: null,
   descripcion: "Bache en la calle 20",
   personaId: null,
   motivoDeRechazo: null,
   duplicadoDeReporteId: null,
   registradoPorUsuarioId: "u1",
-  registradoEn: new Date("2026-01-01T18:00:00Z"),
-  actualizadoEn: new Date("2026-01-01T18:00:00Z"),
+  registradoEn: new Date("2026-11-16T17:15:00Z"),
+  actualizadoEn: new Date("2026-11-16T17:15:00Z"),
+  fechaDeRegistro: "2026-11-16",
+  ubicacion: {
+    modo: "CALLE" as const,
+    lugar: "Colonia Centro",
+    calleId: "calle-1",
+    calle: "Calle 26",
+    domicilio: null,
+    raizId: "raiz-1",
+  },
 });
 
 const html = async () =>
@@ -72,70 +84,94 @@ beforeEach(() => {
     origen: "web",
   });
   historialDeReporteMock.mockResolvedValue([]);
+  leerUmbralDeAtrasoMock.mockResolvedValue(7);
 });
 
 describe("detalle de un reporte con transiciones", () => {
-  it("un reporte recibido conserva la tarjeta y sus acciones", async () => {
-    reportePorIdMock.mockResolvedValue(reporte("RECIBIDO"));
+  it("el panel de acciones lleva el paso siguiente y lo demas plegado", async () => {
+    detalleDeReporteMock.mockResolvedValue(reporte("RECIBIDO"));
 
     const pagina = await html();
 
-    expect(pagina).toContain("Transiciones");
+    expect(pagina).toContain(">Acciones<");
+    expect(pagina).toContain("Siguiente paso");
     expect(pagina).toContain("Marcar en atención");
-    expect(pagina).toContain("Marcar resuelto");
-    expect(pagina).toContain("Asignar área");
+    expect(pagina).toContain("Asignar área…");
+    expect(pagina).not.toContain("Transiciones");
+    expect(pagina.indexOf("Rechazar reporte…")).toBeGreaterThan(
+      pagina.indexOf("Asignar área…"),
+    );
+  });
+});
+
+describe("detalle de un reporte, donde ocurrio y cuando se registro", () => {
+  it("la linea bajo el folio y la ficha nombran la ubicacion y la fecha", async () => {
+    detalleDeReporteMock.mockResolvedValue(reporte("RECIBIDO"));
+
+    const pagina = await html();
+
+    expect(pagina).toContain("Bache en Calle 26, Colonia Centro");
+    expect(pagina).toContain(">Fecha de registro<");
+    expect(pagina).toContain("16 nov 2026");
+    expect(pagina).toContain('href="/calles/calle-1/historial"');
+    expect(pagina).toContain('href="/mapa-operativo?lugar=raiz-1"');
+  });
+
+  it("el atraso se marca con la misma insignia que la bandeja", async () => {
+    detalleDeReporteMock.mockResolvedValue(reporte("RECIBIDO"));
+    leerUmbralDeAtrasoMock.mockResolvedValue(3);
+
+    expect(await html()).toContain("Atrasado · 4 días");
   });
 });
 
 describe("detalle de un reporte en estado terminal", () => {
-  it("un reporte resuelto no deja una tarjeta de transiciones vacia", async () => {
-    reportePorIdMock.mockResolvedValue(reporte("RESUELTO"));
+  it.each(["RESUELTO", "RECHAZADO"] as const)(
+    "un reporte %s no monta el panel y lo dice en la ficha",
+    async (estado) => {
+      detalleDeReporteMock.mockResolvedValue(reporte(estado));
 
-    const pagina = await html();
+      const pagina = await html();
 
-    expect(pagina).not.toContain("Transiciones");
-    expect(pagina).toContain("REP-2026-000123");
-    expect(pagina).toContain("Historial");
-  });
-
-  it("un reporte rechazado tampoco deja la tarjeta", async () => {
-    reportePorIdMock.mockResolvedValue(reporte("RECHAZADO"));
-
-    expect(await html()).not.toContain("Transiciones");
-  });
+      expect(pagina).not.toContain(">Acciones<");
+      expect(pagina).toContain("Sin acciones: el reporte está cerrado.");
+      expect(pagina).toContain("REP-2026-000123");
+      expect(pagina).toContain("Historial");
+    },
+  );
 });
 
 describe("detalle de un reporte sin permiso de administrar", () => {
-  it("un rol sin permiso no ve acciones ni tarjeta y si el aviso", async () => {
+  it("un rol sin permiso ve el aviso de permiso en vez del panel", async () => {
     contextoActualMock.mockResolvedValue({
       ayuntamientoId: "motul",
       usuario: { id: "u2", rol: "OPERADOR" },
       origen: "web",
     });
-    reportePorIdMock.mockResolvedValue(reporte("RECIBIDO"));
+    detalleDeReporteMock.mockResolvedValue(reporte("RECIBIDO"));
 
     const pagina = await html();
 
-    expect(pagina).not.toContain("Transiciones");
+    expect(pagina).not.toContain(">Acciones<");
     expect(pagina).not.toContain("Asignar área");
     expect(pagina).toContain("Su rol no permite cambiar el estado");
   });
 });
 
 describe("programar obra desde el detalle del reporte", () => {
-  it("un reporte recibido ofrece programar obra", async () => {
-    reportePorIdMock.mockResolvedValue(reporte("RECIBIDO"));
+  it("un reporte recibido ofrece programar obra dentro del panel", async () => {
+    detalleDeReporteMock.mockResolvedValue(reporte("RECIBIDO"));
 
     const pagina = await html();
 
-    expect(pagina).toContain("Programar obra");
+    expect(pagina).toContain("Programar obra…");
     expect(pagina).toContain("formulario de programar obra");
   });
 
   it.each(["RESUELTO", "RECHAZADO"] as const)(
     "un reporte %s ya no admite obra",
     async (estado) => {
-      reportePorIdMock.mockResolvedValue(reporte(estado));
+      detalleDeReporteMock.mockResolvedValue(reporte(estado));
 
       const pagina = await html();
 
@@ -150,7 +186,7 @@ describe("programar obra desde el detalle del reporte", () => {
       usuario: { id: "u2", rol: "OPERADOR" },
       origen: "web",
     });
-    reportePorIdMock.mockResolvedValue(reporte("RECIBIDO"));
+    detalleDeReporteMock.mockResolvedValue(reporte("RECIBIDO"));
 
     expect(await html()).not.toContain("formulario de programar obra");
   });

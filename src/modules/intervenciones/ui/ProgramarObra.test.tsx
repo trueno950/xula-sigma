@@ -24,6 +24,31 @@ describe("ProgramarObra", () => {
     expect(html).toContain("Programar obra");
   });
 
+  it("suelto conserva su tarjeta y su titulo, como en Intervenciones", () => {
+    const html = renderToStaticMarkup(
+      <ProgramarObra reporteId={REPORTE} tipos={tipos} />,
+    );
+
+    expect(html).toContain("Obra a programar");
+    expect(html).toContain("shadow-reposo");
+  });
+
+  /**
+   * S14 de `reportes-ux`: dentro del panel de acciones el desplegable ya dice
+   * «Programar obra», asi que la tarjeta y el titulo se repetian dos veces.
+   */
+  it("embebido no repite la tarjeta ni el titulo del panel que lo contiene", () => {
+    const html = renderToStaticMarkup(
+      <ProgramarObra reporteId={REPORTE} tipos={tipos} embebido />,
+    );
+
+    expect(html).not.toContain("Obra a programar");
+    expect(html).not.toContain("shadow-reposo");
+    expect(html).toContain("Tipo de obra");
+    expect(html).toContain("Descripción del trabajo");
+    expect(html).toContain("Programar obra");
+  });
+
   it("no pide la ubicacion: se copia del reporte", () => {
     const html = renderToStaticMarkup(
       <ProgramarObra reporteId={REPORTE} tipos={tipos} />,

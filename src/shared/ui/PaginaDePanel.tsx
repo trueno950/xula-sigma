@@ -5,6 +5,12 @@ const ANCHOS = {
   lista: "max-w-[1200px]",
   /** Detalle de un registro. */
   detalle: "max-w-[720px]",
+  /**
+   * Detalle de dos columnas: la ficha y la linea de tiempo a la izquierda, y
+   * una columna propia de 320px para las acciones (S13 de `reportes-ux`,
+   * diferencia declarada con `design/system.md` seccion 7).
+   */
+  detalleAmplio: "max-w-[1040px]",
   /** Captura: angosto a proposito, para que el campo no se estire. */
   formulario: "max-w-[720px]",
 } as const;

@@ -59,7 +59,7 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3 
 - [x] **T1** (S4, S11) lugar, calle o domicilio, y fecha, en la lectura de la bandeja y del detalle — worker — commit: `cf8da6c`
 - [ ] **T2** (S1-S6) bandeja según la dirección elegida — worker — commit:
 - [x] **T3** (S7-S10) formulario de alta — worker — commit: siguiente
-- [ ] **T4** (S11-S15) detalle según la dirección elegida — worker — commit:
+- [ ] **T4** (S11-S15) detalle según `design/reportes-detalle/01-ficha-y-acciones.html` (L7) — worker — commit:
 - [ ] **T5** (S1-S16) verificación, revisión nativa, PR y merge — verify — commit:
 
 ## Log
@@ -98,3 +98,27 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3 
     inferior, y el E2E con cajas a 390×844 queda como verificación.
   - Verificado: unit 134, E2E `reportes` 8/8, `direccionDeReporte` 2/2,
     tipos, biome y `pnpm reglas`.
+- **L7** — El usuario eligió el detalle desde el lienzo: «Implement the
+  design artboard design/reportes-detalle/01-ficha-y-acciones.html».
+  `01-ficha-y-acciones.html` es la dirección elegida;
+  `02-encabezado-de-trabajo.html` queda como alternativa. Arranca T4. La
+  bandeja todavía no tiene elección, así que T2 sigue esperando.
+- **L8** — T4 hecho según `01-ficha-y-acciones.html`.
+  - Desde 1024 px son dos columnas. A la izquierda, ficha e historial
+    (`FichaDeReporte` y `HistorialDeReporte`). A la derecha, el panel
+    `PanelDeAcciones`, pegado arriba.
+  - El panel lleva el primer paso válido como primario, el otro como
+    secundario, «Programar obra…» y «Asignar área…» como `<details>`, y
+    «Rechazar reporte…» al final, tras un divisor.
+  - `ProgramarObra` gana `embebido`: sin tarjeta propia ni título
+    duplicado. Por defecto no cambia.
+  - `PaginaDePanel` gana `ancho="detalleAmplio"` (1040 px). Los anchos
+    existentes no cambian.
+  - Se actualizó a propósito `e2e/intervenciones.spec.ts`: abre el
+    desplegable «Programar obra…» en vez de esperar un encabezado visible.
+  - Verificado:
+    - unit 482 archivos / 2933 tests;
+    - E2E de reportes, detalle, intervenciones y dirección de reporte:
+      18/18;
+    - tipos, biome y `pnpm reglas`;
+    - capturas a 1440 y 390 contra el tablero.
