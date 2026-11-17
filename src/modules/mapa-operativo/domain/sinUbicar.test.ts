@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { agruparCallesSinUbicar, hrefDeUbicacion } from "./sinUbicar";
+import {
+  agruparCallesSinUbicar,
+  contarSinUbicar,
+  hrefDeUbicacion,
+} from "./sinUbicar";
 
 const COMISARIA = "11111111-1111-4111-8111-111111111111";
 const COLONIA = "22222222-2222-4222-8222-222222222222";
@@ -94,5 +98,29 @@ describe("agruparCallesSinUbicar", () => {
     expect(agruparCallesSinUbicar({ calles: [], permitidos: null })).toEqual(
       [],
     );
+  });
+});
+
+/**
+ * S6: la pestana "Sin ubicar (N)" y el resumen cuentan lo mismo que se ve
+ * adentro: las calles sin punto mas los hechos que no se pueden dibujar. Dos
+ * cuentas distintas para el mismo numero es la forma de que la pestana diga 5
+ * y la lista tenga 4.
+ */
+describe("contarSinUbicar", () => {
+  it("suma las calles sin punto de cada territorio y los hechos sin dibujar", () => {
+    const grupos = agruparCallesSinUbicar({
+      calles: [
+        calle({ calleId: "calle-1", calleNombre: "Calle 20" }),
+        calle({ calleId: "calle-2", calleNombre: "Calle 22" }),
+      ],
+      permitidos: null,
+    });
+
+    expect(contarSinUbicar({ territorios: grupos, hechos: 2 })).toBe(4);
+  });
+
+  it("sin calles ni hechos pendientes cuenta cero", () => {
+    expect(contarSinUbicar({ territorios: [], hechos: 0 })).toBe(0);
   });
 });

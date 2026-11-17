@@ -31,6 +31,21 @@ export type TerritorioSinUbicar = {
 };
 
 /**
+ * Cuantos elementos esperan en la pestana «Sin ubicar» (S6): las calles sin
+ * punto y los hechos que no se pueden dibujar. Es el N de la pestana y el del
+ * resumen, y por eso vive aca y no en la UI: dos cuentas distintas para el
+ * mismo numero terminan diciendo 5 arriba y 4 abajo.
+ */
+export const contarSinUbicar = (datos: {
+  territorios: readonly TerritorioSinUbicar[];
+  hechos: number;
+}): number =>
+  datos.territorios.reduce(
+    (total, territorio) => total + territorio.calles.length,
+    datos.hechos,
+  );
+
+/**
  * El enlace a la pantalla que permite ubicar la calle: el registro
  * territorial con la raiz, el nodo dueno y la accion ya abiertos. Se arma
  * aca, con las claves de la URL tal como las lee

@@ -14,6 +14,7 @@ export const CAJA = cajaDePuntos([{ latitud: 20.9, longitud: -89.6 }]);
 
 const comun = (tipo: string, estado: string) => ({
   tipo,
+  estado,
   etiquetaDeTipo: tipo === "OBRA" ? "Obra" : "Bache",
   etiquetaDeEstado: estado === "RECIBIDO" ? "Recibido" : "Planificada",
   icono: iconoDe(tipo),
@@ -60,6 +61,9 @@ export const marcadorDe = (
   hechos,
   icono: hechos[0]?.icono ?? "OTRO",
   color: hechos[0]?.color ?? colorDeEstado("INVENTADO"),
+  orden: 1,
+  calleNombre: "Calle 26 x 31 y 33",
+  territorioNombre: "Motul",
   ...extra,
 });
 
@@ -73,7 +77,11 @@ export const mapaDe = (
   marcadores: [],
   cobertura: [],
   conteos: { reportes: 0, intervenciones: 0, total: 0 },
-  leyenda: { tipos: [], estados: [], atrasados: 0 },
+  leyenda: { tipos: [], estados: [], atrasados: 0, total: 0 },
   sinUbicar: [],
   ...parcial,
 });
+
+/** El texto que ve la operadora: lo mismo que `textContent` en el navegador. */
+export const textoPlano = (html: string): string =>
+  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");

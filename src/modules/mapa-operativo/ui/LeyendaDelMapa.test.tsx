@@ -39,7 +39,7 @@ describe("LeyendaDelMapa", () => {
 
   it("no dibuja una leyenda vacia", () => {
     const html = renderToStaticMarkup(
-      <LeyendaDelMapa leyenda={{ tipos: [], estados: [], atrasados: 0 }} />,
+      <LeyendaDelMapa leyenda={{ tipos: [], estados: [], atrasados: 0, total: 0 }} />,
     );
 
     expect(html).toBe("");

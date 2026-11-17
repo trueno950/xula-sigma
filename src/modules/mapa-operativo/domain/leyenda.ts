@@ -23,6 +23,12 @@ export type LeyendaDelMapa = {
   estados: readonly EntradaDeEstado[];
   /** Reportes que pasaron el umbral de atraso del municipio (S1). */
   atrasados: number;
+  /**
+   * Los hechos que la leyenda resume (S3): la cabecera plegable lo muestra y
+   * es el mismo total que la fila de resumen, contado sobre los hechos y no
+   * sobre los pines.
+   */
+  total: number;
 };
 
 export type HechoContable = {
@@ -78,5 +84,6 @@ export function construirLeyenda(
     estados: [...estados.values()],
     atrasados: hechos.filter((hecho) => (hecho.diasDeAtraso ?? null) !== null)
       .length,
+    total: hechos.length,
   };
 }

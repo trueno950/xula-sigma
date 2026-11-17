@@ -36,8 +36,12 @@ type LecturasDelMapa = {
   territorios: readonly TerritorioParaMapaOperativo[];
   raiz: TerritorioParaMapaOperativo | null;
   permitidos: ReadonlySet<string> | null;
+  territorioDeLugar: ReadonlyMap<string, string>;
   atraso: AtrasoDelMapa;
 };
+
+/** Los descendientes de cada raiz consultada, por id de raiz. */
+type Subarboles = ReadonlyMap<string, readonly string[]>;
 
 const contar = (hechos: readonly Hecho[]) => ({
   reportes: hechos.filter((h) => h.recurso === "REPORTE").length,
@@ -50,18 +54,51 @@ const puntosUbicados = (calles: readonly CalleParaMapaOperativo[]) =>
 
 /**
  * `null` es «todo el municipio», y tambien lo es cualquier lugar que no sea
- * una raiz (`raizElegida`): no se consulta el subarbol ni se filtra. El
- * conjunto lleva la raiz ademas de sus descendientes porque `subarbol` no
- * devuelve la raiz misma.
+ * una raiz (`raizElegida`): no se filtra. El conjunto lleva la raiz ademas de
+ * sus descendientes porque `subarbol` no devuelve la raiz misma.
  */
-async function lugaresPermitidos(
+const permitidosDe = (
+  raiz: TerritorioParaMapaOperativo | null,
+  subarboles: Subarboles,
+): ReadonlySet<string> | null =>
+  raiz === null ? null : new Set([raiz.id, ...(subarboles.get(raiz.id) ?? [])]);
+
+/**
+ * Una lectura del subarbol por raiz consultada: con `?lugar=` alcanza una, y
+ * sin el son las raices del municipio -la cabecera y sus comisarias-, porque
+ * cada pin declara a que territorio pertenece su calle.
+ */
+async function subarbolesDe(
   fuentes: FuentesDeMapa,
   contexto: ContextoActual,
-  raiz: TerritorioParaMapaOperativo | null,
-): Promise<ReadonlySet<string> | null> {
-  if (!raiz) return null;
-  const descendientes = await fuentes.lugaresDelSubarbol(contexto, raiz.id);
-  return new Set([raiz.id, ...descendientes]);
+  raices: readonly TerritorioParaMapaOperativo[],
+): Promise<Subarboles> {
+  const entradas = await Promise.all(
+    raices.map(
+      async (raiz) =>
+        [raiz.id, await fuentes.lugaresDelSubarbol(contexto, raiz.id)] as const,
+    ),
+  );
+  return new Map(entradas);
+}
+
+/**
+ * El nombre de la raiz de cada lugar, para que la fila de una calle diga a que
+ * territorio pertenece. Un lugar que no cuelga de ninguna raiz consultada no
+ * aparece: la fila omite el territorio antes que inventarlo.
+ */
+function territorioDeLugar(
+  raices: readonly TerritorioParaMapaOperativo[],
+  subarboles: Subarboles,
+): ReadonlyMap<string, string> {
+  const porLugar = new Map<string, string>();
+  for (const raiz of raices) {
+    porLugar.set(raiz.id, raiz.nombre);
+    for (const lugarId of subarboles.get(raiz.id) ?? []) {
+      if (!porLugar.has(lugarId)) porLugar.set(lugarId, raiz.nombre);
+    }
+  }
+  return porLugar;
 }
 
 /**
@@ -90,7 +127,8 @@ async function leerMapa(
     fuentes.umbralDeAtraso(contexto),
   ]);
   const raiz = raizElegida(territorios, lugar);
-  const permitidos = await lugaresPermitidos(fuentes, contexto, raiz);
+  const raices = raiz ? [raiz] : territorios;
+  const subarboles = await subarbolesDe(fuentes, contexto, raices);
   return {
     calles,
     callesSinUbicar,
@@ -98,7 +136,8 @@ async function leerMapa(
     intervenciones,
     territorios,
     raiz,
-    permitidos,
+    permitidos: permitidosDe(raiz, subarboles),
+    territorioDeLugar: territorioDeLugar(raices, subarboles),
     atraso: { umbral, hoy: hoyEnMerida() },
   };
 }
@@ -112,6 +151,7 @@ function componerMapa(
     territorios,
     raiz,
     permitidos,
+    territorioDeLugar,
     atraso,
   }: LecturasDelMapa,
   filtros: FiltrosDeMapa,
@@ -125,7 +165,11 @@ function componerMapa(
     puntos,
     permitidos,
   );
-  const { marcadores, cobertura } = clasificar(hechos, puntos);
+  const { marcadores, cobertura } = clasificar(
+    hechos,
+    puntos,
+    territorioDeLugar,
+  );
   const conteos = contar(hechos);
   return {
     estado: conteos.total === 0 ? "VACIO" : "CON_DATOS",
