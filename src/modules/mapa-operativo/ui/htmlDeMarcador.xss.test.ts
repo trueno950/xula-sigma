@@ -29,6 +29,9 @@ const ETIQUETAS_PERMITIDAS: ReadonlySet<string> = new Set([
   "time",
   // S1: los dias de atraso van en negrita dentro de la ventana.
   "strong",
+  // S5: la cabecera de la ventana dice el nombre de la calle y cuantos
+  // hechos lleva.
+  "p",
 ]);
 
 const CARGA = '"><img src=x onerror=alert(1)>';
@@ -46,16 +49,21 @@ const etiquetasAjenas = (html: string): readonly string[] =>
   etiquetasDe(html).filter((etiqueta) => !ETIQUETAS_PERMITIDAS.has(etiqueta));
 
 const marcadorHostil = (): MarcadorDeMapa =>
-  marcadorDe([
-    {
-      ...HECHO_DE_REPORTE,
-      etiqueta: CARGA,
-      href: CARGA,
-      etiquetaDeTipo: CARGA,
-      etiquetaDeEstado: CARGA,
-      color: COLOR_CARGA,
-    },
-  ]);
+  marcadorDe(
+    [
+      {
+        ...HECHO_DE_REPORTE,
+        etiqueta: CARGA,
+        href: CARGA,
+        etiquetaDeTipo: CARGA,
+        etiquetaDeEstado: CARGA,
+        color: COLOR_CARGA,
+      },
+    ],
+    // S5: la ventana ahora nombra la calle, y ese nombre tambien viene de la
+    // base de datos.
+    { calleNombre: CARGA, territorioNombre: CARGA },
+  );
 
 describe("html del mapa: solo las etiquetas que el modulo escribe", () => {
   it("el pin no deja pasar ninguna etiqueta ajena", () => {
@@ -81,7 +89,7 @@ describe("html del mapa: solo las etiquetas que el modulo escribe", () => {
    * etiquetas permitidas no tenia `strong`, y la sonda pasaba solo porque su
    * unico fixture llevaba `diasDeAtraso: null`, que no imprime la senal.
    */
-  it("con fecha y atraso escribe exactamente a, li, strong, time y ul", () => {
+  it("con fecha y atraso escribe exactamente a, li, p, strong, time y ul", () => {
     const html = htmlDeLaVentana(
       marcadorDe([], {
         hechos: [
@@ -96,10 +104,18 @@ describe("html del mapa: solo las etiquetas que el modulo escribe", () => {
           },
           HECHO_DE_INTERVENCION,
         ],
+        calleNombre: CARGA,
       }),
     );
 
-    expect(etiquetasUsadas(html)).toEqual(["a", "li", "strong", "time", "ul"]);
+    expect(etiquetasUsadas(html)).toEqual([
+      "a",
+      "li",
+      "p",
+      "strong",
+      "time",
+      "ul",
+    ]);
     expect(etiquetasAjenas(html)).toEqual([]);
     expect(html).toContain("&lt;img");
     expect(html).not.toContain("<img");

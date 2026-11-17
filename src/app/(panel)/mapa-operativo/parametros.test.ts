@@ -79,7 +79,7 @@ describe("leerParametrosDeMapa", () => {
     expect(parametros.area).toBeUndefined();
   });
 
-  it("sin parametros, todo cae a undefined", () => {
+  it("sin parametros, todo cae a undefined y el panel arranca en el mapa", () => {
     const parametros = leerParametrosDeMapa({});
 
     expect(parametros).toEqual({
@@ -87,7 +87,37 @@ describe("leerParametrosDeMapa", () => {
       estado: undefined,
       area: undefined,
       lugar: undefined,
+      panel: "en-el-mapa",
     });
+  });
+});
+
+/**
+ * S4: la pestana elegida viaja en la URL. Sin JavaScript es la unica forma de
+ * cambiar de lista, asi que un valor invalido no puede tirar la pantalla: cae
+ * al panel del mapa y los filtros siguen vigentes.
+ */
+describe("leerParametrosDeMapa: pestana del panel", () => {
+  it("acepta la pestana de lo que no se puede dibujar", () => {
+    expect(leerParametrosDeMapa({ panel: "sin-ubicar" }).panel).toBe(
+      "sin-ubicar",
+    );
+  });
+
+  it("un panel inventado cae al mapa sin romper el resto", () => {
+    const parametros = leerParametrosDeMapa({
+      panel: "otro",
+      estado: "RECIBIDO",
+    });
+
+    expect(parametros.panel).toBe("en-el-mapa");
+    expect(parametros.estado).toBe("RECIBIDO");
+  });
+
+  it("panel=a&panel=b (string[]) cae al mapa", () => {
+    expect(
+      leerParametrosDeMapa({ panel: ["sin-ubicar", "en-el-mapa"] }).panel,
+    ).toBe("en-el-mapa");
   });
 });
 

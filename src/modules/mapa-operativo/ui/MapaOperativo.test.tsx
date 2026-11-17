@@ -1,171 +1,191 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { comoIdDeIntervencionEnMapa } from "../domain";
 import { MapaOperativo } from "./MapaOperativo";
 import {
   HECHO_DE_INTERVENCION,
   HECHO_DE_REPORTE,
   mapaDe,
   marcadorDe,
+  textoPlano,
 } from "./mapaDePrueba";
 
-describe("MapaOperativo", () => {
-  it("distingue hechos y declara que la ubicacion de calle es aproximada", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo
-        filtros={{}}
-        mapa={mapaDe({
-          marcadores: [
-            marcadorDe([HECHO_DE_REPORTE]),
-            marcadorDe([HECHO_DE_INTERVENCION], { clave: "calle-2" }),
-          ],
-          conteos: { reportes: 1, intervenciones: 1, total: 2 },
-        })}
-      />,
-    );
+const CON_UN_HECHO_ATRASADO = {
+  ...HECHO_DE_REPORTE,
+  diasDeAtraso: 9,
+};
 
-    expect(html).toContain("Ubicación aproximada de la calle");
-    expect(html).toMatch(/1 reporte(?!s)/);
-    expect(html).toMatch(/1 intervención(?!es)/);
-    expect(html).toContain("Reporte ciudadano");
-    expect(html).toContain("Intervención municipal");
-    expect(html).toContain('href="/reportes/detalle/reporte-1"');
-    expect(html).toContain('href="/intervenciones/intervencion-1"');
-    expect(html).toContain('method="get"');
-    expect(html).toContain('name="tipo"');
-    expect(html).toContain('name="estado"');
-    expect(html).toContain('name="area"');
+const mapaConHechos = () =>
+  mapaDe({
+    marcadores: [
+      marcadorDe([HECHO_DE_REPORTE, HECHO_DE_INTERVENCION], {
+        orden: 1,
+        historiaHref: "/calles/calle-3/historial",
+      }),
+    ],
+    conteos: { reportes: 1, intervenciones: 1, total: 2 },
+    leyenda: {
+      tipos: [],
+      estados: [],
+      atrasados: 1,
+      total: 2,
+    },
   });
 
-  it("los filtros ofrecen etiquetas legibles y conservan el codigo como valor", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo filtros={{}} mapa={mapaDe({ estado: "VACIO" })} />,
-    );
+const render = (mapa = mapaConHechos(), filtros = {}) =>
+  renderToStaticMarkup(
+    <MapaOperativo panel="en-el-mapa" filtros={filtros} mapa={mapa} />,
+  );
 
-    expect(html).toContain('<option value="ALUMBRADO">Alumbrado</option>');
-    expect(html).toContain(
-      '<option value="EN_EJECUCION">En ejecución</option>',
-    );
-    expect(html).toContain(
-      '<option value="AGUA_POTABLE_Y_DRENAJE">Agua potable y drenaje</option>',
+describe("MapaOperativo: orden de la pantalla (S1)", () => {
+  it("pone la barra de filtros, despues el resumen con chips y al final el mapa con su panel", () => {
+    const html = render(mapaConHechos(), { estado: "RECIBIDO" });
+
+    const filtros = html.indexOf('aria-label="Filtros del mapa"');
+    const resumen = html.indexOf('aria-label="Resumen del mapa"');
+    const mapa = html.indexOf('aria-label="Mapa de hechos por calle"');
+
+    expect(filtros).toBeGreaterThan(-1);
+    expect(resumen).toBeGreaterThan(filtros);
+    expect(mapa).toBeGreaterThan(resumen);
+  });
+
+  it("resume en numeros fuertes: hechos, calles dibujadas, atrasados y sin ubicar", () => {
+    const html = render();
+
+    expect(textoPlano(html)).toContain(
+      "2 hechos 1 calle en el mapa 1 atrasado 0 sin ubicar",
     );
   });
 
-  it("declara la calle en la cobertura faltante por calle sin punto", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo
-        filtros={{}}
-        mapa={mapaDe({
-          cobertura: [
-            {
-              id: comoIdDeIntervencionEnMapa("intervencion-2"),
-              recurso: "INTERVENCION",
-              etiqueta: "OBRA",
-              href: "/intervenciones/intervencion-2",
-              razon: "CALLE_SIN_PUNTO",
-              calle: "Calle 60",
-            },
-          ],
-          conteos: { reportes: 0, intervenciones: 1, total: 1 },
-        })}
-      />,
+  /**
+   * Con cero atrasados el numero no se pinta en la senal de error: una alarma
+   * permanente por algo que no pasa deja de significar algo.
+   */
+  it("pinta el numero de atrasados en senal solo cuando hay alguno", () => {
+    const conAtraso = render();
+    const sinAtraso = render(
+      mapaDe({
+        marcadores: [marcadorDe([HECHO_DE_REPORTE])],
+        conteos: { reportes: 1, intervenciones: 0, total: 1 },
+      }),
     );
 
-    expect(html).toContain("calle sin punto: Calle 60");
+    expect(conAtraso).toContain("text-senial-error");
+    expect(sinAtraso).not.toContain("text-senial-error");
   });
 
-  it("muestra un vacio explicito cuando el filtro no deja hechos", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo
-        filtros={{}}
-        mapa={mapaDe({
-          estado: "VACIO",
-          conteos: { reportes: 0, intervenciones: 0, total: 0 },
-        })}
-      />,
-    );
+  it("muestra cada filtro puesto como chip removible, con los otros conservados", () => {
+    const html = render(mapaConHechos(), { tipo: "BACHE", area: undefined });
 
-    expect(html).toContain("No hay hechos para los filtros seleccionados.");
-    expect(html).toContain("0 reportes");
-    expect(html).toContain("0 intervenciones");
+    expect(html).toContain("Tipo: Bache");
+    expect(html).toContain('href="/mapa-operativo"');
   });
 
-  it("enlaza cada hecho ubicado al historial de su calle sin reemplazar su detalle", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo
-        filtros={{}}
-        mapa={mapaDe({
-          marcadores: [
-            marcadorDe([HECHO_DE_REPORTE], {
-              historiaHref: "/calles/calle-3/historial",
-            }),
-          ],
-          conteos: { reportes: 1, intervenciones: 0, total: 1 },
-        })}
-      />,
-    );
+  /**
+   * S2: los filtros se pliegan detras de un `<details>` que cuenta los
+   * puestos, y arrancan plegados. El cliente los abre desde 1024px; el HTML
+   * del servidor no lleva `open`, que es lo que hace que en el telefono el
+   * mapa quede justo debajo del resumen.
+   */
+  it("los filtros se pliegan detras de un details que cuenta los puestos", () => {
+    const sinFiltros = render();
+    const conFiltros = render(mapaConHechos(), {
+      tipo: "BACHE",
+      estado: "RECIBIDO",
+    });
 
-    expect(html).toContain('href="/reportes/detalle/reporte-1"');
-    expect(html).toContain('href="/calles/calle-3/historial"');
-    expect(html).toContain("Ver historial de calle");
+    expect(sinFiltros).toContain("<details");
+    expect(sinFiltros).not.toContain("<details open");
+    expect(textoPlano(sinFiltros)).toContain("Filtros (0)");
+    expect(textoPlano(conFiltros)).toContain("Filtros (2)");
   });
 
-  it("la lista sin JavaScript muestra el conteo del marcador agrupado y cada hecho", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo
-        filtros={{}}
-        mapa={mapaDe({
-          marcadores: [marcadorDe([HECHO_DE_REPORTE, HECHO_DE_INTERVENCION])],
-          conteos: { reportes: 1, intervenciones: 1, total: 2 },
-        })}
-      />,
-    );
+  it("la ubicacion aproximada se dice en la cabecera del mapa, una sola vez", () => {
+    const html = render();
+    const apariciones =
+      html.split("Ubicación aproximada de la calle").length - 1;
 
-    expect(html).toContain("2 hechos en esta calle");
-    expect(html).toContain("REP-1");
-    expect(html).toContain("Obra");
-    expect(html).toContain("Recibido");
-    expect(html).toContain("Planificada");
+    expect(apariciones).toBe(1);
+    expect(html).toContain("1 calle con hechos");
   });
 });
 
-describe("MapaOperativo, calles sin ubicar por territorio (S3)", () => {
-  const CALLE_SIN_PUNTO = {
-    id: "calle-9",
-    nombre: "Calle 21",
-    href: "/territorio?raiz=raiz-1&nodo=lugar-1&vista=calles&accion=ubicarCalle&calle=calle-9",
-  };
-
-  it("dice cuántas calles no tienen punto y enlaza cada una para ubicarla", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo
-        filtros={{}}
-        mapa={mapaDe({
-          sinUbicar: [
-            {
-              id: "raiz-1",
-              nombre: "Comisaría de Kinchil",
-              calles: [CALLE_SIN_PUNTO],
-            },
-          ],
-        })}
-      />,
+describe("MapaOperativo: la calle de cada fila (S4 y S5)", () => {
+  it("numera la fila igual que el pin y nombra la calle y su territorio", () => {
+    const html = render(
+      mapaDe({
+        marcadores: [
+          marcadorDe([HECHO_DE_REPORTE], {
+            orden: 3,
+            calleNombre: "Calle 21",
+            territorioNombre: "Motul",
+          }),
+        ],
+        conteos: { reportes: 1, intervenciones: 0, total: 1 },
+      }),
     );
 
-    expect(html).toContain('aria-label="Calles sin ubicar"');
-    expect(html).toContain("Comisaría de Kinchil");
-    expect(html).toContain(
-      `href="${CALLE_SIN_PUNTO.href.replaceAll("&", "&amp;")}"`,
-    );
-    expect(html).toContain("Calle 21");
-    expect(html).toContain("1 calle sin ubicar");
+    expect(html).toContain('data-numero-de-fila="3"');
+    expect(textoPlano(html)).toContain("Calle 21");
+    expect(textoPlano(html)).toContain("Motul");
+    expect(textoPlano(html)).toContain("1 hecho en esta calle");
   });
 
-  it("sin calles sin punto no dibuja la sección", () => {
-    const html = renderToStaticMarkup(
-      <MapaOperativo filtros={{}} mapa={mapaDe({})} />,
+  it("cada hecho lleva folio, estado con su palabra, tipo, fecha y atraso", () => {
+    const html = render(
+      mapaDe({
+        marcadores: [
+          marcadorDe([CON_UN_HECHO_ATRASADO], {
+            historiaHref: "/calles/calle-3/historial",
+          }),
+        ],
+        conteos: { reportes: 1, intervenciones: 0, total: 1 },
+      }),
     );
+    const texto = textoPlano(html);
 
-    expect(html).not.toContain('aria-label="Calles sin ubicar"');
+    expect(html).toContain('aria-label="Reporte ciudadano: REP-1"');
+    expect(texto).toContain("Recibido");
+    expect(texto).toContain("Bache");
+    expect(texto).toContain("16 nov 2026");
+    expect(texto).toContain("Atrasado · 9 días");
+    expect(html).toContain('href="/calles/calle-3/historial"');
+    expect(texto).toContain("Ver historial de calle");
+  });
+
+  it("la leyenda vive dentro del mapa y no repite el recurso en cada tipo", () => {
+    const html = render(
+      mapaDe({
+        marcadores: [marcadorDe([HECHO_DE_REPORTE])],
+        conteos: { reportes: 1, intervenciones: 0, total: 1 },
+        leyenda: {
+          tipos: [
+            {
+              recurso: "REPORTE",
+              tipo: "BACHE",
+              etiqueta: "Bache",
+              icono: "BACHE",
+              conteo: 1,
+            },
+          ],
+          estados: [
+            {
+              estado: "RECIBIDO",
+              etiqueta: "Recibido",
+              color: "#b45309",
+              conteo: 1,
+            },
+          ],
+          atrasados: 0,
+          total: 1,
+        },
+      }),
+    );
+    const mapa = html.indexOf('aria-label="Mapa de hechos por calle"');
+    const leyenda = html.indexOf('aria-label="Leyenda del mapa"');
+
+    expect(leyenda).toBeGreaterThan(mapa);
+    expect(textoPlano(html)).toContain("Bache 1");
+    expect(textoPlano(html)).not.toContain("(reporte)");
   });
 });

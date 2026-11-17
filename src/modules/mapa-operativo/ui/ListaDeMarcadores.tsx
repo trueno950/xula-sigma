@@ -1,61 +1,39 @@
-import Link from "next/link";
-import { CLASES_DE_ENLACE } from "@/shared/ui";
 import type { MarcadorDeMapa } from "../domain";
-import { etiquetaDeRecurso } from "./etiquetasDeRecurso";
-import { IconoDeMapa } from "./IconoDeMapa";
+import { FilaDeCalle } from "./FilaDeCalle";
 
-const LISTA =
-  "divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo";
-const FILA = "flex flex-col gap-1 px-5 py-2 text-[15px]";
-const DETALLE = "text-caliza-apagada";
+type Props = {
+  marcadores: readonly MarcadorDeMapa[];
+  /** La calle elegida, por su clave; `null` si no hay ninguna. */
+  elegida: string | null;
+  onSeleccion: (clave: string | null) => void;
+};
+
+const VACIA = "px-4 py-6 text-[15px] text-caliza-apagada";
 
 /**
- * S5: el camino sin JavaScript sigue siendo esta lista, y ahora dice lo mismo
- * que el mapa: un pin por calle, con cuantos hechos lleva adentro y cuales
- * son. Es tambien la alternativa para quien no puede usar el mapa, y por eso
- * la senal de atraso de S1 se escribe aca y no solo se pinta en el pin.
+ * La lista del panel: una fila por calle dibujada, en el mismo orden en que
+ * el mapa numera sus pines. Es el camino sin JavaScript -y el de quien no
+ * puede usar el mapa (S7)-, asi que dice lo mismo que cada ventana: cuantos
+ * hechos lleva la calle y cuales son.
  */
-export function ListaDeMarcadores({
-  marcadores,
-}: {
-  marcadores: readonly MarcadorDeMapa[];
-}) {
+export function ListaDeMarcadores({ marcadores, elegida, onSeleccion }: Props) {
+  if (marcadores.length === 0) {
+    return (
+      <p className={VACIA}>
+        Ningún hecho tiene el punto de su calle. El mapa muestra todo Yucatán.
+      </p>
+    );
+  }
+
   return (
-    <ul className={LISTA} aria-label="Marcadores del mapa">
+    <ul aria-label="Calles con hechos" className="flex flex-col">
       {marcadores.map((marcador) => (
-        <li key={marcador.clave} className={FILA}>
-          <div className="flex items-center gap-2">
-            <IconoDeMapa clave={marcador.icono} tamano={20} />
-            {marcador.hechos.length > 1 ? (
-              <span className="font-semibold text-caliza-tinta">
-                {marcador.hechos.length} hechos en esta calle
-              </span>
-            ) : null}
-          </div>
-          <ul className="flex flex-col gap-1">
-            {marcador.hechos.map((hecho) => (
-              <li key={hecho.id}>
-                <Link href={hecho.href} className={CLASES_DE_ENLACE}>
-                  {etiquetaDeRecurso(hecho.recurso, "lista")}: {hecho.etiqueta}
-                </Link>{" "}
-                <span className={DETALLE}>
-                  {hecho.etiquetaDeTipo} · {hecho.etiquetaDeEstado}
-                  {hecho.diasDeAtraso === null ? null : (
-                    <strong className="ml-1 text-senial-error">
-                      Atrasado · {hecho.diasDeAtraso}{" "}
-                      {hecho.diasDeAtraso === 1 ? "día" : "días"}
-                    </strong>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {marcador.historiaHref ? (
-            <Link href={marcador.historiaHref} className={CLASES_DE_ENLACE}>
-              Ver historial de calle
-            </Link>
-          ) : null}
-        </li>
+        <FilaDeCalle
+          key={marcador.clave}
+          marcador={marcador}
+          elegida={elegida === marcador.clave}
+          onSeleccion={onSeleccion}
+        />
       ))}
     </ul>
   );

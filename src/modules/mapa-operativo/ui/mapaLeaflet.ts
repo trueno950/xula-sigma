@@ -1,4 +1,4 @@
-import type { Map as LeafletMap } from "leaflet";
+import type { Map as LeafletMap, Marker } from "leaflet";
 import type { CajaDeMapa, MarcadorDeMapa } from "../domain";
 import { htmlDeLaVentana, htmlDeMarcador } from "./htmlDeMarcador";
 
@@ -38,7 +38,17 @@ type Opciones = {
   marcadores: readonly MarcadorDeMapa[];
   caja: CajaDeMapa | null;
   onTileError: () => void;
+  /** Elegir un pin avisa que fila del panel quedo elegida (S5). */
+  onSeleccion: (clave: string) => void;
 };
+
+/** El mapa con sus pines por clave de calle, para poder elegir uno desde afuera. */
+export type MapaPreparado = {
+  readonly mapa: LeafletMap;
+  readonly pines: PinesDelMapa;
+};
+
+export type PinesDelMapa = ReadonlyMap<string, Marker>;
 
 type Vista = {
   mapa: LeafletMap;
@@ -98,19 +108,47 @@ function agregarMarcadores({
   leaflet,
   mapa,
   marcadores,
+  onSeleccion,
 }: {
   leaflet: typeof import("leaflet");
   mapa: LeafletMap;
   marcadores: readonly MarcadorDeMapa[];
-}): void {
+  onSeleccion: (clave: string) => void;
+}): PinesDelMapa {
+  const pines = new Map<string, Marker>();
   for (const marcador of marcadores) {
-    leaflet
+    const pin = leaflet
       .marker([marcador.punto.latitud, marcador.punto.longitud], {
         icon: iconoDe(leaflet, marcador),
         title: marcador.hechos.map((hecho) => hecho.etiqueta).join(", "),
       })
       .bindPopup(htmlDeLaVentana(marcador))
+      .on("click", () => onSeleccion(marcador.clave))
       .addTo(mapa);
+    pines.set(marcador.clave, pin);
+  }
+  return pines;
+}
+
+/**
+ * Marca el pin de la calle elegida y abre su ventana; los demas sueltan la
+ * marca y cierran la suya (S5). El contorno va en linea y no como clase por
+ * la misma razon que el pin: esta cadena se arma en tiempo de ejecucion.
+ */
+export function seleccionarPin(
+  pines: PinesDelMapa,
+  clave: string | null,
+): void {
+  for (const [claveDelPin, pin] of pines) {
+    const elemento = pin.getElement();
+    if (!elemento) continue;
+    if (claveDelPin === clave) {
+      elemento.dataset.elegida = "1";
+      pin.openPopup();
+    } else {
+      delete elemento.dataset.elegida;
+      pin.closePopup();
+    }
   }
 }
 
@@ -127,7 +165,8 @@ export function prepararMapaOperativo({
   marcadores,
   caja,
   onTileError,
-}: Opciones): LeafletMap {
+  onSeleccion,
+}: Opciones): MapaPreparado {
   const limites = caja ? limitesDe(caja) : LIMITES_DE_YUCATAN;
   const mapa = leaflet.map(elemento, {
     maxBounds: limites,
@@ -144,6 +183,11 @@ export function prepararMapaOperativo({
   });
   anotarVista({ mapa, elemento, limites });
   agregarCapaDeTiles({ leaflet, mapa, onTileError });
-  agregarMarcadores({ leaflet, mapa, marcadores });
-  return mapa;
+  const pines = agregarMarcadores({
+    leaflet,
+    mapa,
+    marcadores,
+    onSeleccion,
+  });
+  return { mapa, pines };
 }

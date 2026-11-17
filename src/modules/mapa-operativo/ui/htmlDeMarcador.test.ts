@@ -21,19 +21,27 @@ describe("htmlDeMarcador", () => {
     expect(html).toContain("<path");
   });
 
-  it("un hecho solo no lleva contador", () => {
-    const html = htmlDeMarcador(marcadorDe([HECHO_DE_REPORTE]));
+  it("el pin lleva el numero de orden de su fila, aunque la calle tenga un solo hecho", () => {
+    const html = htmlDeMarcador(marcadorDe([HECHO_DE_REPORTE], { orden: 2 }));
 
-    expect(html).not.toContain("data-hechos");
+    expect(html).toContain('data-orden="2"');
+    expect(html).toContain(">2<");
   });
 
-  it("varios hechos sobre la misma calle comparten pin con su contador", () => {
-    const marcador = marcadorDe([HECHO_DE_REPORTE, HECHO_DE_INTERVENCION]);
+  /**
+   * L3: la insignia del pin deja de contar hechos y pasa a llevar el orden de
+   * su fila, que es lo que liga las dos vistas. El conteo se dice en la fila
+   * y en la ventana, no en el pin.
+   */
+  it("varios hechos sobre la misma calle no cambian el numero del pin", () => {
+    const marcador = marcadorDe([HECHO_DE_REPORTE, HECHO_DE_INTERVENCION], {
+      orden: 1,
+    });
 
     const html = htmlDeMarcador(marcador);
 
-    expect(html).toContain('data-hechos="2"');
-    expect(html).toContain(">2<");
+    expect(html).toContain('data-orden="1"');
+    expect(html).not.toContain("data-hechos");
   });
 });
 
@@ -68,6 +76,19 @@ describe("htmlDeMarcador, la senal de atraso de S1", () => {
 
 describe("htmlDeLaVentana", () => {
   const marcador = marcadorDe([HECHO_DE_REPORTE, HECHO_DE_INTERVENCION]);
+
+  it("nombra la calle y dice cuantos hechos lleva adentro", () => {
+    const html = htmlDeLaVentana(marcador);
+
+    expect(html).toContain("Calle 26 x 31 y 33");
+    expect(html).toContain("2 hechos en esta calle");
+  });
+
+  it("una calle con un solo hecho lo dice en singular", () => {
+    expect(htmlDeLaVentana(marcadorDe([HECHO_DE_REPORTE]))).toContain(
+      "1 hecho en esta calle",
+    );
+  });
 
   it("lista el folio, el tipo y el estado de cada hecho", () => {
     const html = htmlDeLaVentana(marcador);

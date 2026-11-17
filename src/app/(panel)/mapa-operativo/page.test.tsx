@@ -8,10 +8,14 @@ vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("@/modules/mapa-operativo", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/mapa-operativo")>()),
   agregarMapa: agregarMapaMock,
-  MapaOperativo: () => <div>snapshot del mapa</div>,
+  MapaOperativo: ({ panel }: { panel: string }) => (
+    <div>snapshot del mapa {panel}</div>
+  ),
 }));
 vi.mock("@/shared/ui/EstadoEnVivo", () => ({
-  EstadoEnVivo: () => <div>estado en vivo</div>,
+  EstadoEnVivo: ({ variante }: { variante?: string }) => (
+    <div>estado en vivo {variante}</div>
+  ),
 }));
 
 const { default: PaginaDeMapaOperativo } = await import("./page");
@@ -30,6 +34,8 @@ const mapa = {
   marcadores: [],
   cobertura: [],
   conteos: { reportes: 0, intervenciones: 0, total: 0 },
+  leyenda: { tipos: [], estados: [], atrasados: 0, total: 0 },
+  sinUbicar: [],
 };
 
 beforeEach(() => {
@@ -67,8 +73,29 @@ describe("PaginaDeMapaOperativo", () => {
       area: undefined,
       lugar: "22222222-2222-4222-8222-222222222222",
     });
-    expect(html).toContain("snapshot del mapa");
-    expect(html).toContain("estado en vivo");
+    expect(html).toContain("snapshot del mapa en-el-mapa");
+    expect(html).toContain("estado en vivo compacta");
+  });
+
+  /**
+   * S1 y S4: la cabecera pasa a llevar la descripcion de la pantalla, y la
+   * pestana elegida llega al mapa desde `?panel=`. Sin esto la URL cambiaria y
+   * el panel seguiria mostrando la lista de siempre.
+   */
+  it("compone la descripcion de la cabecera y la pestana pedida en la URL", async () => {
+    contextoActualMock.mockResolvedValue(contexto);
+    agregarMapaMock.mockResolvedValue(mapa);
+
+    const html = renderToStaticMarkup(
+      await PaginaDeMapaOperativo({
+        searchParams: Promise.resolve({ panel: "sin-ubicar" }),
+      }),
+    );
+
+    expect(html).toContain(
+      "Dónde están los reportes y las obras abiertas del municipio, qué lleva demasiado tiempo y qué no se puede dibujar todavía.",
+    );
+    expect(html).toContain("snapshot del mapa sin-ubicar");
   });
 });
 

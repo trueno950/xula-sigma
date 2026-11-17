@@ -12,6 +12,7 @@ describe("MapaOperativo: selector de territorio", () => {
   it("ofrece todo el municipio y cada raiz en el mismo formulario de filtros", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo
+        panel="en-el-mapa"
         filtros={{}}
         mapa={mapaDe({ territorios: TERRITORIOS })}
       />,
@@ -29,6 +30,7 @@ describe("MapaOperativo: selector de territorio", () => {
   it("conserva el territorio elegido al enviar los filtros", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo
+        panel="en-el-mapa"
         filtros={{ lugar: "comisaria-1" }}
         mapa={mapaDe({
           territorios: TERRITORIOS,
@@ -43,6 +45,7 @@ describe("MapaOperativo: selector de territorio", () => {
   it("avisa cuando el territorio elegido no tiene calles ubicadas", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo
+        panel="en-el-mapa"
         filtros={{ lugar: "comisaria-1" }}
         mapa={mapaDe({
           territorios: TERRITORIOS,
@@ -60,6 +63,7 @@ describe("MapaOperativo: selector de territorio", () => {
   it("no avisa nada cuando el territorio tiene calles ubicadas", () => {
     const html = renderToStaticMarkup(
       <MapaOperativo
+        panel="en-el-mapa"
         filtros={{}}
         mapa={mapaDe({ territorios: TERRITORIOS })}
       />,

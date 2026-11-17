@@ -1,18 +1,15 @@
 import type { RecursoDeMapa } from "../domain";
 
 /**
- * Como se nombra un hecho segun donde se lea: la lista y la cobertura llevan
- * el nombre completo, porque ahi el renglon no tiene otro contexto; la
- * leyenda lleva el sufijo corto, porque su fila ya dice el tipo y el conteo.
+ * Como se nombra un hecho cuando el renglon no lo dice: el nombre accesible
+ * del enlace al detalle. La fila muestra el folio -o el tipo, si es una
+ * obra-, y un lector de pantalla necesita saber que eso es un reporte o una
+ * intervencion antes de abrirlo.
  */
-const ETIQUETAS: Readonly<
-  Record<RecursoDeMapa, Readonly<Record<"lista" | "leyenda", string>>>
-> = {
-  REPORTE: { lista: "Reporte ciudadano", leyenda: "reporte" },
-  INTERVENCION: { lista: "Intervención municipal", leyenda: "intervención" },
+const ETIQUETAS: Readonly<Record<RecursoDeMapa, string>> = {
+  REPORTE: "Reporte ciudadano",
+  INTERVENCION: "Intervención municipal",
 };
 
-export const etiquetaDeRecurso = (
-  recurso: RecursoDeMapa,
-  variante: "lista" | "leyenda",
-): string => ETIQUETAS[recurso][variante];
+export const etiquetaDeRecurso = (recurso: RecursoDeMapa): string =>
+  ETIQUETAS[recurso];

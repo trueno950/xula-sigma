@@ -77,6 +77,24 @@ describe("EstadoEnVivo", () => {
     expect(html).toContain("h-11");
   });
 
+  /**
+   * S1 del mapa protagonista: en `/mapa-operativo` la actualizacion en vivo
+   * deja de ser una tarjeta propia y queda como una linea. La variante
+   * compacta solo deja de pintar el marco; el resto de las paginas sigue
+   * recibiendo exactamente la tarjeta de siempre, que es lo que fija el test
+   * de arriba.
+   */
+  it("la variante compacta es una linea, sin tarjeta, y conserva el boton", () => {
+    const html = renderToStaticMarkup(<EstadoEnVivo variante="compacta" />);
+
+    expect(html).not.toContain("rounded-lg");
+    expect(html).not.toContain("shadow-reposo");
+    expect(html).not.toContain("border-caliza-divisor");
+    expect(html).toContain("Actualización desconectada");
+    expect(html).toContain("Actualizar ahora");
+    expect(html).toContain("h-11");
+  });
+
   it("no refresca al abrir: refresca con cada actualizacion y cada resync, sin sondear", () => {
     const sondeo = vi.spyOn(globalThis, "setInterval");
     const { fuente } = montar();
