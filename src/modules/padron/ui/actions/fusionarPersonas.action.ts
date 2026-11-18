@@ -18,17 +18,31 @@ import { comoPersonaId } from "../../domain";
  * validar del lado del dominio (no confia en el borde), pero su `Error`
  * generico no distingue "entrada mal formada" de una caida real de
  * infraestructura, y no esta en la lista blanca de `mensajeDeError`.
+ *
+ * La accion se envia desde el pliegue «Fusionar con otra persona…» de la
+ * ficha, que ya fija la ganadora: por eso el error y el exito vuelven a esa
+ * ficha -antes volvian a `/padron`, que no lee `?error=` y descartaba el
+ * mensaje-. La ganadora es la que se conserva, asi que es la ficha que hay
+ * que volver a mirar.
  */
 const esquemaDeEntrada = z.object({
   perdedoraId: z.uuid(),
   ganadoraId: z.uuid(),
 });
 
-const MENSAJE_FORMULARIO_INVALIDO = "Selecciona las dos personas a fusionar.";
+const MENSAJE_FORMULARIO_INVALIDO =
+  "Seleccione la persona duplicada a fusionar.";
 const MENSAJE_GENERICO = "No se pudo completar la fusión. Intente de nuevo.";
 
-const redirigirConError = (mensaje: string): never =>
-  redirect(`/padron?error=${encodeURIComponent(mensaje)}`);
+const fichaEnAdministrar = (personaId: string) =>
+  `/padron/${personaId}?pestana=administrar`;
+
+const redirigirConError = (personaId: string | null, mensaje: string): never =>
+  redirect(
+    personaId
+      ? `${fichaEnAdministrar(personaId)}&error=${encodeURIComponent(mensaje)}`
+      : `/padron?error=${encodeURIComponent(mensaje)}`,
+  );
 
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
@@ -48,13 +62,21 @@ export async function fusionarPersonasAction(
   });
 
   if (!analisis.success) {
-    redirigirConError(MENSAJE_FORMULARIO_INVALIDO);
+    // Con una ganadora reconocible el error se pinta en su ficha; sin ella
+    // no hay ficha a la cual volver.
+    const ganadora = z.uuid().safeParse(formData.get("ganadoraId"));
+    redirigirConError(
+      ganadora.success ? ganadora.data : null,
+      MENSAJE_FORMULARIO_INVALIDO,
+    );
     return;
   }
 
   const contexto = await contextoActual();
 
   if (!contexto) redirect("/acceso");
+
+  const ficha = fichaEnAdministrar(analisis.data.ganadoraId);
 
   try {
     await fusionarPersonas(
@@ -63,10 +85,11 @@ export async function fusionarPersonasAction(
       contexto,
     );
   } catch (error) {
-    redirigirConError(mensajeDeError(error));
+    redirigirConError(analisis.data.ganadoraId, mensajeDeError(error));
     return;
   }
 
   revalidatePath("/padron");
-  redirect("/padron");
+  revalidatePath(`/padron/${analisis.data.ganadoraId}`);
+  redirect(ficha);
 }

@@ -329,6 +329,8 @@ que devuelva, y devolverlo sería código muerto.
 |---|---|---|
 | `altaDePersonaAction` | `padron` | Server Component, `<form action={...}>` |
 | `fusionarPersonasAction` | `padron` | Server Component, `<form action={...}>` |
+| `editarPersonaAction` | `padron` | Server Component, `<form action={...}>` |
+| `darDeBajaPersonaAction` | `padron` | Server Component, `<form action={...}>` |
 | `cambiarColoresAction` | `marca` | Server Component, `<form action={...}>` |
 | `restablecerColoresAction` | `marca` | Server Component, `<form action={...}>` |
 | `altaDeLugarAction` | `territorio` | Server Component, `<form action={...}>` |
@@ -375,8 +377,21 @@ Notas que no caben en la tabla, una por fila que las necesita:
   describe `PRODUCT.md`.
 - `fusionarPersonasAction` (rebanada 4): `FusionarPersonas.tsx` es un
   `<form action={...}>` sin `"use client"` en ningún componente de por
-  medio, y `redirect(\`/padron?error=...\`)` redacta con la misma lista
-  blanca (`NoAutorizadoError`, `NoEncontradoError`).
+  medio, y `redirect(\`/padron/[id]?pestana=administrar&error=...\`)`
+  redacta con la misma lista blanca (`NoAutorizadoError`,
+  `NoEncontradoError`). Desde T4 de `padron-ux` (S12) el error y el éxito
+  vuelven a la ficha de la ganadora, que es la que se conserva, y no al
+  listado: `/padron` no lee `?error=` y descartaba el mensaje.
+- `editarPersonaAction`/`darDeBajaPersonaAction` (`padron-ux`, S9): mismo
+  motivo exacto que `altaDePersonaAction`; los dos formularios viven
+  plegados en el acordeón de «Administrar» de la ficha. La corrección
+  redacta `NoAutorizadoError`, `NoEncontradoError`, `PersonaInvalidaError`
+  y `CurpInvalidaError` y vuelve a la ficha con `?pestana=administrar`; la
+  baja redacta `NoAutorizadoError` y `NoEncontradoError`, vuelve a la ficha
+  si el rechazo es de negocio y al listado cuando termina. Sin un id
+  reconocible no hay ficha a la cual volver y las dos caen a `/padron`,
+  mismo criterio que `registrarMudanzaAction`. Ninguna de las dos lee
+  `ayuntamientoId` del formulario: sale del contexto del servidor.
 - `altaDeLugarAction`/`editarLugarAction`/`darDeBajaLugarAction`
   (`capa-territorial`, rebanada 3): mismo motivo exacto que
   `altaDePersonaAction`, sin una segunda hoja cliente que complique el
