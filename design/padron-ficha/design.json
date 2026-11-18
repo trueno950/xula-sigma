@@ -1,0 +1,21 @@
+{
+  "title": "Ficha de persona (Padrón)",
+  "brief": "Rediseño de /padron/[id] para la operadora de un municipio pequeño de Yucatán: reconocer a la persona por su CURP y su domicilio vigente, leer el historial de residencias y hacer en el mostrador lo de todos los días —emitir constancia, registrar una mudanza— sin que las acciones que reescriben la ficha (corregir, fusionar, dar de baja) estorben ni se disparen por accidente.",
+  "feature": "odd/tasks/padron-ux.md",
+  "artboards": [
+    {
+      "file": "01-ficha-y-acciones.html",
+      "title": "Ficha y acciones",
+      "tradeoff": "Dos columnas, igual que el detalle de reporte ya elegido: ficha y línea de tiempo a la izquierda, acciones en un panel pegado arriba a la derecha con «Emitir constancia» como único botón de marca y el resto en acordeón, «Dar de baja» al final tras un divisor. Gana densidad —historial largo sin empujar las acciones— y cuesta 320 px de ancho: el detalle sube su máximo de 720 a 1040 px y por debajo de 1024 las acciones bajan al flujo con el orden ficha, acciones, historial.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-encabezado-con-pestanas.html",
+      "title": "Encabezado con pestañas",
+      "tradeoff": "Una sola columna de 720 px: la cabecera concentra nombre, CURP, domicilio vigente y las dos acciones de mostrador —«Emitir constancia» y «Registrar mudanza…»—, y debajo dos pestañas separan «Residencias» de «Administrar» con el acordeón dentro. Gana foco y el mismo orden en 1440 y en 390, sin reacomodo; cuesta dos despliegues encadenados (pestaña y luego acordeón), comparar el domicilio con la acción que lo cambia pide cambiar de pestaña, y en monitor ancho deja vacío a los lados.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}
