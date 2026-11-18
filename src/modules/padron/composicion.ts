@@ -6,12 +6,14 @@ import {
   crearEditarPersona,
   crearFusionarPersonas,
   crearIdentidadesDePersona,
+  crearIdentidadesDePersonas,
   crearListarPersonas,
   crearPersonaPorId,
   crearSugerirDuplicados,
 } from "./application";
 import {
   catalogoDeAbreviaturasSql,
+  lectorDeIdentidadesSql,
   repositorioDePersonasSql,
 } from "./infrastructure";
 import { personas } from "./infrastructure/esquema";
@@ -43,6 +45,9 @@ export const sugerirDuplicados = crearSugerirDuplicados(
 export const personaPorId = crearPersonaPorId(repositorioDePersonasSql);
 export const identidadesDePersona = crearIdentidadesDePersona(
   repositorioDePersonasSql,
+);
+export const identidadesDePersonas = crearIdentidadesDePersonas(
+  lectorDeIdentidadesSql,
 );
 
 /**
