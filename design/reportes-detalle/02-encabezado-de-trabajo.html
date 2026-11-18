@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Encabezado de trabajo — Detalle de reporte</title>
+<style>
+  :root {
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, p, ul, ol, li, dl, dd, dt { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+  form { margin: 0; }
+
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .enlace:hover { text-decoration-thickness: 2px; }
+
+  /* ================= shell ================= */
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar {
+    position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+    border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo);
+    overflow-y: auto;
+  }
+  .municipio {
+    display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px;
+    background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2;
+    color: var(--color-caliza-tinta); text-decoration: none;
+  }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item {
+    display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px;
+    border-radius: var(--radio-md); font-weight: 600; font-size: 15px;
+    color: var(--color-caliza-apagada); text-decoration: none;
+    transition: background-color 150ms var(--ease), color 150ms var(--ease);
+  }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px;
+    border: 1px solid transparent; border-radius: var(--radio-md); background: transparent;
+    color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer;
+  }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  /* ================= controles ================= */
+  .boton {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 10px 18px; border-radius: var(--radio-md); border: 1px solid transparent;
+    font: 600 15px/1.2 var(--fuente); cursor: pointer; text-decoration: none; text-align: center;
+    transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease);
+  }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .boton.peligro { background: var(--color-caliza-lienzo); color: var(--color-senial-error); border-color: var(--color-senial-error); }
+  .boton.peligro:hover { background: var(--color-senial-error-suave); }
+  .ancho { width: 100%; }
+
+  .insignia { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--radio-pill); font-size: 13px; font-weight: 500; }
+  .insignia svg { width: 14px; height: 14px; }
+  .insignia.neutro { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+  .insignia.exito { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .insignia.aviso { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .insignia.error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+  .atraso { color: var(--color-senial-error); font-size: 13px; font-weight: 600; }
+
+  .campo { display: flex; flex-direction: column; gap: 6px; }
+  .campo select, .campo textarea, .campo input {
+    width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--color-caliza-borde);
+    border-radius: var(--radio-md); background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta);
+    font: 400 15px/1.5 var(--fuente);
+  }
+  .campo select {
+    appearance: none; padding-right: 34px;
+    background-image: linear-gradient(45deg, transparent 50%, var(--color-caliza-apagada) 50%), linear-gradient(135deg, var(--color-caliza-apagada) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 19px, calc(100% - 13px) 19px;
+    background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+  }
+  .campo textarea { min-height: 84px; resize: vertical; }
+  .campo .ayuda { font-size: 13px; color: var(--color-caliza-apagada); }
+
+  /* ================= contenido ================= */
+  .contenido {
+    min-width: 0; width: 100%; max-width: 880px; margin: 0 auto;
+    padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 24px;
+  }
+  .migaja { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; color: var(--color-caliza-apagada); }
+  .migaja a { color: var(--color-caliza-apagada); text-decoration: none; }
+  .migaja a:hover { color: var(--color-caliza-tinta); }
+  .migaja [aria-current="page"] { font-family: var(--fuente-dato); font-size: .875rem; color: var(--color-caliza-apagada); }
+
+  .titulo-fila { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+  .titulo-fila .folio { font-family: var(--fuente-dato); font-size: 1.75rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.15; }
+
+  .tarjeta {
+    border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg);
+    background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); padding: 20px;
+  }
+
+  /* ---------- encabezado de trabajo ---------- */
+  .cabecera-trabajo { display: flex; flex-direction: column; gap: 16px; }
+  .franja-datos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .franja-datos .punto-sep { width: 1px; height: 20px; background: var(--color-caliza-divisor); }
+  .franja-datos .area-linea { display: inline-flex; align-items: baseline; gap: 6px; }
+  .franja-datos .lugar { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+  .franja-datos .enlaces { display: inline-flex; flex-wrap: wrap; gap: 4px 16px; }
+  .fila-acciones {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding-top: 16px; border-top: 1px solid var(--color-caliza-divisor);
+  }
+  .fila-acciones .mas { flex: 0 1 auto; }
+  .fila-acciones .mas[open] { flex: 1 1 100%; }
+  .mas > summary {
+    display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px;
+    border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo);
+    cursor: pointer; list-style: none; font: 600 15px/1.2 var(--fuente); color: var(--color-caliza-tinta);
+    transition: background-color 150ms var(--ease);
+  }
+  .mas > summary:hover { background: var(--color-caliza-superficie); }
+  .mas > summary::-webkit-details-marker { display: none; }
+  .mas > summary .chevron { margin-left: auto; color: var(--color-caliza-apagada); transition: rotate 150ms var(--ease); }
+  .mas[open] > summary .chevron { rotate: 180deg; }
+  .panel-mas { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; }
+  .grupo-accion { display: flex; flex-direction: column; gap: 12px; }
+  .grupo-accion > .title { display: flex; align-items: center; gap: 8px; }
+  .grupo-accion .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grupo-accion form { display: flex; flex-direction: column; gap: 12px; }
+  .grupo-accion .acciones-del-grupo { display: flex; gap: 8px; flex-wrap: wrap; }
+  .separador-peligro { padding-top: 20px; border-top: 1px solid var(--color-caliza-divisor); }
+  .grupo-accion.peligro > .title { color: var(--color-senial-error); }
+
+  /* ---------- datos ---------- */
+  .datos { padding: 0; }
+  .fila-dato { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 4px 24px; padding: 14px 20px; border-bottom: 1px solid var(--color-caliza-divisor); }
+  .fila-dato:last-child { border-bottom: 0; }
+  .fila-dato dd { font-size: .9375rem; line-height: 1.45; overflow-wrap: anywhere; }
+  .fila-dato dd.dato { font-size: .875rem; }
+  .fila-dato:first-child { border-radius: var(--radio-lg) var(--radio-lg) 0 0; }
+
+  /* ---------- historial ---------- */
+  .linea-de-tiempo { display: flex; flex-direction: column; }
+  .linea-de-tiempo li { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 2px 12px; padding-bottom: 20px; }
+  .linea-de-tiempo li:last-child { padding-bottom: 0; }
+  .linea-de-tiempo li::before {
+    content: ""; grid-column: 1; grid-row: 1 / span 2; justify-self: center; width: 2px; height: 100%;
+    background: var(--color-caliza-divisor); margin-top: 18px;
+  }
+  .linea-de-tiempo li:last-child::before { display: none; }
+  .linea-de-tiempo .punto {
+    grid-column: 1; grid-row: 1; justify-self: center; width: 12px; height: 12px; margin-top: 5px;
+    border-radius: var(--radio-pill); border: 2px solid var(--color-caliza-borde); background: var(--color-caliza-lienzo);
+  }
+  .linea-de-tiempo li.hecho .punto { border-color: var(--color-caliza-tinta); background: var(--color-caliza-tinta); }
+  .linea-de-tiempo .evento { grid-column: 2; grid-row: 1; }
+  .linea-de-tiempo .cuando { grid-column: 2; grid-row: 2; }
+
+  /* ---------- variante cerrada ---------- */
+  .cerrado { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .cerrado .sin-acciones { color: var(--color-caliza-apagada); font-size: 15px; }
+
+  /* ================= notas y móvil ================= */
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono {
+    width: 390px; height: 844px; overflow-y: auto; position: relative;
+    border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo);
+    box-shadow: var(--sombra-reposo);
+  }
+  .m-municipio {
+    display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px;
+    background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor);
+    font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none;
+  }
+  .m-cuerpo { padding: 16px 16px 96px; display: flex; flex-direction: column; gap: 20px; }
+  .m-cabecera .folio { font-family: var(--fuente-dato); font-size: 1.4rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.2; margin-top: 8px; }
+  .m-cuerpo .tarjeta { padding: 16px; }
+  .m-cuerpo .tarjeta.datos { padding: 0; }
+  .m-cuerpo .fila-acciones .boton { flex: 1 1 auto; }
+  .m-cuerpo .mas { flex: 1 1 100%; }
+  .m-cuerpo .mas > summary { justify-content: space-between; }
+  .m-cuerpo .grupo-accion .campos { grid-template-columns: 1fr; }
+  .m-cuerpo .fila-dato { grid-template-columns: 1fr; padding: 12px 16px; }
+  .m-nav {
+    position: sticky; bottom: 0; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo);
+  }
+  .m-nav a {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none;
+  }
+  .m-nav a[aria-current="true"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="true"] svg { color: var(--color-marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: .01ms !important; animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important; scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4zm7.5-9.7a4 4 0 0 1 0 7.4 6 6 0 0 0 0-7.4zM18 13c2.2.6 4 2.1 4 4v3h-5v-3c0-1.6-.7-3-1.9-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--color-marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--color-marca-texto)" opacity=".85"/></symbol>
+    <symbol id="si-circulo" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 4a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M12 15.5 5.5 9l1.5-1.5 5 5 5-5L18.5 9z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <!-- ============ lateral ============ -->
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a></li>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Admin municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- ============ contenido ============ -->
+  <main class="contenido">
+    <nav class="migaja" aria-label="Ruta">
+      <a href="#">Reportes</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">REP-2026-000005</span>
+    </nav>
+
+    <header class="titulo-fila">
+      <h1 class="folio">REP-2026-000005</h1>
+      <p class="label">Registrado el 16 nov 2026, 11:15 a.m.</p>
+    </header>
+
+    <!-- ---------- encabezado de trabajo ---------- -->
+    <section class="tarjeta cabecera-trabajo" aria-labelledby="t-trabajo">
+      <h2 class="label" id="t-trabajo">Estado del reporte</h2>
+      <div class="franja-datos">
+        <span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span>
+        <span class="atraso">Atrasado · 6 días</span>
+        <span class="punto-sep" aria-hidden="true"></span>
+        <span class="area-linea"><span class="label">Área</span><span class="title">Sin asignar</span></span>
+        <span class="punto-sep" aria-hidden="true"></span>
+        <span class="lugar">
+          <span class="title">Calle 26 x 31 y 33</span>
+          <span class="label">Centro, Motul</span>
+        </span>
+        <span class="enlaces">
+          <a class="enlace" href="#">Ver historial de la calle</a>
+          <a class="enlace" href="#">Ver en el mapa</a>
+        </span>
+      </div>
+
+      <div class="fila-acciones">
+        <form action="#" method="post">
+          <input type="hidden" name="id" value="3f1c">
+          <input type="hidden" name="estadoNuevo" value="EN_ATENCION">
+          <button class="boton primaria" type="submit">Marcar en atención</button>
+        </form>
+        <form action="#" method="post">
+          <input type="hidden" name="id" value="3f1c">
+          <input type="hidden" name="estadoNuevo" value="RESUELTO">
+          <button class="boton secundaria" type="submit">Marcar resuelto</button>
+        </form>
+        <details class="mas">
+          <summary>Más acciones…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+          <div class="panel-mas">
+            <div class="grupo-accion">
+              <h3 class="title">Asignar área</h3>
+              <form action="#" method="post">
+                <input type="hidden" name="id" value="3f1c">
+                <div class="campos">
+                  <div class="campo">
+                    <label class="label" for="d-area">Área responsable</label>
+                    <select id="d-area" name="areaResponsable">
+                      <option value="">Seleccione un área</option>
+                      <option>Obras públicas</option><option>Alumbrado público</option><option>Agua potable y drenaje</option><option>Limpia y recolección</option><option>Parques y jardines</option><option>Servicios generales</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="acciones-del-grupo"><button class="boton secundaria" type="submit">Asignar área</button></div>
+              </form>
+            </div>
+
+            <div class="grupo-accion">
+              <h3 class="title">Programar obra</h3>
+              <form action="#" method="post">
+                <input type="hidden" name="reporteId" value="3f1c">
+                <div class="campos">
+                  <div class="campo">
+                    <label class="label" for="d-tipo">Tipo de obra</label>
+                    <select id="d-tipo" name="tipo">
+                      <option value="">Seleccione un tipo</option>
+                      <option>Bache</option><option>Repavimentación</option><option>Pavimentación</option><option>Mejora</option><option>Fuga</option><option>Alumbrado</option><option>Mantenimiento</option><option>Obra</option>
+                    </select>
+                  </div>
+                  <div class="campo">
+                    <label class="label" for="d-trabajo">Descripción del trabajo</label>
+                    <textarea id="d-trabajo" name="descripcion"></textarea>
+                    <span class="ayuda">No anote nombres, teléfonos ni datos de vecinos.</span>
+                  </div>
+                </div>
+                <div class="acciones-del-grupo">
+                  <button class="boton secundaria" type="submit">Programar obra</button>
+                  <span class="label" style="align-self:center">Crea una intervención planificada y pasa el reporte a «En atención».</span>
+                </div>
+              </form>
+            </div>
+
+            <div class="separador-peligro">
+              <div class="grupo-accion peligro">
+                <h3 class="title">Rechazar reporte</h3>
+                <form action="#" method="post">
+                  <input type="hidden" name="id" value="3f1c">
+                  <input type="hidden" name="estadoNuevo" value="RECHAZADO">
+                  <div class="campos">
+                    <div class="campo">
+                      <label class="label" for="d-motivo">Motivo de rechazo</label>
+                      <select id="d-motivo" name="motivoDeRechazo">
+                        <option value="">Seleccione un motivo</option>
+                        <option>Duplicado</option><option>Fuera de competencia</option><option>Información insuficiente</option>
+                      </select>
+                    </div>
+                    <div class="campo">
+                      <label class="label" for="d-original">Folio del reporte original</label>
+                      <input id="d-original" name="folioDelOriginal" class="dato" placeholder="REP-AAAA-000123" autocomplete="off">
+                      <span class="ayuda">Solo si el motivo es Duplicado.</span>
+                    </div>
+                  </div>
+                  <div class="acciones-del-grupo"><button class="boton peligro" type="submit">Rechazar reporte</button></div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ---------- datos ---------- -->
+    <section aria-labelledby="t-datos">
+      <h2 class="headline" id="t-datos" style="margin-bottom:12px">Datos</h2>
+      <dl class="tarjeta datos">
+        <div class="fila-dato"><dt class="label">Tipo</dt><dd>Bache</dd></div>
+        <div class="fila-dato"><dt class="label">Fecha de registro</dt><dd class="dato">16 nov 2026, 11:15 a.m.</dd></div>
+        <div class="fila-dato"><dt class="label">Descripción</dt><dd>Bache enorme</dd></div>
+        <div class="fila-dato"><dt class="label">Referencia</dt><dd>Enfrente del seguro</dd></div>
+      </dl>
+    </section>
+
+    <!-- ---------- historial ---------- -->
+    <section aria-labelledby="t-historial">
+      <h2 class="headline" id="t-historial" style="margin-bottom:12px">Historial</h2>
+      <ol class="linea-de-tiempo">
+        <li class="hecho">
+          <span class="punto" aria-hidden="true"></span>
+          <p class="evento title">Reporte recibido</p>
+          <p class="cuando dato apagada"><time datetime="2026-11-16T11:15-06:00">16 nov 2026, 11:15 a.m.</time></p>
+        </li>
+      </ol>
+      <p class="label" style="margin-top:12px">Un solo movimiento: nadie ha tomado el reporte en 6 días.</p>
+    </section>
+  </main>
+</div>
+
+<!-- ================= notas del artboard ================= -->
+<section class="hoja" aria-labelledby="t-notas">
+  <div class="hoja-inner">
+    <div>
+      <h2 class="headline" id="t-notas">02 · Encabezado de trabajo</h2>
+      <p class="body apagada" style="max-width:70ch">Una sola columna. Todo lo que se decide de un vistazo —estado, atraso, área y dónde ocurrió— vive en una franja bajo el título, con las acciones en una fila; los datos completos y el historial siguen debajo, en secciones.</p>
+    </div>
+
+    <div class="notas">
+      <div class="nota">
+        <h3 class="title">Compromiso (tradeoff)</h3>
+        <p class="body apagada" style="margin:8px 0 0">Una sola columna de lectura: nada compite con la ficha y el recorrido es el mismo en 1440 y en 390, sin reacomodo. A cambio, las acciones secundarias quedan un clic más lejos —detrás de «Más acciones…»— y el historial empieza más abajo que en la dirección 01. El detalle sube su ancho máximo de 720 a 880&nbsp;px para que la fila de acciones no se rompa.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S11-S15)</h3>
+        <ul class="body">
+          <li><strong>S13 · acciones fuera del flujo.</strong> La franja trae el paso siguiente como botón primario y «Más acciones…» concentra área, obra y rechazo; los dos formularios de una sola pieza («Marcar en atención», «Marcar resuelto») quedan a la vista porque no piden datos.</li>
+          <li><strong>S12 · estado y atraso en la franja.</strong> Insignia con ícono y palabra más «Atrasado · 6 días»; nada de eso se repite en «Datos».</li>
+          <li><strong>S11 · ubicación con enlaces.</strong> Calle, colonia y municipio en la franja, con «Ver historial de la calle» y «Ver en el mapa».</li>
+          <li><strong>S15 · secciones, no pestañas.</strong> «Datos» e «Historial» se leen seguidos: unas pestañas esconderían el historial o pedirían JavaScript, justo lo que la pantalla no tiene.</li>
+          <li><strong>S14 · una tarjeta por grupo.</strong> «Programar obra» es un grupo con título propio dentro del panel de acciones, sin caja adentro de otra caja.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Variante cerrada · Resuelto</h3>
+        <p class="body apagada" style="margin-bottom:12px">La franja sigue diciendo estado y área, pero la fila de acciones desaparece: en un reporte terminal no hay transición válida. La franja conserva su altura y el recorrido se lee completo en el historial.</p>
+        <div class="tarjeta" style="display:flex;flex-direction:column;gap:12px">
+          <div class="cerrado">
+            <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Resuelto</span>
+            <span class="area-linea"><span class="label">Área</span><span class="title">Obras públicas</span></span>
+            <span class="lugar"><span class="title">Calle 26 x 31 y 33</span><span class="label">Centro, Motul</span></span>
+          </div>
+          <p class="sin-acciones">Sin acciones: el reporte está cerrado.</p>
+        </div>
+        <ol class="linea-de-tiempo" style="margin-top:16px">
+          <li class="hecho">
+            <span class="punto" aria-hidden="true"></span>
+            <p class="evento title">Reporte recibido</p>
+            <p class="cuando dato apagada"><time datetime="2026-11-16T11:15-06:00">16 nov 2026, 11:15 a.m.</time></p>
+          </li>
+          <li class="hecho">
+            <span class="punto" aria-hidden="true"></span>
+            <p class="evento title">Área asignada: Obras públicas</p>
+            <p class="cuando dato apagada"><time datetime="2026-11-16T12:40-06:00">16 nov 2026, 12:40 p.m.</time></p>
+          </li>
+          <li class="hecho">
+            <span class="punto" aria-hidden="true"></span>
+            <p class="evento title">Recibido → En atención</p>
+            <p class="cuando dato apagada"><time datetime="2026-11-17T09:05-06:00">17 nov 2026, 9:05 a.m.</time></p>
+          </li>
+          <li class="hecho">
+            <span class="punto" aria-hidden="true"></span>
+            <p class="evento title">En atención → Resuelto</p>
+            <p class="cuando dato apagada"><time datetime="2026-11-24T17:20-06:00">24 nov 2026, 5:20 p.m.</time></p>
+          </li>
+        </ol>
+      </div>
+      <div class="nota">
+        <h3 class="title">Decisiones registradas</h3>
+        <ul class="body">
+          <li><strong>«Más acciones…» abierta</strong> ocupa la línea completa bajo los dos botones: así los formularios de área, obra y rechazo se leen a ancho completo, con «Rechazar reporte» al final tras un divisor.</li>
+          <li><strong>Sin campo condicional sin JavaScript:</strong> «Folio del reporte original» queda visible con la ayuda «Solo si el motivo es Duplicado», igual que hoy; el servidor rechaza la combinación.</li>
+          <li><strong>Motivos cerrados:</strong> Duplicado, Fuera de competencia e Información insuficiente. No hay «Otro»: es una categoría cerrada.</li>
+          <li><strong>Ancho de detalle.</strong> Diferencia con <code>design/system.md</code> §7: 880&nbsp;px en lugar de 720 para sostener la franja y su fila de acciones.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- móvil -->
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada" style="max-width:70ch">Mismo orden: título, franja de trabajo, acciones, datos e historial. La fila de acciones se envuelve —cada botón crece a lo ancho de su renglón— y «Más acciones…» ocupa el ancho completo, abierta aquí para mostrar los tres formularios apilados. No hay barra inferior fija de acciones: la navegación del panel no se tapa, y el cuerpo cierra con 24&nbsp;px de relleno.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <header class="m-cabecera">
+            <nav class="migaja" aria-label="Ruta">
+              <a href="#">Reportes</a>
+              <span aria-hidden="true">›</span>
+              <span aria-current="page">REP-2026-000005</span>
+            </nav>
+            <h1 class="folio">REP-2026-000005</h1>
+            <p class="label" style="margin-top:4px">Registrado el 16 nov 2026, 11:15 a.m.</p>
+          </header>
+
+          <section class="tarjeta cabecera-trabajo" aria-labelledby="m-t-trabajo">
+            <h2 class="label" id="m-t-trabajo">Estado del reporte</h2>
+            <div class="franja-datos">
+              <span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Recibido</span>
+              <span class="atraso">Atrasado · 6 días</span>
+              <span class="area-linea"><span class="label">Área</span><span class="title">Sin asignar</span></span>
+              <span class="lugar"><span class="title">Calle 26 x 31 y 33</span><span class="label">Centro, Motul</span></span>
+              <span class="enlaces">
+                <a class="enlace" href="#">Ver historial de la calle</a>
+                <a class="enlace" href="#">Ver en el mapa</a>
+              </span>
+            </div>
+            <div class="fila-acciones">
+              <form action="#" method="post" style="flex:1 1 auto">
+                <button class="boton primaria ancho" type="submit">Marcar en atención</button>
+              </form>
+              <form action="#" method="post" style="flex:1 1 auto">
+                <button class="boton secundaria ancho" type="submit">Marcar resuelto</button>
+              </form>
+              <details class="mas" open>
+                <summary>Más acciones…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-mas">
+                  <div class="grupo-accion">
+                    <h3 class="title">Asignar área</h3>
+                    <form action="#" method="post">
+                      <div class="campos">
+                        <div class="campo">
+                          <label class="label" for="m-d-area">Área responsable</label>
+                          <select id="m-d-area"><option value="">Seleccione un área</option><option>Obras públicas</option><option>Alumbrado público</option><option>Agua potable y drenaje</option><option>Limpia y recolección</option><option>Parques y jardines</option><option>Servicios generales</option></select>
+                        </div>
+                      </div>
+                      <div class="acciones-del-grupo"><button class="boton secundaria ancho" type="submit">Asignar área</button></div>
+                    </form>
+                  </div>
+                  <div class="grupo-accion">
+                    <h3 class="title">Programar obra</h3>
+                    <form action="#" method="post">
+                      <div class="campos">
+                        <div class="campo">
+                          <label class="label" for="m-d-tipo">Tipo de obra</label>
+                          <select id="m-d-tipo"><option value="">Seleccione un tipo</option><option>Bache</option><option>Repavimentación</option><option>Pavimentación</option><option>Mejora</option><option>Fuga</option><option>Alumbrado</option><option>Mantenimiento</option><option>Obra</option></select>
+                        </div>
+                        <div class="campo">
+                          <label class="label" for="m-d-trabajo">Descripción del trabajo</label>
+                          <textarea id="m-d-trabajo"></textarea>
+                          <span class="ayuda">No anote nombres, teléfonos ni datos de vecinos.</span>
+                        </div>
+                      </div>
+                      <div class="acciones-del-grupo"><button class="boton secundaria ancho" type="submit">Programar obra</button></div>
+                    </form>
+                  </div>
+                  <div class="separador-peligro">
+                    <div class="grupo-accion peligro">
+                      <h3 class="title">Rechazar reporte</h3>
+                      <form action="#" method="post">
+                        <div class="campos">
+                          <div class="campo">
+                            <label class="label" for="m-d-motivo">Motivo de rechazo</label>
+                            <select id="m-d-motivo"><option value="">Seleccione un motivo</option><option>Duplicado</option><option>Fuera de competencia</option><option>Información insuficiente</option></select>
+                          </div>
+                          <div class="campo">
+                            <label class="label" for="m-d-original">Folio del reporte original</label>
+                            <input id="m-d-original" class="dato" placeholder="REP-AAAA-000123" autocomplete="off">
+                            <span class="ayuda">Solo si el motivo es Duplicado.</span>
+                          </div>
+                        </div>
+                        <div class="acciones-del-grupo"><button class="boton peligro ancho" type="submit">Rechazar reporte</button></div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </section>
+
+          <section aria-labelledby="m-t-datos">
+            <h2 class="headline" id="m-t-datos" style="margin-bottom:12px">Datos</h2>
+            <dl class="tarjeta datos">
+              <div class="fila-dato"><dt class="label">Tipo</dt><dd>Bache</dd></div>
+              <div class="fila-dato"><dt class="label">Descripción</dt><dd>Bache enorme</dd></div>
+              <div class="fila-dato"><dt class="label">Referencia</dt><dd>Enfrente del seguro</dd></div>
+            </dl>
+          </section>
+
+          <section aria-labelledby="m-t-historial">
+            <h2 class="headline" id="m-t-historial" style="margin-bottom:12px">Historial</h2>
+            <ol class="linea-de-tiempo">
+              <li class="hecho">
+                <span class="punto" aria-hidden="true"></span>
+                <p class="evento title">Reporte recibido</p>
+                <p class="cuando dato apagada"><time datetime="2026-11-16T11:15-06:00">16 nov 2026, 11:15 a.m.</time></p>
+              </li>
+            </ol>
+            <p class="label" style="margin-top:12px">Un solo movimiento: nadie ha tomado el reporte en 6 días.</p>
+          </section>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a>
+          <a href="#" aria-current="true"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-mas"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
