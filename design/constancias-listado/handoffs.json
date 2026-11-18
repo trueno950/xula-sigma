@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-tabla-con-titular.html",
+  "handoffs": {
+    "01-tabla-con-titular.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-18T18:59:02.372Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/constancias-ux.md"
+    }
+  }
+}
