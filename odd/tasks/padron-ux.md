@@ -46,11 +46,11 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3:
 
 ## Tasks
 
-- [ ] **T0** (S1-S4, S8-S12) diseño en gentle design: dos direcciones para el listado y dos para la ficha; el usuario elige — design — commit:
-- [x] **T1** (S1, S9, S12) datos: domicilio vigente por persona en el listado, en una lectura por página; mapa de lo que exponen `editarPersona`, `darDeBajaPersona` y `fusionarPersonas` para la UI — worker — commit:
+- [x] **T0** (S1-S4, S8-S12) diseño en gentle design: dos direcciones para el listado y dos para la ficha; el usuario elige — design — commit: artboards pendientes de copiar a la rama
+- [x] **T1** (S1, S9, S12) datos: domicilio vigente por persona en el listado, en una lectura por página; mapa de lo que exponen `editarPersona`, `darDeBajaPersona` y `fusionarPersonas` para la UI — worker — commit: 256fe19, 36976f4
 - [ ] **T2** (S1-S4) listado según `design/padron-listado/01-tabla-con-domicilio.html` (L6) — worker — commit:
-- [ ] **T3** (S5-S7) formulario de alta — worker — commit:
-- [ ] **T4** (S8-S12) ficha según `design/padron-ficha/02-encabezado-con-pestanas.html` (L7) — worker — commit:
+- [x] **T3** (S5-S7) formulario de alta — worker — commit: f82c80e
+- [x] **T4** (S8-S12) ficha según `design/padron-ficha/02-encabezado-con-pestanas.html` (L7) — worker — commit: 5fd31ed, 011f1a5
 - [ ] **T5** (S1-S13) verificación, revisión nativa, PR y merge — verify — commit:
 
 ## Log
@@ -142,3 +142,20 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3:
         con ella.
       - La página del listado, en `src/app`, une las dos lecturas.
       - `padron` deja de tener puerto y adaptador hacia `territorio`.
+- **L10** — T1, T3 y T4 cerrados.
+  - **T1:** reconstruido en dos commits.
+    - `256fe19`: la lectura en lote de `territorio`.
+    - `36976f4`: `identidadesDePersonas` en `padron`, y `domiciliosVigentesDe`
+      en `src/app`, que todavía no se cablea; lo hace T2.
+    - Pasan `pnpm layers` y `next build`.
+  - **T3**, en `f82c80e`: el E2E de alta (7 pruebas con títulos y
+    respaldo) y las capturas, en verde.
+  - **T4**, en `5fd31ed` y `011f1a5`:
+    - las acciones `editarPersonaAction` y `darDeBajaPersonaAction`;
+    - `fusionarPersonasAction` vuelve a la ficha;
+    - la ficha con pestañas.
+    - E2E: 7 pruebas de la ficha y 12 de mudanza, títulos, recurso ajeno y
+      respaldo.
+    - Para no editar `e2e/mudanza.spec.ts`, el pliegue de mudanza abre por
+      defecto cuando la persona no tiene residencia o cuando vuelve de
+      crear un domicilio.
