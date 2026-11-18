@@ -3,12 +3,14 @@
   "chosen": "02-pestanas-por-estado.html",
   "handoffs": {
     "02-pestanas-por-estado.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-17T23:49:21.077Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/reportes-ux.md"
+      "implementedAt": "2026-11-18T01:31:36.217Z",
+      "feature": "odd/tasks/reportes-ux.md",
+      "note": "Fusionado en PR #143 (dcbfcbf). La demo usa el subdominio: http://demo.xula.localhost:3200/reportes.",
+      "previewUrl": "http://localhost:3200/reportes"
     }
   }
 }

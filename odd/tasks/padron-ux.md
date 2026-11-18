@@ -46,9 +46,9 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3:
 
 ## Tasks
 
-- [x] **T0** (S1-S4, S8-S12) diseño en gentle design: dos direcciones para el listado y dos para la ficha; el usuario elige — design — commit: artboards pendientes de copiar a la rama
+- [x] **T0** (S1-S4, S8-S12) diseño en gentle design: dos direcciones para el listado y dos para la ficha; el usuario elige — design — commit: (artboards en la rama)
 - [x] **T1** (S1, S9, S12) datos: domicilio vigente por persona en el listado, en una lectura por página; mapa de lo que exponen `editarPersona`, `darDeBajaPersona` y `fusionarPersonas` para la UI — worker — commit: 256fe19, 36976f4
-- [ ] **T2** (S1-S4) listado según `design/padron-listado/01-tabla-con-domicilio.html` (L6) — worker — commit:
+- [x] **T2** (S1-S4) listado según `design/padron-listado/01-tabla-con-domicilio.html` (L6) — worker — commit: 5fc00f3
 - [x] **T3** (S5-S7) formulario de alta — worker — commit: f82c80e
 - [x] **T4** (S8-S12) ficha según `design/padron-ficha/02-encabezado-con-pestanas.html` (L7) — worker — commit: 5fd31ed, 011f1a5
 - [ ] **T5** (S1-S13) verificación, revisión nativa, PR y merge — verify — commit:
@@ -159,3 +159,15 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3:
     - Para no editar `e2e/mudanza.spec.ts`, el pliegue de mudanza abre por
       defecto cuando la persona no tiene residencia o cuando vuelve de
       crear un domicilio.
+- **L11** — T2 cerrado en `5fc00f3`.
+  - E2E en verde:
+    - `padronListado` y `padron`: 9;
+    - las cuatro de padrón juntas: 19;
+    - mudanza, sesión, títulos, recurso ajeno, respaldo, marca, mapa y
+      subdominio: 44.
+  - Lo que no se hizo:
+    - **«de N» en el pie:** solo aparece cuando no hay otra página, porque
+      el puerto no cuenta el total del municipio. Queda fuera de alcance.
+    - **`(lista)/loading.tsx`:** ya abría un Suspense, y sin JavaScript
+      el HTML transmitido nunca se inserta. Es deuda anterior y queda como
+      seguimiento.
