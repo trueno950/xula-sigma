@@ -13,6 +13,7 @@ export * from "./darDeBajaCalle";
 export * from "./darDeBajaDomicilio";
 export * from "./darDeBajaLugar";
 export * from "./darDeBajaZona";
+export * from "./direccionesVigentesDePersonas";
 export * from "./direccionVigenteDePersona";
 export * from "./domicilioPorId";
 export * from "./editarLugar";

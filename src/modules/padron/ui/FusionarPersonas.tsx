@@ -1,60 +1,79 @@
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeFusionarPersonas } from "@/shared/auth/roles";
-import { ANILLO_DE_FOCO } from "@/shared/ui/estilos";
+import { Boton, CLASES_DE_ETIQUETA, clasesDeCampo } from "@/shared/ui";
 import { fusionarPersonasAction } from "./actions/fusionarPersonas.action";
+
+/** Una persona parecida, con lo que la operadora necesita para reconocerla. */
+export type CandidatoAFusionar = {
+  id: string;
+  etiqueta: string;
+};
 
 type Props = {
   contexto: ContextoActual;
-  /** `searchParams.error`, puesto por la Server Action. */
-  error?: string;
+  /** Esta ficha: la que se conserva y la que se queda con lo de la otra. */
+  ganadoraId: string;
+  /**
+   * Las personas parecidas que la página ya buscó. Elegir la duplicada por
+   * nombre en vez de escribir su id es lo que vuelve usable la fusión: el id
+   * crudo no aparece en ningún lado de la pantalla.
+   */
+  candidatos: readonly CandidatoAFusionar[];
 };
 
-const CLASE_ETIQUETA = "text-[13px] font-medium text-caliza-apagada";
-const CLASE_CAMPO = `h-11 rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 text-[15px] text-caliza-tinta font-mono ${ANILLO_DE_FOCO}`;
-
 /**
- * Visible solo si `puedeFusionarPersonas` (tasks.md 4.26). El resto de
- * `ui/` deja el chequeo de rol a la pagina que lo compone (`page.tsx` de
- * `/padron` con `puedeEscribir`) — aca no hay todavia una pagina propia
- * que sea ese punto de composicion, asi que el componente se guarda a si
- * mismo. `fusionarPersonasAction` vuelve a exigir el mismo permiso del
- * lado del caso de uso: ocultar el formulario es UX, no autorizacion
- * (`05-seguridad.md` seccion 6).
+ * Visible solo si `puedeFusionarPersonas` (S12). `fusionarPersonasAction`
+ * vuelve a exigir el mismo permiso del lado del caso de uso: ocultar el
+ * formulario es UX, no autorización (`05-seguridad.md` sección 6).
+ *
+ * Sin personas parecidas no se pinta el `<select>`: un formulario que solo
+ * puede responder con un error es un callejón, y el aviso dice dónde sí hay
+ * candidatas.
  */
-export function FusionarPersonas({ contexto, error }: Props) {
+export function FusionarPersonas({ contexto, ganadoraId, candidatos }: Props) {
   if (!puedeFusionarPersonas(contexto.usuario.rol)) return null;
 
-  return (
-    <form action={fusionarPersonasAction} className="flex flex-col gap-4">
-      {error ? (
-        <p role="alert" className="text-[15px] text-senial-error">
-          {error}
-        </p>
-      ) : null}
+  if (candidatos.length === 0) {
+    return (
+      <p className="text-[15px] text-caliza-apagada">
+        No se encontraron personas parecidas a esta ficha. Revise el listado del
+        padrón.
+      </p>
+    );
+  }
 
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>
+  return (
+    <form action={fusionarPersonasAction} className="flex flex-col gap-3.5">
+      <input type="hidden" name="ganadoraId" value={ganadoraId} />
+      <label
+        htmlFor={`fusionar-${ganadoraId}`}
+        className="flex flex-col gap-1.5"
+      >
+        <span className={CLASES_DE_ETIQUETA}>
           Persona a fusionar (queda marcada, no se borra)
         </span>
-        <input
+        <select
+          id={`fusionar-${ganadoraId}`}
           name="perdedoraId"
-          type="text"
           required
-          className={CLASE_CAMPO}
-        />
+          defaultValue=""
+          className={clasesDeCampo()}
+        >
+          <option value="">Seleccione la persona duplicada</option>
+          {candidatos.map((candidato) => (
+            <option key={candidato.id} value={candidato.id}>
+              {candidato.etiqueta}
+            </option>
+          ))}
+        </select>
       </label>
-
-      <label className="flex flex-col gap-1">
-        <span className={CLASE_ETIQUETA}>Persona destino (queda vigente)</span>
-        <input name="ganadoraId" type="text" required className={CLASE_CAMPO} />
-      </label>
-
-      <button
-        type="submit"
-        className="h-11 rounded-sm bg-marca px-4 text-[15px] font-medium text-marca-texto"
-      >
+      <p className={CLASES_DE_ETIQUETA}>
+        Esta ficha se conserva: el domicilio y la CURP de la persona elegida se
+        fusionan en ella.
+      </p>
+      <Boton type="submit" variante="secundaria">
         Fusionar
-      </button>
+      </Boton>
     </form>
   );
 }

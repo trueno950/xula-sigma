@@ -31,7 +31,7 @@ export function BuscadorDePersonas({ cadena }: Props) {
   const aviso = cadena ? avisoDePalabrasIgnoradas(cadena) : undefined;
 
   return (
-    <form method="get" className="flex flex-col gap-1">
+    <form method="get" className="flex max-w-[620px] flex-col gap-1">
       <label htmlFor="q" className={CLASES_DE_ETIQUETA}>
         Buscar persona
       </label>

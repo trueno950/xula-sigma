@@ -4,6 +4,7 @@ export * from "./darDeBajaPersona";
 export * from "./editarPersona";
 export * from "./fusionarPersonas";
 export * from "./identidadesDePersona";
+export * from "./identidadesDePersonas";
 export * from "./listarPersonas";
 export * from "./personaPorId";
 export type * from "./puertos";

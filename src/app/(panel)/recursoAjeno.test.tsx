@@ -28,6 +28,8 @@ vi.mock("next/navigation", () => ({ notFound: notFoundMock }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 
 vi.mock("@/modules/padron", () => ({
+  PESTANAS_DE_FICHA: ["residencias", "administrar"],
+  PESTANA_POR_DEFECTO: "residencias",
   comoPersonaId: (id: string) => id,
   personaPorId: personaPorIdMock,
 }));

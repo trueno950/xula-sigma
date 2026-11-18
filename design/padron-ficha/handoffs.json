@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "02-encabezado-con-pestanas.html",
+  "handoffs": {
+    "02-encabezado-con-pestanas.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-18T03:25:37.033Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/padron-ux.md"
+    }
+  }
+}

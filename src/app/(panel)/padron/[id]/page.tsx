@@ -1,8 +1,13 @@
 import { FileText } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { z } from "zod";
-import { comoPersonaId, personaPorId } from "@/modules/padron";
+import {
+  AdministrarPersona,
+  FichaDePersona,
+  nombreCompletoDe,
+  PESTANA_POR_DEFECTO,
+  PestanasDeFicha,
+} from "@/modules/padron";
 import {
   HistorialDeResidencias,
   historialDeResidencias,
@@ -14,12 +19,16 @@ import { puedeEscribir } from "@/shared/auth/roles";
 import {
   Aviso,
   AvisoDePermiso,
-  CLASES_DE_DATO,
   EnlaceDeAccion,
   Migaja,
-  PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+import {
+  candidatosAFusionar,
+  domicilioVigenteDe,
+  leerParametrosDeFicha,
+  leerPersona,
+} from "./parametros";
 
 export const metadata: Metadata = { title: "Persona" };
 
@@ -27,14 +36,6 @@ type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
-
-// `ok` y `domicilio` solo los pone el alta de domicilio abierta desde esta ficha.
-const esquemaDeParametros = z.object({
-  error: z.string().optional().catch(undefined),
-  ok: z.literal("domicilio-creado").optional().catch(undefined),
-  domicilio: z.uuid().optional().catch(undefined),
-});
-const esquemaDeId = z.string().uuid();
 
 /**
  * Unica ruta que compone `padron` y `territorio` (design.md seccion 11,
@@ -46,6 +47,9 @@ const esquemaDeId = z.string().uuid();
  * no repite esa arista: solo necesita leer de los dos barrels para
  * mostrarlos juntos, algo que ningun modulo podria hacer sin crear una
  * dependencia permanente entre ellos.
+ *
+ * La lectura de la URL y la resolucion de lo que la pantalla necesita viven
+ * en `parametros.ts` (metrica de 200 lineas, y el corte cae por tema).
  */
 export default async function PaginaDeDetalleDePersona({
   params,
@@ -58,62 +62,38 @@ export default async function PaginaDeDetalleDePersona({
   }
 
   const { id } = await params;
-  const analisis = esquemaDeParametros.safeParse(await searchParams);
-  const error = analisis.success ? analisis.data.error : undefined;
-  const domicilioRecienCreado =
-    analisis.success && !error && analisis.data.ok === "domicilio-creado";
+  const parametros = leerParametrosDeFicha(await searchParams);
+  const persona = await leerPersona(id, contexto);
 
-  /**
-   * El formato se valida con Zod, no con un `try/catch` alrededor de
-   * `personaPorId` (hallazgo de GGA en la revision de esta rebanada): un
-   * `catch` amplio ahi tragaria tambien un fallo real de infraestructura
-   * -conexion caida, timeout- y lo mostraria igual que un id inexistente,
-   * sin log y sin propagar el error. Con la validacion aparte, un fallo de
-   * `personaPorId` que no sea "no encontrado" sigue siendo un error real.
-   */
-  const analisisDeId = esquemaDeId.safeParse(id);
-  const persona = analisisDeId.success
-    ? await personaPorId(comoPersonaId(analisisDeId.data), contexto)
-    : null;
-
-  // Regla 8: un id de otro municipio ya vuelve `null` por RLS, y desde
-  // aca es indistinguible de uno inexistente. Los dos son 404.
   if (!persona) notFound();
 
   const puedeActuar = puedeEscribir(contexto.usuario.rol);
+  // Sin permiso de escritura no hay nada que administrar: un `?pestana=`
+  // pegado a mano no abre una pestaña que la sesion no puede usar.
+  const pestana = puedeActuar ? parametros.pestana : PESTANA_POR_DEFECTO;
+  const nombre = nombreCompletoDe(persona);
   const historial = await historialDeResidencias(persona.id, contexto);
-  // `listar` no tiene LIMIT: solo se paga cuando la mudanza se muestra.
+  // `listar` no tiene LIMIT: solo se paga cuando la cabecera pinta la mudanza.
   const domicilios = puedeActuar ? await listarDomicilios(contexto) : [];
+  const candidatos = await candidatosAFusionar({
+    pestana,
+    nombre,
+    personaId: persona.id,
+    contexto,
+  });
   // El id llega en la URL: solo se preselecciona si es un domicilio que el
   // municipio ya devolvio bajo su tenant. Otro id se ignora sin error.
-  const pedido = analisis.success ? analisis.data.domicilio : undefined;
   const domicilioPreseleccionado = domicilios.find(
-    (domicilio) => domicilio.id === pedido,
+    (domicilio) => domicilio.id === parametros.domicilio,
   )?.id;
-  const nombre = `${persona.nombres} ${persona.primerApellido}${
-    persona.segundoApellido ? ` ${persona.segundoApellido}` : ""
-  }`;
-
-  /**
-   * Emitir la constancia es la accion primaria de esta pantalla: es a lo
-   * que se entra a la ficha de alguien desde el mostrador. Antes vivia al
-   * pie, debajo del historial, detras de un scroll.
-   */
-  const emitir = puedeActuar ? (
-    <EnlaceDeAccion
-      href={`/constancias/emitir?personaId=${persona.id}`}
-      variante="primaria"
-    >
-      <FileText size={18} aria-hidden="true" />
-      Emitir constancia
-    </EnlaceDeAccion>
-  ) : undefined;
+  const domicilioRecienCreado =
+    !parametros.error && parametros.ok === "domicilio-creado";
 
   return (
-    <PaginaDePanel
-      titulo={nombre}
-      accion={emitir}
-      ancho="detalle"
+    <FichaDePersona
+      nombre={nombre}
+      curp={persona.curp}
+      domicilioVigente={domicilioVigenteDe(historial)}
       migaja={
         <Migaja
           pasos={[
@@ -123,34 +103,63 @@ export default async function PaginaDeDetalleDePersona({
           etiqueta="Ruta"
         />
       }
+      acciones={
+        puedeActuar ? (
+          <EnlaceDeAccion
+            href={`/constancias/emitir?personaId=${persona.id}`}
+            variante="primaria"
+          >
+            <FileText size={18} aria-hidden="true" />
+            Emitir constancia
+          </EnlaceDeAccion>
+        ) : undefined
+      }
+      mudanza={
+        puedeActuar ? (
+          <RegistroDeMudanza
+            personaId={persona.id}
+            domicilios={domicilios}
+            sinHistorial={historial.length === 0}
+            domicilioRecienCreado={domicilioRecienCreado}
+            {...(domicilioPreseleccionado ? { domicilioPreseleccionado } : {})}
+          />
+        ) : undefined
+      }
+      abrirMudanza={historial.length === 0 || domicilioRecienCreado}
     >
-      {persona.curp ? <p className={CLASES_DE_DATO}>{persona.curp}</p> : null}
+      {parametros.error ? <Aviso tono="error">{parametros.error}</Aviso> : null}
 
-      {error ? <Aviso tono="error">{error}</Aviso> : null}
-
-      {!puedeActuar ? (
+      {puedeActuar ? null : (
         <AvisoDePermiso
           capacidad="registrar cambios en el padrón ni emitir constancias"
           requisito="un rol con permisos de escritura"
         />
-      ) : null}
+      )}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
-          Historial de residencias
-        </h2>
-        <HistorialDeResidencias historial={historial} />
-      </section>
-
-      {puedeActuar ? (
-        <RegistroDeMudanza
+      <div className="flex flex-col gap-4">
+        <PestanasDeFicha
           personaId={persona.id}
-          domicilios={domicilios}
-          sinHistorial={historial.length === 0}
-          domicilioRecienCreado={domicilioRecienCreado}
-          {...(domicilioPreseleccionado ? { domicilioPreseleccionado } : {})}
+          activa={pestana}
+          puedeAdministrar={puedeActuar}
         />
-      ) : null}
-    </PaginaDePanel>
+        {pestana === "administrar" ? (
+          <AdministrarPersona
+            persona={persona}
+            contexto={contexto}
+            candidatos={candidatos}
+          />
+        ) : (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
+              Historial de residencias
+            </h2>
+            <HistorialDeResidencias historial={historial} />
+            <p className="text-[15px] text-caliza-apagada">
+              La residencia vigente es la que se imprime en las constancias.
+            </p>
+          </section>
+        )}
+      </div>
+    </FichaDePersona>
   );
 }

@@ -16,6 +16,7 @@ import {
   PaginaDePanel,
   PantallaDeMensaje,
 } from "@/shared/ui";
+import { domiciliosVigentesDe } from "./domiciliosVigentes";
 
 export const metadata: Metadata = { title: "Padrón" };
 
@@ -48,18 +49,23 @@ const esquemaDeBusqueda = z.object({
 });
 
 /**
- * Ruta fina: resuelve el contexto, lista o busca, y compone. Por que la
- * lectura no tiene guarda de rol: `listarPersonas.ts`. El enlace a
- * `/padron/alta` si la tiene -mismo `puedeEscribir` que esa ruta exige de
- * nuevo del lado del caso de uso-: sin esto, el rol de solo lectura llegaba
- * a un formulario que igual lo iba a rechazar, un callejon sin salida.
+ * Ruta fina: resuelve el contexto, lista o busca, lee los domicilios de la
+ * pagina y compone. Por que la lectura no tiene guarda de rol:
+ * `listarPersonas.ts`. El enlace a `/padron/alta` si la tiene -mismo
+ * `puedeEscribir` que esa ruta exige de nuevo del lado del caso de uso-: sin
+ * esto, el rol de solo lectura llegaba a un formulario que igual lo iba a
+ * rechazar, un callejon sin salida.
  *
  * `?q=` y no un Server Action: `BuscadorDePersonas.tsx` explica por que.
  *
- * El mismo enlace se le pasa dos veces a la pantalla —arriba y como accion
- * del vacio inicial— a proposito: en una lista con filas, la accion vive en
- * la cabecera; en una pantalla vacia, tiene que estar donde el operador
- * esta mirando, que es el centro.
+ * **El domicilio vigente se lee despues de la lista y solo de las personas
+ * de la pagina** (S1): `domiciliosVigentesDe` une las dos lecturas en lote
+ * de `T1`, asi que son dos viajes por pantalla y ninguno por fila.
+ *
+ * El mismo enlace se le pasa dos veces a la pantalla —en la cabecera, y
+ * como accion del vacio inicial y del telefono— a proposito: en escritorio
+ * la accion vive arriba; en una pantalla vacia o en el telefono, tiene que
+ * estar donde el operador esta mirando.
  */
 export default async function PaginaDePadron({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -87,6 +93,11 @@ export default async function PaginaDePadron({ searchParams }: Props) {
     ? await buscarPersonas(q, contexto, opciones)
     : await listarPersonas(contexto, opciones);
 
+  const domicilios = await domiciliosVigentesDe(
+    personas.map((persona) => persona.id),
+    contexto,
+  );
+
   const alta = puedeEscribir(contexto.usuario.rol) ? (
     <EnlaceDeAccion href="/padron/alta" variante="primaria">
       <Plus size={18} weight="bold" aria-hidden="true" />
@@ -96,7 +107,12 @@ export default async function PaginaDePadron({ searchParams }: Props) {
   const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
-    <PaginaDePanel titulo="Padrón de personas" accion={alta}>
+    <PaginaDePanel
+      titulo="Padrón de personas"
+      {...(alta
+        ? { accion: <div className="hidden sm:flex">{alta}</div> }
+        : {})}
+    >
       {!puedeActuar ? (
         <AvisoDePermiso
           capacidad="dar de alta personas en el padrón"
@@ -106,6 +122,7 @@ export default async function PaginaDePadron({ searchParams }: Props) {
       <BuscadorDePersonas {...(q ? { cadena: q } : {})} />
       <ListadoDePersonas
         personas={personas}
+        domicilios={domicilios}
         filtro={q}
         accionDeAlta={alta}
         orden={orden}
