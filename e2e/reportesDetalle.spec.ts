@@ -128,6 +128,11 @@ test("las acciones plegadas son un acordeon y el panel cabe en la pantalla", asy
     page.locator("details", {
       has: page.locator("summary", { hasText: texto }),
     });
+  const historial = page.getByRole("heading", {
+    name: "Historial",
+    exact: true,
+  });
+  const historialAntes = await cajaDe(historial);
   for (const texto of [
     "Programar obra…",
     "Asignar área…",
@@ -139,6 +144,9 @@ test("las acciones plegadas son un acordeon y el panel cabe en la pantalla", asy
   // Abrir el ultimo cerro los anteriores: el panel no se apila.
   await expect(desplegable("Programar obra…")).toHaveJSProperty("open", false);
   await expect(desplegable("Asignar área…")).toHaveJSProperty("open", false);
+  // Y la columna de la izquierda no se mueve: el historial sigue donde estaba.
+  await desplegable("Programar obra…").locator("summary").click();
+  expect((await cajaDe(historial)).y).toBe(historialAntes.y);
 
   const panel = await cajaDe(
     page.getByRole("complementary", { name: "Acciones" }),
