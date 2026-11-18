@@ -1,0 +1,21 @@
+{
+  "title": "Bandeja de reportes",
+  "brief": "Rediseño de /reportes para el personal de municipios pequeños de Yucatán: ver de un vistazo cuántos reportes hay por estado, cuáles llevan demasiado tiempo y dónde ocurrieron, y llegar a la lista en la primera pantalla de un teléfono.",
+  "feature": "odd/tasks/reportes-ux.md",
+  "artboards": [
+    {
+      "file": "01-tabla-con-contadores.html",
+      "title": "Tabla con contadores",
+      "tradeoff": "Conserva la tabla y sus columnas, y pone siete contadores accionables más una línea «Por área» antes de la lista: se gana un clic por filtro y el resumen ya se puede tocar, a cambio de 74 px de alto; en el celular la franja se desplaza en horizontal.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-pestanas-por-estado.html",
+      "title": "Pestañas por estado",
+      "tradeoff": "El estado pasa a ser el eje de la pantalla con cinco pestañas contadas y un interruptor de atrasados, y el resto de los filtros se va a una barra compacta: cambiar de estado es un clic directo, a cambio de que los conteos por área queden dentro del desplegable de Área y de gastar una fila en la banda.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

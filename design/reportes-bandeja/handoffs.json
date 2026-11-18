@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "02-pestanas-por-estado.html",
+  "handoffs": {
+    "02-pestanas-por-estado.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-17T23:49:21.077Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/reportes-ux.md"
+    }
+  }
+}
