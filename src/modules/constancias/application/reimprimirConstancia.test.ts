@@ -52,6 +52,8 @@ const constanciaGuardada = (canceladaEn: Date | null): ConstanciaGuardada => ({
   canceladaEn,
   canceladaPorUsuarioId: canceladaEn ? "usuario-2" : null,
   motivoCancelacion: canceladaEn ? "ERROR_DE_CAPTURA" : null,
+  nombreDelTitular: "Nombre de prueba",
+  estado: canceladaEn ? "CANCELADA" : "VIGENTE",
 });
 
 describe("reimprimirConstancia", () => {

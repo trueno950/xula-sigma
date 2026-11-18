@@ -51,6 +51,8 @@ const vigente: ConstanciaGuardada = {
   canceladaEn: null,
   canceladaPorUsuarioId: null,
   motivoCancelacion: null,
+  nombreDelTitular: "Juan Poot",
+  estado: "VIGENTE",
 };
 
 const cancelada: ConstanciaGuardada = {
@@ -58,6 +60,7 @@ const cancelada: ConstanciaGuardada = {
   canceladaEn: new Date("2026-02-01T00:00:00Z"),
   canceladaPorUsuarioId: "usuario-1",
   motivoCancelacion: "ERROR_DE_CAPTURA",
+  estado: "CANCELADA",
 };
 
 describe("pdfDeConstancia y el estado de cancelacion", () => {

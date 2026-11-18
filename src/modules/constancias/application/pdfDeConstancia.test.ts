@@ -57,6 +57,8 @@ const constanciaGuardada: ConstanciaGuardada = {
   canceladaEn: null,
   canceladaPorUsuarioId: null,
   motivoCancelacion: null,
+  nombreDelTitular: "Juan Poot",
+  estado: "VIGENTE",
 };
 
 const ayuntamientoLeido: AyuntamientoLeido = {

@@ -6,6 +6,7 @@ export {
   TitularDadoDeBajaError,
 } from "./errores";
 export {
+  derivarEstadoDeConstancia,
   ESTADOS_DE_CONSTANCIA,
   type EstadoDeConstancia,
 } from "./estadoDeConstancia";
