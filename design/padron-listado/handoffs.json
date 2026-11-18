@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-tabla-con-domicilio.html",
+  "handoffs": {
+    "01-tabla-con-domicilio.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-18T03:24:28.785Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/padron-ux.md"
+    }
+  }
+}

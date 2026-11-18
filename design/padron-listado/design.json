@@ -1,0 +1,21 @@
+{
+  "title": "Listado del padrón de personas",
+  "brief": "Rediseño de /padron para el personal de municipios pequeños de Yucatán: ver quién está registrado y dónde vive hoy, distinguir homónimos sin abrir la ficha y reconocer la CURP pendiente, con el teléfono como primera pantalla.",
+  "feature": "odd/tasks/padron-ux.md",
+  "artboards": [
+    {
+      "file": "01-tabla-con-domicilio.html",
+      "title": "Tabla con domicilio",
+      "tradeoff": "La tabla que ya existe gana la columna de domicilio vigente, la CURP etiquetada y el conteo con la búsqueda puesta: ocho personas comparables a la vez con los valores en columnas fijas, a cambio de 320 px de domicilio que le roban ancho al nombre y de tres renglones por persona en el teléfono.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-tarjetas-de-identidad.html",
+      "title": "Tarjetas de identidad",
+      "tradeoff": "Cada persona en su tarjeta, con el nombre a 20 px y la CURP en una etiqueta, y el buscador y el conteo pegados arriba: se lee a un brazo de distancia en el mostrador, a cambio de 128 px por persona en escritorio y 168 en el teléfono, de modo que caben nueve y no catorce, y las CURP ya no quedan en una columna que se pueda confrontar de un vistazo.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}
