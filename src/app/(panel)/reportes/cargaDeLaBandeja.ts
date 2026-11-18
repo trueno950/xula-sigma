@@ -6,7 +6,7 @@ import {
   type FiltrosDeListado,
   listarReportes,
   type OrdenDeReportes,
-  type ReporteGuardado,
+  type ReporteDeBandeja,
 } from "@/modules/reportes";
 import {
   comoLugarId,
@@ -77,21 +77,64 @@ export async function cargarFiltrosDeTerritorio(
 }
 
 export type LecturaDeLaBandeja = {
-  readonly reportes: readonly ReporteGuardado[];
+  readonly reportes: readonly ReporteDeBandeja[];
   readonly hayMas: boolean;
-  readonly conteos: ConteosDeReportes;
+  /** Los conteos **sin** el estado: lo que abriria cada pestaña (S2). */
+  readonly conteosPorEstado: ConteosDeReportes;
+  /** Los conteos **sin** el area: lo que queda detras de cada opcion (S2). */
+  readonly conteosPorArea: ConteosDeReportes;
+  /** Los reportes atrasados con los otros filtros puestos (S1). */
+  readonly totalDeAtrasados: number;
 };
 
+/** El corte de atrasados, que ya viene calculado por la pagina. */
+const conCorte = (
+  filtros: FiltrosDeListado,
+  corte: string,
+): FiltrosDeListado => ({ ...filtros, atrasadosDesde: corte });
+
 /**
- * El listado y los conteos, juntos y con los mismos filtros: son dos
- * lecturas del mismo conjunto, asi que van en un solo `Promise.all` y no
- * pueden divergir -lo que la tabla muestra y lo que los numeros dicen-.
- * `lugarIds` ya viene resuelto por `cargarFiltrosDeTerritorio`.
+ * Los filtros de una pestaña de estado: el estado se quita y el resto se
+ * conserva -el corte de atrasados incluido, cuando el interruptor esta
+ * puesto-, porque la pestaña dice cuantos reportes abriria **con lo que ya
+ * esta filtrado**. Con el interruptor apagado no lleva corte: un reporte que
+ * no esta atrasado tiene que contar en su pestaña.
+ */
+export function filtrosSinEstado(filtros: FiltrosDeListado): FiltrosDeListado {
+  const { estado: _estado, ...resto } = filtros;
+
+  return resto;
+}
+
+/**
+ * Los filtros de una opcion de area: el area se quita y el estado se
+ * conserva, porque el conteo dice cuantos quedarian si se eligiera esa area
+ * dentro de la pestaña en la que se esta.
+ */
+export function filtrosSinArea(filtros: FiltrosDeListado): FiltrosDeListado {
+  const { area: _area, ...resto } = filtros;
+
+  return resto;
+}
+
+/**
+ * El listado y los tres conteos de la banda, juntos y con los mismos
+ * filtros: son cuatro lecturas del mismo conjunto, asi que van en un solo
+ * `Promise.all` y no pueden divergir -lo que la tabla muestra y lo que los
+ * numeros dicen-. `lugarIds` ya viene resuelto por
+ * `cargarFiltrosDeTerritorio`.
+ *
+ * `corte` se usa para el numero del interruptor, que dice cuantos atrasados
+ * hay aunque este apagado. Los conteos de las pestañas y de las areas siguen a
+ * `datos.filtros`, que ya trae el corte solo cuando la operadora encendio el
+ * interruptor (`filtrosDeLaConsulta`).
  */
 export async function leerLaBandeja(datos: {
   filtros: FiltrosDeListado;
   cadena: string | undefined;
   contexto: ContextoActual;
+  /** La fecha civil de corte del umbral del municipio (`fechaDeCorte`). */
+  corte: string;
   limite?: number | undefined;
   orden?: OrdenDeReportes | undefined;
 }): Promise<LecturaDeLaBandeja> {
@@ -99,22 +142,29 @@ export async function leerLaBandeja(datos: {
     ...(datos.limite ? { limite: datos.limite } : {}),
     ...(datos.orden ? { orden: datos.orden } : {}),
   };
-  const opcionesDeConteo = {
-    filtros: datos.filtros,
-    ...(datos.cadena ? { cadena: datos.cadena } : {}),
+  const cadena = datos.cadena ? { cadena: datos.cadena } : {};
+  const conFiltros = (filtros: FiltrosDeListado) =>
+    contarReportes({ filtros, ...cadena }, datos.contexto);
+
+  const [listado, conteosPorEstado, conteosPorArea, deAtrasados] =
+    await Promise.all([
+      datos.cadena
+        ? buscarReportes(datos.cadena, datos.contexto, {
+            filtros: datos.filtros,
+            ...opcionesDeListado,
+          })
+        : listarReportes(datos.filtros, datos.contexto, opcionesDeListado),
+      conFiltros(filtrosSinEstado(datos.filtros)),
+      conFiltros(filtrosSinArea(datos.filtros)),
+      conFiltros(conCorte(datos.filtros, datos.corte)),
+    ]);
+
+  return {
+    ...listado,
+    conteosPorEstado,
+    conteosPorArea,
+    totalDeAtrasados: deAtrasados.total,
   };
-
-  const [listado, conteos] = await Promise.all([
-    datos.cadena
-      ? buscarReportes(datos.cadena, datos.contexto, {
-          filtros: datos.filtros,
-          ...opcionesDeListado,
-        })
-      : listarReportes(datos.filtros, datos.contexto, opcionesDeListado),
-    contarReportes(opcionesDeConteo, datos.contexto),
-  ]);
-
-  return { ...listado, conteos };
 }
 
 /**

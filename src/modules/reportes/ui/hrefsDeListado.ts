@@ -1,8 +1,8 @@
 import { TAMANO_DE_PAGINA } from "../application/listarReportes";
 import type { FiltrosDeLaBandeja } from "../application/puertos";
-import type { OrdenDeReportes } from "../domain";
+import type { EstadoDeReporte, OrdenDeReportes } from "../domain";
 
-type ParametrosDeListado = {
+export type ParametrosDeListado = {
   readonly filtros?: FiltrosDeLaBandeja | undefined;
   readonly q?: string | undefined;
   /** El «solo atrasados» de S1: en la URL es `?atrasados=1`, nunca el corte. */
@@ -79,4 +79,50 @@ export function hrefSinFiltro(
   delete filtros[campo];
 
   return construirHrefDeListado({ filtros, q: parametros.q });
+}
+
+/**
+ * La URL de una pestaña de estado (S2 de `reportes-ux`): los otros filtros,
+ * la busqueda y el atraso se conservan, y el orden y el limite se sueltan
+ * por el mismo motivo que la "x" de un chip.
+ *
+ * `undefined` es «Todos»: la pestaña que suelta el estado.
+ */
+export function hrefDeEstado(
+  parametros: ParametrosDeListado,
+  estado: EstadoDeReporte | undefined,
+): string {
+  const { estado: _actual, ...resto } = parametros.filtros ?? {};
+
+  return construirHrefDeListado({
+    filtros: { ...resto, ...(estado ? { estado } : {}) },
+    q: parametros.q,
+    soloAtrasados: parametros.soloAtrasados,
+  });
+}
+
+/** Un campo de la URL tal como viajaria en un `<form method="get">`. */
+export type CampoDeUrl = { readonly nombre: string; readonly valor: string };
+
+/**
+ * Los campos que un formulario GET tiene que reenviar para no perder lo que
+ * ya estaba puesto. Se derivan de `construirHrefDeListado` -no se arman a
+ * mano- para que la forma de la URL siga viviendo en un solo lugar.
+ *
+ * `atrasados`, el orden y el limite quedan afuera a proposito: el
+ * interruptor de S3 invierte el primero -y un campo que se reenvia solo no se
+ * puede invertir-, y cambiar de vista vuelve a la primera pagina en el orden
+ * por defecto, igual que un chip.
+ */
+export function camposDeLaUrl(
+  parametros: ParametrosDeListado,
+): readonly CampoDeUrl[] {
+  const href = construirHrefDeListado({
+    filtros: parametros.filtros,
+    q: parametros.q,
+  });
+
+  return [...new URLSearchParams(href.split("?")[1] ?? "").entries()].map(
+    ([nombre, valor]) => ({ nombre, valor }),
+  );
 }

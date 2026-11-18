@@ -131,3 +131,28 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3 
     «Solo atrasados» con el suyo. Los conteos por área se mueven a las
     opciones del filtro «Área».
   - Arranca T2.
+- **L10** — T2 hecho según `02-pestanas-por-estado.html`.
+  - Pestañas-enlace por estado con su conteo y `aria-current`.
+  - Interruptor «Solo atrasados N» con un GET que invierte `?atrasados=1`
+    sin JavaScript.
+  - Filtros en una fila, plegados en «Filtros (N)» por debajo de 1024 px.
+    Las opciones de Área muestran su conteo.
+  - El chip de estado se quitó, porque el estado vive en las pestañas.
+  - Columna «Ubicación», y el atraso va dentro de la celda de Estado.
+  - En el teléfono, cada reporte es una fila de tres renglones.
+  - La tarjeta de conteos se eliminó.
+  - Cada carga hace cuatro lecturas en paralelo: la lista y tres conteos
+    (sin estado, sin área y total).
+  - Pendientes que quedan fuera de T2, porque piden tocar
+    infraestructura o dominio:
+    - la búsqueda sigue cubriendo folio, descripción y referencia, no
+      tipo ni calle;
+    - «Sin asignar» no es una opción de Área;
+    - la paginación sigue con «Ver más», sin «Anterior/Siguiente».
+  - Se actualizaron a propósito `reportes.spec.ts`,
+    `reportesFiltros.spec.ts` y `listadoDeReportes.test.tsx`.
+  - Verificado:
+    - unit 485 archivos / 2960 tests;
+    - E2E de 7 specs: 25/25;
+    - tipos, biome y `pnpm reglas`;
+    - capturas a 1440 y 390.

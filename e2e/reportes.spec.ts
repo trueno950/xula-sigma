@@ -86,10 +86,15 @@ const abrirBandeja = async (page: Page, consulta = ""): Promise<void> => {
   await page.goto(urlDe("motul", `/reportes${consulta}`));
 };
 
-const insigniaDeAtraso = (page: Page) => page.getByText("Atrasado · 40 días");
+// La fila lleva el atraso dos veces en el HTML -la celda de escritorio y la
+// linea del telefono-, y una de las dos esta siempre oculta.
+const insigniaDeAtraso = (page: Page) =>
+  page.getByText("Atrasado · 40 días").filter({ visible: true });
 
+// S3: dejo de ser una casilla dentro del formulario y paso a ser el
+// interruptor de la banda, que envia el GET el solo.
 const filtroDeAtrasados = (page: Page) =>
-  page.getByRole("checkbox", { name: "Solo atrasados" });
+  page.getByRole("button", { name: /Solo atrasados/ });
 
 test("el administrador cambia el umbral y la bandeja y el mapa lo reflejan", async ({
   page,
@@ -101,8 +106,7 @@ test("el administrador cambia el umbral y la bandeja y el mapa lo reflejan", asy
 
   await expect(insigniaDeAtraso(page)).toBeVisible();
 
-  await filtroDeAtrasados(page).check();
-  await page.getByRole("button", { name: "Buscar" }).click();
+  await filtroDeAtrasados(page).click();
   await expect(page).toHaveURL(/atrasados=1/);
   await expect(insigniaDeAtraso(page)).toBeVisible();
   await expect(

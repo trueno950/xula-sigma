@@ -1,36 +1,34 @@
-import { fechaEnMerida } from "@/shared/lib/fecha";
 import {
-  CeldaDeApoyo,
-  CeldaDeDato,
-  CeldaPrincipal,
   type ColumnaDeTabla,
   type EstadoDeLista,
   EstadoVacio,
-  FilaDeTabla,
   type OpcionDeLista,
   Tabla,
 } from "@/shared/ui";
 import { fechaCivilDeInstante } from "../application/fechaCivil";
-import type {
-  FiltrosDeLaBandeja,
-  ReporteGuardado,
-} from "../application/puertos";
+import type { FiltrosDeLaBandeja } from "../application/puertos";
+import type { ReporteDeBandeja } from "../application/puertosDeUbicacionesDeReporte";
 import {
   type ConteosDeReportes as Conteos,
   diasDeAtraso,
-  ETIQUETA_DE_AREA,
-  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  type EstadoDeReporte,
   type OrdenDeReportes,
-  SIN_AREA,
 } from "../domain";
-import { CeldaDeEstado } from "./CeldaDeEstado";
-import { ConteosDeReportes } from "./ConteosDeReportes";
+import { ChipsDeFiltros } from "./ChipsDeFiltros";
 import { resolverOrdenDeColumnas } from "./columnasOrdenables";
+import { FilaDeReporte } from "./FilaDeReporte";
 import { FiltrosDeReportes } from "./FiltrosDeReportes";
-import { hrefDeVerMas } from "./hrefsDeListado";
+import {
+  camposDeLaUrl,
+  hrefDeEstado,
+  hrefDeVerMas,
+  type ParametrosDeListado,
+} from "./hrefsDeListado";
+import { type HrefsDeEstado, PestanasDeEstado } from "./PestanasDeEstado";
+import { PliegueDeFiltrosDeReportes } from "./PliegueDeFiltrosDeReportes";
 
 type Props = {
-  reportes: readonly ReporteGuardado[];
+  reportes: readonly ReporteDeBandeja[];
   hayMas: boolean;
   estadoDeLista: EstadoDeLista;
   filtros: FiltrosDeLaBandeja;
@@ -39,38 +37,63 @@ type Props = {
   hoy: string;
   /** Las opciones del filtro de lugar: los lugares activos del municipio. */
   lugares: readonly OpcionDeLista[];
-  /** Los conteos por estado y por area de los filtros elegidos (S2). */
-  conteos: Conteos;
+  /** Conteos **sin** el estado: lo que abriria cada pestaña (S2). */
+  conteosPorEstado: Conteos;
+  /** Conteos **sin** el area: lo que queda detras de cada opcion (S2). */
+  conteosPorArea: Conteos;
+  /** Los reportes atrasados con los otros filtros puestos (S1). */
+  totalDeAtrasados: number;
   q?: string | undefined;
   orden?: OrdenDeReportes | undefined;
   limite?: number | undefined;
   soloAtrasados?: boolean | undefined;
 };
 
+/**
+ * Las dos columnas con orden natural; la ubicacion de S4 va entre ellas y el
+ * estado, y no se ordena porque no hay un orden del territorio que la
+ * operadora pueda pedir.
+ */
 const COLUMNAS: readonly ColumnaDeTabla[] = [
-  { clave: "folio", etiqueta: "Folio", ancho: "minmax(0,2fr)" },
-  { clave: "tipo", etiqueta: "Tipo", ancho: "minmax(0,1fr)" },
-  { clave: "estado", etiqueta: "Estado", ancho: "minmax(0,1fr)" },
-  { clave: "area", etiqueta: "Área", ancho: "minmax(0,1fr)" },
-  { clave: "registrado", etiqueta: "Registrado", ancho: "minmax(0,1fr)" },
+  { clave: "folio", etiqueta: "Folio", ancho: "minmax(0,1.4fr)" },
+  { clave: "tipo", etiqueta: "Tipo", ancho: "minmax(0,0.8fr)" },
+  { clave: "ubicacion", etiqueta: "Ubicación", ancho: "minmax(0,1.5fr)" },
+  // El estado lleva la insignia y, cuando aplica, la de atraso: es la
+  // columna mas ancha a proposito, para que las dos quepan en el renglon.
+  { clave: "estado", etiqueta: "Estado", ancho: "minmax(0,2.4fr)" },
+  { clave: "area", etiqueta: "Área", ancho: "minmax(0,1.1fr)" },
+  { clave: "registrado", etiqueta: "Registrado", ancho: "minmax(0,0.9fr)" },
 ];
 
+/** Lo que el pliegue de S3 cuenta en «Filtros (N)»: todo menos el estado. */
+const filtrosPuestos = (
+  filtros: FiltrosDeLaBandeja,
+  q: string | undefined,
+  soloAtrasados: boolean,
+): number =>
+  [filtros.tipo, filtros.area, filtros.lugar, q].filter(Boolean).length +
+  (soloAtrasados ? 1 : 0);
+
+const hrefsDeEstado = (parametros: ParametrosDeListado): HrefsDeEstado => ({
+  todos: hrefDeEstado(parametros, undefined),
+  RECIBIDO: hrefDeEstado(parametros, "RECIBIDO"),
+  EN_ATENCION: hrefDeEstado(parametros, "EN_ATENCION"),
+  RESUELTO: hrefDeEstado(parametros, "RESUELTO"),
+  RECHAZADO: hrefDeEstado(parametros, "RECHAZADO"),
+});
+
 /**
- * Listado con busqueda (`?q=`), filtros por `estado`/`tipo` (con su chip),
- * «solo atrasados» (S1 de `gestion-municipal`), paginacion (`?limite=`) y
- * orden (`?ordenar=&direccion=`) -las secciones de `design.md` "Filtros",
- * "Buscador", "Paginacion" y "Ordenamiento de columnas". Un reporte sin
- * area dice "Sin asignar" para todos los roles: antes solo quien puede
- * asignarla lo leia asi y el resto veia un guion, dos lecturas distintas del
- * mismo dato.
+ * La bandeja de `reportes-ux` en la direccion elegida en L9: la banda de
+ * pestañas por estado con sus conteos -que sustituye a la tarjeta de resumen
+ * que no se podia tocar-, la barra de filtros en una fila, los chips de lo
+ * que esta puesto, la tabla con donde ocurrio cada reporte y el pie con
+ * cuantos se estan viendo del total.
  *
- * La insignia de atraso se calcula aca, con el umbral y el dia civil que
- * llegan por props, y no en el repositorio: el filtro ya lo aplico SQL, y lo
- * que falta es cuanto lleva cada fila para contarlo en la insignia.
- *
- * S2 suma los dos filtros nuevos -lugar y area responsable- y los conteos por
- * estado y por area, que llegan ya computados: contarlos aca seria contar la
- * pagina, no el municipio.
+ * Los conteos llegan ya computados por Postgres con los filtros puestos y el
+ * del propio eje quitado: contar aca seria contar la pagina visible, no el
+ * municipio. Y los numeros de las pestañas y de las opciones de area se
+ * recalculan junto con la lista, asi que no puede haber un numero viejo al
+ * lado de una lista nueva.
  */
 export function ListadoDeReportes({
   reportes,
@@ -80,29 +103,49 @@ export function ListadoDeReportes({
   umbral,
   hoy,
   lugares,
-  conteos,
+  conteosPorEstado,
+  conteosPorArea,
+  totalDeAtrasados,
   q,
   orden,
   limite,
-  soloAtrasados,
+  soloAtrasados = false,
 }: Props) {
-  const columnas = resolverOrdenDeColumnas(COLUMNAS, {
-    orden,
-    filtros,
-    q,
-    soloAtrasados,
-  });
+  const parametros = { filtros, q, soloAtrasados, orden, limite };
+  const columnas = resolverOrdenDeColumnas(COLUMNAS, parametros);
+  const estadoPuesto: EstadoDeReporte | undefined = filtros.estado;
+  const totalDelListado = estadoPuesto
+    ? conteosPorEstado.porEstado[estadoPuesto]
+    : conteosPorEstado.total;
 
   return (
     <div className="flex flex-col gap-4">
-      <FiltrosDeReportes
-        {...filtros}
-        q={q}
+      <PestanasDeEstado
+        {...(estadoPuesto ? { estado: estadoPuesto } : {})}
+        conteos={conteosPorEstado}
+        totalDeAtrasados={totalDeAtrasados}
         soloAtrasados={soloAtrasados}
-        lugares={lugares}
+        hrefs={hrefsDeEstado(parametros)}
+        camposOcultos={camposDeLaUrl(parametros)}
       />
 
-      <ConteosDeReportes conteos={conteos} />
+      <PliegueDeFiltrosDeReportes
+        activos={filtrosPuestos(filtros, q, soloAtrasados)}
+      >
+        <FiltrosDeReportes
+          {...filtros}
+          q={q}
+          lugares={lugares}
+          porArea={conteosPorArea.porArea}
+        />
+      </PliegueDeFiltrosDeReportes>
+
+      <ChipsDeFiltros
+        filtros={filtros}
+        lugares={lugares}
+        q={q}
+        soloAtrasados={soloAtrasados}
+      />
 
       {estado.clase !== "con-filas" ? (
         <EstadoVacio
@@ -111,32 +154,16 @@ export function ListadoDeReportes({
           hrefSinFiltro="/reportes"
         />
       ) : (
-        <Tabla
-          etiqueta="Reportes ciudadanos"
-          columnas={columnas}
-          {...(hayMas
-            ? {
-                verMas: hrefDeVerMas({
-                  filtros,
-                  q,
-                  limite,
-                  orden,
-                  soloAtrasados,
-                }),
-              }
-            : {})}
-        >
-          {reportes.map((reporte) => (
-            <FilaDeTabla
-              key={reporte.id}
-              href={`/reportes/detalle/${reporte.id}`}
-            >
-              <CeldaPrincipal>{reporte.folio}</CeldaPrincipal>
-              <CeldaDeApoyo>
-                {ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
-              </CeldaDeApoyo>
-              <CeldaDeEstado
-                estado={reporte.estado}
+        <>
+          <Tabla
+            etiqueta="Reportes ciudadanos"
+            columnas={columnas}
+            {...(hayMas ? { verMas: hrefDeVerMas(parametros) } : {})}
+          >
+            {reportes.map((reporte) => (
+              <FilaDeReporte
+                key={reporte.id}
+                reporte={reporte}
                 atraso={diasDeAtraso({
                   estado: reporte.estado,
                   fechaDeRegistro: fechaCivilDeInstante(reporte.registradoEn),
@@ -144,15 +171,15 @@ export function ListadoDeReportes({
                   umbral,
                 })}
               />
-              <CeldaDeApoyo>
-                {reporte.areaResponsable
-                  ? ETIQUETA_DE_AREA[reporte.areaResponsable]
-                  : SIN_AREA}
-              </CeldaDeApoyo>
-              <CeldaDeDato>{fechaEnMerida(reporte.registradoEn)}</CeldaDeDato>
-            </FilaDeTabla>
-          ))}
-        </Tabla>
+            ))}
+          </Tabla>
+          <p className="text-[13px] leading-tight text-caliza-apagada">
+            Mostrando{" "}
+            <span className="font-mono tabular-nums">1–{reportes.length}</span>{" "}
+            de <span className="font-mono tabular-nums">{totalDelListado}</span>{" "}
+            reportes
+          </p>
+        </>
       )}
     </div>
   );

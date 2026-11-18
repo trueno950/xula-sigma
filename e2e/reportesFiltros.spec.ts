@@ -132,18 +132,19 @@ test.beforeAll(async () => {
 
 test.beforeEach(liberarVentanaDeRitmo);
 
-const conteos = (page: Parameters<typeof accederAMotul>[0]) =>
-  page.getByRole("region", { name: "Conteos de reportes" });
+type Pagina = Parameters<typeof accederAMotul>[0];
 
-const porEstado = (page: Parameters<typeof accederAMotul>[0]) =>
-  conteos(page).getByRole("list", { name: "Conteo por estado" });
+const pestanas = (page: Pagina) =>
+  page.getByRole("navigation", { name: "Estado del reporte" });
 
-const porArea = (page: Parameters<typeof accederAMotul>[0]) =>
-  conteos(page).getByRole("list", { name: "Conteo por área" });
+const pestana = (page: Pagina, etiqueta: string) =>
+  pestanas(page).getByRole("link", { name: new RegExp(`^${etiqueta}`) });
 
-/** El unico parrafo de la tarjeta es el total, debajo de su encabezado. */
-const total = (page: Parameters<typeof accederAMotul>[0]) =>
-  conteos(page).getByRole("paragraph");
+/** La opcion del `<select>` de area, con su conteo adentro del texto. */
+const opcionDeArea = (page: Pagina, texto: string) =>
+  page
+    .getByRole("combobox", { name: "Área" })
+    .locator("option", { hasText: texto });
 
 const fila = (page: Parameters<typeof accederAMotul>[0], folio: string) =>
   page.getByRole("link", { name: new RegExp(folio) });
@@ -167,28 +168,31 @@ test("el lugar y el área filtran la bandeja y los conteos acompañan", async ({
   await expect(fila(page, sembrado.enComisaria)).toBeVisible();
   await expect(fila(page, sembrado.resuelto)).toBeVisible();
   await expect(fila(page, sembrado.enLugarVacio)).toHaveCount(0);
-  await expect(porEstado(page)).toContainText("Recibido 1");
-  await expect(porEstado(page)).toContainText("Resuelto 1");
-  await expect(porEstado(page)).toContainText("En atención 0");
-  await expect(porArea(page)).toContainText("Obras públicas 1");
-  await expect(porArea(page)).toContainText("Sin asignar 1");
-  await expect(total(page)).toHaveText("2");
+  await expect(pestana(page, "Recibidos")).toContainText("1");
+  await expect(pestana(page, "Resueltos")).toContainText("1");
+  await expect(pestana(page, "En atención")).toContainText("0");
+  await expect(pestana(page, "Todos")).toContainText("2");
+  await expect(
+    page.getByRole("button", { name: /Solo atrasados/ }),
+  ).toContainText("0");
+  await expect(opcionDeArea(page, "Obras públicas (1)")).toHaveCount(1);
 
   // Por área, dentro del mismo lugar: una sola fila y un solo renglón de área.
   await aplicar(page, `?lugar=${escenario.origenId}&area=OBRAS_PUBLICAS`);
   await expect(fila(page, sembrado.enComisaria)).toBeVisible();
   await expect(fila(page, sembrado.resuelto)).toHaveCount(0);
-  await expect(porArea(page)).toContainText("Obras públicas 1");
-  await expect(porArea(page)).not.toContainText("Sin asignar");
-  await expect(total(page)).toHaveText("1");
+  await expect(opcionDeArea(page, "Obras públicas (1)")).toHaveCount(1);
+  await expect(opcionDeArea(page, "Alumbrado público (0)")).toHaveCount(1);
+  await expect(pestana(page, "Todos")).toContainText("1");
 
   // El lugar sin calles, con su propio conteo: el filtro de lugar no es el
   // de la comisaria de arriba.
   await aplicar(page, `?lugar=${escenario.vacioId}`);
   await expect(fila(page, sembrado.enLugarVacio)).toBeVisible();
   await expect(fila(page, sembrado.enComisaria)).toHaveCount(0);
-  await expect(porArea(page)).toContainText("Alumbrado público 1");
-  await expect(total(page)).toHaveText("1");
+  await expect(opcionDeArea(page, "Alumbrado público (1)")).toHaveCount(1);
+  await expect(pestana(page, "Recibidos")).toContainText("1");
+  await expect(pestana(page, "Todos")).toContainText("1");
 
   // Y el mismo par de filtros por el formulario, para probar que los dos
   // `<select>` viajan en un solo GET.
@@ -199,7 +203,7 @@ test("el lugar y el área filtran la bandeja y los conteos acompañan", async ({
   await page
     .getByRole("combobox", { name: "Área" })
     .selectOption("OBRAS_PUBLICAS");
-  await page.getByRole("button", { name: "Buscar" }).click();
+  await page.getByRole("button", { name: "Filtrar" }).click();
   await expect(page).toHaveURL(
     new RegExp(`lugar=${escenario.origenId}&area=OBRAS_PUBLICAS`),
   );
