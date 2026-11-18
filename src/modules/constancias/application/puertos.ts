@@ -2,6 +2,7 @@ import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type {
   ConstanciaId,
+  EstadoDeConstancia,
   MotivoDeCancelacion,
   MotivoDeReimpresion,
   ReimpresionId,
@@ -40,6 +41,14 @@ export type ConstanciaGuardada = DatosParaGuardar & {
   canceladaEn: Date | null;
   canceladaPorUsuarioId: string | null;
   motivoCancelacion: MotivoDeCancelacion | null;
+  /**
+   * Titular tal como quedo congelado al emitir
+   * (`nombreDelTitularDeSnapshot`), nunca leido del padron. Una sola vez por
+   * fila, en `aConstanciaGuardada`: la pantalla no consulta nada por fila.
+   */
+  nombreDelTitular: string;
+  /** Derivado de `canceladaEn` (`derivarEstadoDeConstancia`), no una columna. */
+  estado: EstadoDeConstancia;
 };
 
 /**

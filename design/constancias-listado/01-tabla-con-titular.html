@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Tabla con titular — Constancias</title>
+<style>
+  :root {
+    --marca: oklch(0.42 0.12 25);
+    --marca-texto: oklch(0.99 0 0);
+    --marca-suave: color-mix(in oklch, var(--marca) 10%, var(--lienzo));
+    --marca-tenue: color-mix(in oklch, var(--marca) 5%, var(--lienzo));
+    --marca-hover: color-mix(in oklch, var(--marca) 92%, var(--tinta));
+    --fondo: oklch(0.962 0.005 80);
+    --lienzo: oklch(0.995 0.002 80);
+    --superficie: oklch(0.975 0.004 80);
+    --relleno: oklch(0.94 0.005 80);
+    --divisor: oklch(0.9 0.006 80);
+    --borde: oklch(0.62 0.008 80);
+    --inhabilitado: oklch(0.68 0.007 80);
+    --apagada: oklch(0.5 0.008 80);
+    --tinta: oklch(0.22 0.008 80);
+    --error: oklch(0.46 0.17 27);
+    --error-suave: oklch(0.96 0.025 27);
+    --exito: oklch(0.46 0.11 150);
+    --exito-suave: oklch(0.96 0.03 150);
+    --aviso: oklch(0.5 0.13 65);
+    --aviso-suave: oklch(0.965 0.035 85);
+    --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+    --reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--fondo); color: var(--tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+  h1, h2, h3, p, ul, li { margin: 0; }
+  ul { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--apagada); }
+  .dato { font-family: var(--mono); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--apagada); }
+  .enlace { color: var(--tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--fondo); }
+  .sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid var(--divisor); background: var(--lienzo); overflow-y: auto; }
+  .municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2; text-decoration: none; }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--r-md); font-weight: 600; font-size: 15px; color: var(--apagada); text-decoration: none; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+  .nav a.item:hover { background: var(--superficie); color: var(--tinta); }
+  .nav a.item[aria-current="page"] { background: var(--marca-suave); color: var(--tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--marca); }
+  .pie { border-top: 1px solid var(--divisor); padding: 12px; margin-top: auto; }
+  .pie .label { padding: 0 12px 4px; }
+  .boton-fantasma { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--r-md); background: transparent; color: var(--apagada); font: 600 15px var(--fuente); cursor: pointer; }
+  .boton-fantasma:hover { background: var(--relleno); color: var(--tinta); }
+
+  .contenido { min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 16px; }
+  .cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; }
+  .cabecera h1 { margin-bottom: 4px; }
+  .cabecera .descripcion { max-width: 62ch; color: var(--apagada); }
+  .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: var(--r-md); border: 1px solid transparent; font: 600 15px/1 var(--fuente); cursor: pointer; text-decoration: none; white-space: nowrap; transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease); }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--marca); color: var(--marca-texto); }
+  .boton.primaria:hover { background: var(--marca-hover); }
+  .boton.secundaria { background: var(--lienzo); color: var(--tinta); border-color: var(--borde); }
+  .boton.secundaria:hover { background: var(--superficie); }
+
+  .buscador { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; padding: 12px 16px; border: 1px solid var(--divisor); border-radius: var(--r-lg); background: var(--lienzo); box-shadow: var(--reposo); }
+  .campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .campo-buscar { flex: 2 1 260px; max-width: 420px; }
+  .campo-estado { flex: 0 1 200px; max-width: 200px; }
+  .con-icono, .con-select { position: relative; }
+  .con-icono > svg, .con-select > svg { position: absolute; top: 50%; translate: 0 -50%; color: var(--apagada); pointer-events: none; }
+  .con-icono > svg { left: 12px; }
+  .con-select > svg { right: 11px; }
+  .input, .campo select { height: 44px; width: 100%; padding: 0 12px; font: 400 15px var(--fuente); border: 1px solid var(--borde); border-radius: var(--r-md); background: var(--lienzo); color: var(--tinta); }
+  .con-icono .input { padding-left: 40px; }
+  .con-select select { appearance: none; padding-right: 34px; }
+  .ayuda { max-width: 58ch; }
+
+  .barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .resultado { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .resultado .cifra { font-family: var(--mono); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .chip { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--r-pill); background: var(--marca-suave); color: var(--tinta); font-size: 13px; font-weight: 500; text-decoration: none; }
+  .chip::after { content: ""; position: absolute; inset: -6px 0; }
+  .chip:hover { background: var(--relleno); }
+  .orden { display: inline-flex; align-items: center; gap: 6px; }
+
+  .tarjeta { border: 1px solid var(--divisor); border-radius: var(--r-lg); background: var(--lienzo); box-shadow: var(--reposo); overflow: clip; }
+  .tabla { width: 100%; border-collapse: collapse; }
+  .tabla thead th { height: 40px; padding: 0 16px; background: var(--superficie); font-size: 13px; font-weight: 500; color: var(--apagada); text-align: left; white-space: nowrap; }
+  .tabla thead th a { display: inline-flex; align-items: center; gap: 6px; height: 40px; text-decoration: none; }
+  .tabla thead th a:hover { color: var(--tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .tabla thead th[aria-sort] a { color: var(--tinta); }
+  .tabla tbody td { height: 48px; padding: 0 16px; border-top: 1px solid var(--divisor); vertical-align: middle; white-space: nowrap; }
+  .tabla tbody tr { transition: background-color 150ms var(--ease); }
+  .tabla tbody tr:hover { background: var(--superficie); }
+  .col-folio { width: 168px; }
+  .col-tipo { width: 200px; }
+  .col-estado { width: 152px; }
+  .col-fecha { width: 152px; }
+  .col-abrir { width: 44px; }
+  .tabla td.col-abrir { padding: 0 8px 0 4px; }
+  .tabla td.col-abrir svg { color: var(--apagada); }
+  .titular { font-weight: 600; font-size: 15px; }
+  .tipo { color: var(--apagada); }
+
+  .insignia { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--r-pill); font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .insignia svg { width: 14px; height: 14px; }
+  .insignia.exito { background: var(--exito-suave); color: var(--exito); }
+  .insignia.error { background: var(--error-suave); color: var(--error); }
+
+  .paginacion { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--divisor); }
+  .paginacion .seguir { display: flex; align-items: center; gap: 12px; }
+  .paginacion .boton { padding: 0 16px; }
+
+  .vacio { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 24px; text-align: center; }
+  .vacio svg { color: var(--apagada); }
+  .vacio .titulo { font-size: .9375rem; font-weight: 600; }
+  .vacio p { max-width: 48ch; }
+  .vacio .botones { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+  .hoja { background: var(--fondo); padding: 32px 24px 64px; border-top: 1px solid var(--divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--r-lg); background: var(--lienzo); border: 1px solid var(--divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--apagada); }
+  .nota li strong { color: var(--tinta); }
+  .nota code { font-family: var(--mono); font-size: .875rem; }
+  .muestras { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; align-items: start; }
+  .muestra { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--divisor); border-radius: var(--r-lg); background: var(--lienzo); }
+  .muestra .vacio { padding: 4px 0 0; }
+
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono { width: 390px; height: 844px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; position: relative; border: 1px solid var(--borde); border-radius: 20px; background: var(--fondo); box-shadow: var(--reposo); }
+  .m-scroll { overflow-y: auto; min-height: 0; }
+  .m-municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--marca-tenue); border-bottom: 1px solid var(--divisor); font-weight: 600; font-size: 15px; text-decoration: none; }
+  .m-cuerpo { padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .m-acciones { display: flex; flex-direction: column; gap: 8px; }
+  .m-acciones .boton { width: 100%; }
+  .m-filtros { border: 1px solid var(--divisor); border-radius: var(--r-lg); background: var(--lienzo); box-shadow: var(--reposo); padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .m-filtros .campo, .m-filtros .campo-buscar, .m-filtros .campo-estado { max-width: none; flex: 1 1 auto; }
+  .m-filtros .boton { width: 100%; }
+  .m-lista { border: 1px solid var(--divisor); border-radius: var(--r-lg); background: var(--lienzo); overflow: clip; box-shadow: var(--reposo); }
+  .m-fila { display: grid; grid-template-columns: minmax(0, 1fr) 20px; gap: 2px 8px; min-height: 76px; padding: 12px 12px 12px 16px; border-bottom: 1px solid var(--divisor); text-decoration: none; }
+  .m-fila:last-child { border-bottom: 0; }
+  .m-fila:active { background: var(--superficie); }
+  .m-fila .l1 { grid-column: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .m-fila .l2 { grid-column: 1; font-weight: 600; font-size: 15px; }
+  .m-fila .l3 { grid-column: 1; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--apagada); }
+  .m-fila .chevron { grid-column: 2; grid-row: 1 / 4; align-self: center; color: var(--apagada); }
+  .m-nav { position: static; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--divisor); background: var(--lienzo); }
+  .m-nav a { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--r-md); font-size: 13px; font-weight: 500; color: var(--apagada); text-decoration: none; }
+  .m-nav a[aria-current="page"] { background: var(--marca-suave); color: var(--tinta); }
+  .m-nav a[aria-current="page"] svg { color: var(--marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--marca-texto)" opacity=".85"/></symbol>
+    <symbol id="i-buscar" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.6 15.6 21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-derecha" viewBox="0 0 24 24"><path d="M9.4 4.6 16.8 12l-7.4 7.4-1.6-1.6L13.6 12 7.8 6.2z"/></symbol>
+    <symbol id="i-abajo" viewBox="0 0 24 24"><path d="M12 16.2 5.4 9.6l1.6-1.6L12 13l5-5 1.6 1.6z"/></symbol>
+    <symbol id="i-suma" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+    <symbol id="i-arriba" viewBox="0 0 24 24"><path d="M12 7.8 18.6 14.4l-1.6 1.6L12 11l-5 5-1.6-1.6z"/></symbol>
+    <symbol id="i-pluma" viewBox="0 0 24 24"><path d="M3 17.2 14.6 5.6l3.8 3.8L6.8 21H3zM16 4.2 17.8 2.4a1.4 1.4 0 0 1 2 0l1.8 1.8a1.4 1.4 0 0 1 0 2L19.8 8z"/></symbol>
+    <symbol id="i-documento" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="si-x" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm3.5 12.1-1.4 1.4L12 13.9 9.9 16l-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4L12 11.1l2.1-2.1 1.4 1.4-2.1 2.1z"/></symbol>
+    <symbol id="i-lupa-vacia" viewBox="0 0 24 24"><path d="M10.5 2.5a8 8 0 0 1 6.3 12.9l4.6 4.6-1.4 1.4-4.6-4.6A8 8 0 1 1 10.5 2.5zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm-1 2.6h2v3.2l2.4 1.4-1 1.7-3.4-2z"/></symbol>
+    <symbol id="i-sello" viewBox="0 0 24 24"><path d="M12 2.5a4 4 0 0 1 2.6 7l.7 4.1-3.3 1.6-3.3-1.6.7-4.1A4 4 0 0 1 12 2.5zM7.4 15.6h9.2l.9 5.9H6.5z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie">
+      <p class="label">Admin municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <header class="cabecera">
+      <div>
+        <h1 class="display">Constancias</h1>
+        <p class="descripcion body">Los documentos que el municipio ya emitió, con el nombre de a quién se le entregaron.</p>
+      </div>
+      <div class="acciones">
+        <a class="boton secundaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-pluma"/></svg>Bloque de firma</a>
+        <a class="boton primaria" href="/constancias/emitir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Emitir constancia</a>
+      </div>
+    </header>
+
+    <form class="buscador" method="get" action="#" role="search" aria-label="Buscar constancias emitidas">
+      <div class="campo campo-buscar">
+        <label class="label" for="q">Buscar constancia</label>
+        <div class="con-icono">
+          <svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-buscar"/></svg>
+          <input class="input" id="q" name="q" type="search" value="canul">
+        </div>
+      </div>
+      <div class="campo campo-estado">
+        <label class="label" for="estado">Estado</label>
+        <div class="con-select">
+          <select id="estado" name="estado"><option>Todos</option><option>Vigente</option><option>Cancelada</option></select>
+          <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg>
+        </div>
+      </div>
+      <button class="boton secundaria" type="submit">Buscar</button>
+      <p class="ayuda label" style="flex:1 1 100%">Por folio (VEC-2026-000018) o por el nombre del titular. No distingue acentos ni mayúsculas.</p>
+    </form>
+
+    <div class="barra">
+      <p class="resultado body">
+        <span><span class="cifra">6</span> constancias para «canul»</span>
+        <span class="apagada">·</span>
+        <span class="orden apagada">por fecha de emisión, de la más reciente a la más vieja</span>
+      </p>
+      <div class="chips">
+        <a class="chip" href="#"><span aria-hidden="true">×</span>canul<span class="sr-only">Quitar filtro: búsqueda «canul»</span></a>
+      </div>
+    </div>
+
+    <section class="tarjeta" aria-labelledby="lista-titulo">
+      <h2 class="sr-only" id="lista-titulo">Constancias para «canul»</h2>
+      <table class="tabla">
+        <caption class="sr-only">6 constancias cuyo titular coincide con «canul», de la más reciente a la más vieja. Se muestran las 6.</caption>
+        <thead>
+          <tr>
+            <th class="col-folio" scope="col" aria-sort="none"><a href="#">Folio<span class="sr-only">: ordenar por folio</span></a></th>
+            <th scope="col"><a href="#">Titular<span class="sr-only">: ordenar por el nombre del titular</span></a></th>
+            <th class="col-tipo" scope="col">Tipo</th>
+            <th class="col-estado" scope="col">Estado</th>
+            <th class="col-fecha" scope="col" aria-sort="descending"><a href="#">Emitida <svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg><span class="sr-only">: más reciente primero. Ordenar al revés</span></a></th>
+            <th class="col-abrir" scope="col"><span class="sr-only">Abrir el detalle</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a class="enlace dato" href="#">VEC-2026-000018</a></td>
+            <td class="titular">Canul Dzul, Wilberth Antonio</td>
+            <td class="tipo">Constancia de vecindad</td>
+            <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span></td>
+            <td class="dato">24 oct 2026</td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#">VEC-2026-000015</a></td>
+            <td class="titular">Canul Pech, Floridalma</td>
+            <td class="tipo">Constancia de vecindad</td>
+            <td><span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>Cancelada</span></td>
+            <td class="dato">15 oct 2026</td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#">VEC-2026-000012</a></td>
+            <td class="titular">Chan Canul, María Elena</td>
+            <td class="tipo">Constancia de vecindad</td>
+            <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span></td>
+            <td class="dato">3 oct 2026</td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#">VEC-2026-000009</a></td>
+            <td class="titular">May Canul, José Armando</td>
+            <td class="tipo">Constancia de vecindad</td>
+            <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span></td>
+            <td class="dato">21 sep 2026</td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#">VEC-2026-000006</a></td>
+            <td class="titular">Poot Canul, María Guadalupe</td>
+            <td class="tipo">Constancia de vecindad</td>
+            <td><span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>Cancelada</span></td>
+            <td class="dato">9 sep 2026</td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#">VEC-2026-000003</a></td>
+            <td class="titular">Tzec Canul, Aurelia</td>
+            <td class="tipo">Constancia de vecindad</td>
+            <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span></td>
+            <td class="dato">1 sep 2026</td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="paginacion">
+        <p class="label">Mostrando <span class="dato">1–6</span> de <span class="dato">6</span> constancias</p>
+        <div class="seguir"><span class="label">Sin más resultados</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<section class="hoja" aria-label="Notas del artboard">
+  <div class="hoja-inner">
+    <div class="notas">
+      <div class="nota">
+        <p class="label">Dirección 01 · compromiso</p>
+        <h3 class="headline">Tabla con titular</h3>
+        <p class="body apagada" style="margin:8px 0 12px">La tabla que ya existe conserva sus columnas y gana la del titular en segunda posición, más el buscador etiquetado, el conteo con chip y el botón de emitir.</p>
+        <p class="body"><strong>Compromiso:</strong> seis constancias se comparan de un vistazo, con folio, nombre, estado y fecha en columnas fijas, a cambio de que el nombre comparta el ancho con una columna «Tipo» que hoy repite el mismo valor en cada fila y de que en el teléfono cada constancia gaste tres renglones.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S1-S3)</h3>
+        <ul class="body">
+          <li><strong>S1.</strong> «Titular» es la segunda columna, en 15&nbsp;px/600 y tinta: se reconoce la constancia de una persona sin abrirla.</li>
+          <li><strong>S2.</strong> La etiqueta dice «Buscar constancia» y debajo aclara qué busca —folio o nombre del titular—; la línea de resultado dice «6 constancias para «canul»», el chip la quita, y el desplegable «Estado» deja el listado en vigentes, canceladas o todas, con su propio chip cuando se elige.</li>
+          <li><strong>S3.</strong> «Emitir constancia» es la acción primaria de la cabecera y lleva a <code>/constancias/emitir</code>, donde se busca a la persona. «Bloque de firma» queda como enlace secundario.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Cómo se comporta</h3>
+        <ul class="body">
+          <li><strong>La búsqueda es del servidor:</strong> un <code>&lt;form method="get"&gt;</code> con etiqueta visible; sin JavaScript funciona igual y la URL conserva <code>?q=</code> y <code>?estado=</code>.</li>
+          <li><strong>Estado con ícono y palabra:</strong> Vigente lleva palomita en verde de señal, Cancelada lleva cruz en rojo de señal; el color nunca va solo.</li>
+          <li><strong>La columna «Tipo» es honesta:</strong> hoy solo existe <code>vecindad-v1</code>, así que repite el mismo valor. Entra porque la pantalla ya viaja con el tipo y una segunda plantilla la vuelve útil sin cambiar la tabla; si el usuario prefiere, se retira y el dato baja al detalle.</li>
+          <li><strong>Renglón completo:</strong> el folio es el enlace y la flecha es decorativa; filas de 48&nbsp;px, foco de 2&nbsp;px en marca, ningún objetivo táctil bajo 44&nbsp;px.</li>
+          <li><strong>Constancia de otro municipio:</strong> el detalle responde 404, no 403 (regla 8), y la fecha civil se lee en <code>America/Merida</code>.</li>
+          <li><strong>L4 queda fuera:</strong> el orden del encabezado móvil —«Bloque de firma» antes del buscador— no se toca porque no entró en la elección.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="muestras" aria-label="Estados de lista">
+      <div class="muestra">
+        <h3 class="title">Búsqueda sin resultados</h3>
+        <div class="barra">
+          <p class="resultado body"><span><span class="cifra">0</span> constancias para «yáñez»</span></p>
+          <div class="chips"><a class="chip" href="#"><span aria-hidden="true">×</span>yáñez<span class="sr-only">Quitar filtro: búsqueda «yáñez»</span></a></div>
+        </div>
+        <div class="vacio">
+          <svg width="40" height="40" aria-hidden="true" fill="currentColor"><use href="#i-lupa-vacia"/></svg>
+          <p class="titulo">Ninguna constancia coincide con «yáñez»</p>
+          <p class="body apagada">La búsqueda revisa folio y nombre del titular, y no distingue acentos ni mayúsculas. Pruebe con el apellido solo o con el folio. Si la persona nunca pidió su constancia, no aparece aquí: se emite desde «Emitir constancia».</p>
+          <div class="botones"><a class="boton secundaria" href="#">Quitar búsqueda</a></div>
+        </div>
+      </div>
+
+      <div class="muestra">
+        <h3 class="title">Sin constancias emitidas (primera vez)</h3>
+        <div class="vacio">
+          <svg width="40" height="40" aria-hidden="true" fill="currentColor"><use href="#i-documento"/></svg>
+          <p class="titulo">Todavía no hay constancias emitidas en Motul</p>
+          <p class="body apagada">Aquí se guardan los documentos que el municipio entrega a sus vecinos: se emiten buscando a la persona en el padrón, y cada una recibe su folio.</p>
+          <div class="botones"><a class="boton secundaria" href="/constancias/emitir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Emitir constancia</a></div>
+        </div>
+        <p class="label">Los dos vacíos son distintos: uno nombra la búsqueda y ofrece quitarla; el otro dice qué es la pantalla y ofrece la primera emisión.</p>
+      </div>
+
+      <div class="muestra">
+        <h3 class="title">Con el estado elegido</h3>
+        <div class="barra">
+          <p class="resultado body"><span><span class="cifra">2</span> constancias para «canul»</span></p>
+          <div class="chips">
+            <a class="chip" href="#"><span aria-hidden="true">×</span>canul<span class="sr-only">Quitar filtro: búsqueda «canul»</span></a>
+            <a class="chip" href="#"><span aria-hidden="true">×</span>Estado: Cancelada<span class="sr-only">Quitar filtro: estado Cancelada</span></a>
+          </div>
+        </div>
+        <p class="label">Cada filtro puesto tiene su chip y su enlace para quitarlo: el estado no se adivina mirando las insignias de las filas.</p>
+      </div>
+    </div>
+
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada">La búsqueda conserva su etiqueta y su ayuda; cada constancia es un enlace de 76&nbsp;px con folio, estado, titular y tipo, y el conteo con su chip quedan encima de la lista.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-scroll">
+        <div class="m-cuerpo">
+          <h1 class="display">Constancias</h1>
+          <div class="m-acciones">
+            <a class="boton primaria" href="/constancias/emitir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Emitir constancia</a>
+            <a class="boton secundaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-pluma"/></svg>Bloque de firma</a>
+          </div>
+
+          <form class="m-filtros" method="get" action="#" role="search" aria-label="Buscar constancias emitidas">
+            <div class="campo">
+              <label class="label" for="mq">Buscar constancia</label>
+              <div class="con-icono">
+                <svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-buscar"/></svg>
+                <input class="input" id="mq" name="q" type="search" value="canul">
+              </div>
+            </div>
+            <div class="campo">
+              <label class="label" for="mestado">Estado</label>
+              <div class="con-select">
+                <select id="mestado" name="estado"><option>Todos</option><option>Vigente</option><option>Cancelada</option></select>
+                <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg>
+              </div>
+            </div>
+            <button class="boton secundaria" type="submit">Buscar</button>
+            <p class="label">Por folio o por el nombre del titular. No distingue acentos.</p>
+          </form>
+
+          <p class="resultado body"><span><span class="cifra">6</span> constancias para «canul»</span></p>
+          <div class="chips"><a class="chip" href="#"><span aria-hidden="true">×</span>canul<span class="sr-only">Quitar filtro: búsqueda «canul»</span></a></div>
+
+          <ul class="m-lista">
+            <li>
+              <a class="m-fila" href="#">
+                <span class="l1"><span class="dato">VEC-2026-000018</span><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span></span>
+                <span class="l2"><span class="sr-only">Abrir la constancia de </span>Canul Dzul, Wilberth Antonio</span>
+                <span class="l3"><span>Constancia de vecindad</span><span class="dato">24 oct 2026</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="m-fila" href="#">
+                <span class="l1"><span class="dato">VEC-2026-000015</span><span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>Cancelada</span></span>
+                <span class="l2"><span class="sr-only">Abrir la constancia de </span>Canul Pech, Floridalma</span>
+                <span class="l3"><span>Constancia de vecindad</span><span class="dato">15 oct 2026</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="m-fila" href="#">
+                <span class="l1"><span class="dato">VEC-2026-000012</span><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span></span>
+                <span class="l2"><span class="sr-only">Abrir la constancia de </span>Chan Canul, María Elena</span>
+                <span class="l3"><span>Constancia de vecindad</span><span class="dato">3 oct 2026</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="m-fila" href="#">
+                <span class="l1"><span class="dato">VEC-2026-000009</span><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span></span>
+                <span class="l2"><span class="sr-only">Abrir la constancia de </span>May Canul, José Armando</span>
+                <span class="l3"><span>Constancia de vecindad</span><span class="dato">21 sep 2026</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+          </ul>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+            <span class="label">Mostrando <span class="dato">1–4</span> de <span class="dato">6</span></span>
+            <a class="boton secundaria" href="#">Ver más</a>
+          </div>
+        </div>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#" aria-current="page"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-mas"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

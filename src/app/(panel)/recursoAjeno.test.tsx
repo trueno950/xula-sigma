@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NoEncontradoError } from "@/shared/lib/errores";
 
 /**
  * Regla 8 de `AGENTS.md`: un recurso de otro tenant devuelve **404**, nunca
@@ -43,6 +44,7 @@ vi.mock("@/modules/constancias", () => ({
   documentosDelAyuntamiento: vi.fn().mockResolvedValue(null),
   esquemaDeSnapshot: { parse: (d: unknown) => d },
   FormularioDeEmision: () => null,
+  vistaPreviaDeConstancia: vi.fn().mockRejectedValue(new NoEncontradoError()),
 }));
 
 vi.mock("@/modules/territorio", async () => ({

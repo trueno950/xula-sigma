@@ -50,6 +50,37 @@ const condicionesDeFiltros = (filtros: FiltrosDeListado): SQL[] => {
 const nombreDelTitular = sql`${constancias.datos}->'titular'->>'nombreCompleto'`;
 
 /**
+ * La version en SQL de `normalizarParaBusqueda`
+ * (`shared/lib/textoDeBusqueda.ts`), copiada de
+ * `territorio/infrastructure/textoDeBusquedaSql.ts`: un modulo no importa la
+ * infraestructura de otro (`AGENTS.md`, capas), misma razon por la que
+ * `escaparComodinesDeLike.ts` de este directorio esta duplicado. Sin
+ * `unaccent` (`drizzle/0004_padron.sql` lo instala) porque tambien quita la
+ * tilde de la enie, y "pena" no es "peña" -la regla de la busqueda del
+ * padron-. `NFC` junta vocal y acento combinante antes de traducir, y las
+ * mayusculas acentuadas van en la tabla porque `lower()` depende del
+ * collation de la base.
+ */
+const EQUIVALENCIAS: readonly (readonly [string, string])[] = [
+  ["a", "áàâäãåÁÀÂÄÃÅ"],
+  ["e", "éèêëÉÈÊË"],
+  ["i", "íìîïÍÌÎÏ"],
+  ["o", "óòôöõÓÒÔÖÕ"],
+  ["u", "úùûüÚÙÛÜ"],
+  ["y", "ýÿÝ"],
+  ["c", "çÇ"],
+  ["ñ", "Ñ"],
+];
+
+const CON_ACENTO = EQUIVALENCIAS.map(([, variantes]) => variantes).join("");
+const SIN_ACENTO = EQUIVALENCIAS.map(([base, variantes]) =>
+  base.repeat([...variantes].length),
+).join("");
+
+const textoDeBusquedaSql = (expresion: SQL): SQL =>
+  sql`translate(lower(normalize(${expresion}, NFC)), ${CON_ACENTO}, ${SIN_ACENTO})`;
+
+/**
  * `opciones.orden` de `design.md`, "Ordenamiento de columnas": "folio" es
  * el texto ya impreso y "emitida" es `emitidaEn`. Sin orden pedido,
  * `emitidaEn DESC` -la constancia mas reciente primero.
@@ -82,19 +113,24 @@ export const listadoDeConstanciasSql: Pick<
   },
 
   async buscar(tx, cadena, opciones) {
-    // `ILIKE '%...%'` sobre `folio` y sobre el nombre del titular -sin
-    // indice GIN ni trigramas: esta rebanada no monto esa infraestructura,
-    // mismo criterio que `listadoDeReportesSql.ts`.
+    // `folio` se compara con `ILIKE` y el nombre con las dos puntas
+    // normalizadas sin acentos (`textoDeBusquedaSql`), para que "jose"
+    // encuentre a "José" como en el padron. Sin indice GIN ni trigramas
+    // sobre el jsonb: esta rebanada no monto esa infraestructura, mismo
+    // criterio que `listadoDeReportesSql.ts`.
     //
     // `escaparComodinesDeLike` va antes de armar el patron: sin escapar, un
     // "%" o un "_" en lo que tipeo el operador actua como comodin de
     // Postgres en vez de como texto literal.
     const cadenaEscapada = escaparComodinesDeLike(cadena);
+    const patronDelNombre = textoDeBusquedaSql(
+      sql`${`%${cadenaEscapada}%`}::text`,
+    );
     const condiciones = [
       ...condicionesDeFiltros(opciones.filtros ?? {}),
       or(
         ilike(constancias.folio, `%${cadenaEscapada}%`),
-        ilike(nombreDelTitular, `%${cadenaEscapada}%`),
+        sql`${textoDeBusquedaSql(nombreDelTitular)} LIKE ${patronDelNombre}`,
       ) as SQL,
     ];
 

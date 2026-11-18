@@ -2,6 +2,7 @@ export * from "./composicionDeExportacion";
 
 import {
   crearBuscarConstancias,
+  crearBuscarTitulares,
   crearCancelarConstancia,
   crearConfigurarDocumentos,
   crearConstanciaPorId,
@@ -11,9 +12,11 @@ import {
   crearPdfDeConstancia,
   crearReimprimirConstancia,
   crearValidarFolio,
+  crearVistaPreviaDeConstancia,
 } from "./application";
 import {
   contadorDeFoliosSql,
+  crearBuscadorDeTitularesPorPadron,
   crearLectorDeDireccionesPorTerritorio,
   crearLectorDeTitularesPorPadron,
   lectorDeAyuntamientoSql,
@@ -56,6 +59,23 @@ export const listarConstancias = crearListarConstancias(
 export const buscarConstancias = crearBuscarConstancias(
   repositorioDeConstanciasSql,
 );
+/**
+ * S4 de `constancias-ux`: el buscador de la pantalla de emision. Va por el
+ * caso de uso del padron, no por su repositorio (`cuatro-puertas-a-la-base`).
+ */
+export const buscarTitulares = crearBuscarTitulares(
+  crearBuscadorDeTitularesPorPadron,
+);
+/**
+ * S5: lo que la hoja de la constancia va a imprimir, leido por los mismos
+ * puertos que `emitirConstancia`.
+ */
+export const vistaPreviaDeConstancia = crearVistaPreviaDeConstancia({
+  documentos: repositorioDeDocumentosSql,
+  ayuntamiento: lectorDeAyuntamientoSql,
+  crearLecturaDeTitulares: crearLectorDeTitularesPorPadron,
+  crearLecturaDeDirecciones: crearLectorDeDireccionesPorTerritorio,
+});
 export const pdfDeConstancia = crearPdfDeConstancia(
   repositorioDeConstanciasSql,
   lectorDeAyuntamientoSql,

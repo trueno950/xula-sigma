@@ -1,4 +1,5 @@
 export * from "./buscarConstancias";
+export * from "./buscarTitulares";
 export * from "./cancelarConstancia";
 export * from "./configurarDocumentos";
 export * from "./constanciaPorId";
@@ -13,3 +14,4 @@ export * from "./reimprimirConstancia";
 export * from "./validacionDeDocumentos";
 export * from "./validacionDeSnapshot";
 export * from "./validarFolio";
+export * from "./vistaPreviaDeConstancia";

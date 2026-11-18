@@ -25,3 +25,14 @@ export const esquemaDeSnapshot = z.object({
 });
 
 export type Snapshot = z.infer<typeof esquemaDeSnapshot>;
+
+/**
+ * El nombre del titular de una fila ya guardada, leido del snapshot y no del
+ * padron: el documento es el registro legal y el padron cambia despues
+ * (`constancias-ux`, S1). Reusa el esquema del snapshot en vez de repetir la
+ * forma -unico lugar que la declara-.
+ */
+export const nombreDelTitularDeSnapshot = (
+  datos: Record<string, unknown>,
+): string =>
+  esquemaDeSnapshot.shape.titular.parse(datos.titular).nombreCompleto;

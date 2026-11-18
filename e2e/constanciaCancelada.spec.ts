@@ -89,7 +89,8 @@ test("el detalle ofrece Imprimir solo si la constancia esta vigente", async ({
   await expect(imprimir).toHaveCount(1);
 
   await page.goto(urlDe("motul", `/constancias/${constancias.canceladaId}`));
-  await expect(page.getByText("Documento cancelado")).toBeVisible();
+  // El estado se lee como el sello de la hoja (L6), no como aviso aparte.
+  await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
   await expect(imprimir).toHaveCount(0);
 });
 

@@ -1,0 +1,21 @@
+{
+  "title": "Listado de constancias emitidas",
+  "brief": "Rediseño de /constancias para el personal de municipios pequeños de Yucatán: saber a quién se le emitió cada constancia sin abrirla, decir qué busca el buscador y poder emitir desde el listado, con el teléfono como primera pantalla.",
+  "feature": "odd/tasks/constancias-ux.md",
+  "artboards": [
+    {
+      "file": "01-tabla-con-titular.html",
+      "title": "Tabla con titular",
+      "tradeoff": "La tabla que ya existe gana la columna del titular, el buscador etiquetado y el conteo con chip: seis constancias comparables de un vistazo con folio, nombre, estado y fecha en columnas fijas, a cambio de una columna «Tipo» que hoy repite el mismo valor en cada fila y de tres renglones por constancia en el teléfono.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-fichas-por-titular.html",
+      "title": "Fichas por titular en pestañas de estado",
+      "tradeoff": "El estado pasa a ser el eje en tres pestañas con su cuenta y cada constancia se lee como una ficha de dos columnas con el nombre del titular a 20 px: se reconoce a la persona a un brazo de distancia y cambiar a «Canceladas» es un clic, a cambio de 100 px por constancia y de que los folios dejen de alinearse en una columna confrontable.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

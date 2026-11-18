@@ -80,7 +80,7 @@ const formateadorDeFechaCivilCorta = new Intl.DateTimeFormat("es-MX", {
 // Los snapshots guardados aceptan cualquier texto en `desdeEn`
 // (`validacionDeSnapshot.ts` usa `z.string()`); un valor antiguo no debe
 // impedir emitir.
-const fechaCivilComoDate = (fecha: string): Date | null => {
+export const fechaCivilComoDate = (fecha: string): Date | null => {
   const coincidencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
   if (!coincidencia) return null;
 
