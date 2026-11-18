@@ -55,4 +55,29 @@ describe("SelectorDeUbicacionYTipo", () => {
     expect(marcado).toContain('name="lugarId"');
     expect(marcado).toContain('name="calleId"');
   });
+
+  it("explica en una linea que elige cada forma de ubicar el reporte", () => {
+    const marcado = html();
+
+    expect(marcado).toContain("Elija el lugar y, si la sabe, la calle.");
+    expect(marcado).toContain("Busque una dirección del padrón territorial.");
+  });
+
+  it("deja la explicacion fuera de la etiqueta: el nombre accesible de cada opcion es su titulo", () => {
+    const marcado = html();
+    const etiquetaDe = (valor: string) => {
+      const inicio = marcado.lastIndexOf("<label", marcado.indexOf(valor));
+      return marcado.slice(inicio, marcado.indexOf("</label>", inicio));
+    };
+
+    expect(etiquetaDe("Domicilio registrado")).not.toContain("Busque");
+    expect(etiquetaDe("Lugar y calle")).not.toContain("Elija");
+  });
+
+  it("la calle pide elegir el lugar antes de ofrecer «Ninguna»", () => {
+    const marcado = html();
+
+    expect(marcado).toContain("Elija primero el lugar");
+    expect(marcado).not.toContain(">Ninguna<");
+  });
 });

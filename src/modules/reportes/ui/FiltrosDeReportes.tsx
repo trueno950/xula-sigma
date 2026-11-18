@@ -10,95 +10,92 @@ import {
 import type { FiltrosDeLaBandeja } from "../application/puertos";
 import {
   AREAS_RESPONSABLES,
-  ESTADOS_DE_REPORTE,
   ETIQUETA_DE_AREA,
-  ETIQUETA_DE_ESTADO_DE_REPORTE,
   ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  type FilaDeConteoDeArea,
   TIPOS_DE_INCIDENCIA,
 } from "../domain";
-import { ChipsDeFiltros } from "./ChipsDeFiltros";
 
 type Props = FiltrosDeLaBandeja & {
   q?: string | undefined;
-  soloAtrasados?: boolean | undefined;
   /** Las opciones del `?lugar=`: los lugares activos del municipio. */
   lugares: readonly OpcionDeLista[];
+  /** Los conteos por area con los otros filtros puestos: cada opcion lleva el suyo. */
+  porArea: readonly FilaDeConteoDeArea[];
 };
 
 /**
- * Un solo `<form method="get">` para busqueda y filtros, no dos separados
- * (`design.md`, "Buscador": "convive con los filtros de la misma pantalla,
- * nunca los reemplaza"). Con dos forms, cambiar el `<select>` de estado
- * mandaria un GET que no lleva `q`, y la busqueda escrita se perderia sin
- * que nada lo avise. Un solo submit manda los tres a la vez, sin
- * JavaScript ni campos ocultos.
+ * Las opciones de «Área» con su conteo entre parentesis (S2, L9). Se
+ * recorren las seis del catalogo -no solo las que tienen algo-: un cero es
+ * informacion, y es justo lo que decia la tarjeta de conteos que esta barra
+ * reemplaza. El conteo viene de Postgres con los otros filtros puestos, nunca
+ * de sumar la pagina visible.
  *
- * «Solo atrasados» (S1 de `gestion-municipal`) es una casilla y no un
- * `<select>`: son dos estados, y desmarcarla es lo mismo que no mandar el
- * campo. Viaja en el mismo GET, asi que cambiar de estado o de tipo no la
- * pierde, y su chip de abajo la quita sin tocar los demas filtros.
+ * «Sin asignar» no es una opcion porque no es un area del catalogo: el filtro
+ * de area recibe un `AreaResponsable`, y un reporte sin area no se puede
+ * pedir por este `<select>`.
+ */
+const opcionesDeArea = (
+  porArea: readonly FilaDeConteoDeArea[],
+): readonly OpcionDeLista[] =>
+  AREAS_RESPONSABLES.map((area) => {
+    const conteo = porArea.find((fila) => fila.area === area)?.conteo ?? 0;
+    return { valor: area, etiqueta: `${ETIQUETA_DE_AREA[area]} (${conteo})` };
+  });
+
+/**
+ * La barra de filtros de S3: busqueda, tipo, lugar y area en **una fila** en
+ * escritorio, y un unico `<form method=\"get\">` para todos
+ * (`design.md`, "Buscador": la busqueda convive con los filtros, nunca los
+ * reemplaza). Con dos formularios, cambiar un `<select>` mandaria un GET sin
+ * `q` y la busqueda escrita se perderia sin que nada lo avise.
  *
- * S2 agrega lugar y area responsable al mismo formulario: el lugar es una
- * colonia o una localidad del municipio -el `?lugar=` se resuelve a su
- * subarbol en el servidor-, y el area es el catalogo cerrado de areas que
- * atienden un reporte.
+ * El estado y «solo atrasados» ya **no** viven aca: el estado es la pestaña y
+ * el atraso es el interruptor de la banda (`PestanasDeEstado`), asi que la
+ * barra se queda con lo que filtra por si mismo.
  *
- * Los chips de abajo (`design.md`, "Filtros") son el select confirmado: el
- * `<select>` captura, el chip dice que el filtro esta puesto -sin el, un
- * `<select>` que cambia de valor se lee como la lista completa, no como un
- * resultado acotado-. Viven en `ChipsDeFiltros.tsx`: cinco filtros en un solo
- * componente pasaban la metrica de complejidad de Biome.
+ * Cambiar un `<select>` no envia nada: sin JavaScript se sigue enviando con
+ * «Filtrar», y la fila unica es lo que evita que el boton quede solo en una
+ * segunda linea (S3).
  */
 export function FiltrosDeReportes({
   q,
-  estado,
   tipo,
   area,
   lugar,
-  soloAtrasados,
   lugares,
+  porArea,
 }: Props) {
-  const filtros: FiltrosDeLaBandeja = {
-    ...(estado ? { estado } : {}),
-    ...(tipo ? { tipo } : {}),
-    ...(area ? { area } : {}),
-    ...(lugar ? { lugar } : {}),
-  };
+  const opciones = opcionesDeArea(porArea);
 
   return (
-    <div className="flex flex-col gap-3">
-      <form method="get" className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="q" className={CLASES_DE_ETIQUETA}>
-            Buscar reporte
-          </label>
-          <div className="relative">
-            <MagnifyingGlass
-              size={18}
-              aria-hidden="true"
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-caliza-apagada"
-            />
-            <input
-              id="q"
-              name="q"
-              type="search"
-              defaultValue={q}
-              className={`${clasesDeCampo()} w-64 pl-9`}
-            />
-          </div>
+    <form
+      method="get"
+      action="/reportes"
+      aria-label="Buscar y filtrar reportes"
+      className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+    >
+      <div className="flex min-w-0 flex-col gap-1 sm:flex-[2_1_12rem] sm:max-w-xs">
+        <label htmlFor="q" className={CLASES_DE_ETIQUETA}>
+          Buscar reporte
+        </label>
+        <div className="relative">
+          <MagnifyingGlass
+            size={18}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-caliza-apagada"
+          />
+          <input
+            id="q"
+            name="q"
+            type="search"
+            placeholder="Folio o descripción"
+            defaultValue={q}
+            className={`${clasesDeCampo()} pl-9`}
+          />
         </div>
-        <CampoDeLista
-          id="filtro-estado"
-          name="estado"
-          etiqueta="Estado"
-          marcador="Todos"
-          opcional
-          defaultValue={estado ?? ""}
-          opciones={opcionesEtiquetadas(
-            ESTADOS_DE_REPORTE,
-            ETIQUETA_DE_ESTADO_DE_REPORTE,
-          )}
-        />
+      </div>
+      <div className="min-w-0 sm:flex-1 sm:basis-32 sm:max-w-44">
         <CampoDeLista
           id="filtro-tipo"
           name="tipo"
@@ -111,6 +108,8 @@ export function FiltrosDeReportes({
             ETIQUETA_DE_TIPO_DE_INCIDENCIA,
           )}
         />
+      </div>
+      <div className="min-w-0 sm:flex-1 sm:basis-32 sm:max-w-48">
         <CampoDeLista
           id="filtro-lugar"
           name="lugar"
@@ -120,6 +119,8 @@ export function FiltrosDeReportes({
           defaultValue={lugar ?? ""}
           opciones={lugares}
         />
+      </div>
+      <div className="min-w-0 sm:flex-1 sm:basis-32 sm:max-w-56">
         <CampoDeLista
           id="filtro-area"
           name="area"
@@ -127,30 +128,12 @@ export function FiltrosDeReportes({
           marcador="Todas"
           opcional
           defaultValue={area ?? ""}
-          opciones={opcionesEtiquetadas(AREAS_RESPONSABLES, ETIQUETA_DE_AREA)}
+          opciones={opciones}
         />
-        <label className="flex h-11 items-center gap-2 text-[13px] font-medium leading-tight text-caliza-apagada">
-          <input
-            type="checkbox"
-            id="filtro-atrasados"
-            name="atrasados"
-            value="1"
-            defaultChecked={soloAtrasados}
-            className="size-4"
-          />
-          Solo atrasados
-        </label>
-        <Boton type="submit" variante="secundaria">
-          Buscar
-        </Boton>
-      </form>
-
-      <ChipsDeFiltros
-        filtros={filtros}
-        lugares={lugares}
-        q={q}
-        soloAtrasados={soloAtrasados}
-      />
-    </div>
+      </div>
+      <Boton type="submit" variante="secundaria">
+        Filtrar
+      </Boton>
+    </form>
   );
 }

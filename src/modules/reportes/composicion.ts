@@ -8,6 +8,7 @@ import {
   crearCambiarUmbralDeAtraso,
   crearConsultarFolioDeReporte,
   crearContarReportes,
+  crearDetalleDeReporte,
   crearHistorialDeReporte,
   crearLeerUmbralDeAtraso,
   crearListarReportes,
@@ -20,6 +21,7 @@ import { crearBuscarDireccionesParaReporte } from "./application/buscarDireccion
 import { crearReporteParaIntervencion } from "./application/reporteParaIntervencion";
 import {
   contadorDeFoliosSql,
+  crearLectorDeNombresPorTerritorio,
   crearLectorDeReportantesPorPadron,
   crearLectorDeUbicacionesPorTerritorio,
   lectorDeReportesDeMapaSql,
@@ -51,7 +53,10 @@ export const reportePorId = crearReportePorId(repositorioDeReportesSql);
 export const reporteExisteEnTransaccion = crearReporteExisteEnTransaccion(
   repositorioDeReportesSql,
 );
-export const listarReportes = crearListarReportes(repositorioDeReportesSql);
+export const listarReportes = crearListarReportes(
+  repositorioDeReportesSql,
+  crearLectorDeNombresPorTerritorio,
+);
 export const listarReportesParaMapa = crearListarReportesParaMapa(
   lectorDeReportesDeMapaSql,
 );
@@ -59,7 +64,18 @@ export const listarReportesDeCalleEnTransaccion = (
   tx: TransaccionTenant,
   calleId: string,
 ) => lectorDeReportesDeMapaSql.listarPorCalle(tx, calleId);
-export const buscarReportes = crearBuscarReportes(repositorioDeReportesSql);
+export const buscarReportes = crearBuscarReportes(
+  repositorioDeReportesSql,
+  crearLectorDeNombresPorTerritorio,
+);
+/**
+ * La lectura de `/reportes/detalle/[id]` con lo que pide S11 de
+ * `reportes-ux`: donde ocurrio y la fecha de registro, ademas de la fila.
+ */
+export const detalleDeReporte = crearDetalleDeReporte({
+  repositorio: repositorioDeReportesSql,
+  crearLecturaDeNombres: crearLectorDeNombresPorTerritorio,
+});
 export const contarReportes = crearContarReportes(repositorioDeReportesSql);
 export const cambiarEstadoDeReporte = crearCambiarEstadoDeReporte({
   repositorio: repositorioDeReportesSql,

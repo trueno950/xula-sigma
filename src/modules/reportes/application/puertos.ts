@@ -17,6 +17,7 @@ import type {
   OpcionesDeConteo,
   OpcionesDeListado,
 } from "./puertosDeListado";
+import type { ReporteDeBandeja } from "./puertosDeUbicacionesDeReporte";
 
 /**
  * Las dos formas de una fila -lo que se guarda y lo que se lee- viven en
@@ -74,7 +75,8 @@ export type {
  * `ReporteGuardado`, definido arriba en este mismo archivo.
  */
 export type ResultadoDeListado = {
-  readonly reportes: readonly ReporteGuardado[];
+  /** Cada fila ya trae donde ocurrio (S4 de `reportes-ux`): `puertosDeUbicacionesDeReporte.ts`. */
+  readonly reportes: readonly ReporteDeBandeja[];
   readonly hayMas: boolean;
 };
 

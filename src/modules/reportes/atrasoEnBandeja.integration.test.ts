@@ -17,6 +17,7 @@ import { crearListarReportes } from "./application/listarReportes";
 import { registrarReporte } from "./composicion";
 import type { ReporteId } from "./domain";
 import { reportes } from "./infrastructure/esquema";
+import { crearLectorDeNombresPorTerritorio } from "./infrastructure/lectorDeNombresPorTerritorio";
 import { repositorioDeReportesSql } from "./infrastructure/repositorioDeReportesSql";
 
 /**
@@ -31,7 +32,10 @@ let gente: GentePorMunicipio;
 let lugarId: string;
 let folio = 0;
 
-const listarReportes = crearListarReportes(repositorioDeReportesSql);
+const listarReportes = crearListarReportes(
+  repositorioDeReportesSql,
+  crearLectorDeNombresPorTerritorio,
+);
 
 const contexto = (rol: "ADMIN_MUNICIPAL" | "OPERADOR") =>
   contextoDe(gente, "motul", rol);

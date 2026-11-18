@@ -1,54 +1,58 @@
-import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
-import { CLASES_DE_DATO } from "@/shared/ui";
+import type { ReactNode } from "react";
+import type { ReporteDeDetalle } from "../application/detalleDeReporte";
 import type { MovimientoGuardado } from "../application/puertosDeMovimientos";
-import {
-  ETIQUETA_DE_AREA,
-  ETIQUETA_DE_ESTADO_DE_REPORTE,
-  ETIQUETA_DE_MOTIVO_DE_RECHAZO,
-} from "../domain";
+import { FichaDeReporte } from "./FichaDeReporte";
+import { HistorialDeReporte } from "./HistorialDeReporte";
 
 type Props = {
+  reporte: ReporteDeDetalle;
   historial: readonly MovimientoGuardado[];
-};
-
-/** Que paso en un movimiento, en una linea: el estado, o el area asignada. */
-const descripcionDe = (movimiento: MovimientoGuardado): string => {
-  if (movimiento.areaAsignada)
-    return `Área asignada: ${ETIQUETA_DE_AREA[movimiento.areaAsignada]}`;
-  if (movimiento.estadoAnterior === null) return "Reporte recibido";
-  const motivo = movimiento.motivo
-    ? ` (${ETIQUETA_DE_MOTIVO_DE_RECHAZO[movimiento.motivo]})`
-    : "";
-  const anterior = ETIQUETA_DE_ESTADO_DE_REPORTE[movimiento.estadoAnterior];
-  const nuevo = movimiento.estadoNuevo
-    ? ETIQUETA_DE_ESTADO_DE_REPORTE[movimiento.estadoNuevo]
-    : "";
-  return `${anterior} → ${nuevo}${motivo}`;
+  atraso: number | null;
+  /**
+   * El panel de acciones, o el aviso de permiso que lo sustituye. Sin el, la
+   * ficha y el historial ocupan el ancho y no queda una columna vacia.
+   */
+  acciones?: ReactNode;
 };
 
 /**
- * Solo lectura, ordenado `ocurridoEn ASC` -el orden ya es parte del
- * contrato de `historialDe` (design.md seccion 10)-: se lee de arriba abajo
- * como la linea de tiempo del reporte, primero lo que paso primero. Mismo
- * marcado que `HistorialDeResidencias` de `territorio`.
+ * El cuerpo de `/reportes/detalle/[id]` en dos columnas desde 1024px (S13,
+ * S15 de `reportes-ux`): ficha e historial a la izquierda, acciones en una
+ * columna propia de 320px.
+ *
+ * El marcado va en el orden de lectura del telefono -ficha, acciones,
+ * historial- y las columnas se resuelven con `grid`: debajo de 1024px las
+ * tres cosas se apilan en ese mismo orden, con el historial al cierre y nunca
+ * detras de un formulario.
+ *
+ * La columna de acciones ocupa las dos filas de la izquierda para que el
+ * `sticky` de adentro tenga recorrido: si solo midiera lo suyo, no se
+ * moveria.
  */
-export function DetalleDeReporte({ historial }: Props) {
-  if (historial.length === 0) {
-    return <p className="text-[15px] text-caliza-apagada">Sin movimientos.</p>;
-  }
-
+export function DetalleDeReporte({
+  reporte,
+  historial,
+  atraso,
+  acciones,
+}: Props) {
   return (
-    <ul className="divide-y divide-caliza-divisor overflow-clip rounded-lg border border-caliza-divisor bg-caliza-lienzo shadow-reposo">
-      {historial.map((movimiento) => (
-        <li key={movimiento.id} className="flex flex-col gap-0.5 px-5 py-3">
-          <span className="text-[15px] text-caliza-tinta">
-            {descripcionDe(movimiento)}
-          </span>
-          <span className={CLASES_DE_DATO}>
-            {fechaYHoraEnMerida(movimiento.ocurridoEn)}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
+      <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+        <FichaDeReporte reporte={reporte} atraso={atraso} />
+      </div>
+
+      {acciones ? (
+        <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          {acciones}
+        </div>
+      ) : null}
+
+      <section className="flex min-w-0 flex-col gap-3 lg:col-start-1 lg:row-start-2">
+        <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
+          Historial
+        </h2>
+        <HistorialDeReporte historial={historial} />
+      </section>
+    </div>
   );
 }

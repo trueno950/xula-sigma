@@ -3,12 +3,13 @@
   "chosen": "01-mapa-protagonista.html",
   "handoffs": {
     "01-mapa-protagonista.html": {
-      "status": "in_progress",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-16T18:30:07.466Z",
       "startedAt": "2026-11-16T18:30:11.885Z",
-      "implementedAt": null,
-      "note": "Feature doc odd/tasks/mapa-protagonista.md; implementación en rama feat/mapa-protagonista."
+      "implementedAt": "2026-11-17T16:42:19.911Z",
+      "note": "Fusionado en PR #142 (6e91182). La demo usa el subdominio: abrir http://demo.xula.localhost:3200/mapa-operativo con admin@demo.example.com.",
+      "previewUrl": "http://localhost:3200/mapa-operativo"
     }
   }
 }

@@ -11,6 +11,7 @@ import { crearBuscarReportes, crearListarReportes } from "./application";
 import { crearRegistrarReporte } from "./application/registrarReporte";
 import {
   contadorDeFoliosSql,
+  crearLectorDeNombresPorTerritorio,
   crearLectorDeReportantesPorPadron,
   crearLectorDeUbicacionesPorTerritorio,
   registroDeMovimientosSql,
@@ -35,8 +36,14 @@ const registrarReporte = crearRegistrarReporte({
   crearLecturaDeUbicaciones: crearLectorDeUbicacionesPorTerritorio,
   crearLecturaDeReportantes: crearLectorDeReportantesPorPadron,
 });
-const listarReportes = crearListarReportes(repositorioDeReportesSql);
-const buscarReportes = crearBuscarReportes(repositorioDeReportesSql);
+const listarReportes = crearListarReportes(
+  repositorioDeReportesSql,
+  crearLectorDeNombresPorTerritorio,
+);
+const buscarReportes = crearBuscarReportes(
+  repositorioDeReportesSql,
+  crearLectorDeNombresPorTerritorio,
+);
 
 /**
  * Token largo y distintivo en la descripcion, sin choque con otro dato del

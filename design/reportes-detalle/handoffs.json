@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "01-ficha-y-acciones.html",
+  "handoffs": {
+    "01-ficha-y-acciones.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-17T23:08:30.630Z",
+      "startedAt": null,
+      "implementedAt": "2026-11-17T23:32:15.173Z",
+      "feature": "odd/tasks/reportes-ux.md",
+      "note": "Commit 3868585 en feat/reportes-ux (aún sin fusionar). La demo del 3200 sigue con main; se actualiza al fusionar."
+    }
+  }
+}

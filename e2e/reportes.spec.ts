@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { type Browser, expect, type Page, test } from "@playwright/test";
+import {
+  type Browser,
+  expect,
+  type Locator,
+  type Page,
+  test,
+} from "@playwright/test";
 import postgres from "postgres";
 import { accederAMotul } from "./acceder";
 import {
@@ -80,10 +86,15 @@ const abrirBandeja = async (page: Page, consulta = ""): Promise<void> => {
   await page.goto(urlDe("motul", `/reportes${consulta}`));
 };
 
-const insigniaDeAtraso = (page: Page) => page.getByText("Atrasado · 40 días");
+// La fila lleva el atraso dos veces en el HTML -la celda de escritorio y la
+// linea del telefono-, y una de las dos esta siempre oculta.
+const insigniaDeAtraso = (page: Page) =>
+  page.getByText("Atrasado · 40 días").filter({ visible: true });
 
+// S3: dejo de ser una casilla dentro del formulario y paso a ser el
+// interruptor de la banda, que envia el GET el solo.
 const filtroDeAtrasados = (page: Page) =>
-  page.getByRole("checkbox", { name: "Solo atrasados" });
+  page.getByRole("button", { name: /Solo atrasados/ });
 
 test("el administrador cambia el umbral y la bandeja y el mapa lo reflejan", async ({
   page,
@@ -95,8 +106,7 @@ test("el administrador cambia el umbral y la bandeja y el mapa lo reflejan", asy
 
   await expect(insigniaDeAtraso(page)).toBeVisible();
 
-  await filtroDeAtrasados(page).check();
-  await page.getByRole("button", { name: "Buscar" }).click();
+  await filtroDeAtrasados(page).click();
   await expect(page).toHaveURL(/atrasados=1/);
   await expect(insigniaDeAtraso(page)).toBeVisible();
   await expect(
@@ -202,6 +212,131 @@ test("un rol que no administra no ve el formulario ni el enlace", async ({
   } finally {
     await contexto.close();
   }
+});
+
+const cajaDe = async (locator: Locator) => {
+  const caja = await locator.boundingBox();
+  if (!caja) throw new Error("El elemento no está en pantalla.");
+  return caja;
+};
+
+const abrirAlta = async (page: Page): Promise<void> => {
+  await page.goto(urlDe("motul", "/reportes/alta"));
+  await expect(
+    page.getByRole("heading", { name: "Registrar reporte" }),
+  ).toBeVisible();
+};
+
+/** Texto que el `<select>` muestra elegido: el marcador o la opcion de la persona. */
+const elegidoEn = (page: Page, etiqueta: string): Promise<string> =>
+  page
+    .getByLabel(etiqueta, { exact: true })
+    .evaluate((select) =>
+      select instanceof HTMLSelectElement
+        ? (select.selectedOptions[0]?.textContent ?? "")
+        : "",
+    );
+
+test("el alta ordena tipo, ubicación y detalle, y dice qué campos son obligatorios", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await abrirAlta(page);
+
+  const tipo = await cajaDe(page.getByLabel("Tipo de incidencia"));
+  const lugar = await cajaDe(page.getByLabel("Lugar", { exact: true }));
+  const calle = await cajaDe(page.getByLabel("Calle", { exact: true }));
+  const descripcion = await cajaDe(page.getByLabel("Descripción"));
+  const referencia = await cajaDe(
+    page.getByLabel("Referencia", { exact: true }),
+  );
+
+  expect(tipo.y).toBeLessThan(lugar.y);
+  expect(lugar.y).toBeLessThan(calle.y);
+  expect(calle.y).toBeLessThan(descripcion.y);
+  expect(descripcion.y).toBeLessThan(referencia.y);
+
+  await expect(
+    page.getByText(
+      "Todos los campos son obligatorios, salvo la calle y la referencia.",
+    ),
+  ).toBeVisible();
+  // La ayuda de la referencia se lee de un renglon a 390px de ancho, que es
+  // donde la auditoria la midio en dos.
+  await page.setViewportSize({ width: 390, height: 844 });
+  const ayudaDeReferencia = await cajaDe(
+    page.locator("#reporte-referencia-ayuda"),
+  );
+  expect(ayudaDeReferencia.height).toBeLessThan(24);
+});
+
+test("las dos formas de ubicar el reporte explican en qué se diferencian y se tocan enteras", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await abrirAlta(page);
+
+  for (const [opcion, explicacion] of [
+    ["Lugar y calle", "Elija el lugar y, si la sabe, la calle."],
+    ["Domicilio registrado", "Busque una dirección del padrón territorial."],
+  ] as const) {
+    const fila = await cajaDe(page.getByText(opcion, { exact: true }));
+    expect(fila.height).toBeGreaterThanOrEqual(44);
+
+    // Una linea, no dos: a 390px la explicacion se lee de un renglon.
+    const ayuda = await cajaDe(page.getByText(explicacion));
+    expect(ayuda.height).toBeLessThan(24);
+  }
+});
+
+test("sin lugar elegido la calle pide el lugar y no ofrece «Ninguna»", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await abrirAlta(page);
+
+  await expect
+    .poll(() => elegidoEn(page, "Calle"))
+    .toBe("Elija primero el lugar");
+  await expect(
+    page.getByLabel("Calle", { exact: true }).locator("option", {
+      hasText: "Ninguna",
+    }),
+  ).toHaveCount(0);
+  // La lista completa sigue en el HTML: es el camino del alta sin JavaScript.
+  expect(
+    await page.getByLabel("Calle", { exact: true }).locator("option").count(),
+  ).toBeGreaterThan(1);
+
+  await page.getByLabel("Lugar", { exact: true }).selectOption({ index: 1 });
+  await expect.poll(() => elegidoEn(page, "Calle")).toBe("Ninguna");
+});
+
+test("a 390x844 la ayuda de la descripción y el botón de envío quedan sobre la barra inferior", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await abrirAlta(page);
+
+  const barra = page.getByRole("navigation", { name: "Navegación principal" });
+
+  const ayuda = page.getByText(
+    "No anote nombres, teléfonos ni datos de vecinos.",
+  );
+  await ayuda.scrollIntoViewIfNeeded();
+  const cajaDeAyuda = await cajaDe(ayuda);
+  expect(cajaDeAyuda.y + cajaDeAyuda.height).toBeLessThanOrEqual(
+    (await cajaDe(barra)).y,
+  );
+
+  const boton = page.getByRole("button", { name: "Registrar reporte" });
+  await boton.scrollIntoViewIfNeeded();
+  const cajaDeBoton = await cajaDe(boton);
+  expect(cajaDeBoton.y + cajaDeBoton.height).toBeLessThanOrEqual(
+    (await cajaDe(barra)).y,
+  );
 });
 
 /** La sesion se abre con script; lo que se prueba despues corre sin el. */

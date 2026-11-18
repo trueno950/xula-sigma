@@ -1,0 +1,21 @@
+{
+  "title": "Detalle de reporte",
+  "brief": "Rediseño de /reportes/detalle/[id] para la operadora de un municipio pequeño de Yucatán: ver de un vistazo dónde ocurrió el reporte, en qué estado está y cuánto lleva atrasado, y actuar con el paso siguiente sin abrir todos los formularios a la vez.",
+  "feature": "odd/tasks/reportes-ux.md",
+  "artboards": [
+    {
+      "file": "01-ficha-y-acciones.html",
+      "title": "Ficha y acciones",
+      "tradeoff": "Dos columnas: la ficha y la línea de tiempo a la izquierda, las acciones en un panel pegado arriba a la derecha con el paso siguiente como botón primario y todo lo demás plegado; cuesta 320 px de ancho, así que el detalle sube su ancho máximo de 720 a 1040 px y por debajo de 1024 las acciones bajan al flujo.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-encabezado-de-trabajo.html",
+      "title": "Encabezado de trabajo",
+      "tradeoff": "Una sola columna con una franja de trabajo bajo el título —estado, atraso, área, ubicación y una fila de acciones— y secciones para datos e historial: mismo recorrido en 1440 y en 390, sin reacomodo; a cambio, las acciones secundarias quedan un clic más lejos y el historial empieza más abajo.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

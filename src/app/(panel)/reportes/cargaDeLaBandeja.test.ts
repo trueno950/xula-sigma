@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { filtrosDeLaConsulta } from "./cargaDeLaBandeja";
+import {
+  filtrosDeLaConsulta,
+  filtrosSinArea,
+  filtrosSinEstado,
+} from "./cargaDeLaBandeja";
 
 const LUGAR = "11111111-1111-4111-8111-111111111111";
 
@@ -43,5 +47,48 @@ describe("filtrosDeLaConsulta", () => {
     expect(
       filtrosDeLaConsulta({ filtros: {}, atrasadosDesde: "2026-11-09" }),
     ).toEqual({ atrasadosDesde: "2026-11-09" });
+  });
+});
+
+/**
+ * Los conteos de las pestañas y de las opciones de área se piden con el
+ * filtro que cada uno representa quitado: una pestaña dice cuántos reportes
+ * abriría, y una opción de área cuántos quedarían si se eligiera. Los otros
+ * filtros -y el corte de atrasados- se conservan, porque los números tienen
+ * que seguir a la lista que se está viendo.
+ */
+describe("filtrosSinEstado", () => {
+  it("quita el estado y deja tipo, area y el subarbol del lugar", () => {
+    expect(
+      filtrosSinEstado({
+        estado: "RECIBIDO",
+        tipo: "BACHE",
+        area: "OBRAS_PUBLICAS",
+        lugarIds: [LUGAR],
+      }),
+    ).toEqual({ tipo: "BACHE", area: "OBRAS_PUBLICAS", lugarIds: [LUGAR] });
+  });
+
+  it("con «solo atrasados» puesto la pestaña conserva su corte", () => {
+    expect(
+      filtrosSinEstado({ estado: "RECIBIDO", atrasadosDesde: "2026-11-09" }),
+    ).toEqual({ atrasadosDesde: "2026-11-09" });
+  });
+});
+
+describe("filtrosSinArea", () => {
+  it("quita el area y conserva estado, tipo y corte", () => {
+    expect(
+      filtrosSinArea({
+        estado: "RECIBIDO",
+        area: "OBRAS_PUBLICAS",
+        tipo: "BACHE",
+        atrasadosDesde: "2026-11-09",
+      }),
+    ).toEqual({
+      estado: "RECIBIDO",
+      tipo: "BACHE",
+      atrasadosDesde: "2026-11-09",
+    });
   });
 });

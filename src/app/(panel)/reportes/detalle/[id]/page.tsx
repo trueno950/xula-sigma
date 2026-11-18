@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { z } from "zod";
 import {
   ETIQUETA_DE_TIPO_DE_INTERVENCION,
@@ -10,25 +11,25 @@ import {
   AccionesDeReporte,
   comoReporteId,
   DetalleDeReporte,
-  ETIQUETA_DE_AREA,
-  ETIQUETA_DE_ESTADO_DE_REPORTE,
-  ETIQUETA_DE_TIPO_DE_INCIDENCIA,
+  detalleDeReporte,
+  diasDeAtraso,
   esTerminal,
   historialDeReporte,
-  reportePorId,
-  SIN_AREA,
+  leerUmbralDeAtraso,
+  PanelDeAcciones,
+  type ReporteDeDetalle,
+  resumenDeUbicacion,
 } from "@/modules/reportes";
 import { contextoActual } from "@/shared/auth";
+import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeAdministrarReportes } from "@/shared/auth/roles";
+import { hoyEnMerida } from "@/shared/lib/fecha";
 import {
   Aviso,
   AvisoDePermiso,
-  FichaDeDatos,
-  FilaDeFicha,
   Migaja,
   opcionesEtiquetadas,
   PaginaDePanel,
-  Panel,
   PantallaDeMensaje,
 } from "@/shared/ui";
 
@@ -42,17 +43,70 @@ type Props = {
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
 
+const OPCIONES_DE_OBRA = opcionesEtiquetadas(
+  TIPOS_DE_INTERVENCION,
+  ETIQUETA_DE_TIPO_DE_INTERVENCION,
+);
+
+/** Los dias de atraso con el umbral del municipio: la misma cuenta que la bandeja (S12). */
+const atrasoDe = async (
+  reporte: ReporteDeDetalle,
+  contexto: ContextoActual,
+): Promise<number | null> =>
+  diasDeAtraso({
+    estado: reporte.estado,
+    fechaDeRegistro: reporte.fechaDeRegistro,
+    hoy: hoyEnMerida(),
+    umbral: await leerUmbralDeAtraso(contexto),
+  });
+
+/**
+ * Lo que va en la columna de acciones: el panel para quien administra un
+ * reporte abierto, el aviso de permiso para quien no, y nada para un reporte
+ * terminal -no hay transiciones que ofrecer, y la ficha ya lo dice-.
+ */
+const accionesDe = (
+  reporte: ReporteDeDetalle,
+  puedeAdministrar: boolean,
+): ReactNode => {
+  if (!puedeAdministrar) {
+    return (
+      <AvisoDePermiso
+        capacidad="cambiar el estado y asignar el área de un reporte"
+        requisito="el rol de administrador municipal"
+      />
+    );
+  }
+
+  if (esTerminal(reporte.estado)) return undefined;
+
+  return (
+    <PanelDeAcciones>
+      <AccionesDeReporte
+        reporteId={reporte.id}
+        estadoActual={reporte.estado}
+        programarObra={
+          <ProgramarObra
+            reporteId={reporte.id}
+            tipos={OPCIONES_DE_OBRA}
+            embebido
+          />
+        }
+      />
+    </PanelDeAcciones>
+  );
+};
+
 /**
  * Ficha del reporte con su historial y las transiciones (tasks.md 7.12).
- * Mismo criterio que `padron/[id]/page.tsx` para "no existe": RLS ya deja
- * `reportePorId` en `null` para un reporte de otro tenant, y la pantalla
- * responde 404 sin distinguirla de uno inexistente (regla 8).
+ * Mismo criterio que `padron/[id]/page.tsx` para "no existe": RLS ya deja la
+ * lectura en `null` para un reporte de otro tenant, y la pantalla responde
+ * 404 sin distinguirla de uno inexistente (regla 8).
  *
- * `AccionesDeReporte` solo se monta si `puedeAdministrarReportes` y el
- * estado no es terminal: ocultar el formulario es UX, la guarda real vive
- * en `cambiarEstadoDeReporte`/`asignarAreaDeReporte` (Fase 5, design.md
- * seccion 15). En `RESUELTO`/`RECHAZADO` no hay transiciones validas que
- * ofrecer, y montarlo dejaba la tarjeta sin contenido.
+ * La lectura es `detalleDeReporte` y no `reportePorId`: trae la ubicacion y
+ * la fecha civil del registro, que son la ficha de S11. Ocultar el panel es
+ * UX, la guarda real vive en `cambiarEstadoDeReporte`/`asignarAreaDeReporte`
+ * (Fase 5, design.md seccion 15).
  *
  * **Vive en `/reportes/detalle/[id]` y no en `/reportes/[id]`** -desvio de
  * tasks.md 7.12, que escribia `{page,alta,[id]}`-: `src/app/reportes/[folio]`
@@ -74,24 +128,28 @@ export default async function PaginaDeDetalleDeReporte({
   const { id } = await params;
   const analisisDeId = esquemaDeId.safeParse(id);
   const reporte = analisisDeId.success
-    ? await reportePorId(comoReporteId(analisisDeId.data), contexto)
+    ? await detalleDeReporte(comoReporteId(analisisDeId.data), contexto)
     : null;
 
   if (!reporte) notFound();
 
-  const historial = await historialDeReporte(reporte.id, contexto);
   const analisisDeParametros = esquemaDeParametros.safeParse(
     await searchParams,
   );
   const error = analisisDeParametros.success
     ? analisisDeParametros.data.error
     : undefined;
+  const [historial, atraso] = await Promise.all([
+    historialDeReporte(reporte.id, contexto),
+    atrasoDe(reporte, contexto),
+  ]);
   const puedeAdministrar = puedeAdministrarReportes(contexto.usuario.rol);
 
   return (
     <PaginaDePanel
       titulo={reporte.folio}
-      ancho="detalle"
+      descripcion={resumenDeUbicacion(reporte)}
+      ancho="detalleAmplio"
       migaja={
         <Migaja
           pasos={[
@@ -104,64 +162,12 @@ export default async function PaginaDeDetalleDeReporte({
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      {!puedeAdministrar ? (
-        <AvisoDePermiso
-          capacidad="cambiar el estado y asignar el área de un reporte"
-          requisito="el rol de administrador municipal"
-        />
-      ) : null}
-
-      <FichaDeDatos>
-        <FilaDeFicha etiqueta="Tipo">
-          {ETIQUETA_DE_TIPO_DE_INCIDENCIA[reporte.tipo]}
-        </FilaDeFicha>
-        <FilaDeFicha etiqueta="Estado">
-          {ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado]}
-        </FilaDeFicha>
-        <FilaDeFicha etiqueta="Área">
-          {reporte.areaResponsable
-            ? ETIQUETA_DE_AREA[reporte.areaResponsable]
-            : SIN_AREA}
-        </FilaDeFicha>
-        <FilaDeFicha etiqueta="Descripción">{reporte.descripcion}</FilaDeFicha>
-        {reporte.referencia ? (
-          <FilaDeFicha etiqueta="Referencia">{reporte.referencia}</FilaDeFicha>
-        ) : null}
-      </FichaDeDatos>
-
-      {puedeAdministrar && !esTerminal(reporte.estado) ? (
-        <Panel titulo="Transiciones">
-          <AccionesDeReporte
-            reporteId={reporte.id}
-            estadoActual={reporte.estado}
-          />
-        </Panel>
-      ) : null}
-
-      {/*
-        «Programar obra» (S2 de `intervenciones-trazabilidad`): solo para quien
-        administra reportes -la misma regla que exige `programarObraDeReporte`-
-        y solo mientras el reporte admite trabajo. En `RESUELTO`/`RECHAZADO`
-        el caso de uso lo rechazaria, asi que no se ofrece.
-      */}
-      {puedeAdministrar && !esTerminal(reporte.estado) ? (
-        <Panel titulo="Programar obra">
-          <ProgramarObra
-            reporteId={reporte.id}
-            tipos={opcionesEtiquetadas(
-              TIPOS_DE_INTERVENCION,
-              ETIQUETA_DE_TIPO_DE_INTERVENCION,
-            )}
-          />
-        </Panel>
-      ) : null}
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[1.25rem] leading-[1.3] font-semibold tracking-[-0.01em] text-caliza-tinta">
-          Historial
-        </h2>
-        <DetalleDeReporte historial={historial} />
-      </section>
+      <DetalleDeReporte
+        reporte={reporte}
+        historial={historial}
+        atraso={atraso}
+        acciones={accionesDe(reporte, puedeAdministrar)}
+      />
     </PaginaDePanel>
   );
 }

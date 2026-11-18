@@ -101,9 +101,8 @@ test("programar obra desde el reporte y finalizarla cierra el reporte", async ({
   await expect(page).toHaveURL(/\/reportes\/detalle\/[0-9a-f-]{36}$/);
   const reporteUrl = page.url();
 
-  await expect(
-    page.getByRole("heading", { name: "Programar obra" }),
-  ).toBeVisible();
+  // En el detalle, «Programar obra…» es un desplegable del panel de acciones.
+  await page.locator("summary", { hasText: "Programar obra" }).click();
   await page.getByLabel("Tipo de obra").selectOption("BACHE");
   await page
     .getByLabel("Descripción del trabajo")

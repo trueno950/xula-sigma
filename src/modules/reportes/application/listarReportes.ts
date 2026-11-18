@@ -7,6 +7,8 @@ import type {
   RepositorioDeReportes,
   ResultadoDeListado,
 } from "./puertos";
+import type { CrearLecturaDeNombres } from "./puertosDeUbicacionesDeReporte";
+import { conUbicaciones } from "./ubicacionesDeReportes";
 
 /**
  * Tamano de pagina fijo de `design.md`, seccion "Paginacion": bajarlo no
@@ -24,11 +26,16 @@ export const TAMANO_DE_PAGINA = 50;
  * Pide `limite + 1` al repositorio y lo recorta con `resolverPagina`
  * (`domain/paginacion.ts`): asi la pantalla sabe si pintar "Ver mas" sin un
  * `COUNT(*)` aparte -mismo mecanismo que `listarPersonas`.
+ *
+ * La ubicacion de cada fila (S4 de `reportes-ux`) se adjunta despues de
+ * cerrar la transaccion: los nombres los resuelve `territorio` en su propio
+ * `withTenant` (ver `conUbicaciones`).
  */
 export function crearListarReportes(
   repositorio: Pick<RepositorioDeReportes, "listar">,
+  crearLecturaDeNombres: CrearLecturaDeNombres,
 ) {
-  return function listarReportes(
+  return async function listarReportes(
     filtros: FiltrosDeListado,
     contexto: ContextoActual,
     opciones?: {
@@ -38,14 +45,20 @@ export function crearListarReportes(
   ): Promise<ResultadoDeListado> {
     const limite = opciones?.limite ?? TAMANO_DE_PAGINA;
 
-    return withTenant(contexto.ayuntamientoId, async (tx) => {
+    const pagina = await withTenant(contexto.ayuntamientoId, async (tx) => {
       const filas = await repositorio.listar(tx, filtros, {
         limite: limite + 1,
         ...(opciones?.orden ? { orden: opciones.orden } : {}),
       });
-      const pagina = resolverPagina(filas, limite);
 
-      return { reportes: pagina.filas, hayMas: pagina.hayMas };
+      return resolverPagina(filas, limite);
     });
+    const reportes = await conUbicaciones(
+      pagina.filas,
+      crearLecturaDeNombres,
+      contexto,
+    );
+
+    return { reportes, hayMas: pagina.hayMas };
   };
 }

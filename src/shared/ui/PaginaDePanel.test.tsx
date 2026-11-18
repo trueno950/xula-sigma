@@ -79,4 +79,25 @@ describe("PaginaDePanel", () => {
     expect(lista).toContain("max-w-[1200px]");
     expect(formulario).toContain("max-w-[720px]");
   });
+
+  /**
+   * S13 de `reportes-ux`: el detalle sostiene dos columnas, asi que sube a
+   * 1040px. Los tres anchos que ya existian no se mueven.
+   */
+  it("el detalle de dos columnas ensancha a 1040px sin tocar los otros anchos", () => {
+    const html = (
+      ancho: "lista" | "detalle" | "formulario" | "detalleAmplio" = "lista",
+    ) =>
+      renderToStaticMarkup(
+        <PaginaDePanel titulo="a" ancho={ancho}>
+          x
+        </PaginaDePanel>,
+      );
+
+    expect(html("detalleAmplio")).toContain("max-w-[1040px]");
+    expect(html("detalleAmplio")).not.toContain("max-w-[720px]");
+    expect(html()).toContain("max-w-[1200px]");
+    expect(html("detalle")).toContain("max-w-[720px]");
+    expect(html("formulario")).toContain("max-w-[720px]");
+  });
 });

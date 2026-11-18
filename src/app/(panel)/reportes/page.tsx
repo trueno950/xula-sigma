@@ -35,8 +35,8 @@ type Props = {
  * Ruta fina: resuelve el contexto, busca o lista, y compone (tasks.md
  * 7.12). Sin guarda de rol propia -leer no es escribir, `listarReportes.ts`-;
  * el enlace de alta si exige `puedeEscribir`, mismo criterio que
- * `PaginaDePadron`: sin el, el rol de solo lectura llegaria a un
- * formulario que el caso de uso igual rechaza.
+ * `PaginaDePadron`: sin el, el rol de solo lectura llegaria a un formulario
+ * que el caso de uso igual rechaza.
  *
  * `q` decide entre `buscarReportes` y `listarReportes` -mismo patron que
  * `PaginaDePadron`-, pero a diferencia de esa pantalla los filtros de
@@ -52,9 +52,12 @@ type Props = {
  *
  * S2 agrega el lugar y el area responsable. El `?lugar=` se resuelve contra
  * la API publica de `territorio` -este es el unico lugar donde los dos
- * modulos se tocan- y viaja como el conjunto de ids de su subarbol; los
- * conteos por estado y por area se piden con los mismos filtros y la misma
- * busqueda, en el mismo `Promise.all` que el listado.
+ * modulos se tocan- y viaja como el conjunto de ids de su subarbol.
+ *
+ * `reportes-ux` (S2, S3, L9) convierte el estado en pestañas y los conteos en
+ * el numero de cada pestaña, de cada opcion de area y del interruptor de
+ * atrasados: por eso el corte se calcula **siempre** y los conteos se piden
+ * con el eje de cada control quitado (`leerLaBandeja`).
  */
 export default async function PaginaDeReportes({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -69,10 +72,11 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
   const umbral = await leerUmbralDeAtraso(contexto);
   const hoy = hoyEnMerida();
   const territorio = await cargarFiltrosDeTerritorio(filtros, contexto);
+  const corte = fechaDeCorte(hoy, umbral);
   const filtrosDeConsulta = filtrosDeLaConsulta({
     filtros,
     ...(territorio.lugarIds ? { lugarIds: territorio.lugarIds } : {}),
-    ...(soloAtrasados ? { atrasadosDesde: fechaDeCorte(hoy, umbral) } : {}),
+    ...(soloAtrasados ? { atrasadosDesde: corte } : {}),
   });
 
   // Un `?lugar=` que no es un lugar del municipio no se pinta ni se nombra:
@@ -82,10 +86,17 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
   void lugarPedido;
   const filtrosDeLaPantalla = territorio.lugarIds ? filtros : sinLugar;
 
-  const { reportes, hayMas, conteos } = await leerLaBandeja({
+  const {
+    reportes,
+    hayMas,
+    conteosPorEstado,
+    conteosPorArea,
+    totalDeAtrasados,
+  } = await leerLaBandeja({
     filtros: filtrosDeConsulta,
     cadena: q,
     contexto,
+    corte,
     ...(limite ? { limite } : {}),
     ...(orden ? { orden } : {}),
   });
@@ -103,22 +114,24 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
       Registrar reporte
     </EnlaceDeAccion>
   ) : undefined;
+  // S5: secundaria y solo para quien hoy administra los reportes. La accion
+  // primaria de la pantalla es registrar, no configurar.
   const configuracion = puedeAdministrarReportes(contexto.usuario.rol) ? (
     <EnlaceDeAccion href="/reportes/configuracion" variante="secundaria">
       <SlidersHorizontal size={18} weight="bold" aria-hidden="true" />
       Configurar atraso
     </EnlaceDeAccion>
   ) : undefined;
-  const puedeActuar = puedeEscribir(contexto.usuario.rol);
 
   return (
     <PaginaDePanel
       titulo="Reportes ciudadanos"
+      descripcion="Lo que reportan los vecinos y en qué orden conviene atenderlo."
       accion={<AccionesDeCabecera alta={alta} configuracion={configuracion} />}
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      {!puedeActuar ? (
+      {!puedeEscribir(contexto.usuario.rol) ? (
         <AvisoDePermiso
           capacidad="registrar reportes ciudadanos"
           requisito="un rol con permisos de escritura"
@@ -133,7 +146,9 @@ export default async function PaginaDeReportes({ searchParams }: Props) {
         umbral={umbral}
         hoy={hoy}
         lugares={territorio.opciones}
-        conteos={conteos}
+        conteosPorEstado={conteosPorEstado}
+        conteosPorArea={conteosPorArea}
+        totalDeAtrasados={totalDeAtrasados}
         soloAtrasados={soloAtrasados}
         q={q}
         orden={orden}
