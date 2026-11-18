@@ -117,6 +117,35 @@ test("a 390 el orden es ficha, acciones e historial, y nada queda bajo la barra 
   expect(seccion.y + seccion.height).toBeLessThanOrEqual(barra.y);
 });
 
+test("las acciones plegadas son un acordeon y el panel cabe en la pantalla", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await abrirElDetalle(page);
+
+  const desplegable = (texto: string) =>
+    page.locator("details", {
+      has: page.locator("summary", { hasText: texto }),
+    });
+  for (const texto of [
+    "Programar obra…",
+    "Asignar área…",
+    "Rechazar reporte…",
+  ]) {
+    await desplegable(texto).locator("summary").click();
+    await expect(desplegable(texto)).toHaveJSProperty("open", true);
+  }
+  // Abrir el ultimo cerro los anteriores: el panel no se apila.
+  await expect(desplegable("Programar obra…")).toHaveJSProperty("open", false);
+  await expect(desplegable("Asignar área…")).toHaveJSProperty("open", false);
+
+  const panel = await cajaDe(
+    page.getByRole("complementary", { name: "Acciones" }),
+  );
+  expect(panel.height).toBeLessThanOrEqual(900);
+});
+
 test("sin JavaScript el paso siguiente y la asignacion de area siguen funcionando", async ({
   browser,
 }: {

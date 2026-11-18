@@ -40,8 +40,8 @@ const CLASES_DE_SUMMARY =
   "transition-colors duration-150 ease-salida [&::-webkit-details-marker]:hidden";
 
 /**
- * Una accion de apoyo, plegada (S13). `<details>` nativo y no un `useState`:
- * abre sin JavaScript.
+ * Una accion de apoyo, plegada (S13). `<details>` nativo: abre sin JavaScript,
+ * y el `name` compartido lo vuelve acordeon -abrir uno cierra el otro-.
  */
 function Desplegable({
   etiqueta,
@@ -57,7 +57,7 @@ function Desplegable({
     : "border-caliza-borde text-caliza-tinta hover:bg-caliza-superficie";
 
   return (
-    <details className="group">
+    <details name="acciones-del-reporte" className="group">
       <summary className={`${CLASES_DE_SUMMARY} ${color}`}>
         {etiqueta}
         <CaretDown

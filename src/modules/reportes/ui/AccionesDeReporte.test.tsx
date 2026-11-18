@@ -67,6 +67,15 @@ describe("AccionesDeReporte, lo demas va plegado (S13, S14)", () => {
     expect(pagina).not.toContain("use client");
   });
 
+  it("los desplegables forman un acordeon: abrir uno cierra el otro y el panel no crece", () => {
+    const pagina = html("RECIBIDO");
+
+    // Mismo `name` en cada `<details>`: el navegador deja abierto uno solo.
+    expect(
+      (pagina.match(/<details name="acciones-del-reporte"/g) ?? []).length,
+    ).toBe(3);
+  });
+
   it("sin obra programable quedan los otros dos desplegables", () => {
     const pagina = html("RECIBIDO", false);
 
