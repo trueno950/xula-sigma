@@ -53,18 +53,28 @@ export function hrefDeVerMas(parametros: ParametrosDeListado): string {
 }
 
 /**
- * La "x" del chip de estado (`design.md`, "Filtros"): quita el filtro y
- * conserva la busqueda -orden y limite se sueltan a proposito, mismo
- * criterio que `hrefSinFiltro` de `reportes`: una navegacion que cambia el
- * criterio de filtrado vuelve a la primera pagina en el orden por defecto.
+ * La "x" del chip de busqueda (`design.md`, "Filtros"): quita solo la
+ * busqueda y conserva el filtro de estado y el orden pedido -el chip del
+ * estado hace lo mismo con su propio eje-.
+ */
+export function hrefSinBusqueda({
+  filtros,
+  orden,
+}: ParametrosDeListado): string {
+  return construirHrefDeListado({ filtros, orden });
+}
+
+/**
+ * La "x" del chip de estado: quita el filtro y conserva la busqueda -y el
+ * orden pedido-; `limite` se suelta a proposito, mismo criterio que
+ * `hrefSinFiltro` de `reportes`: una navegacion que cambia el criterio de
+ * filtrado vuelve a la primera pagina.
  *
  * Sin parametro `campo`, a diferencia de `reportes`: `FiltrosDeListado` de
  * este modulo tiene un solo campo filtrable (`estado`, sin `tipo` -decision
  * de arriba), y una union de un solo valor es la misma abstraccion
  * especulativa que `AGENTS.md` pide no escribir.
  */
-export function hrefSinEstado(
-  parametros: Pick<ParametrosDeListado, "q">,
-): string {
-  return construirHrefDeListado({ q: parametros.q });
+export function hrefSinEstado({ q, orden }: ParametrosDeListado): string {
+  return construirHrefDeListado({ q, orden });
 }

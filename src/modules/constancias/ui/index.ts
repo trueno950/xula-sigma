@@ -3,6 +3,8 @@ export { BotonDeImprimir } from "./BotonDeImprimir";
 export { BotonDeReimpresion } from "./BotonDeReimpresion";
 export { ConfiguracionDeDocumentos } from "./ConfiguracionDeDocumentos";
 export { descripcionDeFiltrosDeConstancias } from "./descripcionDeFiltros";
+export { FilaDeConstancia } from "./FilaDeConstancia";
 export { FiltrosDeConstancias } from "./FiltrosDeConstancias";
 export { FormularioDeEmision } from "./FormularioDeEmision";
 export { ListadoDeConstancias } from "./ListadoDeConstancias";
+export { PieDeConstancias, ResumenDeConstancias } from "./ResumenDeConstancias";

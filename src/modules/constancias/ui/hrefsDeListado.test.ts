@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   construirHrefDeListado,
   hrefDeVerMas,
+  hrefSinBusqueda,
   hrefSinEstado,
 } from "./hrefsDeListado";
 
@@ -80,5 +81,33 @@ describe("hrefSinEstado", () => {
 
   it("sin busqueda, vuelve a la ruta limpia", () => {
     expect(hrefSinEstado({})).toBe("/constancias");
+  });
+
+  it("conserva el orden pedido", () => {
+    expect(hrefSinEstado({ orden: { campo: "folio", direccion: "asc" } })).toBe(
+      "/constancias?ordenar=folio&direccion=asc",
+    );
+  });
+});
+
+describe("hrefSinBusqueda", () => {
+  it("quita la busqueda y conserva el filtro de estado", () => {
+    expect(
+      hrefSinBusqueda({ filtros: { estado: "CANCELADA" }, q: "Poot" }),
+    ).toBe("/constancias?estado=CANCELADA");
+  });
+
+  it("sin filtros, vuelve a la ruta limpia", () => {
+    expect(hrefSinBusqueda({ q: "Poot" })).toBe("/constancias");
+  });
+
+  it("conserva el orden pedido", () => {
+    expect(
+      hrefSinBusqueda({
+        filtros: { estado: "VIGENTE" },
+        q: "Poot",
+        orden: { campo: "emitida", direccion: "desc" },
+      }),
+    ).toBe("/constancias?estado=VIGENTE&ordenar=emitida&direccion=desc");
   });
 });

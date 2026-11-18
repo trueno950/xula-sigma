@@ -78,10 +78,10 @@ L2: «1», que es prioridad alta y media, sin L4 ni C1.
   - mapa de lo que hay hoy.
 
   — worker — commit:
-- [ ] **T2** (S1-S3) listado según `design/constancias-listado/01-tabla-con-titular.html` (L3) — worker — commit:
-- [ ] **T3** (S4-S6) emitir: buscador de persona en la página, vista previa
-  y aviso con el tiempo de residencia — worker — commit:
-- [ ] **T4** (S7-S9) detalle según la dirección elegida — worker — commit:
+- [x] **T2** (S1-S3) listado según `design/constancias-listado/01-tabla-con-titular.html` (L3) — worker — commit:
+- [x] **T3** (S4-S6) emitir: buscador de persona en la página, vista previa
+  y aviso con el tiempo de residencia — worker — commit: 2c2afa3, b8ea1fc
+- [ ] **T4** (S7-S9) detalle según `design/constancias-detalle/02-hoja-sellada.html` (L5), reusando `HojaDeConstancia` de T3 — worker — commit:
 - [ ] **T5** (S1-S10) verificación, PR y merge — verify — commit:
 
 ## Log
@@ -121,3 +121,40 @@ L2: «1», que es prioridad alta y media, sin L4 ni C1.
       `shared/lib/fecha`.
   - **Riesgo anotado:** `textoDeBusquedaSql` quedó duplicado de
     `territorio`, como en el precedente de `escaparComodinesDeLike`.
+- **L5** — El usuario eligió el detalle desde el lienzo: «Implement the
+  design artboard design/constancias-detalle/02-hoja-sellada.html».
+  - `02-hoja-sellada.html` es la dirección elegida;
+    `01-ficha-y-acciones.html` queda como alternativa.
+  - El tradeoff del tablero pide que «la vista previa de emitir y esta hoja
+    deben decir lo mismo». Por eso T3 construye la hoja como un solo
+    componente de servidor, `HojaDeConstancia`, con props con forma de
+    snapshot y un sello opcional. T4 lo reusa en el detalle, leyendo el
+    snapshot guardado.
+  - T4 arranca cuando termine T3.
+- **L6** — El usuario, sobre `02-hoja-sellada.html`: «solo el label del
+  estatus se repite arriba y en lap vista previa».
+  - **Decisión del orquestador:** el estado se muestra una sola vez, como
+    sello sobre la hoja, que es la idea del tablero elegido. Se quita la
+    insignia de la cabecera, junto al folio.
+  - En una constancia cancelada, la hoja lleva el sello «Cancelada» con la
+    fecha y el motivo, como en el tablero.
+  - S7 queda: el estado se ve en el detalle, una vez.
+- **L7** — T3 hecho en `2c2afa3` y `b8ea1fc`, en la rama
+  `feat/constancias-emitir`, que sale de `7fe219e` y se integra a
+  `feat/constancias-ux`.
+  - **S4:** sin persona, emitir busca en el padrón con un GET nativo y no
+    ofrece personas dadas de baja.
+  - **S5:** `HojaDeConstancia` repite la redacción de la plantilla
+    `ConstanciaDeVecindadV1` y lleva la firma.
+  - **S6:** el aviso `duracionCivil` dice, por ejemplo, «Reside ahí desde
+    el 9 oct 2026: 1 mes y 9 días.».
+  - **Verificado:**
+    - E2E: emitir 4, títulos 3 y cancelada 5;
+    - unit completa en verde;
+    - integración 43;
+    - `pnpm layers`, `pnpm reglas` y el build.
+  - El orquestador agregó `vistaPreviaDeConstancia` al mock de
+    `recursoAjeno.test.tsx`.
+  - T4 corre en `.pi/wt-c3`, encima de T3, porque reusa `HojaDeConstancia`.
+    Hereda tal cual su redacción, que es la de la plantilla del PDF y no la
+    paráfrasis del tablero.
