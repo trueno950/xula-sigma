@@ -1,29 +1,19 @@
-import { ArrowsClockwise, Prohibit } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import {
-  BotonDeCancelacion,
-  BotonDeImprimir,
-  BotonDeReimpresion,
+  AccionesDeConstancia,
   comoConstanciaId,
   constanciaPorId,
-  ETIQUETA_DE_MOTIVO_DE_CANCELACION,
   esquemaDeSnapshot,
+  HistorialDeConstancia,
+  HojaDeConstancia,
+  SelloDeConstancia,
 } from "@/modules/constancias";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarDocumentos, puedeEscribir } from "@/shared/auth/roles";
-import { fechaCivilCorta, fechaYHoraEnMerida } from "@/shared/lib/fecha";
-import {
-  Aviso,
-  AvisoDePermiso,
-  FichaDeDatos,
-  FilaDeFicha,
-  Migaja,
-  PaginaDePanel,
-  PantallaDeMensaje,
-} from "@/shared/ui";
-import { AccionColegable } from "./AccionColegable";
+import { exigirAyuntamiento } from "@/shared/tenancy/contexto";
+import { Aviso, Migaja, PaginaDePanel, PantallaDeMensaje } from "@/shared/ui";
 
 export const metadata: Metadata = { title: "Constancia" };
 
@@ -35,38 +25,24 @@ type Props = {
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
 
-const textoDeCancelacion = (
-  motivo: keyof typeof ETIQUETA_DE_MOTIVO_DE_CANCELACION | null,
-) =>
-  motivo
-    ? `Documento cancelado: ${ETIQUETA_DE_MOTIVO_DE_CANCELACION[motivo]}`
-    : "Documento cancelado";
-
 /**
- * Muestra el snapshot congelado como texto plano, mas los tres bordes de
- * ciclo de vida del documento (design.md de `constancias-oficios`, secciones
- * 10 y 11): imprimir (`BotonDeImprimir`, ausente si esta cancelada: el PDF
- * sigue siendo descargable por su URL pero marcado, no se ofrece como hoja
- * para entregar), reimprimir con motivo
- * (`BotonDeReimpresion`, gateado por `puedeEscribir`) y cancelar con motivo
- * (`BotonDeCancelacion`, gateado por `puedeAdministrarDocumentos`) -en los
- * dos casos ocultar el boton no es la autorizacion real, que vive en
- * `reimprimirConstancia`/`cancelarConstancia`; el gate aca es solo para no
- * mostrar una accion que el caso de uso va a rechazar (hallazgo de GGA: el
- * gate de `BotonDeReimpresion` faltaba, el comentario decia que existia)-.
+ * El detalle lee el snapshot congelado y no el padron vivo: lo que muestra
+ * la hoja es lo que se imprimio y se entrego, aunque la persona se haya
+ * mudado despues (S7-S9 de `constancias-ux`, `design/constancias-detalle/02-hoja-sellada.html`).
+ *
+ * La hoja es el mismo componente de servidor que la vista previa de la
+ * emision (`HojaDeConstancia`, S5), asi que la hoja que se aprueba y la que
+ * se consulta despues no pueden decir cosas distintas. El nombre del
+ * municipio no va en el snapshot -se lee al renderizar, igual que en el PDF-,
+ * y el firmante si va: es el que estaba configurado el dia de la emision.
+ *
+ * `?error=` lo escriben `reimprimirConstanciaAction` y
+ * `cancelarConstanciaAction` cuando rechazan; la pagina solo lo pinta, y
+ * solo por eso confia en el texto.
+ *
  * Mismo criterio que `padron/[id]/page.tsx` para "no existe": RLS ya deja
  * `constanciaPorId` en `null` para una constancia de otro tenant, y la
- * pantalla responde 404 sin distinguirla de una inexistente.
- *
- * `?error=` efectivamente se lee aca -a diferencia del gap que la revision
- * de la Fase 4b encontro en esta misma pantalla-: las dos acciones nuevas
- * redirigen con ese parametro cuando `reimprimirConstancia` o
- * `cancelarConstancia` rechazan.
- *
- * Reimprimir y cancelar van cada una en su propio panel y no en una hilera
- * de botones: las dos piden un motivo antes de ejecutar, asi que son
- * formularios, y un formulario suelto al pie de una ficha se lee como parte
- * de la ficha.
+ * pantalla responde 404 sin distinguirla de una inexistente (regla 8).
  */
 export default async function PaginaDeDetalleDeConstancia({
   params,
@@ -84,7 +60,6 @@ export default async function PaginaDeDetalleDeConstancia({
     ? await constanciaPorId(comoConstanciaId(analisisDeId.data), contexto)
     : null;
 
-  // Regla 8, igual que en la ficha de una persona.
   if (!constancia) notFound();
 
   const datos = esquemaDeSnapshot.parse(constancia.datos);
@@ -94,15 +69,13 @@ export default async function PaginaDeDetalleDeConstancia({
   const error = analisisDeParametros.success
     ? analisisDeParametros.data.error
     : undefined;
-  const cancelada = constancia.canceladaEn !== null;
-  const puedeReimprimir = puedeEscribir(contexto.usuario.rol);
-  const puedeCancelar = puedeAdministrarDocumentos(contexto.usuario.rol);
+  const { nombre } = await exigirAyuntamiento();
 
   return (
     <PaginaDePanel
       titulo={constancia.folio}
+      descripcion="Constancia de vecindad"
       ancho="detalle"
-      accion={cancelada ? undefined : <BotonDeImprimir id={constancia.id} />}
       migaja={
         <Migaja
           pasos={[
@@ -114,46 +87,42 @@ export default async function PaginaDeDetalleDeConstancia({
       }
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
-      {cancelada ? (
-        <Aviso tono="error">
-          {textoDeCancelacion(constancia.motivoCancelacion)}
-        </Aviso>
-      ) : null}
-      {!cancelada && !puedeReimprimir ? (
-        <AvisoDePermiso
-          capacidad="reimprimir esta constancia"
-          requisito="un rol con permisos de escritura"
-        />
-      ) : null}
-      {!cancelada && !puedeCancelar ? (
-        <AvisoDePermiso
-          capacidad="cancelar esta constancia"
-          requisito="el rol de administrador municipal"
-        />
-      ) : null}
-      <FichaDeDatos>
-        <FilaDeFicha etiqueta="Titular">
-          {datos.titular.nombreCompleto}
-        </FilaDeFicha>
-        <FilaDeFicha etiqueta="Dirección">{datos.direccion.texto}</FilaDeFicha>
-        <FilaDeFicha etiqueta="Reside desde" dato>
-          {fechaCivilCorta(datos.direccion.desdeEn)}
-        </FilaDeFicha>
-        <FilaDeFicha etiqueta="Emitida" dato>
-          {fechaYHoraEnMerida(constancia.emitidaEn)}
-        </FilaDeFicha>
-      </FichaDeDatos>
-      {!cancelada && puedeReimprimir ? (
-        <AccionColegable titulo="Reimprimir constancia" Icono={ArrowsClockwise}>
-          <BotonDeReimpresion constanciaId={constancia.id} />
-        </AccionColegable>
-      ) : null}
-
-      {!cancelada && puedeCancelar ? (
-        <AccionColegable titulo="Cancelar constancia" Icono={Prohibit}>
-          <BotonDeCancelacion constanciaId={constancia.id} />
-        </AccionColegable>
-      ) : null}
+      <AccionesDeConstancia
+        constanciaId={constancia.id}
+        personaId={constancia.personaId}
+        cancelada={constancia.canceladaEn !== null}
+        puedeReimprimir={puedeEscribir(contexto.usuario.rol)}
+        puedeCancelar={puedeAdministrarDocumentos(contexto.usuario.rol)}
+      />
+      <HojaDeConstancia
+        datos={{
+          municipio: nombre,
+          titular: {
+            nombreCompleto: datos.titular.nombreCompleto,
+            href: `/padron/${constancia.personaId}`,
+          },
+          direccion: datos.direccion,
+          firmante: {
+            ...datos.firmante,
+            ...(datos.leyendaDePie ? { leyendaDePie: datos.leyendaDePie } : {}),
+          },
+          folio: constancia.folio,
+          emitidaEn: constancia.emitidaEn,
+        }}
+        sello={
+          <SelloDeConstancia
+            estado={constancia.estado}
+            canceladaEn={constancia.canceladaEn}
+            motivoCancelacion={constancia.motivoCancelacion}
+          />
+        }
+      />
+      <HistorialDeConstancia
+        folio={constancia.folio}
+        emitidaEn={constancia.emitidaEn}
+        canceladaEn={constancia.canceladaEn}
+        motivoCancelacion={constancia.motivoCancelacion}
+      />
     </PaginaDePanel>
   );
 }
