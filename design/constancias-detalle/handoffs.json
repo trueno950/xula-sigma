@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "02-hoja-sellada.html",
+  "handoffs": {
+    "02-hoja-sellada.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-18T19:06:34.703Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/constancias-ux.md"
+    }
+  }
+}

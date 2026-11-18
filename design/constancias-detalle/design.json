@@ -1,0 +1,21 @@
+{
+  "title": "Detalle de constancia",
+  "brief": "Rediseño de /constancias/[id] para la operadora de un municipio pequeño de Yucatán: ver de un vistazo si la constancia sigue vigente o está cancelada —y por qué—, reconocer al titular y abrir su ficha en el padrón, e imprimir, reimprimir o cancelar sin que las dos acciones que piden un motivo ofrezcan un botón que se dispare por accidente.",
+  "feature": "odd/tasks/constancias-ux.md",
+  "artboards": [
+    {
+      "file": "01-ficha-y-acciones.html",
+      "title": "Ficha y acciones",
+      "tradeoff": "Dos columnas, igual que el detalle de reporte ya elegido: ficha e historial a la izquierda, panel de acciones pegado arriba a la derecha con «Imprimir» como único botón de marca y reimprimir y cancelar en acordeón exclusivo, cancelar al final tras un divisor. Gana visión sin desplazarse; cuesta 320 px de ancho —el detalle sube de 720 a 1040 px— y en el teléfono las acciones bajan hasta después de la ficha.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-hoja-sellada.html",
+      "title": "Hoja sellada",
+      "tradeoff": "Una columna de 760 px que empieza por el papel: la constancia se lee completa como se va a entregar, con el estado puesto de sello encima, y las tres acciones en una barra arriba siempre visible. Gana que el documento manda y el estado se lee como sello; cuesta alto de pantalla —el historial se va abajo— y repite en pantalla lo que el PDF ya muestra, así que la vista previa de emitir y esta hoja deben decir lo mismo.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

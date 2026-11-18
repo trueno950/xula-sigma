@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Hoja sellada — Detalle de constancia</title>
+<style>
+  :root {
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    --radio-sm: 6px;
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, h4, p, ul, ol, li, dl, dd, dt { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+  code { font-family: var(--fuente-dato); font-size: .875rem; }
+
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .enlace:hover { text-decoration-thickness: 2px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  /* ================= shell ================= */
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar {
+    position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+    border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo);
+    overflow-y: auto;
+  }
+  .municipio {
+    display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px;
+    background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2;
+    color: var(--color-caliza-tinta); text-decoration: none;
+  }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item {
+    display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px;
+    border-radius: var(--radio-md); font-weight: 600; font-size: 15px;
+    color: var(--color-caliza-apagada); text-decoration: none;
+    transition: background-color 150ms var(--ease), color 150ms var(--ease);
+  }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px;
+    border: 1px solid transparent; border-radius: var(--radio-md); background: transparent;
+    color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer;
+    transition: color 150ms var(--ease), background-color 150ms var(--ease);
+  }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  /* ================= botones, insignias, campos ================= */
+  .boton {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 10px 18px; border-radius: var(--radio-md); border: 1px solid transparent;
+    font: 600 15px/1.2 var(--fuente); cursor: pointer; text-decoration: none; text-align: center;
+    transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease);
+  }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .boton.peligro { background: var(--color-caliza-lienzo); color: var(--color-senial-error); border-color: var(--color-senial-error); }
+  .boton.peligro:hover { background: var(--color-senial-error-suave); }
+  .ancho { width: 100%; }
+
+  .insignia { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: var(--radio-pill); font-size: 15px; font-weight: 600; }
+  .insignia svg { width: 16px; height: 16px; }
+  .insignia.exito { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .insignia.error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+
+  .campo { display: flex; flex-direction: column; gap: 6px; }
+  .campo select, .campo input {
+    width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--color-caliza-borde);
+    border-radius: var(--radio-md); background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta);
+    font: 400 15px/1.5 var(--fuente);
+  }
+  .campo .ayuda { font-size: 13px; line-height: 1.4; color: var(--color-caliza-apagada); }
+
+  .aviso { display: flex; gap: 8px; padding: 12px; border-radius: var(--radio-md); background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .aviso svg { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+  .aviso p { font-size: .9375rem; line-height: 1.45; }
+
+  /* ================= contenido ================= */
+  .contenido {
+    min-width: 0; width: 100%; max-width: 760px; margin: 0 auto;
+    padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 20px;
+  }
+  .migaja { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; color: var(--color-caliza-apagada); }
+  .migaja a { color: var(--color-caliza-apagada); text-decoration: none; border-bottom: 1px solid transparent; }
+  .migaja a:hover { color: var(--color-caliza-tinta); border-bottom-color: var(--color-caliza-borde); }
+  .migaja [aria-current="page"] { font-family: var(--fuente-dato); font-size: .875rem; }
+
+  .cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 20px; }
+  .cabecera .folio { font-family: var(--fuente-dato); font-size: 1.75rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.15; }
+  .cabecera .tipo { margin-top: 6px; }
+
+  .tarjeta {
+    border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg);
+    background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); padding: 20px;
+  }
+
+  /* ================= barra de acciones ================= */
+  .barra-acciones { display: flex; flex-direction: column; gap: 8px; }
+  .barra-fila { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+  .barra-fila form, .barra-fila .accion, .barra-fila .accion-peligro, .barra-fila .boton { margin: 0; }
+  .barra-fila > .boton { flex: 0 0 auto; }
+  .accion, .accion-peligro { border: 0; background: transparent; flex: 0 1 auto; }
+  .accion[open], .accion-peligro[open] { flex-basis: 100%; }
+  .accion > summary, .accion-peligro > summary {
+    display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 14px;
+    border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo);
+    cursor: pointer; list-style: none; font: 600 15px/1.3 var(--fuente); color: var(--color-caliza-tinta);
+    transition: background-color 150ms var(--ease);
+  }
+  .accion > summary::-webkit-details-marker, .accion-peligro > summary::-webkit-details-marker { display: none; }
+  .accion > summary:hover, .accion[open] > summary { background: var(--color-caliza-superficie); }
+  .accion > summary .chevron, .accion-peligro > summary .chevron { color: var(--color-caliza-apagada); transition: rotate 150ms var(--ease); }
+  .accion[open] > summary .chevron, .accion-peligro[open] > summary .chevron { rotate: 180deg; }
+  .accion .cuerpo-accion, .accion-peligro .cuerpo-accion {
+    display: flex; flex-direction: column; gap: 16px; margin-top: 8px; padding: 12px 14px;
+    border-radius: var(--radio-md); background: var(--color-caliza-superficie);
+  }
+  .accion-peligro > summary { border-color: var(--color-senial-error); color: var(--color-senial-error); }
+  .accion-peligro > summary:hover, .accion-peligro[open] > summary { background: var(--color-senial-error-suave); }
+  .accion-peligro > summary .chevron { color: var(--color-senial-error); }
+  .nota-barra { max-width: 70ch; }
+
+  /* ================= la hoja del documento ================= */
+  .hoja-doc { display: flex; flex-direction: column; gap: 16px; }
+  .doc-cabeza { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 20px; }
+  .doc-membrete { display: flex; align-items: center; gap: 10px; }
+  .doc-membrete .nombre { font: 600 15px/1.25 var(--fuente); }
+  .doc-titulo { display: flex; flex-direction: column; gap: 4px; padding-top: 4px; }
+  .doc-titulo .tipo { font-size: 1.25rem; font-weight: 600; letter-spacing: -.01em; }
+  .regla { height: 1px; background: var(--color-caliza-divisor); }
+  .doc-cuerpo { display: flex; flex-direction: column; gap: 12px; }
+  .doc-cuerpo p { max-width: 60ch; }
+  .doc-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; padding: 12px 16px; border-radius: var(--radio-md); background: var(--color-caliza-superficie); }
+
+  /* sello del estado */
+  .sello {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border: 2px solid currentColor; border-radius: var(--radio-sm);
+    font: 650 15px/1.2 var(--fuente); letter-spacing: .02em;
+    rotate: -3deg;
+  }
+  .sello svg { width: 18px; height: 18px; }
+  .sello.vigente { color: var(--color-senial-exito); background: var(--color-senial-exito-suave); }
+  .sello.cancelada { color: var(--color-senial-error); background: var(--color-senial-error-suave); }
+
+  /* ================= cancelada dentro de la hoja ================= */
+  .anuncio-cancelacion { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--radio-md); background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+  .anuncio-cancelacion .fila { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .anuncio-cancelacion svg { width: 18px; height: 18px; }
+  .anuncio-cancelacion .detalle { color: var(--color-caliza-tinta); font-size: .9375rem; }
+
+  /* ================= historial ================= */
+  .linea-de-tiempo { display: flex; flex-direction: column; margin-top: 12px; }
+  .linea-de-tiempo li { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 2px 12px; padding: 0 0 20px; }
+  .linea-de-tiempo li:last-child { padding-bottom: 0; }
+  .linea-de-tiempo li::before {
+    content: ""; grid-column: 1; grid-row: 1 / span 2; justify-self: center; width: 2px; height: 100%;
+    background: var(--color-caliza-divisor); margin-top: 18px;
+  }
+  .linea-de-tiempo li:last-child::before { display: none; }
+  .linea-de-tiempo .punto {
+    grid-column: 1; grid-row: 1; justify-self: center; width: 12px; height: 12px; margin-top: 5px;
+    border-radius: var(--radio-pill); border: 2px solid var(--color-caliza-borde); background: var(--color-caliza-lienzo);
+  }
+  .linea-de-tiempo li.hecho .punto { border-color: var(--color-caliza-tinta); background: var(--color-caliza-tinta); }
+  .linea-de-tiempo .evento { grid-column: 2; grid-row: 1; }
+  .linea-de-tiempo .cuando { grid-column: 2; grid-row: 2; }
+
+  /* ================= notas y móvil ================= */
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .hoja h2 { margin-bottom: 4px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+  .muestra { padding: 16px; border-radius: var(--radio-md); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .muestra + .muestra { margin-top: 12px; }
+  .muestra .doc-cabeza { margin-bottom: 12px; }
+
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono {
+    width: 390px; height: 844px; overflow-y: auto; position: relative;
+    border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo);
+    box-shadow: var(--sombra-reposo);
+  }
+  .m-municipio {
+    display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px;
+    background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor);
+    font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none;
+  }
+  .m-cuerpo { padding: 16px 16px 96px; display: flex; flex-direction: column; gap: 20px; }
+  .m-cabecera .folio { font-family: var(--fuente-dato); font-size: 1.4rem; font-weight: 650; letter-spacing: -.02em; line-height: 1.2; }
+  .m-cabecera .insignia { margin-top: 10px; }
+  .m-cuerpo .barra-fila > .boton, .m-cuerpo .accion, .m-cuerpo .accion-peligro { flex-basis: 100%; }
+  .m-cuerpo .accion > summary, .m-cuerpo .accion-peligro > summary { justify-content: space-between; }
+  .m-doc { padding: 16px; }
+  .m-doc .doc-titulo .tipo { font-size: 1.125rem; }
+  .m-doc .doc-datos { grid-template-columns: 1fr; }
+  .m-nav {
+    position: sticky; bottom: 0; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo);
+  }
+  .m-nav a {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none;
+  }
+  .m-nav a[aria-current="true"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="true"] svg { color: var(--color-marca); }
+
+  @media (max-width: 1023px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: .01ms !important; animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important; scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-padron" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4zm7.5-9.7a4 4 0 0 1 0 7.4 6 6 0 0 0 0-7.4zM18 13c2.2.6 4 2.1 4 4v3h-5v-3c0-1.6-.7-3-1.9-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--color-marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--color-marca-texto)" opacity=".85"/></symbol>
+    <symbol id="i-imprimir" viewBox="0 0 24 24"><path d="M7 2.5h10v4H7zM5 8h14a2 2 0 0 1 2 2v6h-3v5H6v-5H3v-6a2 2 0 0 1 2-2zm3 8h8v4H8z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M12 15.5 5.5 9l1.5-1.5 5 5 5-5L18.5 9z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="si-x" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm3.5 12.1-1.4 1.4L12 13.9 9.9 16l-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4L12 11.1l2.1-2.1 1.4 1.4-2.1 2.1z"/></symbol>
+    <symbol id="si-aviso" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-persona" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-padron"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Admin municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <nav class="migaja" aria-label="Ruta">
+      <a href="#">Constancias</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">VEC-2026-000003</span>
+    </nav>
+
+    <header class="cabecera">
+      <div>
+        <h1 class="folio">VEC-2026-000003</h1>
+        <p class="label tipo">Constancia de vecindad</p>
+      </div>
+      <span class="insignia exito">
+        <svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente
+      </span>
+    </header>
+
+    <section class="barra-acciones" aria-labelledby="t-acciones">
+      <h2 class="sr-only" id="t-acciones">Acciones</h2>
+      <div class="barra-fila">
+        <a class="boton primaria" href="#">
+          <svg width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-imprimir"/></svg>
+          Imprimir
+        </a>
+        <details class="accion" name="acciones-de-constancia">
+          <summary>Reimprimir constancia…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+          <form class="cuerpo-accion" action="#" method="post">
+            <input type="hidden" name="constanciaId" value="c1f7">
+            <div class="campo">
+              <label class="label" for="b-motivo-reimpresion">Motivo de reimpresión</label>
+              <select id="b-motivo-reimpresion" name="motivo">
+                <option value="">Seleccione un motivo</option>
+                <option value="EXTRAVIO">Extravío</option>
+                <option value="DETERIORO">Deterioro</option>
+                <option value="EJEMPLAR_ADICIONAL">Ejemplar adicional</option>
+              </select>
+              <span class="ayuda">Queda registrado con quién la pidió y cuándo.</span>
+            </div>
+            <button class="boton secundaria" type="submit">Reimprimir</button>
+          </form>
+        </details>
+        <details class="accion-peligro" name="acciones-de-constancia">
+          <summary>Cancelar constancia…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+          <form class="cuerpo-accion" action="#" method="post">
+            <input type="hidden" name="constanciaId" value="c1f7">
+            <div class="campo">
+              <label class="label" for="b-motivo-cancelacion">Motivo de cancelación</label>
+              <select id="b-motivo-cancelacion" name="motivo">
+                <option value="">Seleccione un motivo</option>
+                <option value="ERROR_DE_CAPTURA">Error de captura</option>
+                <option value="DATOS_INCORRECTOS">Datos incorrectos</option>
+              </select>
+              <span class="ayuda">No se deshace. El documento queda cancelado con este motivo.</span>
+            </div>
+            <button class="boton peligro" type="submit">Cancelar constancia</button>
+          </form>
+        </details>
+      </div>
+      <p class="label nota-barra">Abrir un pliegue cierra el otro. «Cancelar» queda al final y en rojo. Sin JavaScript los dos formularios se envían igual.</p>
+    </section>
+
+    <article class="tarjeta hoja-doc" aria-labelledby="t-documento">
+      <div class="doc-cabeza">
+        <div class="doc-membrete">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          <span class="nombre">Ayuntamiento de Motul</span>
+        </div>
+        <span class="sello vigente">
+          <svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente
+        </span>
+      </div>
+
+      <div class="regla" aria-hidden="true"></div>
+
+      <div class="doc-titulo">
+        <h2 class="tipo" id="t-documento">Constancia de vecindad</h2>
+        <p class="dato">Folio VEC-2026-000003</p>
+      </div>
+
+      <div class="doc-cuerpo">
+        <p class="body">Se hace constar que <a class="enlace" href="#">Jose Armando May Canul</a> reside en el municipio de Motul, en <strong>Calle 20 101, junto a la cancha, Colonia Centro, Buenavista</strong>, desde el <time datetime="2026-10-15">15 de octubre de 2026</time>.</p>
+        <p class="label">Este texto es el que se guardó al emitir la constancia: si la persona se muda después, el documento no cambia.</p>
+      </div>
+
+      <dl class="doc-datos">
+        <div class="par">
+          <dt class="label">Reside desde</dt>
+          <dd class="dato"><time datetime="2026-10-15">15 oct 2026</time></dd>
+        </div>
+        <div class="par">
+          <dt class="label">Emitida</dt>
+          <dd class="dato"><time datetime="2026-10-15T23:27-06:00">15 oct 2026, 11:27 p.m.</time></dd>
+        </div>
+      </dl>
+    </article>
+
+    <section aria-labelledby="t-historial">
+      <h2 class="headline" id="t-historial">Historial del documento</h2>
+      <ol class="linea-de-tiempo">
+        <li class="hecho">
+          <span class="punto" aria-hidden="true"></span>
+          <p class="evento title">Constancia emitida</p>
+          <p class="cuando dato apagada"><time datetime="2026-10-15T23:27-06:00">15 oct 2026, 11:27 p.m.</time> · VEC-2026-000003</p>
+        </li>
+      </ol>
+      <p class="label" style="margin-top:12px">Un solo movimiento. Cada reimpresión suma un renglón con su motivo y su fecha.</p>
+    </section>
+  </main>
+</div>
+
+<section class="hoja" aria-labelledby="t-notas">
+  <div class="hoja-inner">
+    <div>
+      <h2 class="headline" id="t-notas">02 · Hoja sellada</h2>
+      <p class="body apagada" style="max-width:70ch">Una sola columna de 760&nbsp;px que empieza por el papel: la constancia se lee como se va a entregar, con el estado puesto de sello encima, y las tres acciones viven en una barra arriba, siempre a la vista, sin columna lateral ni acordeón dentro de una tarjeta.</p>
+    </div>
+
+    <div class="notas">
+      <div class="nota">
+        <h3 class="title">Compromiso (tradeoff)</h3>
+        <p class="body apagada" style="margin:8px 0 0">Pone el documento en el centro: la operadora confirma de un vistazo qué dice la hoja que va a entregar, y el estado se lee como el sello del papel y no como un dato de sistema. Cuesta alto de pantalla —la hoja empuja el historial hacia abajo— y repite en pantalla lo que el PDF ya muestra, así que la vista previa de emitir y esta hoja tienen que decir lo mismo o se desincronizan.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S7-S9)</h3>
+        <ul class="body">
+          <li><strong>S7 · estado en dos registros.</strong> La pastilla de la cabecera dice el estado del registro; el sello sobre la hoja lo repite con ícono y palabra, en <code>senial-exito</code> o <code>senial-error</code>. Ninguno de los dos depende del color: la palabra está escrita. Sale de <code>canceladaEn</code>.</li>
+          <li><strong>S8 · el titular, en la hoja.</strong> El nombre es el enlace a su ficha de Padrón, en tinta con subrayado, dentro de la propia frase del documento: se reconoce a quién se le emitió sin salir de la lectura.</li>
+          <li><strong>S9 · la barra de acciones.</strong> «Imprimir» es el único botón de marca; «Reimprimir constancia…» y «Cancelar constancia…» son <code>&lt;details&gt;</code> con el mismo <code>name</code>, y al abrirse ocupan el ancho completo. «Cancelar» va al final, con contorno rojo y su <code>&lt;select&gt;</code> de motivo.</li>
+          <li><strong>S10 · nativo.</strong> Dos formularios <code>method="post"</code> con el <code>constanciaId</code> oculto; ningún <code>"use client"</code>, ningún <code>ayuntamiento_id</code> recibido del cliente.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Variante cancelada · la hoja sellada en rojo</h3>
+        <div class="muestra">
+          <div class="doc-cabeza">
+            <div class="doc-membrete">
+              <svg width="32" height="32" aria-hidden="true"><use href="#i-escudo"/></svg>
+              <span class="nombre">Ayuntamiento de Motul</span>
+            </div>
+            <span class="sello cancelada"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>Cancelada</span>
+          </div>
+          <div class="anuncio-cancelacion">
+            <div class="fila">
+              <svg fill="currentColor" aria-hidden="true"><use href="#si-aviso"/></svg>
+              <p><strong>Cancelada el 16 oct 2026, 9:12 a.m.</strong></p>
+            </div>
+            <p class="detalle">Motivo: Error de captura</p>
+          </div>
+          <p class="body" style="margin-top:12px">Titular: <a class="enlace" href="#">Jose Armando May Canul</a></p>
+          <p class="label" style="margin-top:8px">Sin acciones: no se imprime ni se reimprime. Para entregar un documento vigente hay que emitir otra constancia desde la ficha de la persona.</p>
+        </div>
+        <p class="label" style="margin-top:12px">Decisión: <strong>la constancia cancelada no se imprime</strong>. El PDF sale marcado «CANCELADA» y una hoja cancelada en manos de la persona se lee como prueba vigente; la pantalla ya no monta «Imprimir» en ese caso. La barra de acciones desaparece completa: quedan la hoja, el motivo, la fecha y el historial, porque el expediente no se borra.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Decisiones registradas</h3>
+        <ul class="body">
+          <li><strong>Sello girado 3°.</strong> Gira solo el sello (<code>rotate: -3deg</code>) y no anima nada: <code>prefers-reduced-motion</code> no tiene que apagarlo. El borde de 2&nbsp;px usa <code>currentColor</code>, así que el tono sale de la señal, no de la marca.</li>
+          <li><strong>Insignia de 30&nbsp;px.</strong> Diferencia con <code>design/system.md</code> §7, que fija 24&nbsp;px y 13&nbsp;px de texto: aquí la pastilla crece a 30&nbsp;px con la palabra a 15/600, porque el estado del documento es lo primero que se busca. El listado conserva la de 24&nbsp;px.</li>
+          <li><strong>Membrete.</strong> Escudo y nombre del municipio dentro de la hoja: es una de las seis plazas donde vive la marca, y en la hoja va sobre lienzo, sin fondo de color.</li>
+          <li><strong>Motivos cerrados.</strong> Reimpresión: Extravío, Deterioro, Ejemplar adicional. Cancelación: Error de captura, Datos incorrectos. Son los dos <code>enum</code> del dominio; no hay «Otro».</li>
+          <li><strong>Sin firma.</strong> La hoja no dibuja bloque de firma ni sello del firmante: eso se revisa al emitir y se lee en el PDF.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Lo que la hoja NO es</h3>
+        <p class="body apagada">No es una vista previa de emisión (S5, otra pantalla) ni un reemplazo del PDF: es la lectura del <code>snapshot</code> guardado, con el mismo texto que va al papel. Si el snapshot no se puede mostrar, la página cae al aviso de error y la barra de acciones se queda sola.</p>
+      </div>
+    </div>
+
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada" style="max-width:70ch">Mismo orden: folio y estado, barra de acciones con los tres controles a todo el ancho, hoja y historial. El cuerpo deja 96&nbsp;px de relleno inferior para que el historial no quede debajo de la barra fija.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <header class="m-cabecera">
+            <nav class="migaja" aria-label="Ruta">
+              <a href="#">Constancias</a>
+              <span aria-hidden="true">›</span>
+              <span aria-current="page">VEC-2026-000003</span>
+            </nav>
+            <h1 class="folio" style="margin-top:8px">VEC-2026-000003</h1>
+            <p class="label">Constancia de vecindad</p>
+            <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span>
+          </header>
+
+          <section class="barra-acciones" aria-label="Acciones">
+            <div class="barra-fila">
+              <a class="boton primaria ancho" href="#">
+                <svg width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-imprimir"/></svg>
+                Imprimir
+              </a>
+              <details class="accion" name="acciones-movil">
+                <summary>Reimprimir constancia…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <form class="cuerpo-accion" action="#" method="post">
+                  <div class="campo">
+                    <label class="label" for="m-motivo-reimpresion">Motivo de reimpresión</label>
+                    <select id="m-motivo-reimpresion">
+                      <option value="">Seleccione un motivo</option>
+                      <option>Extravío</option><option>Deterioro</option><option>Ejemplar adicional</option>
+                    </select>
+                    <span class="ayuda">Queda registrado con quién la pidió y cuándo.</span>
+                  </div>
+                  <button class="boton secundaria ancho" type="submit">Reimprimir</button>
+                </form>
+              </details>
+              <details class="accion-peligro" name="acciones-movil">
+                <summary>Cancelar constancia…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <form class="cuerpo-accion" action="#" method="post">
+                  <div class="campo">
+                    <label class="label" for="m-motivo-cancelacion">Motivo de cancelación</label>
+                    <select id="m-motivo-cancelacion">
+                      <option value="">Seleccione un motivo</option>
+                      <option>Error de captura</option><option>Datos incorrectos</option>
+                    </select>
+                    <span class="ayuda">No se deshace. El documento queda cancelado con este motivo.</span>
+                  </div>
+                  <button class="boton peligro ancho" type="submit">Cancelar constancia</button>
+                </form>
+              </details>
+            </div>
+          </section>
+
+          <article class="tarjeta m-doc hoja-doc" aria-labelledby="m-t-documento">
+            <div class="doc-cabeza">
+              <div class="doc-membrete">
+                <svg width="32" height="32" aria-hidden="true"><use href="#i-escudo"/></svg>
+                <span class="nombre">Ayuntamiento de Motul</span>
+              </div>
+              <span class="sello vigente"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Vigente</span>
+            </div>
+            <div class="regla" aria-hidden="true"></div>
+            <div class="doc-titulo">
+              <h2 class="tipo" id="m-t-documento">Constancia de vecindad</h2>
+              <p class="dato">Folio VEC-2026-000003</p>
+            </div>
+            <div class="doc-cuerpo">
+              <p class="body">Se hace constar que <a class="enlace" href="#">Jose Armando May Canul</a> reside en el municipio de Motul, en <strong>Calle 20 101, junto a la cancha, Colonia Centro, Buenavista</strong>, desde el <time datetime="2026-10-15">15 de octubre de 2026</time>.</p>
+            </div>
+            <dl class="doc-datos">
+              <div class="par"><dt class="label">Reside desde</dt><dd class="dato"><time datetime="2026-10-15">15 oct 2026</time></dd></div>
+              <div class="par"><dt class="label">Emitida</dt><dd class="dato"><time datetime="2026-10-15T23:27-06:00">15 oct 2026, 11:27 p.m.</time></dd></div>
+            </dl>
+          </article>
+
+          <section aria-labelledby="m-t-historial">
+            <h2 class="headline" id="m-t-historial">Historial del documento</h2>
+            <ol class="linea-de-tiempo">
+              <li class="hecho">
+                <span class="punto" aria-hidden="true"></span>
+                <p class="evento title">Constancia emitida</p>
+                <p class="cuando dato apagada"><time datetime="2026-10-15T23:27-06:00">15 oct 2026, 11:27 p.m.</time></p>
+              </li>
+            </ol>
+          </section>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-padron"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#" aria-current="true"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-mas"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
