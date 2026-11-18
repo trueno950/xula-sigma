@@ -12,6 +12,7 @@ import {
   crearContarContenidoDeLugares,
   crearDarDeBajaCalle,
   crearDarDeBajaLugar,
+  crearDireccionesVigentesDePersonas,
   crearDireccionVigenteDePersona,
   crearEditarLugar,
   crearExisteCabecera,
@@ -95,6 +96,10 @@ export const direccionVigenteDePersona = crearDireccionVigenteDePersona(
   repositorioDeResidenciasSql,
   lectorDeDireccionesSql,
   crearLectorDePersonasPorPadron,
+);
+export const direccionesVigentesDePersonas = crearDireccionesVigentesDePersonas(
+  repositorioDeResidenciasSql,
+  lectorDeDireccionesSql,
 );
 export const residentesDe = crearResidentesDe(
   repositorioDeDomiciliosSql,

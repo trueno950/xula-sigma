@@ -8,11 +8,11 @@ import type {
 } from "../domain";
 
 /**
- * `LectorDeDirecciones` **si** recibe `tx` -a diferencia de
- * `LecturaDePersonas` (`puertosDeResidencias.ts`)-: su implementacion vive
- * en el mismo modulo y en la misma transaccion que `direccionVigenteDePersona`
- * abre. El `tx` en la firma de un puerto no es estilo: marca si el
- * adaptador cruza o no un limite de modulo (design.md seccion 7).
+ * `LectorDeDirecciones` **si** recibe `tx` -a diferencia de `LecturaDePersonas`
+ * (`puertosDeResidencias.ts`)-: su implementacion vive en el mismo modulo y en
+ * la misma transaccion que `direccionVigenteDePersona` abre. El `tx` en la
+ * firma de un puerto no es estilo: marca si el adaptador cruza o no un
+ * limite de modulo (design.md seccion 7).
  *
  * Devuelve `null` cuando el domicilio no existe o RLS lo esconde -las dos
  * cosas se ven igual del lado de quien pregunta-, nunca lanza: mismo
@@ -23,6 +23,24 @@ export type LectorDeDirecciones = {
     tx: TransaccionTenant,
     domicilioId: DomicilioId,
   ): Promise<PartesDeDireccion | null>;
+};
+
+/**
+ * La version por lote de `LectorDeDirecciones`, para nombrar una pantalla
+ * entera de direcciones: una consulta para todos los domicilios en vez de una
+ * por fila. Tipo propio y no un metodo mas de `LectorDeDirecciones` porque
+ * solo lo implementa el adaptador real -el resto del modulo sigue pidiendo
+ * una direccion a la vez-, y porque un lote vacio es un mapa vacio y no un
+ * `null` con otro significado.
+ *
+ * Un domicilio que no se puede leer -no existe, es de otro tenant, su lugar
+ * esta de baja- simplemente no aparece en el mapa.
+ */
+export type LectorDeDireccionesEnLote = {
+  partesDeVarios(
+    tx: TransaccionTenant,
+    domicilioIds: readonly DomicilioId[],
+  ): Promise<ReadonlyMap<DomicilioId, PartesDeDireccion>>;
 };
 
 /**
