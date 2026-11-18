@@ -1,10 +1,12 @@
 export { BotonDeCancelacion } from "./BotonDeCancelacion";
 export { BotonDeImprimir } from "./BotonDeImprimir";
 export { BotonDeReimpresion } from "./BotonDeReimpresion";
+export { BuscadorDeTitular } from "./BuscadorDeTitular";
 export { ConfiguracionDeDocumentos } from "./ConfiguracionDeDocumentos";
 export { descripcionDeFiltrosDeConstancias } from "./descripcionDeFiltros";
 export { FilaDeConstancia } from "./FilaDeConstancia";
 export { FiltrosDeConstancias } from "./FiltrosDeConstancias";
 export { FormularioDeEmision } from "./FormularioDeEmision";
+export { HojaDeConstancia } from "./HojaDeConstancia";
 export { ListadoDeConstancias } from "./ListadoDeConstancias";
 export { PieDeConstancias, ResumenDeConstancias } from "./ResumenDeConstancias";

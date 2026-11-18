@@ -1,9 +1,11 @@
 import {
+  buscarPersonas,
   comoPersonaId,
   nombreCompletoDe,
   personaPorId,
 } from "@/modules/padron";
 import type { ContextoActual } from "@/shared/auth/contexto";
+import type { BusquedaDeTitulares } from "../application/buscarTitulares";
 import type { LecturaDeTitulares } from "../application/puertosDeLectura";
 
 /**
@@ -27,6 +29,35 @@ export const crearLectorDeTitularesPorPadron = (
     return {
       nombreCompleto: nombreCompletoDe(persona),
       bajaEn: persona.bajaEn,
+    };
+  },
+});
+
+/**
+ * El buscador de la emision (S4 de `constancias-ux`) contra el mismo caso de
+ * uso que el listado del padron, no contra su repositorio: la busqueda
+ * tolerante a variantes -abreviaturas, acentos, trigramas- vive en `padron`,
+ * y repetirla aca daria dos respuestas distintas para la misma cadena.
+ *
+ * `bajaEn` viaja en el candidato porque quien decide dejar fuera a los dados
+ * de baja es el caso de uso, no este adaptador.
+ */
+export const crearBuscadorDeTitularesPorPadron = (
+  contexto: ContextoActual,
+): BusquedaDeTitulares => ({
+  async buscar(cadena, limite) {
+    const { personas, hayMas } = await buscarPersonas(cadena, contexto, {
+      limite,
+    });
+
+    return {
+      candidatos: personas.map((persona) => ({
+        id: persona.id,
+        nombreCompleto: nombreCompletoDe(persona),
+        curp: persona.curp,
+        bajaEn: persona.bajaEn,
+      })),
+      hayMas,
     };
   },
 });
