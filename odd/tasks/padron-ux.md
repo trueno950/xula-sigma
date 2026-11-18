@@ -171,3 +171,21 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3:
     - **`(lista)/loading.tsx`:** ya abría un Suspense, y sin JavaScript
       el HTML transmitido nunca se inserta. Es deuda anterior y queda como
       seguimiento.
+- **L12** — Resultado de T5, la verificación independiente.
+  - La pidió el orquestador por el riesgo de seguridad, ítem 2: el
+    aislamiento entre municipios y las acciones que escriben.
+  - **Aprobado:**
+    - la lectura en lote, con RLS y `withTenant`, sin N+1 y con pruebas de
+      aislamiento que fallan de verdad;
+    - las tres acciones: Zod primero, municipio del servidor, lista blanca
+      de errores, uuid validado antes de redirigir y sin datos personales
+      en el log.
+  - S1, S9, S12 y S13 se cumplen.
+  - **Aviso:** `fusionarPersonasAction` no tenía prueba unitaria. Se agregó
+    `fusionarPersonas.action.test.ts`, con 7 pruebas: éxito, sin
+    duplicado, ganadora que no es uuid, lista blanca, falla inesperada y
+    sin sesión.
+    - Son pruebas de caracterización: la conducta ya existía, así que no
+      hubo RED antes del código.
+    - Quitar `NoEncontradoError` de la lista blanca hace fallar una de
+      ellas.
