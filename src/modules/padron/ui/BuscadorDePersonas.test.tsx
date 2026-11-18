@@ -5,6 +5,13 @@ import { BuscadorDePersonas } from "./BuscadorDePersonas";
 const DIEZ = "a b c d e f g h i j";
 
 describe("BuscadorDePersonas", () => {
+  it("lleva su etiqueta visible y la ayuda que dice que busca", () => {
+    const html = renderToStaticMarkup(<BuscadorDePersonas />);
+
+    expect(html).toContain(">Buscar persona<");
+    expect(html).toContain("Nombre, apellidos o CURP. No distingue acentos.");
+  });
+
   it("avisa cuantas palabras quedaron fuera del tope de la busqueda", () => {
     const html = renderToStaticMarkup(<BuscadorDePersonas cadena={DIEZ} />);
 

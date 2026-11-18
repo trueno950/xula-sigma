@@ -1,7 +1,7 @@
 import { EsqueletoDeFilas } from "@/shared/ui";
 
 /**
- * Lo que se ve mientras `listarPersonas` responde.
+ * Lo que se ve mientras `listarPersonas` y el domicilio vigente responden.
  *
  * No existia: la pantalla quedaba en blanco hasta que llegaba la lista, y
  * en la red de un municipio eso puede ser un par de segundos en los que no
@@ -14,12 +14,16 @@ import { EsqueletoDeFilas } from "@/shared/ui";
  * Vive en el grupo `(lista)` para no envolver a `[id]`: un `notFound()` que
  * corre dentro de este limite ya encontro el estado 200 enviado, y la ficha
  * de una persona ajena tiene que responder 404.
+ *
+ * Los anchos son los de la pantalla construida: el buscador a 620px y la
+ * linea de resultado -que S3 agrego- antes de la tabla.
  */
 export default function CargandoPadron() {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-6 md:px-6 lg:px-8 lg:py-8">
       <div className="h-9 w-64 animate-pulse rounded-md bg-caliza-relleno" />
-      <div className="h-11 animate-pulse rounded-md bg-caliza-relleno" />
+      <div className="h-11 w-full max-w-[620px] animate-pulse rounded-md bg-caliza-relleno" />
+      <div className="h-5 w-48 animate-pulse rounded-md bg-caliza-relleno" />
       <EsqueletoDeFilas />
     </div>
   );

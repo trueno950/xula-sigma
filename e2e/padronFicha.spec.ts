@@ -295,7 +295,11 @@ test("dar de baja saca a la persona del listado del padrón", async ({
 }) => {
   await accederAMotul(page);
   await page.goto(urlDe("motul", `/padron?q=${escenario.filaDeLaBaja}`));
-  await expect(page.getByText(escenario.filaDeLaBaja)).toBeVisible();
+  // `exact` porque S3 de `padron-ux` repite la busqueda en la linea de
+  // resultado y en el chip: las tres apariciones son el mismo texto.
+  await expect(
+    page.getByText(escenario.filaDeLaBaja, { exact: true }),
+  ).toBeVisible();
 
   await abrirFicha(page, escenario.aDarDeBajaId);
   await page.getByRole("link", { name: "Administrar" }).click();
