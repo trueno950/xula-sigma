@@ -156,3 +156,10 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3 
     - E2E de 7 specs: 25/25;
     - tipos, biome y `pnpm reglas`;
     - capturas a 1440 y 390.
+- **L11** — Revisión nativa de la bandeja (parte 5/10,
+  `review-4124096857e20864`). El refutador corroboró que el nombre
+  accesible de cada fila (`etiquetaAccesible`) omitía el estado. Antes del
+  rediseño, el enlace tomaba su nombre del contenido, que incluía la
+  insignia, así que en «Todos» un lector de pantalla ya no distinguía el
+  estado de cada reporte. Corregido: el estado va justo después del folio,
+  con un test que se observó rojo antes del cambio.

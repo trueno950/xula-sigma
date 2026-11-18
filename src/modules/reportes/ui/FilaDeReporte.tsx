@@ -11,6 +11,7 @@ import type {
 } from "../application/puertosDeUbicacionesDeReporte";
 import {
   ETIQUETA_DE_AREA,
+  ETIQUETA_DE_ESTADO_DE_REPORTE,
   ETIQUETA_DE_TIPO_DE_INCIDENCIA,
   SIN_AREA,
 } from "../domain";
@@ -69,6 +70,7 @@ export function FilaDeReporte({ reporte, atraso }: Props) {
 
   const etiquetaAccesible = [
     reporte.folio,
+    ETIQUETA_DE_ESTADO_DE_REPORTE[reporte.estado],
     tipo,
     lugar.replace(" · ", ", "),
     atraso === null ? null : `atrasado ${atraso} días`,

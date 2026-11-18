@@ -119,6 +119,12 @@ describe("FilaDeReporte, la fila del teléfono (S1, S6)", () => {
     );
   });
 
+  it("el nombre accesible de la fila dice el estado del reporte", () => {
+    const pagina = html({}, 15);
+
+    expect(pagina).toMatch(/aria-label="[^"]*REP-2026-000152 · Recibido ·/);
+  });
+
   it("la versión compacta lleva folio y estado, tipo y ubicación, y fecha con atraso", () => {
     const texto = textoPlano(html({}, 15));
 
