@@ -69,7 +69,7 @@ L2: «1», que es prioridad alta y media, sin L4 ni C1.
 
 ## Tasks
 
-- [ ] **T0** (S1-S3, S7-S9) diseño en gentle design: dos direcciones para
+- [x] **T0** (S1-S3, S7-S9) diseño en gentle design: dos direcciones para
   el listado y dos para el detalle; el usuario elige — design — commit:
 - [x] **T1** (S1, S2, S7, S8) datos:
   - titular en el modelo de lectura del listado y búsqueda por nombre o
@@ -77,11 +77,11 @@ L2: «1», que es prioridad alta y media, sin L4 ni C1.
   - estado y `personaId` del titular en el detalle;
   - mapa de lo que hay hoy.
 
-  — worker — commit:
-- [x] **T2** (S1-S3) listado según `design/constancias-listado/01-tabla-con-titular.html` (L3) — worker — commit:
+  — worker — commit: 7fe219e
+- [ ] **T2** (S1-S3) listado según `design/constancias-listado/01-tabla-con-titular.html` (L3) — worker — commit: 1d3eed2
 - [x] **T3** (S4-S6) emitir: buscador de persona en la página, vista previa
-  y aviso con el tiempo de residencia — worker — commit: 2c2afa3, b8ea1fc
-- [ ] **T4** (S7-S9) detalle según `design/constancias-detalle/02-hoja-sellada.html` (L5), reusando `HojaDeConstancia` de T3 — worker — commit:
+  y aviso con el tiempo de residencia — worker — commit: f58e399, 839fb24
+- [x] **T4** (S7-S9) detalle según `design/constancias-detalle/02-hoja-sellada.html` (L5), reusando `HojaDeConstancia` de T3 — worker — commit: c9038d6
 - [ ] **T5** (S1-S10) verificación, PR y merge — verify — commit:
 
 ## Log
@@ -158,3 +158,18 @@ L2: «1», que es prioridad alta y media, sin L4 ni C1.
   - T4 corre en `.pi/wt-c3`, encima de T3, porque reusa `HojaDeConstancia`.
     Hereda tal cual su redacción, que es la de la plantilla del PDF y no la
     paráfrasis del tablero.
+- **L8** — T2 y T4 terminados e integrados en `feat/constancias-ux`.
+  - **Commits:**
+    - `1d3eed2`: el listado, T2;
+    - `f58e399` y `839fb24`: emitir, T3, traídos de la rama de emitir;
+    - `c9038d6`: el detalle, T4.
+  - **Detalle:**
+    - `SelloDeConstancia` lleva el estado una sola vez (L6);
+    - `AccionesDeConstancia` usa `<details name>`, con «Cancelar» al
+      final;
+    - `HistorialDeConstancia` se arma del modelo de lectura.
+    - Una cancelada ofrece «Emitir una constancia nueva». Se borró
+      `AccionColegable.tsx`, que quedó sin uso.
+  - **Verificado:**
+    - T2: unit completa 3098 y E2E 16;
+    - T4: unit completa 3126 y E2E 28 en 6 specs.
