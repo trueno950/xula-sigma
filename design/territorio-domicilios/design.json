@@ -1,0 +1,21 @@
+{
+  "title": "Registro de domicilios",
+  "brief": "Dos direcciones para el registro plano de domicilios de Territorio (/territorio/domicilios): que se vea dónde va el número en la búsqueda (S9) y que la pantalla diga cuántos domicilios hay y cuántos coinciden, con un chip por filtro (S10), sin perder lo que ya funciona (S14).",
+  "feature": "odd/tasks/territorio-ux.md",
+  "artboards": [
+    {
+      "file": "01-una-busqueda-con-pista.html",
+      "title": "Una búsqueda con pista",
+      "tradeoff": "Un solo campo con el ejemplo «Calle 20 101» encuentra la dirección en un intento, a cambio de que la búsqueda reparta el texto entre calle, número y asentamiento, de modo que quien solo recuerda el número exacto ve también las calles que lo llevan en el nombre.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-calle-y-numero-separados.html",
+      "title": "Calle y número, cada uno en su caja",
+      "tradeoff": "Dos campos pegados con su leyenda —calle y «Número exacto»— y una tabla que separa esas columnas no dejan duda del reparto y filtran el número por igualdad, a cambio de dos objetivos en una barra y una etiqueta más larga en los 390 px.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-una-busqueda-con-pista.html",
+  "handoffs": {
+    "01-una-busqueda-con-pista.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-19T02:51:17.821Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/territorio-ux.md"
+    }
+  }
+}
