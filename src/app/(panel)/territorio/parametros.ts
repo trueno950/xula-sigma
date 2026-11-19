@@ -124,8 +124,15 @@ export const leerParametros = (
     // pantalla no celebra una accion que el mismo URL dice que fallo.
     ok: datos.error ? undefined : datos.ok,
     nuevo: datos.nuevo ? comoLugarId(datos.nuevo) : undefined,
-    // La accion fija su pestana; sin accion vale la elegida (o Lugares).
-    vista: accion ? pestanaDeAccion[accion] : (datos.vista ?? "lugares"),
+    // La accion fija su pestana; sin accion vale la elegida (o Lugares),
+    // salvo con una calle abierta: su panel solo existe en Calles, asi que
+    // un `?calle=` sin `?vista=` caia en Colonias y la calle no se abria
+    // (C1 de `odd/tasks/territorio-ux.md`, S7).
+    vista: accion
+      ? pestanaDeAccion[accion]
+      : datos.calle
+        ? "calles"
+        : (datos.vista ?? "lugares"),
     regreso: datos.regreso,
     borrador: datos.borrador,
   };
