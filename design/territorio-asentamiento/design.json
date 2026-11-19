@@ -1,0 +1,21 @@
+{
+  "title": "Pantalla del asentamiento",
+  "brief": "Asentamiento de Territorio (/territorio?raiz=...): cabecera con tipo y cuentas, pestañas Colonias / Calles / Domicilios, y las acciones de editar sin pestaña propia. Corrige S3-S6 y S8 de odd/tasks/territorio-ux.md y preserva S14.",
+  "feature": "odd/tasks/territorio-ux.md",
+  "artboards": [
+    {
+      "file": "01-cabecera-con-acciones.html",
+      "title": "Cabecera con acciones",
+      "tradeoff": "Compara seis calles con su zona y sus domicilios en columnas fijas y deja las acciones destructivas siempre a la vista en la cabecera, a cambio de que esas columnas se vuelvan dos renglones en el teléfono y de que un pliegue abierto empuje la lista.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-dos-columnas-con-resumen.html",
+      "title": "Dos columnas con el resumen al lado",
+      "tradeoff": "Separa lo que el asentamiento tiene (lista de filas de dos renglones) de lo que se le puede hacer (panel pegajoso con el acordeón), a cambio de 320 px de ancho de lista y de que en 390 el panel se pliegue arriba antes de la primera colonia.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

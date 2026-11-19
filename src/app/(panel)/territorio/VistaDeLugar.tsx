@@ -14,6 +14,7 @@ import type {
   NodoDeSubarbol,
 } from "@/modules/territorio/application/puertos";
 import type { DomicilioGuardado } from "@/modules/territorio/application/puertosDeDomicilios";
+import { AccionesDeLugar } from "@/modules/territorio/ui/AccionesDeLugar";
 import { conAnclaDeAlta } from "@/modules/territorio/ui/anclaDeAlta";
 import type { BorradorDeDomicilio } from "@/modules/territorio/ui/borradorDeDomicilio";
 import {
@@ -58,6 +59,8 @@ type Props = {
   limite?: number | undefined;
   usoDeCalle?: PropsDeContenido["usoDeCalle"];
   zonasDelLugar?: PropsDeContenido["zonasDelLugar"];
+  /** Zona y domicilios por calle; ver `cargaDeDetallesDeCalles.ts`. */
+  detalles?: PropsDeContenido["detalles"];
   /** La ficha de la persona desde la que se entro; ver `regresoAFicha.ts`. */
   regreso?: string | undefined;
 };
@@ -91,6 +94,7 @@ export function VistaDeLugar({
   limite,
   usoDeCalle,
   zonasDelLugar,
+  detalles,
   regreso,
 }: Props) {
   const zona = zonaDelFormulario(
@@ -107,14 +111,26 @@ export function VistaDeLugar({
     tieneColonias: !zona.sinZonas,
   });
   const vistaVisible = vistaVisibleDeLugar(vista, nodo.tipo);
+  const cuentas = cuentasDeLugar({ nodos, calles, nodo, conteos });
   return (
     <>
+      <AccionesDeLugar
+        raizId={raiz.id}
+        lugar={nodo}
+        nodos={nodos}
+        calles={calles}
+        lugares={lugares}
+        accion={accion}
+        permisos={permisos}
+        conteos={conteos}
+        zonasDelLugar={zonasDelLugar}
+        cuentas={cuentas}
+      />
       <PanelDeNodo
         raizId={raiz.id}
         nodo={nodo}
         vista={vistaVisible}
-        cuentas={cuentasDeLugar({ nodos, calles, nodo, conteos })}
-        abreLaEdicion={permisos.abreLaEdicion}
+        cuentas={cuentas}
       />
 
       {vistaVisible === "domicilios" &&
@@ -169,6 +185,7 @@ export function VistaDeLugar({
         mismaDireccion={mismaDireccion}
         busqueda={busqueda}
         limite={limite}
+        detalles={detalles}
         usoDeCalle={usoDeCalle}
         zonasDelLugar={zonasDelLugar}
         regreso={regreso}

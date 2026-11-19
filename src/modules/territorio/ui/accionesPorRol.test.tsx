@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { LugarGuardado } from "../application/puertos";
-import type { ZonaGuardada } from "../application/puertosDeLecturaDeZonas";
+import type {
+  ZonaConCalles,
+  ZonaGuardada,
+} from "../application/puertosDeLecturaDeZonas";
 import { comoCalleId, comoLugarId, comoZonaId } from "../domain";
 import { DetalleDeZona } from "./DetalleDeZona";
 import { base } from "./fixturasDeDomiciliosU5";
@@ -30,6 +33,7 @@ const zona: ZonaGuardada = {
   lugarId,
   asentamiento: "Motul",
 };
+const zonaDelListado: ZonaConCalles = { ...zona, calles: 0 };
 const asentamiento: LugarGuardado = {
   id: lugarId,
   tipo: "cabecera",
@@ -49,12 +53,13 @@ const calle22 = {
 const lista = (puedeAdministrar: boolean) =>
   renderToStaticMarkup(
     <ListaDeZonas
-      zonas={[zona]}
+      zonas={[zonaDelListado]}
       asentamientos={[asentamiento]}
       raizActiva={null}
       error={undefined}
       aviso={undefined}
       puedeAdministrar={puedeAdministrar}
+      altaAbierta={false}
     />,
   );
 

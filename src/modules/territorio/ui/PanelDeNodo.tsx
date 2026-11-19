@@ -19,7 +19,7 @@ export type PasoDeMigaja = { id: LugarId; nombre: string };
 export type { AccionDeNodo } from "./acciones";
 
 /** La pestana que categoriza el contenido: una sola se ve a la vez. */
-export type TabDeLugar = "lugares" | "calles" | "domicilios" | "editar";
+export type TabDeLugar = "lugares" | "calles" | "domicilios";
 
 /** Cuantos hay adentro de cada categoria, para escribirlo en la pestana. */
 export type CuentasDeLugar = {
@@ -35,12 +35,6 @@ type Props = {
   /** La pestana activa: la unica categoria visible. */
   vista: TabDeLugar;
   cuentas: CuentasDeLugar;
-  /**
-   * Si queda al menos una accion de Editar para este rol. Llega calculado
-   * -`permisosDeTerritorio` en `permisos.ts`- y no como rol, para que este
-   * componente no vuelva a decidir permisos por su cuenta.
-   */
-  abreLaEdicion: boolean;
 };
 
 /**
@@ -51,23 +45,16 @@ type Props = {
  * Las pestanas llevan la cuenta de lo que tienen adentro, y eso es lo que
  * las vuelve una respuesta en vez de una pregunta: sin el numero, saber si
  * un lugar tiene calles cargadas obligaba a entrar a la pestana, y despues
- * volver. "Editar" no lleva cuenta a proposito: no es una categoria de
- * contenido, es lo que se le hace al lugar mismo.
+ * volver. «Editar» no aparece: lo que se le hace al lugar vive en la
+ * cabecera (S3 de `odd/tasks/territorio-ux.md`).
  */
-export function PanelDeNodo({
-  raizId,
-  nodo,
-  vista,
-  cuentas,
-  abreLaEdicion,
-}: Props) {
+export function PanelDeNodo({ raizId, nodo, vista, cuentas }: Props) {
   const pestanas = pestanasDePanel({
     raizId,
     nodoId: nodo.id,
     tipo: nodo.tipo,
     vista,
     cuentas,
-    abreLaEdicion,
   });
 
   return <Pestanas pestanas={pestanas} etiqueta="Contenido del lugar" />;

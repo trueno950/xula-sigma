@@ -31,6 +31,8 @@ const raices: readonly OpcionDeLista[] = [
 const base = {
   domicilios: [domicilio],
   hayMas: false,
+  total: 9,
+  coincidencias: 1,
   estadoDeLista: { clase: "con-filas" } as EstadoDeLista,
   filtros: {} as FiltrosDeRegistro,
   raices,
@@ -127,15 +129,15 @@ describe("RegistroDeDomicilios", () => {
     expect(html).toContain(`limite=${TAMANO_DE_PAGINA * 3}"`);
   });
 
-  it("un solo formulario GET con los cuatro filtros de la pantalla", () => {
+  it("un solo formulario GET, con la busqueda y el asentamiento", () => {
     const html = render();
     const formularios = html.match(/<form/g) ?? [];
 
     expect(formularios).toHaveLength(1);
     expect(html).toContain('method="get"');
     expect(html).toContain('name="q"');
-    expect(html).toContain('name="numero"');
     expect(html).toContain('name="raiz"');
+    expect(html).not.toContain('name="numero"');
   });
 
   it("el select de asentamiento ofrece las raices del municipio", () => {
@@ -146,23 +148,40 @@ describe("RegistroDeDomicilios", () => {
 
   it("los filtros puestos vuelven a aparecer en el formulario", () => {
     const html = render({
-      filtros: { raizId: cabeceraId, busqueda: "Calle 21", numero: "5" },
+      filtros: { raizId: cabeceraId, busqueda: "Calle 21" },
     });
 
     expect(html).toContain('value="Calle 21"');
-    expect(html).toContain('value="5"');
     expect(html).toContain(`value="${cabeceraId}" selected=""`);
   });
 
-  it("ofrece registrar un domicilio desde el registro plano cuando puedeCrear", () => {
-    const html = render({ puedeCrear: true });
+  /**
+   * L5 de `territorio-ux`: «Registrar domicilio» vive en la cabecera de la
+   * pagina, al lado del titulo -como en el tablero-, y no en un renglon
+   * propio arriba de la busqueda. El vacio inicial lo sigue ofreciendo, que
+   * es el unico caso en que la accion es el camino para llenar la pantalla.
+   */
+  it("con filas no repite la accion de registrar: vive en la cabecera", () => {
+    expect(render({ puedeCrear: true })).not.toContain("Registrar domicilio");
+  });
+
+  it("el vacio inicial ofrece registrar cuando puedeCrear", () => {
+    const html = render({
+      domicilios: [],
+      estadoDeLista: { clase: "vacio-inicial" },
+      puedeCrear: true,
+    });
 
     expect(html).toContain('href="/territorio?accion=domicilio"');
     expect(html).toContain("Registrar domicilio");
   });
 
   it("no ofrece registrar sin permiso de escritura", () => {
-    const html = render({ puedeCrear: false });
+    const html = render({
+      domicilios: [],
+      estadoDeLista: { clase: "vacio-inicial" },
+      puedeCrear: false,
+    });
 
     expect(html).not.toContain("Registrar domicilio");
   });

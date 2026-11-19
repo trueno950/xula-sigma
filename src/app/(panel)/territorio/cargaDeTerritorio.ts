@@ -15,6 +15,7 @@ import { puedeEscribir } from "@/shared/auth/roles";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { cargarBloqueos } from "./cargaDeBloqueos";
+import { cargarDetallesDeCalles } from "./cargaDeDetallesDeCalles";
 import { cargarDomiciliosDeLaVista } from "./cargaDeDomicilios";
 import { cargarEntrada } from "./cargaDeEntrada";
 import { nodoResuelto, type ParametrosDeTerritorio } from "./parametros";
@@ -134,8 +135,8 @@ export const cargarTerritorio = async ({
   // los lugares que ya estaban debajo del que se mueve, o con ninguno.
   // Las cuentas alimentan el arbol de la entrada y las filas de la pestana
   // Lugares: una consulta agrupada para todo el municipio.
-  const [lugares, cuentas, residentes, deLaVista, bloqueos] = await Promise.all(
-    [
+  const [lugares, cuentas, residentes, deLaVista, bloqueos, detalles] =
+    await Promise.all([
       listarLugares(contexto),
       contarSinRomper(contexto),
       seleccion.domicilio
@@ -143,8 +144,12 @@ export const cargarTerritorio = async ({
         : [],
       cargarDomiciliosDeLaVista({ contexto, parametros, raiz, seleccion }),
       cargarBloqueos({ contexto, parametros, nodo: seleccion.nodo }),
-    ],
-  );
+      cargarDetallesDeCalles({
+        contexto,
+        parametros,
+        nodo: seleccion.nodo,
+      }),
+    ]);
   const puedeCrearLugar = puedeEscribir(contexto.usuario.rol);
   const entrada = await cargarEntrada({
     contexto,
@@ -160,6 +165,7 @@ export const cargarTerritorio = async ({
     lugares,
     cuentas,
     residentes,
+    detalles,
     ...deLaVista,
     ...bloqueos,
     puedeCrearLugar,

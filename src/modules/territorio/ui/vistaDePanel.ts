@@ -10,7 +10,7 @@ import { conRegreso } from "./regresoEnRuta";
 import { nombreDeLoContenido } from "./tiposDelAlta";
 
 type PasoDeArbol = { readonly id: LugarId; readonly nombre: string };
-type TabDeLugar = "lugares" | "calles" | "domicilios" | "editar";
+type TabDeLugar = "lugares" | "calles" | "domicilios";
 type CuentasDeLugar = {
   readonly lugares: number;
   readonly calles: number;
@@ -56,7 +56,6 @@ type DatosDePestanas = {
   readonly tipo: TipoDeLugar;
   readonly vista: TabDeLugar;
   readonly cuentas: CuentasDeLugar;
-  readonly abreLaEdicion: boolean;
 };
 
 const ETIQUETA_ACCESIBLE = {
@@ -91,9 +90,13 @@ const pestanaDeCuenta = (
 };
 
 /**
- * Las pestanas disponibles del panel, con su cuenta y su `href`. "Editar"
- * no lleva cuenta -no es una categoria de contenido, es lo que se le hace al
- * lugar- y solo aparece si el rol tiene algo que hacer ahi.
+ * Las pestanas disponibles del panel, con su cuenta y su `href`.
+ *
+ * «Editar» no es una de ellas desde S3 de `odd/tasks/territorio-ux.md`:
+ * renombrar, mover y dar de baja son lo que se le hace al lugar, no una
+ * categoria de lo que tiene adentro, y se leian como una cuarta pestana mas.
+ * Viven en el acordeon de la cabecera (`AccionesDeLugar.tsx`,
+ * `AccionesDeLugar`).
  */
 export const admiteLugares = (tipo: TipoDeLugar): boolean =>
   TIPOS_DE_LUGAR.some((hijo) => puedeContener(tipo, hijo));
@@ -115,14 +118,4 @@ export const pestanasDePanel = (datos: DatosDePestanas): readonly Pestana[] => [
     ? [pestanaDeCuenta(datos, "calles", "Calles")]
     : []),
   pestanaDeCuenta(datos, "domicilios", "Domicilios"),
-  ...(datos.abreLaEdicion
-    ? [
-        {
-          clave: "editar",
-          etiqueta: "Editar",
-          href: hrefDePanel(datos, "editar"),
-          activa: datos.vista === "editar",
-        },
-      ]
-    : []),
 ];

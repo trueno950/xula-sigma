@@ -35,6 +35,7 @@ export function TabDeCalles({
   busqueda,
   limite,
   usoDeCalle,
+  detalles,
   regreso,
 }: PropsDeContenido) {
   if (!puedeTenerCatalogoDeCalles(lugar.tipo)) {
@@ -136,9 +137,11 @@ export function TabDeCalles({
           lugar={lugar}
           calles={pagina.filas}
           hayMas={pagina.hayMas}
+          coincidencias={pagina.coincidencias}
           calleId={calleSeleccionada?.id}
           busqueda={busqueda}
           limite={limite}
+          detalles={detalles}
         />
       </div>
     </div>

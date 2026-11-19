@@ -1,35 +1,15 @@
-import type { ColumnaDeTabla } from "@/shared/ui";
 import {
   Aviso,
-  CeldaPrincipal,
-  EstadoVacio,
-  FilaDeTabla,
   Migaja,
   PaginaDePanel,
   type Pestana,
   Pestanas,
-  Tabla,
 } from "@/shared/ui";
 import type { DomicilioDelRegistro } from "../application/puertosDeDomicilios";
 import type { ZonaGuardada } from "../application/puertosDeLecturaDeZonas";
 import { AccionesDeZona } from "./AccionesDeZona";
-import {
-  type CalleParaZona,
-  FormularioDePertenenciaDeCalle,
-  FormularioDeQuitarCalleDeZona,
-} from "./FormulariosDeZona";
-
-const COLUMNAS_DE_CALLES: readonly ColumnaDeTabla[] = [
-  { clave: "calle", etiqueta: "Calle" },
-  { clave: "quitar", etiqueta: "Acciones" },
-];
-const SOLO_CALLE = COLUMNAS_DE_CALLES.slice(0, 1);
-
-const COLUMNAS_DE_DOMICILIOS: readonly ColumnaDeTabla[] = [
-  { clave: "calle", etiqueta: "Calle" },
-  { clave: "numero", etiqueta: "Número" },
-  { clave: "asentamiento", etiqueta: "Asentamiento" },
-];
+import type { CalleParaZona } from "./FormulariosDeZona";
+import { CallesDeLaZona, DomiciliosDeLaZona } from "./TablasDeZona";
 
 type Props = {
   zona: ZonaGuardada;
@@ -48,8 +28,13 @@ type Props = {
  * que la componen y los domicilios derivados de esas calles, nunca
  * declarados aparte (Rebanada B1). Renombre, baja y pertenencias son
  * formularios nativos; la zona no se elige por cliente, ya esta en la URL.
- * Las filas de calles no llevan `href`, asi que "Quitar" puede vivir en la
- * fila sin quedar dentro de un enlace.
+ *
+ * **Cada fila abre lo que nombra** (ZD1, S11), y los dos listados viven en
+ * `TablasDeZona.tsx`: la calle entra a su panel de Calles y el domicilio a
+ * su ficha, con los mismos parametros que usa la entrada del territorio.
+ * La fila con el formulario de quitar no puede ser un enlace -un `<form>`
+ * adentro de un `<a>` es HTML invalido y el clic dispara las dos cosas-,
+ * asi que ahi el enlace va en el nombre.
  */
 export function DetalleDeZona({
   zona,
@@ -105,90 +90,14 @@ export function DetalleDeZona({
       <Pestanas pestanas={pestanas} etiqueta="Vistas de la zona" />
       {vista === "calles" ? (
         <CallesDeLaZona
-          zonaId={zona.id}
+          zona={zona}
           calles={calles}
           callesDelAsentamiento={puedeAdministrar ? callesDelAsentamiento : []}
           puedeQuitar={puedeAdministrar}
         />
       ) : (
-        <DomiciliosDeLaZona domicilios={domicilios} />
+        <DomiciliosDeLaZona zona={zona} domicilios={domicilios} />
       )}
     </PaginaDePanel>
-  );
-}
-
-function CallesDeLaZona({
-  zonaId,
-  calles,
-  callesDelAsentamiento,
-  puedeQuitar,
-}: {
-  zonaId: ZonaGuardada["id"];
-  calles: readonly CalleParaZona[];
-  callesDelAsentamiento: readonly CalleParaZona[];
-  puedeQuitar: boolean;
-}) {
-  const fuera = callesDelAsentamiento.filter(
-    (calle) => !calles.some((enZona) => enZona.id === calle.id),
-  );
-
-  return (
-    <>
-      {fuera.length > 0 ? (
-        <FormularioDePertenenciaDeCalle zonaId={zonaId} calles={fuera} />
-      ) : null}
-      {calles.length === 0 ? (
-        <EstadoVacio
-          estado={{ clase: "vacio-inicial" }}
-          mensajeInicial="La zona no tiene calles todavía. Una zona sin calles no deriva domicilios."
-          hrefSinFiltro={`/territorio/zonas?zona=${zonaId}`}
-        />
-      ) : (
-        <Tabla
-          etiqueta="Calles de la zona"
-          columnas={puedeQuitar ? COLUMNAS_DE_CALLES : SOLO_CALLE}
-        >
-          {calles.map((calle) => (
-            <FilaDeTabla key={calle.id} etiquetaAccesible={calle.nombre}>
-              <CeldaPrincipal>{calle.nombre}</CeldaPrincipal>
-              {puedeQuitar ? (
-                <FormularioDeQuitarCalleDeZona zonaId={zonaId} calle={calle} />
-              ) : null}
-            </FilaDeTabla>
-          ))}
-        </Tabla>
-      )}
-    </>
-  );
-}
-
-function DomiciliosDeLaZona({
-  domicilios,
-}: {
-  domicilios: readonly DomicilioDelRegistro[];
-}) {
-  if (domicilios.length === 0) {
-    return (
-      <EstadoVacio
-        estado={{ clase: "vacio-inicial" }}
-        mensajeInicial="La zona todavía no deriva domicilios de sus calles."
-        hrefSinFiltro="/territorio/zonas"
-      />
-    );
-  }
-
-  return (
-    <Tabla etiqueta="Domicilios derivados" columnas={COLUMNAS_DE_DOMICILIOS}>
-      {domicilios.map((domicilio) => (
-        <FilaDeTabla
-          key={domicilio.id}
-          etiquetaAccesible={`${domicilio.calle} ${domicilio.numero}, ${domicilio.lugar}`}
-        >
-          <CeldaPrincipal>{domicilio.calle}</CeldaPrincipal>
-          <CeldaPrincipal>{domicilio.numero}</CeldaPrincipal>
-          <CeldaPrincipal>{domicilio.lugar}</CeldaPrincipal>
-        </FilaDeTabla>
-      ))}
-    </Tabla>
   );
 }

@@ -160,7 +160,10 @@ describe("Territorio: titulo y migaja con contexto", () => {
       /<h1[^>]*>Barrio Alto<\/h1><span[^>]*rounded-pill[^>]*>Colonia<\/span>/,
     );
     expect(html).not.toContain("font-mono");
-    expect(html.match(/Barrio Alto/g) ?? []).toHaveLength(2);
+    // El nombre vive en el titulo y en la migaja. La cabecera de acciones lo
+    // repite solo como `aria-label` de su region, no como un segundo titulo.
+    expect(html.match(/<h1[^>]*>Barrio Alto<\/h1>/g) ?? []).toHaveLength(1);
+    expect(html).not.toMatch(/<h2[^>]*>Barrio Alto/);
   });
 
   it("el primer eslabon siempre es Territorio hacia /territorio", async () => {

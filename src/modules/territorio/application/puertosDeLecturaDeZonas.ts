@@ -8,11 +8,19 @@ export type ZonaGuardada = {
   asentamiento: string;
 };
 
+/**
+ * La fila del listado: la zona y cuantas calles activas la componen. La
+ * cuenta viaja en la misma consulta que las filas -una subconsulta
+ * correlacionada, no una lectura por zona- porque el listado la muestra en
+ * su propia columna (S13 de `odd/tasks/territorio-ux.md`).
+ */
+export type ZonaConCalles = ZonaGuardada & { calles: number };
+
 export type RepositorioDeLecturaDeZonas = {
   listar(
     tx: TransaccionTenant,
     raizId: LugarId | null,
-  ): Promise<readonly ZonaGuardada[]>;
+  ): Promise<readonly ZonaConCalles[]>;
   buscarPorId(
     tx: TransaccionTenant,
     zonaId: ZonaId,

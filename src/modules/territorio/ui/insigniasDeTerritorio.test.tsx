@@ -48,6 +48,7 @@ describe("ListaDeCalles: la ubicacion es un estado", () => {
         calle("b", { latitud: 21.1, longitud: -89.3 }),
       ]}
       hayMas={false}
+      coincidencias={2}
       calleId={undefined}
     />,
   );
@@ -75,6 +76,7 @@ describe("ListaDeZonas: el asentamiento es dato de apoyo", () => {
           nombre: "Sector 1",
           lugarId: raizId,
           asentamiento: "Motul",
+          calles: 2,
         },
       ]}
       asentamientos={[]}
@@ -82,6 +84,7 @@ describe("ListaDeZonas: el asentamiento es dato de apoyo", () => {
       error={undefined}
       aviso={undefined}
       puedeAdministrar
+      altaAbierta={false}
     />,
   );
 

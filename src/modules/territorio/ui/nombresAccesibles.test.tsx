@@ -2,10 +2,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { NodoDeSubarbol } from "../application/puertos";
 import { comoCalleId, comoLugarId } from "../domain";
+import { AccionesDeLugar } from "./AccionesDeLugar";
 import type { PropsDeContenido } from "./contenido";
 import { permisosDeTerritorio } from "./permisos";
 import { TabDeCalles } from "./TabDeCalles";
-import { TabDeEdicion } from "./TabDeEdicion";
 import { TabDeLugares } from "./TabDeLugares";
 import { VistaDeRaices } from "./VistaDeRaices";
 
@@ -54,12 +54,22 @@ describe("nombres accesibles de las filas y acciones", () => {
     expect(html).toContain('aria-label="Calle 20, Sin ubicar"');
   });
 
-  it("cada accion de Editar lleva su descripcion", () => {
-    const html = renderToStaticMarkup(<TabDeEdicion {...base} />);
-
-    expect(html).toContain(
-      'aria-label="Renombrar. Corregir el nombre del lugar."',
+  /**
+   * S3 de `territorio-ux`: las acciones del lugar son pliegues, asi que su
+   * nombre accesible es la etiqueta visible del `<summary>`, y el cuerpo
+   * sigue diciendo que hace cada una.
+   */
+  it("cada pliegue del lugar se anuncia con su etiqueta y su forma", () => {
+    const html = renderToStaticMarkup(
+      <AccionesDeLugar
+        {...base}
+        cuentas={{ lugares: 1, calles: 1, domicilios: 0 }}
+      />,
     );
+
+    expect(html).toContain(">Renombrar…<");
+    expect(html).toContain(">Dar de baja…<");
+    expect(html).toContain('name="accion" value="renombrar"');
   });
 
   it("la fila de una raiz separa el nombre del tipo", () => {

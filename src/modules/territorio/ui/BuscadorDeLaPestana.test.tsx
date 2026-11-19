@@ -43,4 +43,24 @@ describe("BuscadorDeLaPestana", () => {
 
     expect(html).not.toContain("se ignor");
   });
+
+  /**
+   * S4 de `territorio-ux`: en Calles el chip vive en la linea de conteo
+   * -«2 calles para «20»»-, asi que pintarlo tambien aca serian dos chips
+   * para el mismo filtro. En Domicilios no hay linea de conteo en la
+   * pestana y el chip sigue siendo este.
+   */
+  it("en Calles el chip lo pinta la linea de conteo y no el buscador", () => {
+    const html = render({
+      vista: "calles",
+      etiqueta: "Buscar calle",
+      busqueda: "20",
+    });
+
+    expect(html).not.toContain("Quitar filtro");
+  });
+
+  it("en Domicilios el buscador conserva su chip", () => {
+    expect(render({ busqueda: "Calle 20" })).toContain("Búsqueda: Calle 20");
+  });
 });

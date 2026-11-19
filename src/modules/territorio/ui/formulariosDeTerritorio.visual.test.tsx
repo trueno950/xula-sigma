@@ -1,6 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { EstadoDeLista } from "@/shared/ui";
 import type { FiltrosDeRegistro } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoLugarId } from "../domain";
 import { FiltrosDeDomicilios } from "./FiltrosDeDomicilios";
@@ -10,7 +9,7 @@ import {
   renderFormulario,
 } from "./fixturasDeFormularioDeDomicilio";
 import { vistaInicialDelMapa } from "./mapaLeaflet";
-import { RegistroDeDomicilios } from "./RegistroDeDomicilios";
+import { AltaDeDomicilio, RegistroDeDomicilios } from "./RegistroDeDomicilios";
 import { centroDeCalles } from "./vistaDeCalles";
 
 const leyendas = (html: string) =>
@@ -53,27 +52,33 @@ describe("un verbo para el alta de domicilio", () => {
     expect(html).not.toContain("Dar de alta");
   });
 
-  it.each([
-    ["con filas", { clase: "con-filas" }],
-    ["vacio", { clase: "vacio-inicial" }],
-  ] as const)(
-    "el registro ofrece Registrar domicilio con icono (%s)",
-    (_, estado) => {
-      const html = renderToStaticMarkup(
-        <RegistroDeDomicilios
-          domicilios={[]}
-          hayMas={false}
-          estadoDeLista={estado as EstadoDeLista}
-          filtros={{} as FiltrosDeRegistro}
-          raices={[]}
-          puedeCrear
-        />,
-      );
+  /**
+   * L5 de `territorio-ux`: la accion con su icono sigue existiendo, pero en
+   * la cabecera de la pagina (`PaginaDePanel`), y el vacio inicial la repite
+   * adentro. Con filas, el registro no la repite.
+   */
+  it("el alta del registro estilo cabecera lleva icono y su verbo", () => {
+    const html = renderToStaticMarkup(<AltaDeDomicilio />);
 
-      expect(html).toMatch(/<\/svg>Registrar domicilio<\/a>/);
-      expect(html).not.toContain("Agregar domicilio");
-    },
-  );
+    expect(html).toMatch(/<\/svg>Registrar domicilio<\/a>/);
+    expect(html).not.toContain("Agregar domicilio");
+  });
+
+  it("el vacio inicial del registro ofrece el alta con el mismo verbo", () => {
+    const html = renderToStaticMarkup(
+      <RegistroDeDomicilios
+        domicilios={[]}
+        hayMas={false}
+        estadoDeLista={{ clase: "vacio-inicial" }}
+        filtros={{} as FiltrosDeRegistro}
+        raices={[]}
+        puedeCrear
+      />,
+    );
+
+    expect(html).toMatch(/<\/svg>Registrar domicilio<\/a>/);
+    expect(html).not.toContain("Agregar domicilio");
+  });
 });
 
 describe("filtros del registro en movil", () => {
@@ -81,12 +86,19 @@ describe("filtros del registro en movil", () => {
     <FiltrosDeDomicilios filtros={{} as FiltrosDeRegistro} raices={[]} />,
   );
 
-  it("bajo 640px los campos se apilan a ancho completo", () => {
+  /**
+   * S9 de `territorio-ux`: el numero dejo de tener caja propia -vive dentro
+   * de la misma busqueda, con la pista del ejemplo- y el asentamiento se
+   * pliega detras de «Filtros (N)».
+   */
+  it("bajo 640px la busqueda ocupa el ancho y el asentamiento se pliega", () => {
     expect(html).toMatch(
       /<form[^>]*class="[^"]*max-sm:flex-col[^"]*max-sm:items-stretch/,
     );
-    expect(html).toMatch(/id="q"[^>]*class="[^"]*w-full sm:w-64/);
-    expect(html).toMatch(/id="numero"[^>]*class="[^"]*w-full sm:w-32/);
+    expect(html).toMatch(/id="q"[^>]*class="[^"]*w-full/);
+    expect(html).not.toContain('id="numero"');
+    expect(html).toContain("<details");
+    expect(html).toMatch(/<summary[^>]*class="[^"]*sm:hidden/);
   });
 });
 

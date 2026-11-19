@@ -26,7 +26,10 @@ type Props = {
  *
  * Solo Domicilios tiene tope de palabras (`registroDeDomicilios`): ahi el
  * chip repite la consulta y debajo se avisa cuantas quedaron fuera. Calles
- * filtra por subcadena (`paginaDeCalles`), sin recorte que avisar.
+ * filtra por subcadena (`paginaDeCalles`), sin recorte que avisar, y su chip
+ * vive en la linea de conteo -«2 calles para «20»»-, asi que pintarlo aca
+ * tambien serian dos chips para el mismo filtro (S4 de
+ * `odd/tasks/territorio-ux.md`).
  */
 export function BuscadorDeLaPestana({
   raizId,
@@ -40,6 +43,7 @@ export function BuscadorDeLaPestana({
     vista === "domicilios" && busqueda
       ? avisoDePalabrasIgnoradas(busqueda)
       : undefined;
+  const chip = vista === "domicilios" && busqueda;
 
   return (
     <div className="flex flex-col gap-3">
@@ -76,7 +80,7 @@ export function BuscadorDeLaPestana({
           Buscar
         </Boton>
       </form>
-      {busqueda ? (
+      {chip ? (
         <ChipDeFiltro
           etiqueta={`Búsqueda: ${busqueda}`}
           hrefQuitar={rutaDe({ raizId, nodoId, vista })}

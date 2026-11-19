@@ -24,7 +24,7 @@ const contexto = {
   ayuntamientoId: "motul",
   usuario: { id: "u1", rol: "ADMIN_MUNICIPAL" },
   origen: "web",
-};
+} as const;
 
 const raiz = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -34,11 +34,16 @@ const raiz = {
   bajaEn: null,
 };
 
+const sinDomicilios = {
+  domicilios: [],
+  hayMas: false,
+  total: 9,
+  coincidencias: 0,
+};
+
 const render = async (searchParams: Record<string, string> = {}) =>
   renderToStaticMarkup(
-    await PaginaDeDomicilios({
-      searchParams: Promise.resolve(searchParams),
-    }),
+    await PaginaDeDomicilios({ searchParams: Promise.resolve(searchParams) }),
   );
 
 beforeEach(() => {
@@ -57,6 +62,8 @@ beforeEach(() => {
       },
     ],
     hayMas: false,
+    total: 9,
+    coincidencias: 1,
   });
 });
 
@@ -69,10 +76,7 @@ describe("PaginaDeDomicilios", () => {
    * reintroduce el vacio inicial por otra puerta.
    */
   it("una raiz que no esta en el catalogo sigue siendo vacio por filtro", async () => {
-    mocks.registroDeDomicilios.mockResolvedValue({
-      domicilios: [],
-      hayMas: false,
-    });
+    mocks.registroDeDomicilios.mockResolvedValue(sinDomicilios);
 
     const html = await render({
       raiz: "99999999-9999-4999-8999-999999999999",
@@ -88,10 +92,7 @@ describe("PaginaDeDomicilios", () => {
    * texto escrito.
    */
   it("un asentamiento sin domicilios es vacio por filtro, no vacio inicial", async () => {
-    mocks.registroDeDomicilios.mockResolvedValue({
-      domicilios: [],
-      hayMas: false,
-    });
+    mocks.registroDeDomicilios.mockResolvedValue(sinDomicilios);
 
     const html = await render({ raiz: raiz.id });
 
@@ -108,20 +109,16 @@ describe("PaginaDeDomicilios", () => {
     expect(html).toContain('aria-current="page"');
   });
 
-  it("el limite sale del default cuando la URL no lo trae", async () => {
+  it("pasa el limite al caso de uso: el de la URL, o el default", async () => {
     await render();
-
     expect(mocks.registroDeDomicilios).toHaveBeenCalledWith(
       {},
       expect.objectContaining({ ayuntamientoId: "motul" }),
       TAMANO_DE_PAGINA,
     );
-  });
 
-  it("pasa el limite de la URL al caso de uso", async () => {
     await render({ limite: String(TAMANO_DE_PAGINA * 2) });
-
-    expect(mocks.registroDeDomicilios).toHaveBeenCalledWith(
+    expect(mocks.registroDeDomicilios).toHaveBeenLastCalledWith(
       {},
       expect.anything(),
       TAMANO_DE_PAGINA * 2,
@@ -139,19 +136,19 @@ describe("PaginaDeDomicilios", () => {
   });
 
   /**
-   * Hallazgo 11: el campo principal busca por calle y numero juntos; un
+   * S9 de `territorio-ux`: el campo principal se rotula «Calle y número» y
+   * lleva la pista del ejemplo; el numero dejo de tener caja propia. Un
    * enlace viejo con `?q=` sigue abriendo, ahora con la busqueda general.
    */
   it("el campo principal se rotula para calle y numero, con su chip de busqueda", async () => {
     const html = await render({ q: "Calle 22 265" });
 
-    expect(html).toMatch(
-      /<label[^>]*for="q"[^>]*>Buscar domicilio \(calle y número\)<\/label>/,
-    );
+    expect(html).toMatch(/<label[^>]*for="q"[^>]*>Calle y número<\/label>/);
     expect(html).toMatch(/<input[^>]*name="q"[^>]*value="Calle 22 265"/);
+    expect(html).toContain('placeholder="Calle 20 101"');
     expect(html).toContain("Búsqueda: Calle 22 265");
     expect(html).not.toContain("Calle: Calle 22 265");
-    expect(html).toMatch(/<label[^>]*for="numero"[^>]*>Número<\/label>/);
+    expect(html).not.toContain('for="numero"');
   });
 
   it("avisa en la pantalla cuantas palabras quedaron fuera del tope de la busqueda", async () => {
@@ -176,10 +173,18 @@ describe("PaginaDeDomicilios", () => {
     expect(html).toContain("No se pudo determinar su sesión.");
   });
 
-  it("ofrece agregar un domicilio con un rol de escritura", async () => {
+  /**
+   * L5 de `territorio-ux`: «Registrar domicilio» va al lado del titulo, en la
+   * cabecera de `PaginaDePanel`, y no en un renglon propio arriba de la
+   * busqueda.
+   */
+  it("ofrece agregar un domicilio en la cabecera, con rol de escritura", async () => {
     const html = await render();
+    const registro = html.indexOf("Registrar domicilio");
 
     expect(html).toContain('href="/territorio?accion=domicilio"');
+    expect(html.slice(0, registro)).toContain("<h1");
+    expect(registro).toBeLessThan(html.indexOf("Calle y número"));
   });
 
   it("no ofrece agregar con CONSULTA", async () => {

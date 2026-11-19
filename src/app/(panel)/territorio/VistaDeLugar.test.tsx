@@ -94,16 +94,15 @@ describe("La vista de lugar", () => {
 });
 
 describe("El alta de domicilio en el contexto del lugar", () => {
-  it("se ofrece por el permiso de domicilio, no por la pestana Editar", () => {
-    // El alta depende del permiso de domicilio, no del booleano de la
-    // pestana Editar: con `abreLaEdicion: false` el enlace igual tiene que
-    // estar.
-    const permisos = {
-      ...permisosDeTerritorio("OPERADOR"),
-      abreLaEdicion: false,
-    };
-
-    expect(htmlDe(permisos, false)).toMatch(/<\/svg>Registrar domicilio/);
+  it("se ofrece por el permiso de domicilio y no por las acciones del lugar", () => {
+    // El alta depende de `domicilio`, que es escritura: un OPERADOR la ve
+    // aunque no pueda mover el lugar, y un CONSULTA no la ve nunca.
+    expect(htmlDe(permisosDeTerritorio("OPERADOR"), false)).toMatch(
+      /<\/svg>Registrar domicilio/,
+    );
+    expect(htmlDe(permisosDeTerritorio("CONSULTA"), false)).not.toMatch(
+      /Registrar domicilio/,
+    );
   });
 
   it("con la accion abierta sirve el formulario dentro del lugar", () => {

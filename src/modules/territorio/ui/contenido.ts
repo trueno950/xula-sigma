@@ -4,6 +4,7 @@ import type {
   NodoDeSubarbol,
 } from "../application/puertos";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
+import type { DetalleDeCalle } from "../application/puertosDeDetallesDeCalles";
 import type {
   DomicilioDelRegistro,
   DomicilioGuardado,
@@ -65,8 +66,10 @@ export type PropsDeContenido = {
   busqueda?: string | undefined;
   /** El `?limite=` vigente de Calles y Domicilios. */
   limite?: number | undefined;
-  /** Zonas activas del lugar, leidas para la pestana Editar de un asentamiento. */
+  /** Zonas activas del lugar, leidas para la baja de un asentamiento. */
   zonasDelLugar?: number | undefined;
+  /** La zona y los domicilios de cada calle; ver `detallesDeCalles`. */
+  detalles?: readonly DetalleDeCalle[] | undefined;
   /** Lo que frena mover o dar de baja la calle abierta. `null`: no se leyo. */
   usoDeCalle?: UsoDeCalle | null | undefined;
   /**

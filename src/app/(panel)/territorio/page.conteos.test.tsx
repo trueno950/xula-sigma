@@ -32,6 +32,9 @@ vi.mock("@/modules/territorio", async () => ({
   comoCalleId: (id: string) => id,
   comoLugarId: (id: string) => id,
   contarContenidoDeLugares: mocks.contarContenidoDeLugares,
+  // La baja del lugar vive en la cabecera (S3 de `territorio-ux`): sus
+  // zonas se leen en toda pestana, no solo en `vista=editar`.
+  lecturasDeZonas: { listarZonas: async () => [] },
   listarCalles: mocks.listarCalles,
   listarCallesDelMunicipio: mocks.listarCallesDelMunicipio,
   listarLugares: mocks.listarLugares,
@@ -122,5 +125,36 @@ describe("Territorio: cuentas de la pestana Lugares", () => {
     await expect(paginaCompleta({ raiz: RAIZ })).rejects.toThrow(
       "base no disponible",
     );
+  });
+});
+
+/**
+ * S3 de `territorio-ux`: «Editar» deja de ser una pestana mas. Las tres
+ * acciones del lugar viven en la cabecera, plegadas, y los enlaces viejos
+ * con `?vista=editar` siguen abriendo la pantalla con su pliegue.
+ */
+describe("Territorio: acciones del lugar en la cabecera", () => {
+  it("no queda ninguna pestana que lleve a `vista=editar`", async () => {
+    const html = renderToStaticMarkup(await paginaCompleta({ raiz: RAIZ }));
+
+    expect(html).toContain("Domicilios");
+    expect(html).not.toContain("vista=editar");
+    expect(html).not.toMatch(/>Editar</);
+  });
+
+  it("ofrece renombrar y dar de baja plegados en la cabecera", async () => {
+    const html = renderToStaticMarkup(await paginaCompleta({ raiz: RAIZ }));
+
+    expect(html).toContain("Renombrar…");
+    expect(html).toContain("Dar de baja…");
+    expect(html).toContain('name="acciones-de-lugar"');
+  });
+
+  it("un enlace viejo con `vista=editar&accion=baja` abre el pliegue de la baja", async () => {
+    const html = renderToStaticMarkup(
+      await paginaCompleta({ raiz: RAIZ, vista: "editar", accion: "baja" }),
+    );
+
+    expect(html).toMatch(/<details[^>]*name="acciones-de-lugar"[^>]*\sopen/);
   });
 });

@@ -85,19 +85,21 @@ describe("pestanasDePanel", () => {
   };
 
   it("una cabecera o comisaria nombra su pestana por lo unico que contiene", () => {
-    const deCabecera = pestanasDePanel({ ...base, abreLaEdicion: false });
-    const deComisaria = pestanasDePanel({
-      ...base,
-      tipo: "comisaria",
-      abreLaEdicion: false,
-    });
+    const deCabecera = pestanasDePanel(base);
+    const deComisaria = pestanasDePanel({ ...base, tipo: "comisaria" });
 
     expect(deCabecera[0]?.etiqueta).toBe("Colonias");
     expect(deComisaria[0]?.etiqueta).toBe("Colonias");
   });
 
-  it("sin abreLaEdicion no ofrece la pestana Editar", () => {
-    const pestanas = pestanasDePanel({ ...base, abreLaEdicion: false });
+  /**
+   * S3 de `territorio-ux`: «Editar» deja de ser pestana -lo que se le hace
+   * al lugar vive en la cabecera- y con ella se va el parametro que decidia
+   * mostrarla. Las tres categorias de contenido quedan siempre, con su
+   * cuenta, para cualquier rol: leer no es escribir.
+   */
+  it("no ofrece una pestana Editar, con o sin permisos", () => {
+    const pestanas = pestanasDePanel(base);
 
     expect(pestanas.map((p) => p.clave)).toEqual([
       "lugares",
@@ -106,31 +108,18 @@ describe("pestanasDePanel", () => {
     ]);
   });
 
-  it("una colonia solo ofrece Domicilios y Editar", () => {
+  it("una colonia solo ofrece Domicilios", () => {
     const pestanas = pestanasDePanel({
       ...base,
       tipo: "colonia",
       vista: "domicilios",
-      abreLaEdicion: true,
     });
 
-    expect(pestanas.map((p) => p.clave)).toEqual(["domicilios", "editar"]);
-  });
-
-  it("con abreLaEdicion agrega Editar sin cuenta", () => {
-    const pestanas = pestanasDePanel({ ...base, abreLaEdicion: true });
-    const editar = pestanas.find((p) => p.clave === "editar");
-
-    expect(editar).toBeDefined();
-    expect(editar).not.toHaveProperty("cuenta");
+    expect(pestanas.map((p) => p.clave)).toEqual(["domicilios"]);
   });
 
   it("marca activa solo la pestana de la vista actual", () => {
-    const pestanas = pestanasDePanel({
-      ...base,
-      vista: "calles",
-      abreLaEdicion: false,
-    });
+    const pestanas = pestanasDePanel({ ...base, vista: "calles" });
 
     expect(pestanas.filter((p) => p.activa).map((p) => p.clave)).toEqual([
       "calles",
@@ -138,7 +127,7 @@ describe("pestanasDePanel", () => {
   });
 
   it("cada href lleva la raiz, el nodo y la vista de esa pestana", () => {
-    const pestanas = pestanasDePanel({ ...base, abreLaEdicion: false });
+    const pestanas = pestanasDePanel(base);
     const domicilios = pestanas.find((p) => p.clave === "domicilios");
 
     expect(domicilios?.href).toBe(
@@ -147,7 +136,7 @@ describe("pestanasDePanel", () => {
   });
 
   it("nombra el alcance de cada cuenta para el lector de pantalla", () => {
-    const pestanas = pestanasDePanel({ ...base, abreLaEdicion: false });
+    const pestanas = pestanasDePanel(base);
     const porClave = new Map(
       pestanas.map((pestana) => [pestana.clave, pestana.etiquetaAccesible]),
     );
@@ -177,7 +166,6 @@ describe("los enlaces del panel no arrastran la confirmacion", () => {
       tipo: "cabecera",
       vista: "lugares",
       cuentas: { lugares: 1, calles: 1, domicilios: 1 },
-      abreLaEdicion: true,
     });
     const hrefs = [...pasos, ...pestanas].map((paso) => paso.href ?? "");
 

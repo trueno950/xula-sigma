@@ -9,6 +9,7 @@ import {
 import type { LugarGuardado } from "@/modules/territorio/application/puertos";
 import type { FiltrosDeRegistro } from "@/modules/territorio/application/puertosDeDomicilios";
 import { opcionesDeLugares } from "@/modules/territorio/ui/opciones";
+import { AltaDeDomicilio } from "@/modules/territorio/ui/RegistroDeDomicilios";
 import { contextoActual } from "@/shared/auth";
 import { puedeEscribir } from "@/shared/auth/roles";
 import {
@@ -63,19 +64,18 @@ export default async function PaginaDeDomicilios({ searchParams }: Props) {
 
   const { filtros, limite } = leerParametros(await searchParams);
   const raices = await listarRaices(contexto);
-  const { domicilios, hayMas } = await registroDeDomicilios(
-    filtros,
-    contexto,
-    limite ?? TAMANO_DE_PAGINA,
-  );
+  const { domicilios, hayMas, total, coincidencias } =
+    await registroDeDomicilios(filtros, contexto, limite ?? TAMANO_DE_PAGINA);
   const estado = estadoDeLista({
     total: domicilios.length,
     filtro: filtroVisible(filtros, raices),
   });
+  const puedeCrear = puedeEscribir(contexto.usuario.rol);
 
   return (
     <PaginaDePanel
       titulo="Domicilios"
+      {...(puedeCrear ? { accion: <AltaDeDomicilio /> } : {})}
       migaja={
         <Migaja
           pasos={[
@@ -93,7 +93,9 @@ export default async function PaginaDeDomicilios({ searchParams }: Props) {
         filtros={filtros}
         limite={limite}
         raices={opcionesDeLugares(raices)}
-        puedeCrear={puedeEscribir(contexto.usuario.rol)}
+        puedeCrear={puedeCrear}
+        total={total}
+        coincidencias={coincidencias}
       />
     </PaginaDePanel>
   );
