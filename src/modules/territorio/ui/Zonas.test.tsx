@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { LugarGuardado } from "../application/puertos";
-import type { ZonaGuardada } from "../application/puertosDeLecturaDeZonas";
+import type {
+  ZonaConCalles,
+  ZonaGuardada,
+} from "../application/puertosDeLecturaDeZonas";
 import { comoCalleId, comoLugarId, comoZonaId } from "../domain";
 import { DetalleDeZona } from "./DetalleDeZona";
 import { ListaDeZonas } from "./ListaDeZonas";
@@ -27,6 +30,7 @@ const zona: ZonaGuardada = {
   lugarId,
   asentamiento: "Motul",
 };
+const zonaDelListado: ZonaConCalles = { ...zona, calles: 3 };
 const asentamiento: LugarGuardado = {
   id: lugarId,
   tipo: "cabecera",
@@ -43,15 +47,16 @@ const calle22 = {
   nombre: "Calle 22",
 };
 
-const renderLista = () =>
+const renderLista = (altaAbierta = false) =>
   renderToStaticMarkup(
     <ListaDeZonas
-      zonas={[zona]}
+      zonas={[zonaDelListado]}
       asentamientos={[asentamiento]}
       raizActiva={null}
       error={undefined}
       aviso={undefined}
       puedeAdministrar
+      altaAbierta={altaAbierta}
     />,
   );
 
@@ -94,8 +99,8 @@ describe("el listado de zonas", () => {
     expect(html).not.toContain(">Acciones<");
   });
 
-  it("el alta va en un panel con titulo y el select del sistema", () => {
-    const html = renderLista();
+  it("con el alta pedida, el formulario va en un panel con titulo y el select del sistema", () => {
+    const html = renderLista(true);
 
     expect(html).toContain("<section");
     expect(html).toMatch(/<h2[^>]*>Nueva zona<\/h2>/);
@@ -104,10 +109,11 @@ describe("el listado de zonas", () => {
     expect(html).toContain("Elija el asentamiento");
   });
 
-  it("vuelve a Territorio, no al mapa", () => {
+  it("la vuelta a Territorio la da la migaja, una sola vez", () => {
     const html = renderLista();
 
-    expect(html).toContain("Volver a Territorio");
+    expect(html).toMatch(/<a[^>]*href="\/territorio"[^>]*>Territorio<\/a>/);
+    expect(html).not.toContain("Volver a Territorio");
     expect(html).not.toContain("Volver al mapa de territorio");
   });
 });

@@ -36,6 +36,10 @@ test("las tres rutas de zonas navegan: territorio, listado y detalle", async ({
   await expect(page).toHaveURL(urlDe("motul", "/territorio/zonas"));
   await expect(page.getByRole("heading", { name: "Zonas" })).toBeVisible();
 
+  // Z1 de `territorio-ux`: el alta vive detras de un boton, no abierta
+  // empujando la lista hacia abajo.
+  await expect(page.getByRole("button", { name: "Crear zona" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Nueva zona" }).click();
   await expect(page.getByRole("button", { name: "Crear zona" })).toBeVisible();
 });
 
@@ -58,6 +62,7 @@ test("el alta de zona funciona como POST nativo, sin JavaScript", async ({
 
   const nombre = nombreDeZona();
   await page.goto(urlDe("motul", "/territorio/zonas"));
+  await page.getByRole("link", { name: "Nueva zona" }).click();
   await page.getByLabel("Asentamiento").selectOption(escenario.origenId);
   await page.getByLabel("Nombre de la zona").fill(nombre);
   await page.getByRole("button", { name: "Crear zona" }).click();
@@ -87,6 +92,7 @@ test("la zona se renombra, suma y quita calles y se da de baja desde su detalle"
   const renombrada = `Zona ciclo renombrada ${marca}`;
 
   await page.goto(urlDe("motul", "/territorio/zonas"));
+  await page.getByRole("link", { name: "Nueva zona" }).click();
   await page.getByLabel("Asentamiento").selectOption(escenario.origenId);
   await page.getByLabel("Nombre de la zona").fill(nombre);
   await page.getByRole("button", { name: "Crear zona" }).click();

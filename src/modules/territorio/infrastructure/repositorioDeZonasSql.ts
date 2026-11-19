@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { RepositorioDeAdministracionDeZonas } from "../application/puertosDeAdministracionDeZonas";
 import type { RepositorioDeLecturaDeZonas } from "../application/puertosDeLecturaDeZonas";
 import { NombreDeZonaDuplicadoError } from "../domain";
@@ -18,6 +18,22 @@ const zonaActiva = and(
 );
 
 /**
+ * Las calles activas de la zona, en la misma consulta que las filas: una
+ * subconsulta correlacionada y no una lectura por zona (S13 de
+ * `odd/tasks/territorio-ux.md`). Las tablas de adentro tambien quedan bajo
+ * RLS por el `tx` de `withTenant`, asi que no suma calles de otro municipio.
+ */
+const callesActivas = sql<number>`(
+  SELECT count(*)::int
+    FROM calles_de_zonas cz
+    JOIN calles c ON c.id = cz.calle_id
+   WHERE cz.zona_id = ${zonas.id}
+     AND c.baja_en IS NULL
+)`;
+
+const seleccionDeListado = { ...seleccionDeZona, calles: callesActivas };
+
+/**
  * `crear` comparte traduccion con `renombrar`: el indice parcial
  * `zonas_tenant_lugar_nombre_idx` (solo activas, decision S6) se dispara
  * en las dos operaciones, y el check previo del caso de uso no elimina la
@@ -30,7 +46,7 @@ export const repositorioDeZonasSql: RepositorioDeLecturaDeZonas &
   RepositorioDeAdministracionDeZonas = {
   async listar(tx, raizId) {
     return tx
-      .select(seleccionDeZona)
+      .select(seleccionDeListado)
       .from(zonas)
       .innerJoin(lugares, eq(lugares.id, zonas.lugarId))
       .where(and(zonaActiva, raizId ? eq(zonas.lugarId, raizId) : undefined))

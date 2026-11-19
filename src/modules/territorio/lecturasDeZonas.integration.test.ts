@@ -92,12 +92,14 @@ describe("lecturas activas de zonas", () => {
         nombre: "Alfa",
         lugarId: raiz,
         asentamiento: "Lecturas de zonas",
+        calles: 0,
       },
       {
         id: zeta,
         nombre: "Zeta",
         lugarId: raiz,
         asentamiento: "Lecturas de zonas",
+        calles: 0,
       },
     ]);
     expect(await lecturas.zonaPorId(alfa, contextoDe())).toStrictEqual({
@@ -136,6 +138,13 @@ describe("lecturas activas de zonas", () => {
     expect(await lecturas.callesDeZona(zona, contextoDe())).toStrictEqual([
       { id: calle, nombre: "Activa" },
     ]);
+    // La columna "Calles" del listado (S13): cuenta las activas, en la
+    // misma lectura que las filas, y no las que estan de baja.
+    expect(
+      (await lecturas.listarZonas(raiz, contextoDe())).map(
+        (zonaListada) => zonaListada.calles,
+      ),
+    ).toStrictEqual([1]);
     expect(
       (await domiciliosDeZona(zona, contextoDe())).map((d) => d.numero),
     ).toStrictEqual(["1"]);

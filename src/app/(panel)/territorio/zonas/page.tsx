@@ -86,6 +86,7 @@ export default async function PaginaDeZonas({ searchParams }: Props) {
         error={parametros.error}
         aviso={aviso}
         puedeAdministrar={administraZonas}
+        altaAbierta={parametros.accion === "nueva" && administraZonas}
       />
     );
   } catch (error) {

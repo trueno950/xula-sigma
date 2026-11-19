@@ -19,10 +19,21 @@ export type ParametrosDeZonas = {
   zonaId: ZonaId | undefined;
   raizId: LugarId | undefined;
   vista: "calles" | "domicilios";
+  /** `?accion=nueva`: el alta del listado esta abierta. */
+  accion: AccionDeZonas | undefined;
   error: string | undefined;
   ok: (typeof CLAVES_DE_CONFIRMACION_DE_ZONAS)[number] | undefined;
   invalido: boolean;
 };
+
+/**
+ * Lo unico que un `?accion=` abre en zonas. Un valor fuera de este
+ * vocabulario no es un error de la operadora -es un enlace viejo o mal
+ * copiado-, asi que se ignora como en `territorio/parametros.ts`; el 404
+ * queda para los ids.
+ */
+const ACCIONES_DE_ZONAS = ["nueva"] as const;
+export type AccionDeZonas = (typeof ACCIONES_DE_ZONAS)[number];
 
 const uuid = z.string().uuid();
 
@@ -56,6 +67,9 @@ export const leerParametros = (
     zonaId: zona.estado === "ok" ? comoZonaId(zona.id) : undefined,
     raizId: raiz.estado === "ok" ? comoLugarId(raiz.id) : undefined,
     vista,
+    accion: ACCIONES_DE_ZONAS.find(
+      (clave): clave is AccionDeZonas => clave === searchParams.accion,
+    ),
     error,
     // Un fallo y un exito juntos no pasan solos: el error gana.
     ok: error ? undefined : claveDeConfirmacion.parse(searchParams.ok),

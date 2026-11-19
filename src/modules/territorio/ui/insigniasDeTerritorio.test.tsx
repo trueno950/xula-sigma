@@ -75,6 +75,7 @@ describe("ListaDeZonas: el asentamiento es dato de apoyo", () => {
           nombre: "Sector 1",
           lugarId: raizId,
           asentamiento: "Motul",
+          calles: 2,
         },
       ]}
       asentamientos={[]}
@@ -82,6 +83,7 @@ describe("ListaDeZonas: el asentamiento es dato de apoyo", () => {
       error={undefined}
       aviso={undefined}
       puedeAdministrar
+      altaAbierta={false}
     />,
   );
 
