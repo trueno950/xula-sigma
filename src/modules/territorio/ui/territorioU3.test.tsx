@@ -36,6 +36,7 @@ const hijo = (id: typeof raizId, tipo: TipoDeLugar, nombre: string) => ({
 const conteo = (lugarId: typeof raizId, c: Partial<ConteoDeLugar>) => ({
   lugarId,
   domicilios: 0,
+  domiciliosDirectos: 0,
   calles: null,
   ...c,
 });

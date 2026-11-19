@@ -75,9 +75,20 @@ describe("permisos de territorio", () => {
     expect(clasificadas).toEqual(declaradas);
   });
 
-  it("la pestana Editar se esconde solo cuando no hay nada que abrir", () => {
-    expect(permisosDeTerritorio("OPERADOR").abreLaEdicion).toBe(true);
-    expect(permisosDeTerritorio("CONSULTA").abreLaEdicion).toBe(false);
+  /**
+   * Las tres acciones del lugar viven en el acordeon de la cabecera (S3 de
+   * `territorio-ux`), y siguen partidas entre los dos permisos: un OPERADOR
+   * renombra y da de baja, pero mover un lugar es administrar la estructura.
+   */
+  it("las acciones del lugar siguen el permiso de cada caso de uso", () => {
+    const operador = permisosDeTerritorio("OPERADOR");
+    const consulta = permisosDeTerritorio("CONSULTA");
+
+    expect(puedeAbrir("renombrar", operador)).toBe(true);
+    expect(puedeAbrir("baja", operador)).toBe(true);
+    expect(puedeAbrir("reparentear", operador)).toBe(false);
+    expect(puedeAbrir("renombrar", consulta)).toBe(false);
+    expect(puedeAbrir("baja", consulta)).toBe(false);
   });
 
   it("ningun rol de la plataforma rompe la tabla", () => {

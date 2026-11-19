@@ -45,7 +45,7 @@ describe("cargarBloqueos", () => {
 
     const bloqueos = await cargarBloqueos({
       contexto: contextoDe("ADMIN_MUNICIPAL"),
-      parametros: { vista: "calles", calleId },
+      parametros: { calleId },
       nodo: cabecera,
     });
 
@@ -60,7 +60,7 @@ describe("cargarBloqueos", () => {
   it("a un rol sin esas acciones no le lee el uso", async () => {
     const bloqueos = await cargarBloqueos({
       contexto: contextoDe("OPERADOR"),
-      parametros: { vista: "calles", calleId },
+      parametros: { calleId },
       nodo: cabecera,
     });
 
@@ -73,27 +73,32 @@ describe("cargarBloqueos", () => {
 
     const bloqueos = await cargarBloqueos({
       contexto: contextoDe("ADMIN_MUNICIPAL"),
-      parametros: { vista: "calles", calleId },
+      parametros: { calleId },
       nodo: cabecera,
     });
 
     expect(bloqueos.usoDeCalle).toBeNull();
   });
 
-  it("cuenta las zonas solo en Editar de un asentamiento", async () => {
+  /**
+   * S3 de `territorio-ux`: la baja vive en la cabecera de todas las
+   * pestanas, asi que las zonas de un asentamiento se leen siempre que el
+   * tipo pueda tenerlas, no solo cuando la URL decia `vista=editar`.
+   */
+  it("cuenta las zonas de todo asentamiento, y no las de una colonia", async () => {
     mocks.listarZonas.mockResolvedValue([{}, {}]);
-    const enEditar = await cargarBloqueos({
+    const enCabecera = await cargarBloqueos({
       contexto: contextoDe("OPERADOR"),
-      parametros: { vista: "editar", calleId: undefined },
+      parametros: { calleId: undefined },
       nodo: cabecera,
     });
     const enColonia = await cargarBloqueos({
       contexto: contextoDe("OPERADOR"),
-      parametros: { vista: "editar", calleId: undefined },
+      parametros: { calleId: undefined },
       nodo: colonia,
     });
 
-    expect(enEditar.zonasDelLugar).toBe(2);
+    expect(enCabecera.zonasDelLugar).toBe(2);
     expect(enColonia.zonasDelLugar).toBeUndefined();
     expect(mocks.listarZonas).toHaveBeenCalledTimes(1);
   });

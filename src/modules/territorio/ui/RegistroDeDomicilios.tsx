@@ -16,7 +16,6 @@ import { avisoDePalabrasIgnoradas } from "../domain/busquedaPorPalabras";
 import { FilaDeDomicilio } from "./FilaDeDomicilio";
 import { FiltrosDeDomicilios } from "./FiltrosDeDomicilios";
 import { hrefDeVerMasDeDomicilios } from "./hrefsDeDomicilios";
-import { BarraDeAcciones } from "./PanelDeAccion";
 import { PieDeDomicilios, ResumenDeDomicilios } from "./ResumenDeDomicilios";
 
 type Props = {
@@ -41,14 +40,17 @@ const COLUMNAS: readonly ColumnaDeTabla[] = [
 
 const ALTA = "/territorio?accion=domicilio";
 
-/** La accion primaria de la pantalla, con el permisos ya resuelto por la pagina. */
-const AltaDeDomicilio = () => (
-  <BarraDeAcciones>
-    <EnlaceDeAccion href={ALTA} variante="primaria">
-      <MapPin size={18} weight="bold" aria-hidden="true" />
-      Registrar domicilio
-    </EnlaceDeAccion>
-  </BarraDeAcciones>
+/**
+ * La accion primaria de la pantalla. Vive en la cabecera de la pagina -al
+ * lado del titulo, como en `design/territorio-domicilios`, L5 de
+ * `odd/tasks/territorio-ux.md`- y el vacio inicial la repite adentro, que es
+ * el unico caso en que la accion es el camino para llenar la pantalla.
+ */
+export const AltaDeDomicilio = () => (
+  <EnlaceDeAccion href={ALTA} variante="primaria">
+    <MapPin size={18} weight="bold" aria-hidden="true" />
+    Registrar domicilio
+  </EnlaceDeAccion>
 );
 
 /**
@@ -78,10 +80,6 @@ export function RegistroDeDomicilios({
 
   return (
     <div className="flex flex-col gap-4">
-      {puedeCrear && estado.clase !== "vacio-inicial" ? (
-        <AltaDeDomicilio />
-      ) : null}
-
       <FiltrosDeDomicilios filtros={filtros} raices={raices} />
 
       {estado.clase === "vacio-inicial" ? (

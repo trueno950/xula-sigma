@@ -2,18 +2,20 @@ import { Plus } from "@phosphor-icons/react/ssr";
 import {
   AvisoDePermiso,
   CeldaPrincipal,
-  CLASES_DE_TARJETA,
   type ColumnaDeTabla,
   EnlaceDeAccion,
+  EstadoVacio,
   FilaDeTabla,
   Tabla,
 } from "@/shared/ui";
-import { tipoDeLugarEnFrase } from "../domain";
+import { type LugarId, type TipoDeLugar, tipoDeLugarEnFrase } from "../domain";
 import { ANCLA_DE_ALTA, conAnclaDeAlta } from "./anclaDeAlta";
 import { hijosDirectosDe, type PropsDeContenido, rutaDe } from "./contenido";
 import { Cuentas, PastillaDeTipo } from "./FilaDeLugar";
+import { FilaSinColonia } from "./FilaSinColonia";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 import { BarraDeAcciones, PanelDeAccion } from "./PanelDeAccion";
+import type { NodoSeleccionado } from "./PanelDeNodo";
 import { puedeAbrir } from "./permisos";
 import {
   nombreDeLoContenido,
@@ -68,7 +70,11 @@ export function TabDeLugares({
         />
       ) : null}
 
-      {puedeActuar && admiteLugares && !abierta ? (
+      {/*
+        Sin hijos el alta la ofrece el vacio inicial (S6): dos primarias
+        identicas en la misma pestana son una de mas.
+      */}
+      {puedeActuar && admiteLugares && !abierta && hijos.length > 0 ? (
         <BarraDeAcciones>
           <EnlaceDeAccion
             href={conAnclaDeAlta(
@@ -106,7 +112,14 @@ export function TabDeLugares({
         </PanelDeAccion>
       ) : null}
 
-      {hijos.length > 0 ? (
+      {hijos.length === 0 && admiteLugares ? (
+        <VacioDeLugares
+          raizId={raizId}
+          lugar={lugar}
+          tipos={tipos}
+          puedeActuar={puedeActuar}
+        />
+      ) : hijos.length > 0 ? (
         <Tabla
           etiqueta={`${nombreDeLoContenido(lugar.tipo)} dentro de ${lugar.nombre}`}
           columnas={mezclaTipos ? COLUMNAS : SIN_TIPO}
@@ -130,13 +143,56 @@ export function TabDeLugares({
               </span>
             </FilaDeTabla>
           ))}
+          <FilaSinColonia
+            raizId={raizId}
+            nodoId={lugar.id}
+            directos={
+              conteos?.find((cuenta) => cuenta.lugarId === lugar.id)
+                ?.domiciliosDirectos
+            }
+          />
         </Tabla>
-      ) : admiteLugares ? (
-        <p className={`${CLASES_DE_TARJETA} text-[15px] text-caliza-apagada`}>
-          {lugar.nombre} no tiene{" "}
-          {nombreDeLoContenido(lugar.tipo).toLowerCase()} todavía.
-        </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * S6 de `odd/tasks/territorio-ux.md`: un asentamiento sin colonias mostraba
+ * una frase suelta y ninguna salida. El vacio inicial de `DESIGN.md` dice
+ * que es la pantalla y ofrece llenarla; sin permiso de escritura se queda en
+ * la frase, porque el boton terminaria en `NoAutorizadoError`.
+ */
+function VacioDeLugares({
+  raizId,
+  lugar,
+  tipos,
+  puedeActuar,
+}: {
+  raizId: LugarId;
+  lugar: NodoSeleccionado;
+  tipos: readonly TipoDeLugar[];
+  puedeActuar: boolean;
+}) {
+  const alta = conAnclaDeAlta(
+    rutaDe({ raizId, nodoId: lugar.id, vista: "lugares", accion: "lugar" }),
+  );
+
+  return (
+    <EstadoVacio
+      estado={{ clase: "vacio-inicial" }}
+      mensajeInicial={`${lugar.nombre} no tiene ${nombreDeLoContenido(lugar.tipo).toLowerCase()} todavía.`}
+      hrefSinFiltro={rutaDe({ raizId, nodoId: lugar.id, vista: "lugares" })}
+      {...(puedeActuar
+        ? {
+            accion: (
+              <EnlaceDeAccion href={alta} variante="primaria">
+                <Plus size={18} weight="bold" aria-hidden="true" />
+                {verboDelAlta(tipos) ?? "Agregar lugar"}
+              </EnlaceDeAccion>
+            ),
+          }
+        : {})}
+    />
   );
 }

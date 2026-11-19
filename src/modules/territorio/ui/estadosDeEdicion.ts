@@ -5,8 +5,7 @@ import {
   estadoDeMover,
 } from "./bloqueosDeLugar";
 import { hijosDirectosDe, type PropsDeContenido } from "./contenido";
-import type { AccionDeNodo, NodoSeleccionado, TabDeLugar } from "./PanelDeNodo";
-import { vistaVisibleDeLugar } from "./vistaDePanel";
+import type { AccionDeNodo, NodoSeleccionado } from "./PanelDeNodo";
 
 export type ClaveDeEdicion = Extract<
   AccionDeNodo,
@@ -41,7 +40,10 @@ export const estadosDeEdicion = ({
   lugares,
   conteos,
   zonasDelLugar,
-}: PropsDeContenido): Record<ClaveDeEdicion, EstadoDeAccion> => {
+}: Pick<
+  PropsDeContenido,
+  "lugar" | "nodos" | "calles" | "lugares" | "conteos" | "zonasDelLugar"
+>): Record<ClaveDeEdicion, EstadoDeAccion> => {
   const domicilios = domiciliosDe({ lugar, conteos });
 
   return {
@@ -63,11 +65,9 @@ export const estadosDeEdicion = ({
 
 /**
  * Si la pagina tiene que leer las zonas del lugar: solo un asentamiento
- * tiene zonas, y solo la pestana Editar las mira, para la baja.
+ * tiene zonas, y la baja las mira para decir por que se rechaza. Se leen
+ * siempre que el lugar las pueda tener, porque la accion esta en la
+ * cabecera de todas las pestanas desde S3 de `territorio-ux.md`.
  */
-export const leeZonasDelLugar = (
-  vista: TabDeLugar,
-  nodo: Pick<NodoSeleccionado, "tipo">,
-) =>
-  puedeTenerCatalogoDeCalles(nodo.tipo) &&
-  vistaVisibleDeLugar(vista, nodo.tipo) === "editar";
+export const leeZonasDelLugar = (nodo: Pick<NodoSeleccionado, "tipo">) =>
+  puedeTenerCatalogoDeCalles(nodo.tipo);

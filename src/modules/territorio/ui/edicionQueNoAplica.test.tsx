@@ -2,9 +2,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { NodoDeSubarbol } from "../application/puertos";
 import { comoCalleId, comoLugarId } from "../domain";
+import { AccionesDeLugar } from "./AccionesDeLugar";
 import type { PropsDeContenido } from "./contenido";
 import { permisosDeTerritorio } from "./permisos";
-import { TabDeEdicion } from "./TabDeEdicion";
 
 vi.mock("./actions/darDeBajaLugarAction", () => ({
   darDeBajaLugarAction: vi.fn(),
@@ -40,18 +40,16 @@ const coloniaEnCabecera = hijoDe(coloniaId);
 
 const htmlDe = (props: Partial<PropsDeContenido>) =>
   renderToStaticMarkup(
-    <TabDeEdicion
+    <AccionesDeLugar
       raizId={cabeceraId}
       lugar={cabecera}
       nodos={[]}
       calles={[]}
       lugares={[cabecera, comisaria]}
-      calleId={undefined}
-      domicilio={undefined}
-      domicilioId={undefined}
       accion={undefined}
       permisos={permisosDeTerritorio("ADMIN_MUNICIPAL")}
       conteos={[]}
+      cuentas={{ lugares: 0, calles: 0, domicilios: 0 }}
       {...props}
     />,
   );
@@ -60,11 +58,18 @@ describe("la baja de un lugar que la rechazaria", () => {
   it("con domicilios no se ofrece: dice cuantos y que hacer", () => {
     const html = htmlDe({
       accion: "baja",
-      conteos: [{ lugarId: cabeceraId, domicilios: 11, calles: 0 }],
+      conteos: [
+        {
+          lugarId: cabeceraId,
+          domicilios: 11,
+          domiciliosDirectos: 11,
+          calles: 0,
+        },
+      ],
     });
 
     expect(html).toContain("Tiene 11 domicilios. Muévalos primero.");
-    expect(html).not.toContain("accion=baja");
+    expect(html).not.toContain('name="accion" value="baja"');
     expect(html).not.toContain("Dar de baja Motul");
   });
 
@@ -104,7 +109,7 @@ describe("la baja de un lugar que la rechazaria", () => {
   it("vacio se sigue ofreciendo, con su formulario", () => {
     const html = htmlDe({ accion: "baja", zonasDelLugar: 0 });
 
-    expect(html).toContain("accion=baja");
+    expect(html).toContain('name="accion" value="baja"');
     expect(html).toContain("Dar de baja Motul");
   });
 
@@ -119,8 +124,8 @@ describe("Mover un lugar", () => {
   it("una cabecera sin padre no tiene a donde ir: no se ofrece", () => {
     const html = htmlDe({ accion: "reparentear" });
 
-    expect(html).not.toContain("accion=reparentear");
-    expect(html).not.toContain("Mover lugar");
+    expect(html).not.toContain('name="accion" value="reparentear"');
+    expect(html).not.toContain("Mover a otro asentamiento…");
   });
 
   it("una colonia con domicilios no cambia de asentamiento: lo explica", () => {
@@ -128,14 +133,22 @@ describe("Mover un lugar", () => {
       lugar: colonia,
       nodos: [coloniaEnCabecera],
       accion: "reparentear",
-      conteos: [{ lugarId: coloniaId, domicilios: 3, calles: null }],
+      conteos: [
+        {
+          lugarId: coloniaId,
+          domicilios: 3,
+          domiciliosDirectos: 3,
+          calles: null,
+        },
+      ],
     });
 
     expect(html).toContain(
       "Tiene 3 domicilios y no puede cambiar de asentamiento.",
     );
-    expect(html).not.toContain("accion=reparentear");
-    expect(html).not.toContain("Mover lugar");
+    expect(html).not.toContain('name="accion" value="reparentear"');
+    // El pliegue sigue ahi -es donde vive el motivo-, sin formulario.
+    expect(html).toContain("Mover a otro asentamiento…");
   });
 
   it("una colonia sin otro asentamiento al que ir no se ofrece", () => {
@@ -145,7 +158,7 @@ describe("Mover un lugar", () => {
       lugares: [cabecera, colonia],
     });
 
-    expect(html).not.toContain("accion=reparentear");
+    expect(html).not.toContain('name="accion" value="reparentear"');
   });
 
   it("una colonia vacia con otro asentamiento se sigue moviendo", () => {
@@ -153,11 +166,18 @@ describe("Mover un lugar", () => {
       lugar: colonia,
       nodos: [coloniaEnCabecera],
       accion: "reparentear",
-      conteos: [{ lugarId: coloniaId, domicilios: 0, calles: null }],
+      conteos: [
+        {
+          lugarId: coloniaId,
+          domicilios: 0,
+          domiciliosDirectos: 0,
+          calles: null,
+        },
+      ],
     });
 
-    expect(html).toContain("accion=reparentear");
-    expect(html).toContain("Mover lugar");
+    expect(html).toContain('name="accion" value="reparentear"');
+    expect(html).toContain("Mover a otro asentamiento…");
     expect(html).toContain("Kiní");
     expect(html).not.toContain(`<option value="${cabeceraId}"`);
   });

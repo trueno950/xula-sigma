@@ -24,7 +24,7 @@ const contexto = {
   ayuntamientoId: "motul",
   usuario: { id: "u1", rol: "ADMIN_MUNICIPAL" },
   origen: "web",
-};
+} as const;
 
 const raiz = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -43,9 +43,7 @@ const sinDomicilios = {
 
 const render = async (searchParams: Record<string, string> = {}) =>
   renderToStaticMarkup(
-    await PaginaDeDomicilios({
-      searchParams: Promise.resolve(searchParams),
-    }),
+    await PaginaDeDomicilios({ searchParams: Promise.resolve(searchParams) }),
   );
 
 beforeEach(() => {
@@ -111,20 +109,16 @@ describe("PaginaDeDomicilios", () => {
     expect(html).toContain('aria-current="page"');
   });
 
-  it("el limite sale del default cuando la URL no lo trae", async () => {
+  it("pasa el limite al caso de uso: el de la URL, o el default", async () => {
     await render();
-
     expect(mocks.registroDeDomicilios).toHaveBeenCalledWith(
       {},
       expect.objectContaining({ ayuntamientoId: "motul" }),
       TAMANO_DE_PAGINA,
     );
-  });
 
-  it("pasa el limite de la URL al caso de uso", async () => {
     await render({ limite: String(TAMANO_DE_PAGINA * 2) });
-
-    expect(mocks.registroDeDomicilios).toHaveBeenCalledWith(
+    expect(mocks.registroDeDomicilios).toHaveBeenLastCalledWith(
       {},
       expect.anything(),
       TAMANO_DE_PAGINA * 2,
@@ -179,10 +173,18 @@ describe("PaginaDeDomicilios", () => {
     expect(html).toContain("No se pudo determinar su sesión.");
   });
 
-  it("ofrece agregar un domicilio con un rol de escritura", async () => {
+  /**
+   * L5 de `territorio-ux`: «Registrar domicilio» va al lado del titulo, en la
+   * cabecera de `PaginaDePanel`, y no en un renglon propio arriba de la
+   * busqueda.
+   */
+  it("ofrece agregar un domicilio en la cabecera, con rol de escritura", async () => {
     const html = await render();
+    const registro = html.indexOf("Registrar domicilio");
 
     expect(html).toContain('href="/territorio?accion=domicilio"');
+    expect(html.slice(0, registro)).toContain("<h1");
+    expect(registro).toBeLessThan(html.indexOf("Calle y número"));
   });
 
   it("no ofrece agregar con CONSULTA", async () => {

@@ -44,15 +44,27 @@ describe("contarContenidoDeLugares", () => {
 
   it("devuelve las calles solo de los lugares que tienen catalogo", async () => {
     vi.mocked(lector.contarPorLugar).mockResolvedValue([
-      { lugarId: CABECERA, tipo: "cabecera", domicilios: 12, calles: 6 },
-      { lugarId: COLONIA, tipo: "colonia", domicilios: 3, calles: 2 },
+      {
+        lugarId: CABECERA,
+        tipo: "cabecera",
+        domicilios: 12,
+        domiciliosDirectos: 9,
+        calles: 6,
+      },
+      {
+        lugarId: COLONIA,
+        tipo: "colonia",
+        domicilios: 3,
+        domiciliosDirectos: 3,
+        calles: 2,
+      },
     ]);
 
     const resultado = await crearContarContenidoDeLugares(lector)(contexto);
 
     expect(resultado).toEqual([
-      { lugarId: CABECERA, domicilios: 12, calles: 6 },
-      { lugarId: COLONIA, domicilios: 3, calles: null },
+      { lugarId: CABECERA, domicilios: 12, calles: 6, domiciliosDirectos: 9 },
+      { lugarId: COLONIA, domicilios: 3, calles: null, domiciliosDirectos: 3 },
     ]);
   });
 });

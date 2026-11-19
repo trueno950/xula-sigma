@@ -8,8 +8,21 @@ import {
 
 export const COLUMNAS_DE_CALLES: readonly ColumnaDeTabla[] = [
   { clave: "calle", etiqueta: "Calle" },
+  { clave: "zona", etiqueta: "Zona", ancho: "minmax(0,1fr)" },
+  { clave: "domicilios", etiqueta: "Domicilios", ancho: "minmax(0,1fr)" },
+  { clave: "ubicacion", etiqueta: "Ubicación", ancho: "minmax(0,1fr)" },
+];
+
+/**
+ * Las de la pestana sin la lectura de detalles: sin zona ni cuenta no hay
+ * columnas que llenar, y una columna vacia se lee como un dato faltante.
+ */
+export const COLUMNAS_DE_CALLES_SIN_DETALLE: readonly ColumnaDeTabla[] = [
+  { clave: "calle", etiqueta: "Calle" },
   { clave: "ubicacion", etiqueta: "Ubicación" },
 ];
+
+export const SIN_ZONA = "Sin zona";
 
 export const estadoDeUbicacion = (
   punto: PuntoGeografico | null,

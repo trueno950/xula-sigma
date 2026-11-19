@@ -7,11 +7,15 @@ import type { FiltrosDeLaPestana } from "./hrefsDeLaPestana";
  * consulta: la pantalla ya trae el catalogo entero del asentamiento porque
  * lo necesitan los `<select>` de los formularios de domicilio, el panel de
  * la calle abierta y el 404 de `?calle=` ajena (`cargaDeTerritorio.ts`).
+ *
+ * `coincidencias` es lo que la linea de conteo dice (S4 de
+ * `odd/tasks/territorio-ux.md`): todas las que dejo la busqueda, no solo las
+ * de la pagina que se ve.
  */
 export const paginaDeCalles = <C extends { readonly nombre: string }>(
   calles: readonly C[],
   { busqueda, limite }: FiltrosDeLaPestana,
-): { filas: readonly C[]; hayMas: boolean } => {
+): { filas: readonly C[]; hayMas: boolean; coincidencias: number } => {
   const filtro = busqueda ? normalizarParaBusqueda(busqueda) : "";
   const coinciden = filtro
     ? calles.filter((calle) =>
@@ -20,5 +24,9 @@ export const paginaDeCalles = <C extends { readonly nombre: string }>(
     : calles;
   const tope = limite ?? TAMANO_DE_PAGINA;
 
-  return { filas: coinciden.slice(0, tope), hayMas: coinciden.length > tope };
+  return {
+    filas: coinciden.slice(0, tope),
+    hayMas: coinciden.length > tope,
+    coincidencias: coinciden.length,
+  };
 };

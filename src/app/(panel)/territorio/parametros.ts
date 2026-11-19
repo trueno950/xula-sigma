@@ -50,6 +50,19 @@ export type ParametrosDeTerritorio = {
 const LARGO_MAXIMO_DE_BUSQUEDA = 100;
 
 /**
+ * Las vistas que la URL todavia puede nombrar, incluida «editar», que dejo
+ * de ser pestana en S3 de `odd/tasks/territorio-ux.md`. Se sigue aceptando
+ * porque esta en el historial de los navegadores y en los enlaces ya
+ * enviados: cae a la pestana base en vez de a un 404.
+ */
+const VISTAS_DE_URL = ["lugares", "calles", "domicilios", "editar"] as const;
+
+type VistaDeUrl = (typeof VISTAS_DE_URL)[number];
+
+const vistaDe = (vista: VistaDeUrl | undefined): TabDeLugar =>
+  vista === undefined || vista === "editar" ? "lugares" : vista;
+
+/**
  * Cada campo cae a `undefined` por su cuenta -`.catch()`, no un
  * `.safeParse()` de todo el objeto-. Con el objeto entero, un `vista`
  * fuera de las cuatro validas tiraba tambien la `raiz`: `raizId` volvia
@@ -62,10 +75,7 @@ const esquemaDeParametros = z.object({
   domicilio: z.string().uuid().optional().catch(undefined),
   raiz: z.string().uuid().optional().catch(undefined),
   nodo: z.string().uuid().optional().catch(undefined),
-  vista: z
-    .enum(["lugares", "calles", "domicilios", "editar"])
-    .optional()
-    .catch(undefined),
+  vista: z.enum(VISTAS_DE_URL).optional().catch(undefined),
   accion: z.enum(ACCIONES_DE_NODO).optional().catch(undefined),
   q: z
     .string()
@@ -88,7 +98,15 @@ const esquemaDeParametros = z.object({
   borrador: z.uuid().optional().catch(undefined),
 });
 
-/** A que pestana pertenece cada accion, para no perder el contexto. */
+/**
+ * A que pestana pertenece cada accion, para no perder el contexto.
+ *
+ * Las tres del lugar -renombrar, mover y dar de baja- apuntan a la pestana
+ * base: desde S3 de `odd/tasks/territorio-ux.md` su formulario vive en el
+ * acordeon de la cabecera, y `vistaVisibleDeLugar` baja «lugares» a
+ * Domicilios en una colonia. Asi un enlace guardado a `?vista=editar&
+ * accion=baja` sigue abriendo la pantalla con su pliegue desplegado.
+ */
 const pestanaDeAccion: Record<AccionDeNodo, TabDeLugar> = {
   lugar: "lugares",
   calle: "calles",
@@ -99,9 +117,9 @@ const pestanaDeAccion: Record<AccionDeNodo, TabDeLugar> = {
   domicilio: "domicilios",
   corregirDomicilio: "domicilios",
   bajaDomicilio: "domicilios",
-  renombrar: "editar",
-  reparentear: "editar",
-  baja: "editar",
+  renombrar: "lugares",
+  reparentear: "lugares",
+  baja: "lugares",
 };
 
 export const leerParametros = (
@@ -132,7 +150,7 @@ export const leerParametros = (
       ? pestanaDeAccion[accion]
       : datos.calle
         ? "calles"
-        : (datos.vista ?? "lugares"),
+        : vistaDe(datos.vista),
     regreso: datos.regreso,
     borrador: datos.borrador,
   };

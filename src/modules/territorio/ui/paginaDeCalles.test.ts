@@ -45,4 +45,20 @@ describe("paginaDeCalles", () => {
     ]);
     expect(pagina.hayMas).toBe(false);
   });
+
+  /**
+   * S4 de `territorio-ux`: la linea dice cuantas calles coincidieron, y
+   * esa cuenta es la de todo el catalogo, no la de la pagina visible.
+   */
+  it("cuenta todas las coincidencias, aunque la pagina muestre menos", () => {
+    const pagina = paginaDeCalles(muchas, { busqueda: "Calle 5", limite: 2 });
+
+    expect(pagina.filas).toHaveLength(2);
+    expect(pagina.coincidencias).toBe(7);
+    expect(pagina.hayMas).toBe(true);
+  });
+
+  it("sin busqueda las coincidencias son el catalogo entero", () => {
+    expect(paginaDeCalles(muchas, {}).coincidencias).toBe(muchas.length);
+  });
 });

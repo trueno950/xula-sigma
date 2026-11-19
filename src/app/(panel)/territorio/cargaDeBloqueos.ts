@@ -17,7 +17,7 @@ import type { ParametrosDeTerritorio } from "./parametros";
 
 type Entrada = {
   contexto: ContextoActual;
-  parametros: Pick<ParametrosDeTerritorio, "vista" | "calleId">;
+  parametros: Pick<ParametrosDeTerritorio, "calleId">;
   nodo: NodoSeleccionado | null;
 };
 
@@ -49,8 +49,8 @@ const usoDeLaCalleAbierta = (
 ): Promise<UsoDeCalle | null> =>
   sinRomper("el uso de la calle", () => usoDeCalle(calleId, contexto));
 
-const zonasDelNodo = async ({ contexto, parametros, nodo }: Entrada) => {
-  if (!nodo || !leeZonasDelLugar(parametros.vista, nodo)) return undefined;
+const zonasDelNodo = async ({ contexto, nodo }: Entrada) => {
+  if (!nodo || !leeZonasDelLugar(nodo)) return undefined;
   const zonas = await sinRomper("las zonas del lugar", () =>
     lecturasDeZonas.listarZonas(nodo.id, contexto),
   );
@@ -69,7 +69,9 @@ export const cargarBloqueos = async (entrada: Entrada) => {
     calleId && puedeAbrir("bajaCalle", permisos)
       ? usoDeLaCalleAbierta(entrada, calleId)
       : undefined,
-    zonasDelNodo(entrada),
+    // Decidir si la baja se ofrece es decoracion de la cabecera (S3 de
+    // `territorio-ux`): a un rol que no puede darla de baja no se le leen.
+    puedeAbrir("baja", permisos) ? zonasDelNodo(entrada) : undefined,
   ]);
 
   return { usoDeCalle: uso, zonasDelLugar };

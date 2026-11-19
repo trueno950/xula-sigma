@@ -48,10 +48,10 @@ const comisaria = lugar({ n: 5, nombre: "Dzununcan", tipo: "comisaria" });
 const todos = [cabecera, centro, norte, comisaria];
 
 const cuentas: ConteoDeLugar[] = [
-  { lugarId: cabecera.id, domicilios: 12, calles: 6 },
-  { lugarId: centro.id, domicilios: 1, calles: null },
-  { lugarId: norte.id, domicilios: 0, calles: null },
-  { lugarId: comisaria.id, domicilios: 0, calles: 0 },
+  { lugarId: cabecera.id, domicilios: 12, domiciliosDirectos: 9, calles: 6 },
+  { lugarId: centro.id, domicilios: 1, domiciliosDirectos: 1, calles: null },
+  { lugarId: norte.id, domicilios: 0, domiciliosDirectos: 0, calles: null },
+  { lugarId: comisaria.id, domicilios: 0, domiciliosDirectos: 0, calles: 0 },
 ];
 
 const pintar = (resto: { busqueda?: string; sinCuentas?: boolean } = {}) =>

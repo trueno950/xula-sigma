@@ -2,12 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { NodoDeSubarbol } from "../application/puertos";
 import { comoLugarId } from "../domain";
+import { AccionesDeLugar } from "./AccionesDeLugar";
 import type { PropsDeContenido } from "./contenido";
 import { FormularioDeReparenteo } from "./FormularioDeReparenteo";
 import { PanelDeAccion } from "./PanelDeAccion";
 import { permisosDeTerritorio } from "./permisos";
 import { TabDeCalles } from "./TabDeCalles";
-import { TabDeEdicion } from "./TabDeEdicion";
 import { TabDeLugares } from "./TabDeLugares";
 import { VistaDeRaices } from "./VistaDeRaices";
 
@@ -37,11 +37,22 @@ const base: PropsDeContenido = {
 
 const volverDeLugares = `/territorio?raiz=${raizId}&nodo=${raizId}&vista=lugares`;
 const volverDeCalles = `/territorio?raiz=${raizId}&nodo=${raizId}&vista=calles`;
-const volverDeEditar = `/territorio?raiz=${raizId}&nodo=${raizId}&vista=editar`;
 
 /** El interior del `<form>`: ahi tiene que vivir "Cancelar". */
 const formularioDe = (html: string) =>
   html.slice(html.indexOf("<form"), html.indexOf("</form>"));
+
+/**
+ * El formulario de una accion concreta. Desde S3 de `territorio-ux` los tres
+ * formularios del lugar conviven en la cabecera -uno por pliegue-, asi que
+ * "el primer `<form>`" ya no dice cual se esta mirando.
+ */
+const formularioDeAccion = (html: string, accion: string) => {
+  const marca = html.indexOf(`name="accion" value="${accion}"`);
+  const inicio = html.lastIndexOf("<form", marca);
+
+  return html.slice(inicio, html.indexOf("</form>", marca));
+};
 
 /** El ancla de cancelacion con su destino, sin confundirla con el envio. */
 const cancelarDe = (html: string) =>
@@ -88,22 +99,31 @@ describe("Cancelar agrupado con el envio", () => {
 
   it("renombrar un lugar conserva la vuelta adentro del formulario", () => {
     const html = renderToStaticMarkup(
-      <TabDeEdicion {...base} accion="renombrar" />,
+      <AccionesDeLugar
+        {...base}
+        accion="renombrar"
+        cuentas={{ lugares: 1, calles: 0, domicilios: 0 }}
+      />,
     );
-    const form = formularioDe(html);
+    const form = formularioDeAccion(html, "renombrar");
 
-    expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeEditar));
+    expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeLugares));
     expect(form).toContain('name="accion" value="renombrar"');
   });
 
   it("la baja del lugar agrupa el peligro y el cancelar", () => {
     // Sin hijos: con uno la baja ya no se ofrece (`edicionQueNoAplica.test.tsx`).
     const html = renderToStaticMarkup(
-      <TabDeEdicion {...base} nodos={[]} accion="baja" />,
+      <AccionesDeLugar
+        {...base}
+        nodos={[]}
+        accion="baja"
+        cuentas={{ lugares: 0, calles: 0, domicilios: 0 }}
+      />,
     );
-    const form = formularioDe(html);
+    const form = formularioDeAccion(html, "baja");
 
-    expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeEditar));
+    expect(cancelarDe(form)?.[1]).toBe(destinoHtml(volverDeLugares));
     expect(form).toContain("Dar de baja");
     expect(form).toContain("border-senial-error");
     expect(hermanoDelEnvio(form)).toMatch(/^<a [^>]*>Cancelar<\/a>$/);
@@ -135,12 +155,12 @@ describe("Reparenteo sin salida conserva la vuelta", () => {
         nodo={hijoId}
         tipoDelLugar="colonia"
         lugares={[]}
-        volverA={volverDeEditar}
+        volverA={volverDeLugares}
       />,
     );
 
     expect(html).not.toContain("<form");
-    expect(cancelarDe(html)?.[1]).toBe(destinoHtml(volverDeEditar));
+    expect(cancelarDe(html)?.[1]).toBe(destinoHtml(volverDeLugares));
   });
 });
 

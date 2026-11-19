@@ -155,15 +155,33 @@ describe("RegistroDeDomicilios", () => {
     expect(html).toContain(`value="${cabeceraId}" selected=""`);
   });
 
-  it("ofrece registrar un domicilio desde el registro plano cuando puedeCrear", () => {
-    const html = render({ puedeCrear: true });
+  /**
+   * L5 de `territorio-ux`: «Registrar domicilio» vive en la cabecera de la
+   * pagina, al lado del titulo -como en el tablero-, y no en un renglon
+   * propio arriba de la busqueda. El vacio inicial lo sigue ofreciendo, que
+   * es el unico caso en que la accion es el camino para llenar la pantalla.
+   */
+  it("con filas no repite la accion de registrar: vive en la cabecera", () => {
+    expect(render({ puedeCrear: true })).not.toContain("Registrar domicilio");
+  });
+
+  it("el vacio inicial ofrece registrar cuando puedeCrear", () => {
+    const html = render({
+      domicilios: [],
+      estadoDeLista: { clase: "vacio-inicial" },
+      puedeCrear: true,
+    });
 
     expect(html).toContain('href="/territorio?accion=domicilio"');
     expect(html).toContain("Registrar domicilio");
   });
 
   it("no ofrece registrar sin permiso de escritura", () => {
-    const html = render({ puedeCrear: false });
+    const html = render({
+      domicilios: [],
+      estadoDeLista: { clase: "vacio-inicial" },
+      puedeCrear: false,
+    });
 
     expect(html).not.toContain("Registrar domicilio");
   });

@@ -32,17 +32,8 @@ const EXIGE: Record<AccionDeNodo, (rol: Rol) => boolean> = {
   reparentear: puedeAdministrarTerritorio,
 };
 
-/** Las tres que viven en la pestana Editar, y que deciden si se muestra. */
-const DE_LA_EDICION: readonly AccionDeNodo[] = [
-  "renombrar",
-  "reparentear",
-  "baja",
-];
-
 export type PermisosDeTerritorio = {
   readonly porAccion: Readonly<Record<AccionDeNodo, boolean>>;
-  /** Si queda al menos una accion de Editar, la pestana tiene sentido. */
-  readonly abreLaEdicion: boolean;
   /**
    * Las zonas no son acciones del nodo: viven en `/territorio/zonas`, y sus
    * cinco casos de uso piden `puedeAdministrarTerritorio`.
@@ -57,7 +48,6 @@ export function permisosDeTerritorio(rol: Rol): PermisosDeTerritorio {
 
   return {
     porAccion,
-    abreLaEdicion: DE_LA_EDICION.some((accion) => porAccion[accion]),
     administraZonas: puedeAdministrarTerritorio(rol),
   };
 }

@@ -14,6 +14,7 @@ import {
 const conteo = (domicilios: number): ConteoDeLugar => ({
   lugarId: cabeceraId,
   domicilios,
+  domiciliosDirectos: domicilios,
   calles: null,
 });
 

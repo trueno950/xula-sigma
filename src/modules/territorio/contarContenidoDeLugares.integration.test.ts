@@ -90,4 +90,33 @@ describe("contarPorLugar", () => {
 
     expect((await leer()).get(comisaria)?.calles).toBe(0);
   });
+
+  /**
+   * S5 de `odd/tasks/territorio-ux.md`: la fila «Sin colonia» de la pestana
+   * Colonias suma los domicilios que cuelgan directo del asentamiento, y se
+   * cuentan aparte porque `domicilios` baja a todo el subarbol.
+   */
+  it("cuenta aparte los domicilios que cuelgan directo del lugar", async () => {
+    const comisaria = await crearLugar("comisaria", "Comisaria con directos");
+    const colonia = await crearLugar(
+      "colonia",
+      "Colonia con directos",
+      comisaria,
+    );
+    const calle = await crearCalle(comisaria, "Calle de los directos");
+    await crearDomicilioEnCalle(comisaria, calle, "1");
+    await crearDomicilioEnCalle(colonia, calle, "2");
+    await crearDomicilioEnCalle(colonia, calle, "3");
+
+    const cuentas = await leer();
+
+    expect(cuentas.get(comisaria)).toMatchObject({
+      domicilios: 3,
+      domiciliosDirectos: 1,
+    });
+    expect(cuentas.get(colonia)).toMatchObject({
+      domicilios: 2,
+      domiciliosDirectos: 2,
+    });
+  });
 });

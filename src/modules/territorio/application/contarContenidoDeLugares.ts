@@ -21,10 +21,13 @@ export function crearContarContenidoDeLugares(
       lector.contarPorLugar(tx),
     );
 
-    return filas.map(({ lugarId, tipo, domicilios, calles }) => ({
-      lugarId,
-      domicilios,
-      calles: puedeTenerCatalogoDeCalles(tipo) ? calles : null,
-    }));
+    return filas.map(
+      ({ lugarId, tipo, domicilios, domiciliosDirectos, calles }) => ({
+        lugarId,
+        domicilios,
+        domiciliosDirectos,
+        calles: puedeTenerCatalogoDeCalles(tipo) ? calles : null,
+      }),
+    );
   };
 }

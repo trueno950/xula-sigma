@@ -52,6 +52,7 @@ export const TerritorioCargado = ({
     zonaDeLaEntrada,
     usoDeCalle,
     zonasDelLugar,
+    detalles,
   } = carga;
   const permisos = permisosDeTerritorio(contexto.usuario.rol);
   const { accion, calleId, domicilioId, error, ok, vista } = parametros;
@@ -129,6 +130,7 @@ export const TerritorioCargado = ({
           borrador={borrador}
           usoDeCalle={usoDeCalle}
           zonasDelLugar={zonasDelLugar}
+          detalles={detalles}
           regreso={parametros.regreso}
         />
       ) : null}

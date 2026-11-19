@@ -2,7 +2,6 @@ import type { PropsDeContenido } from "./contenido";
 import type { TabDeLugar } from "./PanelDeNodo";
 import { TabDeCalles } from "./TabDeCalles";
 import { TabDeDomicilios } from "./TabDeDomicilios";
-import { TabDeEdicion } from "./TabDeEdicion";
 import { TabDeLugares } from "./TabDeLugares";
 
 type Props = PropsDeContenido & { vista: TabDeLugar };
@@ -30,8 +29,6 @@ const contenidoDe = (vista: TabDeLugar, resto: PropsDeContenido) => {
       return <TabDeCalles {...resto} />;
     case "domicilios":
       return <TabDeDomicilios {...resto} />;
-    case "editar":
-      return <TabDeEdicion {...resto} />;
     default:
       return <TabDeLugares {...resto} />;
   }
