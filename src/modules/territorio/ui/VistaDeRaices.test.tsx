@@ -168,3 +168,32 @@ describe("VistaDeRaices: busqueda", () => {
     expect(html).not.toContain("todavía no tiene asentamientos");
   });
 });
+
+const texto = (html: string) => html.replace(/<[^>]*>/g, "");
+
+/**
+ * I2 de `odd/tasks/territorio-ux.md` (S2): la entrada no decia cuantos
+ * asentamientos y domicilios hay, ni cuantos lugares coincidieron al buscar.
+ */
+describe("VistaDeRaices: resumen del municipio", () => {
+  it("sobre el arbol dice cuantos asentamientos y cuantos domicilios hay", () => {
+    const html = pintar();
+
+    expect(texto(html)).toContain("2 asentamientos · 12 domicilios");
+    expect(html.indexOf("2 asentamientos")).toBeLessThan(
+      html.indexOf("Asentamientos del municipio"),
+    );
+  });
+
+  it("buscando dice cuantos lugares coincidieron, en singular si es uno", () => {
+    expect(texto(pintar({ busqueda: "norte" }))).toContain(
+      "1 lugar para «norte»",
+    );
+  });
+
+  it("sin coincidencias lo dice con cero, en plural", () => {
+    expect(texto(pintar({ busqueda: "zzzz" }))).toContain(
+      "0 lugares para «zzzz»",
+    );
+  });
+});

@@ -28,5 +28,6 @@ export {
 } from "./PanelDeNodo";
 export { RegistroDeDomicilios } from "./RegistroDeDomicilios";
 export { RegistroDeMudanza } from "./RegistroDeMudanza";
+export { ResumenDeTerritorio } from "./ResumenDeTerritorio";
 export { SelectorDePunto } from "./SelectorDePunto";
 export { VistaDeRaices } from "./VistaDeRaices";

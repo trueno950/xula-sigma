@@ -8,13 +8,61 @@ import {
 } from "@/shared/ui";
 import type { ConteoDeLugar } from "../application/puertosDeContenidoDeLugares";
 import { ANCLA_DE_ALTA, conAnclaDeAlta } from "./anclaDeAlta";
-import { armarArbol, type LugarDelArbol } from "./arbolDeLugares";
+import {
+  armarArbol,
+  type LugarDelArbol,
+  type NodoDeArbol,
+} from "./arbolDeLugares";
 import { BuscadorDeLugares } from "./BuscadorDeLugares";
 import { FormularioDeAltaDeLugar } from "./FormularioDeAltaDeLugar";
 import { NodoDelArbol } from "./NodoDelArbol";
+import { ResumenDeTerritorio } from "./ResumenDeTerritorio";
 import { tiposParaElAlta, tituloDelAlta, verboDelAlta } from "./tiposDelAlta";
 
 export type { LugarDelArbol } from "./arbolDeLugares";
+
+/**
+ * Los domicilios del municipio, sumando las raices: la cuenta de cada lugar
+ * ya incluye su subarbol, asi que bajar mas seria contar dos veces.
+ */
+const domiciliosDelMunicipio = ({
+  raices,
+  cuentas,
+}: {
+  raices: readonly LugarDelArbol[];
+  cuentas: readonly ConteoDeLugar[];
+}): number =>
+  raices.reduce(
+    (total, raiz) =>
+      total +
+      (cuentas.find((cuenta) => cuenta.lugarId === raiz.id)?.domicilios ?? 0),
+    0,
+  );
+
+/**
+ * Sin cuentas el municipio no se cuenta: un "0 domicilios" que solo dice que
+ * la lectura fallo es peor que no decir nada. Buscando no hace falta, porque
+ * esa linea cuenta lugares del arbol, no domicilios.
+ */
+const muestraElResumen = ({
+  cuentas,
+  busqueda,
+  estado,
+}: {
+  cuentas: readonly ConteoDeLugar[];
+  busqueda: string | undefined;
+  estado: ReturnType<typeof estadoDeLista>;
+}): boolean =>
+  busqueda !== undefined ||
+  (cuentas.length > 0 && estado.clase === "con-filas");
+
+/** Con busqueda, el arbol trae los ancestros: solo cuentan las coincidencias. */
+const lugaresQueCoinciden = (nodos: readonly NodoDeArbol[]): number =>
+  nodos.reduce(
+    (total, nodo) =>
+      total + (nodo.coincide ? 1 : 0) + lugaresQueCoinciden(nodo.hijos),
+    0,
+  );
 
 type Props = {
   raices: readonly LugarDelArbol[];
@@ -83,6 +131,15 @@ export function VistaDeRaices({
 
       {raices.length > 0 || busqueda ? (
         <BuscadorDeLugares busqueda={busqueda} />
+      ) : null}
+
+      {muestraElResumen({ cuentas, busqueda, estado }) ? (
+        <ResumenDeTerritorio
+          asentamientos={raices.length}
+          domicilios={domiciliosDelMunicipio({ raices, cuentas })}
+          busqueda={busqueda}
+          encontrados={busqueda ? lugaresQueCoinciden(arbol) : undefined}
+        />
       ) : null}
 
       {estado.clase === "con-filas" ? (
