@@ -31,6 +31,8 @@ const raices: readonly OpcionDeLista[] = [
 const base = {
   domicilios: [domicilio],
   hayMas: false,
+  total: 9,
+  coincidencias: 1,
   estadoDeLista: { clase: "con-filas" } as EstadoDeLista,
   filtros: {} as FiltrosDeRegistro,
   raices,
@@ -127,15 +129,15 @@ describe("RegistroDeDomicilios", () => {
     expect(html).toContain(`limite=${TAMANO_DE_PAGINA * 3}"`);
   });
 
-  it("un solo formulario GET con los cuatro filtros de la pantalla", () => {
+  it("un solo formulario GET, con la busqueda y el asentamiento", () => {
     const html = render();
     const formularios = html.match(/<form/g) ?? [];
 
     expect(formularios).toHaveLength(1);
     expect(html).toContain('method="get"');
     expect(html).toContain('name="q"');
-    expect(html).toContain('name="numero"');
     expect(html).toContain('name="raiz"');
+    expect(html).not.toContain('name="numero"');
   });
 
   it("el select de asentamiento ofrece las raices del municipio", () => {
@@ -146,11 +148,10 @@ describe("RegistroDeDomicilios", () => {
 
   it("los filtros puestos vuelven a aparecer en el formulario", () => {
     const html = render({
-      filtros: { raizId: cabeceraId, busqueda: "Calle 21", numero: "5" },
+      filtros: { raizId: cabeceraId, busqueda: "Calle 21" },
     });
 
     expect(html).toContain('value="Calle 21"');
-    expect(html).toContain('value="5"');
     expect(html).toContain(`value="${cabeceraId}" selected=""`);
   });
 

@@ -1,7 +1,7 @@
 import { comoLugarId, exigirLimiteValido, resolverPagina } from "../domain";
 import type {
   FiltrosDeRegistro,
-  RepositorioDeDomicilios,
+  RepositorioDeRegistroDeDomicilios,
 } from "./puertosDeDomicilios";
 
 /**
@@ -22,13 +22,13 @@ export const TAMANO_DE_PAGINA = 50;
 export const LIMITE_MAXIMO = TAMANO_DE_PAGINA * 40;
 
 export type SolicitudDeRegistroDeDomicilios = {
-  readonly tx: Parameters<RepositorioDeDomicilios["registro"]>[0];
+  readonly tx: Parameters<RepositorioDeRegistroDeDomicilios["registro"]>[0];
   readonly filtros: FiltrosDeRegistro;
   readonly limite: number;
 };
 
 export function crearRegistroDeDomicilios(
-  repositorio: RepositorioDeDomicilios,
+  repositorio: RepositorioDeRegistroDeDomicilios,
 ) {
   return async function registroDeDomicilios({
     tx,
@@ -40,16 +40,26 @@ export function crearRegistroDeDomicilios(
     // `resolverPagina`, que corre recien con las filas ya traidas.
     exigirLimiteValido(limite);
     const raizId = filtros.raizId ? comoLugarId(filtros.raizId) : undefined;
+    const normalizados = normalizarFiltros({
+      ...filtros,
+      ...(raizId ? { raizId } : {}),
+    });
+    // Los dos numeros de la linea de conteo salen de una sola lectura, y en
+    // la misma transaccion: `coincidencias` con los filtros puestos,
+    // `total` del municipio entero.
+    const { total, coincidencias } = await repositorio.contar(tx, normalizados);
     const filas = await repositorio.registro(tx, {
       limite: limite + 1,
-      filtros: normalizarFiltros({
-        ...filtros,
-        ...(raizId ? { raizId } : {}),
-      }),
+      filtros: normalizados,
     });
     const pagina = resolverPagina(filas, limite);
 
-    return { domicilios: pagina.filas, hayMas: pagina.hayMas };
+    return {
+      domicilios: pagina.filas,
+      hayMas: pagina.hayMas,
+      total,
+      coincidencias,
+    };
   };
 }
 

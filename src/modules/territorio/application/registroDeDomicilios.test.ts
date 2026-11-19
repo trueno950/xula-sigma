@@ -7,11 +7,13 @@ import {
 } from "../domain";
 import type {
   DomicilioDelRegistro,
-  RepositorioDeDomicilios,
+  RepositorioDeRegistroDeDomicilios,
 } from "./puertosDeDomicilios";
 import { crearRegistroDeDomicilios } from "./registroDeDomicilios";
 
-type TransaccionDePrueba = Parameters<RepositorioDeDomicilios["registro"]>[0];
+type TransaccionDePrueba = Parameters<
+  RepositorioDeRegistroDeDomicilios["registro"]
+>[0];
 
 const tx = {} as TransaccionDePrueba;
 
@@ -28,14 +30,9 @@ const domicilioDePrueba = (id: string): DomicilioDelRegistro => ({
 });
 
 describe("registroDeDomicilios", () => {
-  const repositorio: RepositorioDeDomicilios = {
-    crear: vi.fn(),
-    buscarPorId: vi.fn(),
-    bloquearPorId: vi.fn(),
-    actualizar: vi.fn(),
-    porLugarYSubarbol: vi.fn(),
-    listar: vi.fn(),
+  const repositorio: RepositorioDeRegistroDeDomicilios = {
     registro: vi.fn(),
+    contar: vi.fn(),
   };
 
   beforeEach(() => {
@@ -43,6 +40,10 @@ describe("registroDeDomicilios", () => {
     vi.mocked(repositorio.registro).mockResolvedValue([
       domicilioDePrueba("33333333-3333-4333-8333-333333333333"),
     ]);
+    vi.mocked(repositorio.contar).mockResolvedValue({
+      total: 9,
+      coincidencias: 1,
+    });
   });
 
   it("reenvia solo el filtro de asentamiento y pide una fila adicional", async () => {
@@ -168,6 +169,8 @@ describe("registroDeDomicilios", () => {
     expect(resultado).toEqual({
       domicilios: domicilios.slice(0, 1),
       hayMas: true,
+      total: 9,
+      coincidencias: 1,
     });
   });
 

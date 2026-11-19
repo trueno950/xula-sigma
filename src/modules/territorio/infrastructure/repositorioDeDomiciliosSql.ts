@@ -2,6 +2,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import type {
   DomicilioGuardado,
   RepositorioDeDomicilios,
+  RepositorioDeRegistroDeDomicilios,
 } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
 import { calles, domicilios, lugares } from "./esquema";
@@ -41,14 +42,17 @@ const aDomicilioGuardado = (fila: FilaDeDomicilio): DomicilioGuardado => ({
 
 /**
  * Implementacion real de `RepositorioDeDomicilios` contra `domicilios`.
- * Objeto literal, no clase (precedente `repositorioDeLugaresSql`).
+ * Objeto literal, no clase (precedente `repositorioDeLugaresSql`). El conteo
+ * del registro viaja con `registro` y no como metodo de la interfaz
+ * completa: ver `RepositorioDeRegistroDeDomicilios`.
  *
  * "Activo = `bajaEn IS NULL`" en `buscarPorId`, `porLugarYSubarbol`,
  * `registro` y `listar`, mismo criterio que
  * `lugares` y `calles`: una direccion dada de baja no se lista, no se
  * asigna en una mudanza y no se puede corregir.
  */
-export const repositorioDeDomiciliosSql: RepositorioDeDomicilios = {
+export const repositorioDeDomiciliosSql: RepositorioDeDomicilios &
+  RepositorioDeRegistroDeDomicilios = {
   async crear(tx, datos) {
     await tx.insert(domicilios).values(datos);
   },
@@ -112,6 +116,8 @@ export const repositorioDeDomiciliosSql: RepositorioDeDomicilios = {
   },
 
   registro: registroDeDomiciliosSql.registro,
+
+  contar: registroDeDomiciliosSql.contar,
 
   /**
    * Listado plano del municipio, con los nombres resueltos para la etiqueta

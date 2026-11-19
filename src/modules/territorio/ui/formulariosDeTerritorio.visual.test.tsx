@@ -81,12 +81,19 @@ describe("filtros del registro en movil", () => {
     <FiltrosDeDomicilios filtros={{} as FiltrosDeRegistro} raices={[]} />,
   );
 
-  it("bajo 640px los campos se apilan a ancho completo", () => {
+  /**
+   * S9 de `territorio-ux`: el numero dejo de tener caja propia -vive dentro
+   * de la misma busqueda, con la pista del ejemplo- y el asentamiento se
+   * pliega detras de «Filtros (N)».
+   */
+  it("bajo 640px la busqueda ocupa el ancho y el asentamiento se pliega", () => {
     expect(html).toMatch(
       /<form[^>]*class="[^"]*max-sm:flex-col[^"]*max-sm:items-stretch/,
     );
-    expect(html).toMatch(/id="q"[^>]*class="[^"]*w-full sm:w-64/);
-    expect(html).toMatch(/id="numero"[^>]*class="[^"]*w-full sm:w-32/);
+    expect(html).toMatch(/id="q"[^>]*class="[^"]*w-full/);
+    expect(html).not.toContain('id="numero"');
+    expect(html).toContain("<details");
+    expect(html).toMatch(/<summary[^>]*class="[^"]*sm:hidden/);
   });
 });
 

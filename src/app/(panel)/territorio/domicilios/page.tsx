@@ -63,11 +63,8 @@ export default async function PaginaDeDomicilios({ searchParams }: Props) {
 
   const { filtros, limite } = leerParametros(await searchParams);
   const raices = await listarRaices(contexto);
-  const { domicilios, hayMas } = await registroDeDomicilios(
-    filtros,
-    contexto,
-    limite ?? TAMANO_DE_PAGINA,
-  );
+  const { domicilios, hayMas, total, coincidencias } =
+    await registroDeDomicilios(filtros, contexto, limite ?? TAMANO_DE_PAGINA);
   const estado = estadoDeLista({
     total: domicilios.length,
     filtro: filtroVisible(filtros, raices),
@@ -94,6 +91,8 @@ export default async function PaginaDeDomicilios({ searchParams }: Props) {
         limite={limite}
         raices={opcionesDeLugares(raices)}
         puedeCrear={puedeEscribir(contexto.usuario.rol)}
+        total={total}
+        coincidencias={coincidencias}
       />
     </PaginaDePanel>
   );

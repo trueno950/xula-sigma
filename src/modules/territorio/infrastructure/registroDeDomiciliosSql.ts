@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import type {
   DomicilioDelRegistro,
-  RepositorioDeDomicilios,
+  FiltrosDeRegistro,
+  RepositorioDeRegistroDeDomicilios,
 } from "../application/puertosDeDomicilios";
 import { comoCalleId, comoDomicilioId, comoLugarId } from "../domain";
 import { condicionDeBusquedaPorPalabras } from "./busquedaPorPalabras";
@@ -19,6 +20,8 @@ type FilaDeRegistro = {
   raizId: string;
   raiz: string;
 };
+
+type FilaDeConteo = { total: number; coincidencias: number };
 
 const aDomicilioDelRegistro = (fila: FilaDeRegistro): DomicilioDelRegistro => ({
   ...fila,
@@ -39,57 +42,89 @@ const aDomicilioDelRegistro = (fila: FilaDeRegistro): DomicilioDelRegistro => ({
  * `padre3` son finitos y cubren una cadena corrupta de colonias
  * encadenadas, que ninguna columna de Postgres prohibe.
  */
-export const registroDeDomiciliosSql: Pick<
-  RepositorioDeDomicilios,
-  "registro"
-> = {
+const nombreDeRaizSql = sql`COALESCE(padre3.nombre, padre2.nombre, padre1.nombre, lug.nombre)`;
+
+const condicionesDe = (filtros: FiltrosDeRegistro) => ({
+  raiz: filtros.raizId
+    ? sql`AND dom.lugar_id IN (SELECT id FROM descendientes)`
+    : sql.empty(),
+  calleId: filtros.calleId
+    ? sql`AND dom.calle_id = ${filtros.calleId}`
+    : sql.empty(),
+  calle: filtros.calle
+    ? sql`AND ${textoDeBusquedaSql(sql`cal.nombre`)} LIKE ${textoDeBusquedaSql(
+        sql`${`%${escaparComodinesDeLike(filtros.calle)}%`}::text`,
+      )}`
+    : sql.empty(),
+  numero: filtros.numero
+    ? sql`AND dom.numero = ${filtros.numero}`
+    : sql.empty(),
+  busqueda: filtros.busqueda
+    ? sql`AND ${condicionDeBusquedaPorPalabras(filtros.busqueda, [
+        sql`cal.nombre`,
+        sql`dom.numero`,
+        sql`lug.nombre`,
+        nombreDeRaizSql,
+      ])}`
+    : sql.empty(),
+});
+
+/** Los tres `JOIN`/`LEFT JOIN` de los dos lectores: la calle, el lugar y su cadena de padres. */
+const desdeElDomicilio = sql`
+  FROM domicilios dom
+  JOIN calles cal ON cal.id = dom.calle_id
+  JOIN lugares lug ON lug.id = dom.lugar_id
+  LEFT JOIN lugares padre1 ON padre1.id = lug.padre_id
+  LEFT JOIN lugares padre2 ON padre2.id = padre1.padre_id
+  LEFT JOIN lugares padre3 ON padre3.id = padre2.padre_id`;
+
+const dondeVigentes = (filtros: FiltrosDeRegistro) => {
+  const condiciones = condicionesDe(filtros);
+
+  return sql`WHERE dom.baja_en IS NULL ${condiciones.raiz} ${condiciones.calleId} ${condiciones.calle} ${condiciones.numero} ${condiciones.busqueda}`;
+};
+
+const filaDeConteo = (conteo: FilaDeConteo | undefined): FilaDeConteo =>
+  conteo ?? { total: 0, coincidencias: 0 };
+
+export const registroDeDomiciliosSql: RepositorioDeRegistroDeDomicilios = {
   async registro(tx, opciones) {
     const { filtros, limite } = opciones;
-    const condicionDeRaiz = filtros.raizId
-      ? sql`AND dom.lugar_id IN (SELECT id FROM descendientes)`
-      : sql.empty();
-    const condicionDeCalleId = filtros.calleId
-      ? sql`AND dom.calle_id = ${filtros.calleId}`
-      : sql.empty();
-    const condicionDeCalle = filtros.calle
-      ? sql`AND ${textoDeBusquedaSql(sql`cal.nombre`)} LIKE ${textoDeBusquedaSql(
-          sql`${`%${escaparComodinesDeLike(filtros.calle)}%`}::text`,
-        )}`
-      : sql.empty();
-    const condicionDeNumero = filtros.numero
-      ? sql`AND dom.numero = ${filtros.numero}`
-      : sql.empty();
-    const nombreDeRaiz = sql`COALESCE(padre3.nombre, padre2.nombre, padre1.nombre, lug.nombre)`;
-    const condicionDeBusqueda = filtros.busqueda
-      ? sql`AND ${condicionDeBusquedaPorPalabras(filtros.busqueda, [
-          sql`cal.nombre`,
-          sql`dom.numero`,
-          sql`lug.nombre`,
-          nombreDeRaiz,
-        ])}`
-      : sql.empty();
     const filas = await tx.execute<FilaDeRegistro>(sql`
       ${cteDescendientes(filtros.raizId ?? null)}
       SELECT dom.id, cal.nombre AS calle, dom.calle_id AS "calleId",
              dom.numero, lug.nombre AS lugar, dom.lugar_id AS "lugarId",
              COALESCE(padre3.id, padre2.id, padre1.id, lug.id) AS "raizId",
-             ${nombreDeRaiz} AS raiz
-        FROM domicilios dom
-        JOIN calles cal ON cal.id = dom.calle_id
-        JOIN lugares lug ON lug.id = dom.lugar_id
-        LEFT JOIN lugares padre1 ON padre1.id = lug.padre_id
-        LEFT JOIN lugares padre2 ON padre2.id = padre1.padre_id
-        LEFT JOIN lugares padre3 ON padre3.id = padre2.padre_id
-       WHERE dom.baja_en IS NULL
-             ${condicionDeRaiz}
-             ${condicionDeCalleId}
-             ${condicionDeCalle}
-             ${condicionDeNumero}
-             ${condicionDeBusqueda}
+             ${nombreDeRaizSql} AS raiz
+       ${desdeElDomicilio}
+       ${dondeVigentes(filtros)}
        ORDER BY lug.nombre, cal.nombre, dom.numero, dom.id
        LIMIT ${limite}
     `);
 
     return filas.map(aDomicilioDelRegistro);
+  },
+
+  /**
+   * `coincidencias` cuenta bajo los mismos filtros que la pagina y `total`
+   * no: el «9» de «5 de 9» es el municipio entero, que no cambia con la
+   * busqueda. Un `COUNT` con `FILTER` y no dos consultas, para que los dos
+   * numeros sean la misma foto del municipio.
+   */
+  async contar(tx, filtros) {
+    const condiciones = condicionesDe(filtros);
+    const filas = await tx.execute<FilaDeConteo>(sql`
+      ${cteDescendientes(filtros.raizId ?? null)}
+      SELECT COUNT(*) FILTER (
+               WHERE TRUE ${condiciones.raiz} ${condiciones.calleId}
+                 ${condiciones.calle} ${condiciones.numero}
+                 ${condiciones.busqueda}
+             )::int AS coincidencias,
+             COUNT(*)::int AS total
+       ${desdeElDomicilio}
+       WHERE dom.baja_en IS NULL
+    `);
+
+    return filaDeConteo(filas[0]);
   },
 };

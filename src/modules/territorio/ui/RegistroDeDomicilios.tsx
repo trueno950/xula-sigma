@@ -1,14 +1,10 @@
 import { MapPin } from "@phosphor-icons/react/ssr";
 import {
   Aviso,
-  CeldaDeApoyo,
-  CeldaPrincipal,
-  ChipDeFiltro,
   type ColumnaDeTabla,
   EnlaceDeAccion,
   type EstadoDeLista,
   EstadoVacio,
-  FilaDeTabla,
   type OpcionDeLista,
   Tabla,
 } from "@/shared/ui";
@@ -16,16 +12,12 @@ import type {
   DomicilioDelRegistro,
   FiltrosDeRegistro,
 } from "../application/puertosDeDomicilios";
-import { calleYNumero, etiquetaDeDomicilio } from "../domain";
 import { avisoDePalabrasIgnoradas } from "../domain/busquedaPorPalabras";
+import { FilaDeDomicilio } from "./FilaDeDomicilio";
 import { FiltrosDeDomicilios } from "./FiltrosDeDomicilios";
-import { filtrosVisiblesDeDomicilios } from "./filtrosVisiblesDeDomicilios";
-import {
-  hrefDeDomicilioDelRegistro,
-  hrefDeVerMasDeDomicilios,
-  hrefSinFiltroDeDomicilios,
-} from "./hrefsDeDomicilios";
+import { hrefDeVerMasDeDomicilios } from "./hrefsDeDomicilios";
 import { BarraDeAcciones } from "./PanelDeAccion";
+import { PieDeDomicilios, ResumenDeDomicilios } from "./ResumenDeDomicilios";
 
 type Props = {
   domicilios: readonly DomicilioDelRegistro[];
@@ -36,26 +28,38 @@ type Props = {
   limite?: number | undefined;
   raices: readonly OpcionDeLista[];
   puedeCrear: boolean;
+  /** Domicilios del municipio sin filtros: el «de T» de la linea de conteo. */
+  total?: number | undefined;
+  /** Domicilios que dejan los filtros puestos: el «N» de la misma linea. */
+  coincidencias?: number | undefined;
 };
 
 const COLUMNAS: readonly ColumnaDeTabla[] = [
   { clave: "domicilio", etiqueta: "Domicilio", ancho: "minmax(0,2fr)" },
-  { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,1fr)" },
+  { clave: "lugar", etiqueta: "Asentamiento", ancho: "minmax(0,1fr)" },
 ];
 
+const ALTA = "/territorio?accion=domicilio";
+
+/** La accion primaria de la pantalla, con el permisos ya resuelto por la pagina. */
+const AltaDeDomicilio = () => (
+  <BarraDeAcciones>
+    <EnlaceDeAccion href={ALTA} variante="primaria">
+      <MapPin size={18} weight="bold" aria-hidden="true" />
+      Registrar domicilio
+    </EnlaceDeAccion>
+  </BarraDeAcciones>
+);
+
 /**
- * El registro plano de domicilios del municipio: busqueda por calle y
- * numero, filtro por asentamiento y paginacion por `?limite=`, las tres
- * secciones de `design.md` seccion 1. Cada fila abre el panel del
- * domicilio en su lugar; `hrefDeDomicilioDelRegistro` arma ese destino con
- * la raiz que trae la fila.
+ * El registro plano de domicilios del municipio, en la direccion de
+ * `design/territorio-domicilios/01-una-busqueda-con-pista.html`: una sola
+ * busqueda con pista (S9), la linea de conteo con sus chips y el pie (S10),
+ * y una fila por domicilio que abre su panel.
  *
- * La fila no arma su direccion a mano: `calleYNumero` es la misma que usa el
- * arbol, para que un domicilio se lea igual en las dos pantallas. La raiz
- * queda fuera porque la columna Lugar es lo unico que la fila muestra.
- *
- * El chip repite la consulta tal como se escribio, y debajo el registro dice
- * cuantas palabras quedaron fuera del tope de la busqueda.
+ * Los dos vacios siguen siendo distintos -lo resuelve `estadoDeLista`-: el de
+ * filtro conserva la linea de conteo y los chips para quitar lo que dejo la
+ * lista en cero, y el inicial ofrece cargar el primero.
  */
 export function RegistroDeDomicilios({
   domicilios,
@@ -65,10 +69,9 @@ export function RegistroDeDomicilios({
   limite,
   raices,
   puedeCrear,
+  total,
+  coincidencias,
 }: Props) {
-  const nombreDeRaiz = (id: string) =>
-    raices.find((raiz) => raiz.valor === id)?.etiqueta;
-  const chips = filtrosVisiblesDeDomicilios(filtros, nombreDeRaiz);
   const aviso = filtros.busqueda
     ? avisoDePalabrasIgnoradas(filtros.busqueda)
     : undefined;
@@ -76,76 +79,54 @@ export function RegistroDeDomicilios({
   return (
     <div className="flex flex-col gap-4">
       {puedeCrear && estado.clase !== "vacio-inicial" ? (
-        <BarraDeAcciones>
-          <EnlaceDeAccion
-            href="/territorio?accion=domicilio"
-            variante="primaria"
-          >
-            <MapPin size={18} weight="bold" aria-hidden="true" />
-            Registrar domicilio
-          </EnlaceDeAccion>
-        </BarraDeAcciones>
+        <AltaDeDomicilio />
       ) : null}
 
       <FiltrosDeDomicilios filtros={filtros} raices={raices} />
 
-      {chips.length > 0 ? (
-        <ul aria-label="Filtros aplicados" className="flex flex-wrap gap-2">
-          {chips.map((chip) => (
-            <li key={chip.clave}>
-              <ChipDeFiltro
-                etiqueta={chip.etiqueta}
-                hrefQuitar={hrefSinFiltroDeDomicilios(filtros, chip.clave)}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {aviso ? <Aviso tono="aviso">{aviso}</Aviso> : null}
-
-      {estado.clase !== "con-filas" ? (
+      {estado.clase === "vacio-inicial" ? (
         <EstadoVacio
           estado={estado}
           mensajeInicial="Todavía no hay domicilios registrados."
-          {...(puedeCrear
-            ? {
-                accion: (
-                  <EnlaceDeAccion
-                    href="/territorio?accion=domicilio"
-                    variante="primaria"
-                  >
-                    <MapPin size={18} weight="bold" aria-hidden="true" />
-                    Registrar domicilio
-                  </EnlaceDeAccion>
-                ),
-              }
-            : {})}
           hrefSinFiltro="/territorio/domicilios"
+          {...(puedeCrear ? { accion: <AltaDeDomicilio /> } : {})}
         />
       ) : (
-        <Tabla
-          etiqueta="Domicilios del municipio"
-          columnas={COLUMNAS}
-          {...(hayMas
-            ? { verMas: hrefDeVerMasDeDomicilios({ filtros, limite }) }
-            : {})}
-        >
-          {domicilios.map((domicilio) => (
-            <FilaDeTabla
-              key={domicilio.id}
-              href={hrefDeDomicilioDelRegistro(domicilio)}
-              etiquetaAccesible={etiquetaDeDomicilio({
-                calle: domicilio.calle,
-                numero: domicilio.numero,
-                lugar: domicilio.lugar,
-              })}
-            >
-              <CeldaPrincipal>{calleYNumero(domicilio)}</CeldaPrincipal>
-              <CeldaDeApoyo>{domicilio.lugar}</CeldaDeApoyo>
-            </FilaDeTabla>
-          ))}
-        </Tabla>
+        <>
+          <ResumenDeDomicilios
+            mostrados={domicilios.length}
+            total={total}
+            coincidencias={coincidencias}
+            filtros={filtros}
+            raices={raices}
+          />
+          {aviso ? <Aviso tono="aviso">{aviso}</Aviso> : null}
+          {estado.clase === "vacio-por-filtro" ? (
+            <EstadoVacio
+              estado={estado}
+              mensajeInicial=""
+              hrefSinFiltro="/territorio/domicilios"
+            />
+          ) : (
+            <>
+              <Tabla
+                etiqueta="Domicilios del municipio"
+                columnas={COLUMNAS}
+                {...(hayMas
+                  ? { verMas: hrefDeVerMasDeDomicilios({ filtros, limite }) }
+                  : {})}
+              >
+                {domicilios.map((domicilio) => (
+                  <FilaDeDomicilio key={domicilio.id} domicilio={domicilio} />
+                ))}
+              </Tabla>
+              <PieDeDomicilios
+                mostrados={domicilios.length}
+                coincidencias={coincidencias}
+              />
+            </>
+          )}
+        </>
       )}
     </div>
   );

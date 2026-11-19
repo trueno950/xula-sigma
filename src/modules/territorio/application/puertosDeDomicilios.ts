@@ -127,3 +127,29 @@ export type RepositorioDeDomicilios = {
   /** Solo para el select de `FormularioDeMudanza`; no es el registro plano paginado. */
   listar(tx: TransaccionTenant): Promise<readonly DomicilioParaListado[]>;
 };
+
+/**
+ * Cuantos domicilios hay: los del municipio entero y los que dejan los
+ * filtros puestos. Los dos numeros salen de la misma consulta y sin filtros
+ * valen lo mismo, que es lo que la pantalla necesita para decir «5 de 9».
+ */
+export type ConteoDeDomicilios = {
+  readonly total: number;
+  readonly coincidencias: number;
+};
+
+/**
+ * Lo que pide el registro plano y nada mas. Es un tipo propio y no un metodo
+ * mas de `RepositorioDeDomicilios` porque el conteo no lo usa ninguna otra
+ * lectura del modulo, y sumarlo alla obligaria a los dobles de prueba de
+ * alta, baja y mudanza a implementar un metodo que nunca invocan.
+ */
+export type RepositorioDeRegistroDeDomicilios = Pick<
+  RepositorioDeDomicilios,
+  "registro"
+> & {
+  contar(
+    tx: TransaccionTenant,
+    filtros: FiltrosDeRegistro,
+  ): Promise<ConteoDeDomicilios>;
+};

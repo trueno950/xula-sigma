@@ -34,6 +34,13 @@ const raiz = {
   bajaEn: null,
 };
 
+const sinDomicilios = {
+  domicilios: [],
+  hayMas: false,
+  total: 9,
+  coincidencias: 0,
+};
+
 const render = async (searchParams: Record<string, string> = {}) =>
   renderToStaticMarkup(
     await PaginaDeDomicilios({
@@ -57,6 +64,8 @@ beforeEach(() => {
       },
     ],
     hayMas: false,
+    total: 9,
+    coincidencias: 1,
   });
 });
 
@@ -69,10 +78,7 @@ describe("PaginaDeDomicilios", () => {
    * reintroduce el vacio inicial por otra puerta.
    */
   it("una raiz que no esta en el catalogo sigue siendo vacio por filtro", async () => {
-    mocks.registroDeDomicilios.mockResolvedValue({
-      domicilios: [],
-      hayMas: false,
-    });
+    mocks.registroDeDomicilios.mockResolvedValue(sinDomicilios);
 
     const html = await render({
       raiz: "99999999-9999-4999-8999-999999999999",
@@ -88,10 +94,7 @@ describe("PaginaDeDomicilios", () => {
    * texto escrito.
    */
   it("un asentamiento sin domicilios es vacio por filtro, no vacio inicial", async () => {
-    mocks.registroDeDomicilios.mockResolvedValue({
-      domicilios: [],
-      hayMas: false,
-    });
+    mocks.registroDeDomicilios.mockResolvedValue(sinDomicilios);
 
     const html = await render({ raiz: raiz.id });
 
@@ -139,19 +142,19 @@ describe("PaginaDeDomicilios", () => {
   });
 
   /**
-   * Hallazgo 11: el campo principal busca por calle y numero juntos; un
+   * S9 de `territorio-ux`: el campo principal se rotula «Calle y número» y
+   * lleva la pista del ejemplo; el numero dejo de tener caja propia. Un
    * enlace viejo con `?q=` sigue abriendo, ahora con la busqueda general.
    */
   it("el campo principal se rotula para calle y numero, con su chip de busqueda", async () => {
     const html = await render({ q: "Calle 22 265" });
 
-    expect(html).toMatch(
-      /<label[^>]*for="q"[^>]*>Buscar domicilio \(calle y número\)<\/label>/,
-    );
+    expect(html).toMatch(/<label[^>]*for="q"[^>]*>Calle y número<\/label>/);
     expect(html).toMatch(/<input[^>]*name="q"[^>]*value="Calle 22 265"/);
+    expect(html).toContain('placeholder="Calle 20 101"');
     expect(html).toContain("Búsqueda: Calle 22 265");
     expect(html).not.toContain("Calle: Calle 22 265");
-    expect(html).toMatch(/<label[^>]*for="numero"[^>]*>Número<\/label>/);
+    expect(html).not.toContain('for="numero"');
   });
 
   it("avisa en la pantalla cuantas palabras quedaron fuera del tope de la busqueda", async () => {
