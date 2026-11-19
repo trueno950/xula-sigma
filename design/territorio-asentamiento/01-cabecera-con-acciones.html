@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Cabecera con acciones — Asentamiento</title>
+<style>
+  :root {
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, p, ul, ol, li, dl, dd, dt { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+  code { font-family: var(--fuente-dato); font-size: .875rem; }
+
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .enlace:hover { text-decoration-thickness: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+  /* ================= shell ================= */
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); overflow-y: auto; }
+  .municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2; color: var(--color-caliza-tinta); text-decoration: none; }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--radio-md); font-weight: 600; font-size: 15px; color: var(--color-caliza-apagada); text-decoration: none; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radio-md); background: transparent; color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer; transition: color 150ms var(--ease), background-color 150ms var(--ease); }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  /* ================= botones, insignias, campos ================= */
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: var(--radio-md); border: 1px solid transparent; font: 600 15px/1.2 var(--fuente); cursor: pointer; text-decoration: none; text-align: center; transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease); }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .boton.peligro { background: var(--color-caliza-lienzo); color: var(--color-senial-error); border-color: var(--color-senial-error); }
+  .boton.peligro:hover { background: var(--color-senial-error-suave); }
+  .ancho { width: 100%; }
+
+  .insignia { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--radio-pill); font-size: 13px; font-weight: 500; }
+  .insignia svg { width: 14px; height: 14px; }
+  .insignia.neutro { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+  .insignia.exito { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .insignia.aviso { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+
+  .campo { display: flex; flex-direction: column; gap: 6px; }
+  .campo input, .campo select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); font: 400 15px/1.5 var(--fuente); }
+  .campo .ayuda { font-size: 13px; line-height: 1.4; color: var(--color-caliza-apagada); }
+
+  .aviso { display: flex; gap: 8px; padding: 12px; border-radius: var(--radio-md); background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .aviso svg { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+  .aviso p { font-size: .9375rem; line-height: 1.45; }
+
+  .tarjeta { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); padding: 20px; }
+
+  /* ================= contenido ================= */
+  .contenido { min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 24px; }
+  .migaja { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; color: var(--color-caliza-apagada); }
+  .migaja a { color: var(--color-caliza-apagada); text-decoration: none; border-bottom: 1px solid transparent; }
+  .migaja a:hover { color: var(--color-caliza-tinta); border-bottom-color: var(--color-caliza-borde); }
+  .migaja [aria-current="page"] { color: var(--color-caliza-apagada); }
+
+  /* cabecera del asentamiento */
+  .cabecera-lugar { display: flex; flex-direction: column; gap: 16px; }
+  .fila-titulo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+  .linea-resumen { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+  .linea-resumen .punto { color: var(--color-caliza-apagada); }
+
+  .barra-acciones { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; padding-top: 16px; border-top: 1px solid var(--color-caliza-divisor); }
+  .barra-acciones form { margin: 0; }
+
+  /* ================= acordeón ================= */
+  .accion { border: 0; background: transparent; flex: 0 1 auto; }
+  .accion[open] { flex-basis: 100%; }
+  .accion-peligro { border: 0; background: transparent; flex: 0 1 auto; margin-left: auto; }
+  .accion-peligro[open] { flex-basis: 100%; margin-left: 0; }
+  .accion > summary, .accion-peligro > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo); cursor: pointer; list-style: none; font: 600 15px/1.3 var(--fuente); color: var(--color-caliza-tinta); transition: background-color 150ms var(--ease), border-color 150ms var(--ease); }
+  .accion > summary::-webkit-details-marker, .accion-peligro > summary::-webkit-details-marker { display: none; }
+  .accion > summary:hover, .accion[open] > summary { background: var(--color-caliza-superficie); }
+  .accion > summary .chevron, .accion-peligro > summary .chevron { color: var(--color-caliza-apagada); transition: rotate 150ms var(--ease); }
+  .accion[open] > summary .chevron, .accion-peligro[open] > summary .chevron { rotate: 180deg; }
+  .accion-peligro > summary { border-color: var(--color-senial-error); color: var(--color-senial-error); }
+  .accion-peligro > summary:hover, .accion-peligro[open] > summary { background: var(--color-senial-error-suave); }
+  .accion-peligro > summary .chevron { color: var(--color-senial-error); }
+  .accion .cuerpo-accion, .accion-peligro .cuerpo-accion { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; padding: 16px; border-radius: var(--radio-md); background: var(--color-caliza-superficie); }
+  .cuerpo-accion .nota-accion { font-size: .9375rem; line-height: 1.45; }
+  .fila-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  /* ================= pestañas de URL ================= */
+  .pestanas { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--color-caliza-divisor); }
+  .pestanas a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; margin-bottom: -1px; border-bottom: 2px solid transparent; text-decoration: none; font: 600 15px/1.2 var(--fuente); color: var(--color-caliza-apagada); transition: color 150ms var(--ease), border-color 150ms var(--ease); }
+  .pestanas a:hover { color: var(--color-caliza-tinta); }
+  .pestanas a[aria-current="page"] { color: var(--color-caliza-tinta); border-bottom-color: var(--color-caliza-tinta); }
+  .pestanas .cuenta { font: 500 13px/1 var(--fuente-dato); color: var(--color-caliza-apagada); }
+
+  .panel { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; }
+  .barra-pestana { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+  /* buscador y conteo */
+  .buscador { display: flex; flex-direction: column; gap: 6px; max-width: 440px; }
+  .fila-buscar { display: flex; gap: 8px; }
+  .con-icono { position: relative; flex: 1; }
+  .con-icono svg { position: absolute; left: 12px; top: 13px; color: var(--color-caliza-apagada); }
+  .con-icono input { width: 100%; min-height: 44px; padding: 10px 12px 10px 38px; border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); font: 400 15px/1.5 var(--fuente); }
+  .barra-resultado { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .barra-resultado .resultado { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .cifra { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--radio-pill); background: var(--color-marca-suave); color: var(--color-caliza-tinta); font-size: 13px; font-weight: 500; text-decoration: none; }
+  .chip:hover { background: var(--color-caliza-relleno); }
+
+  /* tabla */
+  .tabla { width: 100%; border-collapse: collapse; }
+  .tabla thead th { height: 40px; padding: 0 16px; background: var(--color-caliza-superficie); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-align: left; white-space: nowrap; }
+  .tabla tbody td { height: 48px; padding: 0 16px; border-top: 1px solid var(--color-caliza-divisor); vertical-align: middle; }
+  .tabla tbody tr { transition: background-color 150ms var(--ease); }
+  .tabla tbody tr:hover { background: var(--color-caliza-superficie); }
+  .tabla .col-zona { width: 220px; }
+  .tabla .col-cuenta { width: 140px; }
+  .tabla .col-ubicacion { width: 150px; }
+  .tabla .col-abrir { width: 44px; }
+  .tabla td.col-abrir { padding: 0 8px 0 4px; }
+  .tabla td.col-abrir svg { color: var(--color-caliza-apagada); }
+  .tabla .nombre { font-weight: 600; }
+  .sin-dato { font-size: 15px; color: var(--color-caliza-apagada); }
+  .tabla tr.fila-suave td { background: var(--color-caliza-superficie); }
+
+  /* ================= hoja de notas ================= */
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+  .nota { padding: 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+  .muestra { padding: 14px; border-radius: var(--radio-md); background: var(--color-caliza-superficie); }
+  .muestra + .muestra { margin-top: 12px; }
+  .muestra .pila { display: flex; flex-direction: column; gap: 10px; }
+  .muestra .fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  .especimen { padding: 0; overflow: clip; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .especimen-titulo { padding: 16px 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .especimen .lista-filas li { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 20px; border-top: 1px solid var(--color-caliza-divisor); }
+  .especimen .lista-filas li > .crece { flex: 1; min-width: 0; }
+  .especimen .lista-filas .meta { display: block; font-size: 13px; color: var(--color-caliza-apagada); }
+  .especimen .lista-filas li.fila-suave { background: var(--color-caliza-superficie); }
+  .estado-vacio { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px 24px; text-align: center; }
+  .estado-vacio p { max-width: 46ch; }
+
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono { width: 390px; height: 844px; overflow-y: auto; position: relative; display: flex; flex-direction: column; border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo); box-shadow: var(--sombra-reposo); }
+  .m-municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor); font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none; }
+  .m-cuerpo { flex: 1; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .m-titulo { font-size: 1.4rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .m-cabecera { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .m-cabecera .barra-acciones { padding-top: 12px; }
+  .m-cabecera .accion, .m-cabecera .accion-peligro { flex-basis: 100%; margin-left: 0; }
+  .m-cabecera .accion > summary, .m-cabecera .accion-peligro > summary { justify-content: space-between; }
+  .m-pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--color-caliza-divisor); overflow-x: auto; }
+  .m-pestanas a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; margin-bottom: -1px; border-bottom: 2px solid transparent; text-decoration: none; white-space: nowrap; font: 600 15px/1.2 var(--fuente); color: var(--color-caliza-apagada); }
+  .m-pestanas a[aria-current="page"] { color: var(--color-caliza-tinta); border-bottom-color: var(--color-caliza-tinta); }
+  .m-pestanas .cuenta { font: 500 13px/1 var(--fuente-dato); }
+  .m-filas li { border-top: 1px solid var(--color-caliza-divisor); }
+  .m-filas li:first-child { border-top: 0; }
+  .m-filas a { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 16px; text-decoration: none; }
+  .m-filas a > .crece { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .m-filas .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .m-nav { position: sticky; bottom: 0; margin-top: auto; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); }
+  .m-nav a { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none; }
+  .m-nav a[aria-current="true"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="true"] svg { color: var(--color-marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-padron" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4zm7.5-9.7a4 4 0 0 1 0 7.4 6 6 0 0 0 0-7.4zM18 13c2.2.6 4 2.1 4 4v3h-5v-3c0-1.6-.7-3-1.9-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--color-marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--color-marca-texto)" opacity=".85"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M12 15.5 5.5 9l1.5-1.5 5 5 5-5L18.5 9z"/></symbol>
+    <symbol id="i-suma" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+    <symbol id="i-buscar" viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 1 0 4.6 13.4l4.3 4.3 1.4-1.4-4.3-4.3A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"/></symbol>
+    <symbol id="i-derecha" viewBox="0 0 24 24"><path d="M9 6.5 10.5 5l7 7-7 7L9 17.5l5.5-5.5z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="si-aviso" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <!-- ============ lateral ============ -->
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-padron"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Admin municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- ============ contenido ============ -->
+  <main class="contenido">
+    <nav class="migaja" aria-label="Ruta">
+      <a href="#">Territorio</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Buenavista</span>
+    </nav>
+
+    <header class="tarjeta cabecera-lugar">
+      <div class="fila-titulo">
+        <h1 class="display">Buenavista</h1>
+        <span class="insignia neutro">Cabecera</span>
+      </div>
+
+      <div class="linea-resumen">
+        <span class="label">3 colonias</span>
+        <span class="punto" aria-hidden="true">·</span>
+        <span class="label">6 calles</span>
+        <span class="punto" aria-hidden="true">·</span>
+        <span class="label">9 domicilios</span>
+      </div>
+
+      <div class="barra-acciones">
+        <details class="accion" name="acciones-de-lugar">
+          <summary>Renombrar…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+          <form class="cuerpo-accion" action="#" method="post">
+            <input type="hidden" name="raiz" value="b1">
+            <input type="hidden" name="nodo" value="b1">
+            <input type="hidden" name="accion" value="renombrar">
+            <div class="campo">
+              <label class="label" for="b-nombre-lugar">Nombre nuevo</label>
+              <input id="b-nombre-lugar" name="nombre" value="Buenavista" autocomplete="off" required>
+              <span class="ayuda">Se corrige el nombre del asentamiento para todo el municipio: las direcciones que cuelgan de él no cambian.</span>
+            </div>
+            <div class="fila-acciones">
+              <button class="boton secundaria" type="submit">Renombrar</button>
+              <button class="boton-fantasma" type="button">Cancelar</button>
+            </div>
+          </form>
+        </details>
+
+        <details class="accion-peligro" name="acciones-de-lugar">
+          <summary>Dar de baja…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+          <form class="cuerpo-accion" action="#" method="post">
+            <input type="hidden" name="raiz" value="b1">
+            <input type="hidden" name="nodo" value="b1">
+            <input type="hidden" name="accion" value="baja">
+            <p class="nota-accion">Buenavista deja de aparecer en el registro. Si todavía tiene colonias, calles o domicilios, la baja se rechaza y la pantalla dice cuántos son.</p>
+            <div class="fila-acciones">
+              <button class="boton peligro" type="submit">Dar de baja Buenavista</button>
+              <button class="boton-fantasma" type="button">Cancelar</button>
+            </div>
+          </form>
+        </details>
+      </div>
+    </header>
+
+    <section aria-labelledby="t-pestanas">
+      <h2 class="sr-only" id="t-pestanas">Contenido de Buenavista</h2>
+      <nav class="pestanas" aria-label="Contenido del lugar">
+        <a href="#">Colonias <span class="cuenta">3</span></a>
+        <a href="#" aria-current="page">Calles <span class="cuenta">6</span></a>
+        <a href="#">Domicilios <span class="cuenta">9</span></a>
+      </nav>
+
+      <div class="panel">
+        <div class="barra-pestana">
+          <a class="boton primaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Agregar calle</a>
+        </div>
+
+        <form class="buscador" action="#" method="get" role="search" aria-label="Buscar calles de Buenavista">
+          <label class="label" for="q-calle">Buscar calle</label>
+          <div class="fila-buscar">
+            <div class="con-icono">
+              <svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-buscar"/></svg>
+              <input id="q-calle" name="q" type="search" value="">
+            </div>
+            <button class="boton secundaria" type="submit">Buscar</button>
+          </div>
+          <p class="ayuda label">Nombre de la calle. No distingue acentos.</p>
+        </form>
+
+        <div class="barra-resultado">
+          <p class="resultado body">
+            <span><span class="cifra">6</span> calles</span>
+            <span class="apagada" aria-hidden="true">·</span>
+            <span class="label">3 ubicadas en Sector Norte, 3 sin zona</span>
+          </p>
+        </div>
+
+        <section class="tarjeta" style="padding:0;overflow:clip" aria-labelledby="t-calles">
+          <h3 class="sr-only" id="t-calles">Calles de Buenavista</h3>
+          <table class="tabla">
+            <caption class="sr-only">6 calles en Buenavista, con su zona y cuántos domicilios tiene cada una.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Calle</th>
+                <th class="col-zona" scope="col">Zona</th>
+                <th class="col-cuenta" scope="col">Domicilios</th>
+                <th class="col-ubicacion" scope="col">Ubicación</th>
+                <th class="col-abrir" scope="col"><span class="sr-only">Abrir la calle</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a class="enlace nombre" href="#">Calle 20 de la Colonia</a></td>
+                <td>Sector Norte</td>
+                <td class="dato">2</td>
+                <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span></td>
+                <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+              </tr>
+              <tr>
+                <td><a class="enlace nombre" href="#">Calle 20</a></td>
+                <td>Sector Norte</td>
+                <td class="dato">2</td>
+                <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span></td>
+                <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+              </tr>
+              <tr>
+                <td><a class="enlace nombre" href="#">Calle 22</a></td>
+                <td>Sector Norte</td>
+                <td class="dato">2</td>
+                <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span></td>
+                <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+              </tr>
+              <tr>
+                <td><a class="enlace nombre" href="#">Calle 24</a></td>
+                <td><span class="sin-dato">Sin zona</span></td>
+                <td class="dato">1</td>
+                <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span></td>
+                <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+              </tr>
+              <tr>
+                <td><a class="enlace nombre" href="#">Calle 15</a></td>
+                <td><span class="sin-dato">Sin zona</span></td>
+                <td class="dato">1</td>
+                <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span></td>
+                <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+              </tr>
+              <tr>
+                <td><a class="enlace nombre" href="#">Camino a Sisal</a></td>
+                <td><span class="sin-dato">Sin zona</span></td>
+                <td class="dato">1</td>
+                <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span></td>
+                <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= notas del artboard ================= -->
+<section class="hoja" aria-labelledby="t-notas">
+  <div class="hoja-inner">
+    <div>
+      <h2 class="headline" id="t-notas">01 · Cabecera con acciones</h2>
+      <p class="body apagada" style="max-width:70ch">Una sola columna de 1200&nbsp;px. El asentamiento se lee arriba: nombre, tipo y cuánto tiene adentro; debajo, la barra de lo que le pasa a él —renombrar y dar de baja, sin pestaña «Editar»— y las tres pestañas de lo que tiene adentro, con su cuenta.</p>
+    </div>
+
+    <div class="notas">
+      <div class="nota">
+        <h3 class="title">Compromiso (tradeoff)</h3>
+        <p class="body apagada" style="margin:8px 0 0">Gana comparación: seis calles con su zona y sus domicilios en columnas fijas, y las acciones destructivas siempre a la vista sin ocupar una pestaña. Cuesta que la tabla gaste 220&nbsp;px en la zona y 140 en el conteo —en el teléfono esas dos columnas tienen que volverse dos renglones de la fila— y que en 1440 el cuerpo de una acción abierta empuje la lista hacia abajo.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S3-S6, S8)</h3>
+        <ul class="body">
+          <li><strong>S3 · «Editar» deja de ser pestaña.</strong> «Renombrar…» y «Dar de baja…» viven en la cabecera como <code>&lt;details name&gt;</code> exclusivos, cada uno su <code>&lt;form&gt;</code> nativo. La baja va al final, con contorno rojo, y dice el nombre del lugar.</li>
+          <li><strong>S4 · el conteo de la búsqueda.</strong> La línea sobre la tabla dice «6 calles» y, con filtro, «2 calles para «20»» más el chip que lo quita; la pestaña sigue diciendo 6 porque 6 es el total del asentamiento.</li>
+          <li><strong>S5 · los domicilios sin colonia.</strong> En Colonias, una fila propia —«Sin colonia · 3 domicilios»— cierra la suma: 6 en Colonia Centro más 3 en la cabecera son los 9 de la pestaña Domicilios.</li>
+          <li><strong>S6 · colonias vacías.</strong> El <code>EstadoVacio</code> inicial ofrece «Agregar colonia» en vez de una frase suelta.</li>
+          <li><strong>S8 · qué más se sabe de una calle.</strong> Zona y domicilios como columnas, con «Sin zona» en texto y no en blanco.</li>
+          <li><strong>S14 · lo que no se toca.</strong> Las pestañas siguen siendo enlaces de URL, los formularios son POST nativos de <code>&lt;form action&gt;</code> sin JavaScript, y el 404 y los permisos quedan donde están.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="notas">
+      <div class="especimen">
+        <div class="especimen-titulo">
+          <p class="label">Pestaña Colonias · S5</p>
+          <h3 class="title">La fila de los domicilios sin colonia</h3>
+          <p class="body apagada">Buenavista · 3 colonias: 6 domicilios en colonias y 3 directo en la cabecera. La fila sombreada es un enlace a Domicilios con el filtro puesto, no un renglón de adorno.</p>
+        </div>
+        <ul class="lista-filas">
+          <li>
+            <span class="crece"><a class="enlace title" href="#">Colonia Centro</a></span>
+            <span class="dato">6 domicilios</span>
+            <svg width="18" height="18" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-derecha"/></svg>
+          </li>
+          <li>
+            <span class="crece"><a class="enlace title" href="#">Colonia San Juan</a></span>
+            <span class="dato apagada">0 domicilios</span>
+            <svg width="18" height="18" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-derecha"/></svg>
+          </li>
+          <li>
+            <span class="crece"><a class="enlace title" href="#">Colonia Santa Cruz</a></span>
+            <span class="dato apagada">0 domicilios</span>
+            <svg width="18" height="18" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-derecha"/></svg>
+          </li>
+          <li class="fila-suave">
+            <span class="crece">
+              <a class="enlace title" href="#">Sin colonia</a>
+              <span class="meta">Domicilios registrados directo en la cabecera</span>
+            </span>
+            <span class="dato">3 domicilios</span>
+            <svg width="18" height="18" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-derecha"/></svg>
+          </li>
+        </ul>
+      </div>
+
+      <div class="especimen">
+        <div class="especimen-titulo">
+          <p class="label">Pestaña Colonias sin colonias · S6</p>
+          <h3 class="title">Vacío inicial, no de filtro</h3>
+          <p class="body apagada">Dice qué es la pantalla y ofrece llenarla, en vez de una frase suelta sin acción.</p>
+        </div>
+        <div class="estado-vacio">
+          <svg width="40" height="40" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-territorio"/></svg>
+          <p class="title">Buenavista todavía no tiene colonias</p>
+          <p class="body apagada">Las calles y los domicilios funcionan sin ellas: se registran directo en la cabecera. Agregue una colonia cuando el municipio la reconozca.</p>
+          <a class="boton primaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Agregar colonia</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="notas">
+      <div class="nota">
+        <h3 class="title">En una colonia la barra suma «Mover a otro asentamiento…» (S3)</h3>
+        <p class="body apagada" style="margin:8px 0 12px">Se ofrece solo cuando el tipo del lugar puede colgar de otro: una cabecera o una comisaría son raíz por construcción, y ahí la barra tiene dos acciones, no tres. El destino lo filtra el servidor por <code>puedeContener</code>; los tres pliegues comparten <code>name</code> y «Dar de baja» sigue al final.</p>
+        <div class="muestra">
+          <div class="barra-acciones" style="border-top:0;padding-top:0">
+            <details class="accion" name="acciones-de-colonia">
+              <summary>Renombrar…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            </details>
+            <details class="accion" name="acciones-de-colonia" open>
+              <summary>Mover a otro asentamiento…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+              <form class="cuerpo-accion" action="#" method="post">
+                <input type="hidden" name="raiz" value="b1">
+                <input type="hidden" name="nodo" value="c3">
+                <input type="hidden" name="accion" value="reparentear">
+                <div class="campo">
+                  <label class="label" for="b-nuevo-padre">Asentamiento nuevo</label>
+                  <select id="b-nuevo-padre" name="padre">
+                    <option value="">Elija el asentamiento</option>
+                    <option value="b2">Comisaría de Kambul</option>
+                  </select>
+                  <span class="ayuda">La colonia se mueve con sus domicilios. «Buenavista» queda como estaba.</span>
+                </div>
+                <button class="boton secundaria" type="submit">Mover a otro asentamiento</button>
+              </form>
+            </details>
+            <details class="accion-peligro" name="acciones-de-colonia">
+              <summary>Dar de baja…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <div class="nota">
+        <h3 class="title">Comisaría · sin calles cargadas</h3>
+        <p class="body apagada" style="margin:8px 0 12px">Una comisaría tiene pestaña Calles —el catálogo depende del tipo, no de que hoy esté lleno—, pero vacía hay que decirlo con el aviso de aviso y ofrecer el alta. La pestaña Calles aparece con 0, así que el 0 es dato y no un silencio.</p>
+        <div class="muestra">
+          <div class="pila">
+            <div class="fila">
+              <p class="title">Comisaría de Kambul</p>
+              <span class="insignia neutro">Comisaría</span>
+            </div>
+            <div class="pestanas" style="border-bottom:1px solid var(--color-caliza-divisor)">
+              <a href="#">Colonias <span class="cuenta">1</span></a>
+              <a href="#" aria-current="page">Calles <span class="cuenta">0</span></a>
+              <a href="#">Domicilios <span class="cuenta">2</span></a>
+            </div>
+            <div class="aviso" role="status">
+              <svg fill="currentColor" aria-hidden="true"><use href="#si-aviso"/></svg>
+              <p>Sin calles. Los domicilios de esta comisaría se registran sin calle hasta que se cargue la primera.</p>
+            </div>
+            <a class="boton primaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Agregar calle</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- móvil -->
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada" style="max-width:70ch">Mismo orden: cabecera con tipo y resumen, acciones del asentamiento en la cabecera, pestañas en una fila, buscador con botón y el conteo con su chip. Aquí con la búsqueda puesta en «20» para ver el caso de S4: la pestaña Calles sigue diciendo 6, la línea dice 2 y el cuerpo no queda debajo de la barra fija.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <nav class="migaja" aria-label="Ruta">
+            <a href="#">Territorio</a>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">Buenavista</span>
+          </nav>
+
+          <header class="tarjeta m-cabecera">
+            <div class="fila-titulo">
+              <p class="m-titulo">Buenavista</p>
+              <span class="insignia neutro">Cabecera</span>
+            </div>
+            <p class="label">3 colonias · 6 calles · 9 domicilios</p>
+            <div class="barra-acciones">
+              <details class="accion" name="acciones-de-lugar-movil">
+                <summary>Renombrar…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <form class="cuerpo-accion" action="#" method="post">
+                  <div class="campo">
+                    <label class="label" for="m-b-nombre-lugar">Nombre nuevo</label>
+                    <input id="m-b-nombre-lugar" value="Buenavista" autocomplete="off">
+                  </div>
+                  <button class="boton secundaria ancho" type="submit">Renombrar</button>
+                </form>
+              </details>
+              <details class="accion-peligro" name="acciones-de-lugar-movil">
+                <summary>Dar de baja…<svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <form class="cuerpo-accion" action="#" method="post">
+                  <p class="body">Buenavista deja de aparecer en el registro. Si todavía tiene colonias, calles o domicilios, la baja se rechaza.</p>
+                  <button class="boton peligro ancho" type="submit">Dar de baja Buenavista</button>
+                </form>
+              </details>
+            </div>
+          </header>
+
+          <nav class="m-pestanas" aria-label="Contenido del lugar">
+            <a href="#">Colonias <span class="cuenta">3</span></a>
+            <a href="#" aria-current="page">Calles <span class="cuenta">6</span></a>
+            <a href="#">Domicilios <span class="cuenta">9</span></a>
+          </nav>
+
+          <a class="boton primaria ancho" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Agregar calle</a>
+
+          <form class="buscador" action="#" method="get" role="search" aria-label="Buscar calles de Buenavista" style="max-width:none">
+            <label class="label" for="m-q-calle">Buscar calle</label>
+            <div class="fila-buscar">
+              <div class="con-icono">
+                <svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-buscar"/></svg>
+                <input id="m-q-calle" name="q" type="search" value="20">
+              </div>
+              <button class="boton secundaria" type="submit">Buscar</button>
+            </div>
+          </form>
+
+          <div class="barra-resultado">
+            <p class="resultado body"><span><span class="cifra">2</span> calles para «20»</span></p>
+            <a class="chip" href="#"><span aria-hidden="true">×</span>20<span class="sr-only">Quitar filtro: búsqueda «20»</span></a>
+          </div>
+
+          <div class="tarjeta" style="padding:0;overflow:clip">
+            <ul class="m-filas">
+              <li>
+                <a href="#">
+                  <span class="crece">
+                    <span class="title">Calle 20 de la Colonia</span>
+                    <span class="meta">
+                      <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span>
+                      <span class="label">Sector Norte · 2 domicilios</span>
+                    </span>
+                  </span>
+                  <svg width="18" height="18" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-derecha"/></svg>
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <span class="crece">
+                    <span class="title">Calle 20</span>
+                    <span class="meta">
+                      <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Ubicada</span>
+                      <span class="label">Sector Norte · 2 domicilios</span>
+                    </span>
+                  </span>
+                  <svg width="18" height="18" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-derecha"/></svg>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-padron"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a>
+          <a href="#" aria-current="true"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-mas"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
