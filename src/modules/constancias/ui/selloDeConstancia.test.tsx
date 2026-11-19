@@ -33,6 +33,16 @@ describe("SelloDeConstancia", () => {
     expect(html).toContain("Motivo: Error de captura");
   });
 
+  /**
+   * El usuario lo pidio al revisar el detalle: «no me gusto que quedo de lado
+   * el estatus». El sello se lee derecho, sin giro.
+   */
+  it("el sello va derecho, sin girar", () => {
+    const html = renderToStaticMarkup(<SelloDeConstancia estado="VIGENTE" />);
+
+    expect(html).not.toMatch(/rotate/);
+  });
+
   /** El codigo del catalogo cerrado no se le enseña a la operadora. */
   it("no muestra el codigo del motivo", () => {
     const html = renderToStaticMarkup(

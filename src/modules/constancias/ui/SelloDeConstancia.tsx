@@ -31,9 +31,8 @@ const PRESENTACION = {
  * tambien como insignia junto al folio.
  *
  * La palabra va escrita, no solo el color: el sello se entiende sin
- * distinguir tonos. El giro de tres grados es lo que lo lee como marca
- * puesta sobre el papel y no como un dato de sistema; no anima nada, asi que
- * `prefers-reduced-motion` no tiene que apagarlo.
+ * distinguir tonos. Va derecho, sin giro:
+ * `selloDeConstancia.test.tsx` dice por que.
  *
  * En una hoja cancelada la fecha y el motivo acompanan al sello: el
  * documento tiene que explicarse solo, y el motivo se muestra con su
@@ -49,7 +48,7 @@ export function SelloDeConstancia({
   return (
     <div className="flex flex-col items-start gap-1.5">
       <span
-        className={`inline-flex -rotate-3 items-center gap-2 rounded-sm border-2 px-3.5 py-2.5 text-[15px] leading-tight font-[650] tracking-[0.02em] ${clases}`}
+        className={`inline-flex items-center gap-2 rounded-sm border-2 px-3.5 py-2.5 text-[15px] leading-tight font-[650] tracking-[0.02em] ${clases}`}
       >
         <Icono size={18} weight="bold" aria-hidden="true" />
         {ETIQUETA_DE_ESTADO_DE_CONSTANCIA[estado]}
