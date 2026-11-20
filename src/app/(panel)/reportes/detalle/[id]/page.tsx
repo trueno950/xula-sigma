@@ -4,7 +4,11 @@ import type { ReactNode } from "react";
 import { z } from "zod";
 import {
   ETIQUETA_DE_TIPO_DE_INTERVENCION,
+  type ObraDeReporte,
+  obraConfirmada,
+  obrasDeReporte,
   ProgramarObra,
+  ProgramarObraConfirmacion,
   TIPOS_DE_INTERVENCION,
 } from "@/modules/intervenciones";
 import {
@@ -41,7 +45,10 @@ type Props = {
 };
 
 const esquemaDeId = z.string().uuid();
-const esquemaDeParametros = z.object({ error: z.string().optional() });
+const esquemaDeParametros = z.object({
+  error: z.string().optional(),
+  obra: z.string().uuid().optional(),
+});
 
 const OPCIONES_DE_OBRA = opcionesEtiquetadas(
   TIPOS_DE_INTERVENCION,
@@ -68,6 +75,7 @@ const atrasoDe = async (
 const accionesDe = (
   reporte: ReporteDeDetalle,
   puedeAdministrar: boolean,
+  obras: readonly ObraDeReporte[],
 ): ReactNode => {
   if (!puedeAdministrar) {
     return (
@@ -89,12 +97,26 @@ const accionesDe = (
           <ProgramarObra
             reporteId={reporte.id}
             tipos={OPCIONES_DE_OBRA}
+            obras={obras}
             embebido
           />
         }
       />
     </PanelDeAcciones>
   );
+};
+
+/**
+ * El aviso de exito de S16: el `?obra=` de la URL solo se pinta si esa obra
+ * esta entre las que se leyeron bajo RLS para este reporte. Un id inventado,
+ * de otro municipio o de otro reporte no produce enlace, sin error ni 404.
+ */
+const confirmacionDe = (
+  pedida: string | undefined,
+  obras: readonly ObraDeReporte[],
+): ReactNode => {
+  const obra = obraConfirmada(pedida, obras);
+  return obra ? <ProgramarObraConfirmacion obra={obra} /> : null;
 };
 
 /**
@@ -139,9 +161,13 @@ export default async function PaginaDeDetalleDeReporte({
   const error = analisisDeParametros.success
     ? analisisDeParametros.data.error
     : undefined;
-  const [historial, atraso] = await Promise.all([
+  const obraPedida = analisisDeParametros.success
+    ? analisisDeParametros.data.obra
+    : undefined;
+  const [historial, atraso, obras] = await Promise.all([
     historialDeReporte(reporte.id, contexto),
     atrasoDe(reporte, contexto),
+    obrasDeReporte(reporte.id, contexto),
   ]);
   const puedeAdministrar = puedeAdministrarReportes(contexto.usuario.rol);
 
@@ -161,12 +187,13 @@ export default async function PaginaDeDetalleDeReporte({
       }
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
+      {confirmacionDe(obraPedida, obras)}
 
       <DetalleDeReporte
         reporte={reporte}
         historial={historial}
         atraso={atraso}
-        acciones={accionesDe(reporte, puedeAdministrar)}
+        acciones={accionesDe(reporte, puedeAdministrar, obras)}
       />
     </PaginaDePanel>
   );

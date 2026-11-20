@@ -1,3 +1,5 @@
+export type { ObraDeReporte } from "./application/obrasDeReporte";
+export { obraConfirmada } from "./application/obrasDeReporte";
 export type { EntradaDeProgramacionDeObra } from "./application/programarObraDeReporte";
 export type {
   DatosDeRegistroDeIntervencion,
@@ -16,6 +18,7 @@ export {
   listarIntervenciones,
   listarIntervencionesDeCalleEnTransaccion,
   listarIntervencionesParaMapa,
+  obrasDeReporte,
   porcionesDeIntervenciones,
   programarObraDeReporte,
   registrarIntervencion,
@@ -26,3 +29,4 @@ export { FormularioDeAltaDeIntervencion } from "./ui/FormularioDeAltaDeIntervenc
 export { FormularioDeCorreccion } from "./ui/FormularioDeCorreccion";
 export { ListadoDeIntervenciones } from "./ui/ListadoDeIntervenciones";
 export { ProgramarObra } from "./ui/ProgramarObra";
+export { ProgramarObraConfirmacion } from "./ui/ProgramarObraConfirmacion";

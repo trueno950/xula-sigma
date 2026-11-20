@@ -10,6 +10,7 @@ import {
   crearProgramarObraDeReporte,
   crearRegistrarIntervencion,
 } from "./application";
+import { crearObrasDeReporte } from "./application/obrasDeReporte";
 import {
   crearLectorDeReferenciasPorModulos,
   crearLectorDeReportesPorReportes,
@@ -17,6 +18,7 @@ import {
   crearReportesParaObraPorReportes,
   lectorDeIntervencionesDeMapaSql,
   lectorDeIntervencionesSql,
+  obrasDeReporteSql,
   repositorioDeIntervencionesSql,
 } from "./infrastructure";
 import {
@@ -67,6 +69,15 @@ export const cambiarEstadoDeIntervencion = crearCambiarEstadoDeIntervencion({
 export const programarObraDeReporte = crearProgramarObraDeReporte({
   repositorio: repositorioDeIntervencionesSql,
   reportes: crearReportesParaObraPorReportes(),
+});
+
+/**
+ * «Las obras de este reporte» (S16 de `intervenciones-ux`): lo que la ficha
+ * del reporte necesita para mostrar la que ya existe y para comprobar contra
+ * el servidor el `?obra=` de la URL antes de pintar el enlace.
+ */
+export const obrasDeReporte = crearObrasDeReporte({
+  listar: obrasDeReporteSql.listar,
 });
 
 /**

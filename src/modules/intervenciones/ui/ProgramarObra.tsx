@@ -1,12 +1,16 @@
+import Link from "next/link";
 import {
   BarraDeAcciones,
   Boton,
   CampoDeLista,
+  CLASES_DE_ENLACE,
   CLASES_DE_ETIQUETA,
   CLASES_DE_FORMULARIO,
   GrupoDeCampos,
   type OpcionDeLista,
 } from "@/shared/ui";
+import type { ObraDeReporte } from "../application/obrasDeReporte";
+import { ETIQUETA_DE_TIPO_DE_INTERVENCION } from "../domain";
 import { programarObraAction } from "./actions/programarObraAction";
 
 type Props = {
@@ -18,17 +22,63 @@ type Props = {
    * repetir el titulo, porque `CLASES_DE_TARJETA` prohibe anidarlas.
    */
   embebido?: boolean;
+  /**
+   * Las obras que este reporte ya tiene, leidas en el servidor bajo RLS
+   * (S16). Se muestran arriba del formulario: la auditoria hallo que la
+   * pantalla dejaba programar sin decir que ya habia una obra.
+   */
+  obras?: readonly ObraDeReporte[];
 };
 
+const AVISO_DE_OBRA_EXISTENTE = "Este reporte ya tiene una obra programada.";
+const AVISO_DE_OBRAS_EXISTENTES = "Este reporte ya tiene obras programadas.";
+
 /**
- * «Programar obra» del detalle del reporte (S2): formulario nativo sin
- * `"use client"`, con su fila en la tabla de excepciones de `AGENTS.md`. No
- * pide ubicacion -se copia del reporte- ni fecha: la obra queda planificada
- * con la fecha civil de hoy y se corrige desde su detalle.
+ * «Ver la obra» de S16, y el tipo entre parentesis cuando hay mas de una: dos
+ * enlaces con el mismo texto en la misma lista no se distinguen ni de vista ni
+ * con un lector de pantalla.
  */
-export function ProgramarObra({ reporteId, tipos, embebido = false }: Props) {
-  const campos = (
+const enlaceDeObra = (obras: readonly ObraDeReporte[], obra: ObraDeReporte) =>
+  obras.length === 1
+    ? "Ver la obra"
+    : `Ver la obra (${ETIQUETA_DE_TIPO_DE_INTERVENCION[obra.tipo]})`;
+
+function ObrasDelReporte({ obras }: { obras: readonly ObraDeReporte[] }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className={CLASES_DE_ETIQUETA}>
+        {obras.length === 1
+          ? AVISO_DE_OBRA_EXISTENTE
+          : AVISO_DE_OBRAS_EXISTENTES}
+      </p>
+      <ul className="flex flex-col gap-1.5">
+        {obras.map((obra) => (
+          <li key={obra.id}>
+            <Link
+              href={`/intervenciones/${obra.id}`}
+              className={`rounded-sm ${CLASES_DE_ENLACE}`}
+            >
+              {enlaceDeObra(obras, obra)}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function CamposDeLaObra({
+  reporteId,
+  tipos,
+}: {
+  reporteId: string;
+  tipos: readonly OpcionDeLista[];
+}) {
+  return (
     <>
+      <p className={CLASES_DE_ETIQUETA}>
+        La fecha de la obra será hoy y el lugar se copia del reporte.
+      </p>
       <CampoDeLista
         id={`tipo-obra-${reporteId}`}
         name="tipo"
@@ -58,25 +108,51 @@ export function ProgramarObra({ reporteId, tipos, embebido = false }: Props) {
       </div>
     </>
   );
+}
 
+/**
+ * «Programar obra» del detalle del reporte (S2): formulario nativo sin
+ * `"use client"`, con su fila en la tabla de excepciones de `AGENTS.md`. No
+ * pide ubicacion -se copia del reporte- ni fecha: la obra queda planificada
+ * con la fecha civil de hoy y se corrige desde su detalle.
+ *
+ * Lo que si dice, desde S17 (P2), es justamente eso: que la fecha sera hoy y
+ * que el lugar viene del reporte, antes de escribir y no despues de guardar.
+ *
+ * Con obras ya programadas las muestra arriba del formulario, y el formulario
+ * sigue disponible: S16 pide mostrarlas -programar a ciegas es el hallazgo-,
+ * no prohibir una segunda obra sobre el mismo reporte.
+ */
+export function ProgramarObra({
+  reporteId,
+  tipos,
+  embebido = false,
+  obras = [],
+}: Props) {
   return (
-    <form
-      action={programarObraAction}
-      className={embebido ? "flex flex-col gap-4" : CLASES_DE_FORMULARIO}
-    >
-      <input type="hidden" name="reporteId" value={reporteId} />
+    <div className={embebido ? "flex flex-col gap-4" : "flex flex-col gap-6"}>
+      {obras.length > 0 ? <ObrasDelReporte obras={obras} /> : null}
 
-      {embebido ? (
-        campos
-      ) : (
-        <GrupoDeCampos titulo="Obra a programar">{campos}</GrupoDeCampos>
-      )}
+      <form
+        action={programarObraAction}
+        className={embebido ? "flex flex-col gap-4" : CLASES_DE_FORMULARIO}
+      >
+        <input type="hidden" name="reporteId" value={reporteId} />
 
-      <BarraDeAcciones>
-        <Boton type="submit" variante={embebido ? "secundaria" : "primaria"}>
-          Programar obra
-        </Boton>
-      </BarraDeAcciones>
-    </form>
+        {embebido ? (
+          <CamposDeLaObra reporteId={reporteId} tipos={tipos} />
+        ) : (
+          <GrupoDeCampos titulo="Obra a programar">
+            <CamposDeLaObra reporteId={reporteId} tipos={tipos} />
+          </GrupoDeCampos>
+        )}
+
+        <BarraDeAcciones>
+          <Boton type="submit" variante={embebido ? "secundaria" : "primaria"}>
+            Programar obra
+          </Boton>
+        </BarraDeAcciones>
+      </form>
+    </div>
   );
 }

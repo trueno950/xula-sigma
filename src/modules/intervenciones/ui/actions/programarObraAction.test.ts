@@ -78,7 +78,7 @@ describe("programarObraAction", () => {
       `/reportes/detalle/${REPORTE}`,
     );
     expect(redirectMock).toHaveBeenLastCalledWith(
-      `/reportes/detalle/${REPORTE}`,
+      `/reportes/detalle/${REPORTE}?obra=${OBRA}`,
     );
   });
 
