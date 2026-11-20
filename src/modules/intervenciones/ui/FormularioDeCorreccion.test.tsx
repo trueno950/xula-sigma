@@ -40,4 +40,20 @@ describe("FormularioDeCorreccion", () => {
     expect(html).not.toContain('name="reporteId"');
     expect(html).toContain("Guardar corrección");
   });
+
+  /**
+   * S13 y el seguimiento de L11: la correccion plegada usa los mismos textos
+   * que el alta (un solo hogar) y no delega el minimo al navegador, cuyo
+   * mensaje sale en su idioma y no existe sin JavaScript.
+   */
+  it("explica el minimo y el aviso de privacidad, sin minLength", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeCorreccion intervencion={intervencion} />,
+    );
+
+    expect(html).toContain("Escriba al menos 10 caracteres");
+    expect(html).toContain("No anote nombres, teléfonos ni datos de vecinos.");
+    expect(html).not.toContain("minLength");
+    expect(html).toContain('aria-describedby="correccion-descripcion-aviso');
+  });
 });

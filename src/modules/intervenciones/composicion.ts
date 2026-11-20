@@ -4,6 +4,7 @@ import {
   crearCambiarEstadoDeIntervencion,
   crearContarIntervenciones,
   crearCorregirIntervencion,
+  crearHistorialDeIntervencion,
   crearIntervencionConReferencias,
   crearIntervencionPorId,
   crearListarIntervenciones,
@@ -18,6 +19,7 @@ import {
   crearLectorDeReportesPorReportes,
   crearLectorDeUbicacionesPorTerritorio,
   crearReportesParaObraPorReportes,
+  lectorDeHistorialDeIntervencionesSql,
   lectorDeIntervencionesDeMapaSql,
   lectorDeIntervencionesSql,
   obrasDeReporteSql,
@@ -40,6 +42,15 @@ export const intervencionPorId = crearIntervencionPorId(
 export const intervencionConReferencias = crearIntervencionConReferencias(
   intervencionPorId,
   crearLectorDeReferenciasPorModulos(),
+);
+
+/**
+ * El historial de cambios de una intervencion (S11 de `intervenciones-ux`):
+ * las revisiones con el nombre y el rol de quien las hizo, y quien registro la
+ * intervencion para el bloque de sistema de la ficha (S14).
+ */
+export const historialDeIntervencion = crearHistorialDeIntervencion(
+  lectorDeHistorialDeIntervencionesSql,
 );
 export const listarIntervencionesParaMapa = crearListarIntervencionesParaMapa(
   lectorDeIntervencionesDeMapaSql,

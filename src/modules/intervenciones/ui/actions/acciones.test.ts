@@ -42,6 +42,16 @@ const formDataDe = (campos: Record<string, string>): FormData => {
   return formData;
 };
 
+/**
+ * La cancelacion tal como la manda el panel: la casilla de confirmacion
+ * marcada. Sin ella el borde rechaza el POST (S12 de `intervenciones-ux`).
+ */
+const CANCELACION = {
+  id: ID,
+  estadoNuevo: "CANCELADA",
+  confirmar: "si",
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   redirectMock.mockImplementation((_url?: string): never => {
@@ -63,9 +73,9 @@ describe("acciones de administracion de intervenciones", () => {
   it("redacta el rechazo de autorizacion sin ocultar la guarda del caso de uso", async () => {
     cambiarEstadoMock.mockRejectedValue(new NoAutorizadoError());
 
-    await expect(
-      cambiarEstadoAction(formDataDe({ id: ID, estadoNuevo: "CANCELADA" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    await expect(cambiarEstadoAction(formDataDe(CANCELACION))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
 
     expect(cambiarEstadoMock).toHaveBeenCalledWith(
       { id: ID, estadoNuevo: "CANCELADA" },
@@ -100,9 +110,9 @@ describe("acciones de administracion de intervenciones", () => {
   ])("mapea %s al mensaje de negocio", async (_caso, error, mensaje) => {
     cambiarEstadoMock.mockRejectedValue(error);
 
-    await expect(
-      cambiarEstadoAction(formDataDe({ id: ID, estadoNuevo: "CANCELADA" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    await expect(cambiarEstadoAction(formDataDe(CANCELACION))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
 
     expect(
       decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string),
@@ -116,9 +126,9 @@ describe("acciones de administracion de intervenciones", () => {
     const secreto = "detalle interno de la fila";
     cambiarEstadoMock.mockRejectedValue(new Error(secreto));
 
-    await expect(
-      cambiarEstadoAction(formDataDe({ id: ID, estadoNuevo: "CANCELADA" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    await expect(cambiarEstadoAction(formDataDe(CANCELACION))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
 
     expect(decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string)).toBe(
       `/intervenciones/${ID}?error=No se pudo cambiar el estado. Intente de nuevo.`,
@@ -136,9 +146,9 @@ describe("acciones de administracion de intervenciones", () => {
       new TenantNoResueltoError("detalle interno del tenant"),
     );
 
-    await expect(
-      cambiarEstadoAction(formDataDe({ id: ID, estadoNuevo: "CANCELADA" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    await expect(cambiarEstadoAction(formDataDe(CANCELACION))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
 
     expect(cambiarEstadoMock).not.toHaveBeenCalled();
     expect(decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string)).toBe(
@@ -147,18 +157,18 @@ describe("acciones de administracion de intervenciones", () => {
   });
   it("redirige a acceso si falta el contexto", async () => {
     contextoActualMock.mockResolvedValue(null);
-    await expect(
-      cambiarEstadoAction(formDataDe({ id: ID, estadoNuevo: "CANCELADA" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    await expect(cambiarEstadoAction(formDataDe(CANCELACION))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
     expect(redirectMock).toHaveBeenCalledWith("/acceso");
   });
 
   it("cambia el estado con el contexto del servidor y revalida la ficha", async () => {
     cambiarEstadoMock.mockResolvedValue(undefined);
 
-    await expect(
-      cambiarEstadoAction(formDataDe({ id: ID, estadoNuevo: "CANCELADA" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
+    await expect(cambiarEstadoAction(formDataDe(CANCELACION))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
 
     expect(cambiarEstadoMock).toHaveBeenCalledWith(
       { id: ID, estadoNuevo: "CANCELADA" },

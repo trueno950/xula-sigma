@@ -37,6 +37,28 @@ export type OpcionesDeEscenario = { tipoDeRaiz?: "cabecera" | "comisaria" };
 // specs que siembran en la misma corrida no pueden repetirlos.
 const marcaNueva = () => `${Date.now()}-${randomBytes(3).toString("hex")}`;
 
+/**
+ * La cabecera viva del municipio, si ya hay una.
+ *
+ * `lugares_una_cabecera` solo admite una por municipio, y `sembrarEscenario`
+ * no trunca: el `TRUNCATE` es del setup global. Asi que una segunda llamada
+ * -una repeticion del `beforeAll` despues de reiniciar el worker, o una
+ * corrida sobre una base que ya tenia cabecera- insertaba otra y fallaba con
+ * "duplicate key value violates unique constraint". El escenario raiza en la
+ * que existe y el resto de sus filas siguen siendo unicas por `marca`.
+ */
+const cabeceraViva = async (tx: TransactionSql): Promise<IdRow | null> => {
+  const [fila] = await tx<IdRow[]>`
+    SELECT id FROM lugares
+     WHERE ayuntamiento_id = ${MUNICIPIOS.motul.id}
+       AND tipo = 'cabecera'
+       AND baja_en IS NULL
+     LIMIT 1
+  `;
+
+  return fila ?? null;
+};
+
 const sembrarEscenario = async (
   tx: TransactionSql,
   tipoDeRaiz: string,
@@ -48,12 +70,20 @@ const sembrarEscenario = async (
   const [usuario = { id: filaAusente("usuario") }] = await tx<IdRow[]>`
     SELECT id FROM usuarios WHERE email = ${CORREO} LIMIT 1
   `;
-  const lugares = await crearLugares(tx, nombres, tipoDeRaiz);
+  const vigente = tipoDeRaiz === "cabecera" ? await cabeceraViva(tx) : null;
+  // Con cabecera ya presente, el escenario no puede pedir otra: la suya se
+  // siembra como comisaria y el `origen` es la cabecera viva.
+  const lugares = await crearLugares(
+    tx,
+    nombres,
+    vigente ? "comisaria" : tipoDeRaiz,
+  );
+  const origen = vigente ?? lugares.origen;
   const calles = await crearCalles(tx, lugares, nombres);
-  await insertarDomicilio(tx, lugares.origen.id, calles.domicilio.id);
+  await insertarDomicilio(tx, origen.id, calles.domicilio.id);
   await insertarReporte({
     tx,
-    lugarId: lugares.origen.id,
+    lugarId: origen.id,
     calleId: calles.reporte.id,
     usuarioId: usuario.id,
     folio,
@@ -62,16 +92,16 @@ const sembrarEscenario = async (
     IdRow[]
   >`
     INSERT INTO intervenciones (ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id, calle_id, descripcion, registrado_por_usuario_id)
-    VALUES (${MUNICIPIOS.motul.id}, 'OBRA', 'PLANIFICADA', '2026-01-15', ${lugares.origen.id}, ${calles.reporte.id}, 'Rehabilitacion del parque municipal', ${usuario.id})
+    VALUES (${MUNICIPIOS.motul.id}, 'OBRA', 'PLANIFICADA', '2026-01-15', ${origen.id}, ${calles.reporte.id}, 'Rehabilitacion del parque municipal', ${usuario.id})
     RETURNING id
   `;
   await tx`
     INSERT INTO intervenciones (ayuntamiento_id, tipo, estado, fecha_de_ocurrencia, lugar_id, calle_id, descripcion, registrado_por_usuario_id)
-    VALUES (${MUNICIPIOS.motul.id}, 'MANTENIMIENTO', 'PLANIFICADA', '2026-01-14', ${lugares.origen.id}, ${calles.domicilio.id}, 'Cobertura sin punto', ${usuario.id})
+    VALUES (${MUNICIPIOS.motul.id}, 'MANTENIMIENTO', 'PLANIFICADA', '2026-01-14', ${origen.id}, ${calles.domicilio.id}, 'Cobertura sin punto', ${usuario.id})
   `;
 
   return {
-    origenId: lugares.origen.id,
+    origenId: origen.id,
     destino: nombres.destino,
     vacioId: lugares.vacio.id,
     movibleId: calles.movible.id,

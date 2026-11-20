@@ -8,6 +8,7 @@ import {
 } from "@/modules/territorio";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import type { LectorDeReferencias } from "../application/puertosDeLectura";
+import { raizDeLugar } from "./raizDeLugarPorTerritorio";
 
 /**
  * Cada lectura abre el `withTenant` de su modulo con el contexto del
@@ -17,13 +18,14 @@ import type { LectorDeReferencias } from "../application/puertosDeLectura";
  */
 export const crearLectorDeReferenciasPorModulos = (): LectorDeReferencias => ({
   async leer(contexto, { lugarId, calleId, reporteId }) {
-    const [lugar, calle, reporte] = await Promise.all([
+    const [lugar, calle, reporte, raizId] = await Promise.all([
       nombreDeLugar(contexto, lugarId),
       calleId === null ? null : nombreDeCalle(contexto, calleId),
       reporteId === null ? null : folioDeReporte(contexto, reporteId),
+      raizDeLugar(contexto, lugarId),
     ]);
 
-    return { lugar, calle, reporte };
+    return { lugar, calle, reporte, raizId };
   },
 });
 

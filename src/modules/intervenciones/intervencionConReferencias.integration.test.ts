@@ -111,6 +111,8 @@ describe("intervencionConReferencias, contra Postgres real", () => {
       lugar: "Comisaria Propia (comisaría)",
       calle: "Calle Propia",
       reporte: { id: propias.reporteId, folio: propias.folio },
+      // Una comisaria es raiz: el enlace a Territorio y al mapa salen de aca (S15).
+      raizId: propias.lugarId,
     });
   });
 
@@ -129,6 +131,7 @@ describe("intervencionConReferencias, contra Postgres real", () => {
       lugar: "Comisaria Sola (comisaría)",
       calle: null,
       reporte: null,
+      raizId: propias.lugarId,
     });
   });
 
@@ -140,7 +143,12 @@ describe("intervencionConReferencias, contra Postgres real", () => {
       ajenas,
     );
 
-    expect(referencias).toEqual({ lugar: null, calle: null, reporte: null });
+    expect(referencias).toEqual({
+      lugar: null,
+      calle: null,
+      reporte: null,
+      raizId: null,
+    });
   });
 
   it("una intervencion de otro municipio no se resuelve ni deja leer sus nombres", async () => {

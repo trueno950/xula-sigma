@@ -74,6 +74,13 @@ export type ReferenciasDeIntervencion = {
   lugar: string | null;
   calle: string | null;
   reporte: { id: string; folio: string } | null;
+  /**
+   * La raiz del territorio del lugar, para las dos rutas de S15
+   * (`/territorio?raiz=` y `/mapa-operativo?lugar=`). `null` cuando la
+   * jerarquia no llega a una raiz conocida: un enlace sin ella apuntaria a
+   * otro lugar, y es preferible no ofrecerlo.
+   */
+  raizId: string | null;
 };
 
 /**

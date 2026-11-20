@@ -466,10 +466,19 @@ Notas que no caben en la tabla, una por fila que las necesita:
   cuelgue del asentamiento del lugar cuando **cambia** la ubicación, porque
   `reparentearLugar` mueve una colonia que ya tiene intervenciones escritas y
   esa pareja guardada se tiene que poder seguir corrigiendo.
+  Desde T6 (S13) su formulario vive plegado en el panel de acciones, cambia
+  solo la descripción y **no lleva `minLength`**: el mínimo se explica con
+  `AYUDA_DE_DESCRIPCION` y lo exige el servidor con
+  `MENSAJE_DESCRIPCION_CORTA`, los dos textos del alta, y el aviso de datos
+  personales es el mismo `AvisoDePrivacidad`.
 - `cambiarEstadoAction` (`intervenciones`, rebanada 1): **el nombre se repite
   entre dos módulos y son acciones distintas**; ésta redacta
   `NoAutorizadoError`, `NoEncontradoError`, `TenantNoResueltoError`,
   `ValidacionError`, `IntervencionCerradaError` y `TransicionInvalidaError`.
+  Desde T6 (S12) redacta también `CancelacionSinConfirmarError`: cancelar pide
+  una casilla —`name="confirmar"`, `required`— porque sin JavaScript no hay
+  diálogo que pregunte antes, y el borde la vuelve a exigir, así que un POST a
+  mano sin ella no cambia nada. Las demás transiciones no la piden.
 - `altaDeIntervencionAction` (`intervenciones`, S1 de
   `intervenciones-trazabilidad`): mismo motivo que `altaDeLugarAction`, con el
   formulario de `/intervenciones/alta` -tipo, lugar, calle opcional, fecha de

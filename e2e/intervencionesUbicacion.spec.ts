@@ -238,9 +238,10 @@ test("sin JavaScript, la calle del asentamiento elegido sigue registrando la int
     await page.getByRole("button", { name: "Registrar intervención" }).click();
 
     await expect(page).toHaveURL(/\/intervenciones\/[0-9a-f-]{36}$/);
-    await expect(
-      page.getByRole("heading", { name: "Intervención Bache" }),
-    ).toBeVisible();
+    // T6 (S10): el detalle titula con el identificador y el estado va como
+    // insignia; el tipo se sigue leyendo en la ficha.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^INT-/);
+    await expect(page.getByText("Planificada", { exact: true })).toBeVisible();
     expect(await intervencionesConLaDescripcion(descripcion)).toBe(1);
   } finally {
     await contexto.close();

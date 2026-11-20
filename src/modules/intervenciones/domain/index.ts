@@ -1,3 +1,4 @@
+export { CancelacionSinConfirmarError } from "./cancelacion";
 export {
   type ConteosDeIntervenciones,
   componerConteosDeIntervenciones,
