@@ -14,12 +14,12 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { registrarIntervencion } from "../composicion";
-import { CalleFueraDelLugarError } from "../domain";
+import { registrarIntervencion } from "./composicion";
+import { CalleFueraDelLugarError } from "./domain";
 import {
   intervenciones,
   revisionesDeIntervenciones,
-} from "../infrastructure/esquema";
+} from "./infrastructure/esquema";
 
 /**
  * S6 de `intervenciones-ux` contra Postgres real: la calle de otro

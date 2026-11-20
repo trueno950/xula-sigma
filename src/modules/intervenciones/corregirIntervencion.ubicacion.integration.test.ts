@@ -17,10 +17,10 @@ import {
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { corregirIntervencion, registrarIntervencion } from "../composicion";
-import { intervencionPorId, trazasDeCorreccion } from "../correccionDePrueba";
-import { CalleFueraDelLugarError } from "../domain";
-import { revisionesDeIntervenciones } from "../infrastructure/esquema";
+import { corregirIntervencion, registrarIntervencion } from "./composicion";
+import { intervencionPorId, trazasDeCorreccion } from "./correccionDePrueba";
+import { CalleFueraDelLugarError } from "./domain";
+import { revisionesDeIntervenciones } from "./infrastructure/esquema";
 
 /**
  * S6 de `intervenciones-ux`, el caso que el alta no puede ver: una colonia con
