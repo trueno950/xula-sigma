@@ -7,6 +7,7 @@ import {
   prepararEscenario,
   type Scenario,
 } from "./calles.fixture";
+import { reservarConsecutivoDeReporte } from "./escenarioSql";
 import { MUNICIPIOS, urlDe } from "./municipios";
 
 /**
@@ -41,7 +42,7 @@ const app = async () => {
 const folioNuevo = (marca: string, nombre: string) =>
   `REP-FILTRO-${marca}-${nombre}`;
 
-const insertarReporte = (
+const insertarReporte = async (
   tx: TransactionSql,
   opciones: {
     folio: string;
@@ -51,20 +52,22 @@ const insertarReporte = (
     usuarioId: string;
     conCalle: boolean;
   },
-) =>
-  tx<{ id: string }[]>`
+) => {
+  const consecutivo = await reservarConsecutivoDeReporte(tx, 2026);
+  return tx<{ id: string }[]>`
     INSERT INTO reportes (ayuntamiento_id, folio, anio, consecutivo, tipo, estado,
                           area_responsable, lugar_id, calle_id, descripcion,
                           registrado_por_usuario_id)
     VALUES (
       ${MUNICIPIOS.motul.id}, ${opciones.folio}, 2026,
-      (SELECT COALESCE(MAX(consecutivo), 0) + 1 FROM reportes WHERE anio = 2026),
+      ${consecutivo},
       'BACHE', ${opciones.estado}, ${opciones.area}, ${opciones.lugarId},
       ${opciones.conCalle ? escenario.reporteCalleId : null},
       'Reporte del filtro', ${opciones.usuarioId}
     )
     RETURNING id
   `;
+};
 
 const usuarioDeMotul = async (tx: TransactionSql, marca: string) => {
   await tx`SELECT set_config('app.tenant', ${MUNICIPIOS.motul.id}, true)`;

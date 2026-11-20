@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import postgres, { type TransactionSql } from "postgres";
 import { anioEnMerida } from "@/shared/lib/fecha";
+import { reservarConsecutivoDeReporte } from "./escenarioSql";
 import { CORREO, MUNICIPIOS } from "./municipios";
 
 type IdRow = { id: string };
@@ -43,16 +44,7 @@ const insertarReporteSimilar = async (
   ubicacion: { coloniaId: string; calleId: string; usuarioId: string },
 ): Promise<string> => {
   const anio = anioEnMerida();
-  const [contador] = await tx<{ consecutivo: number }[]>`
-    INSERT INTO folios_de_reportes (ayuntamiento_id, anio, ultimo_consecutivo)
-    VALUES (${MUNICIPIOS.motul.id}, ${anio},
-      (SELECT COALESCE(MAX(consecutivo), 0) + 1 FROM reportes WHERE anio = ${anio}))
-    ON CONFLICT (ayuntamiento_id, anio) DO UPDATE SET ultimo_consecutivo =
-      GREATEST(folios_de_reportes.ultimo_consecutivo,
-        (SELECT COALESCE(MAX(consecutivo), 0) FROM reportes WHERE anio = ${anio})) + 1
-    RETURNING ultimo_consecutivo AS consecutivo
-  `;
-  const consecutivo = exigirFila(contador, "contador").consecutivo;
+  const consecutivo = await reservarConsecutivoDeReporte(tx, anio);
   const folio = `REP-${anio}-${String(consecutivo).padStart(6, "0")}`;
   const [reporte] = await tx<{ folio: string }[]>`
     INSERT INTO reportes (ayuntamiento_id, folio, anio, consecutivo, tipo,

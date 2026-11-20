@@ -13,6 +13,7 @@ import {
   prepararEscenario,
   type Scenario,
 } from "./calles.fixture";
+import { reservarConsecutivoDeReporte } from "./escenarioSql";
 import { MUNICIPIOS, urlDe } from "./municipios";
 
 /**
@@ -50,7 +51,7 @@ const app = async () => {
 // que el renglon del telefono se partiera por el ancho de la cadena.
 const folioNuevo = (marca: string, nombre: string) => `REP-${marca}-${nombre}`;
 
-const insertarReporte = (
+const insertarReporte = async (
   tx: TransactionSql,
   opciones: {
     folio: string;
@@ -61,19 +62,21 @@ const insertarReporte = (
     /** Cuántos días atrás se registró: es lo que lo vuelve atrasado. */
     diasDeAntiguedad?: number;
   },
-) =>
-  tx`
+) => {
+  const consecutivo = await reservarConsecutivoDeReporte(tx, 2026);
+  return tx`
     INSERT INTO reportes (ayuntamiento_id, folio, anio, consecutivo, tipo, estado,
                           area_responsable, lugar_id, descripcion,
                           registrado_por_usuario_id, registrado_en)
     VALUES (
       ${MUNICIPIOS.motul.id}, ${opciones.folio}, 2026,
-      (SELECT COALESCE(MAX(consecutivo), 0) + 1 FROM reportes WHERE anio = 2026),
+      ${consecutivo},
       'BACHE', ${opciones.estado}, ${opciones.area}, ${opciones.lugarId},
       'Reporte de la bandeja', ${opciones.usuarioId},
       now() - ${opciones.diasDeAntiguedad ?? 0} * interval '1 day'
     )
   `;
+};
 
 const sembrarBandeja = async (): Promise<Sembrado> => {
   const marca = randomBytes(3).toString("hex").toUpperCase();

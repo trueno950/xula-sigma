@@ -19,6 +19,12 @@ type Props = {
  * zoom son enfocables, asi que `role="img"` los esconderia al lector de
  * pantalla.
  *
+ * El contenedor no se oculta mientras Leaflet arranca. Un `visibility:
+ * hidden` que se destapaba en un commit de React posterior dejaba los
+ * controles de zoom -y sus marcadores- enfocables e invisibles durante ese
+ * hueco: es lo que hacia intermitente el E2E del mapa, que encontraba el
+ * control y no podia hacerle clic.
+ *
  * El alto lo pone la caja del mapa, no este componente: `flex-1` y `min-h-0`
  * para que Leaflet mida el espacio que le queda entre la cabecera y el borde.
  * Con `h-full` y no `flex-1` la cadena se resolvia a cero en el telefono,
@@ -26,7 +32,7 @@ type Props = {
  * grilla de escritorio.
  */
 export function MapaVisual({ marcadores, caja, elegida, onSeleccion }: Props) {
-  const { mapaRef, mapaVisible, mapaFallido, aviso } = useMapaOperativo({
+  const { mapaRef, mapaFallido, aviso } = useMapaOperativo({
     marcadores,
     caja,
     elegida,
@@ -43,7 +49,6 @@ export function MapaVisual({ marcadores, caja, elegida, onSeleccion }: Props) {
         hidden={mapaFallido}
         aria-label="Mapa con los marcadores del municipio, ubicación aproximada"
         className="min-h-0 w-full flex-1"
-        style={{ visibility: mapaVisible ? "visible" : "hidden" }}
       />
     </div>
   );

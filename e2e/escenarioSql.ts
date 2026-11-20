@@ -132,14 +132,43 @@ export const insertarDomicilio = (
 
 // La serie `(municipio, anio, consecutivo)` es unica: se toma el siguiente
 // libre en la misma transaccion en vez de adivinarlo desde el reloj.
-export const insertarReporte = ({
+// El consecutivo sale de `reservarConsecutivoDeReporte`.
+/**
+ * Reserva el siguiente consecutivo por `folios_de_reportes`, el mismo
+ * contador que usa el alta de la aplicacion. Un reporte sembrado con
+ * `MAX + 1` no lo avanzaba: el siguiente alta desde la pantalla recibia ese
+ * mismo numero y chocaba con `reportes_serie_idx`. El `UPSERT` toma el
+ * candado de la fila del contador, asi que dos siembras simultaneas tambien
+ * quedan en fila. `GREATEST` cubre reportes que ya esten en la base sin
+ * haber pasado por el contador.
+ */
+export const reservarConsecutivoDeReporte = async (
+  tx: TransactionSql,
+  anio: number,
+): Promise<number> => {
+  const [fila] = await tx<{ consecutivo: number }[]>`
+    INSERT INTO folios_de_reportes (ayuntamiento_id, anio, ultimo_consecutivo)
+    VALUES (${MUNICIPIOS.motul.id}, ${anio},
+      (SELECT COALESCE(MAX(consecutivo), 0) + 1 FROM reportes WHERE anio = ${anio}))
+    ON CONFLICT (ayuntamiento_id, anio) DO UPDATE SET ultimo_consecutivo =
+      GREATEST(folios_de_reportes.ultimo_consecutivo,
+        (SELECT COALESCE(MAX(consecutivo), 0) FROM reportes WHERE anio = ${anio})) + 1
+    RETURNING ultimo_consecutivo AS consecutivo
+  `;
+  if (!fila) throw new Error("folios_de_reportes no devolvio consecutivo");
+  return fila.consecutivo;
+};
+
+export const insertarReporte = async ({
   tx,
   lugarId,
   calleId,
   usuarioId,
   folio,
-}: DatosDeReporte) =>
-  tx`
+}: DatosDeReporte) => {
+  const consecutivo = await reservarConsecutivoDeReporte(tx, 2026);
+  return tx`
     INSERT INTO reportes (ayuntamiento_id, folio, anio, consecutivo, tipo, estado, lugar_id, calle_id, descripcion, registrado_por_usuario_id)
-    VALUES (${MUNICIPIOS.motul.id}, ${folio}, 2026, (SELECT COALESCE(MAX(consecutivo), 0) + 1 FROM reportes WHERE anio = 2026), 'BACHE', 'RECIBIDO', ${lugarId}, ${calleId}, 'Reporte de prueba', ${usuarioId})
+    VALUES (${MUNICIPIOS.motul.id}, ${folio}, 2026, ${consecutivo}, 'BACHE', 'RECIBIDO', ${lugarId}, ${calleId}, 'Reporte de prueba', ${usuarioId})
   `;
+};
