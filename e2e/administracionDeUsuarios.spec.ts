@@ -74,7 +74,10 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   await page.getByLabel("Rol").selectOption("OPERADOR");
   await page.getByRole("button", { name: "Dar de alta" }).click();
 
-  await page.waitForURL(/\/usuarios\?clave=[0-9a-f-]+&ok=alta$/);
+  // La tarjeta aparece y, al pintarse, la URL pierde el token (S9 de
+  // `usuarios-ux`): se espera el listado y no la URL con `?clave=`, que ya no
+  // está cuando Playwright mira.
+  await page.waitForURL(/\/usuarios(\?.*)?$/);
 
   const clave = await claveDe(page, "Contraseña temporal");
 
@@ -117,7 +120,7 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   await filaDe(page)
     .getByRole("button", { name: "Restablecer contraseña" })
     .click();
-  await page.waitForURL(/\/usuarios\?clave=[0-9a-f-]+&ok=restablecimiento$/);
+  await page.waitForURL(/\/usuarios(\?.*)?$/);
 
   const nuevaClave = await claveDe(page, "Nueva contraseña temporal");
 

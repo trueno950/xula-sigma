@@ -147,11 +147,11 @@ export async function proxy(request: NextRequest) {
   cabeceras.set(CABECERA_SUBDOMINIO, resultado.subdominio);
 
   /**
-   * S2: aca se consume la cookie de la contrasenia temporal en el GET real,
-   * el camino sin JavaScript. El render sintetico del redirect de la Server
-   * Action pasa por aca igual, pero su `Set-Cookie` no lo guarda nadie: de
-   * ese se ocupa `DescartarClaveAlMostrar`. El valor viaja en una cabecera
-   * que el cliente no puede escribir: la que mande se borro arriba.
+   * S2: aca se consume la cookie en el GET real, el camino sin JavaScript. El
+   * camino con JavaScript, donde el `Set-Cookie` de este mismo borrado no
+   * llega al navegador, lo explica `AGENTS.md` en la nota de `usuarios`. El
+   * valor viaja en una cabecera que el cliente no puede escribir: la que
+   * mande se borro arriba.
    */
   const clave = claveATrasladar({
     metodo: request.method,

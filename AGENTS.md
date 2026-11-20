@@ -366,6 +366,7 @@ que devuelva, y devolverlo sería código muerto.
 | `altaDeUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `restablecerContraseniaAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `darDeBajaUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
+| `descartarClaveMostradaAction` | `usuarios` | Server Component, `<form action={...}>` |
 
 Notas que no caben en la tabla, una por fila que las necesita:
 
@@ -558,19 +559,47 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `RolNoAsignableError` -solo `OPERADOR` y `CONSULTA`, S3- y
   `CorreoYaRegistradoError` -el choque contra `usuarios_tenant_email_idx` o
   `usuarios_tenant_email_lower_idx`, migracion `0024`-.
-  **La contraseña temporal no vuelve por `?clave=`**: el redirect lleva solo
-  un token opaco y la clave viaja en una cookie httpOnly de 120 segundos. La
-  consume el proxy, en la única petición que trae ese token: la pasa a una
-  cabecera que el cliente no puede escribir y borra la cookie en la misma
-  respuesta, así que se muestra una sola vez también sin JavaScript. Con
-  JavaScript la primera vista es el render sintético del `redirect`, cuyo
-  borrado de cookie no llega al navegador: ahí la borra
-  `DescartarClaveAlMostrar` -la excepción de descarte, abajo-. La
+  **La contraseña temporal no vuelve por `?clave=`** (S4 de
+  `administracion-de-usuarios` y S9 de `usuarios-ux`; **este es el único
+  lugar donde esto se cuenta**: los demás archivos apuntan acá). El redirect
+  lleva solo un token opaco y la clave viaja en una cookie httpOnly de 120
+  segundos. La consume el proxy, en la única petición que trae ese token: la
+  pasa a una cabecera que el cliente no puede escribir y borra la cookie en
+  la misma respuesta, así que se muestra una sola vez también sin JavaScript.
+
+  Con JavaScript hay dos hechos de Next que hay que tener juntos. Uno: el
+  primer pintado es el render sintético del `redirect` y su `Set-Cookie` el
+  navegador no lo guarda, así que la cookie sobrevive hasta que el descarte
+  del montaje termina su viaje; una recarga que caiga en esa ventana es un GET
+  nuevo con el token y vuelve a pintar la contraseña. Dos: una Server Action
+  que toca cookies obliga a Next a redibujar la ruta en la misma respuesta
+  —«A single response carries data and UI», guía de Server Actions—, y ese
+  redibujo ya no trae la cabecera del proxy; por eso el descarte es un `POST`
+  a `/usuarios/clave-temporal`, un Route Handler, y no una Server Action. Con
+  la Server Action la clave desaparecía ~300 ms después de mostrarse (hallazgo
+  C1).
+
+  La ventana de la recarga la cierra `DescartarClaveAlMostrar` al pintar: deja
+  la URL sin `clave` ni `ok` con `window.history.replaceState`, que Next
+  integra en su router —«Native History API», guía de navegación—, así que
+  recargar o volver atrás ya no lleva el token y no hay nada que volver a
+  mostrar. Con JavaScript la clave se queda en pantalla hasta que la operadora
+  pulsa «Ya la anoté»; sin JavaScript también, porque la tarjeta no depende de
+  nada que se borre solo.
+
+  La
   pantalla lee la cabecera, nunca la cookie -nunca en la URL, que queda en el
   historial del navegador y en el log de accesos del servidor-.
   Ver `src/modules/usuarios/ui/claveMostradaEnTransito.ts`; S4 de
   `odd/tasks/administracion-de-usuarios.md` y S2 de
   `odd/tasks/pendientes-fase-0.md`.
+- `descartarClaveMostradaAction` (`usuarios`, S9 de `usuarios-ux`): el
+  `<form>` de «Ya la anoté» de `AvisoDeClaveTemporal`. Mismo motivo que
+  `darDeBajaUsuarioAction`: la tarjeta se pinta en un Server Component y el
+  envío es el POST nativo, así que anda sin JavaScript. Valida el token con
+  Zod, borra la cookie solo si coincide con la guardada y vuelve al listado
+  **sin el token en la URL** —por eso el destino no lleva `ok`: no hay nada
+  que confirmar, la operadora acaba de decir que ya la anotó—.
 - `cambiarColoresAction`/`restablecerColoresAction` (`marca`, S1-S8 de
   `odd/tasks/marca-colores.md`): mismo motivo que `altaDePersonaAction`, y
   **ninguna hoja cliente de la pantalla envuelve ninguna de las dos**.
@@ -612,20 +641,6 @@ tres condiciones juntas, la acción vuelve a `ActionResult<T>`. Hoy hay una:
   a mostrar como error.
 
 **Una segunda no entra sin agregarse a esta lista**, mismo motivo que la de
-arriba.
-
-### La única excepción: descarte sin resultado invocado desde cliente
-
-Una Server Action puede devolver `void` en vez de `ActionResult<T>` **solo**
-si la invoca un componente `"use client"` que no lee su retorno y su único
-efecto es borrar algo de la propia sesión. Hoy hay una:
-
-- `descartarClaveMostradaAction` (`usuarios`): `DescartarClaveAlMostrar` la
-  llama al montarse para borrar la cookie de la contraseña temporal apenas se
-  mostró -el camino con JavaScript-. Valida el token con Zod y borra solo si
-  coincide con el guardado; registra su caída sin datos de la persona.
-
-**Una segunda no entra sin agregarse a esta lista**, mismo motivo que las de
 arriba.
 
 ---

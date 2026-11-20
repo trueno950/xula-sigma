@@ -2,13 +2,13 @@ import { Plus } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import {
   AvisoDeClaveTemporal,
-  type ConfirmacionDeUsuarios,
   claveMostradaDeLaPeticion,
   esquemaDeParametros,
   ListadoDeUsuarios,
   listarUsuarios,
   mensajeDeError,
 } from "@/modules/usuarios";
+import { avisoDeConfirmacion } from "@/modules/usuarios/ui/avisoDeConfirmacion";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarUsuarios } from "@/shared/auth/roles";
 import {
@@ -22,12 +22,6 @@ export const metadata: Metadata = { title: "Usuarios" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
-const CONFIRMACIONES: Record<ConfirmacionDeUsuarios, string> = {
-  alta: "La cuenta quedó creada.",
-  restablecimiento: "La contraseña quedó restablecida.",
-  baja: "La persona quedó dada de baja y ya no puede entrar.",
 };
 
 /**
@@ -46,6 +40,10 @@ const CONFIRMACIONES: Record<ConfirmacionDeUsuarios, string> = {
  * `?error=` trae un codigo del vocabulario de `mensajesDeError.ts`, nunca el
  * texto del error: la URL la escribe cualquiera y reflejarla seria pintar
  * texto ajeno.
+ *
+ * La confirmacion de `?ok=` pasa por `avisoDeConfirmacion`: el exito de un
+ * alta o un restablecimiento solo se anuncia junto a la contrasenia nueva,
+ * porque el aviso existe por esa clave (S11).
  */
 export default async function PaginaDeUsuarios({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -73,6 +71,12 @@ export default async function PaginaDeUsuarios({ searchParams }: Props) {
   // `?error=` lleva un codigo, no texto: la pantalla pone el mensaje
   // (`mensajesDeError.ts`). Un codigo desconocido no muestra nada.
   const mensaje = mensajeDeError(parametros.error);
+  // La tarjeta se pinta con la clave **y** con el nombre de quien la
+  // recibe; la confirmacion sigue a la tarjeta, no a la cabecera sola.
+  const confirmacion = avisoDeConfirmacion({
+    ok: parametros.ok,
+    hayClaveVisible: Boolean(mostrada && nombre),
+  });
 
   return (
     <PaginaDePanel
@@ -86,8 +90,8 @@ export default async function PaginaDeUsuarios({ searchParams }: Props) {
       }
     >
       {mensaje ? <Aviso tono="error">{mensaje}</Aviso> : null}
-      {parametros.ok ? (
-        <Aviso tono="exito">{CONFIRMACIONES[parametros.ok]}</Aviso>
+      {confirmacion ? (
+        <Aviso tono={confirmacion.tono}>{confirmacion.texto}</Aviso>
       ) : null}
       {mostrada && nombre ? (
         <AvisoDeClaveTemporal mostrada={mostrada} nombre={nombre} />
