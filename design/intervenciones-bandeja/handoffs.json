@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "02-tablero-por-estado.html",
+  "handoffs": {
+    "02-tablero-por-estado.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-20T15:24:26.974Z",
+      "startedAt": "2026-11-20T15:24:58.734Z",
+      "implementedAt": "2026-11-20T16:38:03.055Z",
+      "feature": "odd/tasks/intervenciones-ux.md",
+      "note": "91a9d92 en feat/intervenciones-ux. Demo: http://demo.xula.localhost:3200/intervenciones. E2E completa 180/180.",
+      "previewUrl": "http://localhost:3200/intervenciones"
+    }
+  }
+}

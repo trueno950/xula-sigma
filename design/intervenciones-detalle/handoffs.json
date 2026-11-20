@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-ficha-historial-y-acciones.html",
+  "handoffs": {
+    "01-ficha-historial-y-acciones.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-20T17:41:50.628Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/intervenciones-ux.md"
+    }
+  }
+}
