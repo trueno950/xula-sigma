@@ -1,4 +1,9 @@
 export {
+  type ConteosDeIntervenciones,
+  componerConteosDeIntervenciones,
+  type FilaDeConteoDeIntervencion,
+} from "./conteosDeIntervenciones";
+export {
   ESTADOS_DE_INTERVENCION,
   type EstadoDeIntervencion,
   esTerminal,

@@ -1,0 +1,21 @@
+{
+  "title": "Bandeja de intervenciones",
+  "brief": "Rediseño de /intervenciones para el personal de un municipio pequeño de Yucatán: ver cuántas intervenciones hay y en qué estado, distinguir una fila de otra del mismo tipo, y entender el orden de la lista, en la primera pantalla de un teléfono.",
+  "feature": "odd/tasks/intervenciones-ux.md",
+  "artboards": [
+    {
+      "file": "01-pestanas-y-fila-con-identificador.html",
+      "title": "Pestañas y fila con identificador",
+      "tradeoff": "Es la bandeja que el usuario ya eligió en Reportes —pestañas por estado con su cuenta y barra de filtros—, con la fila reconstruida: identificador, trozo de la descripción y marcador de origen. Cuesta alto: la fila pasa de 48 px a 64–95 px según cuánto ocupe la descripción y la página muestra diez de trece, a cambio de que dos intervenciones del mismo tipo nunca se confundan y el orden sea el de la fecha que se ve.",
+      "width": 1440,
+      "height": 1290
+    },
+    {
+      "file": "02-tablero-por-estado.html",
+      "title": "Tablero por estado",
+      "tradeoff": "El estado deja de ser un filtro y pasa a ser la estructura: cuatro columnas con su cuenta en el encabezado y las obras como tarjetas. Se ve el proceso completo de un vistazo, a cambio de columnas de 269 px donde la descripción corta a dos o tres renglones, de comparar moviendo la vista de columna a columna y de que en el teléfono el tablero se vuelva cuatro secciones seguidas donde la última queda a un desplazamiento largo.",
+      "width": 1440,
+      "height": 1310
+    }
+  ]
+}

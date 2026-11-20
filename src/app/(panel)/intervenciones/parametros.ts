@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
   ESTADOS_DE_INTERVENCION,
+  ETIQUETA_DE_ESTADO_DE_INTERVENCION,
+  ETIQUETA_DE_TIPO_DE_INTERVENCION,
   type FiltrosDeIntervenciones,
   TIPOS_DE_INTERVENCION,
 } from "@/modules/intervenciones";
@@ -46,9 +48,27 @@ export const leerParametros = (
 };
 
 /**
+ * Los filtros del tablero sin el estado: es con lo que se piden los conteos
+ * de S2. El estado es la estructura -las cuatro columnas-, asi que el conteo
+ * de una columna dice cuantas obras tiene con el resto de los filtros puestos,
+ * no cuantas tiene la columna que se esta mirando.
+ */
+export const filtrosSinEstado = (
+  filtros: FiltrosDeIntervenciones,
+): FiltrosDeIntervenciones => {
+  const { estado: _estado, ...resto } = filtros;
+
+  return resto;
+};
+
+/**
  * Nombra cada filtro aplicado para el vacio por filtro, mismo criterio que
  * `descripcionDeFiltrosDeReportes`: sin esto, una bandeja vacia por `estado`
  * o `tipo` no decia por que.
+ *
+ * S5: los filtros se nombran con sus **etiquetas** -«Cancelada», «Fuga»-,
+ * nunca con el valor de enum, que es lo que se guarda y lo que viaja en la
+ * URL, no lo que lee una persona.
  */
 export const descripcionDeFiltrosDeIntervenciones = ({
   estado,
@@ -56,8 +76,8 @@ export const descripcionDeFiltrosDeIntervenciones = ({
   lugarId,
 }: FiltrosDeIntervenciones): string | undefined => {
   const partes = [
-    estado ? `estado "${estado}"` : null,
-    tipo ? `tipo "${tipo}"` : null,
+    estado ? `estado "${ETIQUETA_DE_ESTADO_DE_INTERVENCION[estado]}"` : null,
+    tipo ? `tipo "${ETIQUETA_DE_TIPO_DE_INTERVENCION[tipo]}"` : null,
     lugarId ? "lugar elegido" : null,
   ].filter((parte) => parte !== null);
 

@@ -2,6 +2,7 @@ import type { ContextoActual } from "@/shared/auth/contexto";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import type {
   EstadoDeIntervencion,
+  FilaDeConteoDeIntervencion,
   IntervencionId,
   TipoDeIntervencion,
 } from "../domain";
@@ -113,4 +114,17 @@ export type LectorDeIntervenciones = {
     tx: TransaccionTenant,
     filtros: FiltrosDeIntervenciones,
   ): Promise<readonly IntervencionGuardada[]>;
+};
+
+/**
+ * Los conteos por estado del tablero (S2). Aplica los mismos filtros que
+ * `listar` y agrupa en Postgres, no en JavaScript: una columna puede tener
+ * mas obras de las que la pantalla muestra, y contar las filas de la pagina
+ * daria el numero de la pagina.
+ */
+export type ContadorDeIntervenciones = {
+  contar(
+    tx: TransaccionTenant,
+    filtros: FiltrosDeIntervenciones,
+  ): Promise<readonly FilaDeConteoDeIntervencion[]>;
 };

@@ -1,89 +1,77 @@
-import { fechaCivilCorta } from "@/shared/lib/fecha";
 import {
-  CeldaDeApoyo,
-  CeldaDeDato,
-  CeldaPrincipal,
-  type ColumnaDeTabla,
   type EstadoDeLista,
   EstadoVacio,
-  FilaDeTabla,
   type OpcionDeLista,
-  Tabla,
 } from "@/shared/ui";
 import type { IntervencionGuardada } from "../application/puertos";
 import type { FiltrosDeIntervenciones } from "../application/puertosDeLectura";
+import type { ConteosDeIntervenciones } from "../domain";
 import {
-  ETIQUETA_DE_ESTADO_DE_INTERVENCION,
-  ETIQUETA_DE_TIPO_DE_INTERVENCION,
-} from "../domain";
-import { FiltrosDeIntervenciones as Filtros } from "./FiltrosDeIntervenciones";
-import { InsigniaDeIntervencion } from "./InsigniaDeIntervencion";
+  ChipsDeFiltrosDeIntervenciones,
+  FiltrosDeIntervenciones as Filtros,
+} from "./FiltrosDeIntervenciones";
+import { PliegueDeFiltrosDeIntervenciones } from "./FiltrosDeIntervencionesPliegue";
+import { TableroDeIntervenciones } from "./TableroDeIntervenciones";
+import { ResumenDeConteos } from "./TableroDeIntervencionesResumen";
 
 type Props = {
   intervenciones: readonly IntervencionGuardada[];
   lugares: readonly OpcionDeLista[];
+  /** Los conteos por estado con los filtros puestos y el estado quitado (S2). */
+  conteos: ConteosDeIntervenciones;
   estadoDeLista: EstadoDeLista;
   filtros: FiltrosDeIntervenciones;
 };
 
-const COLUMNAS: readonly ColumnaDeTabla[] = [
-  { clave: "tipo", etiqueta: "Tipo", ancho: "minmax(0,1.4fr)" },
-  { clave: "estado", etiqueta: "Estado", ancho: "minmax(0,1fr)" },
-  { clave: "lugar", etiqueta: "Lugar", ancho: "minmax(0,1.6fr)" },
-  { clave: "fecha", etiqueta: "Ocurrencia", ancho: "minmax(0,1fr)" },
-];
-
-const NO_DISPONIBLE = "No disponible";
-
-const nombresDeLugar = (lugares: readonly OpcionDeLista[]) =>
-  new Map(lugares.map((lugar) => [lugar.valor, lugar.etiqueta]));
-
 /**
- * La bandeja de S1: tipo, estado, lugar y fecha de ocurrencia de cada obra,
- * con la fila entera como enlace a su detalle. La fecha es civil y se formatea
- * por `shared/lib/fecha` (`AGENTS.md`, "Fecha y hora").
+ * La bandeja de `intervenciones-ux` en la direccion elegida en L5: los
+ * filtros plegables con su cuenta y sus chips, y el tablero por estado.
+ *
+ * El vacio **inicial** sigue siendo el de `EstadoVacio` -la pantalla no tiene
+ * nada y ofrece llenarla-. El vacio por filtro, en cambio, lo dice cada
+ * columna: con los filtros puestos el tablero no desaparece, porque las cuatro
+ * columnas en cero son la respuesta (S5).
+ *
+ * El total desglosado va arriba de los filtros, como en el artboard: es lo
+ * primero que la operadora lee de la bandeja. Con el vacio inicial no se
+ * pinta, porque «0 intervenciones» no dice nada que el vacio no diga mejor.
  */
 export function ListadoDeIntervenciones({
   intervenciones,
   lugares,
+  conteos,
   estadoDeLista: estado,
   filtros,
 }: Props) {
-  const nombres = nombresDeLugar(lugares);
+  const activos = [filtros.estado, filtros.tipo, filtros.lugarId].filter(
+    Boolean,
+  ).length;
 
   return (
     <div className="flex flex-col gap-4">
-      <Filtros filtros={filtros} lugares={lugares} />
+      {estado.clase === "vacio-inicial" ? null : (
+        <ResumenDeConteos conteos={conteos} conFiltros={activos > 0} />
+      )}
 
-      {estado.clase !== "con-filas" ? (
+      <PliegueDeFiltrosDeIntervenciones activos={activos}>
+        <Filtros filtros={filtros} lugares={lugares} />
+      </PliegueDeFiltrosDeIntervenciones>
+
+      <ChipsDeFiltrosDeIntervenciones filtros={filtros} lugares={lugares} />
+
+      {estado.clase === "vacio-inicial" ? (
         <EstadoVacio
           estado={estado}
           mensajeInicial="Todavía no hay intervenciones registradas."
           hrefSinFiltro="/intervenciones"
         />
       ) : (
-        <Tabla etiqueta="Intervenciones" columnas={COLUMNAS}>
-          {intervenciones.map((intervencion) => (
-            <FilaDeTabla
-              key={intervencion.id}
-              href={`/intervenciones/${intervencion.id}`}
-              etiquetaAccesible={`${ETIQUETA_DE_TIPO_DE_INTERVENCION[intervencion.tipo]}, ${
-                ETIQUETA_DE_ESTADO_DE_INTERVENCION[intervencion.estado]
-              }`}
-            >
-              <CeldaPrincipal>
-                {ETIQUETA_DE_TIPO_DE_INTERVENCION[intervencion.tipo]}
-              </CeldaPrincipal>
-              <InsigniaDeIntervencion estado={intervencion.estado} />
-              <CeldaDeApoyo>
-                {nombres.get(intervencion.lugarId) ?? NO_DISPONIBLE}
-              </CeldaDeApoyo>
-              <CeldaDeDato>
-                {fechaCivilCorta(intervencion.fechaDeOcurrencia)}
-              </CeldaDeDato>
-            </FilaDeTabla>
-          ))}
-        </Tabla>
+        <TableroDeIntervenciones
+          intervenciones={intervenciones}
+          lugares={lugares}
+          conteos={conteos}
+          filtros={filtros}
+        />
       )}
     </div>
   );

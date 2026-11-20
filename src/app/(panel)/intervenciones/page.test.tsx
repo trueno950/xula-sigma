@@ -2,18 +2,21 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * La bandeja de S1 de `intervenciones-trazabilidad`, en su propia pagina: el
- * listado, sus filtros por URL y el alta que solo ve quien administra.
+ * La bandeja de S1 de `intervenciones-trazabilidad` en su direccion de
+ * `intervenciones-ux` (S1-S5): el tablero por estado, sus conteos, el alta y
+ * los filtros que solo ve quien administra.
  */
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const intervencionConReferenciasMock = vi.hoisted(() => vi.fn());
 const listarIntervencionesMock = vi.hoisted(() => vi.fn());
+const contarIntervencionesMock = vi.hoisted(() => vi.fn());
 const listarLugaresMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("@/modules/intervenciones", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/intervenciones")>()),
   comoIntervencionId: (id: string) => id,
+  contarIntervenciones: contarIntervencionesMock,
   intervencionConReferencias: intervencionConReferenciasMock,
   listarIntervenciones: listarIntervencionesMock,
 }));
@@ -21,7 +24,7 @@ vi.mock("@/modules/territorio", () => ({ listarLugares: listarLugaresMock }));
 
 const { default: PaginaDeIntervenciones } = await import("./page");
 
-const ID = "33333333-3333-4333-8333-333333333333";
+const ID = "3f1c8a90-3333-4333-8333-333333333333";
 const LUGAR = "22222222-2222-4222-8222-222222222222";
 
 const intervencion = {
@@ -38,6 +41,11 @@ const intervencion = {
   actualizadoEn: new Date("2026-03-02T12:00:00Z"),
 };
 
+const conteos = {
+  porEstado: { PLANIFICADA: 3, EN_EJECUCION: 1, FINALIZADA: 0, CANCELADA: 0 },
+  total: 4,
+};
+
 const contexto = (rol: "ADMIN_MUNICIPAL" | "OPERADOR") => ({
   ayuntamientoId: "11111111-1111-4111-8111-111111111111",
   usuario: { id: "usuario-1", rol },
@@ -48,6 +56,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   contextoActualMock.mockResolvedValue(contexto("ADMIN_MUNICIPAL"));
   listarIntervencionesMock.mockResolvedValue([intervencion]);
+  contarIntervencionesMock.mockResolvedValue(conteos);
   listarLugaresMock.mockResolvedValue([
     { id: LUGAR, nombre: "Centro", tipo: "colonia" },
   ]);
@@ -58,18 +67,7 @@ describe("bandeja de intervenciones", () => {
     searchParams: Promise.resolve(searchParams),
   });
 
-  beforeEach(() => {
-    listarIntervencionesMock.mockResolvedValue([intervencion]);
-    listarLugaresMock.mockResolvedValue([
-      {
-        id: "22222222-2222-4222-8222-222222222222",
-        nombre: "Centro",
-        tipo: "colonia",
-      },
-    ]);
-  });
-
-  it("reemplaza el texto de no disponible por el listado con su enlace", async () => {
+  it("pinta el tablero con el alta y el enlace de cada obra", async () => {
     const html = renderToStaticMarkup(await PaginaDeIntervenciones(props()));
 
     expect(html).toContain(">Intervenciones</h1>");
@@ -77,8 +75,30 @@ describe("bandeja de intervenciones", () => {
       "La bandeja de intervenciones todavía no está disponible.",
     );
     expect(html).toContain(">Obra<");
+    expect(html).toContain("INT-3F1C");
     expect(html).toContain(`href="/intervenciones/${ID}"`);
     expect(html).toContain("Registrar intervención");
+    expect(html).toContain("agrupadas por el estado en que están");
+  });
+
+  it("S2: los conteos salen del servidor, no de las filas de la pagina", async () => {
+    const html = renderToStaticMarkup(await PaginaDeIntervenciones(props()));
+
+    expect(contarIntervencionesMock).toHaveBeenCalledTimes(1);
+    expect(html).toContain("4 intervenciones");
+    expect(html).toContain("3 planificadas");
+    expect(html).toContain("1 en ejecución");
+  });
+
+  it("S2: pide los conteos con los filtros puestos y sin el estado", async () => {
+    await PaginaDeIntervenciones(
+      props({ estado: "PLANIFICADA", tipo: "PAVIMENTACION" }),
+    );
+
+    expect(contarIntervencionesMock).toHaveBeenCalledWith(
+      { tipo: "PAVIMENTACION" },
+      expect.objectContaining({ usuario: expect.any(Object) }),
+    );
   });
 
   it("pasa los filtros de la URL al caso de uso", async () => {

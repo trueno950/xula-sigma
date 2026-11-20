@@ -1,5 +1,6 @@
 export * from "./altaDeIntervencion";
 export * from "./cambiarEstadoDeIntervencion";
+export * from "./contarIntervenciones";
 export * from "./corregirIntervencion";
 export * from "./intervencionConReferencias";
 export * from "./intervencionPorId";

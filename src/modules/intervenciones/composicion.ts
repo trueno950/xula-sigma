@@ -2,6 +2,7 @@ import type { PorcionExportable } from "@/shared/exportacion/exportar";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import {
   crearCambiarEstadoDeIntervencion,
+  crearContarIntervenciones,
   crearCorregirIntervencion,
   crearIntervencionConReferencias,
   crearIntervencionPorId,
@@ -12,6 +13,7 @@ import {
 } from "./application";
 import { crearObrasDeReporte } from "./application/obrasDeReporte";
 import {
+  conteosDeIntervencionesSql,
   crearLectorDeReferenciasPorModulos,
   crearLectorDeReportesPorReportes,
   crearLectorDeUbicacionesPorTerritorio,
@@ -44,6 +46,9 @@ export const listarIntervencionesParaMapa = crearListarIntervencionesParaMapa(
 );
 export const listarIntervenciones = crearListarIntervenciones(
   lectorDeIntervencionesSql,
+);
+export const contarIntervenciones = crearContarIntervenciones(
+  conteosDeIntervencionesSql,
 );
 export const listarIntervencionesDeCalleEnTransaccion = (
   tx: TransaccionTenant,

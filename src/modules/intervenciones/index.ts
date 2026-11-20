@@ -6,12 +6,14 @@ export type {
   IntervencionGuardada,
 } from "./application/puertos";
 export type {
+  ContadorDeIntervenciones,
   FiltrosDeIntervenciones,
   IntervencionParaMapa,
 } from "./application/puertosDeLectura";
 export type { EntradaDeRegistroDeIntervencion } from "./application/registrarIntervencion";
 export {
   cambiarEstadoDeIntervencion,
+  contarIntervenciones,
   corregirIntervencion,
   intervencionConReferencias,
   intervencionPorId,

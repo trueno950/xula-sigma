@@ -1,3 +1,4 @@
+export * from "./conteosDeIntervencionesSql";
 export * from "./lectorDeIntervencionesDeMapaSql";
 export * from "./lectorDeIntervencionesSql";
 export * from "./lectorDeReferenciasPorModulos";
