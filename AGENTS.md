@@ -559,6 +559,23 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `RolNoAsignableError` -solo `OPERADOR` y `CONSULTA`, S3- y
   `CorreoYaRegistradoError` -el choque contra `usuarios_tenant_email_idx` o
   `usuarios_tenant_email_lower_idx`, migracion `0024`-.
+
+  **Nadie restablece su propia contraseña** (S1 de `usuarios-ux`). El
+  listado no ofrece el boton en la fila propia y el caso de uso
+  `restablecerContrasenia` la rechaza igual con
+  `RestablecimientoPropioError`: esconder un boton no es autorizacion, y un
+  POST a mano sigue llegando. `restablecerContraseniaAction` lo redacta como
+  «No puede restablecer su propia contraseña.».
+
+  **La baja exige confirmacion** (S12 de `usuarios-ux`).
+  `darDeBajaUsuarioAction` pide el campo `confirmar=si`, que llega de una
+  casilla `required` del `<form>` cuyo texto nombra a la persona —«Confirmo
+  dar de baja a …»—, y lo vuelve a exigir en el servidor con
+  `BajaSinConfirmarError` (`modules/usuarios/domain/errores.ts`) antes de
+  llamar al caso de uso: sin la casilla no cambia nada, no hay traza en
+  bitacora y la cuenta sigue activa. Una baja sin ella responde «Para dar de
+  baja a la persona, marque la casilla de confirmación.».
+
   **La contraseña temporal no vuelve por `?clave=`** (S4 de
   `administracion-de-usuarios` y S9 de `usuarios-ux`; **este es el único
   lugar donde esto se cuenta**: los demás archivos apuntan acá). El redirect

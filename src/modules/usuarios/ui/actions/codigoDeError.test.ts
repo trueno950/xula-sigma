@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { RestablecimientoPropioError } from "@/shared/auth/administracionDeUsuarios";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
-import { CorreoYaRegistradoError, RolNoAsignableError } from "../../domain";
+import {
+  BajaSinConfirmarError,
+  CorreoYaRegistradoError,
+  RolNoAsignableError,
+} from "../../domain";
 import { codigoDeErrorParaLaOperadora } from "./codigoDeError";
 
 /**
@@ -19,6 +24,12 @@ describe("codigoDeErrorParaLaOperadora", () => {
     ["no encontrado", new NoEncontradoError(), "no-encontrado"],
     ["rol no asignable", new RolNoAsignableError(), "rol-no-asignable"],
     ["correo repetido", new CorreoYaRegistradoError(), "correo-ya-registrado"],
+    [
+      "restablecimiento propio",
+      new RestablecimientoPropioError(),
+      "restablecimiento-propio",
+    ],
+    ["baja sin confirmar", new BajaSinConfirmarError(), "baja-sin-confirmar"],
   ])("traduce el error de %s", (_caso, error, codigo) => {
     expect(codigoDeErrorParaLaOperadora(error, "alta", "generico-alta")).toBe(
       codigo,

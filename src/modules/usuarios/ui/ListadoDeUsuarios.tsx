@@ -18,9 +18,10 @@ import { AccionesDeUsuario } from "./AccionesDeUsuario";
  * **Lo que cada fila ofrece se decide aca**, con las mismas reglas que
  * corren en el servidor, para no pintar un boton que la accion va a
  * rechazar: `puedeRestablecerContrasenia` deja afuera a un `SUPER_ADMIN`,
- * `puedeDarDeBaja` lo deja afuera tambien, y nadie se da de baja a si mismo
+ * `puedeDarDeBaja` lo deja afuera tambien, nadie se da de baja a si mismo
  * —el municipio tiene un solo administrador y ninguna ruta limpia `bajaEn`:
- * seria un bloqueo permanente (B2 de la verificacion de T1)—.
+ * seria un bloqueo permanente (B2 de la verificacion de T1)— y nadie se
+ * restablece su propia contrasenia (S1 de `usuarios-ux`).
  *
  * **Una fila por tarjeta y no `Tabla`.** `FilaDeTabla` mide 48px fijos en
  * escritorio, y las acciones de una fila son botones de 44px: no caben ni
@@ -62,7 +63,11 @@ export function ListadoDeUsuarios({
               </span>
             </div>
             {permisos ? (
-              <AccionesDeUsuario usuarioId={usuario.id} {...permisos} />
+              <AccionesDeUsuario
+                usuarioId={usuario.id}
+                nombre={usuario.nombre}
+                {...permisos}
+              />
             ) : (
               <span className="text-[13px] text-caliza-apagada">
                 {usuario.dadoDeBaja
@@ -84,6 +89,11 @@ export function ListadoDeUsuarios({
  * rol que no es de la plataforma no habilita nada —la base tiene un CHECK
  * que lo hace imposible, y un valor raro aca significa que algo mas se
  * rompio—.
+ *
+ * La propia cuenta queda sin restablecer por la misma razon por la que el
+ * servidor la rechaza: la regla de rol no distingue a quien pregunta de
+ * quien recibe, y restablecerse la contrasenia a uno mismo pide la clave
+ * vieja, no un boton en el listado (S1 de `usuarios-ux`).
  */
 function permisosDe(
   actor: { id: string; rol: Rol },
@@ -91,7 +101,9 @@ function permisosDe(
 ): { puedeRestablecer: boolean; puedeBaja: boolean } | null {
   if (usuario.dadoDeBaja || !esRol(usuario.rol)) return null;
 
-  const puedeRestablecer = puedeRestablecerContrasenia(actor.rol, usuario.rol);
+  const puedeRestablecer =
+    puedeRestablecerContrasenia(actor.rol, usuario.rol) &&
+    usuario.id !== actor.id;
   const puedeBaja =
     puedeDarDeBaja(actor.rol, usuario.rol) && usuario.id !== actor.id;
 

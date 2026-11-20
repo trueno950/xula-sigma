@@ -28,6 +28,23 @@ import { puedeDarDeBaja, puedeRestablecerContrasenia, type Rol } from "./roles";
 type Objetivo = { id: string; rol: Rol };
 
 /**
+ * S1 de `usuarios-ux`: nadie se restablece su propia contrasenia desde el
+ * panel. No es una regla de rol —`puedeRestablecerContrasenia` deja pasar al
+ * `ADMIN_MUNICIPAL` sobre cualquier cuenta de su municipio, la suya
+ * incluida— sino de a quien alcanza la accion. Por que vive en el servidor
+ * y no solo en el listado: nota de `restablecerContraseniaAction` en
+ * AGENTS.md.
+ */
+export class RestablecimientoPropioError extends Error {
+  readonly codigo = "RESTABLECIMIENTO_PROPIO";
+
+  constructor(mensaje = "No puede restablecer su propia contraseña.") {
+    super(mensaje);
+    this.name = "RestablecimientoPropioError";
+  }
+}
+
+/**
  * El objetivo, o `NoEncontradoError`.
  *
  * No filtra por `ayuntamientoId`: no hace falta y seria peor. La politica
@@ -79,6 +96,10 @@ export function restablecerContrasenia(
 
     if (!puedeRestablecerContrasenia(contexto.usuario.rol, objetivo.rol)) {
       throw new NoAutorizadoError();
+    }
+
+    if (objetivo.id === contexto.usuario.id) {
+      throw new RestablecimientoPropioError();
     }
 
     const digest = await hashDeClave(datos.nuevaClave);

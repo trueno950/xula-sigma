@@ -105,13 +105,13 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   await expect(filaDe(page)).toHaveCount(1);
   await expect(filaDe(page).getByText("Activo")).toBeVisible();
 
-  // A2 y B2: la propia cuenta se puede restablecer pero no darse de baja
-  // —el municipio tiene un solo administrador y no hay ruta que limpie
-  // `bajaEn`—, asi que el boton no se ofrece.
+  // S1 y B2: la propia cuenta no se restablece —el servidor la rechaza— ni
+  // se da de baja: el municipio tiene un solo administrador y no hay ruta
+  // que limpie `bajaEn`.
   const propia = page.getByRole("listitem").filter({ hasText: CORREO });
   await expect(
     propia.getByRole("button", { name: "Restablecer contraseña" }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(propia.getByRole("button", { name: "Dar de baja" })).toHaveCount(
     0,
   );
@@ -135,7 +135,11 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
     true,
   );
 
-  // S6: la baja se confirma y deja la fila sin acciones.
+  // S6 y S12: la baja se confirma con una casilla que nombra a la persona,
+  // y deja la fila sin acciones.
+  await filaDe(page)
+    .getByRole("checkbox", { name: `Confirmo dar de baja a ${NOMBRE}.` })
+    .check();
   await filaDe(page).getByRole("button", { name: "Dar de baja" }).click();
   await page.waitForURL(/\/usuarios\?ok=baja$/);
 
@@ -152,6 +156,29 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   );
 
   expect(enLaBase?.bajaEn).toBeInstanceOf(Date);
+});
+
+/**
+ * S1 de `usuarios-ux`: el administrador no ve «Restablecer contraseña» en su
+ * propia fila. Que ademas el servidor la rechace lo prueban el unit de la
+ * accion y el de integracion del caso de uso: ocultar un boton no es
+ * autorizacion, y este test solo afirma la mitad que el navegador decide.
+ */
+test("la fila del propio administrador no ofrece restablecer su contraseña", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await page.goto(urlDe("motul", "/usuarios"));
+
+  const propia = page.getByRole("listitem").filter({ hasText: CORREO });
+
+  await expect(propia).toHaveCount(1);
+  await expect(
+    propia.getByRole("button", { name: "Restablecer contraseña" }),
+  ).toHaveCount(0);
+  await expect(propia.getByRole("button", { name: "Dar de baja" })).toHaveCount(
+    0,
+  );
 });
 
 /**

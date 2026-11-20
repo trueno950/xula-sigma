@@ -1,4 +1,4 @@
-import { Boton } from "@/shared/ui";
+import { ANILLO_DE_FOCO, Boton } from "@/shared/ui";
 import { darDeBajaUsuarioAction } from "./actions/darDeBajaUsuarioAction";
 import { restablecerContraseniaAction } from "./actions/restablecerContraseniaAction";
 
@@ -22,10 +22,12 @@ import { restablecerContraseniaAction } from "./actions/restablecerContraseniaAc
  */
 export function AccionesDeUsuario({
   usuarioId,
+  nombre,
   puedeRestablecer,
   puedeBaja,
 }: {
   usuarioId: string;
+  nombre: string;
   puedeRestablecer: boolean;
   puedeBaja: boolean;
 }) {
@@ -42,13 +44,33 @@ export function AccionesDeUsuario({
         </form>
       ) : null}
       {puedeBaja ? (
-        <form action={darDeBajaUsuarioAction}>
+        <form
+          action={darDeBajaUsuarioAction}
+          className="flex flex-wrap items-center gap-2"
+        >
           <input type="hidden" name="usuarioId" value={usuarioId} />
+          <CasillaDeBaja nombre={nombre} />
           <Boton type="submit" variante="peligro">
             Dar de baja
           </Boton>
         </form>
       ) : null}
     </div>
+  );
+}
+
+/** S12: la casilla nombra a quien se da de baja; por que el servidor la vuelve a exigir, en la nota de `darDeBajaUsuarioAction` de AGENTS.md. */
+function CasillaDeBaja({ nombre }: { nombre: string }) {
+  return (
+    <label className="flex min-h-11 max-w-full items-center gap-2.5 text-[15px] leading-[1.4] text-caliza-tinta">
+      <input
+        type="checkbox"
+        name="confirmar"
+        value="si"
+        required
+        className={`size-5 shrink-0 accent-senial-error ${ANILLO_DE_FOCO}`}
+      />
+      <span>{`Confirmo dar de baja a ${nombre}.`}</span>
+    </label>
   );
 }

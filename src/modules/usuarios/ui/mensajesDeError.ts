@@ -25,6 +25,10 @@ export const CODIGOS_DE_ERROR = [
   /** S3: solo operador y consulta. */
   "rol-no-asignable",
   "correo-ya-registrado",
+  /** S1 de `usuarios-ux`: nadie restablece su propia contrasenia. */
+  "restablecimiento-propio",
+  /** S12 de `usuarios-ux`: la baja no corre sin la casilla marcada. */
+  "baja-sin-confirmar",
   "generico-alta",
   "generico-restablecimiento",
   "generico-baja",
@@ -48,6 +52,9 @@ const MENSAJES: Record<CodigoDeError, string> = {
     "Desde el panel solo se dan de alta operadores y consultas.",
   "correo-ya-registrado":
     "Ya hay una persona con ese correo en este ayuntamiento.",
+  "restablecimiento-propio": "No puede restablecer su propia contraseña.",
+  "baja-sin-confirmar":
+    "Para dar de baja a la persona, marque la casilla de confirmación.",
   "generico-alta": "No se pudo completar el alta. Intente de nuevo.",
   "generico-restablecimiento":
     "No se pudo restablecer la contraseña. Intente de nuevo.",
