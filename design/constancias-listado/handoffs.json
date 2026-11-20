@@ -3,12 +3,13 @@
   "chosen": "01-tabla-con-titular.html",
   "handoffs": {
     "01-tabla-con-titular.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-18T18:59:02.372Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/constancias-ux.md"
+      "implementedAt": "2026-11-18T19:59:26.739Z",
+      "feature": "odd/tasks/constancias-ux.md",
+      "note": "PR #147 (836b64f). Demo: http://demo.xula.localhost:3200/constancias. Sin la columna «Tipo» mientras haya un solo tipo."
     }
   }
 }

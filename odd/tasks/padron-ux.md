@@ -51,7 +51,7 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3:
 - [x] **T2** (S1-S4) listado según `design/padron-listado/01-tabla-con-domicilio.html` (L6) — worker — commit: 5fc00f3
 - [x] **T3** (S5-S7) formulario de alta — worker — commit: f82c80e
 - [x] **T4** (S8-S12) ficha según `design/padron-ficha/02-encabezado-con-pestanas.html` (L7) — worker — commit: 5fd31ed, 011f1a5
-- [ ] **T5** (S1-S13) verificación, revisión nativa, PR y merge — verify — commit:
+- [x] **T5** (S1-S13) verificación, revisión nativa, PR y merge — verify — commit: PR #146, 3b9cc4e
 
 ## Log
 

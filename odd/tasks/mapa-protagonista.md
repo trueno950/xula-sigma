@@ -49,7 +49,7 @@ Implementa la dirección elegida en el lienzo de gentle design: `design/mapa-ope
 ## Tasks
 
 - [x] **T1** (S1-S7) implementar el rediseño con TDD, tests y E2E — worker + orquestador — commit: `976edc3` (agregado), `e3909b5` (pantalla), siguiente (E2E, spec y Log)
-- [ ] **T2** (S1-S7) verificador independiente, revisión nativa, PR y merge — verify — commit:
+- [x] **T2** (S1-S7) verificador independiente, revisión nativa, PR y merge — verify — commit: PR #142, 6e91182
 
 ## Log
 

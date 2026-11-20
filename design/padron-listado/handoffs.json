@@ -3,12 +3,13 @@
   "chosen": "01-tabla-con-domicilio.html",
   "handoffs": {
     "01-tabla-con-domicilio.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-18T03:24:28.785Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/padron-ux.md"
+      "implementedAt": "2026-11-18T14:51:46.762Z",
+      "feature": "odd/tasks/padron-ux.md",
+      "note": "PR #146 (3b9cc4e). Demo: http://demo.xula.localhost:3200/padron. Sin botón «Fusionar duplicados» en la cabecera: la fusión vive en la ficha."
     }
   }
 }

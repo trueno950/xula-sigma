@@ -96,7 +96,7 @@ con «1»: prioridad alta y media, sin ZD2.
   worker — commit:
 - [x] **T3** (S9, S10) registro de domicilios según `design/territorio-domicilios/01-una-busqueda-con-pista.html` (L3) —
   worker — commit:
-- [ ] **T4** (S1-S14) verificación, PR y merge — verify — commit:
+- [x] **T4** (S1-S14) verificación, PR y merge — verify — commit: PR #149, 16d46e1
 
 ## Log
 

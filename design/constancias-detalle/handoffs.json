@@ -3,12 +3,13 @@
   "chosen": "02-hoja-sellada.html",
   "handoffs": {
     "02-hoja-sellada.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-18T19:06:34.703Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/constancias-ux.md"
+      "implementedAt": "2026-11-18T19:59:26.747Z",
+      "feature": "odd/tasks/constancias-ux.md",
+      "note": "PR #147 (836b64f). Estado una sola vez, como sello (L6); la hoja es la misma de la vista previa de emitir, con la redacción de la plantilla del PDF."
     }
   }
 }
