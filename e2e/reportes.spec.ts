@@ -87,9 +87,16 @@ const abrirBandeja = async (page: Page, consulta = ""): Promise<void> => {
 };
 
 // La fila lleva el atraso dos veces en el HTML -la celda de escritorio y la
-// linea del telefono-, y una de las dos esta siempre oculta.
+// linea del telefono-, y una de las dos esta siempre oculta. Se busca en la
+// fila del reporte del escenario y no en toda la bandeja: en una base que ya
+// corrio la spec quedan otros reportes de 40 dias con la misma insignia.
 const insigniaDeAtraso = (page: Page) =>
-  page.getByText("Atrasado · 40 días").filter({ visible: true });
+  page
+    .locator(":is(li, tr)", {
+      has: page.getByRole("link", { name: new RegExp(escenario.folio) }),
+    })
+    .getByText("Atrasado · 40 días")
+    .filter({ visible: true });
 
 // S3: dejo de ser una casilla dentro del formulario y paso a ser el
 // interruptor de la banda, que envia el GET el solo.
