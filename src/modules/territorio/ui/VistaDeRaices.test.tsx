@@ -85,10 +85,11 @@ describe("VistaDeRaices: cuentas por fila", () => {
 
   it("sin cuentas dibuja las filas sin conteos ni insignias", () => {
     const html = pintar({ sinCuentas: true });
-
-    expect(html).not.toContain("domicilio");
-    expect(html).not.toContain("Sin calles");
-    expect(html).toContain("Buenavista");
+    // Las filas, no el buscador: su etiqueta tambien dice «domicilio».
+    const filas = html.split('aria-label="Asentamientos del municipio"')[1];
+    expect(filas).toContain("Buenavista");
+    expect(filas).not.toContain("domicilio");
+    expect(filas).not.toContain("Sin calles");
   });
 });
 
