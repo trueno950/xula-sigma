@@ -617,3 +617,41 @@ test("a 1440px el mapa y su panel van lado a lado", async ({ page }, info) => {
     contentType: "image/png",
   });
 });
+/**
+ * `EstadoEnVivo` refresca la pantalla con cada aviso del canal, y el
+ * servidor entrega los marcadores en objetos nuevos aunque digan lo mismo.
+ * Antes, cada refresco desmontaba el mapa y lo volvia a armar: la operadora
+ * perdia su zoom, y en el hueco no habia control de «Zoom out», que es lo
+ * que hacia intermitente la prueba de arriba en CI. Un refresco sin cambios
+ * tiene que dejar el mismo mapa, no uno nuevo.
+ */
+test("un refresco sin cambios conserva el mismo mapa y el zoom de la operadora", async ({
+  page,
+}) => {
+  await abrirMapaDeMotul(page);
+  await elegirTerritorio(page, escenario.origenId);
+
+  const region = mapa(page);
+  await expect(region).toHaveAttribute("data-limites");
+  const zoomMinimo = Number(await region.getAttribute("data-min-zoom"));
+  await expect.poll(() => zoomDelMapa(region)).toBe(zoomMinimo);
+
+  await region.getByRole("button", { name: "Zoom in" }).click();
+  await expect.poll(() => zoomDelMapa(region)).toBe(zoomMinimo + 1);
+
+  // Marca el control de este mapa: si el mapa se rearma, el nodo marcado
+  // sale del documento y entra otro sin la marca.
+  const alejar = region.getByRole("button", { name: "Zoom out" });
+  await alejar.evaluate((nodo) => nodo.setAttribute("data-mapa-original", ""));
+
+  const refresco = page.waitForResponse(
+    (respuesta) => respuesta.request().headers().rsc === "1",
+  );
+  await page.getByRole("button", { name: "Actualizar ahora" }).click();
+  await refresco;
+  await expect(resumenDelMapa(page)).toContainText("3 hechos");
+
+  await expect(region.locator("[data-mapa-original]")).toHaveCount(1);
+  await expect(alejar).toBeVisible();
+  expect(await zoomDelMapa(region)).toBe(zoomMinimo + 1);
+});
