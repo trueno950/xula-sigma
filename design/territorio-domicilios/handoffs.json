@@ -3,12 +3,13 @@
   "chosen": "01-una-busqueda-con-pista.html",
   "handoffs": {
     "01-una-busqueda-con-pista.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-19T02:51:17.821Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/territorio-ux.md"
+      "implementedAt": "2026-11-19T04:47:05.125Z",
+      "feature": "odd/tasks/territorio-ux.md",
+      "note": "PR #149 (16d46e1). Demo: http://demo.xula.localhost:3200/territorio/domicilios."
     }
   }
 }

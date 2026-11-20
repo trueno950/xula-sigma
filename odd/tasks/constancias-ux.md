@@ -78,11 +78,11 @@ L2: «1», que es prioridad alta y media, sin L4 ni C1.
   - mapa de lo que hay hoy.
 
   — worker — commit: 7fe219e
-- [ ] **T2** (S1-S3) listado según `design/constancias-listado/01-tabla-con-titular.html` (L3) — worker — commit: 1d3eed2
+- [x] **T2** (S1-S3) listado según `design/constancias-listado/01-tabla-con-titular.html` (L3) — worker — commit: 1d3eed2
 - [x] **T3** (S4-S6) emitir: buscador de persona en la página, vista previa
   y aviso con el tiempo de residencia — worker — commit: f58e399, 839fb24
 - [x] **T4** (S7-S9) detalle según `design/constancias-detalle/02-hoja-sellada.html` (L5), reusando `HojaDeConstancia` de T3 — worker — commit: c9038d6
-- [ ] **T5** (S1-S10) verificación, PR y merge — verify — commit:
+- [x] **T5** (S1-S10) verificación, PR y merge — verify — commit: PR #147, 836b64f
 
 ## Log
 

@@ -55,12 +55,12 @@ Los textos entre comillas son los de la auditoría que el usuario aprobó en L3 
 
 ## Tasks
 
-- [ ] **T0** (S1-S3, S6, S13-S15) diseño en gentle design: dos direcciones para la bandeja y dos para el detalle; el usuario elige — design — commit:
+- [x] **T0** (S1-S3, S6, S13-S15) diseño en gentle design: dos direcciones para la bandeja y dos para el detalle; el usuario elige — design — commit: `design/reportes-bandeja`, `design/reportes-detalle`
 - [x] **T1** (S4, S11) lugar, calle o domicilio, y fecha, en la lectura de la bandeja y del detalle — worker — commit: `cf8da6c`
 - [x] **T2** (S1-S6) bandeja según `design/reportes-bandeja/02-pestanas-por-estado.html` (L9) — worker — commit: `f7444a1`
 - [x] **T3** (S7-S10) formulario de alta — worker — commit: siguiente
 - [x] **T4** (S11-S15) detalle según `design/reportes-detalle/01-ficha-y-acciones.html` (L7) — worker — commit: `3868585`
-- [ ] **T5** (S1-S16) verificación, revisión nativa, PR y merge — verify — commit:
+- [x] **T5** (S1-S16) verificación, revisión nativa, PR y merge — verify — commit: PR #143, dcbfcbf
 
 ## Log
 
