@@ -20,7 +20,9 @@ test("la busqueda de lugares se envia con el boton, sin JavaScript de por medio"
   await accederAMotul(page);
   await page.goto(urlDe("motul", "/territorio"));
 
-  const campo = page.getByLabel("Buscar lugar por nombre");
+  // Es el unico buscador de la entrada: el de domicilio ya no se apila abajo.
+  await expect(page.getByRole("searchbox")).toHaveCount(1);
+  const campo = page.getByLabel("Buscar lugar o domicilio");
   const formulario = page.locator("form", { has: campo });
   await expect(
     formulario.getByRole("button", { name: "Buscar" }),
@@ -36,4 +38,22 @@ test("la busqueda de lugares se envia con el boton, sin JavaScript de por medio"
 
   await page.getByRole("link", { name: /Quitar filtro/ }).click();
   await expect(page).toHaveURL(/\/territorio$/);
+});
+
+test("la misma busqueda se lleva al registro de domicilios con un enlace", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await page.goto(urlDe("motul", "/territorio?q=Calle 22 265"));
+
+  await page
+    .getByRole("link", {
+      name: "Buscar «Calle 22 265» en el registro de domicilios",
+    })
+    .click();
+
+  await expect(page).toHaveURL(/\/territorio\/domicilios\?q=Calle%2022%20265$/);
+  await expect(page.getByLabel("Calle y número", { exact: true })).toHaveValue(
+    "Calle 22 265",
+  );
 });
