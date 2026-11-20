@@ -11,6 +11,7 @@ const contextoActualMock = vi.hoisted(() => vi.fn());
 const detalleDeReporteMock = vi.hoisted(() => vi.fn());
 const historialDeReporteMock = vi.hoisted(() => vi.fn());
 const leerUmbralDeAtrasoMock = vi.hoisted(() => vi.fn());
+const obrasDeReporteMock = vi.hoisted(() => vi.fn(async () => []));
 
 vi.mock("next/navigation", () => ({ notFound: vi.fn(), redirect: vi.fn() }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
@@ -33,6 +34,7 @@ vi.mock("@/modules/reportes", async (importOriginal) => ({
 vi.mock("@/modules/intervenciones", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/intervenciones")>()),
   ProgramarObra: () => <div>formulario de programar obra</div>,
+  obrasDeReporte: obrasDeReporteMock,
 }));
 
 const { default: PaginaDeDetalleDeReporte } = await import("./page");

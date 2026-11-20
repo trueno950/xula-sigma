@@ -2,7 +2,9 @@ import type { PorcionExportable } from "@/shared/exportacion/exportar";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import {
   crearCambiarEstadoDeIntervencion,
+  crearContarIntervenciones,
   crearCorregirIntervencion,
+  crearHistorialDeIntervencion,
   crearIntervencionConReferencias,
   crearIntervencionPorId,
   crearListarIntervenciones,
@@ -10,13 +12,17 @@ import {
   crearProgramarObraDeReporte,
   crearRegistrarIntervencion,
 } from "./application";
+import { crearObrasDeReporte } from "./application/obrasDeReporte";
 import {
+  conteosDeIntervencionesSql,
   crearLectorDeReferenciasPorModulos,
   crearLectorDeReportesPorReportes,
   crearLectorDeUbicacionesPorTerritorio,
   crearReportesParaObraPorReportes,
+  lectorDeHistorialDeIntervencionesSql,
   lectorDeIntervencionesDeMapaSql,
   lectorDeIntervencionesSql,
+  obrasDeReporteSql,
   repositorioDeIntervencionesSql,
 } from "./infrastructure";
 import {
@@ -37,11 +43,23 @@ export const intervencionConReferencias = crearIntervencionConReferencias(
   intervencionPorId,
   crearLectorDeReferenciasPorModulos(),
 );
+
+/**
+ * El historial de cambios de una intervencion (S11 de `intervenciones-ux`):
+ * las revisiones con el nombre y el rol de quien las hizo, y quien registro la
+ * intervencion para el bloque de sistema de la ficha (S14).
+ */
+export const historialDeIntervencion = crearHistorialDeIntervencion(
+  lectorDeHistorialDeIntervencionesSql,
+);
 export const listarIntervencionesParaMapa = crearListarIntervencionesParaMapa(
   lectorDeIntervencionesDeMapaSql,
 );
 export const listarIntervenciones = crearListarIntervenciones(
   lectorDeIntervencionesSql,
+);
+export const contarIntervenciones = crearContarIntervenciones(
+  conteosDeIntervencionesSql,
 );
 export const listarIntervencionesDeCalleEnTransaccion = (
   tx: TransaccionTenant,
@@ -67,6 +85,15 @@ export const cambiarEstadoDeIntervencion = crearCambiarEstadoDeIntervencion({
 export const programarObraDeReporte = crearProgramarObraDeReporte({
   repositorio: repositorioDeIntervencionesSql,
   reportes: crearReportesParaObraPorReportes(),
+});
+
+/**
+ * «Las obras de este reporte» (S16 de `intervenciones-ux`): lo que la ficha
+ * del reporte necesita para mostrar la que ya existe y para comprobar contra
+ * el servidor el `?obra=` de la URL antes de pintar el enlace.
+ */
+export const obrasDeReporte = crearObrasDeReporte({
+  listar: obrasDeReporteSql.listar,
 });
 
 /**

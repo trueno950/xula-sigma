@@ -83,11 +83,11 @@ test("registra una intervencion desde la bandeja y la ve planificada", async ({
   await accederAMotul(page);
   await registrarDesdeLaBandeja(page, "PAVIMENTACION");
 
-  await expect(
-    page.getByRole("heading", { name: "Intervención Pavimentación" }),
-  ).toBeVisible();
+  // T6 (S10, S14): el detalle titula con el identificador y la fecha de
+  // ocurrencia va en el formato unico del sistema, no en ISO.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^INT-/);
   await expect(page.getByText("Planificada", { exact: true })).toBeVisible();
-  await expect(page.getByText("2026-11-16").first()).toBeVisible();
+  await expect(page.getByText("16 nov 2026", { exact: true })).toBeVisible();
 });
 
 test("programar obra desde el reporte y finalizarla cierra el reporte", async ({
@@ -183,9 +183,7 @@ test("sin JavaScript, el alta de intervencion se ve y se envia", async ({
     await page.getByRole("button", { name: "Registrar intervención" }).click();
 
     await expect(page).toHaveURL(/\/intervenciones\/[0-9a-f-]{36}$/);
-    await expect(
-      page.getByRole("heading", { name: "Intervención Bache" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^INT-/);
   } finally {
     await sinJs.close();
   }

@@ -20,6 +20,10 @@ export * from "./composicion";
  * de 200 lineas (`AGENTS.md`, Metricas).
  */
 export const usoDeCalle = crearUsoDeCalle(repositorioDeCallesSql);
+export type {
+  CalleEnElLugar,
+  EntradaDeCalleDelLugar,
+} from "./application/calleDelLugar";
 export {
   type CalleId,
   comoCalleId,

@@ -13,6 +13,7 @@ import {
   withTenant,
 } from "@/shared/tenancy/withTenant";
 import { comoIntervencionId, TIPOS_DE_INTERVENCION } from "../domain";
+import { exigirCalleDelLugar } from "./corregirIntervencion.ubicacion";
 import type { RepositorioDeIntervenciones } from "./puertos";
 import type {
   LecturaDeReportes,
@@ -35,12 +36,21 @@ export type EntradaDeCorreccionDeIntervencion = z.infer<
 
 type RegistrarDeBitacora = (...args: Parameters<typeof registrar>) => unknown;
 
+type RepositorioDeCorreccion = Pick<RepositorioDeIntervenciones, "corregir"> & {
+  /**
+   * La pareja guardada. Se lee solo cuando la correccion elige una calle que no
+   * es del asentamiento del lugar: sin este lector esa eleccion se rechaza
+   * igual, nunca se escribe a ciegas.
+   */
+  buscarPorId?: RepositorioDeIntervenciones["buscarPorId"];
+};
+
 type SolicitudDeCorreccionEnTenant = {
   entrada: EntradaDeCorreccionDeIntervencion;
   id: string;
   cambios: Omit<EntradaDeCorreccionDeIntervencion, "id">;
   contexto: ContextoActual;
-  repositorio: Pick<RepositorioDeIntervenciones, "corregir">;
+  repositorio: RepositorioDeCorreccion;
   crearLecturaDeUbicaciones: () => LecturaDeUbicaciones;
   crearLecturaDeReportes: () => LecturaDeReportes;
   registrarBitacora: RegistrarDeBitacora;
@@ -61,6 +71,13 @@ const validarReferenciasDeCorreccion = async (
     .crearLecturaDeUbicaciones()
     .de(tx, solicitud.entrada.lugarId, solicitud.entrada.calleId);
   if (!ubicacion) throw new NoEncontradoError();
+
+  await exigirCalleDelLugar({
+    tx,
+    entrada: solicitud.entrada,
+    crearLecturaDeUbicaciones: solicitud.crearLecturaDeUbicaciones,
+    buscarPorId: solicitud.repositorio.buscarPorId,
+  });
 
   if (
     solicitud.entrada.reporteId !== null &&
@@ -108,7 +125,7 @@ export function crearCorregirIntervencion({
   crearLecturaDeReportes,
   registrarBitacora = registrar,
 }: {
-  repositorio: Pick<RepositorioDeIntervenciones, "corregir">;
+  repositorio: RepositorioDeCorreccion;
   crearLecturaDeUbicaciones: () => LecturaDeUbicaciones;
   crearLecturaDeReportes: () => LecturaDeReportes;
   registrarBitacora?: RegistrarDeBitacora;

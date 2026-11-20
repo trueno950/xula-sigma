@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Pestañas y fila con identificador — Bandeja de intervenciones</title>
+<style>
+  :root {
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-inhabilitado: oklch(0.68 0.007 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, p, ul, li { margin: 0; }
+  ul { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .enlace:hover { text-decoration-thickness: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* shell */
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); overflow-y: auto; }
+  .municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2; color: var(--color-caliza-tinta); text-decoration: none; }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--radio-md); font-weight: 600; font-size: 15px; color: var(--color-caliza-apagada); text-decoration: none; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radio-md); background: transparent; color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer; }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  /* contenido */
+  .contenido { min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 16px; }
+  .cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; }
+  .cabecera h1 { margin-bottom: 4px; }
+  .cabecera .descripcion { max-width: 62ch; color: var(--color-caliza-apagada); }
+  .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: var(--radio-md); border: 1px solid transparent; font: 600 15px/1 var(--fuente); cursor: pointer; text-decoration: none; white-space: nowrap; transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease); }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .boton[disabled] { background: var(--color-caliza-relleno); color: var(--color-caliza-inhabilitado); border-color: var(--color-caliza-divisor); cursor: not-allowed; }
+
+  /* pestañas por estado */
+  .banda { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .segmentado { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); }
+  .segmentado a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: var(--radio-md); font-size: 15px; font-weight: 600; color: var(--color-caliza-apagada); text-decoration: none; white-space: nowrap; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+  .segmentado a:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .segmentado a[aria-current="true"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .segmentado .cuenta { font-family: var(--fuente-dato); font-size: .875rem; color: var(--color-caliza-apagada); }
+  .segmentado a[aria-current="true"] .cuenta { color: var(--color-caliza-tinta); }
+  .segmentado .visto { display: none; color: var(--color-caliza-tinta); }
+  .segmentado a[aria-current="true"] .visto { display: block; }
+  .orden { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* filtros */
+  .filtros { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); }
+  .campo { display: flex; flex-direction: column; gap: 6px; flex: 1 1 120px; min-width: 0; max-width: 190px; }
+  .campo-buscar { flex: 2 1 220px; max-width: 300px; }
+  .input, .campo select { height: 44px; width: 100%; padding: 0 12px; font: 400 15px var(--fuente); border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); }
+  .input::placeholder { color: var(--color-caliza-inhabilitado); }
+  .con-icono, .con-select { position: relative; }
+  .con-icono > svg, .con-select > svg { position: absolute; top: 50%; translate: 0 -50%; color: var(--color-caliza-apagada); pointer-events: none; }
+  .con-icono > svg { left: 12px; }
+  .con-icono .input { padding-left: 40px; }
+  .con-select select { appearance: none; padding-right: 34px; }
+  .con-select > svg { right: 11px; }
+  .chips-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .chip { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--radio-pill); background: var(--color-marca-suave); color: var(--color-caliza-tinta); font-size: 13px; font-weight: 500; text-decoration: none; }
+  .chip::after { content: ""; position: absolute; inset: -6px 0; }
+  .chip:hover { background: var(--color-caliza-relleno); }
+
+  /* lista */
+  .tarjeta { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); overflow: clip; }
+  .tabla { width: 100%; border-collapse: collapse; }
+  .tabla thead th { height: 40px; padding: 0 14px; background: var(--color-caliza-superficie); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-align: left; white-space: nowrap; }
+  .tabla thead th a { display: inline-flex; align-items: center; gap: 6px; height: 40px; text-decoration: none; }
+  .tabla thead th a:hover { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .tabla tbody td { height: 64px; padding: 8px 14px; border-top: 1px solid var(--color-caliza-divisor); vertical-align: middle; }
+  .tabla tbody tr { transition: background-color 150ms var(--ease); }
+  .tabla tbody tr:hover { background: var(--color-caliza-superficie); }
+  .tabla .col-id { width: 132px; }
+  .tabla .col-estado { width: 176px; }
+  .tabla .col-lugar { width: 232px; }
+  .tabla .col-fecha { width: 124px; }
+  .tabla .col-origen { width: 152px; }
+  .tabla .col-abrir { width: 44px; }
+  .tabla td.col-abrir svg { color: var(--color-caliza-apagada); }
+  .celda-tipo .trozo { display: block; font-size: 13px; line-height: 1.35; color: var(--color-caliza-apagada); margin-top: 2px; overflow-wrap: anywhere; }
+  .insignia { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--radio-pill); font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .insignia svg { width: 14px; height: 14px; }
+  .insignia.neutro { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+  .insignia.exito { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .insignia.aviso { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .insignia.error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+  .lugar { display: block; font-size: 15px; line-height: 1.35; }
+  .lugar .calle { display: block; font-size: 13px; color: var(--color-caliza-apagada); }
+  .origen { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); }
+  .pie-de-tabla { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--color-caliza-divisor); }
+  .pie-de-tabla .paginas { display: flex; align-items: center; gap: 12px; }
+  .pie-de-tabla .boton { padding: 0 14px; }
+
+  /* vacío por filtro */
+  .vacio { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 24px; text-align: center; }
+  .vacio > svg { color: var(--color-caliza-apagada); }
+  .vacio p { max-width: 46ch; }
+
+  /* notas */
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+  .muestra { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); }
+
+  /* móvil */
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono { width: 390px; height: 844px; overflow-y: auto; position: relative; border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo); box-shadow: var(--sombra-reposo); }
+  .m-municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor); font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none; }
+  .m-cuerpo { padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .m-acciones { display: flex; flex-direction: column; gap: 8px; }
+  .m-acciones .boton { width: 100%; }
+  .m-filtros { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); }
+  .m-filtros summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; cursor: pointer; list-style: none; font-weight: 600; font-size: 15px; }
+  .m-filtros summary::-webkit-details-marker { display: none; }
+  .m-filtros summary .cuenta { color: var(--color-caliza-apagada); font-weight: 500; font-family: var(--fuente-dato); font-size: .875rem; }
+  .m-filtros summary svg { transition: rotate 150ms var(--ease); }
+  .m-filtros[open] summary svg { rotate: 180deg; }
+  .m-filtros .cuerpo { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .m-filtros .campo { max-width: none; flex: 1 1 auto; }
+  .m-campo { max-width: none; flex: 1 1 auto; }
+  .m-chips { padding: 0 16px 12px; }
+  .m-lista { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); overflow: clip; box-shadow: var(--sombra-reposo); }
+  .m-fila { display: grid; grid-template-columns: minmax(0, 1fr) 20px; gap: 2px 8px; min-height: 76px; padding: 12px 12px 12px 16px; border-bottom: 1px solid var(--color-caliza-divisor); color: inherit; text-decoration: none; }
+  .m-fila:last-child { border-bottom: 0; }
+  .m-fila:active { background: var(--color-caliza-superficie); }
+  .m-fila .l1 { grid-column: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .m-fila .l2 { grid-column: 1; font-size: 15px; line-height: 1.35; }
+  .m-fila .l2 .trozo { display: block; font-size: 13px; color: var(--color-caliza-apagada); }
+  .m-fila .l3 { grid-column: 1; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--color-caliza-apagada); }
+  .m-fila .chevron { grid-column: 2; grid-row: 1 / 4; align-self: center; color: var(--color-caliza-apagada); }
+  .m-nav { position: sticky; bottom: 0; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); }
+  .m-nav a { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none; }
+  .m-nav a[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="page"] svg { color: var(--color-marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--color-marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--color-marca-texto)" opacity=".85"/></symbol>
+    <symbol id="si-circulo" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 4a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></symbol>
+    <symbol id="si-aviso" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="si-x" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm3.5 12.1-1.4 1.4L12 13.9 9.9 16l-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4L12 11.1l2.1-2.1 1.4 1.4-2.1 2.1z"/></symbol>
+    <symbol id="i-buscar" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.6 15.6 21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-abajo" viewBox="0 0 24 24"><path d="M12 16.2 5.4 9.6l1.6-1.6L12 13l5-5 1.6 1.6z"/></symbol>
+    <symbol id="i-derecha" viewBox="0 0 24 24"><path d="M9.4 4.6 16.8 12l-7.4 7.4-1.6-1.6L13.6 12 7.8 6.2z"/></symbol>
+    <symbol id="i-suma" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+    <symbol id="i-orden" viewBox="0 0 24 24"><path d="M11 4h2v10.2l3.3-3.3 1.4 1.4L12 18.8 6.3 12.3l1.4-1.4L11 14.2z"/></symbol>
+    <symbol id="i-visto" viewBox="0 0 24 24"><path d="M9.6 16.2 5.4 12l-1.4 1.4 5.6 5.6L20 8.4l-1.4-1.4z"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M5 2.5h8l5 5v14H5zM12.4 4v4.2h4.2zM8 12h7v1.6H8zm0 3.4h7V17H8z"/></symbol>
+    <symbol id="i-lupa-vacia" viewBox="0 0 40 40"><circle cx="17" cy="17" r="10.5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M24.6 24.6 33 33" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Administrador municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <header class="cabecera">
+      <div>
+        <h1 class="display">Intervenciones</h1>
+        <p class="descripcion body">Las obras del municipio: qué se va a hacer, qué está en la calle y qué ya terminó.</p>
+      </div>
+      <div class="acciones">
+        <a class="boton primaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Registrar intervención</a>
+      </div>
+    </header>
+
+    <div class="banda">
+      <nav class="segmentado" aria-label="Estado de la intervención">
+        <a href="#">Planificadas <span class="cuenta">7</span></a>
+        <a href="#">En ejecución <span class="cuenta">2</span></a>
+        <a href="#">Finalizadas <span class="cuenta">2</span></a>
+        <a href="#">Canceladas <span class="cuenta">2</span></a>
+        <a href="#" aria-current="true">Todas <span class="cuenta">13</span><svg class="visto" width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-visto"/></svg></a>
+      </nav>
+      <p class="orden label">
+        <svg width="16" height="16" aria-hidden="true" fill="currentColor" style="color:var(--color-caliza-apagada)"><use href="#i-orden"/></svg>
+        13 intervenciones, ordenadas por ocurrencia: la más reciente primero
+      </p>
+    </div>
+
+    <form class="filtros" method="get" action="#" role="search" aria-label="Buscar y filtrar intervenciones">
+      <div class="campo campo-buscar">
+        <label class="label" for="q">Buscar intervención</label>
+        <div class="con-icono">
+          <svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-buscar"/></svg>
+          <input class="input" id="q" name="q" type="search" placeholder="Identificador, descripción o calle">
+        </div>
+      </div>
+      <div class="campo">
+        <label class="label" for="tipo">Tipo</label>
+        <div class="con-select">
+          <select id="tipo" name="tipo">
+            <option>Todos</option>
+            <option>Bache (2)</option>
+            <option>Alumbrado (3)</option>
+            <option>Pavimentación (1)</option>
+            <option>Repavimentación (1)</option>
+            <option>Mantenimiento (2)</option>
+            <option>Fuga (1)</option>
+            <option>Mejora (2)</option>
+            <option>Obra (1)</option>
+          </select>
+          <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg>
+        </div>
+      </div>
+      <div class="campo">
+        <label class="label" for="lugar">Lugar</label>
+        <div class="con-select">
+          <select id="lugar" name="lugar">
+            <option>Todo el municipio</option>
+            <optgroup label="Cabecera"><option>Buenavista (4)</option></optgroup>
+            <optgroup label="Colonias"><option>Colonia Centro (3)</option><option>Colonia San Juan (2)</option><option>Colonia Santa Cruz (2)</option></optgroup>
+            <optgroup label="Comisarías"><option>Sisal (2)</option></optgroup>
+          </select>
+          <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg>
+        </div>
+      </div>
+      <button class="boton secundaria" type="submit">Filtrar</button>
+    </form>
+
+    <section class="tarjeta" aria-labelledby="lista-titulo">
+      <h2 class="sr-only" id="lista-titulo">Intervenciones del municipio</h2>
+      <table class="tabla">
+        <caption class="sr-only">13 intervenciones, ordenadas por fecha de ocurrencia, de la más reciente a la más vieja. Cada identificador abre el detalle.</caption>
+        <thead>
+          <tr>
+            <th class="col-id" scope="col">Identificador</th>
+            <th scope="col">Tipo y descripción</th>
+            <th class="col-estado" scope="col">Estado</th>
+            <th class="col-lugar" scope="col">Lugar y calle</th>
+            <th class="col-fecha" scope="col" aria-sort="descending"><a href="#">Ocurrencia <svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#i-orden"/></svg><span class="sr-only">: más reciente primero. Ordenar al revés</span></a></th>
+            <th class="col-origen" scope="col">Origen</th>
+            <th class="col-abrir" scope="col"><span class="sr-only">Abrir el detalle</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-8C21: Alumbrado, Planificada, Buenavista, Calle 22, 20 de noviembre de 2026, viene de un reporte">INT-8C21</a></td>
+            <td class="celda-tipo"><span class="title">Alumbrado</span><span class="trozo">Sustitución de dos luminarias apagadas en la esquina con la calle 23.</span></td>
+            <td><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></td>
+            <td><span class="lugar">Buenavista<span class="calle">Calle 22</span></span></td>
+            <td class="dato">20 nov 2026</td>
+            <td><span class="origen"><svg width="15" height="15" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-7A4E: Bache, Planificada, Buenavista, Calle 20, 20 de noviembre de 2026, viene de un reporte">INT-7A4E</a></td>
+            <td class="celda-tipo"><span class="title">Bache</span><span class="trozo">Bacheo de la carpeta asfáltica frente al mercado municipal, dos metros cuadrados.</span></td>
+            <td><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></td>
+            <td><span class="lugar">Buenavista<span class="calle">Calle 20</span></span></td>
+            <td class="dato">20 nov 2026</td>
+            <td><span class="origen"><svg width="15" height="15" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-5D02: Fuga, En ejecución, Buenavista, Camino a Sisal, 18 de noviembre de 2026, registrada en el panel">INT-5D02</a></td>
+            <td class="celda-tipo"><span class="title">Fuga</span><span class="trozo">Reparación de fuga en la línea de conducción a la altura del kilómetro dos.</span></td>
+            <td><span class="insignia aviso"><svg fill="currentColor" aria-hidden="true"><use href="#si-aviso"/></svg>En ejecución</span></td>
+            <td><span class="lugar">Buenavista<span class="calle">Camino a Sisal</span></span></td>
+            <td class="dato">18 nov 2026</td>
+            <td><span class="label">—<span class="sr-only">No viene de un reporte</span></span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-4B90: Alumbrado, Planificada, Colonia San Juan, Calle 22, 15 de noviembre de 2026, viene de un reporte">INT-4B90</a></td>
+            <td class="celda-tipo"><span class="title">Alumbrado</span><span class="trozo">Cambio de tres luminarias del parque de la colonia.</span></td>
+            <td><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></td>
+            <td><span class="lugar">Colonia San Juan<span class="calle">Calle 22</span></span></td>
+            <td class="dato">15 nov 2026</td>
+            <td><span class="origen"><svg width="15" height="15" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-3F1C: Pavimentación, En ejecución, Colonia Centro, Calle 26, 12 de noviembre de 2026, viene de un reporte">INT-3F1C</a></td>
+            <td class="celda-tipo"><span class="title">Pavimentación</span><span class="trozo">Pavimentación con concreto hidráulico de la calle de acceso a la colonia.</span></td>
+            <td><span class="insignia aviso"><svg fill="currentColor" aria-hidden="true"><use href="#si-aviso"/></svg>En ejecución</span></td>
+            <td><span class="lugar">Colonia Centro<span class="calle">Calle 26</span></span></td>
+            <td class="dato">12 nov 2026</td>
+            <td><span class="origen"><svg width="15" height="15" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-2E77: Mantenimiento, Planificada, Colonia Santa Cruz, Calle 24, 10 de noviembre de 2026, registrada en el panel">INT-2E77</a></td>
+            <td class="celda-tipo"><span class="title">Mantenimiento</span><span class="trozo">Poda de árboles y limpieza del camellón de la avenida.</span></td>
+            <td><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></td>
+            <td><span class="lugar">Colonia Santa Cruz<span class="calle">Calle 24</span></span></td>
+            <td class="dato">10 nov 2026</td>
+            <td><span class="label">—<span class="sr-only">No viene de un reporte</span></span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-1D45: Repavimentación, Finalizada, Colonia Centro, Calle 26, 5 de noviembre de 2026, viene de un reporte">INT-1D45</a></td>
+            <td class="celda-tipo"><span class="title">Repavimentación</span><span class="trozo">Repavimentación del tramo de 120 metros sobre la avenida principal.</span></td>
+            <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Finalizada</span></td>
+            <td><span class="lugar">Colonia Centro<span class="calle">Calle 26</span></span></td>
+            <td class="dato">5 nov 2026</td>
+            <td><span class="origen"><svg width="15" height="15" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-0C13: Obra, Planificada, Sisal, Calle 8, 2 de noviembre de 2026, registrada en el panel">INT-0C13</a></td>
+            <td class="celda-tipo"><span class="title">Obra</span><span class="trozo">Ampliación de la red de agua potable en la calle 8.</span></td>
+            <td><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></td>
+            <td><span class="lugar">Sisal<span class="calle">Calle 8</span></span></td>
+            <td class="dato">2 nov 2026</td>
+            <td><span class="label">—<span class="sr-only">No viene de un reporte</span></span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-9B88: Mejora, Finalizada, Colonia Santa Cruz, Calle 30, 28 de octubre de 2026, viene de un reporte">INT-9B88</a></td>
+            <td class="celda-tipo"><span class="title">Mejora</span><span class="trozo">Mejora del parque con juegos nuevos y banquetas de concreto.</span></td>
+            <td><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Finalizada</span></td>
+            <td><span class="lugar">Colonia Santa Cruz<span class="calle">Calle 30</span></span></td>
+            <td class="dato">28 oct 2026</td>
+            <td><span class="origen"><svg width="15" height="15" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+          <tr>
+            <td><a class="enlace dato" href="#" aria-label="INT-8A66: Bache, Cancelada, Colonia Centro, Calle 21, 20 de octubre de 2026, registrada en el panel">INT-8A66</a></td>
+            <td class="celda-tipo"><span class="title">Bache</span><span class="trozo">Bacheo de la esquina sobre la calle 21; se canceló porque el tramo se repavimentó.</span></td>
+            <td><span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>Cancelada</span></td>
+            <td><span class="lugar">Colonia Centro<span class="calle">Calle 21</span></span></td>
+            <td class="dato">20 oct 2026</td>
+            <td><span class="label">—<span class="sr-only">No viene de un reporte</span></span></td>
+            <td class="col-abrir"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pie-de-tabla">
+        <p class="label">Mostrando <span class="dato">1–10</span> de <span class="dato">13</span> intervenciones · 7 planificadas, 2 en ejecución, 2 finalizadas y 2 canceladas</p>
+        <div class="paginas">
+          <button class="boton secundaria" type="button" disabled>Anterior</button>
+          <span class="dato apagada">Página 1 de 2</span>
+          <a class="boton secundaria" href="#">Siguiente</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- notas -->
+<section class="hoja" aria-label="Notas del artboard">
+  <div class="hoja-inner">
+    <div class="notas">
+      <div class="nota">
+        <h3 class="headline">01 · Pestañas y fila con identificador</h3>
+        <p class="body apagada" style="margin:8px 0 12px">Es la bandeja que el usuario ya eligió en Reportes —pestañas por estado con su cuenta y una barra de filtros—, con la fila reconstruida para que dos intervenciones del mismo tipo no se confundan.</p>
+        <p class="label">Compromiso: cada fila pasa de 48 px a 64–95 px —el trozo de la descripción envuelve a dos o tres renglones— y se ven diez por página, a cambio de que el identificador, el origen y el lugar nunca se confundan.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S1-S5)</h3>
+        <ul class="body">
+          <li><strong>S1 · filtros sin ocupar media pantalla.</strong> Escritorio: una barra de 74 px. En 390×844 los mismos filtros viven en «Filtros (2)» plegable, y los chips quedan afuera del pliegue para poder quitar uno sin abrirlo. El estado, que en escritorio son las pestañas, en el teléfono es un desplegable con la cuenta de cada uno.</li>
+          <li><strong>S2 · cuántas hay y en qué orden.</strong> Cinco pestañas contadas, la línea «13 intervenciones, ordenadas por ocurrencia: la más reciente primero», el «aria-sort» de la columna y el pie con el reparto por estado. El orden es el de la fecha que se ve.</li>
+          <li><strong>S3 · filas distinguibles.</strong> Identificador monoestilo, trozo de la descripción bajo el tipo y marcador «Desde reporte» en columna propia.</li>
+          <li><strong>S4 · etiqueta accesible.</strong> Cada identificador lleva <code>aria-label</code> con tipo, estado, lugar, calle, fecha y origen.</li>
+          <li><strong>S5 · vacío por filtro con etiquetas.</strong> Ver la muestra de abajo: «No hay intervenciones canceladas en Colonia Centro», nunca <code>CANCELADA</code>.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Decisiones registradas</h3>
+        <ul class="body">
+          <li><strong>El identificador no es un folio.</strong> El módulo no tiene folio y la regla 9 prohíbe una secuencia de base para folios; se muestra el prefijo del <code>id</code> en mayúsculas (<code>INT-3F1C</code>), estable mientras exista la intervención y único en el municipio. Si el municipio pide folio consecutivo, es una tarea aparte, no un cambio de diseño.</li>
+          <li><strong>Una sola fecha visible.</strong> «Ocurrencia» es la fecha del hecho y es también la del orden; capturada y actualizada se leen en el detalle. Antes la lista ordenaba por captura con la ocurrencia a la vista (B2).</li>
+          <li><strong>Las pestañas son enlaces.</strong> No son <code>role="tab"</code>: el estado vive en la URL, el botón «atrás» devuelve la pestaña anterior y sin JavaScript funciona igual. En el teléfono son un <code>&lt;select&gt;</code> por la razón de arriba: cuesta un toque más cambiar de estado y evita que el estado activo quede escondido.</li>
+          <li><strong>La fila entera es el enlace.</strong> Como en <code>FilaDeTabla</code> del proyecto; aquí el enlace visible es el identificador y su <code>aria-label</code> es el de la fila completa (S4).</li>
+          <li><strong>Los conteos siguen a los filtros.</strong> Las cinco pestañas, el total del pie y las opciones de Tipo y Lugar se recalculan juntos; nunca hay un número viejo junto a una lista nueva.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="muestra" aria-label="Vacío por filtro">
+      <h3 class="title">Vacío por filtro: etiquetas, no enums</h3>
+      <div class="chips-fila">
+        <a class="chip" href="#">Cancelada <span aria-hidden="true">×</span><span class="sr-only">Quitar filtro: Cancelada</span></a>
+        <a class="chip" href="#">Colonia Centro <span aria-hidden="true">×</span><span class="sr-only">Quitar filtro: Colonia Centro</span></a>
+      </div>
+      <div class="vacio">
+        <svg width="40" height="40" aria-hidden="true"><use href="#i-lupa-vacia"/></svg>
+        <p class="title">No hay intervenciones canceladas en Colonia Centro.</p>
+        <p class="body apagada">Hay 13 en el municipio; 2 están canceladas, pero en otros lugares.</p>
+        <a class="boton secundaria" href="#">Quitar los filtros</a>
+      </div>
+      <p class="label">El vacío conserva los filtros puestos, los nombra con su etiqueta y ofrece quitarlos; «Quitar los filtros» es un enlace a <code>/intervenciones</code>, no un botón de cliente.</p>
+    </div>
+
+    <!-- móvil -->
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada" style="max-width:70ch">El estado pasa de cinco píldoras a un desplegable nativo con la cuenta de cada uno: cinco píldoras no caben en 358 px y la activa quedaba fuera de la vista. La primera fila empieza a 372 px y termina a 528, y la barra inferior no la toca. «Filtros (1)» plegado gasta 44 px y el chip se ve sin abrirlo; los conteos siguen al filtro puesto: Buenavista deja 2 planificadas, 1 en ejecución y 1 cancelada.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <h1 class="display">Intervenciones</h1>
+          <div class="m-acciones">
+            <a class="boton primaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Registrar intervención</a>
+          </div>
+
+          <div class="campo m-campo">
+            <label class="label" for="m-estado">Estado</label>
+            <div class="con-select">
+              <select id="m-estado" name="estado">
+                <option selected>Todas (4)</option>
+                <option>Planificadas (2)</option>
+                <option>En ejecución (1)</option>
+                <option>Finalizadas (0)</option>
+                <option>Canceladas (1)</option>
+              </select>
+              <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg>
+            </div>
+          </div>
+
+          <details class="m-filtros">
+            <summary>Filtros <span class="cuenta">(1)</span><svg width="16" height="16" aria-hidden="true" fill="currentColor" style="margin-left:auto"><use href="#i-abajo"/></svg></summary>
+            <div class="cuerpo">
+              <div class="campo">
+                <label class="label" for="mq">Buscar intervención</label>
+                <div class="con-icono">
+                  <svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-buscar"/></svg>
+                  <input class="input" id="mq" name="q" type="search" placeholder="Identificador, descripción o calle">
+                </div>
+              </div>
+              <div class="campo">
+                <label class="label" for="mtipo">Tipo</label>
+                <div class="con-select">
+                  <select id="mtipo" name="tipo"><option>Todos</option><option>Bache (2)</option><option>Alumbrado (3)</option><option>Pavimentación (1)</option><option>Repavimentación (1)</option><option>Mantenimiento (2)</option><option>Fuga (1)</option><option>Mejora (2)</option><option>Obra (1)</option></select>
+                  <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg>
+                </div>
+              </div>
+              <div class="campo">
+                <label class="label" for="mlugar">Lugar</label>
+                <div class="con-select">
+                  <select id="mlugar" name="lugar">
+                    <option>Todo el municipio</option>
+                    <optgroup label="Cabecera"><option>Buenavista (4)</option></optgroup>
+                    <optgroup label="Colonias"><option>Colonia Centro (3)</option><option>Colonia San Juan (2)</option><option>Colonia Santa Cruz (2)</option></optgroup>
+                    <optgroup label="Comisarías"><option>Sisal (2)</option></optgroup>
+                  </select>
+                  <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-abajo"/></svg>
+                </div>
+              </div>
+              <button class="boton secundaria" type="submit" style="width:100%">Filtrar</button>
+            </div>
+          </details>
+
+          <div class="chips-fila m-chips">
+            <a class="chip" href="#">Buenavista <span aria-hidden="true">×</span><span class="sr-only">Quitar filtro: Buenavista</span></a>
+          </div>
+
+          <ul class="m-lista">
+            <li>
+              <a class="m-fila" href="#" aria-label="INT-8C21: Alumbrado, Planificada, Buenavista, Calle 22, 20 de noviembre de 2026, viene de un reporte">
+                <span class="l1"><span class="dato">INT-8C21</span><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></span>
+                <span class="l2">Alumbrado<span class="trozo">Sustitución de dos luminarias apagadas en la esquina con la calle 23.</span></span>
+                <span class="l3"><span class="dato">20 nov 2026</span><span>Buenavista · Calle 22</span><span class="origen"><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="m-fila" href="#" aria-label="INT-7A4E: Bache, Planificada, Buenavista, Calle 20, 20 de noviembre de 2026, viene de un reporte">
+                <span class="l1"><span class="dato">INT-7A4E</span><span class="insignia neutro"><svg fill="currentColor" aria-hidden="true"><use href="#si-circulo"/></svg>Planificada</span></span>
+                <span class="l2">Bache<span class="trozo">Bacheo de la carpeta asfáltica frente al mercado municipal.</span></span>
+                <span class="l3"><span class="dato">20 nov 2026</span><span>Buenavista · Calle 20</span><span class="origen"><svg width="14" height="14" aria-hidden="true" fill="currentColor"><use href="#i-doc"/></svg>Desde reporte</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="m-fila" href="#" aria-label="INT-5D02: Fuga, En ejecución, Buenavista, Camino a Sisal, 18 de noviembre de 2026, registrada en el panel">
+                <span class="l1"><span class="dato">INT-5D02</span><span class="insignia aviso"><svg fill="currentColor" aria-hidden="true"><use href="#si-aviso"/></svg>En ejecución</span></span>
+                <span class="l2">Fuga<span class="trozo">Reparación de fuga en la línea de conducción a la altura del kilómetro dos.</span></span>
+                <span class="l3"><span class="dato">18 nov 2026</span><span>Buenavista · Camino a Sisal</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="m-fila" href="#" aria-label="INT-7F31: Alumbrado, Cancelada, Buenavista, Calle 23, 12 de octubre de 2026, registrada en el panel">
+                <span class="l1"><span class="dato">INT-7F31</span><span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>Cancelada</span></span>
+                <span class="l2">Alumbrado<span class="trozo">Cambio de poste de alumbrado en la calle 23; otra intervención cubrió la misma luminaria.</span></span>
+                <span class="l3"><span class="dato">12 oct 2026</span><span>Buenavista · Calle 23</span></span>
+                <svg class="chevron" width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-derecha"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#" aria-current="page"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-mas"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

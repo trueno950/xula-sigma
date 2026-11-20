@@ -1,6 +1,7 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import {
+  contarIntervenciones,
   ListadoDeIntervenciones,
   listarIntervenciones,
 } from "@/modules/intervenciones";
@@ -18,6 +19,7 @@ import {
 } from "@/shared/ui";
 import {
   descripcionDeFiltrosDeIntervenciones,
+  filtrosSinEstado,
   leerParametros,
 } from "./parametros";
 
@@ -28,13 +30,16 @@ type Props = {
 };
 
 /**
- * La bandeja real de S1: reemplaza el texto de "todavia no esta disponible"
- * por el listado con sus tres filtros y el alta. Ruta fina: resuelve el
- * contexto, lista y compone.
+ * La bandeja real de S1: el tablero por estado, sus filtros y el alta. Ruta
+ * fina: resuelve el contexto, lista, cuenta y compone.
  *
  * El alta se ofrece solo con `puedeAdministrarIntervenciones` -la misma regla
  * que exige `altaDeIntervencionAction`-, y el aviso de permiso se muestra a
  * quien no puede escribir; el rol de consulta ve la bandeja y nada mas.
+ *
+ * Los conteos de `contarIntervenciones` (S2) se piden con los filtros sin el
+ * estado, en el mismo `Promise.all` que el listado: son dos lecturas del mismo
+ * conjunto y no pueden divergir.
  */
 export default async function PaginaDeIntervenciones({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -44,14 +49,15 @@ export default async function PaginaDeIntervenciones({ searchParams }: Props) {
   }
 
   const { filtros, error } = leerParametros(await searchParams);
-  const [intervenciones, lugaresGuardados] = await Promise.all([
+  const [intervenciones, lugaresGuardados, conteos] = await Promise.all([
     listarIntervenciones(filtros, contexto),
     listarLugares(contexto),
+    contarIntervenciones(filtrosSinEstado(filtros), contexto),
   ]);
 
   const lugares = opcionesDeLugares(lugaresGuardados);
   const estado = estadoDeLista({
-    total: intervenciones.length,
+    total: conteos.total,
     filtro: descripcionDeFiltrosDeIntervenciones(filtros),
   });
   const puedeAdministrar = puedeAdministrarIntervenciones(contexto.usuario.rol);
@@ -59,6 +65,7 @@ export default async function PaginaDeIntervenciones({ searchParams }: Props) {
   return (
     <PaginaDePanel
       titulo="Intervenciones"
+      descripcion="Las obras del municipio, agrupadas por el estado en que están."
       accion={
         puedeAdministrar ? (
           <EnlaceDeAccion href="/intervenciones/alta" variante="primaria">
@@ -80,15 +87,10 @@ export default async function PaginaDeIntervenciones({ searchParams }: Props) {
       <ListadoDeIntervenciones
         intervenciones={intervenciones}
         lugares={lugares}
+        conteos={conteos}
         estadoDeLista={estado}
         filtros={filtros}
       />
-
-      <p className="text-[15px] text-caliza-apagada">
-        Las obras se registran aquí o se programan desde el detalle de un
-        reporte ciudadano. Al finalizar una obra ligada a un reporte, el reporte
-        se cierra como resuelto.
-      </p>
     </PaginaDePanel>
   );
 }

@@ -23,6 +23,12 @@ import { ReporteNoProgramableError, TIPOS_DE_INTERVENCION } from "../../domain";
  * `programarObraDeReporte`: esta accion no repite el chequeo, solo redacta lo
  * que el caso de uso rechazo. El `ayuntamientoId` sale del contexto del
  * servidor, nunca del formulario.
+ *
+ * Al volver, la URL lleva `?obra=` con el id que devolvio el caso de uso
+ * (S16 de `intervenciones-ux`): es lo que permite confirmar el alta y
+ * enlazar la obra en vez de recargar la misma pantalla sin decir nada. El id
+ * no se lee del formulario, y la pagina lo vuelve a cruzar contra las obras
+ * del reporte antes de pintar el enlace.
  */
 
 const esquemaDeEntrada = z.strictObject({
@@ -88,14 +94,14 @@ function leerEntrada(formData: FormData): EntradaDeLaObra {
 async function programarYVolver(
   entrada: EntradaDeLaObra,
   contexto: ContextoActual,
-): Promise<void> {
+): Promise<string> {
   try {
-    await programarObraDeReporte(entrada, contexto);
+    const obraId = await programarObraDeReporte(entrada, contexto);
+    revalidatePath(`/reportes/detalle/${entrada.reporteId}`);
+    return obraId;
   } catch (error) {
     return redirigirConError(entrada.reporteId, mensajeDeError(error));
   }
-
-  revalidatePath(`/reportes/detalle/${entrada.reporteId}`);
 }
 
 export async function programarObraAction(formData: FormData): Promise<void> {
@@ -106,7 +112,7 @@ export async function programarObraAction(formData: FormData): Promise<void> {
   );
   if (!contexto) redirect("/acceso");
 
-  await programarYVolver(entrada, contexto);
+  const obraId = await programarYVolver(entrada, contexto);
 
-  redirect(`/reportes/detalle/${entrada.reporteId}`);
+  redirect(`/reportes/detalle/${entrada.reporteId}?obra=${obraId}`);
 }

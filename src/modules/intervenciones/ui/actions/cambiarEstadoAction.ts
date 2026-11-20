@@ -13,6 +13,7 @@ import {
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { cambiarEstadoDeIntervencion } from "../../composicion";
 import {
+  CancelacionSinConfirmarError,
   ESTADOS_DE_INTERVENCION,
   IntervencionCerradaError,
   TransicionInvalidaError,
@@ -21,9 +22,20 @@ import {
 const esquema = z.strictObject({
   id: z.string().trim().uuid(),
   estadoNuevo: z.enum(ESTADOS_DE_INTERVENCION),
+  /** La casilla de S12: obligatoria solo para cancelar, y se exige aqui tambien. */
+  confirmar: z.literal("si").optional(),
 });
 const MENSAJE_INVALIDO = "Datos de la transición inválidos.";
 const MENSAJE_GENERICO = "No se pudo cambiar el estado. Intente de nuevo.";
+
+const exigirConfirmacionDeCancelacion = (datos: {
+  estadoNuevo: (typeof ESTADOS_DE_INTERVENCION)[number];
+  confirmar?: "si" | undefined;
+}): void => {
+  if (datos.estadoNuevo === "CANCELADA" && datos.confirmar !== "si") {
+    throw new CancelacionSinConfirmarError();
+  }
+};
 
 const redirigirConError = (id: string, mensaje: string): never =>
   redirect(`/intervenciones/${id}?error=${encodeURIComponent(mensaje)}`);
@@ -35,6 +47,7 @@ const mensajeDeError = (error: unknown): string => {
     return "No se pudo determinar el ayuntamiento del acceso.";
   }
   if (
+    error instanceof CancelacionSinConfirmarError ||
     error instanceof IntervencionCerradaError ||
     error instanceof TransicionInvalidaError ||
     error instanceof ValidacionError
@@ -52,6 +65,7 @@ export async function cambiarEstadoAction(formData: FormData): Promise<void> {
   const analisis = esquema.safeParse({
     id: formData.get("id"),
     estadoNuevo: formData.get("estadoNuevo"),
+    confirmar: formData.get("confirmar") ?? undefined,
   });
   const idCrudo = formData.get("id");
   const id = typeof idCrudo === "string" ? idCrudo : "";
@@ -73,7 +87,11 @@ export async function cambiarEstadoAction(formData: FormData): Promise<void> {
   if (!contexto) redirect("/acceso");
 
   try {
-    await cambiarEstadoDeIntervencion(analisis.data, contexto);
+    exigirConfirmacionDeCancelacion(analisis.data);
+    await cambiarEstadoDeIntervencion(
+      { id: analisis.data.id, estadoNuevo: analisis.data.estadoNuevo },
+      contexto,
+    );
   } catch (error) {
     redirigirConError(id, mensajeDeError(error));
     return;

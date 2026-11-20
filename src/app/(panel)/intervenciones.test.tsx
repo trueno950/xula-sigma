@@ -9,6 +9,7 @@ const notFoundMock = vi.hoisted(() =>
 );
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const intervencionConReferenciasMock = vi.hoisted(() => vi.fn());
+const historialDeIntervencionMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   notFound: notFoundMock,
@@ -22,6 +23,7 @@ vi.mock("@/modules/intervenciones", async (importOriginal) => ({
   ProgramarObra: () => <div>formulario de programar obra</div>,
   comoIntervencionId: (id: string) => id,
   intervencionConReferencias: intervencionConReferenciasMock,
+  historialDeIntervencion: historialDeIntervencionMock,
 }));
 
 const { default: PaginaDeIntervencion } = await import(
@@ -44,11 +46,21 @@ const intervencion = {
   actualizadoEn: new Date("2026-03-02T12:00:00Z"),
 };
 
-const SIN_REFERENCIAS = { lugar: null, calle: null, reporte: null };
+const SIN_REFERENCIAS = {
+  lugar: null,
+  calle: null,
+  reporte: null,
+  raizId: null,
+};
 const ficha = (
   datos: Record<string, unknown> = {},
   referencias: Record<string, unknown> = SIN_REFERENCIAS,
 ) => ({ intervencion: { ...intervencion, ...datos }, referencias });
+
+const historial = () => ({
+  revisiones: [],
+  registradaPor: { nombre: "Ana Canché", rol: "ADMIN_MUNICIPAL" },
+});
 
 const contexto = (rol: "ADMIN_MUNICIPAL" | "OPERADOR") => ({
   ayuntamientoId: "11111111-1111-4111-8111-111111111111",
@@ -64,6 +76,7 @@ const props = (id = ID) => ({
 beforeEach(() => {
   vi.clearAllMocks();
   contextoActualMock.mockResolvedValue(contexto("ADMIN_MUNICIPAL"));
+  historialDeIntervencionMock.mockResolvedValue(historial());
 });
 
 describe("ficha de intervencion", () => {
@@ -75,25 +88,24 @@ describe("ficha de intervencion", () => {
     );
     expect(notFoundMock).toHaveBeenCalled();
   });
-
-  it("muestra ocurrencia, captura y correccion separadas", async () => {
+  /** T6 (S14): el hecho y el registro del sistema, y las tres fechas sin ISO. */
+  it("muestra ocurrencia, captura y correccion separadas y con las fechas formateadas", async () => {
     intervencionConReferenciasMock.mockResolvedValue(ficha());
 
     const html = renderToStaticMarkup(await PaginaDeIntervencion(props()));
 
     expect(html).toContain("Fecha de ocurrencia");
-    expect(html).toContain("2026-01-15");
-    expect(html).toMatch(
-      /<dd class="[^"]*font-mono[^"]*tabular-nums[^"]*">2026-01-15<\/dd>/,
-    );
-    expect(html).toContain("Capturado en");
-    expect(html).toMatch(/<dd class="[^"]*font-mono[^"]*">1 mar 2026/);
-    expect(html).toContain("1 mar 2026");
-    expect(html).toMatch(/<dd class="[^"]*font-mono[^"]*">2 mar 2026/);
-    expect(html).toContain("formulario de correccion");
+    expect(html).toContain("15 ene 2026");
+    expect(html).toContain("Registrada el");
+    expect(html).toContain("Última actualización");
+    for (const momento of ["1 mar 2026, 6:00 a.m.", "2 mar 2026, 6:00 a.m."])
+      expect(html).toContain(momento);
+    expect(html).not.toContain("2026-01-15");
+    expect(html).not.toContain("2026-03-01");
+    // La correccion vive plegada en el panel (S13): la pagina monta el panel y
+    // el pliegue lo prueba `ui/AccionesDeIntervencion.test.tsx`.
     expect(html).toContain("acciones de estado");
   });
-
   it("muestra tipo y estado con su etiqueta, no con el codigo", async () => {
     intervencionConReferenciasMock.mockResolvedValue(
       ficha({ tipo: "REPAVIMENTACION", estado: "EN_EJECUCION" }),
@@ -106,7 +118,6 @@ describe("ficha de intervencion", () => {
     expect(html).not.toContain("REPAVIMENTACION");
     expect(html).not.toContain("EN_EJECUCION");
   });
-
   it("muestra el nombre del lugar y de la calle y el folio como enlace al reporte", async () => {
     const reporteId = "55555555-5555-4555-8555-555555555555";
     intervencionConReferenciasMock.mockResolvedValue(
@@ -116,6 +127,7 @@ describe("ficha de intervencion", () => {
           lugar: "Centro (colonia)",
           calle: "Calle 20",
           reporte: { id: reporteId, folio: "REP-2026-000007" },
+          raizId: "22222222-2222-4222-8222-222222222222",
         },
       ),
     );
@@ -127,10 +139,10 @@ describe("ficha de intervencion", () => {
     expect(html).toContain(
       `<a class="${CLASES_DE_ENLACE}" href="/reportes/detalle/${reporteId}">REP-2026-000007</a>`,
     );
-    expect(html).not.toContain("22222222-2222-4222-8222-222222222222");
-    expect(html).not.toContain("44444444-4444-4444-8444-444444444444");
+    // Los uuid solo viajan en los `href`; como texto visible van los nombres.
+    expect(html).not.toMatch(/>22222222-2222-4222-8222-222222222222</);
+    expect(html).not.toMatch(/>44444444-4444-4444-8444-444444444444</);
   });
-
   it("una referencia que no se puede leer dice No disponible, sin el uuid", async () => {
     intervencionConReferenciasMock.mockResolvedValue(
       ficha(
@@ -148,10 +160,12 @@ describe("ficha de intervencion", () => {
     expect(html).not.toContain("55555555-5555-4555-8555-555555555555");
     expect(html).not.toContain("/reportes/detalle/");
   });
-
   it("sin calle ni reporte dice Sin calle y Sin reporte", async () => {
     intervencionConReferenciasMock.mockResolvedValue(
-      ficha({}, { lugar: "Centro (colonia)", calle: null, reporte: null }),
+      ficha(
+        {},
+        { lugar: "Centro (colonia)", calle: null, reporte: null, raizId: null },
+      ),
     );
 
     const html = renderToStaticMarkup(await PaginaDeIntervencion(props()));
@@ -159,13 +173,14 @@ describe("ficha de intervencion", () => {
     expect(html).toContain("Sin calle");
     expect(html).toContain("Sin reporte");
   });
-
+  /** S12: el panel se sustituye por el aviso de permiso, en su columna. */
   it("no muestra administracion a un operador", async () => {
     contextoActualMock.mockResolvedValue(contexto("OPERADOR"));
     intervencionConReferenciasMock.mockResolvedValue(ficha());
 
     const html = renderToStaticMarkup(await PaginaDeIntervencion(props()));
 
+    expect(html).toContain("Su rol no permite administrar intervenciones.");
     expect(html).not.toContain("formulario de correccion");
     expect(html).not.toContain("acciones de estado");
   });

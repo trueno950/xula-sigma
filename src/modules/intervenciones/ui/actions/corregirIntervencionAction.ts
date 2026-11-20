@@ -13,7 +13,7 @@ import {
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import type { IntervencionGuardada } from "../../application/puertos";
 import { corregirIntervencion, intervencionPorId } from "../../composicion";
-import { comoIntervencionId } from "../../domain";
+import { CalleFueraDelLugarError, comoIntervencionId } from "../../domain";
 
 const esquemaDeEntrada = z.strictObject({
   id: z.string().trim().uuid(),
@@ -54,6 +54,7 @@ const redirigirConError = (id: string, mensaje: string): never =>
 const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoAutorizadoError) return error.message;
   if (error instanceof NoEncontradoError) return "Esa intervención no existe.";
+  if (error instanceof CalleFueraDelLugarError) return error.message;
   if (error instanceof ValidacionError) return error.message;
   if (error instanceof TenantNoResueltoError) {
     return "No se pudo determinar el ayuntamiento del acceso.";

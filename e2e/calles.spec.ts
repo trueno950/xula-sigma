@@ -152,13 +152,16 @@ test("intervenciones conserva la ficha y la correccion nativa", async ({
   await page.goto(
     urlDe("motul", `/intervenciones/${escenario.intervencionId}`),
   );
-  await expect(
-    page.getByRole("heading", { name: "Intervención Obra", exact: true }),
-  ).toBeVisible();
+  // T6 (S10): el detalle titula con el identificador y el estado va como
+  // insignia, la misma de la bandeja; la ficha sigue diciendo cuando ocurrio.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^INT-/);
+  await expect(page.getByText("Planificada", { exact: true })).toBeVisible();
   await expect(page.getByText("Fecha de ocurrencia")).toBeVisible();
 
+  // S13: la correccion vive plegada en el panel de acciones.
+  await page.locator("summary", { hasText: "Corregir intervención" }).click();
   await page
-    .getByLabel("Descripción corregida")
+    .getByLabel("Descripción", { exact: true })
     .fill("Descripción corregida en E2E");
   await page.getByRole("button", { name: "Guardar corrección" }).click();
 

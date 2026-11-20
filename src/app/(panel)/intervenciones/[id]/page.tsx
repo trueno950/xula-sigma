@@ -1,28 +1,29 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { z } from "zod";
+import type {
+  IntervencionGuardada,
+  ReferenciasDeIntervencion,
+} from "@/modules/intervenciones";
 import {
   AccionesDeIntervencion,
   comoIntervencionId,
-  ETIQUETA_DE_ESTADO_DE_INTERVENCION,
+  DetalleDeIntervencion,
   ETIQUETA_DE_TIPO_DE_INTERVENCION,
-  FormularioDeCorreccion,
+  historialDeIntervencion,
+  InsigniaDeIntervencion,
+  identificadorDeIntervencion,
   intervencionConReferencias,
+  PanelDeAcciones,
 } from "@/modules/intervenciones";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarIntervenciones } from "@/shared/auth/roles";
-import { fechaYHoraEnMerida } from "@/shared/lib/fecha";
 import {
   Aviso,
   AvisoDePermiso,
-  CLASES_DE_ENLACE,
-  FichaDeDatos,
-  FilaDeFicha,
   Migaja,
   PaginaDePanel,
-  Panel,
   PantallaDeMensaje,
 } from "@/shared/ui";
 
@@ -36,36 +37,53 @@ type Props = {
 const esquemaDeId = z.string().uuid();
 const esquemaDeParametros = z.object({ error: z.string().optional() });
 
-const NO_DISPONIBLE = "No disponible";
+/** La linea bajo el titulo: tipo, lugar y calle en una sola lectura (S10). */
+const resumenDeIntervencion = (
+  intervencion: IntervencionGuardada,
+  referencias: ReferenciasDeIntervencion,
+): string =>
+  [
+    ETIQUETA_DE_TIPO_DE_INTERVENCION[intervencion.tipo],
+    referencias.lugar,
+    referencias.calle,
+  ]
+    .filter((texto): texto is string => texto !== null)
+    .join(" · ");
 
-const enlaceAlReporte = (
-  reporteId: string | null,
-  reporte: { id: string; folio: string } | null,
+/**
+ * La columna de acciones: el panel para quien administra, el aviso de permiso
+ * para quien no -el artboard lo sustituye, no lo esconde-. La guarda real vive
+ * en `cambiarEstadoDeIntervencion` y `corregirIntervencion`.
+ */
+const accionesDe = (
+  puedeAdministrar: boolean,
+  intervencion: IntervencionGuardada,
 ): ReactNode => {
-  if (reporteId === null) return "Sin reporte";
-  if (reporte === null) return NO_DISPONIBLE;
+  if (!puedeAdministrar) {
+    return (
+      <AvisoDePermiso
+        capacidad="administrar intervenciones"
+        requisito="el rol de administrador municipal"
+      />
+    );
+  }
 
   return (
-    <Link href={`/reportes/detalle/${reporte.id}`} className={CLASES_DE_ENLACE}>
-      {reporte.folio}
-    </Link>
+    <PanelDeAcciones>
+      <AccionesDeIntervencion intervencion={intervencion} />
+    </PanelDeAcciones>
   );
 };
 
-const Dato = ({
-  etiqueta,
-  valor,
-  dato = false,
-}: {
-  etiqueta: string;
-  valor: ReactNode;
-  dato?: boolean;
-}) => (
-  <FilaDeFicha etiqueta={etiqueta} dato={dato}>
-    {valor}
-  </FilaDeFicha>
-);
-
+/**
+ * El detalle de S10-S15: identificador e insignia en la cabecera, la ficha del
+ * hecho separada del registro del sistema, el historial de
+ * `revisiones_de_intervenciones` y el panel de acciones en su columna.
+ *
+ * Ruta fina: resuelve el contexto, lee la ficha con sus referencias, lee el
+ * historial y compone. Un id de otro municipio vuelve `null` bajo RLS y la
+ * pantalla responde 404 sin distinguirlo de uno inexistente (regla 8).
+ */
 export default async function PaginaDeDetalleDeIntervencion({
   params,
   searchParams,
@@ -88,26 +106,27 @@ export default async function PaginaDeDetalleDeIntervencion({
   if (!ficha) notFound();
 
   const { intervencion, referencias } = ficha;
-
   const analisisDeParametros = esquemaDeParametros.safeParse(
     await searchParams,
   );
   const error = analisisDeParametros.success
     ? analisisDeParametros.data.error
     : undefined;
+  const historial = await historialDeIntervencion(intervencion, contexto);
+  const identificador = identificadorDeIntervencion(intervencion.id);
   const puedeAdministrar = puedeAdministrarIntervenciones(contexto.usuario.rol);
-
-  const tipo = ETIQUETA_DE_TIPO_DE_INTERVENCION[intervencion.tipo];
 
   return (
     <PaginaDePanel
-      titulo={`Intervención ${tipo}`}
-      ancho="detalle"
+      titulo={identificador}
+      descripcion={resumenDeIntervencion(intervencion, referencias)}
+      accion={<InsigniaDeIntervencion estado={intervencion.estado} />}
+      ancho="detalleAmplio"
       migaja={
         <Migaja
           pasos={[
             { etiqueta: "Intervenciones", href: "/intervenciones" },
-            { etiqueta: tipo },
+            { etiqueta: identificador },
           ]}
           etiqueta="Ruta"
         />
@@ -115,60 +134,12 @@ export default async function PaginaDeDetalleDeIntervencion({
     >
       {error ? <Aviso tono="error">{error}</Aviso> : null}
 
-      {!puedeAdministrar ? (
-        <AvisoDePermiso
-          capacidad="administrar intervenciones"
-          requisito="el rol de administrador municipal"
-        />
-      ) : null}
-
-      <FichaDeDatos>
-        <Dato etiqueta="Tipo" valor={tipo} />
-        <Dato
-          etiqueta="Estado"
-          valor={ETIQUETA_DE_ESTADO_DE_INTERVENCION[intervencion.estado]}
-        />
-        <Dato
-          etiqueta="Fecha de ocurrencia"
-          valor={intervencion.fechaDeOcurrencia}
-          dato
-        />
-        <Dato
-          etiqueta="Capturado en"
-          valor={fechaYHoraEnMerida(intervencion.capturadoEn)}
-          dato
-        />
-        <Dato
-          etiqueta="Actualizado en"
-          valor={fechaYHoraEnMerida(intervencion.actualizadoEn)}
-          dato
-        />
-        <Dato etiqueta="Lugar" valor={referencias.lugar ?? NO_DISPONIBLE} />
-        <Dato
-          etiqueta="Calle"
-          valor={
-            intervencion.calleId === null
-              ? "Sin calle"
-              : (referencias.calle ?? NO_DISPONIBLE)
-          }
-        />
-        <Dato
-          etiqueta="Reporte de origen"
-          valor={enlaceAlReporte(intervencion.reporteId, referencias.reporte)}
-        />
-        <Dato etiqueta="Descripción" valor={intervencion.descripcion} />
-      </FichaDeDatos>
-
-      {puedeAdministrar ? (
-        <>
-          <Panel titulo="Cambiar estado">
-            <AccionesDeIntervencion intervencion={intervencion} />
-          </Panel>
-          <Panel titulo="Corregir intervención">
-            <FormularioDeCorreccion intervencion={intervencion} />
-          </Panel>
-        </>
-      ) : null}
+      <DetalleDeIntervencion
+        intervencion={intervencion}
+        referencias={referencias}
+        historial={historial}
+        acciones={accionesDe(puedeAdministrar, intervencion)}
+      />
     </PaginaDePanel>
   );
 }

@@ -7,6 +7,7 @@ import {
   withTenant,
 } from "@/shared/tenancy/withTenant";
 import {
+  CalleFueraDelLugarError,
   comoIntervencionId,
   type IntervencionId,
   type TipoDeIntervencion,
@@ -39,10 +40,11 @@ type SolicitudDeRegistroEnTenant = {
 const validarReferenciasDeRegistro = async (
   solicitud: SolicitudDeRegistroEnTenant,
 ): Promise<void> => {
-  const ubicacion = await solicitud
-    .crearLecturaDeUbicaciones()
-    .de(solicitud.tx, solicitud.datos.lugarId, solicitud.datos.calleId);
-  if (!ubicacion) throw new NoEncontradoError();
+  await exigirUbicacion(
+    solicitud.crearLecturaDeUbicaciones(),
+    solicitud.tx,
+    solicitud.datos,
+  );
 
   if (
     solicitud.datos.reporteId !== null &&
@@ -52,6 +54,30 @@ const validarReferenciasDeRegistro = async (
   ) {
     throw new NoEncontradoError();
   }
+};
+
+/**
+ * La pareja lugar/calle tiene que resolver, y la calle tiene que colgar del
+ * asentamiento de ese lugar (S6 de `intervenciones-ux`). Son dos preguntas:
+ * `de` dice si las filas existen y estan a la vista, `calleDelLugar` si la
+ * calle es del lugar. La segunda solo se hace con una calle pedida: una obra
+ * puede registrarse solo por lugar.
+ */
+const exigirUbicacion = async (
+  lector: LecturaDeUbicaciones,
+  tx: TransaccionTenant,
+  datos: { lugarId: string; calleId: string | null },
+): Promise<void> => {
+  const ubicacion = await lector.de(tx, datos.lugarId, datos.calleId);
+  if (!ubicacion) throw new NoEncontradoError();
+  if (datos.calleId === null) return;
+
+  const calle = await lector.calleDelLugar?.(tx, datos.lugarId, datos.calleId);
+  if (calle === "del-lugar") return;
+
+  throw calle === "fuera-del-lugar"
+    ? new CalleFueraDelLugarError()
+    : new NoEncontradoError();
 };
 
 const registrarIntervencionEnTenant = async (

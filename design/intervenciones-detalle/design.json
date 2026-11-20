@@ -1,0 +1,21 @@
+{
+  "title": "Detalle de intervención",
+  "brief": "Rediseño de /intervenciones/[id] para la operadora de un municipio pequeño de Yucatán: reconocer la obra por su identificador y su estado, leer qué cambió y quién lo cambió, y actuar con el paso siguiente sin abrir todos los formularios a la vez.",
+  "feature": "odd/tasks/intervenciones-ux.md",
+  "artboards": [
+    {
+      "file": "01-ficha-historial-y-acciones.html",
+      "title": "Ficha, historial y acciones",
+      "tradeoff": "Dos columnas, como el detalle de reporte que el usuario ya eligió: ficha e historial a la izquierda, acciones en un panel pegado arriba a la derecha con el paso siguiente como primaria y «Cancelar» plegado al final con confirmación. Cuesta 320 px de ancho —el detalle sube de 720 a 1040 px— y por debajo de 1024 el panel baja al flujo.",
+      "width": 1440,
+      "height": 1140
+    },
+    {
+      "file": "02-linea-de-vida.html",
+      "title": "Línea de vida",
+      "tradeoff": "Una sola columna de 720 px: el historial se vuelve la estructura en tres etapas numeradas y las acciones viven dentro de la etapa actual. Mismo recorrido en 1440 y en 390 y ningún reacomodo, a cambio de una página más larga donde el paso siguiente queda a media página y una corrección de descripción hay que buscarla en la etapa donde ocurrió.",
+      "width": 1440,
+      "height": 1540
+    }
+  ]
+}

@@ -1,3 +1,9 @@
+export { CancelacionSinConfirmarError } from "./cancelacion";
+export {
+  type ConteosDeIntervenciones,
+  componerConteosDeIntervenciones,
+  type FilaDeConteoDeIntervencion,
+} from "./conteosDeIntervenciones";
 export {
   ESTADOS_DE_INTERVENCION,
   type EstadoDeIntervencion,
@@ -19,3 +25,4 @@ export {
   TIPOS_DE_INTERVENCION,
   type TipoDeIntervencion,
 } from "./tipoDeIntervencion";
+export { CalleFueraDelLugarError } from "./ubicacion";
