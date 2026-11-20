@@ -28,9 +28,9 @@ const hayFiltrosPuestos = (filtros: FiltrosDeIntervenciones): boolean =>
  * encabezado de cada una pegado al techo mientras se desplaza: asi no se
  * pierde de vista en que estado se esta.
  *
- * Con `?estado=` -el pie de una columna- el tablero muestra solo ese estado y
- * sin tope, que es la otra direccion del artboard para ver las obras que no
- * caben.
+ * Con `?estado=` -el pie de una columna- el tablero muestra solo ese estado,
+ * hasta el tope de la bandeja (`LIMITE_DE_BANDEJA`), para ver las obras que
+ * no caben en la columna.
  */
 export function TableroDeIntervenciones({
   intervenciones,

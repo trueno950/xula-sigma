@@ -3,12 +3,14 @@
   "chosen": "01-ficha-historial-y-acciones.html",
   "handoffs": {
     "01-ficha-historial-y-acciones.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-20T17:41:50.628Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/intervenciones-ux.md"
+      "implementedAt": "2026-11-20T19:07:40.641Z",
+      "feature": "odd/tasks/intervenciones-ux.md",
+      "note": "f0b70b3 en feat/intervenciones-ux. Abre una tarjeta de la bandeja para ver el detalle. E2E 185/185.",
+      "previewUrl": "http://localhost:3200/intervenciones"
     }
   }
 }

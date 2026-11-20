@@ -508,7 +508,7 @@ Notas que no caben en la tabla, una por fila que las necesita:
   en el servidor y se redacta con `MENSAJE_DESCRIPCION_CORTA`: el formulario
   no lleva `minLength`, porque su mensaje lo escribe el navegador y en su
   idioma. El mecanismo de la cookie es `src/shared/ui/borradorEnCookie.ts` y
-  la forma del borrador, `src/modules/intervenciones/ui/borradorEnCookie.ts`.
+  la forma del borrador, `src/modules/intervenciones/ui/borradorDeIntervencion.ts`.
 - `programarObraAction` (`intervenciones`, S2 de
   `intervenciones-trazabilidad`): el `<form>` vive en el detalle del reporte y
   no pide ubicacion -se copia del reporte-. Redacta `NoAutorizadoError`,

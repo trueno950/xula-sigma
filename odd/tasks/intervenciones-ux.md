@@ -79,7 +79,7 @@ Fuera de alcance (baja, anotados): B6, B7, B8, D7, D8, P3.
 - [x] **T4** (S16-S17) programar obra: confirmación y aclaraciones — worker — commit: 6f39042 (E2E `e2e/programarObra.spec.ts` por correr; nota de AGENTS.md por aplicar después de T2)
 - [x] **T5** (S1-S5) bandeja según `design/intervenciones-bandeja/02-tablero-por-estado.html` (L5) — worker, worktree `.pi/wt-diseno` — commit: 8847551 en `feat/intervenciones-ux-diseno`, integrado por cherry-pick en `feat/intervenciones-ux`
 - [x] **T6** (S10-S15) detalle según `design/intervenciones-detalle/01-ficha-historial-y-acciones.html` (L12) — worker — commit: f0b70b3
-- [ ] **T7** (S1-S17) verificación, PR y merge — verify — commit:
+- [x] **T7** (S1-S17) verificación, PR y merge — verify — commit: (ver L14)
 
 ## Log
 
@@ -194,3 +194,13 @@ Fuera de alcance (baja, anotados): B6, B7, B8, D7, D8, P3.
   - `e2e/calles.fixture.ts` reusa la cabecera viva en vez de insertar una
     segunda (`lugares_una_cabecera`).
   - Una E2E con `next dev` corriendo a la vez tarda ~14 min en vez de ~8.
+- **L14** — T7: verificador independiente del track completo, S1-S17
+  cumplidas, sin bloqueos. Unit 3407, integración 163, typecheck y reglas
+  limpios; la E2E completa ya había pasado 185/185 en `f0b70b3`.
+  - Corregidos al cierre: el comentario de `TableroDeIntervenciones` que
+    prometía «sin tope» y la nota de AGENTS.md que apuntaba al archivo
+    equivocado del borrador.
+  - Seguimientos: prueba de aislamiento para `obrasDeReporteSql`; cambios
+    de estado en el historial (L13); regla de la calle en reportes y
+    programar obra (L9); `minLength` de programar obra (L11); la marca
+    hex de `territorioDomicilios.spec.ts` (L11).
