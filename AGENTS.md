@@ -560,6 +560,25 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `CorreoYaRegistradoError` -el choque contra `usuarios_tenant_email_idx` o
   `usuarios_tenant_email_lower_idx`, migracion `0024`-.
 
+  **El rechazo del alta vuelve con lo capturado** (S6 de `usuarios-ux`).
+  `altaDeUsuarioAction` guarda nombre, correo y rol en una cookie httpOnly de
+  120 segundos -el mecanismo de `src/shared/ui/borradorEnCookie.ts`, la forma
+  en `ui/borradorDeAltaDeUsuario.ts`- y la URL lleva solo el token opaco:
+  `?error=<codigo>&borrador=<token>`. El nombre y el correo no van a la URL
+  porque son datos de una persona y quedarian en el log de accesos; el
+  borrador no lleva contraseña porque el alta no la captura. El alta que
+  prospera descarta la cookie.
+
+  **Ningun campo del alta lleva `required`, `minLength` ni `type="email"`**
+  (S7 de `usuarios-ux`). Los tres hacen que el navegador conteste con su
+  propio mensaje, en su idioma y antes de que el POST salga, y sin JavaScript
+  no hay otro: el formulario se envia igual y el servidor redacta en español
+  con sus propios codigos -`nombre-corto`, `correo-invalido`, `sin-rol`-. El
+  minimo del nombre y esos dos textos viven en un solo archivo,
+  `ui/FormularioDeAltaDeUsuario.textos.ts`, que es tambien la ayuda que se lee
+  antes de escribir; el correo conserva el teclado de correo por
+  `inputMode`, que no valida nada.
+
   **Nadie restablece su propia contraseña** (S1 de `usuarios-ux`). El
   listado no ofrece el boton en la fila propia y el caso de uso
   `restablecerContrasenia` la rechaza igual con

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FormularioDeAltaDeUsuario, mensajeDeError } from "@/modules/usuarios";
+import { borradorDeLaPeticion } from "@/modules/usuarios/ui/borradorEnCookie";
 import { contextoActual } from "@/shared/auth";
 import { puedeAdministrarUsuarios } from "@/shared/auth/roles";
 import {
@@ -12,22 +13,29 @@ import {
 export const metadata: Metadata = { title: "Nuevo usuario" };
 
 type Props = {
-  searchParams: Promise<{ error?: string | string[] }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 /**
  * El formulario de alta (S3). Ruta fina: resuelve el contexto, decide si el
  * rol alcanza y compone. El rechazo del servidor vuelve por `?error=` —el
- * `<form>` es nativo y su accion no devuelve `ActionResult<T>`—, y el exito
- * no vuelve aca: termina en el listado, donde aparece la contrasenia
- * temporal una sola vez (S4).
+ * `<form>` es nativo y su accion no devuelve `ActionResult<T>`— y con el
+ * token de lo capturado en una cookie httpOnly (S6); el exito no vuelve aca:
+ * termina en el listado, donde aparece la contrasenia temporal una sola vez
+ * (S4).
+ *
+ * La migaja termina en «Alta» y no en «Nuevo usuario» (S8): el encabezado ya
+ * nombra la pantalla, y repetir el mismo titulo dos veces es ruido, no
+ * orientacion.
  */
 export default async function PaginaDeAltaDeUsuario({ searchParams }: Props) {
   const contexto = await contextoActual();
-  const { error } = await searchParams;
+  const parametros = await searchParams;
   // La URL solo lleva codigos (`mensajesDeError.ts`); uno desconocido no
   // muestra nada en vez de reflejar texto ajeno.
-  const mensaje = mensajeDeError(error);
+  const mensaje = mensajeDeError(parametros.error);
+  const token =
+    typeof parametros.borrador === "string" ? parametros.borrador : undefined;
 
   if (!contexto || !puedeAdministrarUsuarios(contexto.usuario.rol)) {
     return (
@@ -42,6 +50,8 @@ export default async function PaginaDeAltaDeUsuario({ searchParams }: Props) {
     );
   }
 
+  const borrador = await borradorDeLaPeticion(token);
+
   return (
     <PaginaDePanel
       titulo="Nuevo usuario"
@@ -50,13 +60,16 @@ export default async function PaginaDeAltaDeUsuario({ searchParams }: Props) {
         <Migaja
           pasos={[
             { etiqueta: "Usuarios", href: "/usuarios" },
-            { etiqueta: "Nuevo usuario" },
+            { etiqueta: "Alta" },
           ]}
           etiqueta="Ruta"
         />
       }
     >
-      <FormularioDeAltaDeUsuario {...(mensaje ? { error: mensaje } : {})} />
+      <FormularioDeAltaDeUsuario
+        borrador={borrador}
+        {...(mensaje ? { error: mensaje } : {})}
+      />
     </PaginaDePanel>
   );
 }

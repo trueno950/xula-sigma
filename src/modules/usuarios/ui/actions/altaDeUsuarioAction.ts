@@ -6,7 +6,13 @@ import { z } from "zod";
 import { contextoActual } from "@/shared/auth";
 import type { UsuarioDadoDeAlta } from "../../application";
 import { altaDeUsuario } from "../../composicion";
+import {
+  type BorradorDeAltaDeUsuario,
+  borradorDelFormulario,
+} from "../borradorDeAltaDeUsuario";
+import { descartarBorrador, guardarBorrador } from "../borradorEnCookie";
 import { intentarGuardarClaveMostrada } from "../claveTemporalEnCookie";
+import { MINIMO_DE_NOMBRE } from "../FormularioDeAltaDeUsuario.textos";
 import type { CodigoDeError } from "../mensajesDeError";
 import { codigoDeErrorParaLaOperadora } from "./codigoDeError";
 import { rutaDelAltaDeUsuario, rutaDeUsuarios } from "./destinoDeUsuarios";
@@ -20,34 +26,56 @@ import { rutaDelAltaDeUsuario, rutaDeUsuarios } from "./destinoDeUsuarios";
  * Server Actions. Por eso no devuelve `ActionResult<T>`: nadie podria
  * leerlo.
  *
+ * Todo rechazo vuelve con lo capturado en una cookie httpOnly y solo el token
+ * en la URL (S6 de `usuarios-ux`): el nombre y el correo son datos de una
+ * persona y no pueden quedar en el log de accesos del servidor. El borrador
+ * no lleva contrasenia porque el alta no la captura.
+ *
  * La contrasenia temporal no vuelve por el redirect: se guarda en una
  * cookie httpOnly y el redirect lleva solo su token
  * (`claveTemporalEnCookie.ts`).
  */
 
 const esquemaDeEntrada = z.object({
-  nombre: z.string().trim().min(3).max(120),
+  nombre: z.string().min(MINIMO_DE_NOMBRE).max(120),
   // El correo se pega desde otro lado y suele traer espacios en los bordes.
-  email: z.string().trim().pipe(z.email()),
-  rol: z.string().trim(),
+  email: z.string().pipe(z.email()),
+  rol: z.string(),
 });
 
-const redirigirAlAlta = (codigo: CodigoDeError): never =>
-  redirect(rutaDelAltaDeUsuario(codigo));
+type EntradaDelAlta = z.infer<typeof esquemaDeEntrada>;
 
-export async function altaDeUsuarioAction(formData: FormData): Promise<void> {
-  const analisis = esquemaDeEntrada.safeParse({
-    nombre: formData.get("nombre"),
-    email: formData.get("email"),
-    rol: formData.get("rol"),
-  });
+type LecturaDelAlta =
+  | { valida: true; entrada: EntradaDelAlta }
+  | { valida: false; codigo: CodigoDeError };
 
-  // `redirigirAlAlta` esta tipada `never` porque `redirect` lo esta, pero
-  // TypeScript no angosta `analisis` a traves de esa llamada: hace falta el
-  // `return` explicito, mismo caso que `altaDePersonaAction`.
+/**
+ * Un campo vacio es un formulario incompleto; uno que trae valor y no cumple
+ * su forma tiene su propio mensaje en espaniol, porque el navegador ya no
+ * contesta por el suyo (S7 de `usuarios-ux`, ver
+ * `FormularioDeAltaDeUsuario.textos.ts`).
+ */
+const codigoDeFormaInvalida = (
+  analisis: z.ZodSafeParseError<EntradaDelAlta>,
+  crudos: EntradaDelAlta,
+): CodigoDeError => {
+  if (!crudos.nombre || !crudos.email) return "formulario";
+
+  return analisis.error.issues.some((issue) => issue.path[0] === "email")
+    ? "correo-invalido"
+    : "nombre-corto";
+};
+
+const leerEntrada = (formData: FormData): LecturaDelAlta => {
+  const crudos = {
+    nombre: textoDe(formData, "nombre"),
+    email: textoDe(formData, "email"),
+    rol: textoDe(formData, "rol"),
+  };
+  const analisis = esquemaDeEntrada.safeParse(crudos);
+
   if (!analisis.success) {
-    redirigirAlAlta("formulario");
-    return;
+    return { valida: false, codigo: codigoDeFormaInvalida(analisis, crudos) };
   }
 
   /**
@@ -56,9 +84,32 @@ export async function altaDeUsuarioAction(formData: FormData): Promise<void> {
    * «faltan el nombre o el correo» a quien se olvido del rol manda a
    * revisar dos campos que estan bien.
    */
-  if (!analisis.data.rol) {
-    redirigirAlAlta("sin-rol");
-    return;
+  return analisis.data.rol
+    ? { valida: true, entrada: analisis.data }
+    : { valida: false, codigo: "sin-rol" };
+};
+
+/** El valor del campo sin espacios en los bordes; ausente es cadena vacia. */
+function textoDe(formData: FormData, campo: keyof EntradaDelAlta): string {
+  const valor = formData.get(campo);
+
+  return typeof valor === "string" ? valor.trim() : "";
+}
+
+const redirigirConBorrador = async (
+  borrador: BorradorDeAltaDeUsuario,
+  codigo: CodigoDeError,
+): Promise<never> => {
+  await guardarBorrador(borrador);
+  redirect(rutaDelAltaDeUsuario({ error: codigo, borrador: borrador.token }));
+};
+
+export async function altaDeUsuarioAction(formData: FormData): Promise<void> {
+  const borrador = borradorDelFormulario(formData);
+  const lectura = leerEntrada(formData);
+
+  if (!lectura.valida) {
+    return redirigirConBorrador(borrador, lectura.codigo);
   }
 
   const contexto = await contextoActual();
@@ -68,16 +119,18 @@ export async function altaDeUsuarioAction(formData: FormData): Promise<void> {
   let alta: UsuarioDadoDeAlta;
 
   try {
-    alta = await altaDeUsuario(contexto, analisis.data);
+    alta = await altaDeUsuario(contexto, lectura.entrada);
   } catch (error) {
-    redirigirAlAlta(
+    return redirigirConBorrador(
+      borrador,
       codigoDeErrorParaLaOperadora(error, "alta", "generico-alta"),
     );
-    return;
   }
 
-  // La cuenta ya existe: el listado se revalida aunque la clave no llegue a
-  // guardarse, porque el alta ocurrio igual.
+  // La cuenta ya existe: el borrador sobra —no hay nada que volver a
+  // capturar— y el listado se revalida aunque la clave no llegue a guardarse,
+  // porque el alta ocurrio igual.
+  await descartarBorrador();
   revalidatePath("/usuarios");
 
   const mostrada = await intentarGuardarClaveMostrada({
@@ -87,8 +140,7 @@ export async function altaDeUsuarioAction(formData: FormData): Promise<void> {
   });
 
   if (!mostrada) {
-    redirigirAlAlta("clave-no-mostrada");
-    return;
+    redirect(rutaDelAltaDeUsuario({ error: "clave-no-mostrada" }));
   }
 
   redirect(rutaDeUsuarios({ clave: mostrada.token, ok: "alta" }));

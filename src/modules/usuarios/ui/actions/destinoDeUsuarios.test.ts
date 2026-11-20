@@ -40,13 +40,24 @@ describe("rutaDeUsuarios", () => {
 
 describe("rutaDelAltaDeUsuario", () => {
   it("sin error es el formulario de alta", () => {
-    expect(rutaDelAltaDeUsuario()).toBe("/usuarios/alta");
+    expect(rutaDelAltaDeUsuario({})).toBe("/usuarios/alta");
   });
 
   it("con error vuelve al formulario con el codigo", () => {
-    expect(rutaDelAltaDeUsuario("sin-rol")).toBe(
+    expect(rutaDelAltaDeUsuario({ error: "sin-rol" })).toBe(
       "/usuarios/alta?error=sin-rol",
     );
+  });
+
+  /**
+   * S6 de `usuarios-ux`: lo capturado viaja en una cookie httpOnly y la URL
+   * lleva solo su token. El codigo de error sigue yendo primero porque es el
+   * orden de la lista, no el de las llaves.
+   */
+  it("el token del borrador acompana al codigo, nunca el texto capturado", () => {
+    expect(
+      rutaDelAltaDeUsuario({ error: "correo-invalido", borrador: TOKEN }),
+    ).toBe(`/usuarios/alta?error=correo-invalido&borrador=${TOKEN}`);
   });
 });
 

@@ -41,8 +41,23 @@ export const rutaDeUsuarios = (datos: ParametrosDeUsuarios): string => {
 
 const RUTA_DEL_ALTA = "/usuarios/alta";
 
-export const rutaDelAltaDeUsuario = (error?: CodigoDeError): string =>
-  error ? `${RUTA_DEL_ALTA}?error=${error}` : RUTA_DEL_ALTA;
+/**
+ * El rechazo del alta vuelve a su formulario con el codigo de error y, cuando
+ * hay algo que devolver, con el token de lo capturado (S6 de `usuarios-ux`).
+ * El texto capturado nunca viaja aca: va en la cookie httpOnly.
+ */
+export const rutaDelAltaDeUsuario = (datos: {
+  error?: CodigoDeError | undefined;
+  borrador?: string | undefined;
+}): string => {
+  const parametros = new URLSearchParams();
+  if (datos.error) parametros.set("error", datos.error);
+  if (datos.borrador) parametros.set("borrador", datos.borrador);
+
+  const consulta = parametros.toString();
+
+  return consulta ? `${RUTA_DEL_ALTA}?${consulta}` : RUTA_DEL_ALTA;
+};
 
 /**
  * Lo que la pantalla acepta de la URL. Un `?clave=a&clave=b` llega como
