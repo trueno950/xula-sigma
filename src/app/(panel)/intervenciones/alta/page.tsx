@@ -5,6 +5,7 @@ import {
   FormularioDeAltaDeIntervencion,
   TIPOS_DE_INTERVENCION,
 } from "@/modules/intervenciones";
+import { borradorDeLaPeticion } from "@/modules/intervenciones/ui/borradorEnCookie";
 import type { CallesDelAlta } from "@/modules/intervenciones/ui/FormularioDeAltaDeIntervencion.calles";
 import { gruposDeCalles } from "@/modules/intervenciones/ui/FormularioDeAltaDeIntervencion.calles";
 import {
@@ -34,7 +35,11 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const esquemaDeParametros = z.object({ error: z.string().optional() });
+const esquemaDeParametros = z.object({
+  /** El token opaco de lo capturado en un rechazo; ver `borradorEnCookie.ts`. */
+  borrador: z.string().optional(),
+  error: z.string().optional(),
+});
 
 /** El asentamiento que tiene `lugar` en su catalogo, o nada si no resuelve. */
 const asentamientoDe = (
@@ -111,7 +116,10 @@ export default async function PaginaDeAltaDeIntervencion({
   const analisis = esquemaDeParametros.safeParse(await searchParams);
   const error = analisis.success ? analisis.data.error : undefined;
 
-  const lugaresGuardados = await listarLugares(contexto);
+  const [lugaresGuardados, borrador] = await Promise.all([
+    listarLugares(contexto),
+    borradorDeLaPeticion(analisis.success ? analisis.data.borrador : undefined),
+  ]);
   const calles = await callesDelMunicipio(lugaresGuardados, contexto);
 
   const tipos = opcionesEtiquetadas(
@@ -138,6 +146,7 @@ export default async function PaginaDeAltaDeIntervencion({
         lugares={opcionesDeLugares(lugaresGuardados)}
         calles={calles}
         fechaDeHoy={hoyEnMerida()}
+        borrador={borrador}
         {...(error ? { error } : {})}
       />
     </PaginaDePanel>

@@ -204,7 +204,12 @@ test("sin JavaScript, una calle de otro asentamiento se rechaza y no guarda nada
     });
     await page.getByRole("button", { name: "Registrar intervención" }).click();
 
-    await expect(page).toHaveURL(/\/intervenciones\/alta\?error=/);
+    // El rechazo vuelve con lo capturado (S8 de `intervenciones-ux`): la URL
+    // lleva el token del borrador y el mensaje, nunca la descripcion.
+    await expect(page).toHaveURL(
+      /\/intervenciones\/alta\?borrador=[0-9a-f-]{36}&error=/,
+    );
+    expect(page.url()).not.toContain(encodeURIComponent(descripcion));
     await expect(
       page.getByText(
         "La calle elegida no es de ese lugar. Elija una calle del lugar, o registre la intervención sin calle.",

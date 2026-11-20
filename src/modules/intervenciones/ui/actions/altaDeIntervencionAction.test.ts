@@ -4,6 +4,15 @@ import {
   TenantNoResueltoError,
   ValidacionError,
 } from "@/shared/lib/errores";
+import {
+  CALLE,
+  contexto,
+  formDataDe,
+  ID,
+  LUGAR,
+  redireccionDe,
+  tokenGuardadoDe,
+} from "./altaDeIntervencionAction.fixturas";
 
 const redirectMock = vi.hoisted(() =>
   vi.fn((_url?: string): never => {
@@ -13,6 +22,8 @@ const redirectMock = vi.hoisted(() =>
 const revalidatePathMock = vi.hoisted(() => vi.fn());
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
+const guardarBorradorMock = vi.hoisted(() => vi.fn());
+const descartarBorradorMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
@@ -20,40 +31,21 @@ vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("../../composicion", () => ({
   registrarIntervencion: registrarMock,
 }));
+vi.mock("../borradorEnCookie", () => ({
+  guardarBorrador: guardarBorradorMock,
+  descartarBorrador: descartarBorradorMock,
+}));
 
 const { altaDeIntervencionAction } = await import("./altaDeIntervencionAction");
 
-const ID = "33333333-3333-4333-8333-333333333333";
-const LUGAR = "22222222-2222-4222-8222-222222222222";
-const CALLE = "44444444-4444-4444-8444-444444444444";
+const redireccion = () => redireccionDe(redirectMock);
 
-const contexto = (rol: "ADMIN_MUNICIPAL" | "OPERADOR" | "CONSULTA") => ({
-  ayuntamientoId: "11111111-1111-4111-8111-111111111111",
-  usuario: { id: "usuario-1", rol },
-  origen: "web",
-});
-
-const formDataDe = (campos: Record<string, string> = {}) => {
-  const formData = new FormData();
-  const base: Record<string, string> = {
-    tipo: "PAVIMENTACION",
-    fechaDeOcurrencia: "2026-11-16",
-    lugarId: LUGAR,
-    calleId: CALLE,
-    descripcion: "Pavimentacion de la calle 20 entre 15 y 17",
-    ...campos,
-  };
-  for (const [clave, valor] of Object.entries(base)) {
-    formData.set(clave, valor);
-  }
-  return formData;
-};
-
-const redireccion = () =>
-  decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string);
+const tokenGuardado = () => tokenGuardadoDe(guardarBorradorMock) as string;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  guardarBorradorMock.mockResolvedValue(undefined);
+  descartarBorradorMock.mockResolvedValue(undefined);
   redirectMock.mockImplementation(() => {
     throw new Error("NEXT_REDIRECT");
   });
@@ -110,7 +102,6 @@ describe("altaDeIntervencionAction", () => {
     ["un tipo fuera del catalogo", { tipo: "PAVIMENTO" }],
     ["una fecha que no es civil", { fechaDeOcurrencia: "16/11/2026" }],
     ["una ubicacion que no es uuid", { lugarId: "centro" }],
-    ["una descripcion corta", { descripcion: "bache" }],
   ])("rechaza %s sin invocar el caso de uso", async (_caso, campos) => {
     await expect(altaDeIntervencionAction(formDataDe(campos))).rejects.toThrow(
       "NEXT_REDIRECT",
@@ -118,7 +109,7 @@ describe("altaDeIntervencionAction", () => {
 
     expect(registrarMock).not.toHaveBeenCalled();
     expect(redireccion()).toBe(
-      "/intervenciones/alta?error=Revise los datos de la intervención.",
+      `/intervenciones/alta?borrador=${tokenGuardado()}&error=Revise los datos de la intervención.`,
     );
   });
 
@@ -131,7 +122,7 @@ describe("altaDeIntervencionAction", () => {
 
     expect(registrarMock).not.toHaveBeenCalled();
     expect(redireccion()).toBe(
-      "/intervenciones/alta?error=No tiene permiso para esta operación.",
+      `/intervenciones/alta?borrador=${tokenGuardado()}&error=No tiene permiso para esta operación.`,
     );
   });
 
@@ -145,7 +136,8 @@ describe("altaDeIntervencionAction", () => {
       "NEXT_REDIRECT",
     );
 
-    expect(redireccion()).toContain("/intervenciones/alta?error=");
+    expect(redireccion()).toContain("/intervenciones/alta?borrador=");
+    expect(redireccion()).toContain("&error=");
   });
 
   it("no filtra el texto de un fallo desconocido", async () => {
@@ -159,7 +151,7 @@ describe("altaDeIntervencionAction", () => {
     );
 
     expect(redireccion()).toBe(
-      "/intervenciones/alta?error=No se pudo registrar la intervención. Intente de nuevo.",
+      `/intervenciones/alta?borrador=${tokenGuardado()}&error=No se pudo registrar la intervención. Intente de nuevo.`,
     );
     expect(JSON.stringify(consoleError.mock.calls)).not.toContain(
       "detalle interno",
@@ -175,7 +167,7 @@ describe("altaDeIntervencionAction", () => {
     );
 
     expect(redireccion()).toBe(
-      "/intervenciones/alta?error=No se pudo determinar el ayuntamiento del acceso.",
+      `/intervenciones/alta?borrador=${tokenGuardado()}&error=No se pudo determinar el ayuntamiento del acceso.`,
     );
   });
 

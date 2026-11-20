@@ -12,6 +12,7 @@ import {
 import type { ObraDeReporte } from "../application/obrasDeReporte";
 import { ETIQUETA_DE_TIPO_DE_INTERVENCION } from "../domain";
 import { programarObraAction } from "./actions/programarObraAction";
+import { AvisoDePrivacidad } from "./avisoDePrivacidad";
 
 type Props = {
   reporteId: string;
@@ -102,9 +103,7 @@ function CamposDeLaObra({
           rows={3}
           className="w-full rounded-md border border-caliza-borde bg-caliza-lienzo px-3 py-2 text-[15px] text-caliza-tinta"
         />
-        <p className={CLASES_DE_ETIQUETA}>
-          No anote nombres, teléfonos ni datos de vecinos.
-        </p>
+        <AvisoDePrivacidad />
       </div>
     </>
   );

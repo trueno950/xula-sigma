@@ -489,6 +489,17 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `<form>` por sus eventos y no envuelve la acción; sin JavaScript el
   `<select>` sale completo con un `<optgroup>` por asentamiento, y el envío es
   el mismo POST nativo.
+
+  Desde T3 de `intervenciones-ux` (S7-S9), todo rechazo vuelve con lo
+  capturado en una cookie httpOnly de 120 segundos y agrega a la URL solo un
+  token opaco (`?borrador=`) -nunca la descripción, que es texto libre y no
+  puede ir a los logs-. La página rellena el formulario con el borrador si el
+  token coincide; el éxito borra la cookie. El mínimo de la descripción lo
+  hace cumplir `MINIMO_DE_DESCRIPCION` (`FormularioDeAltaDeIntervencion.textos.ts`)
+  en el servidor y se redacta con `MENSAJE_DESCRIPCION_CORTA`: el formulario
+  no lleva `minLength`, porque su mensaje lo escribe el navegador y en su
+  idioma. El mecanismo de la cookie es `src/shared/ui/borradorEnCookie.ts` y
+  la forma del borrador, `src/modules/intervenciones/ui/borradorEnCookie.ts`.
 - `programarObraAction` (`intervenciones`, S2 de
   `intervenciones-trazabilidad`): el `<form>` vive en el detalle del reporte y
   no pide ubicacion -se copia del reporte-. Redacta `NoAutorizadoError`,

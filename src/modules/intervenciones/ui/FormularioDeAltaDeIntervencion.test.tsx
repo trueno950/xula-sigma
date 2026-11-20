@@ -57,8 +57,48 @@ describe("FormularioDeAltaDeIntervencion", () => {
     );
 
     expect(html).toContain("No anote nombres, teléfonos ni datos de vecinos.");
-    expect(html).toContain('minLength="10"');
     expect(html).toContain('maxLength="1000"');
+  });
+
+  /**
+   * S7 de `intervenciones-ux`: el mínimo se explica en español antes de
+   * escribir. `minLength` no queda, porque su mensaje lo redacta el navegador
+   * -en inglés en el equipo de la auditoría, y ninguno sin JavaScript-: lo que
+   * lo hace cumplir es el servidor, que contesta en español.
+   */
+  it("explica en español el mínimo de la descripción antes de escribirla", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeAltaDeIntervencion {...props} />,
+    );
+
+    expect(html).toContain(
+      "Escriba al menos 10 caracteres: qué se hizo, no quién lo pidió.",
+    );
+    expect(html).not.toContain("minLength");
+  });
+
+  /** S9 de `intervenciones-ux`: los obligatorios se marcan. */
+  it("dice cuáles campos son obligatorios antes de pedirlos", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeAltaDeIntervencion {...props} />,
+    );
+
+    expect(html).toContain(
+      "Todos los campos son obligatorios, salvo la calle.",
+    );
+  });
+
+  /**
+   * S9 de `intervenciones-ux`: sin lugar, «Sin calle» no es una respuesta
+   * todavía. Es el mismo marcador que el alta de reportes.
+   */
+  it("sin lugar elegido no ofrece «Sin calle», sino que pide el lugar primero", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeAltaDeIntervencion {...props} />,
+    );
+
+    expect(html).not.toContain(">Sin calle<");
+    expect(html).toContain(">Elija primero el lugar<");
   });
 
   it("pinta el error del borde arriba del formulario", () => {
@@ -84,6 +124,6 @@ describe("FormularioDeAltaDeIntervencion", () => {
 
     expect(html).toContain('<optgroup label="Motul">');
     expect(html).toContain(">Calle 20</option>");
-    expect(html).toContain(">Sin calle</option>");
+    expect(html).toContain(">Elija primero el lugar<");
   });
 });

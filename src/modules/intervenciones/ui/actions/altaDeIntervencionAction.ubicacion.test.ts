@@ -14,12 +14,17 @@ const redirectMock = vi.hoisted(() =>
 const revalidatePathMock = vi.hoisted(() => vi.fn());
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const registrarMock = vi.hoisted(() => vi.fn());
+const guardarBorradorMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
 vi.mock("../../composicion", () => ({
   registrarIntervencion: registrarMock,
+}));
+vi.mock("../borradorEnCookie", () => ({
+  guardarBorrador: guardarBorradorMock,
+  descartarBorrador: vi.fn(),
 }));
 
 const { altaDeIntervencionAction } = await import("./altaDeIntervencionAction");
@@ -56,8 +61,11 @@ describe("altaDeIntervencionAction: calle de otro asentamiento", () => {
       "NEXT_REDIRECT",
     );
 
+    // El rechazo vuelve con lo capturado, asi que la URL lleva el token del
+    // borrador delante del mensaje (S8 de `intervenciones-ux`).
+    const [borrador] = guardarBorradorMock.mock.calls[0] ?? [];
     expect(decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string)).toBe(
-      "/intervenciones/alta?error=La calle elegida no es de ese lugar. Elija una calle del lugar, o registre la intervención sin calle.",
+      `/intervenciones/alta?borrador=${borrador?.token}&error=La calle elegida no es de ese lugar. Elija una calle del lugar, o registre la intervención sin calle.`,
     );
     expect(revalidatePathMock).not.toHaveBeenCalled();
   });

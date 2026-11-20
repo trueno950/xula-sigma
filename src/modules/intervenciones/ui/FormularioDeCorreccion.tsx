@@ -1,6 +1,7 @@
 import { ANILLO_DE_FOCO, Boton, CLASES_DE_ETIQUETA } from "@/shared/ui";
 import type { IntervencionGuardada } from "../application/puertos";
 import { corregirIntervencionAction } from "./actions/corregirIntervencionAction";
+import { AvisoDePrivacidad } from "./avisoDePrivacidad";
 
 type Props = {
   intervencion: IntervencionGuardada;
@@ -28,9 +29,7 @@ export function FormularioDeCorreccion({ intervencion }: Props) {
           defaultValue={intervencion.descripcion}
           className={`w-full rounded-sm border border-caliza-borde bg-caliza-lienzo px-3 py-2 text-[15px] text-caliza-tinta ${ANILLO_DE_FOCO}`}
         />
-        <p className={CLASES_DE_ETIQUETA}>
-          No anote nombres, teléfonos ni datos de vecinos.
-        </p>
+        <AvisoDePrivacidad />
       </div>
 
       <Boton type="submit" variante="primaria">

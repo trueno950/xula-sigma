@@ -13,6 +13,9 @@ import {
   type GrupoDeCalles,
 } from "./FormularioDeAltaDeIntervencion.calles";
 
+/** Lo que el borrador de un alta rechazada ya tenía elegido (S8). */
+export type CalleCapturada = { lugarId: string; calleId: string };
+
 const opcionesDe = (opciones: readonly OpcionDeLista[]) =>
   opciones.map((opcion) => (
     <option key={opcion.valor} value={opcion.valor}>
@@ -26,6 +29,12 @@ const gruposDe = (grupos: readonly GrupoDeCalles[]) =>
       {opcionesDe(grupo.opciones)}
     </optgroup>
   ));
+
+/** Remonta el `<select>` cuando cambia la lista que ofrece. */
+const claveDe = (calles: CallesDelAlta, lugarId: string): string =>
+  lugarId
+    ? (calles.asentamientoDeLugar[lugarId] ?? "sin-asentamiento")
+    : "todas";
 
 /**
  * El campo de Calle del alta, como hoja `"use client"` minima: el `<form
@@ -45,10 +54,21 @@ const gruposDe = (grupos: readonly GrupoDeCalles[]) =>
  * divergir. El `key` del `<select>` lo remonta cuando cambia el asentamiento,
  * asi una calle elegida para el lugar anterior no se envia como si fuera de
  * este.
+ *
+ * Sin lugar elegido no hay «Sin calle» (S9 de `intervenciones-ux`): antes de
+ * elegir lugar, la calle todavia no es una respuesta. El marcador pide el
+ * lugar, como el alta de reportes.
  */
-export function SelectorDeCalleDelLugar({ calles }: { calles: CallesDelAlta }) {
+export function SelectorDeCalleDelLugar({
+  calles,
+  elegido,
+}: {
+  calles: CallesDelAlta;
+  elegido?: CalleCapturada;
+}) {
   const contenedor = useRef<HTMLDivElement>(null);
-  const [lugarId, setLugarId] = useState("");
+  const lugarInicial = elegido?.lugarId ?? "";
+  const [lugarId, setLugarId] = useState(lugarInicial);
 
   useEffect(() => {
     const formulario = contenedor.current?.closest("form");
@@ -70,9 +90,11 @@ export function SelectorDeCalleDelLugar({ calles }: { calles: CallesDelAlta }) {
   }, []);
 
   const oferta = callesAOfrecer(calles, lugarId);
-  const clave = lugarId
-    ? (calles.asentamientoDeLugar[lugarId] ?? "sin-asentamiento")
-    : "todas";
+  const clave = claveDe(calles, lugarId);
+  // La calle del borrador solo se marca mientras se muestra su asentamiento:
+  // al cambiar de lugar la lista es otra y esa calle ya no es una opcion.
+  const calleCapturada =
+    clave === claveDe(calles, lugarInicial) ? (elegido?.calleId ?? "") : "";
 
   return (
     <div ref={contenedor} className="flex flex-col gap-1.5">
@@ -84,10 +106,16 @@ export function SelectorDeCalleDelLugar({ calles }: { calles: CallesDelAlta }) {
           key={clave}
           id="intervencion-calle"
           name="calleId"
-          defaultValue=""
+          defaultValue={calleCapturada}
           className={`${clasesDeCampo()} appearance-none pr-9`}
         >
-          <option value="">Sin calle</option>
+          {lugarId ? (
+            <option value="">Sin calle</option>
+          ) : (
+            <option value="" disabled>
+              Elija primero el lugar
+            </option>
+          )}
           {oferta.forma === "grupos"
             ? gruposDe(oferta.grupos)
             : opcionesDe(oferta.opciones)}
