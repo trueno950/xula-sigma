@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -84,10 +85,10 @@ const reporte = {
   },
 };
 
-const html = async (parametros: Record<string, string> = {}) =>
+const html = async (parametros: Record<string, string> = {}, id = ID) =>
   renderToStaticMarkup(
     await PaginaDeDetalleDeReporte({
-      params: Promise.resolve({ id: ID }),
+      params: Promise.resolve({ id }),
       searchParams: Promise.resolve(parametros),
     }),
   );
@@ -148,5 +149,26 @@ describe("la confirmacion de S16 en el detalle del reporte", () => {
     obrasDeReporteMock.mockResolvedValue([obraDe(OBRA), obraDe(OTRA_OBRA)]);
 
     expect(await html()).toContain('data-obras="2"');
+  });
+});
+
+/**
+ * El `id` de la ruta se valida como uuid antes de tocar la base. Lo que sigue
+ * es la pantalla de «no encontrado», no un detalle vacio, y ninguna de las dos
+ * lecturas corre: un id con otra forma -el nombre de una calle, por ejemplo-
+ * no puede llegar a `detalleDeReporte` ni a `obrasDeReporte`.
+ */
+describe("un id de reporte que no es uuid", () => {
+  it("responde 404 sin leer la base", async () => {
+    vi.mocked(notFound).mockImplementationOnce(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
+
+    await expect(html({}, "Calle con reporte 123")).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+
+    expect(detalleDeReporteMock).not.toHaveBeenCalled();
+    expect(obrasDeReporteMock).not.toHaveBeenCalled();
   });
 });
