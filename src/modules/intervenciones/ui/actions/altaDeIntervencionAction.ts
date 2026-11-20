@@ -14,7 +14,7 @@ import {
 } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { registrarIntervencion } from "../../composicion";
-import { TIPOS_DE_INTERVENCION } from "../../domain";
+import { CalleFueraDelLugarError, TIPOS_DE_INTERVENCION } from "../../domain";
 
 /**
  * Borde de sesion del alta de la bandeja (S1 de
@@ -52,6 +52,7 @@ const mensajeDeError = (error: unknown): string => {
   if (error instanceof NoEncontradoError) {
     return "Ese lugar o esa calle no existe en su municipio.";
   }
+  if (error instanceof CalleFueraDelLugarError) return error.message;
   if (error instanceof ValidacionError) return error.message;
   if (error instanceof TenantNoResueltoError) {
     return "No se pudo determinar el ayuntamiento del acceso.";

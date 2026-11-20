@@ -11,7 +11,16 @@ const props = {
     { valor: "PAVIMENTACION", etiqueta: "Pavimentación" },
   ],
   lugares: [{ valor: LUGAR, etiqueta: "Centro (colonia)" }],
-  calles: [{ valor: CALLE, etiqueta: "Calle 20" }],
+  calles: {
+    asentamientoDeLugar: { [LUGAR]: LUGAR },
+    grupos: [
+      {
+        asentamientoId: LUGAR,
+        asentamiento: "Motul",
+        opciones: [{ valor: CALLE, etiqueta: "Calle 20" }],
+      },
+    ],
+  },
   fechaDeHoy: "2026-11-16",
 };
 
@@ -61,5 +70,20 @@ describe("FormularioDeAltaDeIntervencion", () => {
     );
 
     expect(html).toContain("Revise los datos de la intervención.");
+  });
+
+  /**
+   * S6 de `intervenciones-ux`: sin JavaScript la lista no se acorta, y lo que
+   * deja elegir con coherencia es el `<optgroup>` del asentamiento que tiene
+   * cada calle.
+   */
+  it("con JavaScript desactivado ofrece las calles agrupadas por asentamiento", () => {
+    const html = renderToStaticMarkup(
+      <FormularioDeAltaDeIntervencion {...props} />,
+    );
+
+    expect(html).toContain('<optgroup label="Motul">');
+    expect(html).toContain(">Calle 20</option>");
+    expect(html).toContain(">Sin calle</option>");
   });
 });

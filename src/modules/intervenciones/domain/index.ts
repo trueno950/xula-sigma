@@ -19,3 +19,4 @@ export {
   TIPOS_DE_INTERVENCION,
   type TipoDeIntervencion,
 } from "./tipoDeIntervencion";
+export { CalleFueraDelLugarError } from "./ubicacion";

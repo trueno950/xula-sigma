@@ -461,6 +461,11 @@ Notas que no caben en la tabla, una por fila que las necesita:
   que `cambiarEstadoAction` —la de `reportes`, que es otra acción con el
   mismo nombre—; redacta `NoAutorizadoError`, `NoEncontradoError`,
   `ValidacionError` y el fallo de resolucion del tenant, sin exponer detalles.
+  Desde T2 de `intervenciones-ux` redacta también `CalleFueraDelLugarError`
+  con el mismo mensaje que el alta: la corrección solo exige que la calle
+  cuelgue del asentamiento del lugar cuando **cambia** la ubicación, porque
+  `reparentearLugar` mueve una colonia que ya tiene intervenciones escritas y
+  esa pareja guardada se tiene que poder seguir corrigiendo.
 - `cambiarEstadoAction` (`intervenciones`, rebanada 1): **el nombre se repite
   entre dos módulos y son acciones distintas**; ésta redacta
   `NoAutorizadoError`, `NoEncontradoError`, `TenantNoResueltoError`,
@@ -470,19 +475,33 @@ Notas que no caben en la tabla, una por fila que las necesita:
   formulario de `/intervenciones/alta` -tipo, lugar, calle opcional, fecha de
   ocurrencia y descripcion-. Redacta `NoAutorizadoError`, `NoEncontradoError`
   -un lugar o una calle de otro municipio, que `registrarIntervencion` lee
-  bajo RLS antes de insertar-, `ValidacionError` y el fallo de resolucion del
-  tenant. **El alta exige `puedeAdministrarIntervenciones`**, no
-  `puedeEscribir`, que es con lo que `registrarIntervencion` autoriza la
-  captura de mostrador: la bandeja programa y administra trabajo, y es la
-  regla que fija S1.
+  bajo RLS antes de insertar-, `CalleFueraDelLugarError` -la calle existe y es
+  del municipio, pero cuelga del asentamiento de otro lugar (S6 de
+  `intervenciones-ux`); lo responde `calleDelLugar` de
+  `territorio/application/calleDelLugar.ts`-, `ValidacionError` y el fallo de
+  resolucion del tenant. **El alta exige
+  `puedeAdministrarIntervenciones`**, no `puedeEscribir`, que es con lo que
+  `registrarIntervencion` autoriza la captura de mostrador: la bandeja
+  programa y administra trabajo, y es la regla que fija S1.
+  Desde T2 de `intervenciones-ux` el campo de Calle ofrece solo las calles del
+  asentamiento del lugar elegido: lo acorta
+  `SelectorDeCalleDelLugar` (`"use client"`), la isla que lee el `lugarId` del
+  `<form>` por sus eventos y no envuelve la acción; sin JavaScript el
+  `<select>` sale completo con un `<optgroup>` por asentamiento, y el envío es
+  el mismo POST nativo.
 - `programarObraAction` (`intervenciones`, S2 de
   `intervenciones-trazabilidad`): el `<form>` vive en el detalle del reporte y
   no pide ubicacion -se copia del reporte-. Redacta `NoAutorizadoError`,
   `NoEncontradoError`, `ReporteNoProgramableError` -el reporte ya esta
   `RESUELTO` o `RECHAZADO`-, `ValidacionError` y el fallo del tenant. Vuelve
-  al detalle del reporte, donde la operadora ve el estado nuevo; si el
-  `reporteId` del formulario no es un uuid valido no hay detalle al que
-  volver y el error va a `/reportes`.
+  al detalle del reporte con `?obra=`, el id que devolvio el caso de uso y
+  nunca uno del formulario; la pagina confirma con un `Aviso` y «Ver la
+  obra» solo si ese id esta entre las obras que ya leyo bajo RLS para ese
+  reporte (S16 de `intervenciones-ux`), y el formulario muestra arriba las
+  obras que el reporte ya tiene sin dejar de ofrecer una nueva. El
+  formulario dice que la fecha sera hoy y que el lugar se copia del reporte
+  (S17). Si el `reporteId` del formulario no es un uuid valido no hay
+  detalle al que volver y el error va a `/reportes`.
 - `corregirDomicilioAction`/`darDeBajaDomicilioAction` (`territorio`, Fase 2
   de direcciones editables): mismo motivo exacto que `renombrarCalleAction`,
   cada uno su `<form>` nativo. `corregirDomicilioAction` redacta

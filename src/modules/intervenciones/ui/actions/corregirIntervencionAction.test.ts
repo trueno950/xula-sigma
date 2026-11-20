@@ -5,6 +5,7 @@ import {
   TenantNoResueltoError,
   ValidacionError,
 } from "@/shared/lib/errores";
+import { CalleFueraDelLugarError } from "../../domain";
 
 const redirectMock = vi.hoisted(() =>
   vi.fn((_url?: string): never => {
@@ -114,6 +115,22 @@ describe("corregirIntervencionAction", () => {
 
     expect(decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string)).toBe(
       `/intervenciones/${ID}?error=Esa intervención no existe.`,
+    );
+  });
+
+  /**
+   * S6 de `intervenciones-ux`: al elegir una calle de otro asentamiento la
+   * operadora lee que el problema es la calle, no la intervencion.
+   */
+  it("redacta la calle de otro asentamiento con el mensaje del dominio", async () => {
+    corregirMock.mockRejectedValue(new CalleFueraDelLugarError());
+
+    await expect(corregirIntervencionAction(formDataDe())).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
+
+    expect(decodeURIComponent(redirectMock.mock.calls[0]?.[0] as string)).toBe(
+      `/intervenciones/${ID}?error=La calle elegida no es de ese lugar. Elija una calle del lugar, o registre la intervención sin calle.`,
     );
   });
 

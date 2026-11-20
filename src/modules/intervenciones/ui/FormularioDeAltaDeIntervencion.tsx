@@ -10,12 +10,14 @@ import {
   type OpcionDeLista,
 } from "@/shared/ui";
 import { altaDeIntervencionAction } from "./actions/altaDeIntervencionAction";
+import type { CallesDelAlta } from "./FormularioDeAltaDeIntervencion.calles";
+import { SelectorDeCalleDelLugar } from "./FormularioDeAltaDeIntervencion.selector";
 
 type Props = {
   tipos: readonly OpcionDeLista[];
   lugares: readonly OpcionDeLista[];
-  /** Todas las calles del municipio, etiquetadas con su lugar. */
-  calles: readonly OpcionDeLista[];
+  /** Las calles del municipio por asentamiento y el de cada lugar (S6). */
+  calles: CallesDelAlta;
   /** `hoyEnMerida()`: la fecha civil de hoy, que es la de una obra de mostrador. */
   fechaDeHoy: string;
   error?: string;
@@ -24,7 +26,8 @@ type Props = {
 /**
  * El alta de S1, Server Component con `<form action>` nativo sin `"use client"`
  * -la excepcion de `AGENTS.md`, seccion Server Actions, con su fila en la
- * tabla-. La calle es opcional: una obra puede registrarse solo por lugar.
+ * tabla-. La calle es opcional: una obra puede registrarse solo por lugar, y
+ * se elige entre las del asentamiento del lugar (S6).
  */
 export function FormularioDeAltaDeIntervencion({
   tipos,
@@ -52,14 +55,7 @@ export function FormularioDeAltaDeIntervencion({
           marcador="Seleccione un lugar"
           opciones={lugares}
         />
-        <CampoDeLista
-          id="intervencion-calle"
-          name="calleId"
-          etiqueta="Calle (opcional)"
-          marcador="Sin calle"
-          opcional
-          opciones={calles}
-        />
+        <SelectorDeCalleDelLugar calles={calles} />
         <Campo
           id="intervencion-fecha"
           name="fechaDeOcurrencia"

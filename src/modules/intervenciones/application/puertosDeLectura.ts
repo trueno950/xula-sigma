@@ -7,12 +7,35 @@ import type {
 } from "../domain";
 import type { IntervencionGuardada } from "./puertos";
 
+/**
+ * El veredicto de `calleDelLugar`, el mismo de `territorio` escrito aca para
+ * que la capa de aplicacion no importe el dominio del otro modulo: el
+ * adaptador traduce en la unica frontera.
+ */
+export type CalleEnElLugar = "del-lugar" | "fuera-del-lugar" | "no-resuelve";
+
 export type LecturaDeUbicaciones = {
   de(
     tx: TransaccionTenant,
     lugarId: string,
     calleId: string | null,
   ): Promise<{ texto: string } | null>;
+  /**
+   * Si la calle cuelga del asentamiento del lugar (S6 de
+   * `intervenciones-ux`). `de` no puede responderlo: resuelve cualquier pareja
+   * de filas guardadas, incluida una que dejo de ser coherente cuando se
+   * reparento el lugar.
+   *
+   * Opcional en el tipo y obligatoria en la practica -el adaptador real la
+   * implementa-: un lector que solo compone el texto no puede aceptar una
+   * calle, y los casos de uso la tratan como "no resuelve" cuando falta. Nunca
+   * se escribe una calle a ciegas.
+   */
+  calleDelLugar?(
+    tx: TransaccionTenant,
+    lugarId: string,
+    calleId: string,
+  ): Promise<CalleEnElLugar>;
 };
 
 export type LecturaDeReportes = {

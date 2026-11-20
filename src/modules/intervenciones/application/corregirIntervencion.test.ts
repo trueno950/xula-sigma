@@ -5,7 +5,10 @@ import {
   NoEncontradoError,
   ValidacionError,
 } from "@/shared/lib/errores";
-import type { RepositorioDeIntervenciones } from "./puertos";
+import type {
+  IntervencionGuardada,
+  RepositorioDeIntervenciones,
+} from "./puertos";
 
 const tx = {};
 const withTenantMock = vi.hoisted(() => vi.fn());
@@ -37,10 +40,17 @@ const entrada = {
 };
 
 describe("corregirIntervencion", () => {
-  const repositorio: Pick<RepositorioDeIntervenciones, "corregir"> = {
+  const repositorio: Pick<
+    RepositorioDeIntervenciones,
+    "corregir" | "buscarPorId"
+  > = {
     corregir: vi.fn().mockResolvedValue(true),
+    buscarPorId: vi.fn(),
   };
-  const lectura = { de: vi.fn().mockResolvedValue({ texto: "Centro" }) };
+  const lectura = {
+    de: vi.fn().mockResolvedValue({ texto: "Centro" }),
+    calleDelLugar: vi.fn(),
+  };
   const lecturaDeReportes = { porId: vi.fn() };
   const corregir = crearCorregirIntervencion({
     repositorio,
@@ -54,6 +64,11 @@ describe("corregirIntervencion", () => {
       (_id: unknown, trabajo: (actualTx: unknown) => unknown) => trabajo(tx),
     );
     vi.mocked(repositorio.corregir).mockResolvedValue(true);
+    vi.mocked(repositorio.buscarPorId).mockResolvedValue({
+      id: entrada.id,
+      lugarId: entrada.lugarId,
+      calleId: null,
+    } as unknown as IntervencionGuardada);
     vi.mocked(lecturaDeReportes.porId).mockResolvedValue(true);
   });
 

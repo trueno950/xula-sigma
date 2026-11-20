@@ -33,6 +33,7 @@ import {
   crearUbicacionDeLugarEnTransaccion,
   crearUbicarCalle,
 } from "./application";
+import { crearCalleDelLugar } from "./application/calleDelLugar";
 import {
   crearLectorDePersonasPorPadron,
   lectorDeCallesDeMapaSql,
@@ -114,3 +115,7 @@ export const ubicacionDeLugar = crearUbicacionDeLugar(lectorDeUbicacionesSql);
 export const ubicacionDeLugarEnTransaccion = crearUbicacionDeLugarEnTransaccion(
   lectorDeUbicacionesSql,
 );
+export const calleDelLugar = crearCalleDelLugar({
+  repositorioDeLugares: repositorioDeLugaresSql,
+  repositorioDeCalles: repositorioDeCallesSql,
+});
