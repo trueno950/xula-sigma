@@ -19,6 +19,7 @@ vi.mock("next/font/local", () => ({ default: () => ({ variable: "" }) }));
  */
 const TITULOS: Record<string, string> = {
   "(acceso)/acceso/page.tsx": "Acceso",
+  "(acceso)/cambiar-contrasenia/page.tsx": "Cambiar contraseña",
   "(acceso)/page.tsx": "Inicio",
   "(panel)/calles/[id]/historial/page.tsx": "Historial de calle",
   "(panel)/constancias/[id]/page.tsx": "Constancia",

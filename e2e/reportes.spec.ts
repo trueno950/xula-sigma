@@ -368,6 +368,16 @@ const accederComo = async (
     await page.getByRole("button", { name: "Entrar" }).click();
 
     try {
+      // La cuenta nueva entra con su temporal: S2 de `usuarios-seguridad`
+      // la manda a elegir una propia antes del panel.
+      await page.waitForURL(/\/cambiar-contrasenia$/, { timeout: 5_000 });
+      await page
+        .getByLabel("Contraseña nueva", { exact: true })
+        .fill("clave-propia-de-la-operadora");
+      await page
+        .getByLabel("Repita la contraseña nueva", { exact: true })
+        .fill("clave-propia-de-la-operadora");
+      await page.getByRole("button", { name: "Cambiar contraseña" }).click();
       await page.waitForURL(urlDe("motul"), { timeout: 5_000 });
       return;
     } catch {

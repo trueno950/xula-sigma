@@ -20,10 +20,11 @@ const rutaConIpDePrueba = (ip: string) => (ruta: Route) =>
 async function enviarCredenciales(
   page: Page,
   correo: string,
+  clave: string,
   endpoint: string,
 ): Promise<Response> {
   await page.getByLabel("Correo").fill(correo);
-  await page.getByLabel("Contraseña").fill(CLAVE);
+  await page.getByLabel("Contraseña").fill(clave);
 
   const respuestaDeAcceso = page.waitForResponse(
     (respuesta) =>
@@ -42,16 +43,22 @@ async function completarAcceso(
   page: Page,
   correo: string,
   inicio: string,
+  clave: string = CLAVE,
 ): Promise<void> {
   const endpoint = urlDe("motul", "/api/auth/sign-in/email");
   const ruta = rutaConIpDePrueba(ipDePruebaSiguiente());
   await page.route(endpoint, ruta);
 
   try {
-    const respuesta = await enviarCredenciales(page, correo, endpoint);
+    const respuesta = await enviarCredenciales(page, correo, clave, endpoint);
     if (!respuesta.ok()) {
+      // El cuerpo, no solo el status: un 429 lo devuelven dos limitadores
+      // distintos —el nuestro (`limitarRitmo`) y el de Better Auth— y el
+      // mensaje es lo unico que dice cual fue.
       throw new Error(
-        `No se pudo acceder: el servidor respondió ${respuesta.status()}.`,
+        `No se pudo acceder: el servidor respondió ${respuesta.status()}: ${
+          (await respuesta.text()).slice(0, 200) || "(cuerpo vacío)"
+        }`,
       );
     }
 
@@ -81,4 +88,57 @@ export async function accederAMotul(
 
   await liberarVentanaDeRitmo();
   await completarAcceso(page, correo, inicio);
+}
+
+/**
+ * Entra con una credencial concreta y espera la pantalla que sigue.
+ *
+ * Existe por la contrasenia temporal, que no es la `CLAVE` de los fixtures:
+ * `accederAMotul` siempre usa la del administrador sembrado. `espera` es la
+ * URL que se alcanza despues del POST —`null` cuando el servidor lo rechaza y
+ * no hay navegacion que esperar, como en la temporal caducada—.
+ */
+export async function accederConClave(
+  page: Page,
+  datos: { correo: string; clave: string; espera: string | null },
+): Promise<Response> {
+  await page.goto(urlDe("motul", "/acceso"));
+  await liberarVentanaDeRitmo();
+
+  const endpoint = urlDe("motul", "/api/auth/sign-in/email");
+  const ruta = rutaConIpDePrueba(ipDePruebaSiguiente());
+  await page.route(endpoint, ruta);
+
+  try {
+    const respuesta = await enviarCredenciales(
+      page,
+      datos.correo,
+      datos.clave,
+      endpoint,
+    );
+
+    if (!respuesta.ok() && datos.espera) {
+      throw new Error(
+        `No se pudo acceder con la clave entregada: el servidor respondió ${respuesta.status()}: ${(await respuesta.text()).slice(0, 200) || "(cuerpo vacío)"}`,
+      );
+    }
+
+    if (datos.espera) {
+      await page.waitForURL(datos.espera, {
+        timeout: 5_000,
+        waitUntil: "commit",
+      });
+      // `commit` es cuando empieza la respuesta, no cuando termina: la pagina
+      // que espera el test todavia se esta transmitiendo. Interactuar ahi es
+      // una carrera —los campos ya estan y el `<input name="$ACTION_ID_…">`
+      // del `<form>` de la Server Action puede no haber llegado— y el envio
+      // sale sin accion: no redirige y el test se queda esperando 30 s. Lo
+      // encontro la repeticion del E2E de reactivacion.
+      await page.waitForLoadState("load");
+    }
+
+    return respuesta;
+  } finally {
+    await page.unroute(endpoint, ruta);
+  }
 }

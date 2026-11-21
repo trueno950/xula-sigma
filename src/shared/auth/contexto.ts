@@ -1,9 +1,11 @@
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { exigirAyuntamiento } from "@/shared/tenancy/contexto";
 import { withTenant } from "@/shared/tenancy/withTenant";
-import { usuarios } from "./esquema";
+import {
+  type CuentaConCredencial,
+  cuentaConCredencial,
+} from "./claveTemporalEnCuenta";
 import { origenDelRequest } from "./origen";
 import { esRol, type Rol } from "./roles";
 import { sesionActual } from "./sesion";
@@ -41,7 +43,7 @@ export type ContextoActual = {
 };
 
 /**
- * Si la cuenta sigue activa, leida del lado del servidor.
+ * La sesion con su cuenta, cuando la cuenta esta activa.
  *
  * **Segunda mitad de S6.** La baja borra las sesiones y bloquea el alta de
  * nuevas, pero una sesion que sobreviva —creada en la misma carrera que la
@@ -50,27 +52,12 @@ export type ContextoActual = {
  * a mirar la fila. Es un `SELECT` por clave primaria, en el mismo request
  * que ya resolvio el subdominio.
  */
-const sigueActiva = (
-  ayuntamientoId: AyuntamientoId,
-  usuarioId: string,
-): Promise<boolean> =>
-  withTenant(ayuntamientoId, (tx) =>
-    tx
-      .select({ bajaEn: usuarios.bajaEn })
-      .from(usuarios)
-      .where(eq(usuarios.id, usuarioId))
-      .limit(1),
-  ).then(([fila]) => fila !== undefined && fila.bajaEn === null);
-
-/**
- * `null` cuando no hay sesion.
- *
- * **La unica excepcion a "no lanza" es el municipio inexistente**: con sesion
- * valida y un subdominio que no existe no hay contexto que devolver, y
- * `exigirAyuntamiento` corta en 404. Sin sesion no se toca tenancy, asi que
- * ese caso sigue siendo `null` y lo decide el borde.
- */
-export async function contextoActual(): Promise<ContextoActual | null> {
+async function sesionConSuCuenta(): Promise<{
+  sesion: NonNullable<Awaited<ReturnType<typeof sesionActual>>>;
+  usuario: { id: string; rol: Rol };
+  ayuntamientoId: AyuntamientoId;
+  cuenta: CuentaConCredencial;
+} | null> {
   const sesion = await sesionActual();
 
   if (!sesion) return null;
@@ -87,12 +74,71 @@ export async function contextoActual(): Promise<ContextoActual | null> {
   if (!esRol(rol)) return null;
 
   const { id: ayuntamientoId } = await exigirAyuntamiento();
+  const cuenta = await withTenant(ayuntamientoId, (tx) =>
+    cuentaConCredencial(tx, id),
+  );
 
-  if (!(await sigueActiva(ayuntamientoId, id))) return null;
+  if (!cuenta || cuenta.bajaEn !== null) return null;
+
+  return { sesion, usuario: { id, rol }, ayuntamientoId, cuenta };
+}
+
+/**
+ * `null` cuando no hay sesion.
+ *
+ * **La unica excepcion a "no lanza" es el municipio inexistente**: con sesion
+ * valida y un subdominio que no existe no hay contexto que devolver, y
+ * `exigirAyuntamiento` corta en 404. Sin sesion no se toca tenancy, asi que
+ * ese caso sigue siendo `null` y lo decide el borde.
+ *
+ * **Una cuenta con la clave temporal puesta tampoco resuelve contexto**
+ * (S2), y esto es la reja, no un aviso: las paginas, las Server Actions y
+ * los Route Handlers del panel piden su contexto por aca, asi que una sesion
+ * abierta con la temporal no autoriza ninguna operacion —no hay un segundo
+ * lugar donde acordarse de mirarlo—. La unica puerta que queda abierta es
+ * `contextoDeCambioDeClave()`, que no alcanza para operar.
+ */
+export async function contextoActual(): Promise<ContextoActual | null> {
+  const activa = await sesionConSuCuenta();
+
+  if (!activa || activa.cuenta.claveTemporalEn !== null) return null;
 
   return {
-    ayuntamientoId,
-    usuario: { id, rol },
+    ayuntamientoId: activa.ayuntamientoId,
+    usuario: activa.usuario,
+    origen: origenDelRequest(await headers()),
+  };
+}
+
+/**
+ * Lo unico que se puede hacer con una sesion abierta con la clave temporal:
+ * poner la propia (S2).
+ *
+ * No devuelve un `ContextoActual`, y esa es la mitad de la garantia: llevar
+ * `usuario` haria que un caso de uso cualquiera lo aceptara como actor. Aca
+ * solo viajan el tenant, la persona y la sesion desde la que se escribe, y su
+ * unico consumidor es el cambio de clave.
+ *
+ * Exige que la marca siga puesta: quien ya tiene clave propia no cambia nada
+ * por esta puerta —la pantalla lo manda al panel, y el caso de uso no
+ * encontraria credencial temporal que limpiar—.
+ */
+export type ContextoDeCambioDeClave = {
+  ayuntamientoId: AyuntamientoId;
+  usuarioId: string;
+  sesionId: string;
+  origen: string;
+};
+
+export async function contextoDeCambioDeClave(): Promise<ContextoDeCambioDeClave | null> {
+  const activa = await sesionConSuCuenta();
+
+  if (!activa || activa.cuenta.claveTemporalEn === null) return null;
+
+  return {
+    ayuntamientoId: activa.ayuntamientoId,
+    usuarioId: activa.usuario.id,
+    sesionId: activa.sesion.session.id,
     origen: origenDelRequest(await headers()),
   };
 }

@@ -86,7 +86,13 @@ const trazaDe = (
     entidadId: traza.entidadId,
   });
 
-/** Cambia la credencial de otra persona y deja traza en la misma transaccion. */
+/** Cambia la credencial de otra persona y deja traza en la misma transaccion.
+ *
+ * La clave que se escribe es una temporal: la marca en `cuentas` es lo que la
+ * hace caducar a las 24 horas y obliga a cambiarla al entrar (S1 y S2).
+ * Cualquier restablecimiento que se olvide de marcarla deja una clave que no
+ * caduca nunca y nadie se entera.
+ */
 export function restablecerContrasenia(
   contexto: ContextoActual,
   datos: { usuarioId: string; nuevaClave: string },
@@ -106,7 +112,7 @@ export function restablecerContrasenia(
 
     await tx
       .update(cuentas)
-      .set({ password: digest })
+      .set({ password: digest, claveTemporalEn: new Date() })
       .where(eq(cuentas.userId, objetivo.id));
 
     await trazaDe(tx, {

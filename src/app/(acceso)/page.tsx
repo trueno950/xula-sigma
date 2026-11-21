@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { listarReportes } from "@/modules/reportes";
-import { contextoActual } from "@/shared/auth";
+import {
+  contextoActual,
+  contextoDeCambioDeClave,
+  RUTA_DE_CAMBIO_DE_CLAVE,
+} from "@/shared/auth";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import { horaEnMerida } from "@/shared/lib/fecha";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
@@ -55,7 +59,14 @@ async function contarRecibidos(
 export default async function PaginaDeInicio() {
   const contexto = await contextoActual();
 
-  if (!contexto) redirect("/acceso");
+  // S2: quien entro con una temporal no llega al inicio. La comprobacion
+  // esta aca ademas de en `(panel)/layout.tsx` porque esta pantalla no cuelga
+  // de ese layout, y `contextoActual()` ya devuelve `null` para esa sesion.
+  if (!contexto) {
+    if (await contextoDeCambioDeClave()) redirect(RUTA_DE_CAMBIO_DE_CLAVE);
+
+    redirect("/acceso");
+  }
 
   const ayuntamiento = await ayuntamientoActual();
   const { escudo } = leerMarca(ayuntamiento.marca);

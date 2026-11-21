@@ -7,6 +7,7 @@ import { Aviso } from "@/shared/ui/Aviso";
 import { Boton } from "@/shared/ui/Boton";
 import { Campo } from "@/shared/ui/Campo";
 import { type CamposDeAcceso, esquemaDeAcceso } from "./esquemaDeAcceso";
+import { mensajeDeRechazo } from "./mensajeDeRechazo";
 
 /**
  * El formulario de acceso. Es la hoja: lo unico `"use client"` de la
@@ -37,15 +38,29 @@ const useHidratado = () =>
   );
 
 /**
- * Un solo mensaje para todos los rechazos.
+ * El cuerpo del rechazo, o `null` si no es JSON.
  *
- * Distinguir "no existe" de "contrasenia incorrecta" confirma que la cuenta
- * existe, y con eso se enumera quien trabaja en el municipio. Los cuatro
- * caminos de rechazo —inexistente, clave incorrecta, dado de baja, otro
- * municipio— dicen lo mismo.
+ * El `catch` atrapa solo `SyntaxError`, que es lo que lanza `json()` con un
+ * cuerpo que no lo es —misma forma que `correoDe` en la ruta de auth—. Un
+ * cuerpo ilegible no trae codigo, asi que cae en el mensaje de siempre;
+ * cualquier otro error sale, porque seria un fallo distinto y tragarselo lo
+ * volveria invisible.
  */
-const CREDENCIALES_INVALIDAS = "Correo o contraseña incorrectos.";
+async function cuerpoDe(respuesta: Response): Promise<unknown> {
+  try {
+    return await respuesta.json();
+  } catch (error) {
+    if (error instanceof SyntaxError) return null;
 
+    throw error;
+  }
+}
+
+/**
+ * Un solo mensaje para todos los rechazos de credencial. El texto y la unica
+ * excepcion —la temporal caducada, que solo se alcanza sabiendo la
+ * contrasenia— viven en `mensajeDeRechazo.ts`, con su razon.
+ */
 export function FormularioDeAcceso() {
   const [fallo, setFallo] = useState<string | null>(null);
   const hidratado = useHidratado();
@@ -76,9 +91,10 @@ export function FormularioDeAcceso() {
     }
 
     setFallo(
-      respuesta.status === 429
-        ? "Demasiados intentos. Espere unos minutos."
-        : CREDENCIALES_INVALIDAS,
+      mensajeDeRechazo({
+        status: respuesta.status,
+        cuerpo: await cuerpoDe(respuesta),
+      }),
     );
   };
 

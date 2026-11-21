@@ -367,6 +367,7 @@ que devuelva, y devolverlo sería código muerto.
 | `restablecerContraseniaAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `darDeBajaUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `descartarClaveMostradaAction` | `usuarios` | Server Component, `<form action={...}>` |
+| `cambiarContraseniaPropiaAction` | `usuarios` | Server Component, `<form action={...}>` |
 
 Notas que no caben en la tabla, una por fila que las necesita:
 
@@ -674,6 +675,19 @@ Notas que no caben en la tabla, una por fila que las necesita:
   Zod, borra la cookie solo si coincide con la guardada y vuelve al listado
   **sin el token en la URL** —por eso el destino no lleva `ok`: no hay nada
   que confirmar, la operadora acaba de decir que ya la anotó—.
+- `cambiarContraseniaPropiaAction` (`usuarios`, S2 de
+  `usuarios-seguridad`): el `<form>` de la pantalla de cambio obligatorio,
+  en `src/app/(acceso)/cambiar-contrasenia/` —fuera de `(panel)` a
+  propósito: mientras la temporal esté puesta no hay ninguna otra pantalla
+  que ofrecer, y colgarla del layout que manda hacia ella sería un redirect
+  a sí mismo—. Mismo motivo que `altaDePersonaAction`: no hay ninguna hoja
+  cliente de por medio, así que anda igual sin JavaScript. **No recibe el
+  usuario ni el ayuntamiento**: los resuelve `contextoDeCambioDeClave()`,
+  que devuelve `null` cuando la cuenta ya tiene su clave propia o está dada
+  de baja, así que un POST a mano sin sesión no cambia nada. Redacta
+  `no-coincide`, `corta`, `repetida` y el genérico, y la contraseña no viaja
+  nunca en la URL ni al log: solo el código. Ver
+  `src/modules/usuarios/ui/mensajesDeCambioDeClave.ts`.
 - `cambiarColoresAction`/`restablecerColoresAction` (`marca`, S1-S8 de
   `odd/tasks/marca-colores.md`): mismo motivo que `altaDePersonaAction`, y
   **ninguna hoja cliente de la pantalla envuelve ninguna de las dos**.

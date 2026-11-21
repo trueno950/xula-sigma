@@ -26,7 +26,21 @@ import type { Rol } from "./roles";
 export async function altaDePersona(
   tx: TransaccionTenant,
   ayuntamientoId: AyuntamientoId,
-  datos: { nombre: string; email: string; clave: string; rol: Rol },
+  datos: {
+    nombre: string;
+    email: string;
+    clave: string;
+    rol: Rol;
+    /**
+     * `true` cuando la clave la genero el sistema. Opcional y con `false` por
+     * defecto porque la primitiva tambien siembra cuentas con una clave que
+     * eligio una persona —el primer administrador de un municipio, los
+     * datos de desarrollo—, y esas no caducan ni obligan a cambiarla. El
+     * camino que emite una temporal tiene que decirlo: sin la marca, la
+     * clave no caduca nunca (`claveTemporalEnCuenta.ts`).
+     */
+    claveTemporal?: boolean;
+  },
 ): Promise<{ id: string }> {
   // Antes de escribir nada: si la clave es debil, no se crea la persona y
   // despues su credencial falla dejando un usuario sin forma de entrar.
@@ -55,6 +69,7 @@ export async function altaDePersona(
     accountId: persona.id,
     providerId: "credential",
     password: digest,
+    claveTemporalEn: datos.claveTemporal === true ? new Date() : null,
   });
 
   return persona;

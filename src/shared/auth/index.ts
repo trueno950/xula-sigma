@@ -21,11 +21,21 @@ export {
 } from "./administracionDeUsuarios";
 export { altaDePersona } from "./alta";
 export {
+  ClaveRepetidaError,
+  cambiarClavePropia,
+  RUTA_DE_CAMBIO_DE_CLAVE,
+} from "./cambioDeClave";
+export {
   ALFABETO_DE_CLAVE_TEMPORAL,
   generarClaveTemporal,
   LARGO_DE_CLAVE_TEMPORAL,
 } from "./claveTemporal";
-export { type ContextoActual, contextoActual } from "./contexto";
+export {
+  type ContextoActual,
+  type ContextoDeCambioDeClave,
+  contextoActual,
+  contextoDeCambioDeClave,
+} from "./contexto";
 export {
   ClaveDebilError,
   hashDeClave,

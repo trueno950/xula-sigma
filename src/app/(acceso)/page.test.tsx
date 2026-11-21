@@ -8,13 +8,17 @@ const redirectMock = vi.hoisted(() =>
   }),
 );
 const contextoActualMock = vi.hoisted(() => vi.fn());
+const contextoDeCambioMock = vi.hoisted(() => vi.fn());
 const listarReportesMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   redirect: redirectMock,
   usePathname: () => null,
 }));
-vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
+vi.mock("@/shared/auth", () => ({
+  contextoActual: contextoActualMock,
+  contextoDeCambioDeClave: contextoDeCambioMock,
+}));
 vi.mock("@/shared/tenancy/contexto", () => ({
   ayuntamientoActual: async () => ({ nombre: "Motul" }),
 }));
@@ -32,6 +36,8 @@ const enlaces = (html: string) =>
 describe("inicio del municipio", () => {
   beforeEach(() => {
     contextoActualMock.mockReset();
+    contextoDeCambioMock.mockReset();
+    contextoDeCambioMock.mockResolvedValue(null);
     listarReportesMock.mockReset();
     listarReportesMock.mockResolvedValue({ reportes: [], hayMas: false });
     contextoActualMock.mockResolvedValue({

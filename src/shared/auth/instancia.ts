@@ -1,14 +1,22 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { eq } from "drizzle-orm";
+import { APIError } from "better-auth/api";
 import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import { bdSobreTransaccion } from "./bdSobreTransaccion";
-import { ACCESO_POR_CORREO, MODELOS } from "./configuracion";
+import {
+  CLAVE_TEMPORAL_CADUCADA,
+  cuentaConCredencial,
+  estadoDeClaveTemporal,
+} from "./claveTemporalEnCuenta";
+import {
+  ACCESO_POR_CORREO,
+  MODELOS,
+  RITMO_DE_BETTER_AUTH,
+} from "./configuracion";
 import * as esquema from "./esquema";
-import { usuarios } from "./esquema";
 import { origenDesde } from "./origen";
 
 /**
@@ -49,6 +57,28 @@ const conTenantDe =
 type ConTenant = ReturnType<typeof conTenantDe>;
 
 /**
+ * S1: la temporal caduca a las 24 horas y con ella no se abre sesion.
+ *
+ * Se lanza `APIError` y no se devuelve `false` como en el caso de la baja
+ * porque este rechazo tiene que llegar a la pantalla con su mensaje. Un
+ * `APIError` lanzado desde el endpoint se convierte en la respuesta HTTP con
+ * su status y su cuerpo `{ code, message }`
+ * (`better-call/dist/endpoint.mjs:27-34` en 1.3.1, `createEndpoint`), asi que
+ * el cuerpo no depende de nada que armemos nosotros.
+ *
+ * **No revela si la cuenta existe.** El gancho corre despues de que la
+ * contrasenia verifico: llegar hasta aca ya exige saberla. Una cuenta
+ * inexistente, o una clave equivocada de una cuenta que existe, sigue
+ * recibiendo el mismo `INVALID_EMAIL_OR_PASSWORD` de la libreria, y hay un
+ * test que compara los dos cuerpos.
+ */
+const claveTemporalCaducada = () =>
+  new APIError("FORBIDDEN", {
+    code: CLAVE_TEMPORAL_CADUCADA,
+    message: "La contraseña temporal caducó.",
+  });
+
+/**
  * Una persona dada de baja no abre sesion. Se verifica aca y no en la
  * pantalla porque este es el unico punto por el que pasan todos los caminos
  * de alta de sesion.
@@ -61,13 +91,13 @@ type ConTenant = ReturnType<typeof conTenantDe>;
 const soloSiSigueActiva =
   (tx: TransaccionTenant, conTenant: ConTenant) =>
   async (sesion: { userId: string }) => {
-    const [persona] = await tx
-      .select({ bajaEn: usuarios.bajaEn })
-      .from(usuarios)
-      .where(eq(usuarios.id, sesion.userId))
-      .limit(1);
+    const cuenta = await cuentaConCredencial(tx, sesion.userId);
 
-    if (!persona || persona.bajaEn !== null) return false;
+    if (!cuenta || cuenta.bajaEn !== null) return false;
+
+    const estado = estadoDeClaveTemporal(cuenta.claveTemporalEn, new Date());
+
+    if (estado === "temporal-caducada") throw claveTemporalCaducada();
 
     return conTenant(sesion);
   };
@@ -120,6 +150,7 @@ function construirInstancia(
     advanced: { database: { generateId: "uuid" } },
     emailAndPassword: ACCESO_POR_CORREO,
     ...MODELOS,
+    rateLimit: RITMO_DE_BETTER_AUTH,
     databaseHooks: ganchosDeBd(tx, ayuntamientoId),
   });
 }

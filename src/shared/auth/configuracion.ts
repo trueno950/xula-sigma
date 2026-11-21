@@ -81,3 +81,36 @@ export const ACCESO_POR_CORREO = {
       verificarClave(hash, password),
   },
 } as const;
+
+/**
+ * El limitador de ritmo **de la libreria** queda apagado: el del municipio es
+ * el nuestro (`ritmo.ts`, `limitarRitmo.ts`).
+ *
+ * Better Auth lo trae prendido por defecto en produccion
+ * (`enabled: options.rateLimit?.enabled ?? isProduction`,
+ * `better-auth/dist/context/create-context.mjs:171` en 1.6.29), en memoria
+ * (`:174` del mismo archivo, o sea por proceso) y con una regla especial de
+ * **3 intentos cada 10 segundos** para `/sign-in*`
+ * (`better-auth/dist/api/rate-limiter/index.mjs:370-376`, en 1.6.29).
+ *
+ * Esa llave es `ip|ruta`, y la IP sale de `x-forwarded-for` solo cuando trae
+ * **exactamente un** salto: `getIPFromHeader` devuelve `null` si hay mas
+ * (`@better-auth/core/dist/utils/ip.mjs:188` en 1.6.29), y sin IP la llave es
+ * una sola compartida por proceso — el propio codigo lo dice y avisa con
+ * `no-trusted-ip` (`better-auth/dist/api/rate-limiter/index.mjs:281-287`, en
+ * 1.6.29)—. En el despliegue real, con el proxy delante, eso es **todo un
+ * ayuntamiento limitado a tres accesos cada diez segundos**, con un 429 en
+ * ingles que ninguna pantalla nuestra traduce, que no cuenta por tenant y que
+ * no se puede vaciar.
+ *
+ * Lo encontro el E2E: al repetir los casos, el cuarto acceso seguido de la
+ * misma corrida recibia `{"message":"Too many requests…"}`. Ver
+ * `ritmoDeBetterAuth.integration.test.ts`.
+ *
+ * Apagarlo no deja superficie de fuerza bruta sin cubrir: el unico endpoint
+ * adivinable es `/sign-in/email`, y lo limita el nuestro antes de construir la
+ * instancia (`app/api/auth/[...all]/route.ts`); las demas rutas que la
+ * libreria protegia estan cerradas (sin alta, sin envio de correo,
+ * `/change-password` apagado, `/update-user` con su propio rechazo).
+ */
+export const RITMO_DE_BETTER_AUTH = { enabled: false } as const;

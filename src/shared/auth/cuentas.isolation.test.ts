@@ -50,6 +50,24 @@ describe("aislamiento de cuentas", () => {
     expect(filas).toHaveLength(0);
   });
 
+  it("la marca de clave temporal tampoco se ve desde otro municipio", async () => {
+    await withTenant(ticul, (tx) =>
+      tx
+        .update(cuentas)
+        .set({ claveTemporalEn: new Date() })
+        .where(eq(cuentas.userId, semillas.enTicul.usuarioId)),
+    );
+
+    const filas = await withTenant(motul, (tx) =>
+      tx
+        .select({ claveTemporalEn: cuentas.claveTemporalEn })
+        .from(cuentas)
+        .where(eq(cuentas.userId, semillas.enTicul.usuarioId)),
+    );
+
+    expect(filas).toHaveLength(0);
+  });
+
   it("una credencial de Motul no puede apuntar a un usuario de Ticul", async () => {
     /**
      * Mismo hueco que en `sesiones`, y aca es peor: la fila lleva el hash
