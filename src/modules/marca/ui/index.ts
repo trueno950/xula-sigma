@@ -10,3 +10,10 @@ export {
   MENSAJE_DE_CONFIRMACION_DE_MARCA,
   MENSAJES_DE_ERROR_DE_MARCA,
 } from "./mensajesDeMarca";
+export * from "./SeccionesDeMarca";
+export {
+  DESCRIPCION_DE_MARCA,
+  SinPermisoDeMarca,
+  SinSesionDeMarca,
+} from "./SinPermisoDeMarca";
+export * from "./VistaPreviaDeMarca";

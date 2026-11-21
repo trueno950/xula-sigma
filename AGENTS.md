@@ -337,6 +337,7 @@ que devuelva, y devolverlo sería código muerto.
 | `cambiarColoresAction` | `marca` | Server Component, `<form action={...}>` |
 | `restablecerColoresAction` | `marca` | Server Component, `<form action={...}>` |
 | `cambiarEscudoAction` | `marca` | Server Component, `<form action={...}>` con archivo |
+| `quitarEscudoAction` | `marca` | Server Component, `<form action={...}>` |
 | `altaDeLugarAction` | `territorio` | Server Component, `<form action={...}>` |
 | `editarLugarAction` | `territorio` | Server Component, `<form action={...}>` |
 | `darDeBajaLugarAction` | `territorio` | Server Component, `<form action={...}>` |
@@ -793,6 +794,22 @@ Notas que no caben en la tabla, una por fila que las necesita:
   sigue sin resolver y no se arregla desde `marca`: pide subir
   `serverActions.bodySizeLimit` o mover el transporte del escudo a un Route
   Handler.
+- `quitarEscudoAction` (`marca`, S7 de `marca-exportacion-ux`): el
+  `<form>` de «Quitar escudo», adentro de la fila del escudo de `/marca`.
+  Mismo motivo que `cambiarEscudoAction` —sin componente cliente que lea un
+  `ActionResult<T>`—, y **exige `confirmar=si`**: el `required` de la
+  casilla es la única confirmación que existe sin JavaScript y la acción la
+  vuelve a exigir con `QuitarEscudoSinConfirmarError` antes del caso de uso,
+  así que sin ella no se escribe una fila ni se toca el objeto guardado. Un
+  campo `ambito=escudo` cerrado dice qué se quita, para que un formulario
+  viejo en una pestaña abierta no dispare otra cosa. Redacta
+  `NoAutorizadoError` —`sin-permiso`—, `quitar-sin-confirmar` y
+  `escudo-no-quitado`; el éxito es `escudo-quitado`. Quita la referencia de
+  `ayuntamientos.marca` con la misma escritura que la subida y **después**
+  el objeto del almacén (`quitarEscudo` y `almacenR2`, regla 10), así que la
+  banda del layout cae a su estado sin escudo. Sin escudo guardado, la fila
+  no ofrece el botón y un POST a mano no cambia nada: el caso de uso lo
+  resuelve sin error.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un

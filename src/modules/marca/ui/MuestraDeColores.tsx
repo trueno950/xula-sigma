@@ -11,12 +11,22 @@ type Props = {
 };
 
 /**
- * La muestra en vivo de S4: un boton, un encabezado y el acento de ejemplo
- * que toman el color elegido antes de guardar.
+ * La muestra en vivo: el boton, el item activo y el acento con el color
+ * elegido, antes de guardar.
  *
- * Es decorativa y esta `aria-hidden`: no hay dato nuevo adentro —los
- * campos dicen que color esta elegido— y anunciarle a un lector de pantalla
- * un boton "Guardar" que no guarda seria peor que no decir nada.
+ * Vive **dentro** de la seccion de colores y arriba de las dos paletas (S1):
+ * era una columna fija que en el telefono quedaba debajo de los dos grupos, o
+ * sea fuera de pantalla justo mientras se elegia (hallazgo M1).
+ *
+ * El texto de encima del acento es el que **mide** mas contraste contra el
+ * color elegido (S3), no un token fijo: la muestra no puede prometer una
+ * legibilidad que el color no tiene. El hallazgo M3 fue este chip con blanco
+ * encima, a 3.01:1.
+ *
+ * Es decorativa y esta `aria-hidden`: no hay dato nuevo adentro —los campos
+ * dicen que color esta elegido— y anunciarle a un lector de pantalla un boton
+ * "Nueva persona" que no hace nada seria peor que no decir nada. El numero
+ * medido si se lee: va en la vista previa de arriba, en texto.
  *
  * Es la unica hoja `"use client"` de la pantalla y **no intercepta el
  * envio**: no toca la accion del formulario ni sus campos, y no dibuja
@@ -57,6 +67,9 @@ export function MuestraDeColores({ primario, secundario }: Props) {
     "--accent": colores.secundario,
     "--primary-foreground": textoSobre(colores.primario) ?? TEXTO_CLARO,
   } as CSSProperties;
+  // `null` solo si el color no se puede medir; en ese caso la pastilla va
+  // como relleno, sin texto encima.
+  const textoDelAcento = textoSobre(colores.secundario);
 
   return (
     <div
@@ -64,25 +77,24 @@ export function MuestraDeColores({ primario, secundario }: Props) {
       data-muestra="colores"
       aria-hidden="true"
       style={variables}
-      className="flex flex-col gap-3 rounded-md border border-caliza-divisor bg-caliza-superficie p-3"
+      className="flex flex-col gap-3 rounded-md border border-caliza-divisor bg-caliza-lienzo p-3"
     >
-      <span className={CLASES_DE_ETIQUETA}>Muestra</span>
+      <span className={CLASES_DE_ETIQUETA}>Con estos colores se ve así</span>
       <div className="flex flex-wrap items-center gap-2">
-        <span aria-hidden className={clasesDeBoton("primaria")}>
-          Guardar
+        <span className={clasesDeBoton("primaria")}>Nueva persona</span>
+        <span className="inline-flex h-9 items-center gap-2 rounded-sm bg-marca-suave px-2 text-[15px] font-semibold text-caliza-tinta">
+          Padrón
         </span>
-        <span
-          aria-hidden
-          className="inline-flex h-11 items-center rounded-md bg-marca px-3 text-[13px] font-semibold text-marca-texto"
-        >
-          Encabezado
-        </span>
-        <span
-          aria-hidden
-          className="inline-flex h-11 items-center rounded-md bg-acento px-3 text-[13px] font-semibold text-caliza-lienzo"
-        >
-          Acento
-        </span>
+        {textoDelAcento ? (
+          <span
+            className="inline-flex h-9 items-center rounded-sm bg-acento px-2.5 text-[13px] font-semibold"
+            style={{ color: textoDelAcento }}
+          >
+            Énfasis
+          </span>
+        ) : (
+          <span className="inline-block h-6 w-24 rounded-sm bg-acento" />
+        )}
       </div>
     </div>
   );

@@ -51,8 +51,37 @@ const abrirMarca = async (page: Page) => {
   await page.goto(urlDe("motul", "/marca"));
 };
 
+/** El cuerpo de una fila cerrada no es visible: hay que abrirla (T4). */
+const abrirFila = async (page: Page, titulo: string) => {
+  const fila = page
+    .locator("details")
+    .filter({ has: page.getByRole("heading", { name: titulo }) });
+
+  if (await fila.evaluate((nodo) => (nodo as HTMLDetailsElement).open)) return;
+
+  await fila.locator("summary").click();
+};
+
+const abrirColores = (page: Page) => abrirFila(page, "Colores del municipio");
+
+/**
+ * La fila plegable de «Restablecer colores» (T4). Es un `<details name>`
+ * nativo: el cuerpo no es visible hasta abrirla, y el titulo —que es su `h2`—
+ * se lee con la fila cerrada.
+ */
 const seccionDeRestablecer = (page: Page) =>
-  page.locator("section").filter({ hasText: "Restablecer colores" });
+  page.locator("details").filter({
+    has: page.getByRole("heading", { name: "Restablecer colores" }),
+  });
+
+const abrirRestablecer = async (page: Page) => {
+  const fila = seccionDeRestablecer(page);
+  const abierta = await fila.evaluate(
+    (nodo) => (nodo as HTMLDetailsElement).open,
+  );
+
+  if (!abierta) await fila.locator("summary").click();
+};
 
 const casilla = (page: Page) =>
   seccionDeRestablecer(page).getByRole("checkbox", { name: /Confirmo/ });
@@ -64,6 +93,7 @@ const botonDeRestablecer = (page: Page) =>
 
 /** Deja al municipio con un color elegido, para ver si restablecer lo toca. */
 const elegirOro = async (page: Page) => {
+  await abrirColores(page);
   await page
     .getByRole("group", { name: "Color primario" })
     .locator("label")
@@ -82,6 +112,7 @@ test("restablecer es una seccion con titulo que dice que colores se pierden", as
   page,
 }) => {
   await abrirMarca(page);
+  await abrirRestablecer(page);
 
   await expect(
     page.getByRole("heading", { name: "Restablecer colores" }),
@@ -97,6 +128,7 @@ test("restablecer es una seccion con titulo que dice que colores se pierden", as
 test("sin la casilla el servidor no restablece nada", async ({ page }) => {
   await abrirMarca(page);
   await elegirOro(page);
+  await abrirRestablecer(page);
 
   // Un POST a mano no trae la casilla: el `required` es del navegador y el
   // servidor lo vuelve a exigir. Se quita el atributo para hablarle a la
@@ -116,6 +148,7 @@ test("con la casilla el municipio vuelve a sus colores y conserva el escudo", as
 }) => {
   await abrirMarca(page);
   await elegirOro(page);
+  await abrirRestablecer(page);
 
   await casilla(page).check();
   await botonDeRestablecer(page).click();
@@ -163,6 +196,7 @@ test("sin JavaScript, restablecer tambien exige la casilla", async ({
   try {
     const page = await contexto.newPage();
     await page.goto(urlDe("motul", "/marca"));
+    await abrirRestablecer(page);
 
     await casilla(page).check();
     await botonDeRestablecer(page).click();

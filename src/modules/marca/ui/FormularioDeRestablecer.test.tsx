@@ -8,18 +8,22 @@ vi.mock("./actions/restablecerColoresAction", () => ({
 const { FormularioDeRestablecer } = await import("./FormularioDeRestablecer");
 
 /**
- * S2: la seccion de restablecer dice que hace, **que colores se pierden** y
- * pide una confirmacion. La casilla vive en el HTML, con el `name` y el
- * `value` que la accion lee, y el `required` es la unica confirmacion que
- * existe sin JavaScript; el servidor la vuelve a exigir (ver
+ * S2: el cuerpo de la fila dice que hace, **que colores se pierden** y pide
+ * una confirmacion. La casilla vive en el HTML, con el `name` y el `value`
+ * que la accion lee, y el `required` es la unica confirmacion que existe sin
+ * JavaScript; el servidor la vuelve a exigir (ver
  * `restablecerColoresAction.test.ts` y `restablecerSinConfirmar.integration`).
+ *
+ * S5: el titulo lo pone el resumen de la fila (`SeccionesDeMarca`), asi que el
+ * cuerpo no repite un `<h2>` que quedaria duplicado al abrir.
  */
 
 const markup = renderToStaticMarkup(<FormularioDeRestablecer />);
 
 describe("FormularioDeRestablecer", () => {
-  it("es una seccion con titulo propio", () => {
-    expect(markup).toMatch(/<h2[^>]*>Restablecer colores<\/h2>/);
+  it("es el cuerpo de una fila con titulo, sin repetir el encabezado (S5)", () => {
+    expect(markup).not.toMatch(/<h2/);
+    expect(markup).not.toContain("<section");
   });
 
   it("dice que colores se pierden y que el escudo no se toca", () => {

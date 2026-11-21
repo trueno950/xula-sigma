@@ -44,7 +44,7 @@ export function FormularioDeEscudo({ error }: Props) {
     <form action={cambiarEscudoAction} className={CLASES_DE_FORMULARIO}>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={ID_DE_ARCHIVO} className={CLASES_DE_ETIQUETA}>
-          Escudo del ayuntamiento
+          Cambiar el escudo
         </label>
         <p id={ID_DE_AYUDA} className="text-[13px] text-caliza-apagada">
           {REQUISITOS_DE_ESCUDO}

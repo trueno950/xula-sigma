@@ -14,6 +14,7 @@ export const CLAVES_DE_CONFIRMACION_DE_MARCA = [
   "colores-guardados",
   "colores-restablecidos",
   "escudo-actualizado",
+  "escudo-quitado",
 ] as const;
 
 export type ClaveDeConfirmacionDeMarca =
@@ -26,6 +27,7 @@ export const MENSAJE_DE_CONFIRMACION_DE_MARCA: Record<
   "colores-guardados": "Colores guardados.",
   "colores-restablecidos": "Se volvió a los colores por defecto de XULA.",
   "escudo-actualizado": "Escudo actualizado.",
+  "escudo-quitado": "Se quitó el escudo.",
 };
 
 export const CLAVES_DE_ERROR_DE_MARCA = [
@@ -35,6 +37,8 @@ export const CLAVES_DE_ERROR_DE_MARCA = [
   "colores-no-guardados",
   "restablecimiento-no-hecho",
   "restablecimiento-sin-confirmar",
+  "quitar-sin-confirmar",
+  "escudo-no-quitado",
 ] as const;
 
 export type ClaveDeErrorDeMarca = (typeof CLAVES_DE_ERROR_DE_MARCA)[number];
@@ -57,6 +61,9 @@ export const MENSAJES_DE_ERROR_DE_MARCA: Record<ClaveDeErrorDeMarca, string> = {
     "No se pudieron restablecer los colores. Intente de nuevo.",
   "restablecimiento-sin-confirmar":
     "Para restablecer los colores, marque la casilla de confirmación.",
+  "quitar-sin-confirmar":
+    "Para quitar el escudo, marque la casilla de confirmación.",
+  "escudo-no-quitado": "No se pudo quitar el escudo. Intente de nuevo.",
 };
 
 export const esClaveDeConfirmacion = (

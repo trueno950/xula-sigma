@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { puedeCambiarMarca } from "@/shared/auth/roles";
 import { NoAutorizadoError, ValidacionError } from "@/shared/lib/errores";
-import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { claveDeEscudo } from "../domain/claveDeEscudo";
 import { type MotivoDeRechazo, validarPng } from "../domain/png";
 import type { EntradaDeEscudo, EscudoCambiado } from "../types";
+import { borrarEscudoAnterior, urlDeEscudo } from "./borradoDeEscudo";
 import { escribirMarcaCompuesta } from "./escrituraDeMarca";
 import type { AlmacenDeAssets, RepositorioDeMarca } from "./puertos";
 
@@ -30,7 +30,7 @@ const MENSAJES_DE_RECHAZO: Record<MotivoDeRechazo, string> = {
 };
 
 const urlAnteriorDe = (marca: Record<string, unknown>): string | undefined =>
-  typeof marca.escudo === "string" ? marca.escudo : undefined;
+  urlDeEscudo(marca);
 
 const exigirPngValido = (bytes: Uint8Array): void => {
   const veredicto = validarPng(bytes);
@@ -64,18 +64,7 @@ const escribirEscudo = async (
 
 // Fuera de la transaccion y best-effort: la verdad esta en Postgres, no en
 // el bucket. Un borrado que falla no cambia el resultado ya confirmado
-// (decision 7).
-const borrarAnterior = (
-  almacen: AlmacenDeAssets,
-  ayuntamientoId: string,
-  url: string,
-): Promise<void> =>
-  almacen.borrar(ayuntamientoId, url).catch((error: unknown) => {
-    console.error(
-      "[marca] no se pudo borrar el escudo anterior",
-      datosSegurosDeError(error),
-    );
-  });
+// (decision 7). El porque, en `borradoDeEscudo.ts`.
 
 export function crearCambiarEscudo(
   almacen: AlmacenDeAssets,
@@ -99,7 +88,7 @@ export function crearCambiarEscudo(
     const anterior = await escribirEscudo(repositorio, contexto, url);
 
     if (anterior && anterior !== url) {
-      await borrarAnterior(almacen, contexto.ayuntamientoId, anterior);
+      await borrarEscudoAnterior(almacen, contexto.ayuntamientoId, anterior);
     }
 
     return { escudo: url };

@@ -1,7 +1,6 @@
 import type { Marca } from "@/shared/marca";
 import { BarraDeAcciones } from "@/shared/ui/BarraDeAcciones";
 import { Boton } from "@/shared/ui/Boton";
-import { CLASES_DE_FORMULARIO } from "@/shared/ui/estilos";
 import { cambiarColoresAction } from "./actions/cambiarColoresAction";
 import { GrupoDeColores } from "./GrupoDeColores";
 import { MuestraDeColores } from "./MuestraDeColores";
@@ -19,7 +18,13 @@ const inicial = (actual: string | undefined): string => {
 };
 
 /**
- * Elegir los colores del municipio (S1-S4).
+ * Elegir los colores del municipio (S1-S3): es el cuerpo de la fila
+ * «Colores del municipio».
+ *
+ * La muestra va **primero** (S1): en el celular, el formulario abre con ella
+ * y las dos paletas van despues, asi que se elige con la muestra adentro de la
+ * misma seccion y a la vista, en vez de una columna que quedaba fuera de
+ * pantalla mientras se recorrian los grupos (hallazgo M1).
  *
  * Es un componente del servidor: no tiene estado ni `"use client"`, y su
  * unico hijo cliente es `MuestraDeColores`, que no interviene en el envio.
@@ -28,7 +33,11 @@ const inicial = (actual: string | undefined): string => {
  */
 export function FormularioDeColores({ marca }: Props) {
   return (
-    <form action={cambiarColoresAction} className={CLASES_DE_FORMULARIO}>
+    <form action={cambiarColoresAction} className="flex flex-col gap-6">
+      <MuestraDeColores
+        primario={inicial(marca.primario)}
+        secundario={inicial(marca.secundario)}
+      />
       <GrupoDeColores
         campo="primario"
         etiqueta="Color primario"
@@ -39,14 +48,13 @@ export function FormularioDeColores({ marca }: Props) {
         etiqueta="Color de acento"
         actual={marca.secundario}
       />
-      <MuestraDeColores
-        primario={inicial(marca.primario)}
-        secundario={inicial(marca.secundario)}
-      />
       <BarraDeAcciones>
         <Boton type="submit" variante="primaria">
           Guardar colores
         </Boton>
+        <p className="self-center text-[13px] leading-[1.4] text-caliza-apagada">
+          Se aplican a todo el panel al guardar.
+        </p>
       </BarraDeAcciones>
     </form>
   );

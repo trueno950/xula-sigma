@@ -38,8 +38,9 @@ const contextoSinJavaScript = async (browser: Browser) => {
   return browser.newContext({ javaScriptEnabled: false, storageState: estado });
 };
 
+/** Desde T4 el campo se llama como lo que hace: la fila ya se titula Escudo. */
 const campoDeEscudo = (page: Page) =>
-  page.getByLabel("Escudo del ayuntamiento", { exact: true });
+  page.getByLabel("Cambiar el escudo", { exact: true });
 
 const elegirArchivo = async (
   page: Page,
