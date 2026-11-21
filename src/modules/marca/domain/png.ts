@@ -19,7 +19,16 @@ export type MotivoDeRechazo =
   | "DIMENSIONES";
 
 const FIRMA_PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-const UN_MIB = 1024 * 1024;
+
+/**
+ * El tope de peso, exportado porque la pantalla lo necesita **antes** de
+ * mandar el archivo: el navegador no puede preguntarle al servidor si un
+ * archivo entra, y un archivo de varios MiB ni siquiera llega a la accion
+ * —el transporte de Next corta en 2 MB—, asi que el rechazo se le muestra
+ * con el mismo umbral y la misma oracion que usaria el servidor.
+ */
+export const BYTES_MAXIMOS = 1024 * 1024;
+
 const DIMENSION_MINIMA = 80;
 const DIMENSION_MAXIMA = 2048;
 
@@ -62,7 +71,9 @@ const leerUint32BE = (bytes: Uint8Array, offset: number): number =>
 
 export function validarPng(bytes: Uint8Array): VeredictoPng {
   if (bytes.length === 0) return { ok: false, motivo: "VACIO" };
-  if (bytes.length > UN_MIB) return { ok: false, motivo: "DEMASIADO_GRANDE" };
+  if (bytes.length > BYTES_MAXIMOS) {
+    return { ok: false, motivo: "DEMASIADO_GRANDE" };
+  }
 
   if (!tieneFirmaPng(bytes)) return { ok: false, motivo: "NO_ES_PNG" };
 

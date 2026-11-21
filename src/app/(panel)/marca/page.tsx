@@ -30,6 +30,11 @@ type Props = {
  * que corre otra vez dentro de cada caso de uso porque ocultar un boton no
  * es autorizacion (`05-seguridad.md` seccion 6).
  *
+ * **La URL no trae texto, trae codigos** (S4): cada aviso de esta pantalla se
+ * traduce aca desde los dos catalogos de `mensajesDeMarca.ts`, y un
+ * `?error=` que no este en ellos no pinta nada. Asi una barra de direcciones
+ * escrita a mano no pone palabras en la boca del sistema.
+ *
  * Los colores se pintan desde el servidor (`variablesDeMarca` en el layout,
  * antipatron 13 de `AGENTS.md`): esta pagina solo los edita.
  */
@@ -39,7 +44,7 @@ export default async function PaginaDeMarca({ searchParams }: Props) {
   if (!contexto || !puedeCambiarMarca(contexto.usuario.rol)) {
     return (
       <PaginaDePanel titulo="Marca del ayuntamiento" ancho="formulario">
-        <Aviso tono="aviso">{MENSAJES_DE_ERROR_DE_MARCA.sinPermiso}</Aviso>
+        <Aviso tono="aviso">{MENSAJES_DE_ERROR_DE_MARCA["sin-permiso"]}</Aviso>
       </PaginaDePanel>
     );
   }
@@ -54,7 +59,11 @@ export default async function PaginaDeMarca({ searchParams }: Props) {
       descripcion="El escudo y los colores con los que el municipio aparece en todo el sistema."
       ancho="formulario"
     >
-      {parametros.error ? <Aviso tono="error">{parametros.error}</Aviso> : null}
+      {parametros.error ? (
+        <Aviso tono="error">
+          {MENSAJES_DE_ERROR_DE_MARCA[parametros.error]}
+        </Aviso>
+      ) : null}
 
       {parametros.ok ? (
         <Aviso tono="exito">
@@ -64,7 +73,7 @@ export default async function PaginaDeMarca({ searchParams }: Props) {
 
       <FormularioDeColores marca={marca} />
       <FormularioDeRestablecer />
-      <FormularioDeEscudo />
+      <FormularioDeEscudo error={parametros.escudo} />
     </PaginaDePanel>
   );
 }

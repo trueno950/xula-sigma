@@ -7,26 +7,40 @@ import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { restablecerColores } from "../../composicion";
-import { MENSAJES_DE_ERROR_DE_MARCA } from "../mensajesDeMarca";
+import { RestablecimientoSinConfirmarError } from "../../domain";
+import type { ClaveDeErrorDeMarca } from "../mensajesDeMarca";
 import { confirmarEnMarca, volverAMarca } from "./navegacionDeMarca";
 
 /**
  * Volver a los colores por defecto de XULA (S5).
  *
  * Formulario nativo sin `use client`, misma excepcion de AGENTS.md que el
- * alta de colores y las mismas oraciones de `mensajesDeMarca.ts` (S8).
+ * alta de colores, y el mismo transporte: un codigo de `mensajesDeMarca.ts`
+ * en la URL, nunca una oracion (S4).
  *
- * `ambito` es el unico campo y es cerrado: dice que se restablece. El dia
- * que `/marca` tenga un segundo boton de restablecer —el escudo, por
- * ejemplo— un formulario viejo en una pestana abierta no puede terminar
- * disparando el otro.
+ * `ambito` es un campo cerrado que dice que se restablece. El dia que
+ * `/marca` tenga un segundo boton de restablecer —el escudo, por ejemplo— un
+ * formulario viejo en una pestana abierta no puede terminar disparando el
+ * otro.
  */
 
 const esquemaDeEntrada = z.object({ ambito: z.literal("colores") });
 
-const mensajeDeError = (error: unknown): string => {
-  if (error instanceof NoAutorizadoError) {
-    return MENSAJES_DE_ERROR_DE_MARCA.sinPermiso;
+/**
+ * La casilla (S2), fuera del esquema a proposito: un valor distinto de `si`
+ * no es un formulario mal formado, es «no confirmo», y ese rechazo tiene su
+ * propia oracion. Se exige **antes** del caso de uso, asi que sin casilla no
+ * se escribe una sola fila.
+ */
+const exigirConfirmacion = (valor: unknown): void => {
+  if (valor !== "si") throw new RestablecimientoSinConfirmarError();
+};
+
+const claveDelFallo = (error: unknown): ClaveDeErrorDeMarca => {
+  if (error instanceof NoAutorizadoError) return "sin-permiso";
+
+  if (error instanceof RestablecimientoSinConfirmarError) {
+    return "restablecimiento-sin-confirmar";
   }
 
   console.error(
@@ -34,7 +48,7 @@ const mensajeDeError = (error: unknown): string => {
     datosSegurosDeError(error),
   );
 
-  return MENSAJES_DE_ERROR_DE_MARCA.restablecimientoFallido;
+  return "restablecimiento-no-hecho";
 };
 
 export async function restablecerColoresAction(
@@ -45,7 +59,7 @@ export async function restablecerColoresAction(
   });
 
   if (!analisis.success) {
-    return volverAMarca(MENSAJES_DE_ERROR_DE_MARCA.restablecimientoFallido);
+    return volverAMarca("restablecimiento-no-hecho");
   }
 
   const contexto = await contextoActual();
@@ -53,9 +67,10 @@ export async function restablecerColoresAction(
   if (!contexto) redirect("/acceso");
 
   try {
+    exigirConfirmacion(formData.get("confirmar"));
     await restablecerColores(contexto);
   } catch (error) {
-    volverAMarca(mensajeDeError(error));
+    volverAMarca(claveDelFallo(error));
   }
 
   revalidatePath("/marca");

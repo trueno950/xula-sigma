@@ -7,7 +7,7 @@ import { contextoActual } from "@/shared/auth";
 import { NoAutorizadoError, ValidacionError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { cambiarColores } from "../../composicion";
-import { MENSAJES_DE_ERROR_DE_MARCA } from "../mensajesDeMarca";
+import type { ClaveDeErrorDeMarca } from "../mensajesDeMarca";
 import { colorElegido } from "../seleccionDeColor";
 import { confirmarEnMarca, volverAMarca } from "./navegacionDeMarca";
 
@@ -15,8 +15,9 @@ import { confirmarEnMarca, volverAMarca } from "./navegacionDeMarca";
  * Guardar los colores del municipio (S1-S3).
  *
  * Formulario nativo sin `use client` (excepcion de AGENTS.md): el error
- * viaja por `redirect` + `?error=`, con una oracion de
- * `mensajesDeMarca.ts` y nunca el texto de la excepcion (S8).
+ * viaja por `redirect` + `?error=` con un **codigo** de `mensajesDeMarca.ts`
+ * —nunca el texto de la excepcion ni una oracion en la URL (S4)— y la
+ * pantalla lo traduce.
  *
  * Lo unico que valida el esquema es que haya dos colores: el formato, la
  * medibilidad y el contraste los decide `validarMarca` adentro del caso de
@@ -28,18 +29,14 @@ const esquemaDeEntrada = z.object({
   secundario: z.string().trim().min(1),
 });
 
-const mensajeDeError = (error: unknown): string => {
-  if (error instanceof NoAutorizadoError) {
-    return MENSAJES_DE_ERROR_DE_MARCA.sinPermiso;
-  }
+const claveDelFallo = (error: unknown): ClaveDeErrorDeMarca => {
+  if (error instanceof NoAutorizadoError) return "sin-permiso";
 
-  if (error instanceof ValidacionError) {
-    return MENSAJES_DE_ERROR_DE_MARCA.colorInvalido;
-  }
+  if (error instanceof ValidacionError) return "color-invalido";
 
   console.error("[marca] cambio de colores fallo", datosSegurosDeError(error));
 
-  return MENSAJES_DE_ERROR_DE_MARCA.guardadoFallido;
+  return "colores-no-guardados";
 };
 
 export async function cambiarColoresAction(formData: FormData): Promise<void> {
@@ -49,7 +46,7 @@ export async function cambiarColoresAction(formData: FormData): Promise<void> {
   });
 
   if (!analisis.success) {
-    return volverAMarca(MENSAJES_DE_ERROR_DE_MARCA.formularioIncompleto);
+    return volverAMarca("colores-incompletos");
   }
 
   // Ni el ayuntamiento ni el rol salen del formulario: un Server Action es
@@ -61,7 +58,7 @@ export async function cambiarColoresAction(formData: FormData): Promise<void> {
   try {
     await cambiarColores(analisis.data, contexto);
   } catch (error) {
-    volverAMarca(mensajeDeError(error));
+    volverAMarca(claveDelFallo(error));
   }
 
   revalidatePath("/marca");

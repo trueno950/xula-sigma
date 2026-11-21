@@ -15,6 +15,11 @@ import { CLAVE, MUNICIPIOS, urlDe } from "./municipios";
  * almacen de escudos: tamano, formato y archivo vacio. Un archivo que
  * pasara la validacion subiria un objeto a un bucket real, y este E2E no
  * tiene ninguno; por eso ningun caso manda un PNG valido.
+ *
+ * Desde S6/S9 el error del archivo se pinta en el parrafo al que apunta el
+ * `aria-describedby` del campo (`#escudo-archivo-error`), no como `Aviso`
+ * suelto: por eso los casos leen ese nodo y no un `role="alert"` dentro del
+ * formulario.
  */
 
 const UN_MIB = 1024 * 1024;
@@ -102,6 +107,9 @@ test.beforeEach(liberarVentanaDeRitmo);
 
 /** Los colores son estado del municipio: cada test parte de la marca sembrada. */
 test.beforeEach(limpiarColores);
+
+/** El error del archivo, en el nodo que describe al campo (S9). */
+const errorDelArchivo = (page: Page) => page.locator("#escudo-archivo-error");
 
 const elegirArchivo = async (page: Page, bytes: number) => {
   await page
@@ -247,7 +255,7 @@ test("un archivo de mas de 1 MiB muestra el mensaje de peso, no falla mudo", asy
 
   await elegirArchivo(page, 1_200_000);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
+  await expect(errorDelArchivo(page)).toHaveText(
     "El archivo pesa más de 1 MiB.",
   );
   await expect(
@@ -263,7 +271,10 @@ test("un archivo que cabe en 1 MiB pero no es PNG dice que no es PNG", async ({
 
   await elegirArchivo(page, UN_MIB);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
+  // Un archivo del tope exacto pasa el chequeo del navegador y lo rechaza el
+  // servidor: la pagina vuelve con el codigo y lo traduce junto al campo.
+  await expect(page).toHaveURL(/error=escudo-no-png/);
+  await expect(errorDelArchivo(page)).toHaveText(
     "El archivo no es un PNG válido.",
   );
 });
@@ -273,12 +284,18 @@ test("un archivo vacio dice que esta vacio", async ({ page }) => {
 
   await elegirArchivo(page, 0);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
-    "El archivo está vacío.",
-  );
+  await expect(page).toHaveURL(/error=escudo-vacio/);
+  await expect(errorDelArchivo(page)).toHaveText("El archivo está vacío.");
 });
 
-test("un archivo que ni el transporte admite muestra un error claro y no una promesa rechazada", async ({
+/**
+ * Un archivo de 5 MiB no entra ni en el transporte: Next corta el cuerpo de
+ * una Server Action en 2 MB y la accion no llega a correr. Antes eso
+ * terminaba en "This page couldn't load" —la pantalla de error del framework,
+ * en ingles—; ahora el campo lo descarta en el navegador con la oracion del
+ * catalogo, y la pagina se queda donde estaba.
+ */
+test("un archivo que ni el transporte admite se descarta con el mensaje de peso", async ({
   page,
 }) => {
   const errores: string[] = [];
@@ -287,12 +304,16 @@ test("un archivo que ni el transporte admite muestra un error claro y no una pro
 
   await elegirArchivo(page, 5 * UN_MIB);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
-    "No se pudo subir el archivo. Intente de nuevo.",
+  await expect(errorDelArchivo(page)).toHaveText(
+    "El archivo pesa más de 1 MiB.",
   );
+  await expect(page).toHaveURL(urlDe("motul", "/marca"));
   await expect(
     page.getByRole("button", { name: "Guardar escudo" }),
   ).toBeEnabled();
+  await expect(
+    page.getByText("This page couldn’t load", { exact: false }),
+  ).toHaveCount(0);
   expect(errores).toEqual([]);
 });
 
@@ -374,6 +395,8 @@ test("restablecer borra los colores y conserva el escudo", async ({ page }) => {
   await page.getByRole("button", { name: "Guardar colores" }).click();
   await expect.poll(() => primarioEnElPanel(page)).toBe(ORO);
 
+  // S2: restablecer pide la casilla, y el servidor la exige.
+  await page.getByRole("checkbox", { name: /Confirmo/ }).check();
   await page.getByRole("button", { name: "Restablecer colores" }).click();
 
   await expect(page).toHaveURL(/ok=colores-restablecidos/);

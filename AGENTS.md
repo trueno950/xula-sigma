@@ -336,6 +336,7 @@ que devuelva, y devolverlo sería código muerto.
 | `darDeBajaPersonaAction` | `padron` | Server Component, `<form action={...}>` |
 | `cambiarColoresAction` | `marca` | Server Component, `<form action={...}>` |
 | `restablecerColoresAction` | `marca` | Server Component, `<form action={...}>` |
+| `cambiarEscudoAction` | `marca` | Server Component, `<form action={...}>` con archivo |
 | `altaDeLugarAction` | `territorio` | Server Component, `<form action={...}>` |
 | `editarLugarAction` | `territorio` | Server Component, `<form action={...}>` |
 | `darDeBajaLugarAction` | `territorio` | Server Component, `<form action={...}>` |
@@ -740,21 +741,58 @@ Notas que no caben en la tabla, una por fila que las necesita:
 - `cambiarColoresAction`/`restablecerColoresAction` (`marca`, S1-S8 de
   `odd/tasks/marca-colores.md`): mismo motivo que `altaDePersonaAction`, y
   **ninguna hoja cliente de la pantalla envuelve ninguna de las dos**.
-  `FormularioDeEscudo` media otra acción, la del escudo, y
   `MuestraDeColores` repinta un botón, un encabezado y el acento de ejemplo
   mientras se elige: escucha los `input` y `change` del
   `<form>` que la contiene y lee `FormData`, y no envuelve la acción ni
   dibuja un solo campo. Sin JavaScript, el envío es el POST nativo y los
-  colores se guardan igual. Las dos redactan con la lista blanca de
+  colores se guardan igual. Las dos redactan con el catálogo cerrado de
   `src/modules/marca/ui/mensajesDeMarca.ts`: `NoAutorizadoError` -el aviso
   de permiso- y el fallo genérico que se queda en el log, y
   `cambiarColoresAction` también `ValidacionError` -el color no es un color
   medible-. Ninguna
-  devuelve el mensaje de la excepción, y el `?error=` que llega por la URL
-  se pinta solo porque lo escribió la acción. `restablecerColoresAction`
-  recibe un único campo, `ambito=colores`, para que un formulario viejo en
-  una pestaña abierta no dispare otro restablecimiento el día que `/marca`
-  tenga el suyo.
+  devuelve el mensaje de la excepción, y la URL lleva el **código** de la
+  oración, no la oración (S4 de `marca-exportacion-ux`): la pantalla traduce
+  y un `?error=` que no está en el catálogo no pinta nada.
+  `restablecerColoresAction` recibe un único campo, `ambito=colores`, para
+  que un formulario viejo en una pestaña abierta no dispare otro
+  restablecimiento el día que `/marca` tenga el suyo, y **exige `confirmar=si`** (S2): el `required` de la casilla
+  es la única confirmación que existe sin JavaScript y la acción la vuelve a
+  exigir con `RestablecimientoSinConfirmarError` antes del caso de uso, así
+  que sin ella no se escribe una fila. Su código es
+  `restablecimiento-sin-confirmar` y su oración, «Para restablecer los
+  colores, marque la casilla de confirmación.».
+- `cambiarEscudoAction` (`marca`, S6, S8 y S9 de `marca-exportacion-ux`): es
+  el `action` de un `<form>` nativo con el archivo adentro, no de un
+  `useActionState`. El `method` y el `multipart/form-data` no se escriben:
+  React los pone solo cuando el `action` es una función y avisa si además se
+  los pasa (`react-dom-server.node.development.js:2332` en 19.2.8). Sin
+  JavaScript el navegador manda el POST con el archivo adentro; antes era una
+  hoja cliente que armaba el `FormData` en un `onSubmit` y sin JavaScript el
+  envío se perdía en un `GET` sin archivo ni mensaje (E1). Por eso **no
+  devuelve `ActionResult<T>`** —no hay componente cliente que lo lea— y el
+  rechazo viaja como código del catálogo
+  `escudo-*` de `mensajesDeMarca.ts`, que la pantalla traduce junto al campo;
+  el mensaje es el mismo con y sin JavaScript y nunca es el texto de la
+  excepción. La respuesta es una navegación nueva, así que el campo vuelve
+  vacío y el archivo rechazado no queda elegido. Los requisitos del archivo
+  —PNG, hasta 1 MiB, entre 80x80 y 2048x2048 píxeles, que es lo que
+  `domain/png.ts` acepta— están a la vista antes de elegirlo y atados al
+  campo por `aria-describedby`. El archivo sigue yendo al almacén de objetos
+  por `cambiarEscudo` y `almacenR2` (regla 10); esta acción no escribe
+  ningún archivo en el contenedor.
+
+  **La hoja cliente es el campo, no la acción.** `CampoDeArchivoDeEscudo`
+  dibuja el `<input>` y su error, y rechaza en el navegador un archivo de más
+  de 1 MiB con la misma oración del catálogo: no envuelve la acción ni lee su
+  retorno, y sin JavaScript el envío sigue siendo el POST nativo. Hace falta
+  porque el transporte de Next corta el cuerpo en 2 MB
+  (`next.config.ts`) y un archivo mayor nunca llega a la acción: con
+  JavaScript se descarta antes de salir; **sin JavaScript** el corte lo
+  responde el framework —«Internal Server Error», en inglés— porque no hay
+  render de la aplicación que un `error.tsx` pueda interceptar. Esa mitad
+  sigue sin resolver y no se arregla desde `marca`: pide subir
+  `serverActions.bodySizeLimit` o mover el transporte del escudo a un Route
+  Handler.
 
 **Una segunda no entra sin agregarse a esta tabla**, misma razón que la
 excepción de catálogos de plataforma: una excepción que vive solo en un
