@@ -1,9 +1,10 @@
-import { RestablecimientoPropioError } from "@/shared/auth";
+import { CuentaActivaError, RestablecimientoPropioError } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import {
   BajaSinConfirmarError,
   CorreoYaRegistradoError,
+  ReactivacionSinConfirmarError,
   RolNoAsignableError,
 } from "../../domain";
 import type { CodigoDeError } from "../mensajesDeError";
@@ -32,6 +33,10 @@ export const codigoDeErrorParaLaOperadora = (
     return "restablecimiento-propio";
   }
   if (error instanceof BajaSinConfirmarError) return "baja-sin-confirmar";
+  if (error instanceof ReactivacionSinConfirmarError) {
+    return "reactivacion-sin-confirmar";
+  }
+  if (error instanceof CuentaActivaError) return "cuenta-activa";
 
   console.error(`[usuarios] ${asunto} fallo`, datosSegurosDeError(error));
 

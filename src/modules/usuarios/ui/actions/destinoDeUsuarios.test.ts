@@ -6,8 +6,8 @@ import {
 } from "./destinoDeUsuarios";
 
 /**
- * Los destinos de las tres acciones del panel: listado para restablecer y
- * baja, alta para su propio formulario. Igual que `rutaDelArbol` de
+ * Los destinos de las acciones del panel: listado para restablecer, baja y
+ * reactivacion, alta para su propio formulario. Igual que `rutaDelArbol` de
  * territorio, es una funcion pura para poder probar el destino sin
  * `redirect`, que es de Next y no nuestro.
  */

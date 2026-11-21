@@ -17,7 +17,12 @@ import { CODIGOS_DE_ERROR, type CodigoDeError } from "../mensajesDeError";
  * ya se vio ni anuncia una baja que no ocurrio en esta visita (S14).
  */
 
-const CONFIRMACIONES = ["alta", "restablecimiento", "baja"] as const;
+const CONFIRMACIONES = [
+  "alta",
+  "restablecimiento",
+  "baja",
+  "reactivacion",
+] as const;
 
 export type ConfirmacionDeUsuarios = (typeof CONFIRMACIONES)[number];
 

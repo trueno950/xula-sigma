@@ -79,6 +79,16 @@ export const puedeDarDeBaja = (actor: Rol, objetivo: Rol) =>
   puedeAdministrarUsuarios(actor) && !esIntocable(objetivo);
 
 /**
+ * Reactivar es la otra mitad de la baja, y S3 le pide «las mismas guardas
+ * que la baja»: la misma regla, con el nombre del llamador.
+ *
+ * Es el mismo predicado y no una copia. Una copia que hoy coincide es la
+ * que queda vieja el dia que la baja cambie —`roles.test.ts` recorre las dos
+ * contra `ROLES` justamente para que eso falle—.
+ */
+export const puedeReactivarCuenta = puedeDarDeBaja;
+
+/**
  * Llevarse los datos del municipio en formato abierto.
  *
  * Solo el `ADMIN_MUNICIPAL`, y `SUPER_ADMIN` queda afuera a proposito. Una

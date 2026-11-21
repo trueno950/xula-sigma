@@ -38,15 +38,21 @@ export const CODIGOS_DE_ERROR = [
   "restablecimiento-propio",
   /** S12 de `usuarios-ux`: la baja no corre sin la casilla marcada. */
   "baja-sin-confirmar",
+  /** S3: la reactivacion tampoco, por la misma razon. */
+  "reactivacion-sin-confirmar",
+  /** S3: solo se reactiva una cuenta que este de baja. */
+  "cuenta-activa",
   "generico-alta",
   "generico-restablecimiento",
   "generico-baja",
+  "generico-reactivacion",
   /**
    * La cuenta quedo creada o restablecida y la clave no se pudo guardar
    * para mostrarla: el cambio si ocurrio y lo que falta es la clave.
    */
   "clave-no-mostrada",
   "clave-no-mostrada-restablecimiento",
+  "clave-no-mostrada-reactivacion",
 ] as const;
 
 export type CodigoDeError = (typeof CODIGOS_DE_ERROR)[number];
@@ -68,14 +74,20 @@ const MENSAJES: Record<CodigoDeError, string> = {
   "restablecimiento-propio": "No puede restablecer su propia contraseña.",
   "baja-sin-confirmar":
     "Para dar de baja a la persona, marque la casilla de confirmación.",
+  "reactivacion-sin-confirmar":
+    "Para reactivar a la persona, marque la casilla de confirmación.",
+  "cuenta-activa": "Esa cuenta ya está activa.",
   "generico-alta": "No se pudo completar el alta. Intente de nuevo.",
   "generico-restablecimiento":
     "No se pudo restablecer la contraseña. Intente de nuevo.",
   "generico-baja": "No se pudo dar de baja a la persona. Intente de nuevo.",
+  "generico-reactivacion": "No se pudo reactivar la cuenta. Intente de nuevo.",
   "clave-no-mostrada":
     "La cuenta quedó lista, pero la contraseña no se pudo mostrar. Restablézcala para generar otra.",
   "clave-no-mostrada-restablecimiento":
     "La contraseña quedó restablecida, pero no se pudo mostrar. Restablézcala para generar otra.",
+  "clave-no-mostrada-reactivacion":
+    "La cuenta quedó reactivada, pero la contraseña no se pudo mostrar. Restablézcala para generar otra.",
 };
 
 export const esCodigoDeError = (valor: unknown): valor is CodigoDeError =>

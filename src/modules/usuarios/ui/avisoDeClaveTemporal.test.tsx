@@ -78,4 +78,16 @@ describe("AvisoDeClaveTemporal", () => {
 
     expect(html).toContain("Nueva contraseña temporal");
   });
+
+  /**
+   * S3: la tarjeta no dice solo que hay una clave, dice **por que**. Una
+   * cuenta que vuelve de una baja no es un alta ni un restablecimiento, y la
+   * operadora que dicta la clave tiene que poder decirlo.
+   */
+  it("S3: la reactivacion titula la tarjeta como contrasenia de reactivacion", () => {
+    const html = pintar({ motivo: "reactivacion" });
+
+    expect(html).toContain("Contraseña temporal de reactivación");
+    expect(html).toContain(`Contraseña temporal de reactivación de ${NOMBRE}`);
+  });
 });

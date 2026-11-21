@@ -1,6 +1,7 @@
-import { ANILLO_DE_FOCO, Boton } from "@/shared/ui";
+import { Boton } from "@/shared/ui";
 import { darDeBajaUsuarioAction } from "./actions/darDeBajaUsuarioAction";
 import { restablecerContraseniaAction } from "./actions/restablecerContraseniaAction";
+import { CasillaDeConfirmacion } from "./CasillaDeConfirmacion";
 
 /**
  * Las acciones del panel de una cuenta (S2, S3, S5 y S6), cada una en su
@@ -58,7 +59,7 @@ export function AccionesDeUsuario({
           className="flex flex-col gap-2 border-t border-caliza-divisor pt-3"
         >
           <input type="hidden" name="usuarioId" value={usuarioId} />
-          <CasillaDeBaja nombre={nombre} />
+          <CasillaDeConfirmacion nombre={nombre} accion="dar de baja" />
           <Boton type="submit" variante="peligro">
             Dar de baja
             <span className="sr-only">{` a ${nombre}`}</span>
@@ -66,21 +67,5 @@ export function AccionesDeUsuario({
         </form>
       ) : null}
     </div>
-  );
-}
-
-/** S12: la casilla nombra a quien se da de baja; por que el servidor la vuelve a exigir, en la nota de `darDeBajaUsuarioAction` de AGENTS.md. */
-function CasillaDeBaja({ nombre }: { nombre: string }) {
-  return (
-    <label className="flex min-h-11 max-w-full items-center gap-2.5 text-[13px] leading-[1.4] text-caliza-tinta">
-      <input
-        type="checkbox"
-        name="confirmar"
-        value="si"
-        required
-        className={`size-5 shrink-0 accent-senial-error ${ANILLO_DE_FOCO}`}
-      />
-      <span>{`Confirmo dar de baja a ${nombre}.`}</span>
-    </label>
   );
 }

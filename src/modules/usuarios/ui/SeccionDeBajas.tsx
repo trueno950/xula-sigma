@@ -1,10 +1,16 @@
+import { ArrowCounterClockwise } from "@phosphor-icons/react/ssr";
+import type { Rol } from "@/shared/auth/roles";
 import { fechaEnMerida } from "@/shared/lib/fecha";
-import { InsigniaDeEstado } from "@/shared/ui";
+import { Boton, InsigniaDeEstado } from "@/shared/ui";
 import type { UsuarioDelPanel } from "../domain";
+import { reactivarUsuarioAction } from "./actions/reactivarUsuarioAction";
+import { CasillaDeConfirmacion } from "./CasillaDeConfirmacion";
+import { puedeReactivar } from "./permisosDeCuenta";
 import { pluralizar } from "./pluralizar";
 
 /**
- * Las cuentas de baja, aparte y al final (S5 de `usuarios-ux`).
+ * Las cuentas de baja, aparte y al final (S5 de `usuarios-ux`), y **el unico
+ * lugar desde donde se reactivan** (S3).
  *
  * **Cada fila dice desde cuando**, que es el dato que la auditoria echo de
  * menos (L6): una cuenta marcada «De baja» sin fecha no distingue la baja de
@@ -12,10 +18,16 @@ import { pluralizar } from "./pluralizar";
  * `shared/lib/fecha`: el servidor corre en UTC y la fecha civil es la de
  * Merida.
  *
- * **No ofrecen acciones**, y el bloque lo dice: reactivar una cuenta esta
- * fuera de esta rebanada, y una fila sin botones sin explicacion se lee como
- * una pantalla rota. Una cuenta de baja tampoco es un cajon: lleva su conteo
- * y sus nombres, como los grupos por rol.
+ * **Reactivar emite una clave nueva, no devuelve la de antes.** Por eso la
+ * fila no ofrece «Restablecer»: quien vuelve al panel entra con una temporal
+ * y la cambia al entrar (S2), y dos botones que emiten claves serian dos
+ * caminos para el mismo hecho. Lo que decide si el boton se pinta es
+ * `puedeReactivar`, la misma regla que corre el caso de uso.
+ *
+ * **La confirmacion se pide igual que en la baja** —una casilla `required`
+ * que nombra a la persona, y el servidor que la vuelve a exigir—: reactivar
+ * deja a alguien adentro con una clave que la operadora va a dictar, y sin
+ * JavaScript no hay dialogo que pregunte antes.
  */
 
 const CLASES_DE_LISTA =
@@ -23,15 +35,17 @@ const CLASES_DE_LISTA =
   "shadow-reposo [&>li+li]:border-t [&>li+li]:border-caliza-divisor";
 
 const NO_ENTRAN =
-  "No entran al panel y no ofrecen acciones; reactivar una cuenta queda para otra rebanada.";
+  "No entran al panel mientras estén de baja. Reactivarlas las devuelve con una contraseña temporal nueva.";
 
 const desdeCuando = (bajaEn: Date | null): string =>
   bajaEn ? `de baja desde el ${fechaEnMerida(bajaEn)}` : "de baja";
 
 export function SeccionDeBajas({
   bajas,
+  actor,
 }: {
   bajas: readonly UsuarioDelPanel[];
+  actor: { id: string; rol: Rol };
 }) {
   if (bajas.length === 0) return null;
 
@@ -57,7 +71,7 @@ export function SeccionDeBajas({
         {bajas.map((usuario) => (
           <li
             key={usuario.id}
-            className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <span className="flex min-w-0 flex-col gap-0.5">
               <span className="text-[15px] font-semibold text-caliza-apagada">
@@ -73,6 +87,27 @@ export function SeccionDeBajas({
                 {desdeCuando(usuario.bajaEn)}
               </span>
             </span>
+            {puedeReactivar(actor, usuario) ? (
+              <form
+                action={reactivarUsuarioAction}
+                className="flex shrink-0 flex-col gap-2"
+              >
+                <input type="hidden" name="usuarioId" value={usuario.id} />
+                <CasillaDeConfirmacion
+                  nombre={usuario.nombre}
+                  accion="reactivar"
+                />
+                <Boton type="submit" variante="secundaria">
+                  <ArrowCounterClockwise
+                    size={18}
+                    weight="bold"
+                    aria-hidden="true"
+                  />
+                  Reactivar cuenta
+                  <span className="sr-only">{` de ${usuario.nombre}`}</span>
+                </Boton>
+              </form>
+            ) : null}
           </li>
         ))}
       </ul>

@@ -1,6 +1,7 @@
 import {
   esRol,
   puedeDarDeBaja,
+  puedeReactivarCuenta,
   puedeRestablecerContrasenia,
   type Rol,
 } from "@/shared/auth";
@@ -27,6 +28,27 @@ export type PermisosDeCuenta = {
   puedeRestablecer: boolean;
   puedeBaja: boolean;
 };
+
+/**
+ * Si la fila de una cuenta **de baja** ofrece reactivarla (S3).
+ *
+ * Es una funcion aparte y no un campo de `PermisosDeCuenta` porque las dos
+ * listas no se solapan: una cuenta activa no se reactiva —lo rechaza el caso
+ * de uso— y una de baja no se vuelve a dar de baja. La seccion de bajas vive
+ * al final de la pantalla y se pinta con esto.
+ *
+ * La propia cuenta queda afuera aunque hoy sea imposible —para estar de baja
+ * hay que estar dado de baja, y quien mira esta activo—: la regla de S3 es
+ * del servidor y la pantalla dice lo mismo que diria el caso de uso.
+ */
+export const puedeReactivar = (
+  actor: { id: string; rol: Rol },
+  usuario: UsuarioDelPanel,
+): boolean =>
+  usuario.dadoDeBaja &&
+  esRol(usuario.rol) &&
+  puedeReactivarCuenta(actor.rol, usuario.rol) &&
+  usuario.id !== actor.id;
 
 export function permisosDeCuenta(
   actor: { id: string; rol: Rol },

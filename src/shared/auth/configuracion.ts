@@ -40,6 +40,62 @@ const camposDeUsuario = {
 };
 
 /**
+ * Las rutas de autoservicio de Better Auth que en este sistema no existen, y
+ * que se contestan con 404 antes de tocar la base.
+ *
+ * **`/change-password` es la unica via que cambia la clave sin bitacora.** El
+ * endpoint de la libreria escribe el hash y nada mas: no borra la marca de
+ * S1, no revoca sesiones y no deja traza, asi que una sesion abierta con la
+ * temporal cambiaba su clave por ahi y la persona seguia obligada a cambiar
+ * una que ya no era la que se le dicto. El unico camino para cambiar la
+ * clave es `/cambiar-contrasenia` (`cambiarClavePropia`), que hace las tres
+ * cosas en una transaccion.
+ *
+ * **La sintaxis es de la libreria, no nuestra**: `disabledPaths` se evalua en
+ * el `onRequest` del router y responde `404 Not Found` sin ejecutar el
+ * endpoint (`better-auth/dist/api/index.mjs:163-167` en 1.6.29). El 404 es lo
+ * mismo que ve un cliente que pide una ruta que no existe, asi que tampoco
+ * anuncia que la ruta existio alguna vez.
+ *
+ * No incluye `/update-user`: esa se rechaza solo para las cuentas marcadas,
+ * y por que esta en `autoservicio.ts`.
+ */
+export const RUTAS_DE_AUTOSERVICIO_APAGADAS = ["/change-password"] as const;
+
+/**
+ * El limitador de ritmo **de la libreria** queda apagado: el del municipio es
+ * el nuestro (`ritmo.ts`, `limitarRitmo.ts`).
+ *
+ * Better Auth lo trae prendido por defecto en produccion
+ * (`enabled: options.rateLimit?.enabled ?? isProduction`,
+ * `better-auth/dist/context/create-context.mjs:171` en 1.6.29), en memoria
+ * (`:174` del mismo archivo, o sea por proceso) y con una regla especial de
+ * **3 intentos cada 10 segundos** para `/sign-in*`
+ * (`better-auth/dist/api/rate-limiter/index.mjs:370-376`, en 1.6.29).
+ *
+ * Esa llave es `ip|ruta`, y la IP sale de `x-forwarded-for` solo cuando trae
+ * **exactamente un** salto: `getIPFromHeader` devuelve `null` si hay mas
+ * (`@better-auth/core/dist/utils/ip.mjs:188` en 1.6.29), y sin IP la llave es
+ * una sola compartida por proceso — el propio codigo lo dice y avisa con
+ * `no-trusted-ip` (`better-auth/dist/api/rate-limiter/index.mjs:281-287`, en
+ * 1.6.29)—. En el despliegue real, con el proxy delante, eso es **todo un
+ * ayuntamiento limitado a tres accesos cada diez segundos**, con un 429 en
+ * ingles que ninguna pantalla nuestra traduce, que no cuenta por tenant y que
+ * no se puede vaciar.
+ *
+ * Lo encontro el E2E: al repetir los casos, el cuarto acceso seguido de la
+ * misma corrida recibia `{"message":"Too many requests…"}`. Ver
+ * `ritmoDeBetterAuth.integration.test.ts`.
+ *
+ * Apagarlo no deja superficie de fuerza bruta sin cubrir: el unico endpoint
+ * adivinable es `/sign-in/email`, y lo limita el nuestro antes de construir la
+ * instancia (`app/api/auth/[...all]/route.ts`); las demas rutas que la
+ * libreria protegia estan cerradas (sin alta, sin envio de correo,
+ * `/change-password` apagado, `/update-user` con su propio rechazo).
+ */
+export const RITMO_DE_BETTER_AUTH = { enabled: false } as const;
+
+/**
  * `modelName` no es cosmetico: el adaptador resuelve la tabla con
  * `schema[model]`, una busqueda por clave directa
  * (`@better-auth/drizzle-adapter/dist/index.mjs:92` en 1.6.29). Sin esto
@@ -81,36 +137,3 @@ export const ACCESO_POR_CORREO = {
       verificarClave(hash, password),
   },
 } as const;
-
-/**
- * El limitador de ritmo **de la libreria** queda apagado: el del municipio es
- * el nuestro (`ritmo.ts`, `limitarRitmo.ts`).
- *
- * Better Auth lo trae prendido por defecto en produccion
- * (`enabled: options.rateLimit?.enabled ?? isProduction`,
- * `better-auth/dist/context/create-context.mjs:171` en 1.6.29), en memoria
- * (`:174` del mismo archivo, o sea por proceso) y con una regla especial de
- * **3 intentos cada 10 segundos** para `/sign-in*`
- * (`better-auth/dist/api/rate-limiter/index.mjs:370-376`, en 1.6.29).
- *
- * Esa llave es `ip|ruta`, y la IP sale de `x-forwarded-for` solo cuando trae
- * **exactamente un** salto: `getIPFromHeader` devuelve `null` si hay mas
- * (`@better-auth/core/dist/utils/ip.mjs:188` en 1.6.29), y sin IP la llave es
- * una sola compartida por proceso — el propio codigo lo dice y avisa con
- * `no-trusted-ip` (`better-auth/dist/api/rate-limiter/index.mjs:281-287`, en
- * 1.6.29)—. En el despliegue real, con el proxy delante, eso es **todo un
- * ayuntamiento limitado a tres accesos cada diez segundos**, con un 429 en
- * ingles que ninguna pantalla nuestra traduce, que no cuenta por tenant y que
- * no se puede vaciar.
- *
- * Lo encontro el E2E: al repetir los casos, el cuarto acceso seguido de la
- * misma corrida recibia `{"message":"Too many requests…"}`. Ver
- * `ritmoDeBetterAuth.integration.test.ts`.
- *
- * Apagarlo no deja superficie de fuerza bruta sin cubrir: el unico endpoint
- * adivinable es `/sign-in/email`, y lo limita el nuestro antes de construir la
- * instancia (`app/api/auth/[...all]/route.ts`); las demas rutas que la
- * libreria protegia estan cerradas (sin alta, sin envio de correo,
- * `/change-password` apagado, `/update-user` con su propio rechazo).
- */
-export const RITMO_DE_BETTER_AUTH = { enabled: false } as const;

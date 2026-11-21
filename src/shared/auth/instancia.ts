@@ -5,6 +5,7 @@ import type { AyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import type { TransaccionTenant } from "@/shared/tenancy/withTenant";
 import { withTenant } from "@/shared/tenancy/withTenant";
+import { sinEditarElPerfilConClaveTemporal } from "./autoservicio";
 import { bdSobreTransaccion } from "./bdSobreTransaccion";
 import {
   CLAVE_TEMPORAL_CADUCADA,
@@ -15,6 +16,7 @@ import {
   ACCESO_POR_CORREO,
   MODELOS,
   RITMO_DE_BETTER_AUTH,
+  RUTAS_DE_AUTOSERVICIO_APAGADAS,
 } from "./configuracion";
 import * as esquema from "./esquema";
 import { origenDesde } from "./origen";
@@ -60,11 +62,10 @@ type ConTenant = ReturnType<typeof conTenantDe>;
  * S1: la temporal caduca a las 24 horas y con ella no se abre sesion.
  *
  * Se lanza `APIError` y no se devuelve `false` como en el caso de la baja
- * porque este rechazo tiene que llegar a la pantalla con su mensaje. Un
+ * porque este rechazo tiene que llegar a la pantalla con su mensaje: un
  * `APIError` lanzado desde el endpoint se convierte en la respuesta HTTP con
- * su status y su cuerpo `{ code, message }`
- * (`better-call/dist/endpoint.mjs:27-34` en 1.3.1, `createEndpoint`), asi que
- * el cuerpo no depende de nada que armemos nosotros.
+ * su status y su cuerpo `{ code, message }`. Por que, y con la cita de la
+ * version instalada, en `autoservicio.ts`.
  *
  * **No revela si la cuenta existe.** El gancho corre despues de que la
  * contrasenia verifico: llegar hasta aca ya exige saberla. Una cuenta
@@ -150,7 +151,9 @@ function construirInstancia(
     advanced: { database: { generateId: "uuid" } },
     emailAndPassword: ACCESO_POR_CORREO,
     ...MODELOS,
+    disabledPaths: [...RUTAS_DE_AUTOSERVICIO_APAGADAS],
     rateLimit: RITMO_DE_BETTER_AUTH,
+    hooks: { before: sinEditarElPerfilConClaveTemporal(tx) },
     databaseHooks: ganchosDeBd(tx, ayuntamientoId),
   });
 }

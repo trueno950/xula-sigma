@@ -15,6 +15,9 @@ vi.mock("./actions/darDeBajaUsuarioAction", () => ({
 vi.mock("./actions/restablecerContraseniaAction", () => ({
   restablecerContraseniaAction: vi.fn(),
 }));
+vi.mock("./actions/reactivarUsuarioAction", () => ({
+  reactivarUsuarioAction: vi.fn(),
+}));
 
 const { ListadoDeUsuarios } = await import("./ListadoDeUsuarios");
 
@@ -183,18 +186,10 @@ describe("ListadoDeUsuarios — el orden y el conteo", () => {
     );
   });
 
-  it("S5: la cuenta de baja dice desde cuando, y va en su propia seccion", () => {
-    const html = pintar([baja()]);
-
-    expect(html).toContain("Cuentas de baja");
-    expect(html).toContain("de baja desde el 16 nov 2026");
-  });
-
-  it("una cuenta de baja no ofrece acciones", () => {
-    const html = pintar([baja()]);
-
-    expect(html).not.toContain("Restablecer contraseña");
-    expect(html).not.toContain('name="confirmar"');
-    expect(acordeones(html)).toHaveLength(0);
+  it("S5: la cuenta de baja va en su propia seccion", () => {
+    // La fecha, la casilla de reactivar y la ausencia de acordeon viven en
+    // `seccionDeBajas.test.tsx`: la seccion dejo de ser «una fila sin
+    // acciones» cuando S3 le dio la suya.
+    expect(pintar([baja()])).toContain("Cuentas de baja");
   });
 });

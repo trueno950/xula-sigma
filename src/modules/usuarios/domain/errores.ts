@@ -45,3 +45,20 @@ export class BajaSinConfirmarError extends Error {
     this.name = "BajaSinConfirmarError";
   }
 }
+
+/**
+ * S3: reactivar deja a la persona adentro del panel con una clave nueva, y
+ * la casilla que la nombra es lo unico que separa un clic de esa decision —
+ * sin JavaScript no hay dialogo que pregunte antes—. Misma forma que
+ * `BajaSinConfirmarError`: el borde la vuelve a exigir.
+ */
+export class ReactivacionSinConfirmarError extends Error {
+  readonly codigo = "REACTIVACION_SIN_CONFIRMAR";
+
+  constructor(
+    mensaje = "Para reactivar a la persona, marque la casilla de confirmación.",
+  ) {
+    super(mensaje);
+    this.name = "ReactivacionSinConfirmarError";
+  }
+}

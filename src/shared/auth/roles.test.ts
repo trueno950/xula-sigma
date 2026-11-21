@@ -11,6 +11,7 @@ import {
   puedeEscribir,
   puedeExportar,
   puedeFusionarPersonas,
+  puedeReactivarCuenta,
   puedeRestablecerContrasenia,
   ROLES,
   type Rol,
@@ -86,6 +87,30 @@ describe("puedeRestablecerContrasenia", () => {
       for (const objetivo of ROLES) {
         expect(puedeRestablecerContrasenia(actor, objetivo)).toBe(false);
       }
+    }
+  });
+});
+
+describe("puedeReactivarCuenta", () => {
+  it("tiene la misma tabla que la baja, para todo actor y todo objetivo", () => {
+    // S3: «aplican las mismas guardas que la baja». Se recorre el producto
+    // entero: una divergencia en un solo par es una cuenta de un municipio
+    // que un rol no deberia poder devolver al panel.
+    for (const actor of ROLES) {
+      for (const objetivo of ROLES) {
+        expect(puedeReactivarCuenta(actor, objetivo)).toBe(
+          puedeDarDeBaja(actor, objetivo),
+        );
+      }
+    }
+  });
+
+  it("nadie reactiva a un SUPER_ADMIN ni desde un SUPER_ADMIN", () => {
+    for (const actor of ROLES) {
+      expect(puedeReactivarCuenta(actor, "SUPER_ADMIN")).toBe(false);
+    }
+    for (const objetivo of ROLES) {
+      expect(puedeReactivarCuenta("SUPER_ADMIN", objetivo)).toBe(false);
     }
   });
 });

@@ -12,7 +12,7 @@
  * - `infrastructure/` — el adaptador sobre `usuarios`: el `select` bajo RLS
  *   y el alta por la primitiva `altaDePersona` de `shared/auth`, con el
  *   choque de correo traducido a un error del dominio.
- * - `ui/` — pantalla, formularios y las tres Server Actions.
+ * - `ui/` — pantalla, formularios y las cuatro Server Actions.
  *
  * Lo que **no** vive aca: el hash (`shared/auth/contrasenia.ts`), la regla
  * `puedeAdministrarUsuarios`, el generador de claves temporales y los casos

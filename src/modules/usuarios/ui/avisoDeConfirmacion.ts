@@ -22,23 +22,26 @@ export type AvisoDeConfirmacion = {
 };
 
 /**
- * Solo el alta y el restablecimiento se anuncian por la URL. `baja` esta
- * fuera del mapa a proposito: el aviso de una baja lleva el nombre de una
- * persona y no puede viajar en la URL (S13).
+ * Solo el alta, el restablecimiento y la reactivacion se anuncian por la URL.
+ * `baja` esta fuera del mapa a proposito: el aviso de una baja lleva el
+ * nombre de una persona y no puede viajar en la URL (S13).
  */
 const CONFIRMACIONES: Partial<Record<ConfirmacionDeUsuarios, string>> = {
   alta: "La cuenta quedó creada.",
   restablecimiento: "La contraseña quedó restablecida.",
+  reactivacion: "La cuenta quedó reactivada.",
 };
 
 /**
- * Solo el alta y el restablecimiento emiten contrasenia; `baja` no esta en
- * este mapa a proposito, y por eso no puede caer aca.
+ * Solo las acciones que emiten contrasenia estan aca; `baja` no, y por eso no
+ * puede caer en este mapa.
  */
 const SIN_CLAVE_A_LA_VISTA: Partial<Record<ConfirmacionDeUsuarios, string>> = {
   alta: "La cuenta quedó creada, pero la contraseña nueva ya no se puede mostrar. Restablézcala para generar otra.",
   restablecimiento:
     "La contraseña quedó restablecida, pero ya no se puede mostrar. Restablézcala para generar otra.",
+  reactivacion:
+    "La cuenta quedó reactivada, pero la contraseña nueva ya no se puede mostrar. Restablézcala para generar otra.",
 };
 
 export const avisoDeConfirmacion = ({

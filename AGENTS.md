@@ -366,6 +366,7 @@ que devuelva, y devolverlo sería código muerto.
 | `altaDeUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `restablecerContraseniaAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `darDeBajaUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
+| `reactivarUsuarioAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `descartarClaveMostradaAction` | `usuarios` | Server Component, `<form action={...}>` |
 | `cambiarContraseniaPropiaAction` | `usuarios` | Server Component, `<form action={...}>` |
 
@@ -668,6 +669,28 @@ Notas que no caben en la tabla, una por fila que las necesita:
   para preguntar si esa persona aún se puede restablecer
   (`permisosDeCuenta`, S1 y T3) antes de ofrecer el botón. La borra «Ya la
   anoté». Ver `src/modules/usuarios/ui/destinatarioDeLaClave.ts`.
+- `reactivarUsuarioAction` (`usuarios`, S3 de `usuarios-seguridad`): el
+  `<form>` de la sección «Cuentas de baja» (`SeccionDeBajas.tsx`), uno por
+  fila. Mismo motivo que `darDeBajaUsuarioAction`: sin hoja cliente de por
+  medio, el envío es el POST nativo y anda sin JavaScript.
+
+  **Reutiliza el transporte del restablecimiento, no uno propio.** La acción
+  genera la temporal, `reactivarUsuario` guarda su hash con la marca
+  `clave_temporal_en` en la misma transacción que limpia `baja_en`, revoca
+  las sesiones y escribe la bitácora `REACTIVAR_USUARIO`, y la clave llega a
+  la pantalla solo por la cookie httpOnly y la cabecera del proxy, con la
+  tarjeta de «Ya la anoté» y `motivo=reactivacion` —que es lo que hace que el
+  título diga «Contraseña temporal de reactivación»—. Por eso la clave
+  anterior deja de servir y no hay una segunda vía de entrada.
+
+  **Pide `confirmar=si` como la baja**, y por la misma razón: reactivar deja a
+  alguien adentro del panel con una clave que la operadora va a dictar, y sin
+  JavaScript no hay diálogo que pregunte antes. El borde lo vuelve a exigir
+  (`ReactivacionSinConfirmarError`) antes de llamar al caso de uso. Redacta
+  `NoAutorizadoError`, `NoEncontradoError` —un `usuarioId` de otro
+  ayuntamiento, S7, que además nunca llega a tocarse—, `CuentaActivaError`
+  (la cuenta ya estaba activa) y `clave-no-mostrada-reactivacion` cuando la
+  cuenta sí volvió pero la clave no se pudo guardar.
 - `descartarClaveMostradaAction` (`usuarios`, S9 de `usuarios-ux`): el
   `<form>` de «Ya la anoté» de `AvisoDeClaveTemporal`. Mismo motivo que
   `darDeBajaUsuarioAction`: la tarjeta se pinta en un Server Component y el
@@ -688,6 +711,13 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `no-coincide`, `corta`, `repetida` y el genérico, y la contraseña no viaja
   nunca en la URL ni al log: solo el código. Ver
   `src/modules/usuarios/ui/mensajesDeCambioDeClave.ts`.
+
+  **Es el único camino para cambiar una clave.** El autoservicio de Better
+  Auth no compite: `POST /api/auth/change-password` está apagado
+  (`disabledPaths`, `configuracion.ts`) porque escribía el hash dejando la
+  marca de S1 puesta y sin bitácora, y `POST /api/auth/update-user` se
+  rechaza con la marca puesta (`autoservicio.ts`). Los dos casos tienen su
+  prueba de integración en `src/shared/auth/autoservicio.integration.test.ts`.
 - `cambiarColoresAction`/`restablecerColoresAction` (`marca`, S1-S8 de
   `odd/tasks/marca-colores.md`): mismo motivo que `altaDePersonaAction`, y
   **ninguna hoja cliente de la pantalla envuelve ninguna de las dos**.

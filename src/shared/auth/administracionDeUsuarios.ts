@@ -9,8 +9,10 @@ import { cuentas, sesiones, usuarios } from "./esquema";
 import { puedeDarDeBaja, puedeRestablecerContrasenia, type Rol } from "./roles";
 
 /**
- * Los dos casos de uso que administran personas: restablecer su
- * contrasenia y darla de baja.
+ * Los casos de uso que administran personas: restablecer su contrasenia y
+ * darla de baja. La reactivacion -la otra mitad de la baja- vive en
+ * `reactivacionDeUsuario.ts`, que comparte `objetivoDe` y `trazaDe` con este
+ * archivo porque juntos pasaban las 200 lineas.
  *
  * **El orden de las verificaciones es la regla, no un detalle.** Primero se
  * resuelve el objetivo —y RLS decide si existe para quien pregunta—, recien
@@ -25,7 +27,15 @@ import { puedeDarDeBaja, puedeRestablecerContrasenia, type Rol } from "./roles";
  * transaccion sea de un municipio y el actor de otro.
  */
 
-type Objetivo = { id: string; rol: Rol };
+/**
+ * Lo que necesitan los tres casos de uso del objetivo, y nada mas.
+ *
+ * `bajaEn` entra aca aunque la baja y el restablecimiento no lo miren: es
+ * una columna de la misma fila, y pedirla en una segunda consulta para
+ * decidir si la reactivacion tiene algo que hacer dejaria dos lecturas donde
+ * la regla es una.
+ */
+type Objetivo = { id: string; rol: Rol; bajaEn: Date | null };
 
 /**
  * S1 de `usuarios-ux`: nadie se restablece su propia contrasenia desde el
@@ -51,12 +61,12 @@ export class RestablecimientoPropioError extends Error {
  * de la tabla ya acota el `SELECT` al tenant de la transaccion, y agregar
  * un `WHERE` a mano sugiere que el aislamiento depende de recordarlo.
  */
-async function objetivoDe(
+export async function objetivoDe(
   tx: TransaccionTenant,
   usuarioId: string,
 ): Promise<Objetivo> {
   const [persona] = await tx
-    .select({ id: usuarios.id, rol: usuarios.rol })
+    .select({ id: usuarios.id, rol: usuarios.rol, bajaEn: usuarios.bajaEn })
     .from(usuarios)
     .where(eq(usuarios.id, usuarioId))
     .limit(1);
@@ -67,13 +77,13 @@ async function objetivoDe(
 }
 
 /**
- * La traza de los dos casos de uso de este archivo.
+ * La traza de los casos de uso de este archivo y de la reactivacion.
  *
  * Adapta el contexto a lo que pide `registrar`, que vive en `tenancy` y no
  * puede conocer `ContextoActual` —la direccion es `auth → tenancy`—. Es
  * traduccion, no una segunda forma de escribir en la bitacora.
  */
-const trazaDe = (
+export const trazaDe = (
   tx: TransaccionTenant,
   traza: { contexto: ContextoActual; accion: string; entidadId: string },
 ) =>

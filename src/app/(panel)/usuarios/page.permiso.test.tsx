@@ -30,6 +30,9 @@ vi.mock("@/modules/usuarios/ui/actions/darDeBajaUsuarioAction", () => ({
 vi.mock("@/modules/usuarios/ui/actions/restablecerContraseniaAction", () => ({
   restablecerContraseniaAction: vi.fn(),
 }));
+vi.mock("@/modules/usuarios/ui/actions/reactivarUsuarioAction", () => ({
+  reactivarUsuarioAction: vi.fn(),
+}));
 
 const { default: PaginaDeUsuarios } = await import("./page");
 
