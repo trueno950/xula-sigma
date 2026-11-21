@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { RestablecimientoPropioError } from "@/shared/auth/administracionDeUsuarios";
 import type { ContextoActual } from "@/shared/auth/contexto";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { decodificarClaveMostrada } from "../claveMostrada";
@@ -128,6 +129,23 @@ describe("restablecerContraseniaAction", () => {
     ).rejects.toThrow("REDIRECT:");
 
     expect(errorDelDestino()).toBe("sin-permiso");
+  });
+
+  /**
+   * S1 de `usuarios-ux`: la propia contrasenia no se restablece desde el
+   * panel, y el rechazo tiene que llegar redactado — la clave no se genero
+   * para nadie, asi que tampoco hay nada que mostrar ni cookie que guardar.
+   */
+  it("rechazar la propia contrasena vuelve con su mensaje y sin clave que mostrar", async () => {
+    restablecerMock.mockRejectedValue(new RestablecimientoPropioError());
+
+    await expect(
+      restablecerContraseniaAction(formulario({ usuarioId: OPERADOR })),
+    ).rejects.toThrow("REDIRECT:");
+
+    expect(destino()).toBe("/usuarios?error=restablecimiento-propio");
+    expect(cookies.guardadas.size).toBe(0);
+    expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 
   /**

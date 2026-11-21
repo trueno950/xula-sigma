@@ -6,7 +6,8 @@ import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
  * S6 y S7 en el borde de la accion: la baja es logica y se confirma en el
  * listado; un `usuarioId` de otro municipio llega como «El recurso no
  * existe.» —nunca como 403— porque el caso de uso resuelve el objetivo bajo
- * RLS antes de mirar el rol.
+ * RLS antes de mirar el rol. S12 agrega la casilla: sin ella no se llama al
+ * caso de uso, asi que no hay fila que tocar.
  */
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
@@ -85,7 +86,9 @@ describe("darDeBajaUsuarioAction", () => {
     darDeBajaMock.mockRejectedValue(new NoEncontradoError());
 
     await expect(
-      darDeBajaUsuarioAction(formulario({ usuarioId: OPERADOR })),
+      darDeBajaUsuarioAction(
+        formulario({ usuarioId: OPERADOR, confirmar: "si" }),
+      ),
     ).rejects.toThrow("REDIRECT:");
 
     expect(errorDelDestino()).toBe("no-encontrado");
@@ -96,15 +99,45 @@ describe("darDeBajaUsuarioAction", () => {
     darDeBajaMock.mockRejectedValue(new NoAutorizadoError());
 
     await expect(
-      darDeBajaUsuarioAction(formulario({ usuarioId: OPERADOR })),
+      darDeBajaUsuarioAction(
+        formulario({ usuarioId: OPERADOR, confirmar: "si" }),
+      ),
     ).rejects.toThrow("REDIRECT:");
 
     expect(errorDelDestino()).toBe("sin-permiso");
   });
 
-  it("la baja exitosa vuelve al listado confirmando, sin clave que mostrar", async () => {
+  /**
+   * S12 de `usuarios-ux`: sin JavaScript no hay dialogo que pregunte antes,
+   * asi que la casilla es lo unico que separa un clic de una baja, y el
+   * borde la exige otra vez. Un POST a mano sin ella no cambia nada.
+   */
+  it("sin la casilla de confirmacion no da de baja a nadie", async () => {
     await expect(
       darDeBajaUsuarioAction(formulario({ usuarioId: OPERADOR })),
+    ).rejects.toThrow("REDIRECT:");
+
+    expect(destino()).toBe("/usuarios?error=baja-sin-confirmar");
+    expect(darDeBajaMock).not.toHaveBeenCalled();
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+
+  it("una confirmacion con otro valor tampoco alcanza", async () => {
+    await expect(
+      darDeBajaUsuarioAction(
+        formulario({ usuarioId: OPERADOR, confirmar: "no" }),
+      ),
+    ).rejects.toThrow("REDIRECT:");
+
+    expect(errorDelDestino()).toBe("baja-sin-confirmar");
+    expect(darDeBajaMock).not.toHaveBeenCalled();
+  });
+
+  it("la baja exitosa vuelve al listado confirmando, sin clave que mostrar", async () => {
+    await expect(
+      darDeBajaUsuarioAction(
+        formulario({ usuarioId: OPERADOR, confirmar: "si" }),
+      ),
     ).rejects.toThrow("REDIRECT:");
 
     expect(destino()).toBe("/usuarios?ok=baja");
@@ -119,7 +152,9 @@ describe("darDeBajaUsuarioAction", () => {
     darDeBajaMock.mockRejectedValue(new Error("se cayo la base"));
 
     await expect(
-      darDeBajaUsuarioAction(formulario({ usuarioId: OPERADOR })),
+      darDeBajaUsuarioAction(
+        formulario({ usuarioId: OPERADOR, confirmar: "si" }),
+      ),
     ).rejects.toThrow("REDIRECT:");
 
     expect(errorDelDestino()).toBe("generico-baja");

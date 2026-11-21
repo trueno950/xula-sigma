@@ -1,6 +1,11 @@
+import { RestablecimientoPropioError } from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
-import { CorreoYaRegistradoError, RolNoAsignableError } from "../../domain";
+import {
+  BajaSinConfirmarError,
+  CorreoYaRegistradoError,
+  RolNoAsignableError,
+} from "../../domain";
 import type { CodigoDeError } from "../mensajesDeError";
 
 /**
@@ -23,6 +28,10 @@ export const codigoDeErrorParaLaOperadora = (
   if (error instanceof NoEncontradoError) return "no-encontrado";
   if (error instanceof RolNoAsignableError) return "rol-no-asignable";
   if (error instanceof CorreoYaRegistradoError) return "correo-ya-registrado";
+  if (error instanceof RestablecimientoPropioError) {
+    return "restablecimiento-propio";
+  }
+  if (error instanceof BajaSinConfirmarError) return "baja-sin-confirmar";
 
   console.error(`[usuarios] ${asunto} fallo`, datosSegurosDeError(error));
 

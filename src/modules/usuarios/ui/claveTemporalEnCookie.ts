@@ -28,13 +28,14 @@ import {
  * que las borre despues de pintar: la primera recarga volvia a mostrar la
  * clave (S2). El proxy la mueve a `CABECERA_CLAVE_MOSTRADA` y la borra en
  * la misma respuesta, en la unica peticion que trae el token; de ahi en
- * adelante la cookie ya no existe. Con JavaScript ese pintado sale del
- * render sintetico del redirect, cuyo `Set-Cookie` no guarda nadie, y lo
- * borra `DescartarClaveAlMostrar` al montarse. El traslado y los nombres
- * compartidos viven en `claveMostradaEnTransito.ts`.
+ * adelante la cookie ya no existe. El camino con JavaScript -que la clave
+ * sobreviva hasta el descarte del montaje- y la limpieza de la URL estan
+ * explicados una sola vez: `AGENTS.md`, nota de `usuarios`. El traslado y
+ * los nombres compartidos viven en `claveMostradaEnTransito.ts`.
  *
  * Las dos acciones que escriben esta cookie son un `<form>` nativo que
- * redirige, la excepcion de `AGENTS.md` en la seccion Server Actions.
+ * redirige, la excepcion de `AGENTS.md` en la seccion Server Actions. La
+ * que la borra cuando la operadora dice que ya la anoto tambien.
  */
 const VIGENCIA_EN_SEGUNDOS = 120;
 

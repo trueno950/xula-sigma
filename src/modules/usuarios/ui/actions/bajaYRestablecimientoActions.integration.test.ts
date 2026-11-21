@@ -75,9 +75,8 @@ let gente: GentePorMunicipio;
 
 const formulario = (campos: Record<string, string>) => {
   const formData = new FormData();
-  for (const [clave, valor] of Object.entries(campos)) {
+  for (const [clave, valor] of Object.entries(campos))
     formData.set(clave, valor);
-  }
   return formData;
 };
 
@@ -178,7 +177,7 @@ describe("baja por la accion", () => {
     const usuarioId = await unaPersona();
 
     await expect(
-      darDeBajaUsuarioAction(formulario({ usuarioId })),
+      darDeBajaUsuarioAction(formulario({ usuarioId, confirmar: "si" })),
     ).rejects.toThrow("REDIRECT:");
 
     const fila = await filaDe(motul, usuarioId);
@@ -190,7 +189,9 @@ describe("baja por la accion", () => {
 
   it("la cuenta de otro municipio no se da de baja y se responde no encontrado", async () => {
     await expect(
-      darDeBajaUsuarioAction(formulario({ usuarioId: gente.ticul.CONSULTA })),
+      darDeBajaUsuarioAction(
+        formulario({ usuarioId: gente.ticul.CONSULTA, confirmar: "si" }),
+      ),
     ).rejects.toThrow("REDIRECT:");
 
     expect(errorDelDestino()).toBe("no-encontrado");

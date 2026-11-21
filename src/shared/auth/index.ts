@@ -16,6 +16,7 @@
 
 export {
   darDeBajaUsuario,
+  RestablecimientoPropioError,
   restablecerContrasenia,
 } from "./administracionDeUsuarios";
 export { altaDePersona } from "./alta";

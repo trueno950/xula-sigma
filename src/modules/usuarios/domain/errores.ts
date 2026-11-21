@@ -1,5 +1,5 @@
 /**
- * Los dos errores propios de la administracion de usuarios desde el panel.
+ * Los errores propios de la administracion de usuarios desde el panel.
  *
  * Llevan `codigo` como los de `shared/lib/errores.ts` —el despacho se hace
  * por ahi, nunca por `instanceof`, porque un error que cruza un limite de
@@ -31,5 +31,17 @@ export class RolNoAsignableError extends Error {
   ) {
     super(mensaje);
     this.name = "RolNoAsignableError";
+  }
+}
+
+/** S12 de `usuarios-ux`: baja sin la casilla de confirmacion; ver la nota de `darDeBajaUsuarioAction` en AGENTS.md. */
+export class BajaSinConfirmarError extends Error {
+  readonly codigo = "BAJA_SIN_CONFIRMAR";
+
+  constructor(
+    mensaje = "Para dar de baja a la persona, marque la casilla de confirmación.",
+  ) {
+    super(mensaje);
+    this.name = "BajaSinConfirmarError";
   }
 }
