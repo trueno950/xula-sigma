@@ -22,13 +22,6 @@ export const HORAS_DE_VIGENCIA_DE_CLAVE_TEMPORAL = 24;
 const MILISEGUNDOS_DE_VIGENCIA =
   HORAS_DE_VIGENCIA_DE_CLAVE_TEMPORAL * 60 * 60 * 1000;
 
-/**
- * El codigo que viaja en el cuerpo del rechazo de `/api/auth/sign-in/email`.
- * La pantalla de acceso lo traduce a su mensaje; el `code` es el mismo que
- * usa Better Auth para los suyos (`INVALID_EMAIL_OR_PASSWORD`).
- */
-export const CLAVE_TEMPORAL_CADUCADA = "CLAVE_TEMPORAL_CADUCADA";
-
 /** El proveedor cuya fila guarda el hash de la contrasenia. */
 const PROVEEDOR_DE_CLAVE = "credential";
 
@@ -87,28 +80,6 @@ export async function cuentaConCredencial(
     .from(usuarios)
     .leftJoin(cuentas, conSuCredencial)
     .where(eq(usuarios.id, usuarioId))
-    .limit(1);
-
-  return fila ?? null;
-}
-
-/** El hash y la marca de la credencial, para cambiarla. */
-export async function credencialDe(
-  tx: TransaccionTenant,
-  usuarioId: string,
-): Promise<{ password: string | null; claveTemporalEn: Date | null } | null> {
-  const [fila] = await tx
-    .select({
-      password: cuentas.password,
-      claveTemporalEn: cuentas.claveTemporalEn,
-    })
-    .from(cuentas)
-    .where(
-      and(
-        eq(cuentas.userId, usuarioId),
-        eq(cuentas.providerId, PROVEEDOR_DE_CLAVE),
-      ),
-    )
     .limit(1);
 
   return fila ?? null;

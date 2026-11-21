@@ -6,13 +6,16 @@ import { withTenant } from "@/shared/tenancy/withTenant";
 import type { ContextoActual } from "./contexto";
 import { hashDeClave } from "./contrasenia";
 import { cuentas, sesiones, usuarios } from "./esquema";
-import { puedeDarDeBaja, puedeRestablecerContrasenia, type Rol } from "./roles";
+import { puedeRestablecerContrasenia, type Rol } from "./roles";
 
 /**
- * Los casos de uso que administran personas: restablecer su contrasenia y
- * darla de baja. La reactivacion -la otra mitad de la baja- vive en
- * `reactivacionDeUsuario.ts`, que comparte `objetivoDe` y `trazaDe` con este
- * archivo porque juntos pasaban las 200 lineas.
+ * El restablecimiento de la contrasenia de otra persona, con las piezas que
+ * comparten los tres casos de uso que administran a alguien: resolver el
+ * objetivo, dejar la traza y rechazar una cuenta que cambio bajo los pies.
+ *
+ * La baja y la reactivacion viven cada una en su archivo
+ * (`bajaDeUsuario.ts`, `reactivacionDeUsuario.ts`): los tres juntos pasaban
+ * las 200 lineas, y separados cada uno se lee entero.
  *
  * **El orden de las verificaciones es la regla, no un detalle.** Primero se
  * resuelve el objetivo —y RLS decide si existe para quien pregunta—, recien
@@ -30,10 +33,11 @@ import { puedeDarDeBaja, puedeRestablecerContrasenia, type Rol } from "./roles";
 /**
  * Lo que necesitan los tres casos de uso del objetivo, y nada mas.
  *
- * `bajaEn` entra aca aunque la baja y el restablecimiento no lo miren: es
- * una columna de la misma fila, y pedirla en una segunda consulta para
- * decidir si la reactivacion tiene algo que hacer dejaria dos lecturas donde
- * la regla es una.
+ * `bajaEn` entra aca aunque el restablecimiento no lo mire: es una columna de
+ * la misma fila, y pedirla en una segunda consulta para decidir si la
+ * reactivacion tiene algo que hacer dejaria dos lecturas donde la regla es
+ * una. Ademas es contra lo que el restablecimiento vuelve a comparar adentro
+ * de su transaccion.
  */
 type Objetivo = { id: string; rol: Rol; bajaEn: Date | null };
 
@@ -51,6 +55,26 @@ export class RestablecimientoPropioError extends Error {
   constructor(mensaje = "No puede restablecer su propia contraseña.") {
     super(mensaje);
     this.name = "RestablecimientoPropioError";
+  }
+}
+
+/**
+ * La cuenta cambio entre la lectura de las guardas y la escritura, o estaba
+ * de baja: la clave que iba a emitirse ya no serviria, porque un restablecer
+ * no activa a nadie. Lo decide la fila bloqueada, no el `if` de arriba.
+ *
+ * La operadora lo ve como el mensaje generico de la accion —«Intente de
+ * nuevo»—, que es lo que corresponde: no hubo falla, hubo otra operacion en
+ * el medio.
+ */
+export class CuentaCambiadaError extends Error {
+  readonly codigo = "CUENTA_CAMBIADA";
+
+  constructor(
+    mensaje = "La cuenta cambió mientras se procesaba la operación.",
+  ) {
+    super(mensaje);
+    this.name = "CuentaCambiadaError";
   }
 }
 
@@ -77,7 +101,8 @@ export async function objetivoDe(
 }
 
 /**
- * La traza de los casos de uso de este archivo y de la reactivacion.
+ * La traza de los casos de uso de este archivo, de la baja y de la
+ * reactivacion.
  *
  * Adapta el contexto a lo que pide `registrar`, que vive en `tenancy` y no
  * puede conocer `ContextoActual` —la direccion es `auth → tenancy`—. Es
@@ -96,12 +121,43 @@ export const trazaDe = (
     entidadId: traza.entidadId,
   });
 
+/**
+ * El `bajaEn` vigente con la fila de `usuarios` bloqueada.
+ *
+ * **El lock es lo que ordena las operaciones que emiten claves.** La
+ * reactivacion bloquea esta misma fila con su `UPDATE` condicional, y la baja
+ * tambien; tomarlo antes de escribir la credencial es lo que hace que, cuando
+ * una reactivacion ya confirmo, el restablecimiento que venia detras vea el
+ * `bajaEn` nuevo en vez de escribir encima de la clave que se acaba de
+ * mostrar.
+ */
+async function bajaBajoLock(
+  tx: TransaccionTenant,
+  usuarioId: string,
+): Promise<Date | null> {
+  const [fila] = await tx
+    .select({ bajaEn: usuarios.bajaEn })
+    .from(usuarios)
+    .where(eq(usuarios.id, usuarioId))
+    .for("update");
+
+  if (!fila) throw new NoEncontradoError();
+
+  return fila.bajaEn;
+}
+
 /** Cambia la credencial de otra persona y deja traza en la misma transaccion.
  *
  * La clave que se escribe es una temporal: la marca en `cuentas` es lo que la
  * hace caducar a las 24 horas y obliga a cambiarla al entrar (S1 y S2).
  * Cualquier restablecimiento que se olvide de marcarla deja una clave que no
  * caduca nunca y nadie se entera.
+ *
+ * **Cierra las sesiones de la persona en la misma transaccion.** Una sesion
+ * abierta antes del restablecimiento sobrevive al cambio de hash y cae en la
+ * pantalla de cambio obligatorio, que solo pide una clave nueva dos veces:
+ * desde ahi se pone una clave propia sin conocer ninguna, y una cookie
+ * robada se vuelve la cuenta entera.
  */
 export function restablecerContrasenia(
   contexto: ContextoActual,
@@ -120,61 +176,22 @@ export function restablecerContrasenia(
 
     const digest = await hashDeClave(datos.nuevaClave);
 
+    const vigente = await bajaBajoLock(tx, objetivo.id);
+
+    if (vigente !== null || objetivo.bajaEn !== null) {
+      throw new CuentaCambiadaError();
+    }
+
     await tx
       .update(cuentas)
       .set({ password: digest, claveTemporalEn: new Date() })
       .where(eq(cuentas.userId, objetivo.id));
 
-    await trazaDe(tx, {
-      contexto,
-      accion: "RESTABLECER_CONTRASENIA",
-      entidadId: objetivo.id,
-    });
-  });
-}
-
-/**
- * Baja logica: marca `bajaEn` y revoca las sesiones vigentes.
- *
- * **No borra la fila**, y por eso `usuarios` no tiene `GRANT DELETE`: la
- * persona sigue siendo quien firmo las constancias que ya emitio.
- *
- * **Borra sus sesiones** (S6: «quien queda de baja pierde sus sesiones»).
- * Cerrar el alta de sesiones nuevas no alcanza: `soloSiSigueActiva` solo
- * corre al crear una (`instancia.ts`), asi que la que ya estaba abierta
- * seguiria sirviendo hasta vencer. `xula_app` tiene `GRANT DELETE` sobre
- * `sesiones` (`drizzle/0001_auth.sql`), y va en la misma transaccion que el
- * `UPDATE` de la baja: o queda fuera de la cuenta y sin sesiones, o no
- * quedo de baja.
- *
- * **Nadie se da de baja a si mismo.** El municipio tiene un solo
- * `ADMIN_MUNICIPAL` (S3), ninguna ruta limpia `bajaEn` —el SUPER_ADMIN solo
- * restablece contrasenias— y darse de baja seria un bloqueo permanente del
- * municipio entero.
- */
-export function darDeBajaUsuario(
-  contexto: ContextoActual,
-  datos: { usuarioId: string },
-): Promise<void> {
-  return withTenant(contexto.ayuntamientoId, async (tx) => {
-    const objetivo = await objetivoDe(tx, datos.usuarioId);
-
-    if (!puedeDarDeBaja(contexto.usuario.rol, objetivo.rol)) {
-      throw new NoAutorizadoError();
-    }
-
-    if (objetivo.id === contexto.usuario.id) throw new NoAutorizadoError();
-
-    await tx
-      .update(usuarios)
-      .set({ bajaEn: new Date() })
-      .where(eq(usuarios.id, objetivo.id));
-
     await tx.delete(sesiones).where(eq(sesiones.userId, objetivo.id));
 
     await trazaDe(tx, {
       contexto,
-      accion: "BAJA_USUARIO",
+      accion: "RESTABLECER_CONTRASENIA",
       entidadId: objetivo.id,
     });
   });

@@ -16,7 +16,7 @@ import {
 } from "@/shared/tenancy/superAdminDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { altaDePersona } from "./alta";
-import { CLAVE_TEMPORAL_CADUCADA } from "./claveTemporalEnCuenta";
+import { CLAVE_TEMPORAL_CADUCADA } from "./codigosDeAcceso";
 import { hashDeClave } from "./contrasenia";
 import { cuentas } from "./esquema";
 

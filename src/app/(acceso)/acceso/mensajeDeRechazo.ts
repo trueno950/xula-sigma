@@ -1,4 +1,4 @@
-import { CLAVE_TEMPORAL_CADUCADA } from "@/shared/auth/claveTemporalEnCuenta";
+import { CLAVE_TEMPORAL_CADUCADA } from "@/shared/auth/codigosDeAcceso";
 
 /**
  * Lo que la pantalla de acceso le dice a la persona cuando el servidor

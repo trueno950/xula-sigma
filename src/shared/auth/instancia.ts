@@ -8,10 +8,10 @@ import { withTenant } from "@/shared/tenancy/withTenant";
 import { sinEditarElPerfilConClaveTemporal } from "./autoservicio";
 import { bdSobreTransaccion } from "./bdSobreTransaccion";
 import {
-  CLAVE_TEMPORAL_CADUCADA,
   cuentaConCredencial,
   estadoDeClaveTemporal,
 } from "./claveTemporalEnCuenta";
+import { CLAVE_TEMPORAL_CADUCADA } from "./codigosDeAcceso";
 import {
   ACCESO_POR_CORREO,
   MODELOS,

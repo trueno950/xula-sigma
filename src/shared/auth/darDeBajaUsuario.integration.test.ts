@@ -10,7 +10,7 @@ import {
   ticul,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
-import { darDeBajaUsuario } from "./administracionDeUsuarios";
+import { darDeBajaUsuario } from "./bajaDeUsuario";
 import { sesiones, usuarios } from "./esquema";
 import {
   contextoDe,

@@ -47,6 +47,26 @@ const credencial = () =>
     tx.select().from(cuentas).where(eq(cuentas.userId, usuarioId)),
   ).then(([fila]) => fila);
 
+/** La marca que la reja leyo: el caso de uso la vuelve a comparar. */
+const marcaVigente = async (): Promise<Date> => {
+  const marca = (await credencial())?.claveTemporalEn;
+
+  if (!marca) throw new Error("La siembra no dejo la marca temporal.");
+
+  return marca;
+};
+
+/** El contexto que arma `contextoDeCambioDeClave()` para una sesion dada. */
+const contextoDesde = async (
+  sesionId: string,
+): Promise<Parameters<typeof cambiarClavePropia>[0]> => ({
+  ayuntamientoId: motul,
+  usuarioId,
+  sesionId,
+  claveTemporalEn: await marcaVigente(),
+  origen: "https://motul.xulasigma.mx",
+});
+
 const sesionesDe = (id: string) =>
   withTenant(motul, (tx) =>
     tx
@@ -93,17 +113,9 @@ describe("cambiar la clave propia", () => {
     const antes = await credencial();
     const sesionesAntes = await sesionesDe(usuarioId);
 
-    const error = await motivoDe(() =>
-      cambiarClavePropia(
-        {
-          ayuntamientoId: motul,
-          usuarioId,
-          sesionId: "sesion-que-no-existe",
-          origen: "https://motul.xulasigma.mx",
-        },
-        TEMPORAL,
-      ),
-    );
+    const contexto = await contextoDesde("sesion-que-no-existe");
+
+    const error = await motivoDe(() => cambiarClavePropia(contexto, TEMPORAL));
 
     expect(error.codigo).toBe(new ClaveRepetidaError().codigo);
     expect((await credencial())?.password).toBe(antes?.password);
@@ -118,17 +130,9 @@ describe("cambiar la clave propia", () => {
   it("rechaza una clave corta y no toca nada", async () => {
     const antes = await credencial();
 
-    const error = await motivoDe(() =>
-      cambiarClavePropia(
-        {
-          ayuntamientoId: motul,
-          usuarioId,
-          sesionId: "sesion-que-no-existe",
-          origen: "https://motul.xulasigma.mx",
-        },
-        "corta",
-      ),
-    );
+    const contexto = await contextoDesde("sesion-que-no-existe");
+
+    const error = await motivoDe(() => cambiarClavePropia(contexto, "corta"));
 
     expect(error.codigo).toBe("CLAVE_DEBIL");
     expect((await credencial())?.password).toBe(antes?.password);
@@ -140,15 +144,7 @@ describe("cambiar la clave propia", () => {
       await crearSesion(indice);
     }
 
-    await cambiarClavePropia(
-      {
-        ayuntamientoId: motul,
-        usuarioId,
-        sesionId: propia,
-        origen: "https://motul.xulasigma.mx",
-      },
-      NUEVA,
-    );
+    await cambiarClavePropia(await contextoDesde(propia), NUEVA);
 
     const despues = await credencial();
 

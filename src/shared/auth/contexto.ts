@@ -116,29 +116,38 @@ export async function contextoActual(): Promise<ContextoActual | null> {
  *
  * No devuelve un `ContextoActual`, y esa es la mitad de la garantia: llevar
  * `usuario` haria que un caso de uso cualquiera lo aceptara como actor. Aca
- * solo viajan el tenant, la persona y la sesion desde la que se escribe, y su
- * unico consumidor es el cambio de clave.
+ * solo viajan el tenant, la persona, la sesion desde la que se escribe, la
+ * marca que se leyo y su unico consumidor es el cambio de clave.
  *
- * Exige que la marca siga puesta: quien ya tiene clave propia no cambia nada
- * por esta puerta —la pantalla lo manda al panel, y el caso de uso no
- * encontraria credencial temporal que limpiar—.
+ * **Exige que la marca siga puesta y que la sesion se haya abierto con
+ * ella**: una sesion anterior a la marca la abrio otra clave —una vieja, o la
+ * que un restablecimiento reemplazo—, asi que dejarla entrar al cambio
+ * obligatorio seria dejar que una cookie que ya no corresponde ponga la clave
+ * propia. La comparacion es de instantes y admite el mismo instante. El
+ * `claveTemporalEn` del contexto es el valor leido aca: es contra el que el
+ * caso de uso vuelve a comparar adentro de su transaccion.
  */
 export type ContextoDeCambioDeClave = {
   ayuntamientoId: AyuntamientoId;
   usuarioId: string;
   sesionId: string;
+  claveTemporalEn: Date;
   origen: string;
 };
 
 export async function contextoDeCambioDeClave(): Promise<ContextoDeCambioDeClave | null> {
   const activa = await sesionConSuCuenta();
+  const marca = activa?.cuenta.claveTemporalEn;
 
-  if (!activa || activa.cuenta.claveTemporalEn === null) return null;
+  if (!activa || !marca) return null;
+
+  if (activa.sesion.session.createdAt.getTime() < marca.getTime()) return null;
 
   return {
     ayuntamientoId: activa.ayuntamientoId,
     usuarioId: activa.usuario.id,
     sesionId: activa.sesion.session.id,
+    claveTemporalEn: marca,
     origen: origenDelRequest(await headers()),
   };
 }

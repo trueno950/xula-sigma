@@ -41,6 +41,13 @@ const txQueDevuelve = (filas: readonly FilaDeCuenta[]) => ({
 
 let filasDeCuenta: FilaDeCuenta[] = [{ bajaEn: null, claveTemporalEn: null }];
 
+/**
+ * El instante en que se abrio la sesion del request, y una marca anterior:
+ * el caso normal es que la temporal se haya emitido antes de entrar con ella.
+ */
+const SESION_CREADA_EN = new Date("2026-03-10T12:00:00.000Z");
+const MARCA_ANTERIOR = new Date("2026-03-10T11:00:00.000Z");
+
 /** El request de un municipio con sesion, que es el caso comun. */
 const prepararElRequest = () => {
   mocks.headers.mockReset();
@@ -51,7 +58,7 @@ const prepararElRequest = () => {
     new Headers({ host: "motul.localhost:3000" }),
   );
   mocks.sesionActual.mockResolvedValue({
-    session: { id: "sesion-1" },
+    session: { id: "sesion-1", createdAt: SESION_CREADA_EN },
     user: { id: "usuario-1", rol: "CONSULTA" },
   });
   const ayuntamiento = { id: "ayuntamiento-1", subdominio: "motul" };
@@ -122,14 +129,34 @@ describe("contextoDeCambioDeClave", () => {
   beforeEach(prepararElRequest);
 
   it("devuelve la sesion y el tenant mientras la temporal siga puesta", async () => {
-    filasDeCuenta = [{ bajaEn: null, claveTemporalEn: new Date() }];
+    filasDeCuenta = [{ bajaEn: null, claveTemporalEn: MARCA_ANTERIOR }];
 
     await expect(contextoDeCambioDeClave()).resolves.toEqual({
       ayuntamientoId: "ayuntamiento-1",
       usuarioId: "usuario-1",
       sesionId: "sesion-1",
+      claveTemporalEn: MARCA_ANTERIOR,
       origen: expect.any(String),
     });
+  });
+
+  /**
+   * Una sesion abierta antes de que se emitiera la temporal actual no la
+   * conoce: la abrio una clave anterior. Admitirla dejaria que una cookie
+   * vieja —la que el restablecimiento borro de la base pero que puede haber
+   * sobrevivido en otro lado— pusiera la clave propia.
+   */
+  it("una sesion abierta antes de la marca no abre el cambio obligatorio", async () => {
+    const marca = new Date(SESION_CREADA_EN.getTime() + 1_000);
+    filasDeCuenta = [{ bajaEn: null, claveTemporalEn: marca }];
+
+    await expect(contextoDeCambioDeClave()).resolves.toBeNull();
+  });
+
+  it("una sesion abierta en el mismo instante que la marca si", async () => {
+    filasDeCuenta = [{ bajaEn: null, claveTemporalEn: SESION_CREADA_EN }];
+
+    await expect(contextoDeCambioDeClave()).resolves.not.toBeNull();
   });
 
   it("es null cuando la credencial ya es la clave propia", async () => {
@@ -146,7 +173,7 @@ describe("contextoDeCambioDeClave", () => {
   });
 
   it("es null para una cuenta dada de baja", async () => {
-    filasDeCuenta = [{ bajaEn: new Date(), claveTemporalEn: new Date() }];
+    filasDeCuenta = [{ bajaEn: new Date(), claveTemporalEn: MARCA_ANTERIOR }];
 
     await expect(contextoDeCambioDeClave()).resolves.toBeNull();
   });
