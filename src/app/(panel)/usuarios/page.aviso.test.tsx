@@ -23,9 +23,16 @@ vi.mock("@/shared/auth", async (importOriginal) => ({
 }));
 vi.mock("@/modules/usuarios", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/usuarios")>()),
-  avisoPendienteDeLaPeticion: avisoPendienteMock,
-  claveMostradaDeLaPeticion: claveMostradaMock,
   listarUsuarios: listarUsuariosMock,
+}));
+vi.mock("@/modules/usuarios/ui/avisoPendienteEnCookie", () => ({
+  avisoPendienteDeLaPeticion: avisoPendienteMock,
+}));
+vi.mock("@/modules/usuarios/ui/claveTemporalEnCookie", () => ({
+  claveMostradaDeLaPeticion: claveMostradaMock,
+}));
+vi.mock("@/modules/usuarios/ui/destinatarioDeLaClave", () => ({
+  destinatarioDeLaClaveDeLaPeticion: vi.fn(async () => null),
 }));
 vi.mock("@/modules/usuarios/ui/actions/darDeBajaUsuarioAction", () => ({
   darDeBajaUsuarioAction: vi.fn(),

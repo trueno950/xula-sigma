@@ -14,6 +14,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * sujeto es qué anuncia la página según lo que llega de la URL y de la
  * cabecera del proxy. La cabecera y el listado se mockean; la composición
  * del listado no es lo que se está probando.
+ *
+ * El estado nombrado de S11 —la tarjeta dice de quién era y ofrece
+ * restablecerla— vive en `page.claveSinMostrar.test.tsx`: es otra cookie y
+ * otro desenlace del mismo hallazgo.
  */
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
@@ -28,9 +32,16 @@ vi.mock("@/shared/auth", async (importOriginal) => ({
 }));
 vi.mock("@/modules/usuarios", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/usuarios")>()),
-  avisoPendienteDeLaPeticion: avisoPendienteMock,
-  claveMostradaDeLaPeticion: claveMostradaMock,
   listarUsuarios: listarUsuariosMock,
+}));
+vi.mock("@/modules/usuarios/ui/avisoPendienteEnCookie", () => ({
+  avisoPendienteDeLaPeticion: avisoPendienteMock,
+}));
+vi.mock("@/modules/usuarios/ui/claveTemporalEnCookie", () => ({
+  claveMostradaDeLaPeticion: claveMostradaMock,
+}));
+vi.mock("@/modules/usuarios/ui/destinatarioDeLaClave", () => ({
+  destinatarioDeLaClaveDeLaPeticion: vi.fn(async () => null),
 }));
 vi.mock("@/modules/usuarios/ui/actions/darDeBajaUsuarioAction", () => ({
   darDeBajaUsuarioAction: vi.fn(),

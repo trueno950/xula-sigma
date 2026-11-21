@@ -93,14 +93,17 @@ describe("alta de usuario: el titulo no se repite (S8)", () => {
 });
 
 describe("alta de usuario: permiso y sesion", () => {
-  it("un rol que no administra usuarios no llega al formulario", async () => {
+  it("un rol que no administra usuarios no llega al formulario, pero se ve dentro del panel (S15)", async () => {
     contextoActualMock.mockResolvedValue(contexto("OPERADOR"));
 
     const html = await pagina();
 
-    expect(html).toContain(
-      "Su rol no tiene permiso para administrar usuarios.",
-    );
+    expect(html).toContain("Su rol es Operador: no administra cuentas.");
+    expect(html).toContain("Pida al administrador municipal");
+    // El encabezado y la migaja de la pantalla siguen ahi: solo cambia el
+    // cuerpo por el aviso y la salida.
+    expect(html).toContain("Nuevo usuario");
+    expect(html).toContain('href="/usuarios"');
     expect(html).not.toContain('name="nombre"');
   });
 

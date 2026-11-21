@@ -659,6 +659,14 @@ Notas que no caben en la tabla, una por fila que las necesita:
   Ver `src/modules/usuarios/ui/claveMostradaEnTransito.ts`; S4 de
   `odd/tasks/administracion-de-usuarios.md` y S2 de
   `odd/tasks/pendientes-fase-0.md`.
+
+  **La recarga también necesita saber de quién era la clave** (S11). El proxy
+  ya borró la cookie de la clave, así que el `usuarioId` y el token van
+  además en una cookie propia de 120 segundos que nadie consume —ese estado
+  **es** la recarga— y que la pantalla busca en el listado que leyó bajo RLS
+  para preguntar si esa persona aún se puede restablecer
+  (`permisosDeCuenta`, S1 y T3) antes de ofrecer el botón. La borra «Ya la
+  anoté». Ver `src/modules/usuarios/ui/destinatarioDeLaClave.ts`.
 - `descartarClaveMostradaAction` (`usuarios`, S9 de `usuarios-ux`): el
   `<form>` de «Ya la anoté» de `AvisoDeClaveTemporal`. Mismo motivo que
   `darDeBajaUsuarioAction`: la tarjeta se pinta en un Server Component y el

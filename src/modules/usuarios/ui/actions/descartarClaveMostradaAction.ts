@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { descartarClaveMostrada } from "../claveTemporalEnCookie";
+import { olvidarDestinatarioDeLaClave } from "../destinatarioDeLaClave";
 import { rutaDeUsuarios } from "./destinoDeUsuarios";
 
 /**
@@ -31,6 +32,9 @@ export async function descartarClaveMostradaAction(
   if (analisis.success) {
     try {
       await descartarClaveMostrada(analisis.data);
+      // Ya no hay clave que ofrecer: el aviso de «ya no se puede mostrar»
+      // dejaria de tener sentido (S11).
+      await olvidarDestinatarioDeLaClave();
     } catch (error) {
       // La cookie vence sola a los 120 segundos y el `POST` del montaje
       // (`DescartarClaveAlMostrar`) la borra por la otra via: el fallo no

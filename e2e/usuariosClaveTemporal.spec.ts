@@ -5,11 +5,13 @@ import { liberarVentanaDeRitmo } from "./calles.fixture";
 import { urlDe } from "./municipios";
 
 /**
- * S9 y S11 de `usuarios-ux` en el navegador, que es el único lugar donde se
- * pueden probar: la contraseña temporal se queda en pantalla hasta que la
- * operadora dice que ya la anotó, la URL pierde el token al pintarse la
- * tarjeta, y el aviso de restablecer no anuncia el éxito cuando la clave ya no
- * se puede ver.
+ * S9, S10 y S11 de `usuarios-ux` en el navegador, que es el único lugar donde
+ * se pueden probar: la contraseña temporal se queda en pantalla hasta que la
+ * operadora dice que ya la anotó, «Copiar» la deja en el portapapeles —y sin
+ * JavaScript no hay «Copiar», que es la mejora progresiva—, la URL pierde el
+ * token al pintarse la tarjeta, y el aviso de restablecer no anuncia el éxito
+ * cuando la clave ya no se puede ver: dice de quién era y ofrece restablecerla
+ * otra vez.
  *
  * El hallazgo C1 de la auditoría era el contrario: con JavaScript la clave se
  * veía ~300 ms y desaparecía sola, porque el descarte del montaje era una
@@ -21,6 +23,9 @@ import { urlDe } from "./municipios";
  * `/eventos`, así que la red nunca queda ociosa.
  */
 
+/** S10: el portapapeles es del navegador y hay que pedirlo por contexto. */
+test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+
 const NOMBRE = "Operadora de Mostrador";
 
 const correoNuevo = () => `clave-temporal-${randomUUID()}@example.com`;
@@ -31,10 +36,10 @@ const avisoDe = (
 ) => page.getByRole("region", { name: encabezado });
 
 /** La clave esta en el segundo parrafo de la tarjeta: el primero la titula. */
-const claveDe = async (
-  page: Parameters<typeof accederAMotul>[0],
-  encabezado: string,
-) => (await avisoDe(page, encabezado).locator("p").nth(1).innerText()).trim();
+const claveDe = async (page: Parameters<typeof accederAMotul>[0]) =>
+  (
+    await avisoDe(page, "Contraseña temporal").locator("p").nth(1).innerText()
+  ).trim();
 
 /** Un acceso por test y la ventana de ritmo por correo es de cinco intentos. */
 test.beforeEach(liberarVentanaDeRitmo);
@@ -66,8 +71,15 @@ test("con JavaScript, la URL pierde el token al pintar la tarjeta y recargar no 
 
   await page.getByRole("button", { name: "Dar de alta" }).click();
 
-  const clave = await claveDe(page, "Contraseña temporal");
+  const clave = await claveDe(page);
   expect(clave).toMatch(/^[A-Za-z0-9]{16}$/);
+
+  // S10: la tarjeta dice de quién es la clave —nombre, correo y rol—, porque
+  // mientras está arriba el listado sigue ofreciendo «Restablecer».
+  await expect(avisoDe(page, "Contraseña temporal")).toContainText(NOMBRE);
+  await expect(avisoDe(page, "Contraseña temporal")).toContainText(
+    "rol Operador",
+  );
 
   // S9: el token sale de la URL apenas se pinta la tarjeta, así que una
   // recarga inmediata ya no es un GET con token.
@@ -80,6 +92,26 @@ test("con JavaScript, la URL pierde el token al pintar la tarjeta y recargar no 
   await expect(avisoDe(page, "Contraseña temporal")).toHaveCount(0);
 });
 
+test("con JavaScript, «Copiar» deja la contraseña en el portapapeles y lo anuncia", async ({
+  page,
+}) => {
+  await accederAMotul(page);
+  await darDeAlta(page, correoNuevo());
+  await page.getByRole("button", { name: "Dar de alta" }).click();
+
+  const clave = await claveDe(page);
+
+  await page.bringToFront();
+  await page.getByRole("button", { name: "Copiar" }).click();
+
+  // El anuncio va en la región viva de la tarjeta, no en un diálogo que haya
+  // que cerrar: la operadora sigue donde estaba.
+  await expect(
+    page.getByText("Contraseña copiada al portapapeles."),
+  ).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(clave);
+});
+
 test("con JavaScript, la contraseña sigue en pantalla hasta que la operadora la da por anotada", async ({
   page,
 }) => {
@@ -87,7 +119,7 @@ test("con JavaScript, la contraseña sigue en pantalla hasta que la operadora la
   await darDeAlta(page, correoNuevo());
   await page.getByRole("button", { name: "Dar de alta" }).click();
 
-  const clave = await claveDe(page, "Contraseña temporal");
+  const clave = await claveDe(page);
 
   // C1 era esto: dos segundos después de mostrarse, la clave seguía ahí.
   await page.waitForTimeout(2000);
@@ -120,8 +152,15 @@ test("sin JavaScript, el botón de darla por anotada también la quita y limpia 
     await page.getByRole("button", { name: "Dar de alta" }).click();
     await page.waitForURL(/\/usuarios\?clave=[0-9a-f-]+&ok=alta$/);
 
-    const clave = await claveDe(page, "Contraseña temporal");
+    const clave = await claveDe(page);
     expect(clave).toMatch(/^[A-Za-z0-9]{16}$/);
+
+    // S10 al revés: sin JavaScript el botón no se pinta. La clave queda
+    // seleccionable, que es el texto que la propia tarjeta explica.
+    await expect(page.getByRole("button", { name: "Copiar" })).toHaveCount(0);
+    await expect(
+      page.getByText("seleccione la contraseña", { exact: false }),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: "Ya la anoté" }).click();
     await page.waitForURL(/\/usuarios$/);
@@ -145,12 +184,23 @@ test("sin JavaScript, recargar la URL del alta no vuelve a mostrar la clave y ma
     await page.getByRole("button", { name: "Dar de alta" }).click();
     await page.waitForURL(/\/usuarios\?clave=[0-9a-f-]+&ok=alta$/);
 
-    const clave = await claveDe(page, "Contraseña temporal");
+    const clave = await claveDe(page);
 
     await page.reload();
 
     await expect(page.getByText(clave)).toHaveCount(0);
-    await expect(page.getByText(/ya no se puede mostrar/)).toBeVisible();
+    // S11: sin la clave a la vista, el aviso dice de quién era y ofrece
+    // restablecerla otra vez, en vez de anunciar un éxito vacío.
+    await expect(
+      page.getByText(
+        `La contraseña temporal de ${NOMBRE} ya no se puede mostrar.`,
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Restablecer la contraseña de ${NOMBRE}`,
+      }),
+    ).toBeVisible();
     await expect(page.getByText("La cuenta quedó creada.")).toHaveCount(0);
   } finally {
     await contexto.close();

@@ -12,6 +12,7 @@ import {
 } from "../borradorDeAltaDeUsuario";
 import { descartarBorrador, guardarBorrador } from "../borradorEnCookie";
 import { intentarGuardarClaveMostrada } from "../claveTemporalEnCookie";
+import { recordarDestinatarioDeLaClave } from "../destinatarioDeLaClave";
 import { MINIMO_DE_NOMBRE } from "../FormularioDeAltaDeUsuario.textos";
 import type { CodigoDeError } from "../mensajesDeError";
 import { codigoDeErrorParaLaOperadora } from "./codigoDeError";
@@ -142,6 +143,13 @@ export async function altaDeUsuarioAction(formData: FormData): Promise<void> {
   if (!mostrada) {
     redirect(rutaDelAltaDeUsuario({ error: "clave-no-mostrada" }));
   }
+
+  // De quien era la clave, para cuando ya no se pueda mostrar: la pantalla la
+  // nombra y ofrece restablecerla otra vez (S11 de `usuarios-ux`).
+  await recordarDestinatarioDeLaClave({
+    token: mostrada.token,
+    usuarioId: alta.usuarioId,
+  });
 
   redirect(rutaDeUsuarios({ clave: mostrada.token, ok: "alta" }));
 }
