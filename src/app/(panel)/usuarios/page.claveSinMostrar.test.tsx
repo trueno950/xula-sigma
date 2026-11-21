@@ -34,6 +34,7 @@ vi.mock("@/modules/usuarios/ui/avisoPendienteEnCookie", () => ({
 }));
 vi.mock("@/modules/usuarios/ui/claveTemporalEnCookie", () => ({
   claveMostradaDeLaPeticion: claveMostradaMock,
+  clavePorPedirDeLaPeticion: vi.fn(async () => null),
 }));
 vi.mock("@/modules/usuarios/ui/destinatarioDeLaClave", () => ({
   destinatarioDeLaClaveDeLaPeticion: destinatarioMock,

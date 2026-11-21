@@ -16,7 +16,11 @@ import {
   leerSubdominio,
   type Subdominio,
 } from "@/shared/tenancy/subdominio";
-import { CABECERAS_DE_TRASLADO, trasladosDeLaPeticion } from "./proxyTraslados";
+import {
+  CABECERAS_DE_TRASLADO,
+  pideElPayload,
+  trasladosDeLaPeticion,
+} from "./proxyTraslados";
 
 /**
  * Resolucion de tenant en el borde del request.
@@ -143,8 +147,8 @@ export async function proxy(request: NextRequest) {
 
   /**
    * S2, S13 y S14: aca se consumen las cookies de un solo uso en el GET real,
-   * el camino sin JavaScript. El camino con JavaScript, donde el `Set-Cookie`
-   * de este mismo borrado no llega al navegador, lo explica `AGENTS.md` en la
+   * el camino sin JavaScript. El camino con JavaScript, donde la clave no
+   * puede viajar en el payload del router, lo explica `AGENTS.md` en la
    * nota de `usuarios`. El valor viaja en una cabecera que el cliente no
    * puede escribir: la que mande se borro arriba. Que se traslada y cuando lo
    * decide `proxyTraslados.ts`.
@@ -154,6 +158,7 @@ export async function proxy(request: NextRequest) {
     ruta: request.nextUrl.pathname,
     consulta: request.nextUrl.searchParams,
     leerCookie: (nombre) => request.cookies.get(nombre)?.value,
+    esPayload: pideElPayload(request.headers),
   });
 
   for (const traslado of traslados) {

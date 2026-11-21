@@ -44,22 +44,47 @@ export const CABECERAS_DE_TRASLADO = [
   CABECERA_AVISO,
 ] as const;
 
+/**
+ * Si esta peticion pide el payload de la ruta y no una pagina entera.
+ *
+ * Las dos formas de pedirlo cuentan, porque las dos terminan en un payload que
+ * el router guarda y reutiliza al volver con «Atras»: el router del cliente
+ * manda `rsc: 1` (`node_modules/next/dist/esm/client/components/router-reducer/fetch-server-response.js:48`,
+ * Next 16.3.1) y el pre-render del destino de un `redirect` de Server Action
+ * pide el payload con `Accept: text/x-component` —el tipo de contenido del
+ * payload, `client/components/app-router-headers.js:15`— desde el servidor y
+ * **sin** `rsc` (`router-reducer/reducers/server-action-reducer.js:162`: «the
+ * server pre-fetches the redirect target as RSC»). Una navegacion de documento
+ * pide `text/html`.
+ *
+ * Se lee aca y no en la pagina porque de eso depende que el proxy consuma o no
+ * la cookie de la clave: ver `claveATrasladar`.
+ */
+export const pideElPayload = (cabeceras: Headers): boolean =>
+  cabeceras.get("rsc") === "1" ||
+  (cabeceras.get("accept") ?? "").includes(TIPO_DE_CONTENIDO_DEL_PAYLOAD);
+
+const TIPO_DE_CONTENIDO_DEL_PAYLOAD = "text/x-component";
+
 export const trasladosDeLaPeticion = ({
   metodo,
   ruta,
   consulta,
   leerCookie,
+  esPayload,
 }: {
   metodo: string;
   ruta: string;
   consulta: URLSearchParams;
   leerCookie: (nombre: string) => string | undefined;
+  esPayload: boolean;
 }): readonly Traslado[] => {
   const clave = claveATrasladar({
     metodo,
     ruta,
     token: consulta.get("clave") ?? undefined,
     cookie: leerCookie(NOMBRE_COOKIE_CLAVE_MOSTRADA),
+    esPayload,
   });
   const aviso = avisoATrasladar({
     metodo,

@@ -8,7 +8,10 @@ import {
 import type { AvisoPendiente } from "./avisoPendiente";
 import { avisoPendienteDeLaPeticion } from "./avisoPendienteEnCookie";
 import type { ClaveMostrada } from "./claveMostrada";
-import { claveMostradaDeLaPeticion } from "./claveTemporalEnCookie";
+import {
+  claveMostradaDeLaPeticion,
+  clavePorPedirDeLaPeticion,
+} from "./claveTemporalEnCookie";
 import { destinatarioDeLaClaveDeLaPeticion } from "./destinatarioDeLaClave";
 import { mensajeDeError } from "./mensajesDeError";
 import { permisosDeCuenta } from "./permisosDeCuenta";
@@ -20,9 +23,13 @@ import { permisosDeCuenta } from "./permisosDeCuenta";
  * la confirmacion— y la ruta quedaba con la mitad de su cuerpo decidiendo
  * textos.
  *
- * **La clave temporal** (S9 y S11) sale de la cabecera que puso el proxy en
- * la unica peticion que trae su token: sin el token en la URL no hay
- * cabecera, y volver a esta pantalla no la muestra. Cuando el proxy ya
+ * **La clave temporal** (S9 y S11), en tres desenlaces. Con JavaScript la
+ * contrasenia no viaja en el payload, porque el router lo guarda y lo vuelve a
+ * pintar al regresar con «Atras» (S4 de `usuarios-seguridad`): la pantalla
+ * recibe solo el token -`por-pedir`- y la isla se la pide al Route Handler,
+ * que la entrega y borra la cookie en el mismo viaje. Sin JavaScript, que es
+ * una navegacion de documento, el proxy la traslada a una cabecera y la
+ * borra: ahi si la tarjeta se pinta entera -`visible`-. Cuando el proxy ya
  * consumio la cookie, el `usuarioId` sale de la cookie del destinatario
  * —que nadie consume porque este estado **es** el de la recarga— y se busca
  * en el listado que esta misma peticion leyo bajo RLS: una cuenta de otro
@@ -46,6 +53,12 @@ export type ClaveDeLaPeticion =
   | { tipo: "nada" }
   | { tipo: "visible"; mostrada: ClaveMostrada; usuario: UsuarioDelPanel }
   | {
+      tipo: "por-pedir";
+      token: string;
+      usuario: UsuarioDelPanel;
+      puedeRestablecer: boolean;
+    }
+  | {
       tipo: "sin-mostrar";
       usuario: UsuarioDelPanel;
       puedeRestablecer: boolean;
@@ -56,6 +69,38 @@ export type AvisosDeLaPeticion = {
   confirmacion: AvisoDeConfirmacion | null;
   avisoYPersona: { aviso: AvisoPendiente; usuario: UsuarioDelPanel } | null;
   mensaje: string | null;
+};
+
+const puedeRestablecerDe = (
+  actor: ActorDelPanel,
+  usuario: UsuarioDelPanel,
+): boolean => permisosDeCuenta(actor, usuario)?.puedeRestablecer ?? false;
+
+/**
+ * La clave que esta peticion todavia puede pedir, si el dueño esta en el
+ * listado: la isla la pide al servidor y **solo asi** llega a la pantalla.
+ *
+ * `null` cuando no hay ninguna pendiente: ahi sigue el camino de la recarga,
+ * que es el estado «ya no se puede mostrar».
+ */
+const clavePorPedir = async (
+  token: string,
+  usuarios: readonly UsuarioDelPanel[],
+  actor: ActorDelPanel,
+): Promise<ClaveDeLaPeticion | null> => {
+  const usuarioId = await clavePorPedirDeLaPeticion(token);
+  if (!usuarioId) return null;
+
+  const usuario = usuarios.find((cuenta) => cuenta.id === usuarioId);
+
+  return usuario
+    ? {
+        tipo: "por-pedir",
+        token,
+        usuario,
+        puedeRestablecer: puedeRestablecerDe(actor, usuario),
+      }
+    : { tipo: "nada" };
 };
 
 const estadoDeLaClave = async (
@@ -71,6 +116,9 @@ const estadoDeLaClave = async (
     return usuario ? { tipo: "visible", mostrada, usuario } : { tipo: "nada" };
   }
 
+  const porPedir = token ? await clavePorPedir(token, usuarios, actor) : null;
+  if (porPedir) return porPedir;
+
   const destinatario = await destinatarioDeLaClaveDeLaPeticion(token);
   const usuario = usuarios.find(
     (cuenta) => cuenta.id === destinatario?.usuarioId,
@@ -80,8 +128,7 @@ const estadoDeLaClave = async (
   return {
     tipo: "sin-mostrar",
     usuario,
-    puedeRestablecer:
-      permisosDeCuenta(actor, usuario)?.puedeRestablecer ?? false,
+    puedeRestablecer: puedeRestablecerDe(actor, usuario),
   };
 };
 
@@ -93,7 +140,9 @@ const resultadoDe = (
     ? null
     : avisoDeConfirmacion({
         ok: parametros.ok,
-        hayClaveVisible: clave.tipo === "visible",
+        // `por-pedir` tambien la va a mostrar: la isla la trae en el mismo
+        // instante, asi que el exito se anuncia igual (S11).
+        hayClaveVisible: clave.tipo === "visible" || clave.tipo === "por-pedir",
       });
 
 export const avisosDeLaPeticion = async ({

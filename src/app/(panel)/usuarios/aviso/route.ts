@@ -1,5 +1,8 @@
 import { descartarAvisoPendiente } from "@/modules/usuarios/ui/avisoPendienteEnCookie";
-import { responderDescarte } from "@/modules/usuarios/ui/routeDeDescarte";
+import {
+  responderConToken,
+  sinContenido,
+} from "@/modules/usuarios/ui/routeDeDescarte";
 
 /**
  * `POST /usuarios/aviso`: borra la cookie del aviso de la baja **sin
@@ -11,12 +14,16 @@ import { responderDescarte } from "@/modules/usuarios/ui/routeDeDescarte";
  * porque completo, en `AGENTS.md`, nota de `usuarios`.
  *
  * **No lee tenant ni base**: solo borra la cookie de quien manda la peticion,
- * y solo si el token coincide con el guardado.
+ * y solo si el token coincide con la guardada.
  */
 export async function POST(request: Request): Promise<Response> {
-  return responderDescarte({
+  return responderConToken({
     request,
-    descartar: descartarAvisoPendiente,
     etiqueta: "aviso de la baja",
+    atender: async (token) => {
+      await descartarAvisoPendiente(token);
+
+      return sinContenido();
+    },
   });
 }

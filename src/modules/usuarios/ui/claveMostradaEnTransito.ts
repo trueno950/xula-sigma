@@ -30,6 +30,18 @@ export const CABECERA_CLAVE_MOSTRADA = "x-xula-clave-mostrada";
  * El valor de la cookie que hay que trasladar, o `null` si esta peticion no
  * la consume.
  *
+ * **La peticion del router no la consume** (S4 de `usuarios-seguridad`). El
+ * router guarda el payload de la ruta y lo reutiliza al volver con «Atras»
+ * (glosario de Next 16.3.1, «Client Cache»: «Pages are not cached by default
+ * but are reused during browser back/forward navigation»), asi que lo que
+ * viaje ahi se pinta otra vez sin pedirle nada al servidor. En esa peticion
+ * —la reconoce `pideElPayload`, que cubre al router y al pre-render del
+ * destino de un `redirect` de Server Action— la cookie se queda donde esta y
+ * la clave la pide la isla en un `POST` que la entrega y la borra en el mismo
+ * viaje.
+ * La navegacion de documento, que es el camino sin JavaScript, la sigue
+ * llevando en la cabecera: es lo unico que ese navegador puede pintar.
+ *
  * Sin `clave` en la URL no se toca nada: recargar o volver a `/usuarios`
  * deja la cookie donde esta hasta que vence, y la pantalla no la muestra.
  * Tampoco la consume un `?clave=` de otra alta: volver con el navegador a
@@ -40,13 +52,16 @@ export const claveATrasladar = ({
   ruta,
   token,
   cookie,
+  esPayload = false,
 }: {
   metodo?: string;
   ruta: string;
   token: string | undefined;
   cookie: string | undefined;
+  esPayload?: boolean;
 }): string | null => {
   if (metodo !== "GET" || ruta !== RUTA_COOKIE_CLAVE_MOSTRADA) return null;
+  if (esPayload) return null;
   if (!token || !cookie) return null;
 
   return decodificarClaveMostrada(cookie)?.token === token ? cookie : null;

@@ -4,6 +4,7 @@ import {
   AvisoDeAccion,
   AvisoDeClaveTemporal,
   ClaveQueYaNoSePuedeMostrar,
+  ClaveTemporalAlMostrar,
   DESCRIPCION_DE_USUARIOS,
   esquemaDeParametros,
   ListadoDeUsuarios,
@@ -32,7 +33,8 @@ type Props = {
  * y la accion —lo que el rol no puede hacer— no se pinta.
  *
  * Lo que la peticion anuncia lo resuelve `avisosDeLaPeticion`: la
- * contrasenia temporal que trajo el proxy, el aviso de un solo uso de la
+ * contrasenia temporal, que con JavaScript se pide despues de montar la
+ * pantalla (S4 de `usuarios-seguridad`), el aviso de un solo uso de la
  * baja, los codigos de error y el estado de «ya no se puede mostrar» (S11).
  * Aca solo se compone.
  */
@@ -88,6 +90,13 @@ export default async function PaginaDeUsuarios({ searchParams }: Props) {
         <AvisoDeClaveTemporal
           mostrada={avisos.clave.mostrada}
           usuario={avisos.clave.usuario}
+        />
+      ) : null}
+      {avisos.clave.tipo === "por-pedir" ? (
+        <ClaveTemporalAlMostrar
+          token={avisos.clave.token}
+          usuario={avisos.clave.usuario}
+          puedeRestablecer={avisos.clave.puedeRestablecer}
         />
       ) : null}
       <ListadoDeUsuarios usuarios={usuarios} actor={actor} />

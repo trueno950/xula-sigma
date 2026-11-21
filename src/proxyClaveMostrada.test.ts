@@ -74,6 +74,53 @@ describe("proxy — la clave temporal se consume en el servidor", () => {
     expect(borradoDeLaCookie(res)).toContain("Expires=Thu, 01 Jan 1970");
   });
 
+  /**
+   * S4 de `usuarios-seguridad`: el payload que el router guarda y restaura al
+   * volver con «Atras» no puede llevar la contrasenia, asi que en la peticion
+   * del router la cookie no se consume. La pide la isla en un `POST` que la
+   * entrega y la borra en el mismo viaje.
+   */
+  it("el payload del router no lleva la clave ni consume la cookie", async () => {
+    const res = await pedirUsuarios(`?clave=${TOKEN}`, {
+      ...conLaCookie(),
+      rsc: "1",
+    });
+
+    expect(
+      cabeceraQueRecibeElServidor(res, CABECERA_CLAVE_MOSTRADA),
+    ).toBeNull();
+    expect(borradoDeLaCookie(res)).toBeUndefined();
+  });
+
+  /**
+   * El destino de un `redirect` de Server Action se pre-renderiza en el
+   * servidor pidiendo el payload (`Accept: text/x-component`, sin `rsc`), y
+   * ese payload es el que el router guarda: tampoco puede llevar la clave.
+   */
+  it("el pre-render del destino de un redirect tampoco la lleva", async () => {
+    const res = await pedirUsuarios(`?clave=${TOKEN}`, {
+      ...conLaCookie(),
+      accept: "text/x-component",
+    });
+
+    expect(
+      cabeceraQueRecibeElServidor(res, CABECERA_CLAVE_MOSTRADA),
+    ).toBeNull();
+    expect(borradoDeLaCookie(res)).toBeUndefined();
+  });
+
+  it("una navegacion de documento si la traslada: es el camino sin JavaScript", async () => {
+    const res = await pedirUsuarios(`?clave=${TOKEN}`, {
+      ...conLaCookie(),
+      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    });
+
+    expect(cabeceraQueRecibeElServidor(res, CABECERA_CLAVE_MOSTRADA)).toBe(
+      VALOR,
+    );
+    expect(borradoDeLaCookie(res)).toContain("Path=/usuarios");
+  });
+
   it("sin el token en la URL no traslada nada y deja la cookie", async () => {
     const res = await pedirUsuarios("", conLaCookie());
 

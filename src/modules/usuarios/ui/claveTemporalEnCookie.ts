@@ -23,13 +23,13 @@ import {
  * y de 120 segundos. La URL lleva unicamente el token, y la pantalla la
  * aplica solo si coincide: cualquier otra navegacion no la muestra.
  *
- * **La consumen el proxy y la hoja cliente.** Un Server Component
+ * **La consumen el proxy y la isla.** Un Server Component
  * lee cookies pero no las borra, y sin JavaScript no hay Server Function
  * que las borre despues de pintar: la primera recarga volvia a mostrar la
  * clave (S2). El proxy la mueve a `CABECERA_CLAVE_MOSTRADA` y la borra en
  * la misma respuesta, en la unica peticion que trae el token; de ahi en
  * adelante la cookie ya no existe. El camino con JavaScript -que la clave
- * sobreviva hasta el descarte del montaje- y la limpieza de la URL estan
+ * sobreviva hasta que la pide la isla- y la limpieza de la URL estan
  * explicados una sola vez: `AGENTS.md`, nota de `usuarios`. El traslado y
  * los nombres compartidos viven en `claveMostradaEnTransito.ts`.
  *
@@ -78,6 +78,18 @@ export const intentarGuardarClaveMostrada = async (
   }
 };
 
+/** La clave de esta peticion, solo si el token coincide con el guardado. */
+const claveGuardadaDe = async (
+  token: string | undefined,
+): Promise<ClaveMostrada | null> => {
+  if (!token) return null;
+  const guardada = decodificarClaveMostrada(
+    (await cookies()).get(NOMBRE_COOKIE_CLAVE_MOSTRADA)?.value,
+  );
+
+  return guardada?.token === token ? guardada : null;
+};
+
 /** Sin token en la URL no se lee nada: ninguna otra visita la muestra. */
 export const claveMostradaDeLaPeticion = async (
   token: string | undefined,
@@ -92,14 +104,44 @@ export const claveMostradaDeLaPeticion = async (
 
 /** Solo la borra si el token es el suyo: otra visita no toca esta cookie. */
 export const descartarClaveMostrada = async (token: string): Promise<void> => {
-  const almacen = await cookies();
-  const guardada = decodificarClaveMostrada(
-    almacen.get(NOMBRE_COOKIE_CLAVE_MOSTRADA)?.value,
-  );
-  if (guardada?.token !== token) return;
+  if (!(await claveGuardadaDe(token))) return;
 
-  almacen.delete({
+  (await cookies()).delete({
     name: NOMBRE_COOKIE_CLAVE_MOSTRADA,
     path: RUTA_COOKIE_CLAVE_MOSTRADA,
   });
 };
+
+/**
+ * La clave que el `POST /usuarios/clave-temporal` le entrega a la isla (S4 de
+ * `usuarios-seguridad`), **borrando la cookie en el mismo viaje**: la primera
+ * peticion se la lleva y la segunda ya no encuentra nada.
+ *
+ * Es la unica salida de la clave hacia el cliente con JavaScript: el payload
+ * de la pantalla no la lleva, por eso el router no puede volver a pintarla al
+ * regresar con «Atras» sin preguntarle al servidor.
+ */
+export const tomarClaveMostrada = async (
+  token: string,
+): Promise<ClaveMostrada | null> => {
+  const guardada = await claveGuardadaDe(token);
+  if (!guardada) return null;
+
+  await descartarClaveMostrada(token);
+
+  return guardada;
+};
+
+/**
+ * El `usuarioId` de la clave que esta peticion **todavia puede pedir**, o
+ * `null` si ya no hay ninguna.
+ *
+ * Lee la cookie sin consumirla y **sin devolver la clave**: la pantalla solo
+ * necesita saber de quien era para armar la tarjeta, y lo que no sale de aca
+ * no puede quedar en el payload del router. Que la clave este todavia en el
+ * navegador significa que el proxy no la consumio, es decir que la peticion
+ * es la del router y no una navegacion de documento (`claveMostradaEnTransito.ts`).
+ */
+export const clavePorPedirDeLaPeticion = async (
+  token: string | undefined,
+): Promise<string | null> => (await claveGuardadaDe(token))?.usuarioId ?? null;
