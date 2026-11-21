@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "chosen": "02-vista-previa-primero.html",
+  "handoffs": {
+    "02-vista-previa-primero.html": {
+      "status": "in_progress",
+      "queued": false,
+      "sentAt": "2026-11-21T14:25:26.859Z",
+      "startedAt": "2026-11-21T14:26:23.368Z",
+      "implementedAt": null,
+      "feature": "odd/tasks/marca-exportacion-ux.md",
+      "note": "T4 de odd/tasks/marca-exportacion-ux.md; arranca cuando termine T2/T3 (mismos archivos)."
+    }
+  }
+}
