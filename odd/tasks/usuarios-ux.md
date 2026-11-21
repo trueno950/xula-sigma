@@ -183,3 +183,12 @@ aparte, C3 (caducidad y cambio obligatorio de la clave temporal) y L3
     nombra a nadie; `replaceState` y «Copiar» solo tienen cobertura E2E.
 - **L15** — E2E completa sola: 200/200. Handoffs del listado y del aviso
   marcados como implementados.
+- **L16** — Revisión nativa: la rama entera excede el presupuesto de los
+  revisores; se revisa por unidades en `.pi/review-units/`. Unidad 1 (T2+T3,
+  `f1623eb..3223553`): aprobada. Aviso no bloqueante: con JavaScript la
+  clave queda en la caché del router de Next y «Atrás» tras salir sin «Ya
+  la anoté» la vuelve a pintar sin pedir al servidor. Cerrarlo pide que la
+  clave no viaje en el payload de la página; se anota para el track de
+  seguridad junto con C3.
+  - Unidad 2 (T5, `bbadba8..cafa9cf`): la evaluación no pide revisión
+    (riesgo medio, no toca `src/shared/auth`).
