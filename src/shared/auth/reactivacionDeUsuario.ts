@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import { NoAutorizadoError } from "@/shared/lib/errores";
 import { withTenant } from "@/shared/tenancy/withTenant";
 import { objetivoDe, trazaDe } from "./administracionDeUsuarios";
@@ -34,6 +34,17 @@ import { puedeReactivarCuenta } from "./roles";
  * **Nadie se reactiva a si mismo** y la cuenta tiene que estar de baja: una
  * cuenta activa responde `CuentaActivaError` con su propio codigo, y ni ese
  * rechazo ni los otros mueven una fila —la transaccion no llego a escribir—.
+ *
+ * **El «solo si esta de baja» que decide no es el `if` que se lee arriba,**
+ * sino el `WHERE` que limpia `bajaEn`. Dos operadoras pueden reactivar la
+ * misma cuenta a la vez: las dos leen `bajaEn` distinto de NULL antes de que
+ * ninguna confirme, y las dos pasarian el `if`. La segunda tiene que frenarse
+ * en el `UPDATE`, que es el unico punto donde Postgres ya serializo las dos
+ * —el lock de la fila— y puede volver a mirar el `bajaEn` vigente. Sin eso la
+ * segunda pisa el hash que la primera acaba de mostrar: la cuenta queda
+ * activa con una clave que la operadora que la dicto ya no puede usar. Con
+ * el `WHERE` condicional la segunda no ve filas, la transaccion se deshace
+ * entera y la clave de la primera sigue sirviendo.
  */
 
 /** S3: solo se reactiva lo que esta de baja; lo activo no tiene nada que hacer. */
@@ -64,10 +75,13 @@ export function reactivarUsuario(
     // Despues de las guardas: hashear es lo caro y un rechazo no lo merece.
     const digest = await hashDeClave(datos.nuevaClave);
 
-    await tx
+    const reactivadas = await tx
       .update(usuarios)
       .set({ bajaEn: null })
-      .where(eq(usuarios.id, objetivo.id));
+      .where(and(eq(usuarios.id, objetivo.id), isNotNull(usuarios.bajaEn)))
+      .returning({ id: usuarios.id });
+
+    if (reactivadas.length === 0) throw new CuentaActivaError();
 
     await tx
       .update(cuentas)
