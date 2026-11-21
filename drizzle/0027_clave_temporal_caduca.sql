@@ -1,0 +1,12 @@
+-- S1: marca la credencial cuya clave emitio el sistema (alta, restablecimiento,
+-- reactivacion) para que caduque a las 24 horas y obligue a cambiarla al
+-- entrar. Se borra cuando la persona elige la suya.
+--
+-- Las filas que ya existen quedan en NULL, o sea "clave propia": el cambio
+-- obligatorio empieza a regir para las temporales emitidas desde aca. Marcarlas
+-- a posteriori inventaria una caducidad con fecha que nadie puede saber.
+--
+-- `xula_app` ya tiene UPDATE de tabla sobre `cuentas` (0001_auth.sql), asi que
+-- no hace falta un GRANT nuevo; la politica `cuentas_tenant`, que es FOR ALL,
+-- sigue siendo el unico limite.
+ALTER TABLE "cuentas" ADD COLUMN "clave_temporal_en" timestamp with time zone;
