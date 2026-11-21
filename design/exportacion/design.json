@@ -1,0 +1,21 @@
+{
+  "title": "Exportación de datos",
+  "brief": "Rediseño de /exportacion para el administrador municipal de un ayuntamiento pequeño de Yucatán: saber antes de descargar qué lleva el ZIP —los 19 conjuntos con sus conteos, incluidos usuarios.csv y bitacora.csv con nombre, correo y rol del personal—, ver el estado mientras se arma y al terminar con el nombre del archivo, toparse con el error dentro del panel y no leer que existe una bitácora que no se puede consultar; más la pantalla sin permiso con encabezado, migaja y a quién pedírselo.",
+  "feature": "odd/tasks/marca-exportacion-ux.md",
+  "artboards": [
+    {
+      "file": "01-inventario-antes-de-descargar.html",
+      "title": "Inventario antes de descargar",
+      "tradeoff": "El encabezado del panel con la acción a la derecha se conserva, y la tarjeta de texto se vuelve el inventario: seis grupos —plataforma, padrón, territorio, constancias, reportes, intervenciones— con sus archivos y sus conteos, y el aviso de datos del personal arriba de todo. Se ve exactamente qué se lleva el ZIP, a cambio de una pantalla de unas tres vistas de alto en el teléfono, con el botón arriba y el inventario lejos de él.",
+      "width": 1440,
+      "height": 1300
+    },
+    {
+      "file": "02-acta-de-entrega.html",
+      "title": "Acta de entrega con la acción al pie",
+      "tradeoff": "La pantalla es una entrega de 880 px —nombre del archivo, conteos, aviso del personal y manifiesto plano de 19 renglones— con la descarga y su estado anclados en una barra al pie, siempre bajo la vista y bajo el pulgar. El botón nunca se pierde y es el mismo bloque el que muestra progreso, resultado y error, a cambio de 88 px tapando el final del área visible y de romper la convención del panel de poner la acción primaria en el encabezado.",
+      "width": 1440,
+      "height": 1200
+    }
+  ]
+}

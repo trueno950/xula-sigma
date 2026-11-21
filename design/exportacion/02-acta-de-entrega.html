@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Acta de entrega con la acción al pie — Exportación</title>
+<style>
+  :root {
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-acento: oklch(0.55 0.1 25);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-inhabilitado: oklch(0.68 0.007 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    --radio-sm: 6px;
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --sombra-flotante: 0 8px 24px -6px oklch(0.24 0.008 80 / .22), 0 2px 6px oklch(0.24 0.008 80 / .08);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, h4, p, ul, li { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); overflow-y: auto; }
+  .municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2; color: var(--color-caliza-tinta); text-decoration: none; }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--radio-md); font-weight: 600; font-size: 15px; color: var(--color-caliza-apagada); text-decoration: none; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radio-md); background: transparent; color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer; }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  .contenido { min-width: 0; width: 100%; max-width: 880px; margin: 0 auto; padding: 24px 32px 0; display: flex; flex-direction: column; gap: 16px; }
+  .migaja { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-caliza-apagada); }
+  .migaja a { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .cabecera { display: flex; flex-direction: column; gap: 4px; }
+  .cabecera .descripcion { max-width: 62ch; color: var(--color-caliza-apagada); }
+
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: var(--radio-md); border: 1px solid transparent; font: 600 15px/1 var(--fuente); cursor: pointer; text-decoration: none; white-space: nowrap; transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease); }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .ancho { width: 100%; }
+
+  .aviso { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: var(--radio-md); background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .aviso svg { flex: none; margin-top: 2px; }
+  .aviso .texto { color: var(--color-caliza-tinta); font-weight: 500; }
+  .aviso.aviso-aviso { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .aviso.aviso-error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+  .aviso .detalle { color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.5; }
+  .aviso .nota { color: var(--color-caliza-apagada); font-size: 13px; margin-top: 4px; }
+  .aviso code { font-family: var(--fuente-dato); font-size: .875rem; }
+
+  .tarjeta { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); }
+
+  /* el acta */
+  .acta { display: flex; flex-direction: column; }
+  .acta-cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 24px; padding: 20px 20px 16px; }
+  .acta-nombre { display: flex; flex-direction: column; gap: 2px; }
+  .acta-nombre .archivo-grande { font-family: var(--fuente-dato); font-size: 1.25rem; font-weight: 600; letter-spacing: -.01em; }
+  .acta-meta { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+  .acta-cuerpo { display: flex; flex-direction: column; gap: 16px; padding: 0 20px 20px; }
+  .zona { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: var(--radio-sm); background: var(--color-caliza-superficie); }
+
+  .manifiesto { display: flex; flex-direction: column; }
+  .manifiesto-grupo + .manifiesto-grupo { margin-top: 12px; }
+  .manifiesto-grupo > .label { padding: 0 0 4px; }
+  .fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 12px; min-height: 40px; padding: 8px 0; border-bottom: 1px solid var(--color-caliza-divisor); }
+  .fila:last-child { border-bottom: 0; }
+  .fila .filas { text-align: right; }
+  .fila .nota-fila { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-caliza-apagada); }
+  .marca-dato { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: var(--radio-pill); background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .marca-dato svg { width: 12px; height: 12px; }
+
+  .linea-tiempo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding-top: 8px; }
+  .paso { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-caliza-apagada); }
+  .paso[data-hecho] { color: var(--color-caliza-tinta); }
+  .paso[data-hecho] svg { color: var(--color-senial-exito); }
+
+  /* la barra de la entrega, al pie */
+  .barra-entrega { position: sticky; bottom: 16px; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 8px; padding: 12px 16px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); box-shadow: var(--sombra-flotante); }
+  .barra-entrega .identidad { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .barra-entrega .identidad .dato { font-weight: 600; }
+  .barra-entrega .progreso { height: 8px; border-radius: var(--radio-pill); background: var(--color-caliza-relleno); overflow: clip; }
+  .barra-entrega .progreso span { display: block; height: 100%; background: var(--color-marca); border-radius: var(--radio-pill); }
+  .relleno-final { height: 24px; }
+
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+  .nota code { font-family: var(--fuente-dato); font-size: .875rem; }
+  .muestras { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+  .muestra { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); }
+  .muestra .barra-entrega { position: static; margin: 0; }
+  .permiso-marco { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: var(--radio-sm); background: var(--color-caliza-fondo); }
+
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono { width: 390px; height: 844px; overflow-y: auto; position: relative; border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo); box-shadow: var(--sombra-reposo); }
+  .m-municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor); font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none; }
+  .m-cuerpo { padding: 12px 16px 8px; display: flex; flex-direction: column; gap: 12px; }
+  .m-cuerpo .acta-cabecera { padding: 16px 14px 12px; }
+  .m-cuerpo .acta-cuerpo { padding: 0 14px 14px; gap: 12px; }
+  .m-cuerpo .acta-meta { text-align: left; flex-direction: row; flex-wrap: wrap; gap: 4px 8px; }
+  .m-cuerpo .archivo-grande { font-size: 1rem; }
+  .m-barra { position: sticky; bottom: 0; z-index: 3; display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); }
+  .m-barra .identidad { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .m-nav { position: sticky; bottom: 0; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); }
+  .m-nav a { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none; }
+  .m-nav a[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="page"] svg { color: var(--color-marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="oklch(0.42 0.12 25)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="oklch(0.99 0 0)" opacity=".85"/></symbol>
+    <symbol id="i-descarga" viewBox="0 0 24 24"><path d="M11 3h2v10.2l3.2-3.2 1.4 1.4L12 17l-5.6-5.6 1.4-1.4L11 13.2zM4 18.5h16V21H4z"/></symbol>
+    <symbol id="i-personal" viewBox="0 0 24 24"><path d="M12 12.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 1.8c-4 0-7.2 2.1-7.2 4.7v2h14.4v-2c0-2.6-3.2-4.7-7.2-4.7zM19 3.2h2v2.6h-2z"/></symbol>
+    <symbol id="i-zipper" viewBox="0 0 24 24"><path d="M6 2.5h12v19H6zM11 2.5h2v3h-2zm0 4h2v3h-2zm0 4h2v3h-2zm0 4h2v3h-2z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="i-error" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zM11 6h2v7h-2zm0 9.4h2v2h-2z"/></symbol>
+    <symbol id="i-reloj" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm.9 4.4v5.3l3.6 2.1-.9 1.5-4.5-2.6V6.9z"/></symbol>
+    <symbol id="i-punto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Administrador municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <nav class="migaja" aria-label="Ruta">
+      <a href="#">Administración</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Exportación</span>
+    </nav>
+
+    <header class="cabecera">
+      <h1 class="display">Exportación</h1>
+      <p class="descripcion body">Todo lo que este ayuntamiento tiene en la plataforma, en un solo archivo. Antes de descargarlo, esto es lo que lleva.</p>
+    </header>
+
+    <section class="tarjeta acta" aria-labelledby="a-entrega">
+      <div class="acta-cabecera">
+        <div class="acta-nombre">
+          <h2 class="headline" id="a-entrega">Entrega de datos de Motul</h2>
+          <p class="archivo-grande">motul-2026-11-21.zip</p>
+        </div>
+        <div class="acta-meta">
+          <p class="dato"><span class="dato">21</span> archivos · <span class="dato">13 110</span> filas</p>
+          <p class="dato">2.4 MB</p>
+          <p class="label">Se arma al pedirlo y tarda unos segundos</p>
+        </div>
+      </div>
+
+      <div class="acta-cuerpo">
+        <div class="aviso aviso-aviso" role="status">
+          <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personal"/></svg>
+          <div>
+            <p class="texto">Lleva datos del personal del ayuntamiento.</p>
+            <p class="detalle"><code>usuarios.csv</code> trae el nombre, el correo y el rol de cada cuenta; <code>bitacora.csv</code> trae quién hizo qué y cuándo. El ZIP va completo: esos dos no se pueden quitar.</p>
+          </div>
+        </div>
+
+        <div class="zona">
+          <div class="manifiesto">
+            <div class="manifiesto-grupo">
+              <h3 class="label">Plataforma · <span class="dato">2</span> archivos · <span class="dato">3 420</span> filas</h3>
+              <div class="fila">
+                <span class="dato">usuarios.csv</span>
+                <span class="dato filas">8</span>
+                <span class="nota-fila"><span class="marca-dato"><svg fill="currentColor" aria-hidden="true"><use href="#i-personal"/></svg>datos del personal</span>nombre, correo y rol de cada cuenta</span>
+              </div>
+              <div class="fila">
+                <span class="dato">bitacora.csv</span>
+                <span class="dato filas">3 412</span>
+                <span class="nota-fila">quién hizo qué, sobre qué registro y cuándo; es el registro del municipio</span>
+              </div>
+            </div>
+
+            <div class="manifiesto-grupo">
+              <h3 class="label">Padrón · <span class="dato">1</span> archivo · <span class="dato">1 842</span> filas</h3>
+              <div class="fila"><span class="dato">personas.csv</span><span class="dato filas">1 842</span></div>
+            </div>
+
+            <div class="manifiesto-grupo">
+              <h3 class="label">Territorio · <span class="dato">7</span> archivos · <span class="dato">5 285</span> filas</h3>
+              <div class="fila"><span class="dato">lugares.csv</span><span class="dato filas">96</span></div>
+              <div class="fila"><span class="dato">calles.csv</span><span class="dato filas">1 274</span></div>
+              <div class="fila"><span class="dato">domicilios.csv</span><span class="dato filas">1 631</span></div>
+              <div class="fila"><span class="dato">residencias.csv</span><span class="dato filas">2 087</span></div>
+              <div class="fila"><span class="dato">zonas.csv</span><span class="dato filas">12</span></div>
+              <div class="fila"><span class="dato">calles_de_zonas.csv</span><span class="dato filas">148</span></div>
+              <div class="fila"><span class="dato">eventos_de_calles.csv</span><span class="dato filas">37</span></div>
+            </div>
+
+            <div class="manifiesto-grupo">
+              <h3 class="label">Constancias · <span class="dato">4</span> archivos · <span class="dato">464</span> filas</h3>
+              <div class="fila"><span class="dato">constancias.csv</span><span class="dato filas">214</span></div>
+              <div class="fila"><span class="dato">reimpresiones.csv</span><span class="dato filas">19</span></div>
+              <div class="fila"><span class="dato">configuracion_de_documentos.csv</span><span class="dato filas">3</span></div>
+              <div class="fila"><span class="dato">folios_de_documentos.csv</span><span class="dato filas">228</span></div>
+            </div>
+
+            <div class="manifiesto-grupo">
+              <h3 class="label">Reportes · <span class="dato">3</span> archivos · <span class="dato">1 965</span> filas</h3>
+              <div class="fila"><span class="dato">reportes.csv</span><span class="dato filas">438</span></div>
+              <div class="fila"><span class="dato">movimientos_de_reportes.csv</span><span class="dato filas">1 106</span></div>
+              <div class="fila"><span class="dato">folios_de_reportes.csv</span><span class="dato filas">421</span></div>
+            </div>
+
+            <div class="manifiesto-grupo">
+              <h3 class="label">Intervenciones · <span class="dato">2</span> archivos · <span class="dato">134</span> filas</h3>
+              <div class="fila"><span class="dato">intervenciones.csv</span><span class="dato filas">63</span></div>
+              <div class="fila"><span class="dato">revisiones_de_intervenciones.csv</span><span class="dato filas">71</span></div>
+            </div>
+          </div>
+
+          <div class="linea-tiempo">
+            <p class="label">Además van <code class="dato">manifiesto.json</code> —municipio, marca y momento de la generación— y <code class="dato">escudo.png</code> si el municipio tiene escudo.</p>
+          </div>
+          <p class="label">La bitácora no tiene pantalla para consultarla: el <code class="dato">bitacora.csv</code> de este ZIP es la única forma de leerla, y aquí queda anotada cada descarga.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="barra-entrega">
+      <div class="identidad">
+        <p class="dato">motul-2026-11-21.zip · 2.4 MB</p>
+        <p class="label">Se arma ahora, con los datos de este momento.</p>
+      </div>
+      <a class="boton primaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-descarga"/></svg>Descargar el ZIP</a>
+    </div>
+    <div class="relleno-final"></div>
+  </main>
+</div>
+
+<section class="hoja" aria-labelledby="t-notas">
+  <div class="hoja-inner">
+    <div>
+      <h2 class="headline" id="t-notas">02 · Acta de entrega con la acción al pie</h2>
+      <p class="body apagada" style="max-width:70ch">La pantalla deja de ser un encabezado con un botón y una tarjeta de texto y pasa a ser una entrega: un documento de 880 px con nombre de archivo, conteos y manifiesto, y la descarga anclada al pie, siempre a la vista mientras se lee qué lleva. La lista es plana —un renglón por archivo, con el conteo a la derecha— y solo los dos conjuntos que traen datos de personas llevan explicación.</p>
+    </div>
+
+    <div class="notas">
+      <div class="nota">
+        <h3 class="title">Compromiso (tradeoff)</h3>
+        <p class="body apagada" style="margin:8px 0 0">El botón nunca se pierde: está al pie, pegado, así que en el teléfono queda bajo el pulgar y en escritorio se descarga desde cualquier punto del manifiesto; el mismo bloque es donde aparecen el progreso, el resultado y el error, sin mover nada de sitio. Cuesta dos cosas: la barra pegada gasta 88 px al final del área visible —tapa el último renglón mientras se recorre— y rompe la convención del panel de poner la acción primaria en el encabezado. La lista plana, además, pierde el agrupamiento por módulo de las tablas: quien busca «lo de constancias» lee nombres en vez de reconocer un grupo.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S10-S16)</h3>
+        <ul class="body">
+          <li><strong>S10.</strong> Aviso arriba del manifiesto, dentro del acta: nombra <code>usuarios.csv</code> y <code>bitacora.csv</code>, dice qué llevan y que el ZIP va completo; las dos filas lo repiten con la marca «datos del personal».</li>
+          <li><strong>S11.</strong> Cada renglón lleva su conteo y cada grupo su total; el acta cierra con <span class="dato">13 110</span> filas y <span class="dato">21</span> archivos, que es lo que dice la cabecera.</li>
+          <li><strong>S12.</strong> La cabecera y la barra llevan el nombre del archivo; la barra es el estado: preparando con progreso, descargado con hora, o error.</li>
+          <li><strong>S13.</strong> El fallo se pinta en la barra, dentro del panel, y dice que no se descargó nada.</li>
+          <li><strong>S14.</strong> El acta dice que la bitácora no tiene pantalla y que su CSV es la única forma de leerla.</li>
+          <li><strong>S15, S16.</strong> Sin permiso se conservan migaja y título, y se dice qué rol hace falta y a quién pedirlo.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Cómo se comporta</h3>
+        <ul class="body">
+          <li><strong>Un solo bloque de estado:</strong> la barra es lo único que cambia entre «listo», «preparando», «descargado» y «falló»; el acta de arriba no se mueve.</li>
+          <li><strong>Sin JavaScript:</strong> el botón es un <code>&lt;a download&gt;</code> y el manifiesto es HTML del servidor; el progreso es lo único que pide JavaScript y su ausencia no bloquea la descarga.</li>
+          <li><strong>Conteos que cuadran:</strong> <span class="dato">3 420 + 1 842 + 5 285 + 464 + 1 965 + 134 = 13 110</span>, y <span class="dato">19</span> CSV + <span class="dato">manifiesto.json</span> + <span class="dato">escudo.png</span> = <span class="dato">21</span> archivos.</li>
+          <li><strong>La sombra de la barra está justificada:</strong> <code>sombra-flotante</code> es la del sistema para lo que tapa contenido, y la barra lo tapa al desplazarse.</li>
+          <li><strong>Autochequeo:</strong> solo tokens de <code>design/system.md</code> —caliza fondo/lienzo/superficie/relleno/divisor/borde/apagada/tinta, marca y su mezcla de hover, señales éxito, aviso y error, y las tres sombras del sistema—; una familia con respaldo de sistema y mono del sistema para nombres y conteos. Sin blanco ni negro puros, sin degradados, sin tarjetas anidadas (el manifiesto vive en una zona <code>caliza-superficie</code>), sin sombra en el botón.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="muestras" aria-label="Estados de la barra">
+      <div class="muestra">
+        <h3 class="title">Preparando (S12)</h3>
+        <div class="barra-entrega">
+          <div class="identidad" style="flex:1">
+            <p class="dato">motul-2026-11-21.zip</p>
+            <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="19" aria-valuenow="12" aria-label="Conjuntos leídos"><span style="width:63%"></span></div>
+            <p class="label">Leyendo el padrón · <span class="dato">12 de 19</span> conjuntos. No cierre esta pestaña.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="muestra">
+        <h3 class="title">Descargado (S12)</h3>
+        <div class="barra-entrega">
+          <div class="identidad">
+            <p class="dato">motul-2026-11-21.zip · 2.4 MB</p>
+            <p class="label">Descargado hoy a las <span class="dato">10:43</span>. Quedó anotado en la bitácora.</p>
+          </div>
+          <a class="boton secundaria" href="#">Descargar otra vez</a>
+        </div>
+        <p class="label">Una segunda descarga es un archivo nuevo: mismo municipio, día y hora del momento en que se arma.</p>
+      </div>
+
+      <div class="muestra">
+        <h3 class="title">Falló (S13)</h3>
+        <div class="barra-entrega">
+          <div class="identidad" style="flex:1">
+            <p class="texto title" style="color:var(--color-senial-error)">No se pudo armar el archivo. No se descargó nada.</p>
+            <p class="label">Vuelva a intentarlo; si sigue fallando, avise al administrador municipal con la hora del intento.</p>
+          </div>
+          <a class="boton secundaria" href="#">Volver a intentar</a>
+        </div>
+      </div>
+
+      <div class="muestra">
+        <h3 class="title">Sin permiso (S15, S16)</h3>
+        <div class="permiso-marco">
+          <nav class="migaja" aria-label="Ruta">
+            <a href="#">Administración</a>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">Exportación</span>
+          </nav>
+          <h4 class="headline">Exportación</h4>
+          <div class="aviso aviso-aviso" role="status">
+            <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-error"/></svg>
+            <div>
+              <p class="texto">Su rol no tiene permiso para exportar los datos del ayuntamiento.</p>
+              <p class="label" style="margin-top:4px">Exportar lo hace el administrador municipal. Pídaselo a Ana Canché, admin@demo.example.com. El manifiesto tampoco se muestra: no hay nada que se pueda descargar desde aquí.</p>
+            </div>
+          </div>
+          <p><a class="enlace" href="#">Volver al padrón</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada">El acta se lee como un documento —nombre del archivo, conteos, aviso del personal y los 19 renglones— y la barra de la entrega queda pegada arriba de la navegación: se lee el manifiesto entero y se descarga sin volver a subir. El progreso y el error aparecen en esa misma barra.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <nav class="migaja" aria-label="Ruta">
+            <a href="#">Administración</a>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">Exportación</span>
+          </nav>
+          <h1 class="display">Exportación</h1>
+
+          <section class="tarjeta acta" aria-labelledby="ma-entrega">
+            <div class="acta-cabecera">
+              <div class="acta-nombre">
+                <h2 class="title" id="ma-entrega">Entrega de datos</h2>
+                <p class="archivo-grande">motul-2026-11-21.zip</p>
+              </div>
+              <div class="acta-meta">
+                <p class="dato"><span class="dato">21</span> archivos</p>
+                <p class="dato"><span class="dato">13 110</span> filas</p>
+                <p class="dato">2.4 MB</p>
+              </div>
+            </div>
+            <div class="acta-cuerpo">
+              <div class="aviso aviso-aviso" role="status">
+                <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personal"/></svg>
+                <div>
+                  <p class="texto">Lleva datos del personal.</p>
+                  <p class="detalle"><code>usuarios.csv</code>: nombre, correo y rol. <code>bitacora.csv</code>: quién hizo qué.</p>
+                </div>
+              </div>
+
+              <div class="zona">
+                <div class="manifiesto">
+                  <div class="manifiesto-grupo">
+                    <h3 class="label">Plataforma · <span class="dato">2</span> · <span class="dato">3 420</span> filas</h3>
+                    <div class="fila">
+                      <span class="dato">usuarios.csv</span><span class="dato filas">8</span>
+                      <span class="nota-fila"><span class="marca-dato"><svg fill="currentColor" aria-hidden="true"><use href="#i-personal"/></svg>personal</span></span>
+                    </div>
+                    <div class="fila"><span class="dato">bitacora.csv</span><span class="dato filas">3 412</span></div>
+                  </div>
+                  <div class="manifiesto-grupo">
+                    <h3 class="label">Padrón · <span class="dato">1</span> · <span class="dato">1 842</span> filas</h3>
+                    <div class="fila"><span class="dato">personas.csv</span><span class="dato filas">1 842</span></div>
+                  </div>
+                  <div class="manifiesto-grupo">
+                    <h3 class="label">Territorio · <span class="dato">7</span> · <span class="dato">5 285</span> filas</h3>
+                    <div class="fila"><span class="dato">lugares.csv</span><span class="dato filas">96</span></div>
+                    <div class="fila"><span class="dato">calles.csv</span><span class="dato filas">1 274</span></div>
+                    <div class="fila"><span class="dato">domicilios.csv</span><span class="dato filas">1 631</span></div>
+                    <div class="fila"><span class="dato">residencias.csv</span><span class="dato filas">2 087</span></div>
+                    <div class="fila"><span class="dato">zonas.csv</span><span class="dato filas">12</span></div>
+                    <div class="fila"><span class="dato">calles_de_zonas.csv</span><span class="dato filas">148</span></div>
+                    <div class="fila"><span class="dato">eventos_de_calles.csv</span><span class="dato filas">37</span></div>
+                  </div>
+                  <div class="manifiesto-grupo">
+                    <h3 class="label">Constancias · <span class="dato">4</span> · <span class="dato">464</span> filas</h3>
+                    <div class="fila"><span class="dato">constancias.csv</span><span class="dato filas">214</span></div>
+                    <div class="fila"><span class="dato">reimpresiones.csv</span><span class="dato filas">19</span></div>
+                    <div class="fila"><span class="dato">configuracion_de_documentos.csv</span><span class="dato filas">3</span></div>
+                    <div class="fila"><span class="dato">folios_de_documentos.csv</span><span class="dato filas">228</span></div>
+                  </div>
+                  <div class="manifiesto-grupo">
+                    <h3 class="label">Reportes · <span class="dato">3</span> · <span class="dato">1 965</span> filas</h3>
+                    <div class="fila"><span class="dato">reportes.csv</span><span class="dato filas">438</span></div>
+                    <div class="fila"><span class="dato">movimientos_de_reportes.csv</span><span class="dato filas">1 106</span></div>
+                    <div class="fila"><span class="dato">folios_de_reportes.csv</span><span class="dato filas">421</span></div>
+                  </div>
+                  <div class="manifiesto-grupo">
+                    <h3 class="label">Intervenciones · <span class="dato">2</span> · <span class="dato">134</span> filas</h3>
+                    <div class="fila"><span class="dato">intervenciones.csv</span><span class="dato filas">63</span></div>
+                    <div class="fila"><span class="dato">revisiones_de_intervenciones.csv</span><span class="dato filas">71</span></div>
+                  </div>
+                </div>
+                <p class="label">Más <code class="dato">manifiesto.json</code> y <code class="dato">escudo.png</code>: 21 archivos. La bitácora no tiene pantalla: se lee en su CSV.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="m-barra">
+          <div class="identidad">
+            <p class="dato">motul-2026-11-21.zip</p>
+            <p class="dato apagada">2.4 MB</p>
+          </div>
+          <a class="boton primaria ancho" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-descarga"/></svg>Descargar el ZIP</a>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#" aria-current="page"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-mas"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

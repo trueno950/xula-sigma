@@ -60,6 +60,7 @@ vi.mock("@/modules/marca/composicion", () => ({
 }));
 
 const { GET } = await import("./route");
+const { peticionDeDescarga } = await import("./peticionDePrueba");
 
 let gente: GentePorMunicipio;
 let carpeta = "";
@@ -136,7 +137,7 @@ describe("GET /exportacion/descarga contra la base", () => {
     conCabeceras(subdominioMotul);
     contextoActualMock.mockResolvedValue(adminDe("motul"));
 
-    const respuesta = await GET();
+    const respuesta = await GET(peticionDeDescarga());
 
     expect(respuesta.status).toBe(200);
     expect(respuesta.headers.get("Content-Type")).toBe("application/zip");
@@ -164,7 +165,7 @@ describe("GET /exportacion/descarga contra la base", () => {
     conCabeceras(subdominioTicul);
     contextoActualMock.mockResolvedValue(adminDe("ticul"));
 
-    const respuesta = await GET();
+    const respuesta = await GET(peticionDeDescarga());
 
     await zipDe(respuesta, "ticul.zip");
 
@@ -183,7 +184,7 @@ describe("GET /exportacion/descarga contra la base", () => {
       contextoDe(gente, "motul", "OPERADOR"),
     );
 
-    const respuesta = await GET();
+    const respuesta = await GET(peticionDeDescarga());
 
     expect(respuesta.status).toBe(403);
     // El cuerpo es el mensaje para la operadora, no un ZIP: el archivo no

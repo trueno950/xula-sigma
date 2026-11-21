@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Vista previa primero y secciones plegadas — Marca</title>
+<style>
+  /* Marca YA GUARDADA del municipio del demo: Verde + acento #e07800 (L2). */
+  :root {
+    --color-marca: oklch(0.44 0.1 155);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-acento: #e07800;
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-inhabilitado: oklch(0.68 0.007 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    --radio-sm: 6px;
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, h4, p, ul, li, fieldset, legend { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  fieldset { padding: 0; border: 0; }
+  a { color: inherit; }
+  svg { display: block; }
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); overflow-y: auto; }
+  .municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2; color: var(--color-caliza-tinta); text-decoration: none; }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--radio-md); font-weight: 600; font-size: 15px; color: var(--color-caliza-apagada); text-decoration: none; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radio-md); background: transparent; color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer; }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  .contenido { min-width: 0; width: 100%; max-width: 1040px; margin: 0 auto; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 24px; }
+  .migaja { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-caliza-apagada); }
+  .migaja a { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .cabecera { display: flex; flex-direction: column; gap: 4px; }
+  .cabecera .descripcion { max-width: 66ch; color: var(--color-caliza-apagada); }
+
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: var(--radio-md); border: 1px solid transparent; font: 600 15px/1 var(--fuente); cursor: pointer; text-decoration: none; white-space: nowrap; transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease); }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .boton.peligro { background: var(--color-caliza-lienzo); color: var(--color-senial-error); border-color: var(--color-senial-error); }
+  .boton.peligro:hover { background: var(--color-senial-error-suave); }
+  .ancho { width: 100%; }
+
+  .aviso { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: var(--radio-md); background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .aviso svg { flex: none; margin-top: 2px; }
+  .aviso .texto { color: var(--color-caliza-tinta); font-weight: 500; }
+  .aviso.aviso-aviso { background: var(--color-senial-aviso-suave); color: var(--color-senial-aviso); }
+  .aviso.aviso-error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+
+  .tarjeta { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); }
+  .form { display: flex; flex-direction: column; gap: 16px; }
+  .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+
+  /* la vista previa, primero */
+  .previa { display: flex; flex-direction: column; gap: 16px; padding: 20px; }
+  .previa-cabecera { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+  .mini { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; padding: 12px; border-radius: var(--radio-sm); background: var(--color-caliza-superficie); }
+  .mini-lateral { display: flex; flex-direction: column; gap: 8px; }
+  .mini-banda { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: var(--radio-sm); background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; }
+  .mini-item { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 8px; border-radius: var(--radio-sm); color: var(--color-caliza-apagada); font-weight: 600; font-size: 15px; }
+  .mini-item[aria-current] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .mini-item[aria-current] svg { color: var(--color-marca); }
+  .mini-cuerpo { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+  .mini-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 10px; border-radius: var(--radio-pill); background: var(--color-marca-suave); font-size: 13px; font-weight: 500; }
+  .acento-relleno { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radio-sm); background: var(--color-acento); color: var(--color-caliza-tinta); font-size: 13px; font-weight: 600; }
+  .acento-mal { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radio-sm); background: var(--color-acento); color: oklch(0.99 0 0); font-size: 13px; font-weight: 600; text-decoration: line-through; }
+  .medido { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 13px; color: var(--color-caliza-apagada); }
+  .medido .dato { color: var(--color-caliza-tinta); }
+  .previa-pie { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-top: 12px; border-top: 1px solid var(--color-caliza-divisor); }
+
+  /* índice de secciones plegables */
+  .indice > li + li { border-top: 1px solid var(--color-caliza-divisor); }
+  .fila > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto 24px; align-items: center; gap: 4px 16px; min-height: 72px; padding: 12px 20px; cursor: pointer; list-style: none; transition: background-color 150ms var(--ease); }
+  .fila > summary::-webkit-details-marker { display: none; }
+  .fila > summary:hover { background: var(--color-caliza-superficie); }
+  .fila[open] > summary { background: var(--color-caliza-superficie); }
+  .fila > summary .chevron { color: var(--color-caliza-apagada); transition: rotate 150ms var(--ease); }
+  .fila[open] > summary .chevron { rotate: 180deg; }
+  .fila-nombre { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .fila-nombre .label { max-width: 62ch; }
+  .escudo-mini { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--radio-sm); background: var(--color-marca-tenue); }
+  .dos-puntos { display: flex; align-items: center; gap: 6px; }
+  .punto { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--color-caliza-divisor); flex: none; }
+  .cuerpo-fila { display: flex; flex-direction: column; gap: 16px; padding: 16px 20px 20px; background: var(--color-caliza-superficie); border-top: 1px solid var(--color-caliza-divisor); }
+
+  .grupo-color { display: flex; flex-direction: column; gap: 8px; }
+  .opciones { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opcion { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo); font-size: 15px; cursor: pointer; }
+  .opcion[data-elegida] { border-color: var(--color-marca); background: var(--color-caliza-relleno); font-weight: 600; box-shadow: inset 0 0 0 1px var(--color-marca); }
+  .opcion input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .opcion:has(input:focus-visible) { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  .exacto { display: flex; align-items: center; gap: 8px; }
+  .exacto-muestra { width: 64px; height: 44px; border-radius: var(--radio-md); border: 1px solid var(--color-caliza-borde); background: var(--color-acento); }
+
+  /* muestra compacta, dentro de la sección de colores */
+  .muestra-inline { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: var(--radio-sm); background: var(--color-caliza-lienzo); }
+  .muestra-inline .fila-muestra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  .perdidas { display: flex; flex-direction: column; gap: 8px; }
+  .perdida { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 8px 12px; border-radius: var(--radio-sm); background: var(--color-caliza-lienzo); }
+  .perdida .par { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flecha { color: var(--color-caliza-apagada); }
+  .confirmacion { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; font-size: 15px; line-height: 1.4; }
+  .confirmacion input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--color-senial-error); }
+  .con-error .mensaje-error { color: var(--color-senial-error); }
+
+  .requisitos { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--color-caliza-apagada); }
+  .campo { display: flex; flex-direction: column; gap: 6px; }
+  .campo input[type="file"] { width: 100%; height: 44px; padding: 4px 12px; border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo); font: 15px var(--fuente); color: var(--color-caliza-tinta); }
+  .campo input[type="file"]::file-selector-button { margin-right: 12px; padding: 6px 12px; border: 0; border-radius: var(--radio-sm); background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); font: 500 13px var(--fuente); cursor: pointer; }
+  .campo.con-error input[type="file"] { border-color: var(--color-senial-error); }
+  .mensaje-error { display: flex; align-items: flex-start; gap: 6px; color: var(--color-senial-error); font-size: 13px; line-height: 1.4; }
+  .mensaje-error svg { flex: none; margin-top: 1px; }
+  .escudo-actual { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .escudo-vista { display: grid; place-items: center; width: 72px; height: 72px; border-radius: var(--radio-sm); background: var(--color-marca-tenue); flex: none; }
+  .divisor { height: 1px; background: var(--color-caliza-divisor); }
+
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+  .nota code { font-family: var(--fuente-dato); font-size: .875rem; }
+  .muestras { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+  .muestra { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); }
+  .permiso-marco { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: var(--radio-sm); background: var(--color-caliza-fondo); }
+
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono { width: 390px; height: 844px; overflow-y: auto; position: relative; border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo); box-shadow: var(--sombra-reposo); }
+  .m-municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor); font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none; }
+  .m-cuerpo { padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .m-cuerpo .previa { padding: 12px; }
+  .m-cuerpo .mini { grid-template-columns: 1fr; }
+  .m-cuerpo .mini-lateral .mini-item:not([aria-current]) { display: none; }
+  .m-cuerpo .fila > summary { grid-template-columns: minmax(0, 1fr) 20px; padding: 12px 16px; }
+  .m-cuerpo .fila > summary .chevron { grid-column: 2; grid-row: 1 / 3; }
+  .m-cuerpo .fila > summary .dos-puntos, .m-cuerpo .fila > summary .escudo-mini { grid-column: 1; justify-self: start; }
+  .m-cuerpo .cuerpo-fila { padding: 12px 16px 16px; }
+  .m-cuerpo .perdida { grid-template-columns: 1fr; }
+  .m-cuerpo .indice { border-radius: var(--radio-lg); }
+  .m-nav { position: sticky; bottom: 0; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); }
+  .m-nav a { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none; }
+  .m-nav a[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="page"] svg { color: var(--color-marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="oklch(0.44 0.1 155)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="oklch(0.99 0 0)" opacity=".85"/></symbol>
+    <symbol id="i-escudo-sin" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 20h14" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-suma" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="i-error" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zM11 6h2v7h-2zm0 9.4h2v2h-2z"/></symbol>
+    <symbol id="i-subir" viewBox="0 0 24 24"><path d="M11 8.4V21h2V8.4l3.2 3.2 1.4-1.4L12 4.6 6.4 10.2l1.4 1.4zM4 2.5h16V5H4z"/></symbol>
+    <symbol id="i-quitar" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4zM6 8h12l-.9 13H6.9zM10 11v7h1.8v-7zm2.2 0v7H14v-7z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M12 15.5 5.5 9l1.5-1.5 5 5 5-5L18.5 9z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Administrador municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <nav class="migaja" aria-label="Ruta">
+      <a href="#">Administración</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Marca</span>
+    </nav>
+
+    <header class="cabecera">
+      <h1 class="display">Marca del ayuntamiento</h1>
+      <p class="descripcion body">Cómo se ve Motul en el panel. Abajo hay tres secciones: el escudo, los colores y el restablecimiento.</p>
+    </header>
+
+    <div class="aviso" role="status">
+      <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#si-check"/></svg>
+      <p class="texto">Colores guardados.</p>
+    </div>
+
+    <section class="tarjeta previa" aria-labelledby="s-previa">
+      <div class="previa-cabecera">
+        <h2 class="headline" id="s-previa">Cómo se ve el panel hoy</h2>
+        <p class="label">Con el escudo y los colores guardados</p>
+      </div>
+
+      <div class="mini" aria-hidden="true">
+        <div class="mini-lateral">
+          <div class="mini-banda"><svg width="24" height="24"><use href="#i-escudo"/></svg>Motul</div>
+          <div class="mini-item" aria-current="page"><svg width="18" height="18" fill="currentColor"><use href="#i-personas"/></svg>Padrón</div>
+          <div class="mini-item"><svg width="18" height="18" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</div>
+          <div class="mini-item"><svg width="18" height="18" fill="currentColor"><use href="#i-marca"/></svg>Marca</div>
+        </div>
+        <div class="mini-cuerpo">
+          <div class="mini-fila">
+            <span class="boton primaria" style="pointer-events:none"><svg width="16" height="16" fill="currentColor"><use href="#i-suma"/></svg>Nueva persona</span>
+            <span class="chip">Estrato: Popular ×</span>
+          </div>
+          <div class="mini-fila">
+            <span class="title">Turno de hoy</span>
+          </div>
+          <div class="mini-fila">
+            <span class="acento-relleno">Énfasis secundario</span>
+            <span class="medido">tinta sobre el acento <span class="dato">5.6:1</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="previa-pie">
+        <p class="medido" style="max-width:34ch">El texto del botón principal lo elige el servidor, blanco o tinta, el que más contraste dé.</p>
+        <p class="medido" style="max-width:44ch">El acento va de relleno y el texto encima es tinta: <span class="dato">5.6:1</span>. Con blanco encima queda en <span class="dato">3.1:1</span>, por eso el acento no se usa como color de texto. <span style="display:inline-flex;vertical-align:middle"><span class="acento-mal">así no</span></span></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="s-secciones">
+      <div class="seccion-cabecera" style="display:flex;flex-direction:column;gap:2px;margin-bottom:12px">
+        <h2 class="headline" id="s-secciones">Secciones</h2>
+        <p class="label">Abra la que quiera cambiar. Solo hay una abierta a la vez; lo que se guarda sin abrir sigue igual.</p>
+      </div>
+
+      <ul class="tarjeta indice">
+        <li>
+          <details class="fila" name="seccionesDeMarca" open>
+            <summary>
+              <span class="fila-nombre">
+                <span class="title">Escudo del ayuntamiento</span>
+                <span class="label">escudo.png · 512 × 512 · 24 KiB · actualizado el 12 sep 2026</span>
+              </span>
+              <span class="escudo-mini"><svg width="28" height="28" aria-hidden="true"><use href="#i-escudo"/></svg></span>
+              <svg class="chevron" width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </summary>
+            <div class="cuerpo-fila">
+              <div class="escudo-actual">
+                <div class="escudo-vista"><svg width="48" height="48" aria-hidden="true"><use href="#i-escudo"/></svg></div>
+                <div>
+                  <p class="title">Escudo actual</p>
+                  <p class="label">El que se ve en la banda del municipio, arriba de la navegación. Sin escudo, la banda queda solo con el nombre.</p>
+                </div>
+              </div>
+
+              <form class="form" action="#" method="post" enctype="multipart/form-data">
+                <div class="campo con-error">
+                  <label class="label" for="escudo-archivo">Cambiar el escudo</label>
+                  <ul class="requisitos">
+                    <li><span>PNG</span></li>
+                    <li><span>hasta 1 MiB</span></li>
+                    <li><span>cuadrado: mismo ancho y alto</span></li>
+                    <li><span>se ve mejor a 512 × 512 px</span></li>
+                  </ul>
+                  <input id="escudo-archivo" name="escudo" type="file" accept="image/png" aria-invalid="true" aria-describedby="escudo-error-texto">
+                  <p class="mensaje-error" id="escudo-error-texto" role="alert">
+                    <svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-error"/></svg>
+                    El archivo pesa 2.4 MiB. El máximo son 1 MiB.
+                  </p>
+                  <p class="label">El archivo rechazado no queda elegido: el campo se vacía y el escudo actual sigue siendo el de arriba.</p>
+                </div>
+                <div class="acciones">
+                  <button class="boton primaria" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-subir"/></svg>Guardar escudo</button>
+                  <p class="label">Es un envío normal del formulario: funciona sin JavaScript.</p>
+                </div>
+              </form>
+
+              <div class="divisor" role="presentation"></div>
+
+              <form class="form" action="#" method="post">
+                <input type="hidden" name="ambito" value="escudo">
+                <label class="confirmacion">
+                  <input type="checkbox" name="confirmar" value="si" required>
+                  Confirmo quitar el escudo de Motul; la banda del municipio queda solo con el nombre.
+                </label>
+                <div class="acciones">
+                  <button class="boton peligro" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-quitar"/></svg>Quitar escudo</button>
+                  <p class="label">También exige la casilla el servidor: sin ella no cambia nada.</p>
+                </div>
+              </form>
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details class="fila" name="seccionesDeMarca">
+            <summary>
+              <span class="fila-nombre">
+                <span class="title">Colores del municipio</span>
+                <span class="label">Verde <span class="dato">oklch(0.44 0.1 155)</span> · acento <span class="dato">#e07800</span></span>
+              </span>
+              <span class="dos-puntos" aria-hidden="true">
+                <span class="punto" style="background:oklch(0.44 0.1 155)"></span>
+                <span class="punto" style="background:#e07800"></span>
+              </span>
+              <svg class="chevron" width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </summary>
+            <div class="cuerpo-fila">
+              <div class="muestra-inline" aria-label="Muestra de los colores elegidos">
+                <p class="label">Con estos colores se ve así</p>
+                <div class="fila-muestra">
+                  <span class="mini-item" aria-current="page" style="width:auto"><svg width="18" height="18" fill="currentColor"><use href="#i-personas"/></svg>Padrón</span>
+                  <span class="boton primaria" style="pointer-events:none">Nueva persona</span>
+                  <span class="acento-relleno">Énfasis</span>
+                  <span class="medido">tinta sobre el acento <span class="dato">5.6:1</span></span>
+                </div>
+              </div>
+
+              <form class="form" action="#" method="post">
+                <fieldset class="grupo-color">
+                  <legend class="label" style="margin-bottom:8px">Color primario</legend>
+                  <div class="opciones">
+                    <label class="opcion"><input type="radio" name="primario" value="oklch(0.42 0.12 25)"><span class="punto" style="background:oklch(0.42 0.12 25)" aria-hidden="true"></span>Guinda</label>
+                    <label class="opcion"><input type="radio" name="primario" value="oklch(0.47 0.14 35)"><span class="punto" style="background:oklch(0.47 0.14 35)" aria-hidden="true"></span>Ladrillo</label>
+                    <label class="opcion"><input type="radio" name="primario" value="oklch(0.84 0.14 90)"><span class="punto" style="background:oklch(0.84 0.14 90)" aria-hidden="true"></span>Oro</label>
+                    <label class="opcion" data-elegida><input type="radio" name="primario" value="oklch(0.44 0.1 155)" checked><span class="punto" style="background:oklch(0.44 0.1 155)" aria-hidden="true"></span>Verde</label>
+                    <label class="opcion"><input type="radio" name="primario" value="oklch(0.45 0.08 200)"><span class="punto" style="background:oklch(0.45 0.08 200)" aria-hidden="true"></span>Petróleo</label>
+                    <label class="opcion"><input type="radio" name="primario" value="oklch(0.8 0.09 230)"><span class="punto" style="background:oklch(0.8 0.09 230)" aria-hidden="true"></span>Celeste</label>
+                    <label class="opcion"><input type="radio" name="primario" value="oklch(0.45 0.13 250)"><span class="punto" style="background:oklch(0.45 0.13 250)" aria-hidden="true"></span>Azul</label>
+                    <label class="opcion"><input type="radio" name="primario" value="oklch(0.42 0.12 300)"><span class="punto" style="background:oklch(0.42 0.12 300)" aria-hidden="true"></span>Morado</label>
+                    <label class="opcion"><input type="radio" name="primario" value="libre">Otro color</label>
+                  </div>
+                </fieldset>
+
+                <fieldset class="grupo-color">
+                  <legend class="label" style="margin-bottom:8px">Color de acento</legend>
+                  <div class="opciones">
+                    <label class="opcion"><input type="radio" name="secundario" value="oklch(0.42 0.12 25)"><span class="punto" style="background:oklch(0.42 0.12 25)" aria-hidden="true"></span>Guinda</label>
+                    <label class="opcion"><input type="radio" name="secundario" value="oklch(0.84 0.14 90)"><span class="punto" style="background:oklch(0.84 0.14 90)" aria-hidden="true"></span>Oro</label>
+                    <label class="opcion"><input type="radio" name="secundario" value="oklch(0.47 0.14 35)"><span class="punto" style="background:oklch(0.47 0.14 35)" aria-hidden="true"></span>Ladrillo</label>
+                    <label class="opcion" data-elegida><input type="radio" name="secundario" value="libre" checked>Otro color</label>
+                  </div>
+                  <div class="exacto">
+                    <span class="exacto-muestra" aria-hidden="true"></span>
+                    <label class="label" for="secundarioLibre2">Color exacto</label>
+                    <input id="secundarioLibre2" type="color" value="#e07800" style="width:56px;height:44px;padding:2px;border:1px solid var(--color-caliza-borde);border-radius:var(--radio-md)">
+                    <span class="dato">#e07800</span>
+                  </div>
+                </fieldset>
+
+                <div class="acciones">
+                  <button class="boton primaria" type="submit">Guardar colores</button>
+                  <p class="label">Se aplican a todo el panel al guardar.</p>
+                </div>
+              </form>
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details class="fila" name="seccionesDeMarca">
+            <summary>
+              <span class="fila-nombre">
+                <span class="title">Restablecer colores</span>
+                <span class="label">Vuelve a Guinda y al acento por defecto de XULA. No toca el escudo.</span>
+              </span>
+              <span class="label">Borrar</span>
+              <svg class="chevron" width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </summary>
+            <div class="cuerpo-fila">
+              <form class="form" action="#" method="post">
+                <input type="hidden" name="ambito" value="colores">
+                <div class="perdidas">
+                  <p class="body">Se pierden los colores de este ayuntamiento:</p>
+                  <div class="perdida">
+                    <span class="title">Color primario</span>
+                    <span class="par">
+                      <span class="punto" style="background:oklch(0.44 0.1 155)" aria-hidden="true"></span>
+                      <span class="dato">Verde</span>
+                      <span class="flecha" aria-hidden="true">→</span>
+                      <span class="punto" style="background:oklch(0.42 0.12 25)" aria-hidden="true"></span>
+                      <span class="dato">Guinda (por defecto)</span>
+                    </span>
+                  </div>
+                  <div class="perdida">
+                    <span class="title">Color de acento</span>
+                    <span class="par">
+                      <span class="punto" style="background:#e07800" aria-hidden="true"></span>
+                      <span class="dato">#e07800</span>
+                      <span class="flecha" aria-hidden="true">→</span>
+                      <span class="punto" style="background:oklch(0.55 0.1 25)" aria-hidden="true"></span>
+                      <span class="dato">Acento por defecto de XULA</span>
+                    </span>
+                  </div>
+                </div>
+                <label class="confirmacion">
+                  <input type="checkbox" name="confirmar" value="si" required>
+                  Confirmo volver a los colores por defecto de XULA y perder los de arriba.
+                </label>
+                <div class="acciones">
+                  <button class="boton peligro" type="submit">Restablecer colores</button>
+                  <p class="label">Sin la casilla no cambia nada: el servidor también la exige.</p>
+                </div>
+              </form>
+            </div>
+          </details>
+        </li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<section class="hoja" aria-labelledby="t-notas">
+  <div class="hoja-inner">
+    <div>
+      <h2 class="headline" id="t-notas">02 · Vista previa primero y secciones plegadas</h2>
+      <p class="body apagada" style="max-width:70ch">La pantalla deja de ser un formulario largo y pasa a ser un taller: arriba, cómo se ve el panel con la marca guardada —la banda del municipio, el ítem activo, el botón y el acento—; abajo, tres filas plegables que se abren de a una. El orden cambia: el escudo sube al primer lugar, porque es lo que la operadora viene a cambiar y lo que hoy falla sin JavaScript.</p>
+    </div>
+
+    <div class="notas">
+      <div class="nota">
+        <h3 class="title">Compromiso (tradeoff)</h3>
+        <p class="body apagada" style="margin:8px 0 0">Nada compite con nada: la página mide menos de una pantalla con todo cerrado y cada fila dice su estado actual en una línea (el escudo, los dos colores), así que se revisa la marca sin abrir nada. Cuesta que elegir un color pida dos toques —abrir la fila y pulsar— y que el acento, el escudo y el restablecimiento vivan en cuerpos que no se ven a la vez: comparar «cómo era» con «cómo queda» obliga a cerrar una fila y abrir otra. Además el título de un cuerpo cerrado no muestra el selector exacto, así que un color libre se descubre a un toque de distancia.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S1-S5, S7-S9, S16)</h3>
+        <ul class="body">
+          <li><strong>S1.</strong> La muestra no es una columna que se queda atrás: la vista previa está arriba, y el cuerpo de «Colores» repite una muestra compacta —ítem activo, botón, acento— al lado de las paletas, así que en el teléfono se elige con la muestra adentro de la misma sección.</li>
+          <li><strong>S2.</strong> «Restablecer colores» es su propia fila con título, dice en el título qué se pierde, y en el cuerpo los dos pares <span class="dato">Verde → Guinda</span> y <span class="dato">#e07800 → acento por defecto</span>, con casilla obligatoria que el servidor exige otra vez.</li>
+          <li><strong>S3.</strong> La vista previa muestra el acento como relleno con tinta (5.6:1) y, al lado, el mismo acento con blanco encima (3.1:1) tachado: la muestra no promete lo que el color no da.</li>
+          <li><strong>S4.</strong> El aviso es una oración de la página; el código viaja aparte y la URL no lleva texto.</li>
+          <li><strong>S5.</strong> Tres secciones con título en mayúscula de sección: escudo, colores, restablecer. La fila plegada conserva su título a la vista.</li>
+          <li><strong>S7.</strong> El escudo actual se ve y tiene datos; «Quitar escudo» pide confirmación y, sin escudo, la fila dice «Sin escudo» y la acción desaparece.</li>
+          <li><strong>S8, S9.</strong> Requisitos antes del campo, y el error del archivo justo debajo, con el campo en rojo y vacío.</li>
+          <li><strong>S16.</strong> El permiso se explica con la migaja y el rol que hace falta, dentro del panel.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Cómo se comporta</h3>
+        <ul class="body">
+          <li><strong>Una sola fila abierta:</strong> <code>&lt;details name="seccionesDeMarca"&gt;</code>; sin JavaScript se abren y cierran igual, y cada cuerpo trae su propio POST nativo.</li>
+          <li><strong>La fila cerrada es el resumen:</strong> título, estado actual en una línea y, a la derecha, el escudo o los dos puntos de color; nada de eso pide abrir.</li>
+          <li><strong>Orden por consecuencia:</strong> escudo primero (E1-E4, lo que hoy se rompe sin JavaScript), colores después y restablecer al final —que es lo único destructivo de la pantalla—.</li>
+          <li><strong>La muestra es honesta, no decorativa:</strong> dice qué texto lleva el botón y cuál combinación no se usa, y los dos números son los medidos para el acento guardado de este municipio.</li>
+          <li><strong>Foco y tacto:</strong> <code>summary</code> de 72 px con hover propio, opciones de 44 px, casilla de 20 px con etiqueta clicable, anillo de foco de 2 px en marca.</li>
+          <li><strong>Autochequeo:</strong> solo tokens de <code>design/system.md</code> —caliza fondo/lienzo/superficie/relleno/divisor/borde/apagada/tinta, marca y sus mezclas, señales éxito, aviso y error—; una sola familia con respaldo de sistema y mono del sistema para datos. Sin blanco ni negro puros, sin degradados, sin tarjetas anidadas (las filas usan <code>caliza-superficie</code>, no otra tarjeta), sin sombra en botones, campos ni <code>summary</code>. <code>#e07800</code> es el dato guardado del municipio, no un token.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="muestras" aria-label="Estados">
+      <div class="muestra">
+        <h3 class="title">Restablecer sin la casilla</h3>
+        <div class="form">
+          <div class="perdidas">
+            <div class="perdida"><span class="title">Color primario</span><span class="par"><span class="punto" style="background:oklch(0.44 0.1 155)" aria-hidden="true"></span><span class="dato">Verde</span><span class="flecha" aria-hidden="true">→</span><span class="dato">Guinda</span></span></div>
+          </div>
+          <div class="con-error" style="display:flex;flex-direction:column;gap:6px">
+            <label class="confirmacion"><input type="checkbox" name="confirmar-demo" required aria-invalid="true" aria-describedby="conf-error">Confirmo volver a los colores por defecto de XULA.</label>
+            <p class="mensaje-error" id="conf-error" role="alert"><svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-error"/></svg>Para restablecer los colores, marque la casilla de confirmación.</p>
+          </div>
+          <button class="boton peligro" type="button">Restablecer colores</button>
+        </div>
+        <p class="label">El servidor responde lo mismo sin casilla: los colores siguen siendo Verde y #e07800.</p>
+      </div>
+
+      <div class="muestra">
+        <h3 class="title">Escudo, ya quitado</h3>
+        <div class="escudo-actual">
+          <div class="escudo-vista" style="background:var(--color-caliza-lienzo);border:1px dashed var(--color-caliza-borde);color:var(--color-caliza-apagada)"><svg width="36" height="36" aria-hidden="true" fill="currentColor"><use href="#i-escudo-sin"/></svg></div>
+          <div>
+            <p class="title">Sin escudo</p>
+            <p class="label">La banda del municipio muestra solo el nombre. No hay «Quitar escudo» porque no hay nada que quitar.</p>
+          </div>
+        </div>
+        <div class="aviso" role="status">
+          <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#si-check"/></svg>
+          <p class="texto">Se quitó el escudo.</p>
+        </div>
+        <p class="label">El aviso llega como código desde el <code>redirect</code>; recargar no lo repite.</p>
+      </div>
+
+      <div class="muestra">
+        <h3 class="title">Sin permiso (S15, S16)</h3>
+        <div class="permiso-marco">
+          <nav class="migaja" aria-label="Ruta">
+            <a href="#">Administración</a>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">Marca</span>
+          </nav>
+          <h4 class="headline">Marca del ayuntamiento</h4>
+          <div class="aviso aviso-aviso" role="status">
+            <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-error"/></svg>
+            <div>
+              <p class="texto">Su rol no tiene permiso para cambiar la marca del ayuntamiento.</p>
+              <p class="label" style="margin-top:4px">La marca la cambia el administrador municipal. Pídaselo a Ana Canché, admin@demo.example.com; si hace falta el permiso para su cuenta, se cambia en Usuarios.</p>
+            </div>
+          </div>
+          <p><a class="enlace" href="#">Volver al padrón</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada">La vista previa se acorta a la banda del municipio, el botón y el acento, y queda arriba. Las tres filas se leen sin abrir nada; al abrir «Colores», la muestra compacta viaja dentro de la misma sección, así que se elige con la muestra a la vista (S1) sin gastar una franja fija de pantalla.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <nav class="migaja" aria-label="Ruta">
+            <a href="#">Administración</a>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">Marca</span>
+          </nav>
+          <h1 class="display">Marca</h1>
+
+          <section class="tarjeta previa" aria-labelledby="m-previa">
+            <div class="previa-cabecera">
+              <h2 class="title" id="m-previa">Cómo se ve el panel hoy</h2>
+            </div>
+            <div class="mini" aria-hidden="true">
+              <div class="mini-lateral">
+                <div class="mini-banda"><svg width="24" height="24"><use href="#i-escudo"/></svg>Motul</div>
+                <div class="mini-item" aria-current="page"><svg width="18" height="18" fill="currentColor"><use href="#i-personas"/></svg>Padrón</div>
+              </div>
+              <div class="mini-cuerpo">
+                <span class="boton primaria" style="pointer-events:none">Nueva persona</span>
+                <span class="acento-relleno">Énfasis · tinta encima</span>
+              </div>
+            </div>
+          </section>
+
+          <ul class="tarjeta indice">
+            <li>
+              <details class="fila" name="seccionesMovil">
+                <summary>
+                  <span class="fila-nombre">
+                    <span class="title">Escudo del ayuntamiento</span>
+                    <span class="label">escudo.png · 512 × 512</span>
+                  </span>
+                  <span class="escudo-mini"><svg width="24" height="24" aria-hidden="true"><use href="#i-escudo"/></svg></span>
+                  <svg class="chevron" width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg>
+                </summary>
+                <div class="cuerpo-fila">
+                  <div class="escudo-actual">
+                    <div class="escudo-vista" style="width:56px;height:56px"><svg width="36" height="36" aria-hidden="true"><use href="#i-escudo"/></svg></div>
+                    <div><p class="title">Escudo actual</p><p class="label">24 KiB · actualizado el 12 sep 2026</p></div>
+                  </div>
+                  <ul class="requisitos"><li><span>PNG</span></li><li><span>hasta 1 MiB</span></li><li><span>cuadrado</span></li></ul>
+                  <input type="file" accept="image/png" aria-label="Cambiar el escudo">
+                  <button class="boton primaria ancho" type="button">Guardar escudo</button>
+                  <div class="divisor" role="presentation"></div>
+                  <label class="confirmacion"><input type="checkbox" name="mquitar" value="si" required>Confirmo quitar el escudo de Motul.</label>
+                  <button class="boton peligro ancho" type="button">Quitar escudo</button>
+                </div>
+              </details>
+            </li>
+            <li>
+              <details class="fila" name="seccionesMovil" open>
+                <summary>
+                  <span class="fila-nombre">
+                    <span class="title">Colores del municipio</span>
+                    <span class="label">Verde · acento <span class="dato">#e07800</span></span>
+                  </span>
+                  <span class="dos-puntos" aria-hidden="true"><span class="punto" style="background:oklch(0.44 0.1 155)"></span><span class="punto" style="background:#e07800"></span></span>
+                  <svg class="chevron" width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg>
+                </summary>
+                <div class="cuerpo-fila">
+                  <div class="muestra-inline" aria-label="Muestra de los colores elegidos">
+                    <p class="label">Con estos colores se ve así</p>
+                    <div class="fila-muestra">
+                      <span class="boton primaria" style="pointer-events:none">Nueva persona</span>
+                      <span class="acento-relleno">Énfasis</span>
+                    </div>
+                    <p class="medido">tinta sobre el acento <span class="dato">5.6:1</span> · el acento nunca va como color de texto</p>
+                  </div>
+                  <fieldset class="grupo-color">
+                    <legend class="label" style="margin-bottom:8px">Color primario</legend>
+                    <div class="opciones">
+                      <label class="opcion" data-elegida><input type="radio" name="mprimario" checked><span class="punto" style="background:oklch(0.44 0.1 155)" aria-hidden="true"></span>Verde</label>
+                      <label class="opcion"><input type="radio" name="mprimario"><span class="punto" style="background:oklch(0.42 0.12 25)" aria-hidden="true"></span>Guinda</label>
+                      <label class="opcion"><input type="radio" name="mprimario"><span class="punto" style="background:oklch(0.84 0.14 90)" aria-hidden="true"></span>Oro</label>
+                      <label class="opcion"><input type="radio" name="mprimario"><span class="punto" style="background:oklch(0.45 0.13 250)" aria-hidden="true"></span>Azul</label>
+                    </div>
+                  </fieldset>
+                  <fieldset class="grupo-color">
+                    <legend class="label" style="margin-bottom:8px">Color de acento</legend>
+                    <div class="opciones">
+                      <label class="opcion" data-elegida><input type="radio" name="msecundario" checked>Otro color</label>
+                      <label class="opcion"><input type="radio" name="msecundario"><span class="punto" style="background:oklch(0.84 0.14 90)" aria-hidden="true"></span>Oro</label>
+                    </div>
+                    <div class="exacto">
+                      <span class="exacto-muestra" aria-hidden="true"></span>
+                      <span class="label">Color exacto</span>
+                      <span class="dato">#e07800</span>
+                    </div>
+                  </fieldset>
+                  <button class="boton primaria ancho" type="button">Guardar colores</button>
+                </div>
+              </details>
+            </li>
+            <li>
+              <details class="fila" name="seccionesMovil">
+                <summary>
+                  <span class="fila-nombre">
+                    <span class="title">Restablecer colores</span>
+                    <span class="label">Vuelve a Guinda y al acento por defecto</span>
+                  </span>
+                  <span class="label">Borrar</span>
+                  <svg class="chevron" width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg>
+                </summary>
+                <div class="cuerpo-fila">
+                  <p class="body">Se pierden el Verde y el acento <span class="dato">#e07800</span>. El escudo no se toca.</p>
+                  <label class="confirmacion"><input type="checkbox" name="mconf" required>Confirmo volver a los colores por defecto de XULA.</label>
+                  <button class="boton peligro ancho" type="button">Restablecer colores</button>
+                </div>
+              </details>
+            </li>
+          </ul>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#" aria-current="page"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

@@ -54,6 +54,7 @@ vi.mock("@/modules/marca/composicion", () => ({
 }));
 
 const { GET } = await import("./route");
+const { peticionDeDescarga } = await import("./peticionDePrueba");
 
 let gente: GentePorMunicipio;
 
@@ -103,7 +104,7 @@ describe("GET /exportacion/descarga: escudo que falla", () => {
     const antes = await trazasDeExportacion();
     const registro = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const respuesta = await GET();
+    const respuesta = await GET(peticionDeDescarga());
 
     expect(respuesta.status).toBe(500);
     // Sin ZIP no hay traza: la lectura del escudo va adentro de la misma
