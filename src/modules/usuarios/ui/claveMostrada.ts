@@ -12,7 +12,7 @@ import { LARGO_MINIMO } from "@/shared/auth/reglasDeClave";
  * corto no es una clave que el sistema haya generado.
  */
 
-const MOTIVOS = ["alta", "restablecimiento"] as const;
+const MOTIVOS = ["alta", "restablecimiento", "reactivacion"] as const;
 
 export type MotivoDeClaveMostrada = (typeof MOTIVOS)[number];
 

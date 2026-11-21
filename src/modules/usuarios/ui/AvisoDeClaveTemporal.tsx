@@ -1,7 +1,7 @@
 import { Boton, CLASES_DE_ETIQUETA, CLASES_DE_TARJETA } from "@/shared/ui";
 import { descartarClaveMostradaAction } from "./actions/descartarClaveMostradaAction";
 import { BotonDeCopiar } from "./BotonDeCopiar";
-import type { ClaveMostrada } from "./claveMostrada";
+import type { ClaveMostrada, MotivoDeClaveMostrada } from "./claveMostrada";
 import { DescartarClaveAlMostrar } from "./DescartarClaveAlMostrar";
 import { tituloDelRol } from "./descripcionesDeRol";
 
@@ -31,6 +31,18 @@ import { tituloDelRol } from "./descripcionesDeRol";
 /** El id con el que «Copiar» encuentra la clave en el DOM. */
 const ID_DE_LA_CLAVE = "clave-entregada";
 
+/**
+ * El titulo dice **por que** la persona tiene una clave temporal: no es lo
+ * mismo una cuenta nueva que una que perdio la suya o una que vuelve de una
+ * baja (S3). Es el `motivo` que la accion guardo junto a la clave, no una
+ * deduccion de la pantalla.
+ */
+const ENCABEZADOS: Record<MotivoDeClaveMostrada, string> = {
+  alta: "Contraseña temporal",
+  restablecimiento: "Nueva contraseña temporal",
+  reactivacion: "Contraseña temporal de reactivación",
+};
+
 /** Lo que la tarjeta necesita de la cuenta: a quien se le entrega la clave. */
 export type UsuarioDeLaClave = {
   nombre: string;
@@ -46,12 +58,10 @@ export function AvisoDeClaveTemporal({
   mostrada: ClaveMostrada;
   usuario: UsuarioDeLaClave;
 }) {
-  const encabezado =
-    mostrada.motivo === "alta"
-      ? "Contraseña temporal"
-      : "Nueva contraseña temporal";
+  const encabezado = ENCABEZADOS[mostrada.motivo];
   // El correo y el rol del listado, en una linea: la clave puede estar en
-  // pantalla por un alta o por un restablecimiento y el aviso dice cual.
+  // pantalla por un alta, un restablecimiento o una reactivacion, y el aviso
+  // dice cual.
   const identidad = `${usuario.email} · rol ${tituloDelRol(usuario.rol)}`;
 
   return (

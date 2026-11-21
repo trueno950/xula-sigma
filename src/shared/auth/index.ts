@@ -43,11 +43,13 @@ export {
   verificarClave,
 } from "./contrasenia";
 export { manejarAuth } from "./instancia";
+export { CuentaActivaError, reactivarUsuario } from "./reactivacionDeUsuario";
 export {
   esRol,
   puedeAdministrarUsuarios,
   puedeDarDeBaja,
   puedeEscribir,
+  puedeReactivarCuenta,
   puedeRestablecerContrasenia,
   ROLES,
   type Rol,

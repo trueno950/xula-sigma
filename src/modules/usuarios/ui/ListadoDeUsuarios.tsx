@@ -38,7 +38,7 @@ export function ListadoDeUsuarios({
           <GrupoDeCuentas key={grupo.rol} grupo={grupo} actor={actor} />
         ))}
       </div>
-      <SeccionDeBajas bajas={resumen.bajas} />
+      <SeccionDeBajas bajas={resumen.bajas} actor={actor} />
     </div>
   );
 }
