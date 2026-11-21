@@ -54,6 +54,19 @@ const tablaDeOrden = (orden: OrdenDeConstancias | undefined) => {
   });
 };
 
+type TablaDeOrden = ReturnType<typeof tablaDeOrden>;
+
+/**
+ * Busca la columna entre las que la tabla declara, en vez de con
+ * `table.getColumn(clave)`: esa pide el id y, si no esta, escribe en consola
+ * `[Table] Column with id '…' does not exist` y devuelve `undefined`. El
+ * listado le pasa a proposito columnas que no ordena -`titular`-, asi que
+ * preguntarle por ellas ensuciaba el log del servidor sin decir nada del
+ * codigo.
+ */
+const columnaDeLaTabla = (table: TablaDeOrden, clave: string) =>
+  table.getAllFlatColumns().find((columna) => columna.id === clave);
+
 /**
  * Resuelve el estado de orden de cada columna con `@tanstack/table-core`
  * -el nucleo sin React de TanStack Table- corriendo en el Server Component
@@ -76,7 +89,7 @@ export function resolverOrdenDeColumnas(
   const table = tablaDeOrden(parametros.orden);
 
   return columnasBase.map((columna) => {
-    const columnaTanstack = table.getColumn(columna.clave);
+    const columnaTanstack = columnaDeLaTabla(table, columna.clave);
     if (!columnaTanstack?.getCanSort()) return columna;
 
     const siguiente = columnaTanstack.getNextSortingOrder() || "asc";
