@@ -113,23 +113,3 @@ export async function credencialDe(
 
   return fila ?? null;
 }
-
-/**
- * Marca la credencial como temporal. Se llama en la misma transaccion que
- * escribe el hash: una credencial temporal sin marca no caduca nunca, y una
- * marca sin su hash dejaria una clave propia tratada como temporal.
- */
-export const marcarClaveTemporal = (
-  tx: TransaccionTenant,
-  usuarioId: string,
-  emitidaEn: Date,
-) =>
-  tx
-    .update(cuentas)
-    .set({ claveTemporalEn: emitidaEn })
-    .where(
-      and(
-        eq(cuentas.userId, usuarioId),
-        eq(cuentas.providerId, PROVEEDOR_DE_CLAVE),
-      ),
-    );

@@ -97,7 +97,10 @@ toca datos, marcá el hallazgo.
    - `plataforma.sql` y `plataforma-admin.sql`: siembra del ayuntamiento
      reservado.
    - `restablecer-admin.sql`: destraba a un `ADMIN_MUNICIPAL` (decisión de la
-     tarea 4.16 de `auth-rbac`).
+     tarea 4.16 de `auth-rbac`). Deja una temporal nueva —24 h y cambio
+     obligatorio, marcada en la misma sentencia que el hash—: una clave que
+     dicta una operadora no es la clave de la persona, y sin la marca el
+     destrabe no destraba a quien traía la marca vencida.
    - `auditar-raices.sql`: lista los lugares que violan el MUST de raíz de
      `jerarquia-territorial`.
    - `reparar-raices-huerfanas.sql`: les da padre a los lugares de baja que

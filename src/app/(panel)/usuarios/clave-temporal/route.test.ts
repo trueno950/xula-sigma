@@ -108,6 +108,15 @@ describe("POST /usuarios/clave-temporal", () => {
     expect(cookies.borrar).not.toHaveBeenCalled();
   });
 
+  it("una cookie con forma invalida no entrega nada ni se borra", async () => {
+    cookies.guardadas.set(NOMBRE_COOKIE_CLAVE_MOSTRADA, "no-es-la-clave");
+
+    const respuesta = await POST(conElToken());
+
+    expect(respuesta.status).toBe(404);
+    expect(cookies.borrar).not.toHaveBeenCalled();
+  });
+
   /** La clave no se queda en ninguna cache intermedia. */
   it("ninguna respuesta se guarda en cache", async () => {
     const entregada = await POST(conElToken());

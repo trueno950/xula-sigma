@@ -51,6 +51,15 @@ const camposDeUsuario = {
  * clave es `/cambiar-contrasenia` (`cambiarClavePropia`), que hace las tres
  * cosas en una transaccion.
  *
+ * **`/verify-password` es un oraculo de la clave de la persona** y aqui no lo
+ * usa nadie: contesta «si» o «no» a la clave que le manden sobre la cuenta de
+ * la sesion (`api/routes/password.mjs:175-205` y `api/index.mjs:122`, los dos
+ * en 1.6.29), sin limite propio y sin dejar bitacora. Con el limitador de la libreria apagado (`RITMO_DE_BETTER_AUTH`)
+ * eran intentos infinitos contra la clave de quien tiene la sesion abierta, y
+ * el dia que una sesion se robe, adivinar la clave por ahi no cuenta ni se
+ * ve. Nuestra unica comprobacion de una clave es `verificarClave`, en el
+ * servidor y dentro de un caso de uso, que es lo que hace el cambio de clave.
+ *
  * **La sintaxis es de la libreria, no nuestra**: `disabledPaths` se evalua en
  * el `onRequest` del router y responde `404 Not Found` sin ejecutar el
  * endpoint (`better-auth/dist/api/index.mjs:163-167` en 1.6.29). El 404 es lo
@@ -60,7 +69,10 @@ const camposDeUsuario = {
  * No incluye `/update-user`: esa se rechaza solo para las cuentas marcadas,
  * y por que esta en `autoservicio.ts`.
  */
-export const RUTAS_DE_AUTOSERVICIO_APAGADAS = ["/change-password"] as const;
+export const RUTAS_DE_AUTOSERVICIO_APAGADAS = [
+  "/change-password",
+  "/verify-password",
+] as const;
 
 /**
  * El limitador de ritmo **de la libreria** queda apagado: el del municipio es
@@ -91,7 +103,8 @@ export const RUTAS_DE_AUTOSERVICIO_APAGADAS = ["/change-password"] as const;
  * adivinable es `/sign-in/email`, y lo limita el nuestro antes de construir la
  * instancia (`app/api/auth/[...all]/route.ts`); las demas rutas que la
  * libreria protegia estan cerradas (sin alta, sin envio de correo,
- * `/change-password` apagado, `/update-user` con su propio rechazo).
+ * `/change-password` y `/verify-password` apagados, `/update-user` con su
+ * propio rechazo).
  */
 export const RITMO_DE_BETTER_AUTH = { enabled: false } as const;
 
