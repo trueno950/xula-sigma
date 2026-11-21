@@ -1,4 +1,5 @@
 export { AccionesDeUsuario } from "./AccionesDeUsuario";
+export { AvisoDeAccion } from "./AvisoDeAccion";
 export { AvisoDeClaveTemporal } from "./AvisoDeClaveTemporal";
 export {
   type ConfirmacionDeUsuarios,
@@ -6,6 +7,7 @@ export {
   rutaDelAltaDeUsuario,
   rutaDeUsuarios,
 } from "./actions/destinoDeUsuarios";
+export { avisoPendienteDeLaPeticion } from "./avisoPendienteEnCookie";
 export type {
   ClaveMostrada,
   MotivoDeClaveMostrada,

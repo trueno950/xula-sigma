@@ -4,11 +4,11 @@ import { avisoDeConfirmacion } from "./avisoDeConfirmacion";
 /**
  * S11 de `usuarios-ux` (hallazgo R1): el exito de un alta o un
  * restablecimiento solo se anuncia junto a la contrasenia nueva. Si la clave
- * ya no se puede ver, el aviso lo dice y manda a restablecer; la baja, que no
- * emite clave, confirma siempre.
+ * ya no se puede ver, el aviso lo dice y manda a restablecer.
  *
- * Regresion del verificador: el mapeo completo, incluido el caso sin `ok` y
- * la baja en sus dos estados.
+ * La baja ya no pasa por aca (S13 y S14): su aviso dice de quien y de cuando,
+ * va en una cookie de un solo uso y no en la URL, y lo pinta
+ * `AvisoDeAccion.tsx`. Un `?ok=baja` escrito a mano no anuncia nada.
  */
 
 describe("avisoDeConfirmacion", () => {
@@ -50,17 +50,12 @@ describe("avisoDeConfirmacion", () => {
     });
   });
 
-  it("la baja confirma siempre: no emite clave que mostrar", () => {
-    const confirmada = {
-      tono: "exito",
-      texto: "La persona quedó dada de baja y ya no puede entrar.",
-    };
-
-    expect(avisoDeConfirmacion({ ok: "baja", hayClaveVisible: true })).toEqual(
-      confirmada,
-    );
-    expect(avisoDeConfirmacion({ ok: "baja", hayClaveVisible: false })).toEqual(
-      confirmada,
-    );
+  it("la baja no se anuncia por la URL: la anuncia el aviso de un solo uso", () => {
+    expect(
+      avisoDeConfirmacion({ ok: "baja", hayClaveVisible: true }),
+    ).toBeNull();
+    expect(
+      avisoDeConfirmacion({ ok: "baja", hayClaveVisible: false }),
+    ).toBeNull();
   });
 });

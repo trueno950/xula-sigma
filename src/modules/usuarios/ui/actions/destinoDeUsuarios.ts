@@ -6,12 +6,15 @@ import { CODIGOS_DE_ERROR, type CodigoDeError } from "../mensajesDeError";
  *
  * Pura y exportada para poder probar el destino sin `redirect`, que es de
  * Next y no nuestro —misma forma que `volverAlArbol` de territorio—. Todo lo
- * que viaja en la URL es vocabulario cerrado: la confirmacion, el token de
- * la clave mostrada y el **codigo** de error, que la pantalla traduce
- * (`mensajesDeError.ts`). Nunca texto del operador.
+ * que viaja en la URL es vocabulario cerrado: la confirmacion, los tokens de
+ * la clave mostrada y del aviso de la baja, y el **codigo** de error, que la
+ * pantalla traduce (`mensajesDeError.ts`). Nunca texto del operador, ni un
+ * nombre.
  *
- * `clave` es el token de la contrasenia mostrada, **no la contrasenia**
- * (S4). Sin `clave` la pantalla no lee la cookie.
+ * `clave` y `aviso` son tokens opacos, **no** la contrasenia ni el nombre de
+ * una persona (S4 y S13). Sin ellos la pantalla no lee la cookie que los
+ * acompaña: recargar o volver con el boton de atras no muestra una clave que
+ * ya se vio ni anuncia una baja que no ocurrio en esta visita (S14).
  */
 
 const CONFIRMACIONES = ["alta", "restablecimiento", "baja"] as const;
@@ -20,11 +23,12 @@ export type ConfirmacionDeUsuarios = (typeof CONFIRMACIONES)[number];
 
 export type ParametrosDeUsuarios = {
   clave?: string | undefined;
+  aviso?: string | undefined;
   ok?: ConfirmacionDeUsuarios | undefined;
   error?: CodigoDeError | undefined;
 };
 
-const CLAVES_DE_CONSULTA = ["clave", "ok", "error"] as const;
+const CLAVES_DE_CONSULTA = ["clave", "aviso", "ok", "error"] as const;
 
 export const rutaDeUsuarios = (datos: ParametrosDeUsuarios): string => {
   const parametros = new URLSearchParams();
@@ -68,6 +72,7 @@ export const rutaDelAltaDeUsuario = (datos: {
  */
 export const esquemaDeParametros = z.object({
   clave: z.uuid().optional().catch(undefined),
+  aviso: z.uuid().optional().catch(undefined),
   ok: z.enum(CONFIRMACIONES).optional().catch(undefined),
   error: z.enum(CODIGOS_DE_ERROR).optional().catch(undefined),
 });

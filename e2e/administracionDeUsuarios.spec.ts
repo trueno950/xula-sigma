@@ -39,6 +39,14 @@ const filaDe = (page: Parameters<typeof accederAMotul>[0]) =>
   page.getByRole("listitem").filter({ hasText: correo });
 
 /**
+ * S2 de `usuarios-ux`: la cuenta entera es el acordeón, así que sus acciones
+ * existen pero no se pueden pulsar hasta abrirla.
+ */
+const abrirFila = async (page: Parameters<typeof accederAMotul>[0]) => {
+  await filaDe(page).locator("summary").click();
+};
+
+/**
  * Un acceso por test y la ventana de ritmo por correo es de cinco intentos
  * cada quince minutos: mismo `beforeEach` que `marca.spec.ts`.
  */
@@ -117,6 +125,7 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
   );
 
   // S5: restablecer muestra una contrasenia nueva, y es la que queda.
+  await abrirFila(page);
   await filaDe(page)
     .getByRole("button", { name: "Restablecer contraseña" })
     .click();
@@ -137,16 +146,19 @@ test("el administrador da de alta, restablece y da de baja sin que la contraseñ
 
   // S6 y S12: la baja se confirma con una casilla que nombra a la persona,
   // y deja la fila sin acciones.
+  await abrirFila(page);
   await filaDe(page)
     .getByRole("checkbox", { name: `Confirmo dar de baja a ${NOMBRE}.` })
     .check();
   await filaDe(page).getByRole("button", { name: "Dar de baja" }).click();
-  await page.waitForURL(/\/usuarios\?ok=baja$/);
 
+  // S13: el aviso nombra a la persona, y el nombre no viaja en la URL; solo
+  // el token que el proxy consume en esta misma petición (S14).
+  await page.waitForURL(/\/usuarios\?aviso=[0-9a-f-]+&ok=baja$/);
   await expect(
-    page.getByText("La persona quedó dada de baja y ya no puede entrar."),
+    page.getByText(new RegExp(`Se dio de baja a ${NOMBRE}`)),
   ).toBeVisible();
-  await expect(filaDe(page).getByText("De baja")).toBeVisible();
+  await expect(filaDe(page)).toContainText("de baja desde el");
   await expect(
     filaDe(page).getByRole("button", { name: "Dar de baja" }),
   ).toHaveCount(0);
@@ -173,6 +185,12 @@ test("la fila del propio administrador no ofrece restablecer su contraseña", as
   const propia = page.getByRole("listitem").filter({ hasText: CORREO });
 
   await expect(propia).toHaveCount(1);
+  // S1: la propia cuenta lo dice bajo el correo, y al abrirla explica por qué.
+  await expect(propia).toContainText("· su cuenta");
+  await propia.locator("summary").click();
+  await expect(propia).toContainText(
+    "Sin acciones sobre su propia cuenta: no se restablece su contraseña desde aquí",
+  );
   await expect(
     propia.getByRole("button", { name: "Restablecer contraseña" }),
   ).toHaveCount(0);

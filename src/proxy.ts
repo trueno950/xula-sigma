@@ -1,11 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
-  CABECERA_CLAVE_MOSTRADA,
-  claveATrasladar,
-  NOMBRE_COOKIE_CLAVE_MOSTRADA,
-  RUTA_COOKIE_CLAVE_MOSTRADA,
-} from "@/modules/usuarios/ui/claveMostradaEnTransito";
-import {
   CABECERA_RUTA,
   CABECERA_SUBDOMINIO,
   CABECERA_SUPERFICIE,
@@ -22,6 +16,7 @@ import {
   leerSubdominio,
   type Subdominio,
 } from "@/shared/tenancy/subdominio";
+import { CABECERAS_DE_TRASLADO, trasladosDeLaPeticion } from "./proxyTraslados";
 
 /**
  * Resolucion de tenant en el borde del request.
@@ -119,7 +114,7 @@ export async function proxy(request: NextRequest) {
    */
   cabeceras.delete(CABECERA_SUPERFICIE);
   cabeceras.delete(CABECERA_SUBDOMINIO);
-  cabeceras.delete(CABECERA_CLAVE_MOSTRADA);
+  for (const cabecera of CABECERAS_DE_TRASLADO) cabeceras.delete(cabecera);
   cabeceras.set(CABECERA_RUTA, request.nextUrl.pathname);
 
   const resultado = await resolverHost(request);
@@ -147,28 +142,28 @@ export async function proxy(request: NextRequest) {
   cabeceras.set(CABECERA_SUBDOMINIO, resultado.subdominio);
 
   /**
-   * S2: aca se consume la cookie en el GET real, el camino sin JavaScript. El
-   * camino con JavaScript, donde el `Set-Cookie` de este mismo borrado no
-   * llega al navegador, lo explica `AGENTS.md` en la nota de `usuarios`. El
-   * valor viaja en una cabecera que el cliente no puede escribir: la que
-   * mande se borro arriba.
+   * S2, S13 y S14: aca se consumen las cookies de un solo uso en el GET real,
+   * el camino sin JavaScript. El camino con JavaScript, donde el `Set-Cookie`
+   * de este mismo borrado no llega al navegador, lo explica `AGENTS.md` en la
+   * nota de `usuarios`. El valor viaja en una cabecera que el cliente no
+   * puede escribir: la que mande se borro arriba. Que se traslada y cuando lo
+   * decide `proxyTraslados.ts`.
    */
-  const clave = claveATrasladar({
+  const traslados = trasladosDeLaPeticion({
     metodo: request.method,
     ruta: request.nextUrl.pathname,
-    token: request.nextUrl.searchParams.get("clave") ?? undefined,
-    cookie: request.cookies.get(NOMBRE_COOKIE_CLAVE_MOSTRADA)?.value,
+    consulta: request.nextUrl.searchParams,
+    leerCookie: (nombre) => request.cookies.get(nombre)?.value,
   });
 
-  if (clave) cabeceras.set(CABECERA_CLAVE_MOSTRADA, clave);
+  for (const traslado of traslados) {
+    cabeceras.set(traslado.cabecera, traslado.valor);
+  }
 
   const respuesta = NextResponse.next({ request: { headers: cabeceras } });
 
-  if (clave) {
-    respuesta.cookies.delete({
-      name: NOMBRE_COOKIE_CLAVE_MOSTRADA,
-      path: RUTA_COOKIE_CLAVE_MOSTRADA,
-    });
+  for (const traslado of traslados) {
+    respuesta.cookies.delete({ name: traslado.cookie, path: traslado.ruta });
   }
 
   // Solo se refirma en la rama directa. Refirmar tambien en la rama del

@@ -67,6 +67,7 @@ describe("listarUsuarios", () => {
       email: "admin_municipal@motul.example.com",
       rol: "ADMIN_MUNICIPAL",
       dadoDeBaja: false,
+      bajaEn: null,
     });
   });
 
@@ -79,6 +80,8 @@ describe("listarUsuarios", () => {
     const dadaDeBaja = filas.find((fila) => fila.id === gente.motul.CONSULTA);
 
     expect(dadaDeBaja?.dadoDeBaja).toBe(true);
+    // S5 de `usuarios-ux`: la fila de una cuenta de baja dice desde cuando.
+    expect(dadaDeBaja?.bajaEn).toBeInstanceOf(Date);
     expect(filas).toHaveLength(4);
   });
 
@@ -100,6 +103,7 @@ describe("listarUsuarios", () => {
 
     for (const fila of filas) {
       expect(Object.keys(fila).sort()).toEqual([
+        "bajaEn",
         "dadoDeBaja",
         "email",
         "id",

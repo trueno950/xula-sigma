@@ -27,6 +27,7 @@ const fila: UsuarioDelPanel = {
   email: "operadora@motul.example.com",
   rol: "OPERADOR",
   dadoDeBaja: false,
+  bajaEn: null,
 };
 
 beforeEach(() => {

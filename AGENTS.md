@@ -595,6 +595,36 @@ Notas que no caben en la tabla, una por fila que las necesita:
   bitacora y la cuenta sigue activa. Una baja sin ella responde «Para dar de
   baja a la persona, marque la casilla de confirmación.».
 
+  **El aviso de la baja no vuelve a anunciarse al recargar** (S13 y S14 de
+  `usuarios-ux`; **este es el unico lugar donde esto se cuenta**). La baja
+  responde `/usuarios?aviso=<token>&ok=baja`: el nombre y la fecha de la
+  persona **no viajan en la URL** -son datos personales, y la URL queda en el
+  historial y en el log de accesos-, viaja un `usuarioId` en una cookie
+  httpOnly de 120 segundos, y el nombre y `bajaEn` los pone la pantalla desde
+  el listado que esa misma peticion leyo bajo RLS. Es el mismo transporte de
+  un solo uso que el de `?clave=`, con su propio par de nombres: la cookie
+  `aviso-de-usuarios`, la cabecera `x-xula-aviso-de-usuarios` y
+  `avisoATrasladar` en `src/modules/usuarios/ui/avisoEnTransito.ts`. Las dos
+  cabeceras se borran de la peticion entrante en `proxy.ts` antes de escribir
+  las suyas (`proxyTraslados.ts`, `CABECERAS_DE_TRASLADO`): sin eso, una
+  cabecera inventada mas un `?aviso=` inventado anunciarian una baja que no
+  ocurrio. Consumida la cookie, recargar o volver con el boton de atras no
+  encuentra nada que anunciar; por eso `avisoDeConfirmacion` ya no tiene
+  texto para `?ok=baja` y un `?ok=baja` escrito a mano no anuncia nada.
+
+  **Con JavaScript el proxy solo no alcanza, y es el mismo hueco que cerro
+  T2 para la clave.** El primer pintado es el render sintetico del
+  `redirect` de la Server Action, y el `Set-Cookie` de ese borrado el
+  navegador no lo guarda: la cookie sobrevive y una recarga inmediata —un GET
+  nuevo con el mismo `?aviso=`— vuelve a pintar el aviso (lo encontro el
+  E2E). Por eso el aviso monta `DescartarAvisoAlMostrar`: deja la URL sin
+  `aviso` ni `ok` con `window.history.replaceState` y borra la cookie con un
+  `POST` a `/usuarios/aviso`, un Route Handler y no una Server Action —una
+  Server Action que toca cookies redibuja la ruta sin la cabecera del
+  proxy—. Los dos `POST` de descarte comparten borde en
+  `src/modules/usuarios/ui/routeDeDescarte.ts`. Sin JavaScript el proxy sigue
+  siendo el unico que la consume.
+
   **La contraseña temporal no vuelve por `?clave=`** (S4 de
   `administracion-de-usuarios` y S9 de `usuarios-ux`; **este es el único
   lugar donde esto se cuenta**: los demás archivos apuntan acá). El redirect

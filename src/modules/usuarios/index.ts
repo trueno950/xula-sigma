@@ -34,7 +34,9 @@ export type {
   ConfirmacionDeUsuarios,
 } from "./ui";
 export {
+  AvisoDeAccion,
   AvisoDeClaveTemporal,
+  avisoPendienteDeLaPeticion,
   CODIGOS_DE_ERROR,
   claveMostradaDeLaPeticion,
   esCodigoDeError,

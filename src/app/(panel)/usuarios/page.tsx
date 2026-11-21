@@ -1,7 +1,9 @@
 import { Plus } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import {
+  AvisoDeAccion,
   AvisoDeClaveTemporal,
+  avisoPendienteDeLaPeticion,
   claveMostradaDeLaPeticion,
   esquemaDeParametros,
   ListadoDeUsuarios,
@@ -37,13 +39,19 @@ type Props = {
  * (`claveMostradaEnTransito.ts`, S4 y S2). Sin el token en la URL no hay
  * cabecera, asi que volver a esta pantalla no la muestra.
  *
+ * El aviso de la baja funciona igual (S13 y S14): `?aviso=` trae el token y
+ * el proxy puso en una cabecera el `usuarioId` de quien se dio de baja, ya
+ * consumida la cookie. El nombre y la fecha salen del listado que esta misma
+ * pantalla leyo bajo RLS: no viajan en la URL ni en la cookie.
+ *
  * `?error=` trae un codigo del vocabulario de `mensajesDeError.ts`, nunca el
  * texto del error: la URL la escribe cualquiera y reflejarla seria pintar
  * texto ajeno.
  *
  * La confirmacion de `?ok=` pasa por `avisoDeConfirmacion`: el exito de un
  * alta o un restablecimiento solo se anuncia junto a la contrasenia nueva,
- * porque el aviso existe por esa clave (S11).
+ * porque el aviso existe por esa clave (S11). La baja no pasa por ahi: la
+ * anuncia `AvisoDeAccion`, y solo cuando su aviso llego en esta peticion.
  */
 export default async function PaginaDeUsuarios({ searchParams }: Props) {
   const contexto = await contextoActual();
@@ -68,6 +76,13 @@ export default async function PaginaDeUsuarios({ searchParams }: Props) {
   const nombre = mostrada
     ? usuarios.find((usuario) => usuario.id === mostrada.usuarioId)?.nombre
     : undefined;
+  const aviso =
+    parametros.ok === "baja"
+      ? await avisoPendienteDeLaPeticion(parametros.aviso)
+      : null;
+  const avisada = aviso
+    ? usuarios.find((usuario) => usuario.id === aviso.usuarioId)
+    : undefined;
   // `?error=` lleva un codigo, no texto: la pantalla pone el mensaje
   // (`mensajesDeError.ts`). Un codigo desconocido no muestra nada.
   const mensaje = mensajeDeError(parametros.error);
@@ -90,6 +105,13 @@ export default async function PaginaDeUsuarios({ searchParams }: Props) {
       }
     >
       {mensaje ? <Aviso tono="error">{mensaje}</Aviso> : null}
+      {aviso && avisada ? (
+        <AvisoDeAccion
+          nombre={avisada.nombre}
+          bajaEn={avisada.bajaEn}
+          token={aviso.token}
+        />
+      ) : null}
       {confirmacion ? (
         <Aviso tono={confirmacion.tono}>{confirmacion.texto}</Aviso>
       ) : null}

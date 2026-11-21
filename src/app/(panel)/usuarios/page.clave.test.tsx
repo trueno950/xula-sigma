@@ -18,6 +18,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const claveMostradaMock = vi.hoisted(() => vi.fn());
+const avisoPendienteMock = vi.hoisted(() => vi.fn());
 const listarUsuariosMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: vi.fn(), redirect: vi.fn() }));
@@ -27,6 +28,7 @@ vi.mock("@/shared/auth", async (importOriginal) => ({
 }));
 vi.mock("@/modules/usuarios", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/usuarios")>()),
+  avisoPendienteDeLaPeticion: avisoPendienteMock,
   claveMostradaDeLaPeticion: claveMostradaMock,
   listarUsuarios: listarUsuariosMock,
 }));
@@ -70,9 +72,11 @@ beforeEach(() => {
       email: "operadora@motul.example.com",
       rol: "OPERADOR",
       dadoDeBaja: false,
+      bajaEn: null,
     },
   ]);
   claveMostradaMock.mockResolvedValue(null);
+  avisoPendienteMock.mockResolvedValue(null);
 });
 
 describe("la confirmacion del restablecimiento", () => {
@@ -108,10 +112,10 @@ describe("la confirmacion del restablecimiento", () => {
     expect(pantalla).not.toContain("La cuenta quedó creada.");
   });
 
-  it("la baja no depende de nada en pantalla: confirma siempre", async () => {
+  it("la baja no depende de nada en pantalla: la anuncia el aviso de un solo uso", async () => {
     const pantalla = await html({ ok: "baja" });
 
-    expect(pantalla).toContain(
+    expect(pantalla).not.toContain(
       "La persona quedó dada de baja y ya no puede entrar.",
     );
   });
