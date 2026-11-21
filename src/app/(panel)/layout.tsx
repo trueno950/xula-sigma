@@ -1,7 +1,11 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { contextoActual } from "@/shared/auth";
+import {
+  contextoActual,
+  contextoDeCambioDeClave,
+  RUTA_DE_CAMBIO_DE_CLAVE,
+} from "@/shared/auth";
 import { leerMarca } from "@/shared/marca";
 import { CABECERA_RUTA } from "@/shared/tenancy/cabeceras";
 import {
@@ -55,7 +59,13 @@ export default async function LayoutDePanel({
   const ayuntamiento = await exigirAyuntamiento();
   const contexto = await contextoActual();
 
-  if (!contexto) redirect("/acceso");
+  // S2: una sesion abierta con la temporal no puede usar el panel todavia,
+  // asi que va al cambio obligatorio en vez de al acceso.
+  if (!contexto) {
+    if (await contextoDeCambioDeClave()) redirect(RUTA_DE_CAMBIO_DE_CLAVE);
+
+    redirect("/acceso");
+  }
 
   const marca = leerMarca(ayuntamiento.marca);
   const rol = etiquetaDeRol(contexto.usuario.rol);

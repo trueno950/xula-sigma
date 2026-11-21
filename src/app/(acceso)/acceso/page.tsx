@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { contextoActual } from "@/shared/auth";
+import {
+  contextoActual,
+  contextoDeCambioDeClave,
+  RUTA_DE_CAMBIO_DE_CLAVE,
+} from "@/shared/auth";
 import { leerMarca } from "@/shared/marca";
 import { ayuntamientoActual } from "@/shared/tenancy/contexto";
 import { FormularioDeAcceso } from "./FormularioDeAcceso";
@@ -23,6 +27,10 @@ export default async function PaginaDeAcceso() {
   // Quien ya tiene sesion no ve la pantalla de acceso. Se verifica en
   // servidor: esconder el formulario en el cliente no es autorizacion.
   if (await contextoActual()) redirect("/");
+
+  // S2: con una temporal puesta no hay formulario que ofrecer —entrar de
+  // nuevo con ella devolveria a la misma pantalla—, sino el cambio.
+  if (await contextoDeCambioDeClave()) redirect(RUTA_DE_CAMBIO_DE_CLAVE);
 
   const ayuntamiento = await ayuntamientoActual();
   const { escudo } = leerMarca(ayuntamiento.marca);

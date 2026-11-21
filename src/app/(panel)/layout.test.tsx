@@ -7,6 +7,7 @@ const redirectMock = vi.hoisted(() =>
   }),
 );
 const contextoActualMock = vi.hoisted(() => vi.fn());
+const contextoDeCambioMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/headers", () => ({
   headers: async () => new Headers({ "x-xula-ruta": "/padron" }),
@@ -18,7 +19,11 @@ vi.mock("next/navigation", () => ({
   redirect: redirectMock,
   usePathname: () => null,
 }));
-vi.mock("@/shared/auth", () => ({ contextoActual: contextoActualMock }));
+vi.mock("@/shared/auth", () => ({
+  contextoActual: contextoActualMock,
+  contextoDeCambioDeClave: contextoDeCambioMock,
+  RUTA_DE_CAMBIO_DE_CLAVE: "/cambiar-contrasenia",
+}));
 vi.mock("@/shared/tenancy/contexto", () => ({
   superficieActual: async () => "ayuntamiento",
   exigirAyuntamiento: async () => ({ nombre: "Motul", marca: {} }),
@@ -32,6 +37,8 @@ const pintar = async () =>
 describe("layout del panel", () => {
   beforeEach(() => {
     contextoActualMock.mockReset();
+    contextoDeCambioMock.mockReset();
+    contextoDeCambioMock.mockResolvedValue(null);
     contextoActualMock.mockResolvedValue({
       usuario: { id: "u1", rol: "ADMIN_MUNICIPAL" },
     });
@@ -96,5 +103,18 @@ describe("layout del panel", () => {
 
     await expect(pintar()).rejects.toThrow("NEXT_REDIRECT");
     expect(redirectMock).toHaveBeenCalledWith("/acceso");
+  });
+
+  it("una sesion con clave temporal solo puede llegar a cambiar la clave", async () => {
+    contextoActualMock.mockResolvedValue(null);
+    contextoDeCambioMock.mockResolvedValue({
+      ayuntamientoId: "motul",
+      usuarioId: "u1",
+      sesionId: "s1",
+      origen: "https://motul.xulasigma.mx",
+    });
+
+    await expect(pintar()).rejects.toThrow("NEXT_REDIRECT");
+    expect(redirectMock).toHaveBeenCalledWith("/cambiar-contrasenia");
   });
 });

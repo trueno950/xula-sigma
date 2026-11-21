@@ -20,10 +20,11 @@ const rutaConIpDePrueba = (ip: string) => (ruta: Route) =>
 async function enviarCredenciales(
   page: Page,
   correo: string,
+  clave: string,
   endpoint: string,
 ): Promise<Response> {
   await page.getByLabel("Correo").fill(correo);
-  await page.getByLabel("Contraseña").fill(CLAVE);
+  await page.getByLabel("Contraseña").fill(clave);
 
   const respuestaDeAcceso = page.waitForResponse(
     (respuesta) =>
@@ -42,13 +43,14 @@ async function completarAcceso(
   page: Page,
   correo: string,
   inicio: string,
+  clave: string = CLAVE,
 ): Promise<void> {
   const endpoint = urlDe("motul", "/api/auth/sign-in/email");
   const ruta = rutaConIpDePrueba(ipDePruebaSiguiente());
   await page.route(endpoint, ruta);
 
   try {
-    const respuesta = await enviarCredenciales(page, correo, endpoint);
+    const respuesta = await enviarCredenciales(page, correo, clave, endpoint);
     if (!respuesta.ok()) {
       throw new Error(
         `No se pudo acceder: el servidor respondió ${respuesta.status()}.`,
@@ -81,4 +83,44 @@ export async function accederAMotul(
 
   await liberarVentanaDeRitmo();
   await completarAcceso(page, correo, inicio);
+}
+
+/**
+ * Entra con una credencial concreta y espera la pantalla que sigue.
+ *
+ * Existe por la contrasenia temporal, que no es la `CLAVE` de los fixtures:
+ * `accederAMotul` siempre usa la del administrador sembrado. `espera` es la
+ * URL que se alcanza despues del POST —`null` cuando el servidor lo rechaza y
+ * no hay navegacion que esperar, como en la temporal caducada—.
+ */
+export async function accederConClave(
+  page: Page,
+  datos: { correo: string; clave: string; espera: string | null },
+): Promise<Response> {
+  await page.goto(urlDe("motul", "/acceso"));
+  await liberarVentanaDeRitmo();
+
+  const endpoint = urlDe("motul", "/api/auth/sign-in/email");
+  const ruta = rutaConIpDePrueba(ipDePruebaSiguiente());
+  await page.route(endpoint, ruta);
+
+  try {
+    const respuesta = await enviarCredenciales(
+      page,
+      datos.correo,
+      datos.clave,
+      endpoint,
+    );
+
+    if (datos.espera) {
+      await page.waitForURL(datos.espera, {
+        timeout: 5_000,
+        waitUntil: "commit",
+      });
+    }
+
+    return respuesta;
+  } finally {
+    await page.unroute(endpoint, ruta);
+  }
 }

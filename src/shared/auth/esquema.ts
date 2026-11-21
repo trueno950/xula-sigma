@@ -163,6 +163,12 @@ export const cuentas = pgTable(
     // El hash argon2id, no la contrasenia. El nombre lo impone el modelo
     // de Better Auth; renombrarlo obligaria a un mapa de campos.
     password: text(),
+    /**
+     * Cuando la clave la emitio el sistema y no la persona. Nula en una
+     * credencial propia. Que significa y cuanto dura —24 horas— esta en
+     * `claveTemporalEnCuenta.ts`; aca solo el dato.
+     */
+    claveTemporalEn: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },

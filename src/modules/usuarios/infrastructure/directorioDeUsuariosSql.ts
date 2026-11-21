@@ -74,7 +74,13 @@ export const directorioDeUsuariosSql: DirectorioDeUsuarios = {
     if (existente) throw new CorreoYaRegistradoError();
 
     try {
-      return await altaDePersona(tx, ayuntamientoId, datos);
+      // El alta del panel siempre emite una clave temporal —la genera el caso
+      // de uso, no el formulario—, asi que la credencial nace marcada: caduca
+      // a las 24 horas y obliga a cambiarla al entrar (S1 y S2).
+      return await altaDePersona(tx, ayuntamientoId, {
+        ...datos,
+        claveTemporal: true,
+      });
     } catch (error) {
       if (
         RESTRICCIONES_DE_CORREO.some((nombre) =>
