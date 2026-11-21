@@ -23,6 +23,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { decodificarClaveMostrada } from "../claveMostrada";
+import { NOMBRE_COOKIE_CLAVE_MOSTRADA } from "../claveMostradaEnTransito";
 
 /**
  * El alta del panel contra Postgres (S3 y S4): formulario -> accion -> caso
@@ -153,7 +154,8 @@ describe("alta por la accion", () => {
     ).rejects.toThrow("REDIRECT:");
 
     expect(errorDelDestino()).toBe("rol-no-asignable");
-    expect(cookies.guardadas.size).toBe(0);
+    // S6 de `usuarios-ux`: el rechazo deja el borrador y nunca una clave.
+    expect(cookies.guardadas.has(NOMBRE_COOKIE_CLAVE_MOSTRADA)).toBe(false);
     expect(await personas()).toHaveLength(antes.length);
   });
 

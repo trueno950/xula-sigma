@@ -68,6 +68,9 @@ describe("destinatarioDeLaClaveDeLaPeticion", () => {
 
     expect(guardada?.valor).toBe(`${TOKEN}:${USUARIO}`);
     expect(guardada?.opciones.httpOnly).toBe(true);
+    expect(guardada?.opciones.path).toBe("/usuarios");
+    expect(guardada?.opciones.maxAge).toBe(120);
+    expect(guardada?.opciones.sameSite).toBe("lax");
   });
 
   it("sin token en la URL no dice nada, aunque la cookie siga ahi", async () => {
