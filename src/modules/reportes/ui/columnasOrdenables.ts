@@ -79,7 +79,12 @@ export function resolverOrdenDeColumnas(
   });
 
   return columnasBase.map((columna) => {
-    const columnaTanstack = table.getColumn(columna.clave);
+    // Sin `table.getColumn`: avisa por consola de los ids que no declara, y
+    // `ubicacion` es una columna a proposito fuera (mismo motivo, explicado
+    // en `constancias/ui/columnasOrdenables.ts`).
+    const columnaTanstack = table
+      .getAllFlatColumns()
+      .find((declarada) => declarada.id === columna.clave);
     if (!columnaTanstack?.getCanSort()) return columna;
 
     const siguiente = columnaTanstack.getNextSortingOrder() || "asc";

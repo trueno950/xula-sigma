@@ -3,12 +3,14 @@
   "chosen": "01-inventario-antes-de-descargar.html",
   "handoffs": {
     "01-inventario-antes-de-descargar.html": {
-      "status": "sent",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-21T14:27:40.468Z",
       "startedAt": null,
-      "implementedAt": null,
-      "feature": "odd/tasks/marca-exportacion-ux.md"
+      "implementedAt": "2026-11-21T15:59:58.088Z",
+      "feature": "odd/tasks/marca-exportacion-ux.md",
+      "note": "PR #162 (d93a36d). Demo: http://demo.xula.localhost:3200/exportacion",
+      "previewUrl": "http://localhost:3200/exportacion"
     }
   }
 }

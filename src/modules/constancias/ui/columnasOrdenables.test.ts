@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { ColumnaDeTabla } from "@/shared/ui";
 import { resolverOrdenDeColumnas } from "./columnasOrdenables";
 
@@ -20,6 +20,21 @@ describe("resolverOrdenDeColumnas", () => {
         activa: false,
       },
     });
+  });
+
+  it("una columna que la tabla no ordena queda intacta y sin aviso por consola", () => {
+    const aviso = vi.spyOn(console, "error").mockImplementation(() => {});
+    const titular: ColumnaDeTabla = {
+      clave: "titular",
+      etiqueta: "Titular",
+      ancho: "minmax(0,2fr)",
+    };
+
+    const columnas = resolverOrdenDeColumnas([titular], {});
+
+    expect(columnas).toEqual([titular]);
+    expect(aviso).not.toHaveBeenCalled();
+    aviso.mockRestore();
   });
 
   it("emitida tambien es clicable", () => {
