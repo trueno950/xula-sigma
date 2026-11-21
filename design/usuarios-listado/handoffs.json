@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "02-agrupado-por-rol.html",
+  "handoffs": {
+    "02-agrupado-por-rol.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-21T00:23:46.483Z",
+      "startedAt": null,
+      "implementedAt": "2026-11-21T01:47:38.157Z",
+      "feature": "odd/tasks/usuarios-ux.md",
+      "note": "cafa9cf en feat/usuarios-ux. E2E completa 200/200.",
+      "previewUrl": "http://localhost:3200/usuarios"
+    }
+  }
+}

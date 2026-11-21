@@ -1,0 +1,21 @@
+{
+  "title": "Listado de usuarios",
+  "brief": "Rediseño de /usuarios para el administrador municipal de un ayuntamiento pequeño de Yucatán, que muchas veces trabaja desde el teléfono: ver quién entra al panel y con qué rol, restablecer una contraseña o dar de baja una cuenta sin equivocarse de persona y sin que la acción peligrosa quede a un toque de distancia.",
+  "feature": "odd/tasks/usuarios-ux.md",
+  "artboards": [
+    {
+      "file": "01-tabla-con-acciones.html",
+      "title": "Tabla con acciones",
+      "tradeoff": "Cuatro columnas fijas con el acordeón de acciones en la última y el patrón del detalle de reporte, con el peligro al final: se comparan rol y estado de un vistazo y la cuenta se identifica por nombre y correo en un renglón. Cuesta 300 px para la columna de acciones —que le roban ancho al nombre— y, al abrir una cuenta, la fila crece hacia abajo y empuja la lista; el acordeón exclusivo deja ver una sola cuenta abierta a la vez.",
+      "width": 1440,
+      "height": 1240
+    },
+    {
+      "file": "02-agrupado-por-rol.html",
+      "title": "Agrupado por rol",
+      "tradeoff": "La lista deja de ser tabla: tres bloques por rol, cada uno con lo que ese rol permite y quiénes lo tienen, y la cuenta entera es su propio acordeón —sin columna de acciones, con las cuentas de baja en una sección aparte—. Contesta «quién puede capturar» sin leer una columna y el mismo recorrido sirve en 1440 y en 390, a cambio de romper el orden alfabético en tres bloques, de mandar las bajas al final de la página y de que la fila cerrada no insinúe que hay acciones salvo por el chevron.",
+      "width": 1440,
+      "height": 1520
+    }
+  ]
+}
