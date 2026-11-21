@@ -52,8 +52,13 @@ async function completarAcceso(
   try {
     const respuesta = await enviarCredenciales(page, correo, clave, endpoint);
     if (!respuesta.ok()) {
+      // El cuerpo, no solo el status: un 429 lo devuelven dos limitadores
+      // distintos —el nuestro (`limitarRitmo`) y el de Better Auth— y el
+      // mensaje es lo unico que dice cual fue.
       throw new Error(
-        `No se pudo acceder: el servidor respondió ${respuesta.status()}.`,
+        `No se pudo acceder: el servidor respondió ${respuesta.status()}: ${
+          (await respuesta.text()).slice(0, 200) || "(cuerpo vacío)"
+        }`,
       );
     }
 
@@ -112,11 +117,24 @@ export async function accederConClave(
       endpoint,
     );
 
+    if (!respuesta.ok() && datos.espera) {
+      throw new Error(
+        `No se pudo acceder con la clave entregada: el servidor respondió ${respuesta.status()}: ${(await respuesta.text()).slice(0, 200) || "(cuerpo vacío)"}`,
+      );
+    }
+
     if (datos.espera) {
       await page.waitForURL(datos.espera, {
         timeout: 5_000,
         waitUntil: "commit",
       });
+      // `commit` es cuando empieza la respuesta, no cuando termina: la pagina
+      // que espera el test todavia se esta transmitiendo. Interactuar ahi es
+      // una carrera —los campos ya estan y el `<input name="$ACTION_ID_…">`
+      // del `<form>` de la Server Action puede no haber llegado— y el envio
+      // sale sin accion: no redirige y el test se queda esperando 30 s. Lo
+      // encontro la repeticion del E2E de reactivacion.
+      await page.waitForLoadState("load");
     }
 
     return respuesta;

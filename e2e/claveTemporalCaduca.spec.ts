@@ -108,6 +108,8 @@ test("el primer acceso con la temporal obliga a cambiarla y la deja sin efecto",
   const otraPagina = await otro?.newPage();
   if (!otro || !otraPagina) throw new Error("Sin contexto de navegador.");
 
+  // Tercer acceso del caso: se espera la ventana del limite de intentos.
+  await liberarVentanaDeRitmo();
   await formarse(otraPagina);
   await otraPagina.getByLabel("Correo").fill(cuenta.correo);
   await otraPagina.getByLabel("Contraseña").fill(TEMPORAL);
