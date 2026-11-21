@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
+  CambioDeClaveVencidoError,
   ClaveRepetidaError,
   cambiarClavePropia,
   contextoDeCambioDeClave,
@@ -43,6 +44,13 @@ const volverCon = (codigo: CodigoDeCambioDeClave): never =>
 function codigoDel(error: unknown): CodigoDeCambioDeClave {
   if (error instanceof ClaveDebilError) return "corta";
   if (error instanceof ClaveRepetidaError) return "repetida";
+
+  /**
+   * Otra pestana gano la carrera, o la sesion se cerro: no es una falla y el
+   * mensaje generico ya invita a reintentar. Sin traza en el log para no
+   * llenarlo de carreras normales.
+   */
+  if (error instanceof CambioDeClaveVencidoError) return "generico";
 
   console.error(
     "[auth] cambio de contrasenia fallo",

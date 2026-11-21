@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { darDeBajaUsuario } from "@/shared/auth/administracionDeUsuarios";
+import { darDeBajaUsuario } from "@/shared/auth/bajaDeUsuario";
 import { usuarios } from "@/shared/auth/esquema";
 import {
   contextoDe,

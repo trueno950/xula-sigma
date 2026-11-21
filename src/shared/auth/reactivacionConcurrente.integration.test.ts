@@ -1,13 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  enTransaccionParalela,
   limpiar,
   motul,
   owner,
   sembrar,
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion } from "@/shared/tenancy/withTenant";
-import { hashDeClave, verificarClave } from "./contrasenia";
+import { verificarClave } from "./contrasenia";
 import {
   CLAVE_DE_LA_PERSONA,
   contextoDeActor,
@@ -19,19 +18,16 @@ import {
   unaPersona,
 } from "./reactivacionDePrueba";
 import { reactivarUsuario } from "./reactivacionDeUsuario";
+import {
+  abrirReactivacion,
+  esperarPendiente,
+} from "./reactivacionEnCursoDePrueba";
 
 /**
  * Dos reactivaciones de la misma cuenta, a la vez.
  *
- * **La primera peticion no corre por el pool.** La suite de integracion usa
- * `DB_POOL_MAX=1`, asi que dos `reactivarUsuario` disparadas juntas se
- * serializan sobre la misma conexion: la segunda lee `baja_en` ya en NULL y
- * responde `CuentaActivaError` por la guarda, sin llegar nunca a la carrera.
- * Por eso la primera se representa como lo hace
- * `territorio/mudanzas.concurrencia.integration.test.ts`: una transaccion
- * real en `appSinTenant`, ajena al pool, que escribe lo mismo que
- * `reactivarUsuario` en el mismo orden y no confirma hasta `liberar`.
- *
+ * La primera corre en `abrirReactivacion` —transaccion real, ajena al pool,
+ * que no confirma hasta `liberar`—: por que, en el comentario de ese archivo.
  * La segunda pasa su guarda —la de la primera todavia no confirmo, asi que
  * `baja_en` se sigue leyendo distinto de NULL— y se queda esperando el lock
  * de la fila. Lo que se prueba es que ese lock la despierte rechazada: si la
@@ -52,58 +48,13 @@ afterAll(async () => {
   await cerrarConexion();
 });
 
-/** La primera reactivacion, escrita en SQL y sin confirmar hasta `liberar`. */
-const primeraReactivacionAbierta = async (
-  actorId: string,
-  usuarioId: string,
-) => {
-  let confirmar: () => void = () => {};
-  let liberar: () => void = () => {};
-  const lista = new Promise<void>((resolve) => {
-    confirmar = resolve;
-  });
-  const abierta = new Promise<void>((resolve) => {
-    liberar = resolve;
-  });
-  const digest = await hashDeClave(TEMPORAL_NUEVA);
-
-  const transaccion = enTransaccionParalela(motul, async (tx) => {
-    await tx`UPDATE usuarios SET baja_en = NULL WHERE id = ${usuarioId}`;
-    await tx`UPDATE cuentas
-      SET password = ${digest}, clave_temporal_en = now()
-      WHERE user_id = ${usuarioId}`;
-    await tx`INSERT INTO bitacora (ayuntamiento_id, actor, accion, entidad, entidad_id)
-      VALUES (${motul}, ${actorId}, 'REACTIVAR_USUARIO', 'usuarios', ${usuarioId})`;
-    confirmar();
-    await abierta;
-  });
-
-  return { lista, transaccion, liberar: () => liberar() };
-};
-
-/** Que la operacion siga pendiente: si resolvio, no hubo carrera que probar. */
-const esperarPendiente = async (operacion: Promise<unknown>) => {
-  const pendiente = Symbol("pendiente");
-  const resultado = await Promise.race([
-    operacion.then(
-      () => "resuelta" as const,
-      () => "rechazada" as const,
-    ),
-    new Promise<typeof pendiente>((resolve) =>
-      setTimeout(() => resolve(pendiente), 300),
-    ),
-  ]);
-
-  expect(resultado).toBe(pendiente);
-};
-
 describe("dos reactivaciones simultaneas de la misma cuenta", () => {
   it("la que llega segunda responde CuentaActivaError y deja valida la clave de la primera", async () => {
     const { id } = await unaPersona();
     await darDeBaja(motul, id);
     const actor = contextoDeActor(motul, "ADMIN_MUNICIPAL");
 
-    const primera = await primeraReactivacionAbierta(actor.usuario.id, id);
+    const primera = await abrirReactivacion(actor.usuario.id, id);
     await primera.lista;
 
     const segunda = reactivarUsuario(actor, {

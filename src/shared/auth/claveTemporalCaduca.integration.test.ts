@@ -10,7 +10,7 @@ import {
 } from "@/shared/tenancy/municipiosDePrueba";
 import { cerrarConexion, withTenant } from "@/shared/tenancy/withTenant";
 import { altaDePersona } from "./alta";
-import { CLAVE_TEMPORAL_CADUCADA } from "./claveTemporalEnCuenta";
+import { CLAVE_TEMPORAL_CADUCADA } from "./codigosDeAcceso";
 import { cuentas, sesiones } from "./esquema";
 
 /**

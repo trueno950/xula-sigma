@@ -15,12 +15,14 @@
  */
 
 export {
-  darDeBajaUsuario,
+  CuentaCambiadaError,
   RestablecimientoPropioError,
   restablecerContrasenia,
 } from "./administracionDeUsuarios";
 export { altaDePersona } from "./alta";
+export { darDeBajaUsuario } from "./bajaDeUsuario";
 export {
+  CambioDeClaveVencidoError,
   ClaveRepetidaError,
   cambiarClavePropia,
   RUTA_DE_CAMBIO_DE_CLAVE,

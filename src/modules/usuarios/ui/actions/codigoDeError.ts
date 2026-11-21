@@ -1,4 +1,8 @@
-import { CuentaActivaError, RestablecimientoPropioError } from "@/shared/auth";
+import {
+  CuentaActivaError,
+  CuentaCambiadaError,
+  RestablecimientoPropioError,
+} from "@/shared/auth";
 import { NoAutorizadoError, NoEncontradoError } from "@/shared/lib/errores";
 import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import {
@@ -37,6 +41,13 @@ export const codigoDeErrorParaLaOperadora = (
     return "reactivacion-sin-confirmar";
   }
   if (error instanceof CuentaActivaError) return "cuenta-activa";
+
+  /**
+   * Otra operadora gano la carrera —la cuenta cambio de estado entre que se
+   * leyo y que se escribio—: no es una falla, y el mensaje generico ya invita
+   * a reintentar.
+   */
+  if (error instanceof CuentaCambiadaError) return generico;
 
   console.error(`[usuarios] ${asunto} fallo`, datosSegurosDeError(error));
 
