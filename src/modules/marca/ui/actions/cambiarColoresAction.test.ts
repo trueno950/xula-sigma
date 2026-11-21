@@ -81,7 +81,11 @@ describe("cambiarColoresAction", () => {
     await ejecutar({ primario: "", secundario: verde });
 
     expect(destinoDelRedirect().searchParams.get("error")).toBe(
-      MENSAJES_DE_ERROR_DE_MARCA.formularioIncompleto,
+      "colores-incompletos",
+    );
+    // Lo que viaja es el codigo; la oracion la pone la pantalla (S4).
+    expect(MENSAJES_DE_ERROR_DE_MARCA["colores-incompletos"]).toBe(
+      "Elija un color primario y uno de acento.",
     );
     expect(cambiarColoresMock).not.toHaveBeenCalled();
   });
@@ -122,7 +126,7 @@ describe("cambiarColoresAction", () => {
     );
   });
 
-  it("un permiso negado sale con la oracion de la pantalla, no con la de la excepcion", async () => {
+  it("un permiso negado sale con su codigo, no con el texto de la excepcion", async () => {
     const negado = new NoAutorizadoError();
     contextoActualMock.mockResolvedValue(contexto);
     cambiarColoresMock.mockRejectedValue(negado);
@@ -131,11 +135,11 @@ describe("cambiarColoresAction", () => {
 
     const mensaje = destinoDelRedirect().searchParams.get("error");
 
-    expect(mensaje).toBe(MENSAJES_DE_ERROR_DE_MARCA.sinPermiso);
+    expect(mensaje).toBe("sin-permiso");
     expect(mensaje).not.toBe(negado.message);
   });
 
-  it("un color rechazado por la reja no filtra el detalle del campo", async () => {
+  it("un color rechazado por la reja sale como `color-invalido`, sin el detalle del campo", async () => {
     contextoActualMock.mockResolvedValue(contexto);
     cambiarColoresMock.mockRejectedValue(
       new ValidacionError({ primario: 'El valor de "primario" no es valido.' }),
@@ -145,7 +149,7 @@ describe("cambiarColoresAction", () => {
 
     const mensaje = destinoDelRedirect().searchParams.get("error");
 
-    expect(mensaje).toBe(MENSAJES_DE_ERROR_DE_MARCA.colorInvalido);
+    expect(mensaje).toBe("color-invalido");
     expect(mensaje).not.toContain("primario");
   });
 
@@ -159,7 +163,7 @@ describe("cambiarColoresAction", () => {
     await ejecutar({ primario: verde, secundario: verde });
 
     expect(destinoDelRedirect().searchParams.get("error")).toBe(
-      MENSAJES_DE_ERROR_DE_MARCA.guardadoFallido,
+      "colores-no-guardados",
     );
     expect(errorDeInfra).toHaveBeenCalled();
   });

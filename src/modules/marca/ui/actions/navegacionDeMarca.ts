@@ -1,18 +1,26 @@
 import { redirect } from "next/navigation";
-import type { ClaveDeConfirmacionDeMarca } from "../mensajesDeMarca";
+import type {
+  ClaveDeConfirmacionDeMarca,
+  ClaveDeErrorDeEscudo,
+  ClaveDeErrorDeMarca,
+} from "../mensajesDeMarca";
 
 /**
- * Los destinos de las dos acciones de colores: `/marca` con el error ya
- * redactado, o con la clave de confirmacion.
+ * Los destinos de `/marca`: el aviso de la pagina, el rechazo de un campo o
+ * la clave de confirmacion.
  *
- * Mismo contrato que `navegacionDeZonas`: el exito lleva una clave de un
- * vocabulario cerrado —nunca texto de la operadora de vuelta a la URL— y el
- * error lleva una de las oraciones de `mensajesDeMarca`, elegida por la
- * accion. La pagina solo pinta el `?error=` que ella misma supo mandar.
+ * Mismo contrato que `navegacionDeZonas`, y ahora tambien en los errores: la
+ * URL lleva **vocabulario cerrado** —un codigo, nunca una oracion— y el
+ * texto lo pone la pantalla desde `mensajesDeMarca.ts` (S4). Por eso el tipo
+ * del error es la union de los dos catalogos y no `string`.
  */
 
+export type ClaveDeErrorDeMarcaEnUrl =
+  | ClaveDeErrorDeMarca
+  | ClaveDeErrorDeEscudo;
+
 export const rutaDeMarca = (datos: {
-  error?: string;
+  error?: ClaveDeErrorDeMarcaEnUrl;
   ok?: ClaveDeConfirmacionDeMarca;
 }): string => {
   const parametros = new URLSearchParams();
@@ -25,7 +33,7 @@ export const rutaDeMarca = (datos: {
   return consulta ? `/marca?${consulta}` : "/marca";
 };
 
-export const volverAMarca = (error: string): never =>
+export const volverAMarca = (error: ClaveDeErrorDeMarcaEnUrl): never =>
   redirect(rutaDeMarca({ error }));
 
 export const confirmarEnMarca = (ok: ClaveDeConfirmacionDeMarca): never =>

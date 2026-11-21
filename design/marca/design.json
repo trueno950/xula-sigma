@@ -1,0 +1,21 @@
+{
+  "title": "Marca del ayuntamiento",
+  "brief": "Rediseño de /marca para el administrador municipal de un ayuntamiento pequeño de Yucatán, que muchas veces trabaja desde el teléfono: elegir el color primario y el de acento viendo cómo queda el panel mientras elige —también en 390—, entender qué se pierde antes de restablecer, y ver el escudo actual, sus requisitos antes de elegir archivo, el error junto al campo y la opción de quitarlo con confirmación.",
+  "feature": "odd/tasks/marca-exportacion-ux.md",
+  "artboards": [
+    {
+      "file": "01-colores-con-la-muestra-fija.html",
+      "title": "Colores con la muestra fija",
+      "tradeoff": "La misma pila de secciones de hoy, cada una con su título, y la muestra deja de ser un bloque al final para volverse una columna pegada (franja de 92 px en el teléfono): todo se ve de una vez y en el orden conocido, a cambio de ensanchar la pantalla a 1040 px y de dejar restablecer y escudo a dos pantallas y media del color que se está eligiendo.",
+      "width": 1440,
+      "height": 1240
+    },
+    {
+      "file": "02-vista-previa-primero.html",
+      "title": "Vista previa primero y secciones plegadas",
+      "tradeoff": "Arriba, cómo se ve el panel con la marca guardada —banda, ítem activo, botón y acento—; abajo, tres filas plegables que dicen su estado actual en una línea y se abren de a una, con el escudo en primer lugar por ser lo que hoy se rompe sin JavaScript. Se revisa la marca sin abrir nada, a cambio de que elegir un color pida dos toques y de que comparar «cómo era» con «cómo queda» obligue a cerrar una fila y abrir otra.",
+      "width": 1440,
+      "height": 1180
+    }
+  ]
+}

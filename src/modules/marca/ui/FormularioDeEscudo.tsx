@@ -1,96 +1,64 @@
-"use client";
-
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Aviso } from "@/shared/ui/Aviso";
 import { BarraDeAcciones } from "@/shared/ui/BarraDeAcciones";
 import { Boton } from "@/shared/ui/Boton";
-import { MensajeDeError } from "@/shared/ui/Campo";
-import {
-  ANILLO_DE_FOCO,
-  CLASES_DE_ETIQUETA,
-  CLASES_DE_FORMULARIO,
-} from "@/shared/ui/estilos";
+import { CLASES_DE_ETIQUETA, CLASES_DE_FORMULARIO } from "@/shared/ui/estilos";
 import { cambiarEscudoAction } from "./actions/cambiarEscudo.action";
-import { subirEscudo } from "./subirEscudo";
+import { CampoDeArchivoDeEscudo } from "./CampoDeArchivoDeEscudo";
+import type { ClaveDeErrorDeEscudo } from "./mensajesDeMarca";
+import { REQUISITOS_DE_ESCUDO } from "./requisitosDeEscudo";
 
-/**
- * El formulario de escudo. Es una hoja cliente, igual que
- * `FormularioDeAcceso`.
- *
- * Arma el `FormData` a mano en el `onSubmit` en vez de usar la `action`
- * nativa del `<form>`: la nativa no deja leer el `ActionResult` para
- * pintar el error por campo, que es justo lo que este formulario necesita.
- */
+const ID_DE_ARCHIVO = "escudo-archivo";
+const ID_DE_AYUDA = "escudo-ayuda";
 
-type Campos = {
-  escudo: FileList;
+export { REQUISITOS_DE_ESCUDO };
+
+type Props = {
+  /** El rechazo que dejo la accion, si volvio con uno (S9). */
+  error: ClaveDeErrorDeEscudo | undefined;
 };
 
-export function FormularioDeEscudo() {
-  const [error, setError] = useState<string | null>(null);
-  const [exito, setExito] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<Campos>();
-
-  const subir = async ({ escudo }: Campos) => {
-    setError(null);
-    setExito(false);
-
-    const archivo = escudo.item(0);
-
-    if (!archivo) return;
-
-    const resultado = await subirEscudo(archivo, cambiarEscudoAction);
-
-    if (!resultado.ok) {
-      setError(resultado.mensaje);
-      return;
-    }
-
-    setExito(true);
-  };
-
+/**
+ * El formulario del escudo (S6).
+ *
+ * Es un componente del servidor con un `<form action>` nativo: sin
+ * JavaScript el navegador hace el POST entero, con el archivo adentro, y la
+ * pagina vuelve pintada por el `redirect` de la accion. El `method` y el
+ * `multipart/form-data` no se escriben a mano porque React los pone cuando el
+ * `action` es una funcion —y avisa si ademas se los pasa: «React provides
+ * those automatically», `react-dom-server.node.development.js:2332` en
+ * 19.2.8—. Antes era una hoja cliente que armaba el `FormData` a mano en un
+ * `onSubmit`, y sin JavaScript ese envio se perdia en un GET sin archivo ni
+ * mensaje (E1).
+ *
+ * El precio es que la accion ya no puede devolver un `ActionResult` que
+ * alguien lea: el rechazo viaja como codigo en la URL y el texto sale de
+ * `mensajesDeMarca.ts`, asi que es el mismo con y sin JavaScript. Como la
+ * respuesta es una navegacion nueva, el campo vuelve vacio: el archivo
+ * rechazado no queda elegido (S9).
+ *
+ * El campo es la unica hoja cliente (`CampoDeArchivoDeEscudo`), y no envuelve
+ * la accion: agrega el rechazo por peso que el servidor no puede dar porque
+ * el archivo ni llega —el transporte corta en 2 MB—.
+ */
+export function FormularioDeEscudo({ error }: Props) {
   return (
-    <form
-      onSubmit={handleSubmit(subir)}
-      className={CLASES_DE_FORMULARIO}
-      noValidate
-    >
+    <form action={cambiarEscudoAction} className={CLASES_DE_FORMULARIO}>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="escudo-archivo" className={CLASES_DE_ETIQUETA}>
-          Escudo del ayuntamiento
+        <label htmlFor={ID_DE_ARCHIVO} className={CLASES_DE_ETIQUETA}>
+          Cambiar el escudo
         </label>
-        <input
-          id="escudo-archivo"
-          {...register("escudo", { required: "Elija un archivo PNG." })}
-          type="file"
-          accept="image/png"
-          aria-invalid={errors.escudo ? true : undefined}
-          aria-describedby={errors.escudo ? "escudo-error" : undefined}
-          className={`w-full rounded-md border bg-caliza-lienzo px-3 py-2 text-[15px] text-caliza-tinta transition-[border-color] duration-150 ease-salida file:mr-3 file:rounded-sm file:border-0 file:bg-caliza-relleno file:px-3 file:py-1.5 file:text-[13px] file:font-medium file:text-caliza-tinta ${
-            errors.escudo ? "border-senial-error" : "border-caliza-borde"
-          } ${ANILLO_DE_FOCO}`}
+        <p id={ID_DE_AYUDA} className="text-[13px] text-caliza-apagada">
+          {REQUISITOS_DE_ESCUDO}
+        </p>
+        <CampoDeArchivoDeEscudo
+          idDeArchivo={ID_DE_ARCHIVO}
+          idDeAyuda={ID_DE_AYUDA}
+          error={error}
         />
-        {errors.escudo ? (
-          <MensajeDeError
-            id="escudo-error"
-            texto={errors.escudo.message ?? ""}
-          />
-        ) : null}
       </div>
 
-      {error ? <Aviso tono="error">{error}</Aviso> : null}
-
-      {exito ? <Aviso tono="exito">Escudo actualizado.</Aviso> : null}
-
       <BarraDeAcciones>
-        <Boton type="submit" variante="primaria" disabled={isSubmitting}>
-          {isSubmitting ? "Subiendo..." : "Guardar escudo"}
+        <Boton type="submit" variante="primaria">
+          Guardar escudo
         </Boton>
       </BarraDeAcciones>
     </form>

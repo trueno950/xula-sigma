@@ -1,6 +1,7 @@
 import {
   crearCambiarColores,
   crearCambiarEscudo,
+  crearQuitarEscudo,
   crearRestablecerColores,
 } from "./application";
 import { almacenR2, lectorR2, repositorioDeMarcaSql } from "./infrastructure";
@@ -30,6 +31,12 @@ export const cambiarColores = crearCambiarColores(repositorioDeMarcaSql);
 export const restablecerColores = crearRestablecerColores(
   repositorioDeMarcaSql,
 );
+
+/**
+ * Quitar el escudo (S7). Mismo almacen y mismo repositorio que la subida: el
+ * borrado del objeto lo acota `claveTenantDesdeUrl`, no este archivo.
+ */
+export const quitarEscudo = crearQuitarEscudo(almacenR2, repositorioDeMarcaSql);
 
 /**
  * El lector del escudo para la exportacion completa (S4 de

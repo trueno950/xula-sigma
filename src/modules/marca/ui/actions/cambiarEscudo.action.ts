@@ -1,66 +1,95 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { contextoActual } from "@/shared/auth";
-import {
-  type ActionResult,
-  mapearError,
-  NoAutorizadoError,
-  ValidacionError,
-} from "@/shared/lib/errores";
+import { NoAutorizadoError } from "@/shared/lib/errores";
+import { datosSegurosDeError } from "@/shared/lib/registroDeError";
 import { cambiarEscudo } from "../../composicion";
-import type { EscudoCambiado } from "../../types";
+import { type MotivoDeRechazo, validarPng } from "../../domain";
+import type { ClaveDeErrorDeEscudo } from "../mensajesDeMarca";
+import { rutaDeMarca } from "./navegacionDeMarca";
 
 /**
- * Camino de escritura, borde de sesion (ADR 0001 seccion 4, design.md
- * seccion 5, pasos 1-2 y 5-6). Los pasos 3-4 —bytes, PUT, transaccion,
- * borrado diferido— viven en `cambiarEscudo` ya cableado por
- * `composicion.ts`; esta accion solo valida la forma de la entrada,
- * resuelve el contexto y traduce el resultado.
+ * Subir el escudo (S6).
+ *
+ * Es el `action` de un `<form>` nativo con `multipart/form-data`, y esa es
+ * toda la diferencia con un Server Action de `useActionState`: sin
+ * JavaScript el navegador manda el POST con el archivo adentro, y el
+ * rechazo no puede volver como `ActionResult` porque no hay componente
+ * cliente que lo lea. Viaja como **codigo** en la URL y la pantalla lo
+ * traduce (`mensajesDeMarca.ts`), asi que el mensaje es el mismo con y sin
+ * JavaScript y nunca es el texto de la excepcion (S9). Es la excepcion de
+ * formulario nativo de `AGENTS.md`.
+ *
+ * Los pasos 3-4 del camino de escritura —bytes, PUT al almacen, transaccion,
+ * borrado diferido— siguen viviendo en `cambiarEscudo`, cableado por
+ * `composicion.ts`: el archivo no toca el filesystem ni viaja a ningun otro
+ * lado que el almacen de objetos (regla 10).
  */
-
-const UN_MIB = 1024 * 1024;
 
 /**
- * Solo la forma del dato: que sea un archivo y que no exceda el limite de
- * un Server Action de Next (decision 3 de proposal.md — 1 MiB entra en el
- * limite por defecto). La firma PNG, el chunk `IHDR` y las dimensiones se
- * validan mas adentro, en `domain/png.ts`, sobre los bytes ya leidos: este
- * esquema no los conoce.
+ * Solo la forma del dato. El tamano y el formato los decide `validarPng`
+ * sobre los bytes ya leidos: este esquema no conoce la firma PNG ni el
+ * `IHDR`, y duplicar aca el limite era lo que dejaba dos listas de motivos.
  */
-const esquemaDeEntrada = z
-  .instanceof(File, { message: "Suba un archivo." })
-  .refine((archivo) => archivo.size > 0, "El archivo está vacío.")
-  .refine((archivo) => archivo.size <= UN_MIB, "El archivo pesa más de 1 MiB.");
+const esquemaDeEntrada = z.instanceof(File, { message: "Suba un archivo." });
 
-export async function cambiarEscudoAction(
-  formData: FormData,
-): Promise<ActionResult<EscudoCambiado>> {
-  try {
-    const analisis = esquemaDeEntrada.safeParse(formData.get("escudo"));
+/**
+ * El motivo del sniffer, que es vocabulario del dominio, traducido al
+ * vocabulario cerrado que puede viajar en la URL. `validarPng` corre aca
+ * —para poder elegir el codigo— y otra vez adentro del caso de uso, que es
+ * la reja de verdad: es puro, y la alternativa era mapear el texto de la
+ * excepcion de vuelta a un codigo.
+ */
+const CLAVES_DE_RECHAZO: Record<MotivoDeRechazo, ClaveDeErrorDeEscudo> = {
+  VACIO: "escudo-vacio",
+  DEMASIADO_GRANDE: "escudo-pesado",
+  NO_ES_PNG: "escudo-no-png",
+  SIN_IHDR: "escudo-no-png",
+  DIMENSIONES: "escudo-dimensiones",
+};
 
-    if (!analisis.success) {
-      throw new ValidacionError({
-        escudo: analisis.error.issues[0]?.message ?? "Archivo inválido.",
-      });
-    }
+const claveDelFallo = (error: unknown): ClaveDeErrorDeEscudo => {
+  if (error instanceof NoAutorizadoError) return "escudo-sin-permiso";
 
-    // El ayuntamientoId, el rol y el origen salen del contexto de sesion,
-    // nunca de `formData`: un Server Action es superficie publica y recibe
-    // lo que el cliente quiera mandarle.
-    const contexto = await contextoActual();
+  console.error("[marca] cambio de escudo fallo", datosSegurosDeError(error));
 
-    if (!contexto) throw new NoAutorizadoError();
+  return "escudo-no-guardado";
+};
 
-    const bytes = new Uint8Array(await analisis.data.arrayBuffer());
-    const escudo = await cambiarEscudo({ bytes }, contexto);
+export async function cambiarEscudoAction(formData: FormData): Promise<void> {
+  const analisis = esquemaDeEntrada.safeParse(formData.get("escudo"));
 
-    revalidatePath("/marca");
-    revalidatePath("/acceso");
-
-    return { ok: true, data: escudo };
-  } catch (error) {
-    return mapearError(error);
+  if (!analisis.success) {
+    return redirect(rutaDeMarca({ error: "escudo-archivo-faltante" }));
   }
+
+  // El ayuntamientoId, el rol y el origen salen del contexto de sesion,
+  // nunca de `formData`: un Server Action es superficie publica y recibe lo
+  // que el cliente quiera mandarle.
+  const contexto = await contextoActual();
+
+  if (!contexto) redirect("/acceso");
+
+  const bytes = new Uint8Array(await analisis.data.arrayBuffer());
+  const veredicto = validarPng(bytes);
+
+  if (!veredicto.ok) {
+    return redirect(
+      rutaDeMarca({ error: CLAVES_DE_RECHAZO[veredicto.motivo] }),
+    );
+  }
+
+  try {
+    await cambiarEscudo({ bytes }, contexto);
+  } catch (error) {
+    return redirect(rutaDeMarca({ error: claveDelFallo(error) }));
+  }
+
+  revalidatePath("/marca");
+  revalidatePath("/acceso");
+
+  redirect(rutaDeMarca({ ok: "escudo-actualizado" }));
 }

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "chosen": "01-inventario-antes-de-descargar.html",
+  "handoffs": {
+    "01-inventario-antes-de-descargar.html": {
+      "status": "sent",
+      "queued": false,
+      "sentAt": "2026-11-21T14:27:40.468Z",
+      "startedAt": null,
+      "implementedAt": null,
+      "feature": "odd/tasks/marca-exportacion-ux.md"
+    }
+  }
+}

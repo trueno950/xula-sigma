@@ -29,20 +29,28 @@ import { agregarPorciones, type PorcionExportable } from "./agregarPorciones";
  *
  * La bitacora si va: es la evidencia de quien hizo que, y es justamente lo
  * que un archivo municipal necesita conservar.
+ *
+ * Cada conjunto va con su lector, uno al lado del otro: de aca salen el
+ * nombre que lleva en el archivo —`usuarios.csv`— y las filas que trae.
+ * Separarlo en dos listas dejaria el nombre de un lado y la consulta del
+ * otro, que es como se pierde un conjunto sin que nadie lo note.
  */
-const conjuntosDePlataforma = async (
+type LectorDeConjunto = (
   tx: TransaccionTenant,
-): Promise<Record<string, readonly unknown[]>> => ({
-  usuarios: await tx
-    .select({
-      id: usuarios.id,
-      nombre: usuarios.name,
-      email: usuarios.email,
-      rol: usuarios.rol,
-      bajaEn: usuarios.bajaEn,
-      creadoEn: usuarios.createdAt,
-    })
-    .from(usuarios),
+) => PromiseLike<readonly unknown[]>;
+
+const lectoresDePlataforma = {
+  usuarios: (tx: TransaccionTenant) =>
+    tx
+      .select({
+        id: usuarios.id,
+        nombre: usuarios.name,
+        email: usuarios.email,
+        rol: usuarios.rol,
+        bajaEn: usuarios.bajaEn,
+        creadoEn: usuarios.createdAt,
+      })
+      .from(usuarios),
   /**
    * Columnas explicitas, mismo criterio que `usuarios` arriba: sin esto
    * una columna nueva de `bitacora` entraria sola al archivo entregado sin
@@ -52,20 +60,41 @@ const conjuntosDePlataforma = async (
    * asi que el archivo entregado no se incluye a si mismo. Es lo correcto:
    * esa fila todavia no existe cuando se lee.
    */
-  bitacora: await tx
-    .select({
-      id: bitacora.id,
-      ayuntamientoId: bitacora.ayuntamientoId,
-      actor: bitacora.actor,
-      accion: bitacora.accion,
-      entidad: bitacora.entidad,
-      entidadId: bitacora.entidadId,
-      origen: bitacora.origen,
-      ocurridoEn: bitacora.ocurridoEn,
-    })
-    .from(bitacora)
-    .orderBy(bitacora.ocurridoEn),
-});
+  bitacora: (tx: TransaccionTenant) =>
+    tx
+      .select({
+        id: bitacora.id,
+        ayuntamientoId: bitacora.ayuntamientoId,
+        actor: bitacora.actor,
+        accion: bitacora.accion,
+        entidad: bitacora.entidad,
+        entidadId: bitacora.entidadId,
+        origen: bitacora.origen,
+        ocurridoEn: bitacora.ocurridoEn,
+      })
+      .from(bitacora)
+      .orderBy(bitacora.ocurridoEn),
+} satisfies Record<string, LectorDeConjunto>;
+
+/**
+ * Los nombres de los conjuntos de la plataforma, en el orden en que van al
+ * archivo. Los consume el inventario de la pantalla de exportacion, que los
+ * antepone a los de los modulos exactamente como `conjuntosDe` abajo.
+ */
+export const nombresDePlataforma: readonly string[] =
+  Object.keys(lectoresDePlataforma);
+
+const conjuntosDePlataforma = async (
+  tx: TransaccionTenant,
+): Promise<Record<string, readonly unknown[]>> => {
+  const conjuntos: Record<string, readonly unknown[]> = {};
+
+  for (const [nombre, leer] of Object.entries(lectoresDePlataforma)) {
+    conjuntos[nombre] = await leer(tx);
+  }
+
+  return conjuntos;
+};
 
 /**
  * Los conjuntos de la plataforma y los que aportan los modulos, en un solo

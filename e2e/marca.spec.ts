@@ -15,6 +15,11 @@ import { CLAVE, MUNICIPIOS, urlDe } from "./municipios";
  * almacen de escudos: tamano, formato y archivo vacio. Un archivo que
  * pasara la validacion subiria un objeto a un bucket real, y este E2E no
  * tiene ninguno; por eso ningun caso manda un PNG valido.
+ *
+ * Desde S6/S9 el error del archivo se pinta en el parrafo al que apunta el
+ * `aria-describedby` del campo (`#escudo-archivo-error`), no como `Aviso`
+ * suelto: por eso los casos leen ese nodo y no un `role="alert"` dentro del
+ * formulario.
  */
 
 const UN_MIB = 1024 * 1024;
@@ -103,14 +108,19 @@ test.beforeEach(liberarVentanaDeRitmo);
 /** Los colores son estado del municipio: cada test parte de la marca sembrada. */
 test.beforeEach(limpiarColores);
 
+/** El error del archivo, en el nodo que describe al campo (S9). */
+const errorDelArchivo = (page: Page) => page.locator("#escudo-archivo-error");
+
+/** El campo del archivo, que desde T4 se llama como la accion. */
+const campoDeArchivo = (page: Page) =>
+  page.getByLabel("Cambiar el escudo", { exact: true });
+
 const elegirArchivo = async (page: Page, bytes: number) => {
-  await page
-    .getByLabel("Escudo del ayuntamiento", { exact: true })
-    .setInputFiles({
-      name: "escudo.png",
-      mimeType: "image/png",
-      buffer: Buffer.alloc(bytes),
-    });
+  await campoDeArchivo(page).setInputFiles({
+    name: "escudo.png",
+    mimeType: "image/png",
+    buffer: Buffer.alloc(bytes),
+  });
   await page.getByRole("button", { name: "Guardar escudo" }).click();
 };
 
@@ -118,6 +128,28 @@ const abrirMarca = async (page: Page) => {
   await accederAMotul(page);
   await page.goto(urlDe("motul", "/marca"));
 };
+
+/**
+ * Las tres secciones de `/marca` son `<details name>` (T4): el cuerpo de una
+ * fila cerrada no es visible, asi que cada test abre la que va a usar. La
+ * primera —el escudo— arranca abierta.
+ */
+const filaDe = (page: Page, titulo: string) =>
+  page
+    .locator("details")
+    .filter({ has: page.getByRole("heading", { name: titulo }) });
+
+const abrirSeccion = async (page: Page, titulo: string) => {
+  const fila = filaDe(page, titulo);
+  const abierta = await fila.evaluate(
+    (nodo) => (nodo as HTMLDetailsElement).open,
+  );
+
+  if (!abierta) await fila.locator("summary").click();
+};
+
+const abrirColores = (page: Page) =>
+  abrirSeccion(page, "Colores del municipio");
 
 test("la pagina de marca muestra su ubicacion y no desborda en movil ni escritorio", async ({
   page,
@@ -186,6 +218,79 @@ test("la pagina de marca muestra su ubicacion y no desborda en movil ni escritor
 });
 
 /**
+ * S5 y la vista previa de T4: `/marca` se lee como un taller —arriba como se
+ * ve el panel, abajo tres filas plegables— y cada fila conserva su titulo a la
+ * vista aunque este cerrada.
+ */
+test("cada seccion de /marca tiene su titulo (S5)", async ({ page }) => {
+  await abrirMarca(page);
+
+  for (const titulo of [
+    "Cómo se ve el panel hoy",
+    "Escudo del ayuntamiento",
+    "Colores del municipio",
+    "Restablecer colores",
+  ]) {
+    await expect(
+      page.getByRole("heading", { name: titulo }),
+      `Falta el titulo "${titulo}"`,
+    ).toBeVisible();
+  }
+});
+
+/**
+ * S3: la vista previa pinta el acento como relleno con el texto que mide mas
+ * contraste y **dice el numero medido**; no promete una legibilidad que el
+ * color no tiene. El hallazgo M3 fue ese mismo chip con blanco encima.
+ */
+test("la vista previa dice el contraste medido del acento (S3)", async ({
+  page,
+}) => {
+  await abrirMarca(page);
+
+  const previa = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Cómo se ve el panel hoy" }),
+  });
+
+  await expect(previa).toBeVisible();
+  // La banda del municipio, con el nombre que el panel pinta en el lateral.
+  await expect(previa).toContainText(MUNICIPIOS.motul.nombre);
+
+  const texto = await previa.innerText();
+  const razon = Number(/(\d+\.\d):1/.exec(texto)?.[1]);
+
+  expect(
+    razon,
+    `La vista previa debe decir el contraste medido: ${texto}`,
+  ).toBeGreaterThanOrEqual(4.5);
+});
+
+/**
+ * S1 (hallazgo M1): en el celular la muestra se elige con la muestra a la
+ * vista. Era una columna que quedaba **debajo** de los dos grupos de colores,
+ * asi que al recorrer las paletas la muestra salia de pantalla.
+ */
+test("en el celular la muestra va antes de los dos grupos de colores (S1)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await abrirMarca(page);
+  await abrirColores(page);
+
+  const muestra = page.locator('[data-muestra="colores"]');
+  const primario = grupoDelPrimario(page);
+  const acento = page.getByRole("group", { name: "Color de acento" });
+
+  await expect(muestra).toBeVisible();
+  const cajaMuestra = await muestra.boundingBox();
+  const cajaPrimario = await primario.boundingBox();
+  const cajaAcento = await acento.boundingBox();
+
+  expect(cajaMuestra?.y ?? -1).toBeLessThan(cajaPrimario?.y ?? -1);
+  expect(cajaMuestra?.y ?? -1).toBeLessThan(cajaAcento?.y ?? -1);
+});
+
+/**
  * A 390px la barra inferior muestra cuatro destinos fijos y un `<details>`
  * "Más" con el resto, incluido `Marca` (el ultimo modulo). El modulo activo
  * no vive en una hilera desplazable: hay que abrir "Más" para verlo marcado
@@ -247,7 +352,7 @@ test("un archivo de mas de 1 MiB muestra el mensaje de peso, no falla mudo", asy
 
   await elegirArchivo(page, 1_200_000);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
+  await expect(errorDelArchivo(page)).toHaveText(
     "El archivo pesa más de 1 MiB.",
   );
   await expect(
@@ -263,7 +368,10 @@ test("un archivo que cabe en 1 MiB pero no es PNG dice que no es PNG", async ({
 
   await elegirArchivo(page, UN_MIB);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
+  // Un archivo del tope exacto pasa el chequeo del navegador y lo rechaza el
+  // servidor: la pagina vuelve con el codigo y lo traduce junto al campo.
+  await expect(page).toHaveURL(/error=escudo-no-png/);
+  await expect(errorDelArchivo(page)).toHaveText(
     "El archivo no es un PNG válido.",
   );
 });
@@ -273,12 +381,18 @@ test("un archivo vacio dice que esta vacio", async ({ page }) => {
 
   await elegirArchivo(page, 0);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
-    "El archivo está vacío.",
-  );
+  await expect(page).toHaveURL(/error=escudo-vacio/);
+  await expect(errorDelArchivo(page)).toHaveText("El archivo está vacío.");
 });
 
-test("un archivo que ni el transporte admite muestra un error claro y no una promesa rechazada", async ({
+/**
+ * Un archivo de 5 MiB no entra ni en el transporte: Next corta el cuerpo de
+ * una Server Action en 2 MB y la accion no llega a correr. Antes eso
+ * terminaba en "This page couldn't load" —la pantalla de error del framework,
+ * en ingles—; ahora el campo lo descarta en el navegador con la oracion del
+ * catalogo, y la pagina se queda donde estaba.
+ */
+test("un archivo que ni el transporte admite se descarta con el mensaje de peso", async ({
   page,
 }) => {
   const errores: string[] = [];
@@ -287,12 +401,16 @@ test("un archivo que ni el transporte admite muestra un error claro y no una pro
 
   await elegirArchivo(page, 5 * UN_MIB);
 
-  await expect(page.locator("form").getByRole("alert")).toHaveText(
-    "No se pudo subir el archivo. Intente de nuevo.",
+  await expect(errorDelArchivo(page)).toHaveText(
+    "El archivo pesa más de 1 MiB.",
   );
+  await expect(page).toHaveURL(urlDe("motul", "/marca"));
   await expect(
     page.getByRole("button", { name: "Guardar escudo" }),
   ).toBeEnabled();
+  await expect(
+    page.getByText("This page couldn’t load", { exact: false }),
+  ).toHaveCount(0);
   expect(errores).toEqual([]);
 });
 
@@ -302,10 +420,15 @@ test("un OPERADOR ve el aviso de permiso y no el formulario", async ({
   await accederAMotul(page, correoDeOperador);
   await page.goto(urlDe("motul", "/marca"));
 
+  // S16: la pantalla dice cual es el rol, cual hace falta y a quien pedirlo,
+  // en vez de una sola oracion sin salida.
   await expect(
-    page.getByText("Su rol no tiene permiso para cambiar la marca"),
+    page.getByText("Su rol es Operador: no cambia la marca del ayuntamiento."),
   ).toBeVisible();
-  await expect(page.getByLabel("Escudo del ayuntamiento")).toHaveCount(0);
+  await expect(
+    page.getByText("Pida al administrador municipal el permiso"),
+  ).toBeVisible();
+  await expect(campoDeArchivo(page)).toHaveCount(0);
   await expect(
     page.getByRole("heading", {
       name: "Marca del ayuntamiento",
@@ -319,6 +442,7 @@ test("elegir un color de la paleta lo guarda y el panel lo pinta", async ({
   page,
 }) => {
   await abrirMarca(page);
+  await abrirColores(page);
 
   // Se hace clic en la opcion visible, que es lo que hace una persona: el
   // radio vive recortado (`sr-only`) para que el objetivo tactil sea la
@@ -343,6 +467,7 @@ test("el selector exacto solo se ofrece con «Otro color» marcado", async ({
   // se pudiera tocar con un color de la paleta elegido, el guardado
   // ignoraria el color exacto y avisaria exito igual.
   await abrirMarca(page);
+  await abrirColores(page);
   const exacto = grupoDelPrimario(page).getByLabel("Elegir color primario");
 
   await opcionDelPrimario(page, "Oro").click();
@@ -356,6 +481,7 @@ test("elegir un color libre se guarda tal cual y el panel lo pinta", async ({
   page,
 }) => {
   await abrirMarca(page);
+  await abrirColores(page);
 
   await opcionDelPrimario(page, "Otro color").click();
   await grupoDelPrimario(page)
@@ -369,12 +495,20 @@ test("elegir un color libre se guarda tal cual y el panel lo pinta", async ({
 
 test("restablecer borra los colores y conserva el escudo", async ({ page }) => {
   await abrirMarca(page);
+  await abrirColores(page);
 
   await opcionDelPrimario(page, "Oro").click();
   await page.getByRole("button", { name: "Guardar colores" }).click();
   await expect.poll(() => primarioEnElPanel(page)).toBe(ORO);
 
-  await page.getByRole("button", { name: "Restablecer colores" }).click();
+  // S2: restablecer pide la casilla, y el servidor la exige.
+  await abrirSeccion(page, "Restablecer colores");
+  const restablecer = filaDe(page, "Restablecer colores");
+
+  await restablecer.getByRole("checkbox", { name: /Confirmo/ }).check();
+  await restablecer
+    .getByRole("button", { name: "Restablecer colores" })
+    .click();
 
   await expect(page).toHaveURL(/ok=colores-restablecidos/);
   // Vacio: la marca ya no trae `primario` y `globals.css` vuelve al
@@ -391,6 +525,7 @@ test("un color que la reja rechaza no se guarda y el panel no cambia", async ({
   page,
 }) => {
   await abrirMarca(page);
+  await abrirColores(page);
 
   await opcionDelPrimario(page, "Otro color").click();
 
@@ -439,6 +574,7 @@ test("sin JavaScript, elegir un color y guardarlo funciona igual", async ({
   try {
     const page = await contexto.newPage();
     await page.goto(urlDe("motul", "/marca"));
+    await abrirColores(page);
 
     await opcionDelPrimario(page, "Azul").click();
     await page.getByRole("button", { name: "Guardar colores" }).click();
