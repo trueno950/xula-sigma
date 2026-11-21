@@ -3,13 +3,14 @@
   "chosen": "02-vista-previa-primero.html",
   "handoffs": {
     "02-vista-previa-primero.html": {
-      "status": "in_progress",
+      "status": "implemented",
       "queued": false,
       "sentAt": "2026-11-21T14:25:26.859Z",
       "startedAt": "2026-11-21T14:26:23.368Z",
-      "implementedAt": null,
+      "implementedAt": "2026-11-21T15:59:54.907Z",
       "feature": "odd/tasks/marca-exportacion-ux.md",
-      "note": "T4 de odd/tasks/marca-exportacion-ux.md; arranca cuando termine T2/T3 (mismos archivos)."
+      "note": "PR #162 (d93a36d). Demo: http://demo.xula.localhost:3200/marca",
+      "previewUrl": "http://localhost:3200/marca"
     }
   }
 }
