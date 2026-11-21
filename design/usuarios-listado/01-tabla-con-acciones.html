@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Tabla con acciones — Usuarios</title>
+<style>
+  :root {
+    --color-marca: oklch(0.42 0.12 25);
+    --color-marca-texto: oklch(0.99 0 0);
+    --color-acento: oklch(0.55 0.1 25);
+    --color-marca-suave: color-mix(in oklch, var(--color-marca) 10%, var(--color-caliza-lienzo));
+    --color-marca-tenue: color-mix(in oklch, var(--color-marca) 5%, var(--color-caliza-lienzo));
+    --color-marca-hover: color-mix(in oklch, var(--color-marca) 92%, var(--color-caliza-tinta));
+
+    --color-caliza-fondo: oklch(0.962 0.005 80);
+    --color-caliza-lienzo: oklch(0.995 0.002 80);
+    --color-caliza-superficie: oklch(0.975 0.004 80);
+    --color-caliza-relleno: oklch(0.94 0.005 80);
+    --color-caliza-divisor: oklch(0.9 0.006 80);
+    --color-caliza-borde: oklch(0.62 0.008 80);
+    --color-caliza-inhabilitado: oklch(0.68 0.007 80);
+    --color-caliza-apagada: oklch(0.5 0.008 80);
+    --color-caliza-tinta: oklch(0.22 0.008 80);
+
+    --color-senial-error: oklch(0.46 0.17 27);
+    --color-senial-error-suave: oklch(0.96 0.025 27);
+    --color-senial-exito: oklch(0.46 0.11 150);
+    --color-senial-exito-suave: oklch(0.96 0.03 150);
+    --color-senial-aviso: oklch(0.5 0.13 65);
+    --color-senial-aviso-suave: oklch(0.965 0.035 85);
+
+    --radio-sm: 6px;
+    --radio-md: 8px;
+    --radio-lg: 12px;
+    --radio-pill: 999px;
+
+    --sombra-reposo: 0 1px 2px oklch(0.24 0.008 80 / .06), 0 1px 1px oklch(0.24 0.008 80 / .04);
+    --sombra-elevada: 0 4px 12px -2px oklch(0.24 0.008 80 / .1), 0 2px 4px oklch(0.24 0.008 80 / .05);
+    --ease: cubic-bezier(.25, 1, .5, 1);
+    --fuente: "Inter Variable", system-ui, "Segoe UI", Roboto, sans-serif;
+    --fuente-dato: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { font-family: var(--fuente); }
+  body { margin: 0; background: var(--color-caliza-fondo); color: var(--color-caliza-tinta); font-size: 15px; line-height: 1.55; }
+  :focus-visible { outline: 2px solid var(--color-marca); outline-offset: 2px; }
+  h1, h2, h3, h4, p, ul, li { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  a { color: inherit; }
+  svg { display: block; }
+  .display { font-size: 1.75rem; font-weight: 650; line-height: 1.15; letter-spacing: -.02em; }
+  .headline { font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .title { font-size: .9375rem; font-weight: 600; line-height: 1.4; }
+  .body { font-size: .9375rem; line-height: 1.55; }
+  .label { font-size: .8125rem; font-weight: 500; line-height: 1.3; color: var(--color-caliza-apagada); }
+  .dato { font-family: var(--fuente-dato); font-size: .875rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .apagada { color: var(--color-caliza-apagada); }
+  .enlace { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* shell */
+  .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--color-caliza-fondo); }
+  .sidebar { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); overflow-y: auto; }
+  .municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); font-weight: 600; font-size: 15px; line-height: 1.2; color: var(--color-caliza-tinta); text-decoration: none; }
+  .nav { display: flex; flex-direction: column; gap: 24px; padding: 12px; }
+  .nav .grupo > .label { padding: 0 12px 4px; }
+  .nav ul { display: flex; flex-direction: column; gap: 2px; }
+  .nav a.item { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--radio-md); font-weight: 600; font-size: 15px; color: var(--color-caliza-apagada); text-decoration: none; transition: background-color 150ms var(--ease), color 150ms var(--ease); }
+  .nav a.item:hover { background: var(--color-caliza-superficie); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .nav a.item[aria-current="page"] svg { color: var(--color-marca); }
+  .pie-del-lateral { border-top: 1px solid var(--color-caliza-divisor); padding: 12px; margin-top: auto; }
+  .pie-del-lateral .label { padding: 0 12px 4px; }
+  .boton-fantasma { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--radio-md); background: transparent; color: var(--color-caliza-apagada); font: 600 15px var(--fuente); cursor: pointer; }
+  .boton-fantasma:hover { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  /* contenido */
+  .contenido { min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px 32px 40px; display: flex; flex-direction: column; gap: 16px; }
+  .migaja { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-caliza-apagada); }
+  .migaja a { color: var(--color-caliza-tinta); text-decoration: underline; text-underline-offset: 2px; }
+  .cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; }
+  .cabecera h1 { margin-bottom: 4px; }
+  .cabecera .descripcion { max-width: 62ch; color: var(--color-caliza-apagada); }
+  .acciones-cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: var(--radio-md); border: 1px solid transparent; font: 600 15px/1 var(--fuente); cursor: pointer; text-decoration: none; white-space: nowrap; transition: color 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease), scale 150ms var(--ease); }
+  .boton:active { scale: .98; }
+  .boton.primaria { background: var(--color-marca); color: var(--color-marca-texto); }
+  .boton.primaria:hover { background: var(--color-marca-hover); }
+  .boton.secundaria { background: var(--color-caliza-lienzo); color: var(--color-caliza-tinta); border-color: var(--color-caliza-borde); }
+  .boton.secundaria:hover { background: var(--color-caliza-superficie); }
+  .boton.peligro { background: var(--color-caliza-lienzo); color: var(--color-senial-error); border-color: var(--color-senial-error); }
+  .boton.peligro:hover { background: var(--color-senial-error-suave); }
+  .ancho { width: 100%; }
+
+  /* aviso de una sola vez */
+  .aviso { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: var(--radio-md); background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .aviso svg { flex: none; margin-top: 2px; }
+  .aviso .cuerpo-aviso { display: flex; flex-direction: column; gap: 2px; }
+  .aviso .texto { color: var(--color-caliza-tinta); font-weight: 500; }
+  .aviso .una-vez { font-size: 13px; color: var(--color-caliza-apagada); }
+
+  /* conteo y orden */
+  .barra-resultado { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+  .conteo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+  .conteo .cifra { font-family: var(--fuente-dato); font-weight: 600; }
+  .orden { display: inline-flex; align-items: baseline; gap: 6px; max-width: 62ch; }
+
+  /* tabla */
+  .tarjeta { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); box-shadow: var(--sombra-reposo); overflow: clip; }
+  .tabla { width: 100%; border-collapse: collapse; }
+  .tabla thead th { height: 40px; padding: 0 16px; background: var(--color-caliza-superficie); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-align: left; white-space: nowrap; }
+  .tabla tbody td { padding: 10px 16px; border-top: 1px solid var(--color-caliza-divisor); vertical-align: top; }
+  .tabla tbody tr { transition: background-color 150ms var(--ease); }
+  .tabla tbody tr:hover { background: var(--color-caliza-superficie); }
+  .tabla tbody tr.fila-baja:hover { background: transparent; }
+  .col-rol { width: 150px; }
+  .col-estado { width: 190px; }
+  .col-acciones { width: 300px; }
+  .cuenta { display: flex; flex-direction: column; gap: 2px; padding-top: 6px; }
+  .cuenta .nombre { font-size: 15px; font-weight: 600; }
+  .cuenta .correo { font-size: 13px; color: var(--color-caliza-apagada); }
+  .rol { padding-top: 8px; }
+  .estado-celda { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; padding-top: 5px; }
+  .fila-baja .nombre { color: var(--color-caliza-apagada); }
+  .fila-baja .correo { color: var(--color-caliza-apagada); }
+
+  .insignia { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: var(--radio-pill); font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .insignia svg { width: 14px; height: 14px; }
+  .insignia.exito { background: var(--color-senial-exito-suave); color: var(--color-senial-exito); }
+  .insignia.error { background: var(--color-senial-error-suave); color: var(--color-senial-error); }
+  .insignia.neutro { background: var(--color-caliza-relleno); color: var(--color-caliza-tinta); }
+
+  /* el acordeón de acciones de la fila */
+  .acciones-fila { padding-top: 2px; }
+  .acciones-fila > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--color-caliza-borde); border-radius: var(--radio-md); background: var(--color-caliza-lienzo); font: 600 15px var(--fuente); color: var(--color-caliza-tinta); cursor: pointer; list-style: none; transition: background-color 150ms var(--ease); }
+  .acciones-fila > summary::-webkit-details-marker { display: none; }
+  .acciones-fila > summary:hover { background: var(--color-caliza-superficie); }
+  .acciones-fila[open] > summary { background: var(--color-caliza-superficie); }
+  .acciones-fila > summary .chevron { margin-left: auto; color: var(--color-caliza-apagada); transition: rotate 150ms var(--ease); }
+  .acciones-fila[open] > summary .chevron { rotate: 180deg; }
+  .panel-fila { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .panel-fila .nota { font-size: 13px; color: var(--color-caliza-apagada); padding: 0 2px; }
+  .separador-peligro { margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--color-caliza-divisor); display: flex; flex-direction: column; gap: 8px; }
+  .confirmacion { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.4; color: var(--color-caliza-tinta); }
+  .confirmacion input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--color-marca); }
+  .sin-acciones { max-width: 30ch; padding-top: 12px; display: flex; gap: 6px; }
+  .sin-acciones svg { flex: none; margin-top: 2px; }
+
+  /* notas */
+  .hoja { background: var(--color-caliza-fondo); padding: 32px 24px 64px; border-top: 1px solid var(--color-caliza-divisor); }
+  .hoja-inner { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  .notas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .nota { padding: 16px 20px; border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); border: 1px solid var(--color-caliza-divisor); }
+  .nota h3 { margin-bottom: 8px; }
+  .nota ul { display: flex; flex-direction: column; gap: 6px; padding-left: 18px; list-style: disc; color: var(--color-caliza-apagada); }
+  .nota li strong { color: var(--color-caliza-tinta); }
+  .nota code { font-family: var(--fuente-dato); font-size: .875rem; }
+  .muestras { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+  .muestra { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); }
+
+  /* móvil */
+  .telefono-marco { display: flex; flex-direction: column; gap: 12px; }
+  .telefono { width: 390px; height: 844px; overflow-y: auto; position: relative; border: 1px solid var(--color-caliza-borde); border-radius: 20px; background: var(--color-caliza-fondo); box-shadow: var(--sombra-reposo); }
+  .m-municipio { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 16px; background: var(--color-marca-tenue); border-bottom: 1px solid var(--color-caliza-divisor); font-weight: 600; font-size: 15px; color: var(--color-caliza-tinta); text-decoration: none; }
+  .m-cuerpo { padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .m-lista { border: 1px solid var(--color-caliza-divisor); border-radius: var(--radio-lg); background: var(--color-caliza-lienzo); overflow: clip; box-shadow: var(--sombra-reposo); }
+  .m-cuenta { padding: 12px 16px; border-bottom: 1px solid var(--color-caliza-divisor); display: flex; flex-direction: column; gap: 8px; }
+  .m-cuenta:last-child { border-bottom: 0; }
+  .m-cuenta .l1 { display: flex; flex-direction: column; gap: 2px; }
+  .m-cuenta .l2 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--color-caliza-apagada); }
+  .m-cuenta .acciones-fila > summary { width: 100%; }
+  .m-cuenta .panel-fila .boton { width: 100%; }
+  .m-nav { position: sticky; bottom: 0; display: flex; gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-caliza-divisor); background: var(--color-caliza-lienzo); }
+  .m-nav a { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--radio-md); font-size: 13px; font-weight: 500; color: var(--color-caliza-apagada); text-decoration: none; }
+  .m-nav a[aria-current="page"] { background: var(--color-marca-suave); color: var(--color-caliza-tinta); }
+  .m-nav a[aria-current="page"] svg { color: var(--color-marca); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-personas" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-6 1.8-6 4v3h12v-3c0-2.2-2.7-4-6-4z"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M12 2.5 22 20.5H2zM11 9h2v6h-2zm0 7.4h2v2h-2z"/></symbol>
+    <symbol id="i-constancias" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4v15H6zM13 4v3h3zM8.5 11h7v1.8h-7zm0 4h7v1.8h-7z"/></symbol>
+    <symbol id="i-territorio" viewBox="0 0 24 24"><path d="M3 5.5 9 3l6 2.5L21 3v15.5L15 21l-6-2.5L3 21zM9 5v13.2l6 2.4V7.4z"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M12 2.2c-3.6 0-6.5 2.9-6.5 6.5 0 4.9 6.5 13.1 6.5 13.1s6.5-8.2 6.5-13.1c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></symbol>
+    <symbol id="i-obra" viewBox="0 0 24 24"><path d="M14.2 2.6a5.2 5.2 0 0 0-4.7 7.2L3.4 15.9l4.7 4.7 6.1-6.1a5.2 5.2 0 0 0 7.2-4.7l-3.3 3.3-4.7-4.7z"/></symbol>
+    <symbol id="i-usuarios" viewBox="0 0 24 24"><path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.9 0-7 2-7 4.6V21h14v-3.4c0-2.6-3.1-4.6-7-4.6z"/></symbol>
+    <symbol id="i-marca" viewBox="0 0 24 24"><path d="M12 2.5A9.5 9.5 0 1 0 21.5 12c0-1.4-.3-2.7-.8-3.9l-2 2c.2.6.3 1.2.3 1.9a7 7 0 1 1-7-7c.7 0 1.3.1 1.9.3l2-2A9.4 9.4 0 0 0 12 2.5zm7.3 1-6.1 6.1-2.1-2.1 6.1-6.1z"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M11 3h2v9l3.2-3.2 1.4 1.4L12 15.8 6.4 10.2l1.4-1.4L11 12zM4 17h16v3.5H4z"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></symbol>
+    <symbol id="i-escudo" viewBox="0 0 40 40"><path d="M20 2 34 7v12c0 8.6-5.8 14.4-14 17C11.8 33.4 6 27.6 6 19V7z" fill="var(--color-marca)"/><path d="M13 15h6.2v10H13zm7.8 0H27v10h-6.2z" fill="var(--color-marca-texto)" opacity=".85"/></symbol>
+    <symbol id="i-suma" viewBox="0 0 24 24"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z"/></symbol>
+    <symbol id="i-llave" viewBox="0 0 24 24"><path d="M15.5 2.5a6 6 0 0 0-5.7 7.9L2.5 17.7V21.5h3.8l1.2-1.2v-2.1h2.1l1.2-1.2v-2.1h2.1l2.6-2.6a6 6 0 1 0 0-9.8zm1.6 3.3a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6z"/></symbol>
+    <symbol id="i-candado" viewBox="0 0 24 24"><path d="M12 2.5a4.5 4.5 0 0 0-4.5 4.5V9H6v12.5h12V9h-1.5V7A4.5 4.5 0 0 0 12 2.5zm0 2A2.5 2.5 0 0 1 14.5 7v2h-5V7A2.5 2.5 0 0 1 12 4.5zM12 12a1.8 1.8 0 0 1 1 3.3v2.2h-2v-2.2A1.8 1.8 0 0 1 12 12z"/></symbol>
+    <symbol id="si-check" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm4.7 6.6-5.6 6.4-3.3-3.2 1.4-1.4 1.8 1.7 4.2-4.9z"/></symbol>
+    <symbol id="si-x" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm3.5 12.1-1.4 1.4L12 13.9 9.9 16l-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4L12 11.1l2.1-2.1 1.4 1.4-2.1 2.1z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M12 15.5 5.5 9l1.5-1.5 5 5 5-5L18.5 9z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegación del panel">
+    <a class="municipio" href="#">
+      <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+      Motul
+    </a>
+    <nav class="nav" aria-label="Módulos">
+      <div class="grupo">
+        <h2 class="label">Atención</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Territorio</h2>
+        <ul>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-mapa"/></svg>Mapa operativo</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-obra"/></svg>Intervenciones</a></li>
+        </ul>
+      </div>
+      <div class="grupo">
+        <h2 class="label">Administración</h2>
+        <ul>
+          <li><a class="item" href="#" aria-current="page"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Usuarios</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-marca"/></svg>Marca</a></li>
+          <li><a class="item" href="#"><svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#i-exportar"/></svg>Exportación</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="pie-del-lateral">
+      <p class="label">Administrador municipal</p>
+      <button type="button" class="boton-fantasma">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <nav class="migaja" aria-label="Ruta">
+      <a href="#">Administración</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Usuarios</span>
+    </nav>
+
+    <header class="cabecera">
+      <div>
+        <h1 class="display">Usuarios</h1>
+        <p class="descripcion body">Quién entra a este panel y con qué rol. Las cuentas son de este ayuntamiento.</p>
+      </div>
+      <div class="acciones-cabecera">
+        <a class="boton primaria" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Nuevo usuario</a>
+      </div>
+    </header>
+
+    <div class="aviso" role="status">
+      <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#si-check"/></svg>
+      <div class="cuerpo-aviso">
+        <p class="texto">Se dio de baja a José Armando May el <span class="dato">16 nov 2026</span>. Ya no puede entrar al panel.</p>
+        <p class="una-vez">Este aviso se muestra una sola vez: recargar la página no lo repite.</p>
+      </div>
+    </div>
+
+    <div class="barra-resultado">
+      <p class="conteo body">
+        <span><span class="cifra">8</span> cuentas</span>
+        <span class="apagada">·</span>
+        <span><span class="cifra">6</span> activas</span>
+        <span class="apagada">·</span>
+        <span><span class="cifra">2</span> de baja</span>
+      </p>
+      <p class="orden label">Orden: activas primero, por rol y luego por nombre; las de baja al final, de la más reciente a la más antigua.</p>
+    </div>
+
+    <section class="tarjeta" aria-labelledby="t-lista">
+      <h2 class="sr-only" id="t-lista">Cuentas del ayuntamiento de Motul</h2>
+      <table class="tabla">
+        <caption class="sr-only">8 cuentas: 6 activas y 2 de baja, ordenadas por rol y luego por nombre, con las cuentas de baja al final.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Cuenta</th>
+            <th class="col-rol" scope="col">Rol</th>
+            <th class="col-estado" scope="col">Estado</th>
+            <th class="col-acciones" scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="cuenta">
+                <span class="nombre">Ana Canché <span class="label">· su cuenta</span></span>
+                <span class="correo">admin@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body">Administrador municipal</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span>
+              </span>
+            </td>
+            <td>
+              <p class="sin-acciones label"><svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-candado"/></svg>Su cuenta: la contraseña no se restablece desde aquí y nadie se da de baja a sí mismo.</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <span class="cuenta">
+                <span class="nombre">Rosa Poot</span>
+                <span class="correo">rosa.poot@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body">Operador</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span>
+              </span>
+            </td>
+            <td>
+              <details class="acciones-fila" name="accionesDeCuenta" open>
+                <summary>Acciones<span class="sr-only"> de Rosa Poot</span><svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-fila">
+                  <form action="#" method="post">
+                    <input type="hidden" name="usuarioId" value="6f2a">
+                    <button class="boton secundaria ancho" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-llave"/></svg>Restablecer contraseña<span class="sr-only"> de Rosa Poot</span></button>
+                  </form>
+                  <p class="nota">Genera una contraseña temporal de un solo uso.</p>
+                  <div class="separador-peligro">
+                    <form action="#" method="post">
+                      <input type="hidden" name="usuarioId" value="6f2a">
+                      <label class="confirmacion"><input type="checkbox" name="confirmar" value="si" required>Confirmo dar de baja a Rosa Poot; dejará de entrar al panel.</label>
+                      <button class="boton peligro ancho" type="submit" style="margin-top:8px">Dar de baja<span class="sr-only"> a Rosa Poot</span></button>
+                    </form>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <span class="cuenta">
+                <span class="nombre">Wilberth Canul</span>
+                <span class="correo">wilberth.canul@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body">Operador</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span>
+              </span>
+            </td>
+            <td>
+              <details class="acciones-fila" name="accionesDeCuenta">
+                <summary>Acciones<span class="sr-only"> de Wilberth Canul</span><svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-fila">
+                  <form action="#" method="post">
+                    <input type="hidden" name="usuarioId" value="a41c">
+                    <button class="boton secundaria ancho" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-llave"/></svg>Restablecer contraseña<span class="sr-only"> de Wilberth Canul</span></button>
+                  </form>
+                  <div class="separador-peligro">
+                    <form action="#" method="post">
+                      <input type="hidden" name="usuarioId" value="a41c">
+                      <label class="confirmacion"><input type="checkbox" name="confirmar" value="si" required>Confirmo dar de baja a Wilberth Canul; dejará de entrar al panel.</label>
+                      <button class="boton peligro ancho" type="submit" style="margin-top:8px">Dar de baja<span class="sr-only"> a Wilberth Canul</span></button>
+                    </form>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <span class="cuenta">
+                <span class="nombre">Floridalma Dzul</span>
+                <span class="correo">floridalma.dzul@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body">Operador</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span>
+              </span>
+            </td>
+            <td>
+              <details class="acciones-fila" name="accionesDeCuenta">
+                <summary>Acciones<span class="sr-only"> de Floridalma Dzul</span><svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-fila">
+                  <form action="#" method="post">
+                    <input type="hidden" name="usuarioId" value="b90e">
+                    <button class="boton secundaria ancho" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-llave"/></svg>Restablecer contraseña<span class="sr-only"> de Floridalma Dzul</span></button>
+                  </form>
+                  <div class="separador-peligro">
+                    <form action="#" method="post">
+                      <input type="hidden" name="usuarioId" value="b90e">
+                      <label class="confirmacion"><input type="checkbox" name="confirmar" value="si" required>Confirmo dar de baja a Floridalma Dzul; dejará de entrar al panel.</label>
+                      <button class="boton peligro ancho" type="submit" style="margin-top:8px">Dar de baja<span class="sr-only"> a Floridalma Dzul</span></button>
+                    </form>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <span class="cuenta">
+                <span class="nombre">María Elena Chan</span>
+                <span class="correo">maria.chan@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body">Consulta</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span>
+              </span>
+            </td>
+            <td>
+              <details class="acciones-fila" name="accionesDeCuenta">
+                <summary>Acciones<span class="sr-only"> de María Elena Chan</span><svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-fila">
+                  <form action="#" method="post">
+                    <input type="hidden" name="usuarioId" value="1d7f">
+                    <button class="boton secundaria ancho" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-llave"/></svg>Restablecer contraseña<span class="sr-only"> de María Elena Chan</span></button>
+                  </form>
+                  <div class="separador-peligro">
+                    <form action="#" method="post">
+                      <input type="hidden" name="usuarioId" value="1d7f">
+                      <label class="confirmacion"><input type="checkbox" name="confirmar" value="si" required>Confirmo dar de baja a María Elena Chan; dejará de entrar al panel.</label>
+                      <button class="boton peligro ancho" type="submit" style="margin-top:8px">Dar de baja<span class="sr-only"> a María Elena Chan</span></button>
+                    </form>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <span class="cuenta">
+                <span class="nombre">Pedro Uicab</span>
+                <span class="correo">pedro.uicab@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body">Consulta</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span>
+              </span>
+            </td>
+            <td>
+              <details class="acciones-fila" name="accionesDeCuenta">
+                <summary>Acciones<span class="sr-only"> de Pedro Uicab</span><svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-fila">
+                  <form action="#" method="post">
+                    <input type="hidden" name="usuarioId" value="c3b2">
+                    <button class="boton secundaria ancho" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-llave"/></svg>Restablecer contraseña<span class="sr-only"> de Pedro Uicab</span></button>
+                  </form>
+                  <div class="separador-peligro">
+                    <form action="#" method="post">
+                      <input type="hidden" name="usuarioId" value="c3b2">
+                      <label class="confirmacion"><input type="checkbox" name="confirmar" value="si" required>Confirmo dar de baja a Pedro Uicab; dejará de entrar al panel.</label>
+                      <button class="boton peligro ancho" type="submit" style="margin-top:8px">Dar de baja<span class="sr-only"> a Pedro Uicab</span></button>
+                    </form>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+
+          <tr class="fila-baja">
+            <td>
+              <span class="cuenta">
+                <span class="nombre">José Armando May</span>
+                <span class="correo">jose.may@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body apagada">Consulta</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>De baja</span>
+                <span class="dato apagada">de baja desde el 16 nov 2026</span>
+              </span>
+            </td>
+            <td>
+              <p class="sin-acciones label"><svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#si-x"/></svg>Sin acciones: la cuenta ya no entra al panel.</p>
+            </td>
+          </tr>
+
+          <tr class="fila-baja">
+            <td>
+              <span class="cuenta">
+                <span class="nombre">Aurelia Tzec</span>
+                <span class="correo">aurelia.tzec@demo.example.com</span>
+              </span>
+            </td>
+            <td class="rol body apagada">Operador</td>
+            <td>
+              <span class="estado-celda">
+                <span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>De baja</span>
+                <span class="dato apagada">de baja desde el 3 oct 2026</span>
+              </span>
+            </td>
+            <td>
+              <p class="sin-acciones label"><svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#si-x"/></svg>Sin acciones: la cuenta ya no entra al panel.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<section class="hoja" aria-labelledby="t-notas">
+  <div class="hoja-inner">
+    <div>
+      <h2 class="headline" id="t-notas">01 · Tabla con acciones</h2>
+      <p class="body apagada" style="max-width:70ch">La misma forma que el usuario ya eligió para los listados: una tabla con los valores en columnas fijas, el conteo y el orden encima y, en la última columna, el acordeón de acciones por cuenta —el patrón del detalle de reporte, con el peligro al final—.</p>
+    </div>
+
+    <div class="notas">
+      <div class="nota">
+        <h3 class="title">Compromiso (tradeoff)</h3>
+        <p class="body apagada" style="margin:8px 0 0">Cuatro columnas fijas: rol y estado se comparan de un vistazo y la cuenta se identifica por nombre y correo en un renglón. Cuesta 300&nbsp;px de ancho para la columna de acciones, que le roban ancho al nombre, y —al abrir una cuenta— la fila crece hacia abajo y empuja el resto de la lista, así que dos cuentas abiertas a la vez no se pueden ver: solo una, por el acordeón exclusivo. En el teléfono la tabla se vuelve una lista de renglones y el acordeón ocupa una línea completa.</p>
+      </div>
+      <div class="nota">
+        <h3 class="title">Qué corrige (S1-S5, S12-S14)</h3>
+        <ul class="body">
+          <li><strong>S1.</strong> Su propia fila no ofrece «Restablecer contraseña»: dice por qué. El servidor lo vuelve a rechazar.</li>
+          <li><strong>S2.</strong> Las acciones de la cuenta viven en un <code>&lt;details name="accionesDeCuenta"&gt;</code> exclusivo; «Dar de baja» va al final, tras un divisor, con contorno de peligro.</li>
+          <li><strong>S3.</strong> El <code>summary</code> lleva «de Rosa Poot» en <code>sr-only</code>, y cada botón repite de quién es: el nombre accesible es «Restablecer contraseña de Rosa Poot».</li>
+          <li><strong>S4.</strong> Conteo explícito —<span class="dato">8</span> cuentas, <span class="dato">6</span> activas, <span class="dato">2</span> de baja— y el orden escrito al lado.</li>
+          <li><strong>S5.</strong> La cuenta de baja dice «de baja desde el 16 nov 2026» bajo la insignia.</li>
+          <li><strong>S12.</strong> «Dar de baja» no se envía sin la casilla obligatoria que nombra a la persona; el texto es el mismo que exige el servidor.</li>
+          <li><strong>S13.</strong> La confirmación de arriba dice de quién y cuándo: «Se dio de baja a José Armando May el 16 nov 2026».</li>
+          <li><strong>S14.</strong> Ese aviso viene del POST y no de la URL: recargar o volver atrás no lo repite, y el aviso lo dice en voz baja.</li>
+        </ul>
+      </div>
+      <div class="nota">
+        <h3 class="title">Cómo se comporta</h3>
+        <ul class="body">
+          <li><strong>Un solo acordeón abierto.</strong> <code>name</code> en <code>&lt;details&gt;</code> (Chrome 120, Safari 17.2, Firefox 130) hace que abrir una cuenta cierre la anterior. Sin soporte, cada uno abre por su cuenta: nada se rompe.</li>
+          <li><strong>Todo es un POST nativo.</strong> Las dos acciones son formularios; la casilla es <code>required</code> y el servidor la vuelve a exigir, así que sin JavaScript la baja se detiene igual.</li>
+          <li><strong>El restablecer no anuncia éxito solo:</strong> su resultado es la clave temporal en pantalla (<code>design/usuarios-clave-temporal/</code>), no un aviso verde.</li>
+          <li><strong>La cuenta de baja no ofrece nada:</strong> no hay «reactivar» en esta rebanada; la fila lo dice en vez de dejar la columna vacía.</li>
+          <li><strong>Foco y tacto:</strong> contorno de 2&nbsp;px en marca; <code>summary</code> de 44&nbsp;px de alto; casilla de 20&nbsp;px con su etiqueta clicable. Nada se revela al pasar el ratón.</li>
+          <li><strong>Autochequeo:</strong> solo tokens de <code>design/system.md</code> —caliza fondo/lienzo/superficie/relleno/divisor/borde/apagada/tinta, marca y sus mezclas, señales error/éxito— y una sola familia, <code>Inter Variable</code> con respaldo de sistema y mono del sistema para conteos y fechas. Sin blanco puro ni negro puro, sin cebra, sin tarjetas anidadas, sin sombra en botones, filas ni campos.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="muestras" aria-label="Estados de la fila">
+      <div class="muestra">
+        <h3 class="title">Fila de su propia cuenta (S1)</h3>
+        <span class="cuenta">
+          <span class="nombre">Ana Canché <span class="label">· su cuenta</span></span>
+          <span class="correo">admin@demo.example.com</span>
+        </span>
+        <p class="sin-acciones label" style="padding-top:4px"><svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-candado"/></svg>Su cuenta: la contraseña no se restablece desde aquí y nadie se da de baja a sí mismo.</p>
+        <p class="label">Sin botón que después falle: la razón está donde estaría la acción. El servidor rechaza el mismo caso por si alguien arma el POST a mano.</p>
+      </div>
+      <div class="muestra">
+        <h3 class="title">Confirmación de restablecer (S13)</h3>
+        <div class="aviso" role="status">
+          <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#si-check"/></svg>
+          <div class="cuerpo-aviso">
+            <p class="texto">Se restableció la contraseña de Rosa Poot.</p>
+            <p class="una-vez">La clave nueva está abajo, en el aviso de la contraseña temporal.</p>
+          </div>
+        </div>
+        <p class="label">Restablecer nunca termina en un aviso verde solo: el éxito y la clave llegan juntos. Si la clave ya no se puede mostrar, lo dice ese aviso y ofrece restablecer otra vez (S11).</p>
+      </div>
+    </div>
+
+    <div class="telefono-marco">
+      <div>
+        <h2 class="headline">Móvil · 390 × 844</h2>
+        <p class="body apagada">Mismo orden de lectura: título, «Nuevo usuario» a todo lo ancho, conteo, aviso y cuentas. Cada cuenta gasta cuatro renglones y el acordeón ocupa una línea completa de 44&nbsp;px; la casilla de la baja y su botón se apilan a todo lo ancho.</p>
+      </div>
+      <div class="telefono">
+        <a class="m-municipio" href="#">
+          <svg width="40" height="40" aria-hidden="true"><use href="#i-escudo"/></svg>
+          Motul
+        </a>
+        <div class="m-cuerpo">
+          <nav class="migaja" aria-label="Ruta">
+            <a href="#">Administración</a>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">Usuarios</span>
+          </nav>
+          <h1 class="display">Usuarios</h1>
+          <a class="boton primaria ancho" href="#"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-suma"/></svg>Nuevo usuario</a>
+
+          <div class="aviso" role="status">
+            <svg width="20" height="20" aria-hidden="true" fill="currentColor"><use href="#si-check"/></svg>
+            <div class="cuerpo-aviso">
+              <p class="texto">Se dio de baja a José Armando May el <span class="dato">16 nov 2026</span>.</p>
+              <p class="una-vez">Este aviso se muestra una sola vez.</p>
+            </div>
+          </div>
+
+          <p class="conteo body"><span><span class="cifra">8</span> cuentas</span><span class="apagada">·</span><span><span class="cifra">6</span> activas</span><span class="apagada">·</span><span><span class="cifra">2</span> de baja</span></p>
+          <p class="label">Activas primero, por rol y luego por nombre; las de baja al final.</p>
+
+          <ul class="m-lista">
+            <li class="m-cuenta">
+              <span class="l1">
+                <span class="nombre">Ana Canché <span class="label">· su cuenta</span></span>
+                <span class="correo" style="font-size:13px;color:var(--color-caliza-apagada)">admin@demo.example.com</span>
+              </span>
+              <span class="l2"><span>Administrador municipal</span><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span></span>
+              <p class="sin-acciones label"><svg width="16" height="16" aria-hidden="true" fill="currentColor"><use href="#i-candado"/></svg>Su cuenta: la contraseña no se restablece desde aquí.</p>
+            </li>
+            <li class="m-cuenta">
+              <span class="l1">
+                <span class="nombre">Rosa Poot</span>
+                <span class="correo" style="font-size:13px;color:var(--color-caliza-apagada)">rosa.poot@demo.example.com</span>
+              </span>
+              <span class="l2"><span>Operador</span><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span></span>
+              <details class="acciones-fila" name="accionesMovil" open>
+                <summary>Acciones<span class="sr-only"> de Rosa Poot</span><svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-fila">
+                  <form action="#" method="post">
+                    <button class="boton secundaria" type="submit"><svg width="18" height="18" aria-hidden="true" fill="currentColor"><use href="#i-llave"/></svg>Restablecer contraseña<span class="sr-only"> de Rosa Poot</span></button>
+                  </form>
+                  <div class="separador-peligro">
+                    <form action="#" method="post">
+                      <label class="confirmacion"><input type="checkbox" name="confirmar" value="si" required>Confirmo dar de baja a Rosa Poot; dejará de entrar al panel.</label>
+                      <button class="boton peligro ancho" type="submit" style="margin-top:8px">Dar de baja<span class="sr-only"> a Rosa Poot</span></button>
+                    </form>
+                  </div>
+                </div>
+              </details>
+            </li>
+            <li class="m-cuenta">
+              <span class="l1">
+                <span class="nombre">Wilberth Canul</span>
+                <span class="correo" style="font-size:13px;color:var(--color-caliza-apagada)">wilberth.canul@demo.example.com</span>
+              </span>
+              <span class="l2"><span>Operador</span><span class="insignia exito"><svg fill="currentColor" aria-hidden="true"><use href="#si-check"/></svg>Activa</span></span>
+              <details class="acciones-fila" name="accionesMovil">
+                <summary>Acciones<span class="sr-only"> de Wilberth Canul</span><svg class="chevron" width="18" height="18" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <div class="panel-fila">
+                  <form action="#" method="post">
+                    <button class="boton secundaria" type="submit">Restablecer contraseña<span class="sr-only"> de Wilberth Canul</span></button>
+                  </form>
+                </div>
+              </details>
+            </li>
+            <li class="m-cuenta">
+              <span class="l1">
+                <span class="nombre" style="color:var(--color-caliza-apagada)">José Armando May</span>
+                <span class="correo" style="font-size:13px;color:var(--color-caliza-apagada)">jose.may@demo.example.com</span>
+              </span>
+              <span class="l2"><span>Consulta</span><span class="insignia error"><svg fill="currentColor" aria-hidden="true"><use href="#si-x"/></svg>De baja</span><span class="dato apagada">desde el 16 nov 2026</span></span>
+            </li>
+          </ul>
+        </div>
+
+        <nav class="m-nav" aria-label="Navegación principal">
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-personas"/></svg>Padrón</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-reportes"/></svg>Reportes</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-constancias"/></svg>Constancias</a>
+          <a href="#"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-territorio"/></svg>Territorio</a>
+          <a href="#" aria-current="page"><svg width="24" height="24" aria-hidden="true" fill="currentColor"><use href="#i-usuarios"/></svg>Más</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

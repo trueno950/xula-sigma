@@ -1,0 +1,21 @@
+{
+  "title": "Contraseña temporal y pantalla sin permiso",
+  "brief": "Rediseño del aviso de la contraseña temporal de Usuarios —después de un alta o de un restablecer— y de la pantalla que ve un rol sin permiso: la clave tiene que quedar en pantalla hasta que la operadora confirme que la anotó, decir de quién es, ofrecer copiarla y, cuando ya no se puede ver, decir cómo conseguir otra; la pantalla sin permiso conserva el encabezado y la migaja del módulo.",
+  "feature": "odd/tasks/usuarios-ux.md",
+  "artboards": [
+    {
+      "file": "01-aviso-sobre-la-lista.html",
+      "title": "Aviso sobre la lista",
+      "tradeoff": "La clave es una tarjeta arriba del listado, en el lugar donde hoy vive el aviso verde de éxito: no hay ruta ni paso nuevos y la operadora no pierde el hilo de las cuentas. Cuesta que la clave compita con la lista —queda arriba, no en el centro de la vista—, que desaparezca con el primer desplazamiento en un teléfono y que, mientras está visible, la pantalla siga ofreciendo «Restablecer» en otras filas, así que el aviso tiene que decir de quién es para no confundirse con la cuenta de al lado.",
+      "width": 1440,
+      "height": 1120
+    },
+    {
+      "file": "02-entrega-de-la-clave.html",
+      "title": "Entrega de la clave",
+      "tradeoff": "La clave gana su propia pantalla de 760 px, con la clave en grande, tres pasos escritos sobre cómo entregarla y un solo botón de salida: nada más compite con el secreto. Cuesta una ruta y un paso más en el flujo del alta, deja el listado esperando detrás y vuelve peligroso el botón «atrás» —salir sin confirmar pierde la clave y obliga a restablecer, cosa que la pantalla advierte antes del botón—, además de exigir un estado explícito para quien la abre con el token gastado o vencido.",
+      "width": 1440,
+      "height": 1000
+    }
+  ]
+}

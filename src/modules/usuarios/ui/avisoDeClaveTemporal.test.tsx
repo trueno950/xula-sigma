@@ -3,13 +3,17 @@ import { describe, expect, it, vi } from "vitest";
 import type { ClaveMostrada } from "./claveMostrada";
 
 /**
- * S9 de `usuarios-ux` (hallazgo C1): la contrasenia temporal se queda en
- * pantalla hasta que la operadora indica que ya la anoto.
+ * S9 y S10 de `usuarios-ux` (hallazgos C1, C2 y C4) en la tarjeta de la
+ * contrasenia temporal
+ * (`design/usuarios-clave-temporal/01-aviso-sobre-la-lista.html`).
  *
- * Sin navegador lo unico que se puede afirmar es que la tarjeta trae ese
- * boton y que el token viaja en un campo oculto, no en la URL; que siga
- * visible dos segundos despues y que solo desaparezca al pulsarlo lo prueba
- * `e2e/usuariosClaveTemporal.spec.ts`.
+ * Sin navegador se puede afirmar que la tarjeta dice de quien es la clave
+ * —nombre, correo y rol, porque mientras la tarjeta esta arriba el listado
+ * sigue ofreciendo «Restablecer» en otras filas—, que la clave lleva una
+ * etiqueta accesible, y que **«Copiar» no esta en el HTML del servidor**:
+ * el boton lo pinta una isla cliente, y lo que se prueba aca es justamente
+ * lo que se ve sin JavaScript. Que copie de verdad y que sin script no haya
+ * boton lo prueba `e2e/usuariosClaveTemporal.spec.ts`.
  */
 
 vi.mock("./actions/descartarClaveMostradaAction", () => ({
@@ -25,21 +29,40 @@ const MOSTRADA: ClaveMostrada = {
   clave: "clave-temporal-larga",
 };
 
+const NOMBRE = "Operadora de Mostrador";
+const CORREO = "operadora@motul.example.com";
+
 const pintar = (sobre: Partial<ClaveMostrada> = {}) =>
   renderToStaticMarkup(
     <AvisoDeClaveTemporal
       mostrada={{ ...MOSTRADA, ...sobre }}
-      nombre="Operadora de Mostrador"
+      usuario={{ nombre: NOMBRE, email: CORREO, rol: "OPERADOR" }}
     />,
   );
 
 describe("AvisoDeClaveTemporal", () => {
-  it("muestra la contrasenia y a quien pertenece", () => {
+  it("muestra la contrasenia y de quien es: nombre, correo y rol", () => {
     const html = pintar();
 
     expect(html).toContain(MOSTRADA.clave);
-    expect(html).toContain("Operadora de Mostrador");
-    expect(html).toContain("Anótela ahora");
+    expect(html).toContain(`Contraseña temporal de ${NOMBRE}`);
+    expect(html).toContain(CORREO);
+    expect(html).toContain("rol Operador");
+  });
+
+  it("la clave se puede identificar y seleccionar sin JavaScript", () => {
+    const html = pintar();
+
+    expect(html).toContain("Contraseña de un solo uso");
+    expect(html).toContain("seleccione la contraseña");
+  });
+
+  /** S10: el boton solo existe con JavaScript; el HTML del servidor no lo trae. */
+  it("sin JavaScript no se pinta «Copiar», pero la clave se copia a mano", () => {
+    const html = pintar();
+
+    expect(html).not.toContain("Copiar<");
+    expect(html).not.toContain("Contraseña copiada al portapapeles.");
   });
 
   it("ofrece darla por anotada, con el token en un campo oculto y no en la URL", () => {

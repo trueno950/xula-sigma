@@ -101,14 +101,26 @@ describe("altaDeUsuarioAction", () => {
     expect(altaDeUsuarioMock).not.toHaveBeenCalled();
   });
 
-  it("sin correo vuelve al formulario con un codigo, no con un 500", async () => {
+  it("un correo mal formado lo dice con su propio codigo, no con un 500", async () => {
     await expect(
       altaDeUsuarioAction(
         formulario({ ...ALTA_VALIDA, email: "no-es-correo" }),
       ),
     ).rejects.toThrow("REDIRECT:");
 
-    expect(errorDelDestino()).toBe("formulario");
+    expect(errorDelDestino()).toBe("correo-invalido");
+    expect(altaDeUsuarioMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["un nombre demasiado corto", { nombre: "ab" }, "nombre-corto"],
+    ["un formulario vacio", { nombre: "", email: "", rol: "" }, "formulario"],
+  ])("%s tiene su propio codigo", async (_caso, cambios, codigo) => {
+    await expect(
+      altaDeUsuarioAction(formulario({ ...ALTA_VALIDA, ...cambios })),
+    ).rejects.toThrow("REDIRECT:");
+
+    expect(errorDelDestino()).toBe(codigo);
     expect(altaDeUsuarioMock).not.toHaveBeenCalled();
   });
 

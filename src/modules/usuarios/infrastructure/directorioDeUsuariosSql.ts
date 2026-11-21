@@ -54,6 +54,7 @@ export const directorioDeUsuariosSql: DirectorioDeUsuarios = {
         filas.map(({ bajaEn, ...persona }) => ({
           ...persona,
           dadoDeBaja: bajaEn !== null,
+          bajaEn,
         })),
       ),
 

@@ -17,6 +17,11 @@ import {
 describe("mensajeDeError", () => {
   it.each([
     ["formulario", "Faltan el nombre o el correo."],
+    ["nombre-corto", "El nombre debe tener al menos 3 letras."],
+    [
+      "correo-invalido",
+      "Escriba un correo válido, como nombre@municipio.gob.mx.",
+    ],
     ["sin-rol", "Elija un rol."],
     ["sin-destinatario", "Falta la persona."],
     ["sin-permiso", "No tiene permiso para esta operación."],

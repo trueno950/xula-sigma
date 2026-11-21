@@ -9,6 +9,7 @@ import {
   restablecerContrasenia,
 } from "@/shared/auth";
 import { intentarGuardarClaveMostrada } from "../claveTemporalEnCookie";
+import { recordarDestinatarioDeLaClave } from "../destinatarioDeLaClave";
 import type { CodigoDeError } from "../mensajesDeError";
 import { codigoDeErrorParaLaOperadora } from "./codigoDeError";
 import { rutaDeUsuarios } from "./destinoDeUsuarios";
@@ -78,6 +79,10 @@ export async function restablecerContraseniaAction(
     volverAlListado("clave-no-mostrada-restablecimiento");
     return;
   }
+
+  // De quien era, para cuando la clave ya no se pueda mostrar: la pantalla la
+  // nombra y ofrece restablecerla otra vez (S11 de `usuarios-ux`).
+  await recordarDestinatarioDeLaClave({ token: mostrada.token, usuarioId });
 
   redirect(rutaDeUsuarios({ clave: mostrada.token, ok: "restablecimiento" }));
 }

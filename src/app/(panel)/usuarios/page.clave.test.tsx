@@ -14,10 +14,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * sujeto es qué anuncia la página según lo que llega de la URL y de la
  * cabecera del proxy. La cabecera y el listado se mockean; la composición
  * del listado no es lo que se está probando.
+ *
+ * El estado nombrado de S11 —la tarjeta dice de quién era y ofrece
+ * restablecerla— vive en `page.claveSinMostrar.test.tsx`: es otra cookie y
+ * otro desenlace del mismo hallazgo.
  */
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
 const claveMostradaMock = vi.hoisted(() => vi.fn());
+const avisoPendienteMock = vi.hoisted(() => vi.fn());
 const listarUsuariosMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ notFound: vi.fn(), redirect: vi.fn() }));
@@ -27,8 +32,16 @@ vi.mock("@/shared/auth", async (importOriginal) => ({
 }));
 vi.mock("@/modules/usuarios", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/usuarios")>()),
-  claveMostradaDeLaPeticion: claveMostradaMock,
   listarUsuarios: listarUsuariosMock,
+}));
+vi.mock("@/modules/usuarios/ui/avisoPendienteEnCookie", () => ({
+  avisoPendienteDeLaPeticion: avisoPendienteMock,
+}));
+vi.mock("@/modules/usuarios/ui/claveTemporalEnCookie", () => ({
+  claveMostradaDeLaPeticion: claveMostradaMock,
+}));
+vi.mock("@/modules/usuarios/ui/destinatarioDeLaClave", () => ({
+  destinatarioDeLaClaveDeLaPeticion: vi.fn(async () => null),
 }));
 vi.mock("@/modules/usuarios/ui/actions/darDeBajaUsuarioAction", () => ({
   darDeBajaUsuarioAction: vi.fn(),
@@ -70,9 +83,11 @@ beforeEach(() => {
       email: "operadora@motul.example.com",
       rol: "OPERADOR",
       dadoDeBaja: false,
+      bajaEn: null,
     },
   ]);
   claveMostradaMock.mockResolvedValue(null);
+  avisoPendienteMock.mockResolvedValue(null);
 });
 
 describe("la confirmacion del restablecimiento", () => {
@@ -108,10 +123,10 @@ describe("la confirmacion del restablecimiento", () => {
     expect(pantalla).not.toContain("La cuenta quedó creada.");
   });
 
-  it("la baja no depende de nada en pantalla: confirma siempre", async () => {
+  it("la baja no depende de nada en pantalla: la anuncia el aviso de un solo uso", async () => {
     const pantalla = await html({ ok: "baja" });
 
-    expect(pantalla).toContain(
+    expect(pantalla).not.toContain(
       "La persona quedó dada de baja y ya no puede entrar.",
     );
   });

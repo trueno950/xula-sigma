@@ -28,11 +28,9 @@ import { altaDeUsuario } from "../../composicion";
 import { decodificarClaveMostrada } from "../claveMostrada";
 
 /**
- * Restablecimiento y baja por la accion, contra Postgres (S5, S6, S7). Lo
- * que se afirma: la clave que la pantalla muestra verifica contra el hash,
- * la baja no borra la fila, y un `usuarioId` de otro municipio responde «no
- * encontrado» sin mover una sola fila — ni la del otro municipio ni la
- * propia.
+ * Restablecimiento y baja por la accion, contra Postgres (S5, S6, S7): la
+ * clave mostrada verifica contra el hash, la baja no borra la fila, y un
+ * `usuarioId` de otro municipio responde «no encontrado» sin mover una fila.
  */
 
 const contextoActualMock = vi.hoisted(() => vi.fn());
@@ -184,7 +182,8 @@ describe("baja por la accion", () => {
 
     expect(fila?.id).toBe(usuarioId);
     expect(fila?.bajaEn).toBeInstanceOf(Date);
-    expect(destino()).toBe("/usuarios?ok=baja");
+    // S13/S14: el aviso va en cookie; la URL lleva solo su token.
+    expect(destino()).toMatch(/^\/usuarios\?aviso=[0-9a-f-]+&ok=baja$/);
   });
 
   it("la cuenta de otro municipio no se da de baja y se responde no encontrado", async () => {

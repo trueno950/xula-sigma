@@ -19,4 +19,10 @@ export type UsuarioDelPanel = {
   rol: string;
   /** La baja es logica: la fila sigue y se muestra, marcada (S6). */
   dadoDeBaja: boolean;
+  /**
+   * Cuando se dio de baja, si se dio de baja (S5 de `usuarios-ux`): es la
+   * fecha que la pantalla escribe en la seccion de bajas. Sale de la misma
+   * columna que `dadoDeBaja`, asi que las dos no pueden contradecirse.
+   */
+  bajaEn: Date | null;
 };

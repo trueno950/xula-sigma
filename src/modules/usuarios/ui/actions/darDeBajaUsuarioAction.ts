@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { contextoActual, darDeBajaUsuario } from "@/shared/auth";
 import { BajaSinConfirmarError } from "../../domain";
+import { intentarGuardarAvisoPendiente } from "../avisoPendienteEnCookie";
 import { codigoDeErrorParaLaOperadora } from "./codigoDeError";
 import { rutaDeUsuarios } from "./destinoDeUsuarios";
 
@@ -22,6 +23,12 @@ import { rutaDeUsuarios } from "./destinoDeUsuarios";
  *
  * **S12 de `usuarios-ux`: la baja se confirma** con `confirmar=si`; por que
  * esta exigencia es la que cuenta, en la nota de esta accion en AGENTS.md.
+ *
+ * **S13 y S14: el exito no se anuncia por la URL.** El aviso que nombra a la
+ * persona y su fecha viaja en la cookie de `avisoPendienteEnCookie.ts` y la
+ * URL lleva solo el token, que el proxy consume en la misma peticion: el
+ * nombre no queda en el historial ni en el log de accesos, y recargar no
+ * repite el aviso.
  */
 
 const esquemaDeEntrada = z.object({ usuarioId: z.uuid() });
@@ -51,9 +58,11 @@ export async function darDeBajaUsuarioAction(
 
   if (!contexto) redirect("/acceso");
 
+  const { usuarioId } = analisis.data;
+
   try {
     exigirConfirmacionDeBaja(formData.get("confirmar"));
-    await darDeBajaUsuario(contexto, { usuarioId: analisis.data.usuarioId });
+    await darDeBajaUsuario(contexto, { usuarioId });
   } catch (error) {
     redirect(
       rutaDeUsuarios({
@@ -63,6 +72,10 @@ export async function darDeBajaUsuarioAction(
     return;
   }
 
+  // La cuenta ya quedo de baja: si el aviso no se puede guardar, el listado
+  // dice el estado igual y la accion vuelve sin anunciar nada.
   revalidatePath("/usuarios");
-  redirect(rutaDeUsuarios({ ok: "baja" }));
+  const aviso = await intentarGuardarAvisoPendiente({ usuarioId });
+
+  redirect(rutaDeUsuarios({ aviso: aviso?.token, ok: "baja" }));
 }

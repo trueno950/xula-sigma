@@ -47,6 +47,11 @@ vi.mock("@/shared/auth", async (importOriginal) => ({
 }));
 vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// Fuera de un request no hay almacen de cookies: `next/headers` tiraria y el
+// aviso de S13 caeria en su camino sin aviso. Se simula el almacen.
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ set: vi.fn() }),
+}));
 
 const { darDeBajaUsuarioAction } = await import(
   "./ui/actions/darDeBajaUsuarioAction"
@@ -126,7 +131,8 @@ describe("darDeBajaUsuarioAction y la casilla de confirmacion", () => {
       ),
     ).rejects.toThrow("REDIRECT:");
 
-    expect(destino()).toBe("/usuarios?ok=baja");
+    // S13 y S14: el aviso viaja en una cookie y la URL lleva solo su token.
+    expect(destino()).toMatch(/^\/usuarios\?aviso=[0-9a-f-]+&ok=baja$/);
     expect((await filaDe(objetivo))?.bajaEn).toBeInstanceOf(Date);
     expect(await trazasDeBaja(objetivo)).toHaveLength(1);
   });

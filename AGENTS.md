@@ -560,6 +560,25 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `CorreoYaRegistradoError` -el choque contra `usuarios_tenant_email_idx` o
   `usuarios_tenant_email_lower_idx`, migracion `0024`-.
 
+  **El rechazo del alta vuelve con lo capturado** (S6 de `usuarios-ux`).
+  `altaDeUsuarioAction` guarda nombre, correo y rol en una cookie httpOnly de
+  120 segundos -el mecanismo de `src/shared/ui/borradorEnCookie.ts`, la forma
+  en `ui/borradorDeAltaDeUsuario.ts`- y la URL lleva solo el token opaco:
+  `?error=<codigo>&borrador=<token>`. El nombre y el correo no van a la URL
+  porque son datos de una persona y quedarian en el log de accesos; el
+  borrador no lleva contraseña porque el alta no la captura. El alta que
+  prospera descarta la cookie.
+
+  **Ningun campo del alta lleva `required`, `minLength` ni `type="email"`**
+  (S7 de `usuarios-ux`). Los tres hacen que el navegador conteste con su
+  propio mensaje, en su idioma y antes de que el POST salga, y sin JavaScript
+  no hay otro: el formulario se envia igual y el servidor redacta en español
+  con sus propios codigos -`nombre-corto`, `correo-invalido`, `sin-rol`-. El
+  minimo del nombre y esos dos textos viven en un solo archivo,
+  `ui/FormularioDeAltaDeUsuario.textos.ts`, que es tambien la ayuda que se lee
+  antes de escribir; el correo conserva el teclado de correo por
+  `inputMode`, que no valida nada.
+
   **Nadie restablece su propia contraseña** (S1 de `usuarios-ux`). El
   listado no ofrece el boton en la fila propia y el caso de uso
   `restablecerContrasenia` la rechaza igual con
@@ -575,6 +594,36 @@ Notas que no caben en la tabla, una por fila que las necesita:
   llamar al caso de uso: sin la casilla no cambia nada, no hay traza en
   bitacora y la cuenta sigue activa. Una baja sin ella responde «Para dar de
   baja a la persona, marque la casilla de confirmación.».
+
+  **El aviso de la baja no vuelve a anunciarse al recargar** (S13 y S14 de
+  `usuarios-ux`; **este es el unico lugar donde esto se cuenta**). La baja
+  responde `/usuarios?aviso=<token>&ok=baja`: el nombre y la fecha de la
+  persona **no viajan en la URL** -son datos personales, y la URL queda en el
+  historial y en el log de accesos-, viaja un `usuarioId` en una cookie
+  httpOnly de 120 segundos, y el nombre y `bajaEn` los pone la pantalla desde
+  el listado que esa misma peticion leyo bajo RLS. Es el mismo transporte de
+  un solo uso que el de `?clave=`, con su propio par de nombres: la cookie
+  `aviso-de-usuarios`, la cabecera `x-xula-aviso-de-usuarios` y
+  `avisoATrasladar` en `src/modules/usuarios/ui/avisoEnTransito.ts`. Las dos
+  cabeceras se borran de la peticion entrante en `proxy.ts` antes de escribir
+  las suyas (`proxyTraslados.ts`, `CABECERAS_DE_TRASLADO`): sin eso, una
+  cabecera inventada mas un `?aviso=` inventado anunciarian una baja que no
+  ocurrio. Consumida la cookie, recargar o volver con el boton de atras no
+  encuentra nada que anunciar; por eso `avisoDeConfirmacion` ya no tiene
+  texto para `?ok=baja` y un `?ok=baja` escrito a mano no anuncia nada.
+
+  **Con JavaScript el proxy solo no alcanza, y es el mismo hueco que cerro
+  T2 para la clave.** El primer pintado es el render sintetico del
+  `redirect` de la Server Action, y el `Set-Cookie` de ese borrado el
+  navegador no lo guarda: la cookie sobrevive y una recarga inmediata —un GET
+  nuevo con el mismo `?aviso=`— vuelve a pintar el aviso (lo encontro el
+  E2E). Por eso el aviso monta `DescartarAvisoAlMostrar`: deja la URL sin
+  `aviso` ni `ok` con `window.history.replaceState` y borra la cookie con un
+  `POST` a `/usuarios/aviso`, un Route Handler y no una Server Action —una
+  Server Action que toca cookies redibuja la ruta sin la cabecera del
+  proxy—. Los dos `POST` de descarte comparten borde en
+  `src/modules/usuarios/ui/routeDeDescarte.ts`. Sin JavaScript el proxy sigue
+  siendo el unico que la consume.
 
   **La contraseña temporal no vuelve por `?clave=`** (S4 de
   `administracion-de-usuarios` y S9 de `usuarios-ux`; **este es el único
@@ -610,6 +659,14 @@ Notas que no caben en la tabla, una por fila que las necesita:
   Ver `src/modules/usuarios/ui/claveMostradaEnTransito.ts`; S4 de
   `odd/tasks/administracion-de-usuarios.md` y S2 de
   `odd/tasks/pendientes-fase-0.md`.
+
+  **La recarga también necesita saber de quién era la clave** (S11). El proxy
+  ya borró la cookie de la clave, así que el `usuarioId` y el token van
+  además en una cookie propia de 120 segundos que nadie consume —ese estado
+  **es** la recarga— y que la pantalla busca en el listado que leyó bajo RLS
+  para preguntar si esa persona aún se puede restablecer
+  (`permisosDeCuenta`, S1 y T3) antes de ofrecer el botón. La borra «Ya la
+  anoté». Ver `src/modules/usuarios/ui/destinatarioDeLaClave.ts`.
 - `descartarClaveMostradaAction` (`usuarios`, S9 de `usuarios-ux`): el
   `<form>` de «Ya la anoté» de `AvisoDeClaveTemporal`. Mismo motivo que
   `darDeBajaUsuarioAction`: la tarjeta se pinta en un Server Component y el

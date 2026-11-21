@@ -34,15 +34,22 @@ export type {
   ConfirmacionDeUsuarios,
 } from "./ui";
 export {
+  AvisoDeAccion,
   AvisoDeClaveTemporal,
+  avisoPendienteDeLaPeticion,
+  ClaveQueYaNoSePuedeMostrar,
   CODIGOS_DE_ERROR,
   claveMostradaDeLaPeticion,
+  DESCRIPCION_DE_USUARIOS,
+  destinatarioDeLaClaveDeLaPeticion,
   esCodigoDeError,
   esquemaDeParametros,
   FormularioDeAltaDeUsuario,
   ListadoDeUsuarios,
   mensajeDeError,
   opcionesDeRol,
+  PantallaSinSesion,
   rutaDelAltaDeUsuario,
   rutaDeUsuarios,
+  SinPermisoDeUsuarios,
 } from "./ui";

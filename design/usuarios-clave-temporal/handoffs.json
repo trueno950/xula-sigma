@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "chosen": "01-aviso-sobre-la-lista.html",
+  "handoffs": {
+    "01-aviso-sobre-la-lista.html": {
+      "status": "implemented",
+      "queued": false,
+      "sentAt": "2026-11-21T00:25:51.281Z",
+      "startedAt": "2026-11-21T00:25:52.852Z",
+      "implementedAt": "2026-11-21T01:47:38.157Z",
+      "feature": "odd/tasks/usuarios-ux.md",
+      "note": "c5daec4 en feat/usuarios-ux. Se ve al dar de alta o restablecer. E2E completa 200/200.",
+      "previewUrl": "http://localhost:3200/usuarios"
+    }
+  }
+}

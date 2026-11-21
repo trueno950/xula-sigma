@@ -1,3 +1,8 @@
+import {
+  MENSAJE_CORREO_INVALIDO,
+  MENSAJE_NOMBRE_CORTO,
+} from "./FormularioDeAltaDeUsuario.textos";
+
 /**
  * El error de una accion del panel, tal como viaja en la URL y tal como se
  * le muestra a la operadora.
@@ -15,6 +20,10 @@
 export const CODIGOS_DE_ERROR = [
   /** El formulario llego incompleto o mal formado. */
   "formulario",
+  /** S7 de `usuarios-ux`: el nombre no alcanza el minimo del alta. */
+  "nombre-corto",
+  /** S7: el correo no tiene forma de correo. */
+  "correo-invalido",
   /** El alta no trae rol elegido: es el unico campo opcional del `<select>`. */
   "sin-rol",
   /** Falta el `usuarioId` sobre el que actuar. */
@@ -44,6 +53,10 @@ export type CodigoDeError = (typeof CODIGOS_DE_ERROR)[number];
 
 const MENSAJES: Record<CodigoDeError, string> = {
   formulario: "Faltan el nombre o el correo.",
+  // El minimo del nombre se dice en un solo lugar junto con la ayuda del
+  // campo, que tiene que decir lo mismo: `FormularioDeAltaDeUsuario.textos.ts`.
+  "nombre-corto": MENSAJE_NOMBRE_CORTO,
+  "correo-invalido": MENSAJE_CORREO_INVALIDO,
   "sin-rol": "Elija un rol.",
   "sin-destinatario": "Falta la persona.",
   "sin-permiso": "No tiene permiso para esta operación.",
