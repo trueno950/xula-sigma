@@ -11,7 +11,11 @@ import {
   cuentaConCredencial,
   estadoDeClaveTemporal,
 } from "./claveTemporalEnCuenta";
-import { ACCESO_POR_CORREO, MODELOS } from "./configuracion";
+import {
+  ACCESO_POR_CORREO,
+  MODELOS,
+  RITMO_DE_BETTER_AUTH,
+} from "./configuracion";
 import * as esquema from "./esquema";
 import { origenDesde } from "./origen";
 
@@ -146,6 +150,7 @@ function construirInstancia(
     advanced: { database: { generateId: "uuid" } },
     emailAndPassword: ACCESO_POR_CORREO,
     ...MODELOS,
+    rateLimit: RITMO_DE_BETTER_AUTH,
     databaseHooks: ganchosDeBd(tx, ayuntamientoId),
   });
 }
