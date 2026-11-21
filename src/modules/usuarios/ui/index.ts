@@ -12,6 +12,7 @@ export {
 } from "./actions/destinoDeUsuarios";
 export { avisoPendienteDeLaPeticion } from "./avisoPendienteEnCookie";
 export { ClaveQueYaNoSePuedeMostrar } from "./ClaveQueYaNoSePuedeMostrar";
+export { ClaveTemporalAlMostrar } from "./ClaveTemporalAlMostrar";
 export type {
   ClaveMostrada,
   MotivoDeClaveMostrada,

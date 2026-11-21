@@ -25,6 +25,16 @@
 --   psql "$DATABASE_URL" -tAc \
 --     "SELECT id FROM ayuntamientos WHERE subdominio = 'ticul'"
 --
+-- **La clave que se dicta es temporal: 24 horas y cambio obligatorio.** El
+-- script marca la credencial en la misma sentencia que escribe el hash, igual
+-- que un restablecimiento del panel (`administracionDeUsuarios.ts`). No es un
+-- detalle: toda cuenta que crea el panel nace marcada, asi que el caso tipico
+-- —el administrador que se quedo afuera— trae una marca ya vencida, y cambiar
+-- solo el hash lo dejaria igual de afuera: `/sign-in/email` responde 403
+-- `CLAVE_TEMPORAL_CADUCADA`. El destrabe tiene que devolver una credencial que
+-- sirva, y una clave dictada por una operadora no es la clave de la persona.
+-- Lo que la operadora dicta lo tiene que cambiar el administrador al entrar.
+--
 -- El hash se calcula afuera y se pasa hecho, con el mismo argon2id que usa
 -- `contrasenia.ts`. Una contrasenia en un archivo del repositorio es una
 -- contrasenia en git, para siempre y en cada clon:
@@ -83,6 +93,7 @@ BEGIN
    */
   UPDATE cuentas
      SET password = current_setting('restablecer.hash'),
+         clave_temporal_en = now(),
          updated_at = now();
 
   /*

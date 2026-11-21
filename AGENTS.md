@@ -97,7 +97,10 @@ toca datos, marcá el hallazgo.
    - `plataforma.sql` y `plataforma-admin.sql`: siembra del ayuntamiento
      reservado.
    - `restablecer-admin.sql`: destraba a un `ADMIN_MUNICIPAL` (decisión de la
-     tarea 4.16 de `auth-rbac`).
+     tarea 4.16 de `auth-rbac`). Deja una temporal nueva —24 h y cambio
+     obligatorio, marcada en la misma sentencia que el hash—: una clave que
+     dicta una operadora no es la clave de la persona, y sin la marca el
+     destrabe no destraba a quien traía la marca vencida.
    - `auditar-raices.sql`: lista los lugares que violan el MUST de raíz de
      `jerarquia-territorial`.
    - `reparar-raices-huerfanas.sql`: les da padre a los lugares de baja que
@@ -623,47 +626,61 @@ Notas que no caben en la tabla, una por fila que las necesita:
   `aviso` ni `ok` con `window.history.replaceState` y borra la cookie con un
   `POST` a `/usuarios/aviso`, un Route Handler y no una Server Action —una
   Server Action que toca cookies redibuja la ruta sin la cabecera del
-  proxy—. Los dos `POST` de descarte comparten borde en
-  `src/modules/usuarios/ui/routeDeDescarte.ts`. Sin JavaScript el proxy sigue
-  siendo el unico que la consume.
+  proxy—. Los dos `POST` comparten borde en
+  `src/modules/usuarios/ui/routeDeDescarte.ts` (`responderConToken`). Sin
+  JavaScript el proxy sigue siendo el unico que la consume.
 
   **La contraseña temporal no vuelve por `?clave=`** (S4 de
-  `administracion-de-usuarios` y S9 de `usuarios-ux`; **este es el único
-  lugar donde esto se cuenta**: los demás archivos apuntan acá). El redirect
-  lleva solo un token opaco y la clave viaja en una cookie httpOnly de 120
-  segundos. La consume el proxy, en la única petición que trae ese token: la
-  pasa a una cabecera que el cliente no puede escribir y borra la cookie en
-  la misma respuesta, así que se muestra una sola vez también sin JavaScript.
+  `administracion-de-usuarios`, S9 de `usuarios-ux` y S4 de
+  `usuarios-seguridad`; **este es el único lugar donde esto se cuenta**: los
+  demás archivos apuntan acá). El redirect lleva solo un token opaco y la
+  clave viaja en una cookie httpOnly de 120 segundos. Lo que cambia entre los
+  dos caminos es **quién puede guardar el HTML**:
 
-  Con JavaScript hay dos hechos de Next que hay que tener juntos. Uno: el
-  primer pintado es el render sintético del `redirect` y su `Set-Cookie` el
-  navegador no lo guarda, así que la cookie sobrevive hasta que el descarte
-  del montaje termina su viaje; una recarga que caiga en esa ventana es un GET
-  nuevo con el token y vuelve a pintar la contraseña. Dos: una Server Action
-  que toca cookies obliga a Next a redibujar la ruta en la misma respuesta
-  —«A single response carries data and UI», guía de Server Actions—, y ese
-  redibujo ya no trae la cabecera del proxy; por eso el descarte es un `POST`
-  a `/usuarios/clave-temporal`, un Route Handler, y no una Server Action. Con
-  la Server Action la clave desaparecía ~300 ms después de mostrarse (hallazgo
-  C1).
+  - **Sin JavaScript**, que es una navegación de documento, el proxy es el
+    único que la consume: pasa la cookie a la cabecera
+    `x-xula-clave-mostrada` y la borra en la misma respuesta, así que la
+    tarjeta se pinta entera en ese HTML una sola vez.
+  - **Con JavaScript** el primer pintado es un payload del router, y el
+    router **lo guarda y lo reutiliza al volver con «Atrás»** («Client
+    Cache», glosario de Next 16: «Pages are not cached by default but are
+    reused during browser back/forward navigation»). Por eso en esa petición
+    —la que el cliente marca con `rsc: 1`— el proxy **no** consume la cookie:
+    la pantalla recibe el token, la tarjeta la pinta la isla
+    `ClaveTemporalAlMostrar` y la clave llega por un `POST` a
+    `/usuarios/clave-temporal` que la **entrega y borra la cookie en el mismo
+    viaje**, con `cache-control: no-store`. Salir sin pulsar «Ya la anoté» y
+    volver con «Atrás» restaura el payload sin la clave; la isla la vuelve a
+    pedir, la cookie ya no existe y la pantalla cae al estado «ya no se puede
+    mostrar» de S11 con el botón de restablecer.
 
-  La ventana de la recarga la cierra `DescartarClaveAlMostrar` al pintar: deja
-  la URL sin `clave` ni `ok` con `window.history.replaceState`, que Next
-  integra en su router —«Native History API», guía de navegación—, así que
-  recargar o volver atrás ya no lleva el token y no hay nada que volver a
-  mostrar. Con JavaScript la clave se queda en pantalla hasta que la operadora
-  pulsa «Ya la anoté»; sin JavaScript también, porque la tarjeta no depende de
-  nada que se borre solo.
+  El `POST` es un Route Handler y no una Server Action por el hallazgo C1:
+  una Server Action que toca cookies obliga a Next a redibujar la ruta en la
+  misma respuesta —«A single response carries data and UI», guía de Server
+  Actions— y ese redibujo ya no trae la cabecera del proxy, así que la clave
+  desaparecía ~300 ms después de mostrarse. Con el Route Handler la entrega no
+  redibuja nada.
 
-  La
-  pantalla lee la cabecera, nunca la cookie -nunca en la URL, que queda en el
-  historial del navegador y en el log de accesos del servidor-.
-  Ver `src/modules/usuarios/ui/claveMostradaEnTransito.ts`; S4 de
-  `odd/tasks/administracion-de-usuarios.md` y S2 de
-  `odd/tasks/pendientes-fase-0.md`.
+  La URL la limpia `DescartarClaveAlMostrar` al pintar: deja la tarjeta sin
+  `clave` ni `ok` con `window.history.replaceState`, que Next integra en su
+  router —«Native History API», guía de navegación—, así que recargar o volver
+  atrás ya no lleva el token y no hay nada que volver a mostrar. No
+  toca cookies: sin JavaScript las borra el proxy en la misma respuesta y con
+  JavaScript las borra la entrega del `POST`. Con JavaScript la clave se queda
+  en pantalla hasta que la operadora pulsa «Ya la anoté»; sin JavaScript
+  también, porque la tarjeta no depende de nada que se borre solo.
 
-  **La recarga también necesita saber de quién era la clave** (S11). El proxy
-  ya borró la cookie de la clave, así que el `usuarioId` y el token van
+  La pantalla lee la cabecera, nunca la cookie -nunca en la URL, que queda en
+  el historial del navegador y en el log de accesos del servidor-. Ver
+  `src/modules/usuarios/ui/claveMostradaEnTransito.ts` y
+  `src/modules/usuarios/ui/ClaveTemporalAlMostrar.tsx`; S4 de
+  `odd/tasks/administracion-de-usuarios.md`, S2 de
+  `odd/tasks/pendientes-fase-0.md` y S4 de
+  `odd/tasks/usuarios-seguridad.md`.
+
+  **La recarga también necesita saber de quién era la clave** (S11). La
+  cookie de la clave ya no está —la consumió el proxy o la entrega del
+  `POST`—, así que el `usuarioId` y el token van
   además en una cookie propia de 120 segundos que nadie consume —ese estado
   **es** la recarga— y que la pantalla busca en el listado que leyó bajo RLS
   para preguntar si esa persona aún se puede restablecer
@@ -692,12 +709,14 @@ Notas que no caben en la tabla, una por fila que las necesita:
   (la cuenta ya estaba activa) y `clave-no-mostrada-reactivacion` cuando la
   cuenta sí volvió pero la clave no se pudo guardar.
 - `descartarClaveMostradaAction` (`usuarios`, S9 de `usuarios-ux`): el
-  `<form>` de «Ya la anoté» de `AvisoDeClaveTemporal`. Mismo motivo que
-  `darDeBajaUsuarioAction`: la tarjeta se pinta en un Server Component y el
-  envío es el POST nativo, así que anda sin JavaScript. Valida el token con
-  Zod, borra la cookie solo si coincide con la guardada y vuelve al listado
-  **sin el token en la URL** —por eso el destino no lleva `ok`: no hay nada
-  que confirmar, la operadora acaba de decir que ya la anotó—.
+  `<form>` de «Ya la anoté» de la tarjeta de la clave —`TarjetaDeClave`, la
+  pinte el servidor sin JavaScript o la isla `ClaveTemporalAlMostrar` con
+  JavaScript—. Mismo motivo que `darDeBajaUsuarioAction`: el envío es el POST
+  nativo y anda sin JavaScript; con JavaScript React lo manda por la acción.
+  Valida el token con Zod, borra la cookie solo si coincide con la guardada y
+  vuelve al listado **sin el token en la URL** —por eso el destino no lleva
+  `ok`: no hay nada que confirmar, la operadora acaba de decir que ya la
+  anotó—.
 - `cambiarContraseniaPropiaAction` (`usuarios`, S2 de
   `usuarios-seguridad`): el `<form>` de la pantalla de cambio obligatorio,
   en `src/app/(acceso)/cambiar-contrasenia/` —fuera de `(panel)` a

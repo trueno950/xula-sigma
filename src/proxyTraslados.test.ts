@@ -42,17 +42,20 @@ const traslados = ({
   ruta = RUTA_COOKIE_CLAVE_MOSTRADA,
   consulta = "",
   claves,
+  esPayload = false,
 }: {
   metodo?: string;
   ruta?: string;
   consulta?: string;
   claves?: Record<string, string>;
+  esPayload?: boolean;
 }) =>
   trasladosDeLaPeticion({
     metodo,
     ruta,
     consulta: new URLSearchParams(consulta),
     leerCookie: (nombre) => claves?.[nombre],
+    esPayload,
   });
 
 describe("trasladosDeLaPeticion", () => {
@@ -61,6 +64,16 @@ describe("trasladosDeLaPeticion", () => {
       CABECERA_CLAVE_MOSTRADA,
       CABECERA_AVISO,
     ]);
+  });
+
+  it("la peticion del router no traslada la clave: la pide la isla (S4)", () => {
+    expect(
+      traslados({
+        consulta: `clave=${TOKEN_CLAVE}`,
+        claves: { [NOMBRE_COOKIE_CLAVE_MOSTRADA]: COOKIE_CLAVE },
+        esPayload: true,
+      }),
+    ).toEqual([]);
   });
 
   it("la clave temporal se traslada igual que antes del aviso", () => {

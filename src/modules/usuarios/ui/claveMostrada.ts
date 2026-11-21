@@ -25,6 +25,36 @@ const esquemaDeClaveMostrada = z.object({
 
 export type ClaveMostrada = z.infer<typeof esquemaDeClaveMostrada>;
 
+/**
+ * Lo que el servidor le entrega a la isla que pinta la tarjeta (S4 de
+ * `usuarios-seguridad`): el motivo, para titularla, y la clave. Ni el token ni
+ * el `usuarioId`, que la pantalla ya tiene.
+ *
+ * Es el mismo esquema que el de la cookie, recortado, y se valida en los dos
+ * extremos —el Route Handler lo arma y la isla lo lee— por la misma razon por
+ * la que la cookie se valida entera: lo que llega del otro lado puede no
+ * tener esta forma, y una clave a medias es peor que ninguna.
+ */
+export type ClaveEntregada = Pick<ClaveMostrada, "motivo" | "clave">;
+
+const esquemaDeClaveEntregada = esquemaDeClaveMostrada.pick({
+  motivo: true,
+  clave: true,
+});
+
+export const claveEntregadaDe = ({
+  motivo,
+  clave,
+}: ClaveMostrada): ClaveEntregada => ({ motivo, clave });
+
+export const decodificarClaveEntregada = (
+  valor: unknown,
+): ClaveEntregada | null => {
+  const analisis = esquemaDeClaveEntregada.safeParse(valor);
+
+  return analisis.success ? analisis.data : null;
+};
+
 export const codificarClaveMostrada = (mostrada: ClaveMostrada): string =>
   JSON.stringify(mostrada);
 

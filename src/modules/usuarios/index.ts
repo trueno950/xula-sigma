@@ -38,6 +38,7 @@ export {
   AvisoDeClaveTemporal,
   avisoPendienteDeLaPeticion,
   ClaveQueYaNoSePuedeMostrar,
+  ClaveTemporalAlMostrar,
   CODIGOS_DE_ERROR,
   claveMostradaDeLaPeticion,
   DESCRIPCION_DE_USUARIOS,

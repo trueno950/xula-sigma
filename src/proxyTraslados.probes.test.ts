@@ -25,6 +25,7 @@ const traslados = (o: {
     ruta: o.ruta ?? "/usuarios",
     consulta: new URLSearchParams(o.consulta ?? ""),
     leerCookie: () => o.cookie,
+    esPayload: false,
   });
 
 describe("el traslado de un solo uso (S9, S13 y S14 de usuarios-ux)", () => {
