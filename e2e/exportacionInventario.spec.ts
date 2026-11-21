@@ -1,9 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { eq } from "drizzle-orm";
+import { comoAyuntamientoId } from "@/shared/tenancy/ayuntamientoId";
+import { ayuntamientos } from "@/shared/tenancy/esquema";
+import { withTenant } from "@/shared/tenancy/withTenant";
 import { accederAMotul } from "./acceder";
 import { liberarVentanaDeRitmo } from "./calles.fixture";
-import { urlDe } from "./municipios";
+import { MUNICIPIOS, urlDe } from "./municipios";
 
 /**
  * La pantalla de exportacion segun `design/exportacion/01` (S10-S13).
@@ -18,6 +22,28 @@ import { urlDe } from "./municipios";
  */
 
 const FILAS = new Intl.NumberFormat("es-MX");
+
+const motul = comoAyuntamientoId(MUNICIPIOS.motul.id);
+
+const escribirMarca = (marca: Record<string, unknown>) =>
+  withTenant(motul, (tx) =>
+    tx.update(ayuntamientos).set({ marca }).where(eq(ayuntamientos.id, motul)),
+  );
+
+/**
+ * Sin escudo, por el mismo motivo que `exportacionDeDatos.spec.ts` explica en
+ * su `beforeAll`: el de la siembra apunta a una URL de la aplicacion y la
+ * descarga falla a proposito cuando el escudo guardado no se puede leer (S1
+ * y S4). Con el puesto, las tres descargas de este archivo recibirian 500 y lo
+ * que se probaria no seria el inventario.
+ */
+test.beforeAll(async () => {
+  await escribirMarca({});
+});
+
+test.afterAll(async () => {
+  await escribirMarca(MUNICIPIOS.motul.marca);
+});
 
 test.beforeEach(liberarVentanaDeRitmo);
 
@@ -143,7 +169,9 @@ test("si la descarga falla, el error queda dentro del panel (S13)", async ({
     .getByRole("link", { name: "Descargar los datos del ayuntamiento" })
     .click();
 
-  const fallo = page.getByRole("alert");
+  // Acotado al panel: el anunciador de rutas de Next es un `div role="alert"`
+  // en el `body`, fuera del `<main>` de la pantalla.
+  const fallo = page.locator("main").getByRole("alert");
 
   await expect(fallo).toContainText("No se pudo armar el archivo.");
   await expect(fallo).toContainText("No se descargó nada");
